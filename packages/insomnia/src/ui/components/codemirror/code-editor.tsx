@@ -141,7 +141,6 @@ const normalizeMimeType = (mode?: string) => {
 export interface CodeEditorHandle {
   setValue: (value: string) => void;
   getValue: () => string;
-  setCursor: (ch: number, line: number) => void;
   setSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
   scrollToSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
   selectAll: () => void;
@@ -151,7 +150,6 @@ export interface CodeEditorHandle {
   setAttribute: (name: string, value: string) => void;
   removeAttribute: (name: string) => void;
   getAttribute: (name: string) => void;
-  clearSelection: () => void;
 }
 export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   autoPrettify,
@@ -495,12 +493,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     selectAll: () => codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),
     focus: () => codeMirror.current?.focus(),
     refresh: () => codeMirror.current?.refresh(),
-    setCursor: (ch, line = 0) => {
-      if (codeMirror.current && !codeMirror.current.hasFocus()) {
-        codeMirror.current.focus();
-      }
-      codeMirror.current?.setCursor({ line, ch });
-    },
     setSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
       codeMirror.current?.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
       codeMirror.current?.scrollIntoView({ line: lineStart, ch: chStart });
@@ -520,15 +512,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     setAttribute: (name: string, value: string) => codeMirror.current?.getTextArea().parentElement?.setAttribute(name, value),
     removeAttribute: (name: string) => codeMirror.current?.getTextArea().parentElement?.removeAttribute(name),
     getAttribute: (name: string) => codeMirror.current?.getTextArea().parentElement?.getAttribute(name),
-    clearSelection: () => {
-      if (codeMirror.current && !codeMirror.current?.isHintDropdownActive()) {
-        codeMirror.current.setSelection({ line: -1, ch: -1 }, { line: -1, ch: -1 }, { scroll: false },);
-      }
-    },
-    cursorIndex: () => codeMirror.current?.indexFromPos(codeMirror.current.getCursor()),
-    markText: (from: CodeMirror.Position, to: CodeMirror.Position, options: CodeMirror.TextMarkerOptions) => {
-      return codeMirror.current?.getDoc().markText(from, to, options);
-    },
   }), []);
 
   const showFilter = mode && (mode.includes('json') || mode.includes('xml'));

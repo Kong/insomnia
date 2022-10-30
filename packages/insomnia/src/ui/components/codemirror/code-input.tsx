@@ -34,11 +34,7 @@ export interface CodeInputProps {
 export interface CodeInputHandle {
   setValue: (value: string) => void;
   getValue: () => string;
-  setCursor: (ch: number, line: number) => void;
   setSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
-  scrollToSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
-  getSelectionStart: () => void;
-  getSelectionEnd: () => void;
   selectAll: () => void;
   focus: () => void;
   focusEnd: () => void;
@@ -46,7 +42,6 @@ export interface CodeInputHandle {
   setAttribute: (name: string, value: string) => void;
   removeAttribute: (name: string) => void;
   getAttribute: (name: string) => void;
-  clearSelection: () => void;
 }
 export const CodeInput = forwardRef<CodeInputHandle, CodeInputProps>(({
   className,
@@ -208,23 +203,10 @@ export const CodeInput = forwardRef<CodeInputHandle, CodeInputProps>(({
     selectAll: () => codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),
     focus: () => codeMirror.current?.focus(),
     refresh: () => codeMirror.current?.refresh(),
-    setCursor: (ch, line = 0) => {
-      if (codeMirror.current && !codeMirror.current.hasFocus()) {
-        codeMirror.current.focus();
-      }
-      codeMirror.current?.setCursor({ line, ch });
-    },
     setSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
       codeMirror.current?.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
       codeMirror.current?.scrollIntoView({ line: lineStart, ch: chStart });
     },
-    scrollToSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
-      codeMirror.current?.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
-      // If sizing permits, position selection just above center
-      codeMirror.current?.scrollIntoView({ line: lineStart, ch: chStart }, window.innerHeight / 2 - 100);
-    },
-    getSelectionStart: () => codeMirror.current?.listSelections()?.[0].anchor.ch || 0,
-    getSelectionEnd: () => codeMirror.current?.listSelections()?.[0].head.ch || 0,
     focusEnd: () => {
       if (codeMirror.current && !codeMirror.current.hasFocus()) {
         codeMirror.current.focus();
@@ -235,11 +217,6 @@ export const CodeInput = forwardRef<CodeInputHandle, CodeInputProps>(({
     setAttribute: (name: string, value: string) => codeMirror.current?.getTextArea().parentElement?.setAttribute(name, value),
     removeAttribute: (name: string) => codeMirror.current?.getTextArea().parentElement?.removeAttribute(name),
     getAttribute: (name: string) => codeMirror.current?.getTextArea().parentElement?.getAttribute(name),
-    clearSelection: () => {
-      if (codeMirror.current && !codeMirror.current?.isHintDropdownActive()) {
-        codeMirror.current.setSelection({ line: -1, ch: -1 }, { line: -1, ch: -1 }, { scroll: false },);
-      }
-    },
   }), []);
 
   return (
