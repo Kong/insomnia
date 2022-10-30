@@ -67,9 +67,7 @@ export const CodeInput = forwardRef<CodeInputHandle, CodeInputProps>(({
       return;
     }
 
-    const transformEnums = (
-      tagDef: NunjucksParsedTag
-    ): NunjucksParsedTag[] => {
+    const transformEnums = (tagDef: NunjucksParsedTag): NunjucksParsedTag[] => {
       if (tagDef.args[0]?.type === 'enum') {
         return tagDef.args[0].options?.map(option => {
           const optionName = misc.fnOrString(option.displayName, tagDef.args);
