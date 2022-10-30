@@ -20,12 +20,7 @@ import { Hotkey } from '../hotkey';
 import { showModal } from '../modals';
 import { AddKeyCombinationModal } from '../modals/add-key-combination-modal';
 
-/**
-   * Checks whether the given key combination already existed.
-   * @param newKeyComb the key combination to be checked.
-   * @returns {boolean} true if already existed.
-   */
-export const isKeyCombinationInRegistry = (pressedKeyComb: KeyCombination, hotKeyRegistry: Partial<HotKeyRegistry>) =>
+export const isKeyCombinationInRegistry = (pressedKeyComb: KeyCombination, hotKeyRegistry: Partial<HotKeyRegistry>): boolean =>
   !!Object.values(hotKeyRegistry).find(bindings =>
     getPlatformKeyCombinations(bindings)
       .find(keyComb => areSameKeyCombinations(pressedKeyComb, keyComb)));

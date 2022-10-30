@@ -339,7 +339,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     });
 
     codeMirror.current.on('keydown', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
-
       const pressedKeyComb: KeyCombination = {
         ctrl: event.ctrlKey,
         alt: event.altKey,
@@ -430,10 +429,10 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     }
     // Make URLs clickable
     if (onClickLink) {
-      codeMirror.current?.makeLinksClickable(onClickLink);
+      codeMirror.current.makeLinksClickable(onClickLink);
     }
     // Restore the state
-    if (uniquenessKey && editorStates.hasOwnProperty(uniquenessKey) && codeMirror.current) {
+    if (uniquenessKey && editorStates[uniquenessKey]) {
       const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
       codeMirror.current.scrollTo(scroll.left, scroll.top);
       codeMirror.current.setHistory(history);
