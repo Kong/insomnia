@@ -90,12 +90,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
   await database.flushChanges(flushId);
-  if (session.isLoggedIn() && isRemoteProject(project)) {
-    if (!isCollection(workspace)) {
-      // Don't initialize and mark for sync unless we're in a collection
-      return;
-    }
-
+  if (session.isLoggedIn() && isRemoteProject(project) && isCollection(workspace)) {
     const vcs = getVCS();
     if (vcs) {
       initializeLocalBackendProjectAndMarkForSync({
