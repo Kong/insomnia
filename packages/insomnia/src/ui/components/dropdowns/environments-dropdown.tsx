@@ -1,4 +1,3 @@
-import { EnvironmentHighlightColorStyle } from 'insomnia-common';
 import React, { FC, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -18,13 +17,11 @@ import { Tooltip } from '../tooltip';
 
 interface Props {
   activeEnvironment?: Environment | null;
-  environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
   workspace: Workspace;
 }
 
 export const EnvironmentsDropdown: FC<Props> = ({
   activeEnvironment,
-  environmentHighlightColorStyle,
   workspace,
 }) => {
   const environments = useSelector(selectEnvironments);
@@ -61,14 +58,14 @@ export const EnvironmentsDropdown: FC<Props> = ({
             </Tooltip>
           )}
           <div className="sidebar__menu__thing__text">
-            {activeEnvironment?.color && environmentHighlightColorStyle === 'sidebar-indicator' ? (
+            {activeEnvironment?.color && (
               <i
                 className="fa fa-circle space-right"
                 style={{
                   color: activeEnvironment.color,
                 }}
               />
-            ) : null}
+            )}
             {description}
           </div>
           <i className="space-left fa fa-caret-down" />

@@ -162,7 +162,6 @@ export const WrapperDebug: FC = () => {
         <div className="sidebar__menu">
           <EnvironmentsDropdown
             activeEnvironment={activeEnvironment}
-            environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             workspace={activeWorkspace}
           />
           <button className="btn btn--super-compact" onClick={showCookiesModal}>

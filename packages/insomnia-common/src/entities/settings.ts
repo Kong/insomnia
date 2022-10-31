@@ -1,11 +1,6 @@
 import { HttpVersion } from '../constants';
 import { HotKeyRegistry } from './hotkeys';
 
-type Sides = 'top' | 'bottom' | 'left' | 'right';
-type WindowSides = `window-${Sides}`;
-type SidebarSides = `sidebar-${'edge' | 'indicator'}`;
-export type EnvironmentHighlightColorStyle = WindowSides | SidebarSides;
-
 export enum UpdateChannel {
   stable = 'stable',
   beta = 'beta',
@@ -47,7 +42,6 @@ export interface Settings {
 
   /** If true, Insomnia will send anonymous data about features and plugins used. */
   enableAnalytics: boolean;
-  environmentHighlightColorStyle: EnvironmentHighlightColorStyle;
   filterResponsesByEnv: boolean;
   followRedirects: boolean;
   fontInterface: string | null;
