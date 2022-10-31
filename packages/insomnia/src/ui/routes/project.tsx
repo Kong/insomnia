@@ -339,8 +339,8 @@ const ProjectRoute: FC = () => {
   }, [dispatch, revalidate]);
 
   const importFromGit = useCallback(() => {
-    dispatch(cloneGitRepository({ createFsClient: MemClient.createClient }));
-  }, [dispatch]);
+    dispatch(cloneGitRepository({ createFsClient: MemClient.createClient, onComplete: revalidate }));
+  }, [dispatch, revalidate]);
 
   return (
     <Fragment>

@@ -153,8 +153,9 @@ const noDocumentFound = (gitRepo: GitRepository) => {
 /**
  * Clone a git repository
  * */
-export const cloneGitRepository = ({ createFsClient }: {
+export const cloneGitRepository = ({ createFsClient, onComplete }: {
   createFsClient: () => git.PromiseFsClient;
+  onComplete?: () => void;
 }) => {
   return (dispatch: any, getState: () => RootState) => {
     // TODO: in the future we should ask which project to clone into...?
@@ -291,6 +292,7 @@ export const cloneGitRepository = ({ createFsClient }: {
             await db.flushChanges(bufferId);
             dispatch(loadStop());
             trackSegmentEvent(SegmentEvent.vcsSyncComplete, { ...vcsSegmentEventProperties('git', 'clone'), providerName });
+            onComplete?.();
           },
         });
       },
