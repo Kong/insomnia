@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS } from '../../common/constants';
 import { debounce } from '../../common/misc';
 import * as models from '../../models';
-import { selectActiveEnvironment, selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
+import { selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
 import { selectPaneHeight, selectPaneWidth, selectSidebarWidth } from '../redux/sidebar-selectors';
 import { ErrorBoundary } from './error-boundary';
 import { Sidebar } from './sidebar/sidebar';
@@ -35,7 +35,6 @@ export const PageLayout: FC<Props> = ({
   renderPageHeader,
   renderPageSidebar,
 }) => {
-  const activeEnvironment = useSelector(selectActiveEnvironment);
   const settings = useSelector(selectSettings);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const reduxPaneHeight = useSelector(selectPaneHeight);
@@ -209,30 +208,6 @@ export const PageLayout: FC<Props> = ({
         gridTemplateColumns: gridColumns,
         gridTemplateRows: gridRows,
         boxSizing: 'border-box',
-        borderTop:
-          activeEnvironment &&
-            activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'window-top'
-            ? '5px solid ' + activeEnvironment.color
-            : undefined,
-        borderBottom:
-          activeEnvironment &&
-            activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'window-bottom'
-            ? '5px solid ' + activeEnvironment.color
-            : undefined,
-        borderLeft:
-          activeEnvironment &&
-            activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'window-left'
-            ? '5px solid ' + activeEnvironment.color
-            : undefined,
-        borderRight:
-          activeEnvironment &&
-            activeEnvironment.color &&
-            settings.environmentHighlightColorStyle === 'window-right'
-            ? '5px solid ' + activeEnvironment.color
-            : undefined,
       }}
     >
       {renderPageHeader && <ErrorBoundary showAlert>{renderPageHeader}</ErrorBoundary>}
@@ -241,8 +216,6 @@ export const PageLayout: FC<Props> = ({
         <ErrorBoundary showAlert>
           <Sidebar
             ref={sidebarRef}
-            activeEnvironment={activeEnvironment}
-            environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             hidden={activeWorkspaceMeta?.sidebarHidden || false}
             width={sidebarWidth}
           >

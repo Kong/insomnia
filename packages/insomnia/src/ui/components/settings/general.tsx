@@ -1,4 +1,4 @@
-import { EnvironmentHighlightColorStyle, HttpVersion, HttpVersions, UpdateChannel } from 'insomnia-common';
+import { HttpVersion, HttpVersions, UpdateChannel } from 'insomnia-common';
 import React, { FC, Fragment } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -121,20 +121,6 @@ export const General: FC = () => {
       </div>
 
       <div className="row-fill row-fill--top pad-top-sm">
-        <EnumSetting<EnvironmentHighlightColorStyle>
-          label="Environment highlight style"
-          help="Select the sub-environment highlight area. Configure the highlight color itself in your environment settings."
-          setting="environmentHighlightColorStyle"
-          values={[
-            { value:'sidebar-indicator', name: 'Sidebar indicator' },
-            { value:'sidebar-edge', name: 'Sidebar edge' },
-            { value:'window-top', name: 'Window top' },
-            { value:'window-bottom', name: 'Window bottom' },
-            { value:'window-left', name: 'Window left' },
-            { value:'window-right', name: 'Window right' },
-          ]}
-        />
-
         <NumberSetting
           label="Autocomplete popup delay (ms)"
           setting="autocompleteDelay"
