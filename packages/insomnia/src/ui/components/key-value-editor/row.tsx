@@ -76,10 +76,6 @@ export const Row = forwardRef<RowHandle, Props>(({
     focusNameEnd: () => nameRef.current?.focusEnd(),
   }));
 
-  useEffect(() => {
-    nameRef.current?.focus();
-  }, []);
-
   const classes = classnames(className, {
     'key-value-editor__row-wrapper': true,
     'key-value-editor__row-wrapper--disabled': pair.disabled,

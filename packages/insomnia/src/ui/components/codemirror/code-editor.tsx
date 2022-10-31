@@ -297,7 +297,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     }
 
     const showGuttersAndLineNumbers = !hideGutters && !hideLineNumbers;
-    console.log({ showGuttersAndLineNumbers });
     const canAutocomplete = handleGetRenderContext || getAutocompleteConstants || getAutocompleteSnippets;
 
     const transformEnums = (
