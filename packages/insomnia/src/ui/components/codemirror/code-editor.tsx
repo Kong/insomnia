@@ -149,8 +149,6 @@ export interface CodeEditorHandle {
   setCursor: (ch: number, line: number) => void;
   setSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
   scrollToSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
-  getSelectionStart: () => void;
-  getSelectionEnd: () => void;
   selectAll: () => void;
   focus: () => void;
   focusEnd: () => void;
@@ -531,8 +529,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       // If sizing permits, position selection just above center
       codeMirror.current?.scrollIntoView({ line: lineStart, ch: chStart }, window.innerHeight / 2 - 100);
     },
-    getSelectionStart: () => codeMirror.current?.listSelections()?.[0].anchor.ch || 0,
-    getSelectionEnd: () => codeMirror.current?.listSelections()?.[0].head.ch || 0,
     focusEnd: () => {
       if (codeMirror.current && !codeMirror.current.hasFocus()) {
         codeMirror.current.focus();
