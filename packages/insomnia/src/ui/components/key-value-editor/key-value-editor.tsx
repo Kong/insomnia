@@ -1,11 +1,11 @@
 import classnames from 'classnames';
-import React, { FC, Fragment, useRef } from 'react';
+import React, { FC, Fragment } from 'react';
 import styled from 'styled-components';
 
 import { generateId } from '../../../common/misc';
 import { PromptButton } from '../base/prompt-button';
 import { createKeybindingsHandler } from '../keydown-binder';
-import { AutocompleteHandler, Pair, Row, RowHandle } from './row';
+import { AutocompleteHandler, Pair, Row } from './row';
 
 export const Toolbar = styled.div({
   boxSizing: 'content-box',
@@ -53,7 +53,6 @@ export const KeyValueEditor: FC<Props> = ({
   pairs,
   valuePlaceholder,
 }) => {
-  const rowRef = useRef<RowHandle>(null);
   // We should make the pair.id property required and pass them in from the parent
   const pairsWithIds = pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') }));
 
@@ -141,7 +140,6 @@ export const KeyValueEditor: FC<Props> = ({
           <Row
             key={pair.id}
             showDescription={showDescription}
-            ref={rowRef}
             namePlaceholder={namePlaceholder}
             valuePlaceholder={valuePlaceholder}
             descriptionPlaceholder={descriptionPlaceholder}

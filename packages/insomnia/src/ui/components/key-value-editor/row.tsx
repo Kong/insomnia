@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import React, { FC, useRef } from 'react';
 
 import { describeByteSize } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
@@ -45,10 +45,8 @@ interface Props {
   onKeydown?: (e: React.KeyboardEvent) => void;
   showDescription: boolean;
 }
-export interface RowHandle {
-  focusNameEnd: () => void;
-}
-export const Row = forwardRef<RowHandle, Props>(({
+
+export const Row: FC<Props> = ({
   allowFile,
   allowMultiline,
   className,
@@ -66,15 +64,10 @@ export const Row = forwardRef<RowHandle, Props>(({
   onKeydown,
   valuePlaceholder,
   showDescription,
-}, ref) => {
+}) => {
   const { enabled } = useNunjucksEnabled();
 
-  const nameRef = useRef<OneLineEditorHandle>(null);
   const valueRef = useRef<OneLineEditorHandle>(null);
-
-  useImperativeHandle(ref, () => ({
-    focusNameEnd: () => nameRef.current?.focusEnd(),
-  }));
 
   const classes = classnames(className, {
     'key-value-editor__row-wrapper': true,
@@ -99,7 +92,6 @@ export const Row = forwardRef<RowHandle, Props>(({
           })}
         >
           <OneLineEditor
-            ref={nameRef}
             placeholder={namePlaceholder || 'Name'}
             defaultValue={pair.name}
             getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
@@ -252,5 +244,5 @@ export const Row = forwardRef<RowHandle, Props>(({
       </div>
     </li>
   );
-});
+};
 Row.displayName = 'Row';
