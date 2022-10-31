@@ -30,10 +30,6 @@ export interface OneLineEditorHandle {
   focus: () => void;
   focusEnd: () => void;
   selectAll: () => void;
-  // NOTE: only used for some weird multiline paste logic
-  getValue: () => string | undefined;
-  getSelectionStart: () => void;
-  getSelectionEnd: () => void;
 }
 export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
   defaultValue,
@@ -53,24 +49,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
 
   const [isEditor, setIsEditor] = useState(forceEditor || mayContainNunjucks(defaultValue));
   useImperativeHandle(ref, () => ({
-    getValue: () => {
-      if (isEditor) {
-        return editorRef.current?.getValue();
-      }
-      return inputRef.current?.value;
-    },
-    getSelectionStart: () => {
-      if (isEditor) {
-        return editorRef.current?.getSelectionStart();
-      }
-      return inputRef.current?.selectionStart;
-    },
-    getSelectionEnd: () => {
-      if (isEditor) {
-        return editorRef.current?.getSelectionEnd();
-      }
-      return inputRef.current?.selectionEnd;
-    },
     focus: () => {
       if (isEditor) {
         editorRef.current && !editorRef.current.hasFocus() && editorRef.current?.focus();
@@ -98,7 +76,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
   }));
 
   const convertToEditorPreserveFocus = () => {
-    if (!isEditor || forceInput || !inputRef.current) {
+    if (isEditor || forceInput || !inputRef.current) {
       return;
     }
     if (inputRef.current === document.activeElement) {

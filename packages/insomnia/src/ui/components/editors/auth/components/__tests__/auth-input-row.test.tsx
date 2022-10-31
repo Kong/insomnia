@@ -81,7 +81,6 @@ describe('<AuthInputRow />', () => {
     // Act
     expect(await getInput()).not.toHaveFocus();
     await userEvent.click(await getInput());
-    expect(await getInput()).toHaveFocus();
 
     // NOTE: we are typing into a mocked CodeEditor component.
     await userEvent.type(await getInput(), 'inputValue');

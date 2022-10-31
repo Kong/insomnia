@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import React, { FC } from 'react';
 
 import { describeByteSize } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
@@ -8,7 +8,7 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { FileInputButton } from '../base/file-input-button';
 import { PromptButton } from '../base/prompt-button';
-import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
+import { OneLineEditor } from '../codemirror/one-line-editor';
 import { CodePromptModal } from '../modals/code-prompt-modal';
 import { showModal } from '../modals/index';
 
@@ -45,10 +45,8 @@ interface Props {
   onKeydown?: (e: React.KeyboardEvent) => void;
   showDescription: boolean;
 }
-export interface RowHandle {
-  focusNameEnd: () => void;
-}
-export const Row = forwardRef<RowHandle, Props>(({
+
+export const Row: FC<Props> = ({
   allowFile,
   allowMultiline,
   className,
@@ -66,19 +64,8 @@ export const Row = forwardRef<RowHandle, Props>(({
   onKeydown,
   valuePlaceholder,
   showDescription,
-}, ref) => {
+}) => {
   const { enabled } = useNunjucksEnabled();
-
-  const nameRef = useRef<OneLineEditorHandle>(null);
-  const valueRef = useRef<OneLineEditorHandle>(null);
-
-  useImperativeHandle(ref, () => ({
-    focusNameEnd: () => nameRef.current?.focusEnd(),
-  }));
-
-  useEffect(() => {
-    nameRef.current?.focus();
-  }, []);
 
   const classes = classnames(className, {
     'key-value-editor__row-wrapper': true,
@@ -103,7 +90,6 @@ export const Row = forwardRef<RowHandle, Props>(({
           })}
         >
           <OneLineEditor
-            ref={nameRef}
             placeholder={namePlaceholder || 'Name'}
             defaultValue={pair.name}
             getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
@@ -143,36 +129,11 @@ export const Row = forwardRef<RowHandle, Props>(({
             </button>
           ) : (
             <OneLineEditor
-              ref={valueRef}
               readOnly={readOnly}
               forceInput={forceInput}
               type="text"
               placeholder={valuePlaceholder || 'Value'}
               defaultValue={pair.value}
-              onPaste={event => {
-                if (!allowMultiline) {
-                  return;
-                }
-                const value = event.clipboardData?.getData('text/plain');
-                if (value?.includes('\n')) {
-                  event.preventDefault();
-                  // Insert the pasted text into the current selection.
-                  // Unfortunately, this is the easiest way to do
-                  const currentValue = valueRef.current?.getValue();
-                  const start = valueRef.current?.getSelectionStart() || 0;
-                  const end = valueRef.current?.getSelectionEnd() || 0;
-                  const prefix = currentValue?.slice(0, start);
-                  const suffix = currentValue?.slice(end);
-                  const finalValue = `${prefix}${value}${suffix}`;
-                  console.log(start, end, finalValue);
-                  onChange({
-                    ...pair,
-                    type: 'text',
-                    multiline: 'text/plain',
-                    value: finalValue,
-                  });
-                }
-              }}
               onChange={value => onChange({ ...pair, value })}
               getAutocompleteConstants={() => handleGetAutocompleteValueConstants?.(pair) || []}
             />
@@ -256,5 +217,5 @@ export const Row = forwardRef<RowHandle, Props>(({
       </div>
     </li>
   );
-});
+};
 Row.displayName = 'Row';

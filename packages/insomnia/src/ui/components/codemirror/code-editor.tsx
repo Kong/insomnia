@@ -149,8 +149,6 @@ export interface CodeEditorHandle {
   setCursor: (ch: number, line: number) => void;
   setSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
   scrollToSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
-  getSelectionStart: () => void;
-  getSelectionEnd: () => void;
   selectAll: () => void;
   focus: () => void;
   focusEnd: () => void;
@@ -298,11 +296,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
 
     const showGuttersAndLineNumbers = !hideGutters && !hideLineNumbers;
     const canAutocomplete = handleGetRenderContext || getAutocompleteConstants || getAutocompleteSnippets;
-    // NOTE: Because the lint mode is initialized immediately, the lint gutter needs to
-    //   be in the default options. DO NOT REMOVE THIS.
-    const gutters = showGuttersAndLineNumbers ?
-      ['CodeMirror-lint-markers', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter']
-      : ['CodeMirror-lint-markers'];
 
     const transformEnums = (
       tagDef: NunjucksParsedTag
@@ -346,7 +339,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       // Only set keyMap if we're not read-only. This is so things like ctrl-a work on read-only mode.
       keyMap: !readOnly && settings.editorKeyMap ? settings.editorKeyMap : 'default',
       extraKeys: CodeMirror.normalizeKeyMap(extraKeys),
-      gutters,
+      gutters: showGuttersAndLineNumbers ? ['CodeMirror-lint-markers', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter'] : [],
       foldOptions: { widget: (from: CodeMirror.Position, to: CodeMirror.Position) => widget(codeMirror.current, from, to) },
       mode: !handleRender ? normalizeMimeType(mode) : {
         name: 'nunjucks',
@@ -536,8 +529,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       // If sizing permits, position selection just above center
       codeMirror.current?.scrollIntoView({ line: lineStart, ch: chStart }, window.innerHeight / 2 - 100);
     },
-    getSelectionStart: () => codeMirror.current?.listSelections()?.[0].anchor.ch || 0,
-    getSelectionEnd: () => codeMirror.current?.listSelections()?.[0].head.ch || 0,
     focusEnd: () => {
       if (codeMirror.current && !codeMirror.current.hasFocus()) {
         codeMirror.current.focus();
