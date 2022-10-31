@@ -1,23 +1,26 @@
-import React, { FC, useCallback } from 'react';
+import { invariant } from '@remix-run/router';
+import React, { FC } from 'react';
+import { useSelector } from 'react-redux';
 
-import { update } from '../../../models/helpers/request-operations';
-import type { Request, RequestParameter } from '../../../models/request';
-import { WebSocketRequest } from '../../../models/websocket-request';
+import { updateById } from '../../../models/helpers/request-operations';
+import type {  RequestParameter } from '../../../models/request';
+import { selectActiveRequest } from '../../redux/selectors';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
   bulk: boolean;
-  request: Request | WebSocketRequest;
   disabled?: boolean;
+  requestId: string;
 }
 
 export const RequestParametersEditor: FC<Props> = ({
-  request,
   bulk,
   disabled = false,
+  requestId,
 }) => {
-  const handleBulkUpdate = useCallback((paramsString: string) => {
+  const parameters = useSelector(selectActiveRequest)?.parameters || [];
+  const handleBulkUpdate = (paramsString: string) => {
     const parameters: {
       name: string;
       value: string;
@@ -38,11 +41,11 @@ export const RequestParametersEditor: FC<Props> = ({
         value,
       });
     }
-    update(request, { parameters });
-  }, [request]);
+    updateById(requestId, { parameters });
+  };
 
   let paramsString = '';
-  for (const param of request.parameters) {
+  for (const param of parameters) {
     // Make sure it's not disabled
     if (param.disabled) {
       continue;
@@ -51,14 +54,9 @@ export const RequestParametersEditor: FC<Props> = ({
     if (!param.name && !param.value) {
       continue;
     }
-
     paramsString += `${param.name}: ${param.value}\n`;
   }
-
-  const onChangeParameter = useCallback((parameters: RequestParameter[]) => {
-    update(request, { parameters });
-  }, [request]);
-
+  console.log(paramsString);
   if (bulk) {
     return (
       <CodeEditor
@@ -76,8 +74,11 @@ export const RequestParametersEditor: FC<Props> = ({
       namePlaceholder="name"
       valuePlaceholder="value"
       descriptionPlaceholder="description"
-      pairs={request.parameters}
-      onChange={onChangeParameter}
+      pairs={parameters}
+      onChange={(parameters: RequestParameter[]) => {
+        console.log('change', parameters);
+        updateById(requestId, { parameters });
+      }}
       isDisabled={disabled}
     />
   );

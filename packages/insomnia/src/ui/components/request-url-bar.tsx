@@ -13,12 +13,12 @@ import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
 import * as models from '../../models';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isRequest, Request } from '../../models/request';
+import { isRequest } from '../../models/request';
 import * as network from '../../network/network';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { loadRequestStart, loadRequestStop } from '../redux/modules/global';
-import { selectActiveEnvironment, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
+import { selectActiveEnvironment, selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
 import { type DropdownHandle, Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownDivider } from './base/dropdown/dropdown-divider';
@@ -35,7 +35,6 @@ import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;
-  request: Request;
   uniquenessKey: string;
 }
 
@@ -45,29 +44,20 @@ export interface RequestUrlBarHandle {
 
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   handleAutocompleteUrls,
-  request,
   uniquenessKey,
 }, ref) => {
   const downloadPath = useSelector(selectResponseDownloadPath);
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const settings = useSelector(selectSettings);
+  const request = useSelector(selectActiveRequest);
   const dispatch = useDispatch();
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditorHandle>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const handleGenerateCode = () => {
-    showModal(GenerateCodeModal, { request });
-  };
-  const focusInput = useCallback(() => {
-    if (inputRef.current) {
-      inputRef.current.focusEnd();
-    }
-  }, [inputRef]);
-
-  useImperativeHandle(ref, () => ({ focusInput }), [focusInput]);
+  useImperativeHandle(ref, () => ({ focusInput: () => inputRef.current?.focusEnd() }));
 
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
@@ -92,11 +82,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     return filePath;
   }
 
-  const sendThenSetFilePath = useCallback(async (filePath?: string) => {
-    if (!request) {
-      return;
-    }
-
+  const sendThenSetFilePath = async (filePath?: string) => {
+    invariant(request, 'No request');
     // Update request stats
     models.stats.incrementExecutedRequests();
     trackSegmentEvent(SegmentEvent.requestExecute, {
@@ -176,9 +163,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       // Stop loading
       dispatch(loadRequestStop(request._id));
     }
-  }, [activeEnvironment, dispatch, request, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  };
 
-  const handleSend = useCallback(async () => {
+  const handleSend = async () => {
     if (!request) {
       return;
     }
@@ -217,25 +204,26 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     await updateRequestMetaByParentId(request._id, { activeResponseId: null });
     // Stop loading
     dispatch(loadRequestStop(request._id));
-  }, [activeEnvironment, dispatch, request, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  };
 
-  const send = useCallback(() => {
+  const send = () => {
     setCurrentTimeout(undefined);
     if (downloadPath) {
       sendThenSetFilePath(downloadPath);
     } else {
       handleSend();
     }
-  }, [downloadPath, handleSend, sendThenSetFilePath]);
+  };
 
   useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
+
   const handleStop = () => {
     setCurrentInterval(null);
     setCurrentTimeout(undefined);
   };
 
-  const handleSendOnInterval = useCallback(() => {
+  const handleSendOnInterval = () => {
     showPrompt({
       inputType: 'decimal',
       title: 'Send on Interval',
@@ -246,7 +234,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         setCurrentInterval(+seconds * 1000);
       },
     });
-  }, []);
+  };
 
   const handleSendAfterDelay = () => {
     showPrompt({
@@ -260,7 +248,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     });
   };
 
-  const downloadAfterSend = useCallback(async () => {
+  const downloadAfterSend = async () => {
+    invariant(request, 'No request');
     const { canceled, filePaths } = await window.dialog.showOpenDialog({
       title: 'Select Download Location',
       buttonLabel: 'Select',
@@ -270,8 +259,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       return;
     }
     updateRequestMetaByParentId(request._id, { downloadPath: filePaths[0] });
-  }, [request._id]);
-  const handleClearDownloadLocation = () => updateRequestMetaByParentId(request._id, { downloadPath: null });
+  };
 
   useDocBodyKeyboardShortcuts({
     request_focusUrl: () => {
@@ -300,7 +288,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   });
 
   const lastPastedTextRef = useRef('');
-  const handleImport = useCallback(async (text: string) => {
+  const handleImport = async (text: string) => {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
     try {
@@ -328,14 +316,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       console.error(error);
     }
     return null;
-  }, [request]);
+  };
 
-  const handleUrlChange = useCallback(async (url: string) => {
+  const handleUrlChange = async (url: string) => {
     invariant(request, 'Request required');
     const pastedText = lastPastedTextRef.current;
     // If no pasted text in the queue, just fire the regular change handler
     if (!pastedText) {
-      requestOperations.update(request, { url });
+      requestOperations.updateById(request._id, { url });
       return;
     }
     // Reset pasted text cache
@@ -344,14 +332,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     const importedRequest = await handleImport(pastedText);
     // Update depending on whether something was imported
     if (!importedRequest) {
-      requestOperations.update(request, { url });
+      requestOperations.updateById(request._id, { url });
     }
-  }, [handleImport, request]);
+  };
 
-  const handleUrlPaste = useCallback((event: ClipboardEvent) => {
+  const handleUrlPaste = (event: ClipboardEvent) => {
     // NOTE: We're not actually doing the import here to avoid races with onChange
     lastPastedTextRef.current = event.clipboardData?.getData('text/plain') || '';
-  }, []);
+  };
 
   const { url, method } = request;
   const isCancellable = currentInterval || currentTimeout;
@@ -359,7 +347,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     <div className="urlbar">
       <MethodDropdown
         ref={methodDropdownRef}
-        onChange={method => requestOperations.update(request, { method })}
+        onChange={method => {
+          invariant(request, 'Request required');
+          requestOperations.updateById(request._id, { method });
+        }}
         method={method}
       />
       <div className="urlbar__flex__right">
@@ -411,21 +402,35 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                 <i className="fa fa-arrow-circle-o-right" /> Send Now
                 <DropdownHint keyBindings={hotKeyRegistry.request_send} />
               </DropdownItem>
-              <DropdownItem onClick={handleGenerateCode}>
+              <DropdownItem onClick={() => showModal(GenerateCodeModal, { request })}>
                 <i className="fa fa-code" /> Generate Client Code
               </DropdownItem>
               <DropdownDivider>Advanced</DropdownDivider>
               <DropdownItem onClick={handleSendAfterDelay}>
                 <i className="fa fa-clock-o" /> Send After Delay
               </DropdownItem>
-              <DropdownItem onClick={handleSendOnInterval}>
+              <DropdownItem
+                onClick={() => showPrompt({
+                  inputType: 'decimal',
+                  title: 'Send on Interval',
+                  label: 'Interval in seconds',
+                  defaultValue: '3',
+                  submitName: 'Start',
+                  onComplete: seconds => {
+                    setCurrentInterval(+seconds * 1000);
+                  },
+                })}
+              >
                 <i className="fa fa-repeat" /> Repeat on Interval
               </DropdownItem>
               {downloadPath ? (
                 <DropdownItem
                   stayOpenAfterClick
                   buttonClass={PromptButton}
-                  onClick={handleClearDownloadLocation}
+                  onClick={() => {
+                    invariant(request, 'No request');
+                    updateRequestMetaByParentId(request._id, { downloadPath: null });
+                  }}
                 >
                   <i className="fa fa-stop-circle" /> Stop Auto-Download
                 </DropdownItem>
@@ -441,7 +446,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           </>
         )}
       </div>
-    </div>
+    </div >
   );
 });
 

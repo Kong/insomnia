@@ -1,7 +1,7 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC } from 'react';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
-import { update } from '../../../models/helpers/request-operations';
+import { updateById } from '../../../models/helpers/request-operations';
 import type { Request, RequestHeader } from '../../../models/request';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { CodeEditor } from '../codemirror/code-editor';
@@ -18,30 +18,26 @@ export const RequestHeadersEditor: FC<Props> = ({
   bulk,
   isDisabled,
 }) => {
-  const handleBulkUpdate = useCallback((headersString: string) => {
+  const handleBulkUpdate = (headersString: string) => {
     const headers: {
       name: string;
       value: string;
     }[] = [];
-
     const rows = headersString.split(/\n+/);
     for (const row of rows) {
       const [rawName, rawValue] = row.split(/:(.*)$/);
       const name = (rawName || '').trim();
       const value = (rawValue || '').trim();
-
       if (!name && !value) {
         continue;
       }
-
       headers.push({
         name,
         value,
       });
     }
-
-    update(request, { headers });
-  }, [request]);
+    updateById(request._id, { headers });
+  };
 
   let headersString = '';
   for (const header of request.headers) {
@@ -56,10 +52,6 @@ export const RequestHeadersEditor: FC<Props> = ({
 
     headersString += `${header.name}: ${header.value}\n`;
   }
-
-  const onChangeHeaders = useCallback((headers: RequestHeader[]) => {
-    update(request, { headers });
-  }, [request]);
 
   if (bulk) {
     return (
@@ -81,7 +73,9 @@ export const RequestHeadersEditor: FC<Props> = ({
       pairs={request.headers}
       handleGetAutocompleteNameConstants={getCommonHeaderNames}
       handleGetAutocompleteValueConstants={getCommonHeaderValues}
-      onChange={onChangeHeaders}
+      onChange={(headers: RequestHeader[]) => {
+        updateById(request._id, { headers });
+      }}
       isDisabled={isDisabled}
       isWebSocketRequest={isWebSocketRequest(request)}
     />

@@ -10,7 +10,7 @@ import { KeyCombination } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useMount } from 'react-use';
 import vkBeautify from 'vkbeautify';
@@ -234,7 +234,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     handleRender,
     handleGetRenderContext,
   } = useGatedNunjucks({ disabled: !enableNunjucks });
-  const prettifyXML = useCallback((code: string, filter?:string) => {
+  const prettifyXML = (code: string, filter?:string) => {
     if (updateFilter && filter) {
       try {
         const results = queryXPath(code, filter);
@@ -250,8 +250,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       // Failed to parse so just return original
       return code;
     }
-  }, [indentChars, updateFilter]);
-  const prettifyJSON = useCallback((code: string, filter?:string) => {
+  };
+  const prettifyJSON = (code: string, filter?:string) => {
     try {
       let jsonString = code;
       if (updateFilter && filter) {
@@ -269,15 +269,15 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       // That's Ok, just leave it
       return code;
     }
-  }, [autoPrettify, indentChars, updateFilter]);
-  const maybePrettifyAndSetValue = useCallback((code?: string, forcePrettify?: boolean, filter?: string) => {
+  };
+  const maybePrettifyAndSetValue = (code?: string, forcePrettify?: boolean, filter?: string) => {
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
     }
-    setOriginalCode(code);
     const shouldPrettify = forcePrettify || autoPrettify;
     if (shouldPrettify) {
+      setOriginalCode(code);
       if (mode?.includes('xml')) {
         code = prettifyXML(code, filter);
       } else if (mode?.includes('json')) {
@@ -290,7 +290,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       return;
     }
     codeMirror.current?.setValue(code || '');
-  }, [autoPrettify, mode, prettifyJSON, prettifyXML]);
+  };
 
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody: () => {

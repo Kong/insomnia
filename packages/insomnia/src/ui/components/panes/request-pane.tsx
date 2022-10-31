@@ -1,6 +1,7 @@
+import { invariant } from '@remix-run/router';
 import classnames from 'classnames';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
-import React, { FC, useCallback, useEffect, useRef } from 'react';
+import React, { FC, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
@@ -69,33 +70,10 @@ export const RequestPane: FC<Props> = ({
   settings,
   workspace,
 }) => {
+  console.log('rerender', request?.body.mimeType);
 
-  const handleEditDescription = useCallback((forceEditMode: boolean) => {
-    showModal(RequestSettingsModal, { request, forceEditMode });
-  }, [request]);
-
-  const handleEditDescriptionAdd = useCallback(() => {
-    handleEditDescription(true);
-  }, [handleEditDescription]);
-
-  const autocompleteUrls = useCallback(() => {
-    return queryAllWorkspaceUrls(workspace, models.request.type, request?._id);
-  }, [workspace, request]);
-
-  const handleUpdateSettingsUseBulkHeaderEditor = useCallback(() => {
-    models.settings.update(settings, { useBulkHeaderEditor:!settings.useBulkHeaderEditor });
-  }, [settings]);
-
-  const handleUpdateSettingsUseBulkParametersEditor = useCallback(() => {
-    models.settings.update(settings, { useBulkParametersEditor:!settings.useBulkParametersEditor });
-  }, [settings]);
-
-  const handleImportQueryFromUrl = useCallback(() => {
-    if (!request) {
-      console.warn('Tried to import query when no request active');
-      return;
-    }
-
+  const handleImportQueryFromUrl = () => {
+    invariant(request, 'Tried to import query when no request active');
     let query;
 
     try {
@@ -116,10 +94,10 @@ export const RequestPane: FC<Props> = ({
         modified: Date.now(),
         url,
         parameters,
-      // Hack to force the ui to refresh. More info on use-vcs-version
+        // Hack to force the ui to refresh. More info on use-vcs-version
       }, true);
     }
-  }, [request]);
+  };
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const activeEnvironment = useSelector(selectActiveEnvironment);
@@ -154,9 +132,8 @@ export const RequestPane: FC<Props> = ({
             key={request._id}
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
-            handleAutocompleteUrls={autocompleteUrls}
+            handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspace, models.request.type, request?._id)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            request={request}
           />
         </ErrorBoundary>
       </PaneHeader>
@@ -226,7 +203,7 @@ export const RequestPane: FC<Props> = ({
             >
               <RequestParametersEditor
                 key={contentType}
-                request={request}
+                requestId={request._id}
                 bulk={settings.useBulkParametersEditor}
               />
             </ErrorBoundary>
@@ -241,7 +218,7 @@ export const RequestPane: FC<Props> = ({
             </button>
             <button
               className="btn btn--compact"
-              onClick={handleUpdateSettingsUseBulkParametersEditor}
+              onClick={() => models.settings.update(settings, { useBulkParametersEditor: !settings.useBulkParametersEditor })}
             >
               {settings.useBulkParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
             </button>
@@ -260,7 +237,7 @@ export const RequestPane: FC<Props> = ({
           <TabPanelFooter>
             <button
               className="btn btn--compact"
-              onClick={handleUpdateSettingsUseBulkHeaderEditor}
+              onClick={() => models.settings.update(settings, { useBulkHeaderEditor: !settings.useBulkHeaderEditor })}
             >
               {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
             </button>
@@ -270,8 +247,7 @@ export const RequestPane: FC<Props> = ({
           {request.description ? (
             <div>
               <div className="pull-right pad bg-default">
-                {/* @ts-expect-error -- TSCONVERSION the click handler expects a boolean prop... */}
-                <button className="btn btn--clicky" onClick={handleEditDescription}>
+                <button className="btn btn--clicky" onClick={() => showModal(RequestSettingsModal, { request, forceEditMode: false })}>
                   Edit
                 </button>
               </div>
@@ -300,7 +276,7 @@ export const RequestPane: FC<Props> = ({
                 <br />
                 <button
                   className="btn btn--clicky faint"
-                  onClick={handleEditDescriptionAdd}
+                  onClick={() => showModal(RequestSettingsModal, { request, forceEditMode: true })}
                 >
                   Add Description
                 </button>

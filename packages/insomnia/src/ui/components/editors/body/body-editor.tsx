@@ -48,26 +48,26 @@ export const BodyEditor: FC<Props> = ({
   settings,
   environmentId,
 }) => {
-  const handleRawChange = useCallback((rawValue: string) => {
+  const handleRawChange = (rawValue: string) => {
     const oldContentType = request.body.mimeType || '';
     const body = newBodyRaw(rawValue, oldContentType);
     models.request.update(request, { body });
-  }, [request]);
+  };
 
-  const handleGraphQLChange = useCallback((content: string) => {
+  const handleGraphQLChange = (content: string) => {
     const body = newBodyRaw(content, CONTENT_TYPE_GRAPHQL);
     models.request.update(request, { body });
-  }, [request]);
+  };
 
-  const handleFormUrlEncodedChange = useCallback((parameters: RequestBodyParameter[]) => {
+  const handleFormUrlEncodedChange = (parameters: RequestBodyParameter[]) => {
     const body = newBodyFormUrlEncoded(parameters);
     models.request.update(request, { body });
-  }, [request]);
+  };
 
-  const handleFormChange = useCallback((parameters: RequestBodyParameter[]) => {
+  const handleFormChange = (parameters: RequestBodyParameter[]) => {
     const body = newBodyForm(parameters);
     models.request.update(request, { body });
-  }, [request]);
+  };
 
   const handleFileChange = async (path: string) => {
     const headers = clone(request.headers);

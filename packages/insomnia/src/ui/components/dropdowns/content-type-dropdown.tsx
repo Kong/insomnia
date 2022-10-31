@@ -1,5 +1,5 @@
 import { invariant } from '@remix-run/router';
-import React, { FC, useCallback } from 'react';
+import React, { FC } from 'react';
 import { useSelector } from 'react-redux';
 
 import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
@@ -41,7 +41,7 @@ const MimeTypeItem: FC<{
   const request = useSelector(selectActiveRequest);
   const activeRequest = request && !isWebSocketRequest(request) ? request : null;
 
-  const handleChangeMimeType = useCallback(async (mimeType: string | null) => {
+  const handleChangeMimeType = async (mimeType: string | null) => {
     if (!activeRequest) {
       return;
     }
@@ -78,7 +78,7 @@ const MimeTypeItem: FC<{
 
     onChange(mimeType);
     trackSegmentEvent(SegmentEvent.requestBodyTypeSelect, { type: mimeType });
-  }, [onChange, activeRequest]);
+  };
 
   const contentType = activeRequest?.body && 'mimeType' in activeRequest.body ? activeRequest.body.mimeType : null;
   const contentTypeFallback = typeof contentType === 'string' ? contentType : EMPTY_MIME_TYPE;
@@ -99,11 +99,12 @@ export const ContentTypeDropdown: FC = () => {
 
   const onChange = async (mimeType: string | null): Promise<Request | null> => {
     invariant(request, 'No active request');
-    const requestMeta = await models.requestMeta.getOrCreateByParentId(request._id,);
+    const requestMeta = await models.requestMeta.getOrCreateByParentId(request._id);
     // Switched to No body
     const savedRequestBody = typeof mimeType !== 'string' ? request.body : {};
     // Clear saved value in requestMeta
     await models.requestMeta.update(requestMeta, { savedRequestBody });
+    console.log('updated', { 'from': request.body.mimeType, 'to': mimeType });
     // @ts-expect-error -- TSCONVERSION mimeType can be null when no body is selected but the updateMimeType logic needs to be reexamined
     return models.request.updateMimeType(request, mimeType, false, requestMeta.savedRequestBody);
   };
