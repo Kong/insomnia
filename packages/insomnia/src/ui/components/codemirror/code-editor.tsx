@@ -203,44 +203,43 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   };
   const { handleRender, handleGetRenderContext } = useGatedNunjucks({ disabled: !enableNunjucks });
 
-  const prettifyAndSetValue = useCallback((code?: string, filter?: string) => {
+  const setValue = useCallback((code?: string, filter?: string) => {
     invariant(typeof code === 'string', 'Code editor was passed non-string value');
     setOriginalCode(code);
-    if (autoPrettify) {
-      if (mode?.includes('xml')) {
-        if (filter) {
-          try {
-            const results = queryXPath(code, filter);
-            code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
-          } catch (err) {
-            code = `<error>${err.message}</error>`;
-          }
-        }
-        try {
-          code = vkBeautify.xml(code, indentChars);
-        } catch (error) { }
-      } else if (mode?.includes('json')) {
-        try {
-          let jsonString = code;
-          if (filter) {
-            try {
-              const codeObj = JSON.parse(code);
-              const results = JSONPath({ json: codeObj, path: filter.trim() });
-              jsonString = JSON.stringify(results);
-            } catch (err) {
-              console.log('[jsonpath] Error: ', err);
-              jsonString = '[]';
-            }
-          }
-          code = jsonPrettify(jsonString, indentChars, autoPrettify);
-        } catch (error) { }
+    if (mode?.includes('xml') && filter) {
+      try {
+        const results = queryXPath(code, filter);
+        code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
+      } catch (err) {
+        code = `<error>${err.message}</error>`;
+      }
+    } else if (mode?.includes('json') && filter) {
+      try {
+        const codeObj = JSON.parse(code);
+        const results = JSONPath({ json: codeObj, path: filter.trim() });
+        code = JSON.stringify(results);
+      } catch (err) {
+        console.log('[jsonpath] Error: ', err);
+        code = '[]';
       }
     }
     // this prevents codeMirror from needlessly setting the same thing repeatedly (which has the effect of moving the user's cursor and resetting the viewport scroll: a bad user experience)
     if (codeMirror.current?.getValue() !== code) {
       codeMirror.current?.setValue(code || '');
     }
-  }, [autoPrettify, indentChars, mode]);
+  }, [mode]);
+
+  const prettifyAndSetValue = useCallback((code?: string) => {
+    invariant(typeof code === 'string', 'Code editor was passed non-string value');
+    try {
+      if (mode?.includes('xml')) {
+        code = vkBeautify.xml(code, indentChars);
+      } else if (mode?.includes('json')) {
+        code = jsonPrettify(code, indentChars, autoPrettify);
+      }
+    } catch (error) { }
+    setValue(code);
+  }, [autoPrettify, indentChars, mode, setValue]);
 
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody: () => {
@@ -395,7 +394,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     codeMirror.current.setCursor({ line: -1, ch: -1 });
 
     // Actually set the value
-    prettifyAndSetValue(defaultValue || '', filter);
+    setValue(defaultValue || '', filter);
     // Clear history so we can't undo the initial set
     codeMirror.current?.clearHistory();
     // Setup nunjucks listeners
@@ -531,7 +530,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                     if (updateFilter) {
                       updateFilter(filter || '');
                     }
-                    prettifyAndSetValue(originalCode, filter);
+                    setValue(originalCode, filter);
                   },
                 })}
                 onChange={e => {
@@ -539,7 +538,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                     if (updateFilter) {
                       updateFilter('');
                     }
-                    prettifyAndSetValue(originalCode);
+                    setValue(originalCode);
                   }
                 }}
               />) : null}
@@ -559,7 +558,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                         if (updateFilter) {
                           updateFilter(filter);
                         }
-                        prettifyAndSetValue(originalCode, filter);
+                        setValue(originalCode, filter);
                       }}
                     >
                       {filter}
