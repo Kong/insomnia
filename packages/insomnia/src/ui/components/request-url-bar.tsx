@@ -1,3 +1,4 @@
+import { invariant } from '@remix-run/router';
 import type { SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import * as importers from 'insomnia-importers';
@@ -11,13 +12,13 @@ import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
 import * as models from '../../models';
-import { update } from '../../models/helpers/request-operations';
+import * as requestOperations from '../../models/helpers/request-operations';
 import { isRequest, Request } from '../../models/request';
 import * as network from '../../network/network';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { loadRequestStart, loadRequestStop } from '../redux/modules/global';
-import { selectActiveEnvironment, selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
+import { selectActiveEnvironment, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
 import { type DropdownHandle, Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownDivider } from './base/dropdown/dropdown-divider';
@@ -34,7 +35,6 @@ import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;
-  onUrlChange: (r: Request, url: string) => Promise<Request>;
   request: Request;
   uniquenessKey: string;
 }
@@ -45,14 +45,12 @@ export interface RequestUrlBarHandle {
 
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   handleAutocompleteUrls,
-  onUrlChange,
   request,
   uniquenessKey,
 }, ref) => {
   const downloadPath = useSelector(selectResponseDownloadPath);
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeRequest = useSelector(selectActiveRequest);
   const settings = useSelector(selectSettings);
   const dispatch = useDispatch();
   const methodDropdownRef = useRef<DropdownHandle>(null);
@@ -309,10 +307,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       const { data } = await importers.convert(text);
       const { resources } = data;
       const r = resources[0];
-      if (r && r._type === 'request' && activeRequest && isRequest(activeRequest)) {
+      if (r && r._type === 'request' && request && isRequest(request)) {
         // Only pull fields that we want to update
         return database.update({
-          ...activeRequest,
+          ...request,
           modified: Date.now(),
           url: r.url,
           method: r.method,
@@ -330,13 +328,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       console.error(error);
     }
     return null;
-  }, [activeRequest]);
+  }, [request]);
 
   const handleUrlChange = useCallback(async (url: string) => {
+    invariant(request, 'Request required');
     const pastedText = lastPastedTextRef.current;
     // If no pasted text in the queue, just fire the regular change handler
     if (!pastedText) {
-      onUrlChange(request, url);
+      requestOperations.update(request, { url });
       return;
     }
     // Reset pasted text cache
@@ -345,19 +344,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     const importedRequest = await handleImport(pastedText);
     // Update depending on whether something was imported
     if (!importedRequest) {
-      onUrlChange(request, url);
+      requestOperations.update(request, { url });
     }
-  }, [handleImport, onUrlChange, request]);
+  }, [handleImport, request]);
 
   const handleUrlPaste = useCallback((event: ClipboardEvent) => {
     // NOTE: We're not actually doing the import here to avoid races with onChange
     lastPastedTextRef.current = event.clipboardData?.getData('text/plain') || '';
-  }, []);
-
-  const onMethodChange = useCallback((method: string) => update(request, { method }), [request]);
-
-  const handleSendDropdownHide = useCallback(() => {
-    buttonRef.current?.blur();
   }, []);
 
   const { url, method } = request;
@@ -366,7 +359,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     <div className="urlbar">
       <MethodDropdown
         ref={methodDropdownRef}
-        onChange={methodValue => onMethodChange(methodValue)}
+        onChange={method => requestOperations.update(request, { method })}
         method={method}
       />
       <div className="urlbar__flex__right">
@@ -405,7 +398,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               className="tall"
               right
               ref={dropdownRef}
-              onHide={handleSendDropdownHide}
+              onHide={() => buttonRef.current?.blur()}
             >
               <DropdownButton
                 className="urlbar__send-context"

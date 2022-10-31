@@ -9,7 +9,6 @@ import { getContentTypeFromHeaders } from '../../../common/constants';
 import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { update } from '../../../models/helpers/request-operations';
 import type { Request } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
 import type { Workspace } from '../../../models/workspace';
@@ -70,13 +69,6 @@ export const RequestPane: FC<Props> = ({
   settings,
   workspace,
 }) => {
-
-  const updateRequestUrl = (request: Request, url: string) => {
-    if (request.url === url) {
-      return Promise.resolve(request);
-    }
-    return update(request, { url });
-  };
 
   const handleEditDescription = useCallback((forceEditMode: boolean) => {
     showModal(RequestSettingsModal, { request, forceEditMode });
@@ -150,19 +142,6 @@ export const RequestPane: FC<Props> = ({
     );
   }
 
-  async function updateRequestMimeType(mimeType: string | null): Promise<Request | null> {
-    if (!request) {
-      console.warn('Tried to update request mime-type when no active request');
-      return null;
-    }
-    const requestMeta = await models.requestMeta.getOrCreateByParentId(request._id,);
-    // Switched to No body
-    const savedRequestBody = typeof mimeType !== 'string' ? request.body : {};
-    // Clear saved value in requestMeta
-    await models.requestMeta.update(requestMeta, { savedRequestBody });
-    // @ts-expect-error -- TSCONVERSION mimeType can be null when no body is selected but the updateMimeType logic needs to be reexamined
-    return models.request.updateMimeType(request, mimeType, false, requestMeta.savedRequestBody);
-  }
   const numParameters = request.parameters.filter(p => !p.disabled).length;
   const numHeaders = request.headers.filter(h => !h.disabled).length;
   const urlHasQueryParameters = request.url.indexOf('?') >= 0;
@@ -175,7 +154,6 @@ export const RequestPane: FC<Props> = ({
             key={request._id}
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
-            onUrlChange={updateRequestUrl}
             handleAutocompleteUrls={autocompleteUrls}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             request={request}
@@ -185,7 +163,7 @@ export const RequestPane: FC<Props> = ({
       <Tabs className={classnames(paneBodyClasses, 'react-tabs')}>
         <TabList>
           <Tab tabIndex="-1">
-            <ContentTypeDropdown onChange={updateRequestMimeType} />
+            <ContentTypeDropdown />
           </Tab>
           <Tab tabIndex="-1">
             <AuthDropdown />

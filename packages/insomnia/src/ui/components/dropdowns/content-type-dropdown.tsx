@@ -1,3 +1,4 @@
+import { invariant } from '@remix-run/router';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -15,6 +16,8 @@ import {
   CONTENT_TYPE_YAML,
   getContentTypeName,
 } from '../../../common/constants';
+import * as models from '../../../models';
+import { isRequest } from '../../../models/request';
 import { isWebSocketRequest } from '../../../models/websocket-request';
 import { selectActiveRequest } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
@@ -23,10 +26,6 @@ import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { AlertModal } from '../modals/alert-modal';
 import { showModal } from '../modals/index';
-
-interface Props {
-  onChange: (mimeType: string | null) => void;
-}
 
 const EMPTY_MIME_TYPE = null;
 
@@ -93,14 +92,22 @@ const MimeTypeItem: FC<{
 };
 MimeTypeItem.displayName = DropdownItem.name;
 
-export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
+export const ContentTypeDropdown: FC = () => {
   const request = useSelector(selectActiveRequest);
-  const activeRequest = request && !isWebSocketRequest(request) ? request : null;
+  invariant(request, 'No active request');
+  invariant(isRequest(request), 'Active request is not a http request');
 
-  if (!activeRequest) {
-    return null;
-  }
-  const { body } = activeRequest;
+  const onChange = async (mimeType: string | null): Promise<Request | null> => {
+    invariant(request, 'No active request');
+    const requestMeta = await models.requestMeta.getOrCreateByParentId(request._id,);
+    // Switched to No body
+    const savedRequestBody = typeof mimeType !== 'string' ? request.body : {};
+    // Clear saved value in requestMeta
+    await models.requestMeta.update(requestMeta, { savedRequestBody });
+    // @ts-expect-error -- TSCONVERSION mimeType can be null when no body is selected but the updateMimeType logic needs to be reexamined
+    return models.request.updateMimeType(request, mimeType, false, requestMeta.savedRequestBody);
+  };
+  const { body } = request;
   const hasMimeType = 'mimeType' in body;
   const hasParams = body && 'params' in body && body.params;
   const numBodyParams = hasParams ? body.params?.filter(({ disabled }) => !disabled).length : 0;
