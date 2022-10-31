@@ -9,6 +9,9 @@ on:
     types:
       - opened
       - synchronize
+  schedule:
+      # Nightly run every weekday on 01:30 UTC
+      - cron:  '30 1 * * 1-5'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -54,13 +57,13 @@ jobs:
         run: npm run app-build
 
       - name: Run Smoke tests (CI)
-        # Partial Smoke test run, for regular CI triggers
-        if: "!startsWith(github.head_ref, 'release/')"
+        # Partial Smoke test run, for regular CI triggers, and not for nightly runs
+        if: "!startsWith(github.head_ref, 'release/') || github.event.schedule != '30 1 * * 1-5'"
         run: npm run test:build --prefix packages/insomnia-smoke-test -- --project=Smoke
 
       - name: Run Smoke tests (Release)
-        # Full Smoke test run, for Release PRs
-        if: "startsWith(github.head_ref, 'release/')"
+        # Full Smoke test run, for Release PRs and nightly runs
+        if: "startsWith(github.head_ref, 'release/') || github.event.schedule == '30 1 * * 1-5'"
         run: npm run test:build --prefix packages/insomnia-smoke-test
 
       - name: Set Inso CLI variables
