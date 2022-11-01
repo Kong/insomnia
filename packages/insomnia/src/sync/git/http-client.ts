@@ -21,6 +21,8 @@ export const httpClient = {
         headers: config.headers,
         data: body,
         responseType: 'arraybuffer',
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
         maxRedirects: 10,
       });
     } catch (err) {
