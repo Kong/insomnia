@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { EditorConfiguration } from 'codemirror';
 import { KeyCombination } from 'insomnia-common';
-import React, { forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useMount } from 'react-use';
 
@@ -125,11 +125,6 @@ export const CodeInput = forwardRef<CodeInputHandle, CodeInputProps>(({
         change.update?.(change.from, change.to, [change.text.join('').replace(/\n/g, ' ')]);
       }
     });
-    codeMirror.current.on('changes', misc.debounce(() => {
-      if (onChange) {
-        onChange(codeMirror.current?.getDoc().getValue() || '');
-      }
-    }, DEBOUNCE_MILLIS));
 
     codeMirror.current.on('keydown', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
       // Use default tab behaviour if we're told
@@ -167,7 +162,6 @@ export const CodeInput = forwardRef<CodeInputHandle, CodeInputProps>(({
 
     codeMirror.current.on('blur', (_, e) => onBlur?.(e));
     codeMirror.current.on('focus', (_, e) => onFocus?.(e));
-    codeMirror.current.on('paste', (_, e) => onPaste?.(e));
     codeMirror.current.on('keyHandled', (_: CodeMirror.Editor, _keyName: string, event: Event) => event.stopPropagation());
     // Prevent these things if we're type === "password"
     const preventDefault = (_: CodeMirror.Editor, event: Event) => type?.toLowerCase() === 'password' && event.preventDefault();
@@ -194,6 +188,24 @@ export const CodeInput = forwardRef<CodeInputHandle, CodeInputProps>(({
       codeMirror.current?.closeHintDropdown();
     };
   });
+
+  useEffect(() => {
+    const fn = misc.debounce((doc: CodeMirror.Editor) => {
+      if (onChange) {
+        onChange(doc.getValue() || '');
+      }
+    }, DEBOUNCE_MILLIS);
+    codeMirror.current?.on('changes', fn);
+    return () => {
+      codeMirror.current?.off('changes', fn);
+    };
+  }, [onChange]);
+
+  useEffect(() => {
+    const handlePaste = (_: CodeMirror.Editor, e: ClipboardEvent) => onPaste?.(e);
+    codeMirror.current?.on('paste', handlePaste);
+    return () => codeMirror.current?.on('paste', handlePaste);
+  }, [onPaste]);
 
   useImperativeHandle(ref, () => ({
     setValue: value => codeMirror.current?.setValue(value),
