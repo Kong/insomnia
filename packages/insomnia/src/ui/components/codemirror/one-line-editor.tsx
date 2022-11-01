@@ -21,7 +21,7 @@ export interface OneLineEditorProps {
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   id?: string;
   onChange?: (value: string) => void;
-  onKeyDown: (event: KeyboardEvent, value: string) => void;
+  onKeyDown?: (event: KeyboardEvent, value: string) => void;
   onPaste?: (event: ClipboardEvent) => void;
   placeholder?: string;
   readOnly?: boolean;
