@@ -52,16 +52,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, Props>(({
         type={type || 'text'}
         placeholder={placeholder}
         onPaste={onPaste}
-        onBlur={() => {
-          // Editor was already removed from the DOM, so do nothing
-          if (!codeInputRef.current) {
-            return;
-          }
-          // Set focused state
-          codeInputRef.current?.removeAttribute('data-focused');
-        }}
         onKeyDown={event => onKeyDown?.(event, codeInputRef.current?.getValue())}
-        onFocus={() => codeInputRef.current?.setAttribute('data-focused', 'on')}
         onChange={onChange}
         getAutocompleteConstants={getAutocompleteConstants}
         className="editor--single-line"

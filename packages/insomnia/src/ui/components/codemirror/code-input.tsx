@@ -21,9 +21,7 @@ export interface CodeInputProps {
   defaultValue: string;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   id?: string;
-  onBlur: (event: FocusEvent) => void;
   onChange?: (value: string) => void;
-  onFocus: (event: FocusEvent) => void;
   onKeyDown: (event: KeyboardEvent, value: string) => void;
   onPaste?: (event: ClipboardEvent) => void;
   placeholder?: string;
@@ -39,18 +37,13 @@ export interface CodeInputHandle {
   focus: () => void;
   focusEnd: () => void;
   hasFocus: () => boolean;
-  setAttribute: (name: string, value: string) => void;
-  removeAttribute: (name: string) => void;
-  getAttribute: (name: string) => void;
 }
 export const CodeInput = forwardRef<CodeInputHandle, CodeInputProps>(({
   className,
   defaultValue,
   getAutocompleteConstants,
   id,
-  onBlur,
   onChange,
-  onFocus,
   onKeyDown,
   onPaste,
   placeholder,
@@ -160,8 +153,8 @@ export const CodeInput = forwardRef<CodeInputHandle, CodeInputProps>(({
       }
     });
 
-    codeMirror.current.on('blur', (_, e) => onBlur?.(e));
-    codeMirror.current.on('focus', (_, e) => onFocus?.(e));
+    codeMirror.current.on('blur', () => codeMirror.current?.getTextArea().parentElement?.removeAttribute('data-focused'));
+    codeMirror.current.on('focus', () => codeMirror.current?.getTextArea().parentElement?.setAttribute('data-focused', 'on'));
     codeMirror.current.on('keyHandled', (_: CodeMirror.Editor, _keyName: string, event: Event) => event.stopPropagation());
     // Prevent these things if we're type === "password"
     const preventDefault = (_: CodeMirror.Editor, event: Event) => type?.toLowerCase() === 'password' && event.preventDefault();
