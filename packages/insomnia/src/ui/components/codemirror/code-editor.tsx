@@ -72,9 +72,6 @@ const widget = (cm: CodeMirror.EditorFromTextArea | null, from: CodeMirror.Posit
 };
 // Global object used for storing and persisting editor scroll, lint and folding margin states
 const editorStates: Record<string, EditorState> = {};
-
-// NOTE: many options could be inferred from readOnly
-// shouldn't need the setValue hack anymore in websocket req pane
 export interface CodeEditorProps {
   autoPrettify?: boolean;
   className?: string;
@@ -202,49 +199,68 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     Tab: (cm: CodeMirror.Editor) => cm.somethingSelected() ? cm.indentSelection('add') : cm.replaceSelection(indentChars, 'end'),
   };
   const { handleRender, handleGetRenderContext } = useGatedNunjucks({ disabled: !enableNunjucks });
-
-  const setValue = useCallback((code?: string, filter?: string) => {
-    invariant(typeof code === 'string', 'Code editor was passed non-string value');
-    setOriginalCode(code);
-    if (mode?.includes('xml') && filter) {
+  const prettifyXML = (code: string, filter?:string) => {
+    if (updateFilter && filter) {
       try {
         const results = queryXPath(code, filter);
         code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
       } catch (err) {
+        // Failed to parse filter (that's ok)
         code = `<error>${err.message}</error>`;
       }
-    } else if (mode?.includes('json') && filter) {
-      try {
-        const codeObj = JSON.parse(code);
-        const results = JSONPath({ json: codeObj, path: filter.trim() });
-        code = JSON.stringify(results);
-      } catch (err) {
-        console.log('[jsonpath] Error: ', err);
-        code = '[]';
+    }
+    try {
+      return vkBeautify.xml(code, indentChars);
+    } catch (error) {
+      // Failed to parse so just return original
+      return code;
+    }
+  };
+  const prettifyJSON = (code: string, filter?:string) => {
+    try {
+      let jsonString = code;
+      if (updateFilter && filter) {
+        try {
+          const codeObj = JSON.parse(code);
+          const results = JSONPath({ json: codeObj, path: filter.trim() });
+          jsonString = JSON.stringify(results);
+        } catch (err) {
+          console.log('[jsonpath] Error: ', err);
+          jsonString = '[]';
+        }
+      }
+      return jsonPrettify(jsonString, indentChars, autoPrettify);
+    } catch (error) {
+      // That's Ok, just leave it
+      return code;
+    }
+  };
+  const maybePrettifyAndSetValue = (code?: string, forcePrettify?: boolean, filter?: string) => {
+    if (typeof code !== 'string') {
+      console.warn('Code editor was passed non-string value', code);
+      return;
+    }
+    const shouldPrettify = forcePrettify || autoPrettify;
+    if (shouldPrettify) {
+      setOriginalCode(code);
+      if (mode?.includes('xml')) {
+        code = prettifyXML(code, filter);
+      } else if (mode?.includes('json')) {
+        code = prettifyJSON(code, filter);
       }
     }
     // this prevents codeMirror from needlessly setting the same thing repeatedly (which has the effect of moving the user's cursor and resetting the viewport scroll: a bad user experience)
-    if (codeMirror.current?.getValue() !== code) {
-      codeMirror.current?.setValue(code || '');
+    const currentCode = codeMirror.current?.getValue();
+    if (currentCode === code) {
+      return;
     }
-  }, [mode]);
-
-  const prettifyAndSetValue = useCallback((code?: string) => {
-    invariant(typeof code === 'string', 'Code editor was passed non-string value');
-    try {
-      if (mode?.includes('xml')) {
-        code = vkBeautify.xml(code, indentChars);
-      } else if (mode?.includes('json')) {
-        code = jsonPrettify(code, indentChars, autoPrettify);
-      }
-    } catch (error) { }
-    setValue(code);
-  }, [autoPrettify, indentChars, mode, setValue]);
+    codeMirror.current?.setValue(code || '');
+  };
 
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody: () => {
       if (mode?.includes('json') || mode?.includes('xml')) {
-        prettifyAndSetValue(codeMirror.current?.getValue());
+        maybePrettifyAndSetValue(codeMirror.current?.getValue());
       }
     },
   });
@@ -394,7 +410,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     codeMirror.current.setCursor({ line: -1, ch: -1 });
 
     // Actually set the value
-    setValue(defaultValue || '', filter);
+    maybePrettifyAndSetValue(defaultValue || '', false, filter);
     // Clear history so we can't undo the initial set
     codeMirror.current?.clearHistory();
     // Setup nunjucks listeners
@@ -536,7 +552,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                     if (updateFilter) {
                       updateFilter(filter || '');
                     }
-                    setValue(originalCode, filter);
+                    maybePrettifyAndSetValue(originalCode, false, filter);
                   },
                 })}
                 onChange={e => {
@@ -544,7 +560,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                     if (updateFilter) {
                       updateFilter('');
                     }
-                    setValue(originalCode);
+                    maybePrettifyAndSetValue(originalCode, false);
                   }
                 }}
               />) : null}
@@ -564,7 +580,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                         if (updateFilter) {
                           updateFilter(filter);
                         }
-                        setValue(originalCode, filter);
+                        maybePrettifyAndSetValue(originalCode, false, filter);
                       }}
                     >
                       {filter}
@@ -583,7 +599,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                 title="Auto-format request body whitespace"
                 onClick={() => {
                   if (mode?.includes('json') || mode?.includes('xml')) {
-                    prettifyAndSetValue(codeMirror.current?.getValue());
+                    maybePrettifyAndSetValue(codeMirror.current?.getValue(), true);
                   }
                 }}
               >
