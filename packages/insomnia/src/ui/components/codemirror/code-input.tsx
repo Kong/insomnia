@@ -32,7 +32,6 @@ export interface CodeInputProps {
 export interface CodeInputHandle {
   setValue: (value: string) => void;
   getValue: () => string;
-  setSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
   selectAll: () => void;
   focus: () => void;
   focusEnd: () => void;
@@ -205,11 +204,6 @@ export const CodeInput = forwardRef<CodeInputHandle, CodeInputProps>(({
     getValue: () => codeMirror.current?.getValue() || '',
     selectAll: () => codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),
     focus: () => codeMirror.current?.focus(),
-    refresh: () => codeMirror.current?.refresh(),
-    setSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
-      codeMirror.current?.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
-      codeMirror.current?.scrollIntoView({ line: lineStart, ch: chStart });
-    },
     focusEnd: () => {
       if (codeMirror.current && !codeMirror.current.hasFocus()) {
         codeMirror.current.focus();
@@ -217,9 +211,6 @@ export const CodeInput = forwardRef<CodeInputHandle, CodeInputProps>(({
       codeMirror.current?.getDoc()?.setCursor(codeMirror.current.getDoc().lineCount(), 0);
     },
     hasFocus: () => codeMirror.current?.hasFocus() || false,
-    setAttribute: (name: string, value: string) => codeMirror.current?.getTextArea().parentElement?.setAttribute(name, value),
-    removeAttribute: (name: string) => codeMirror.current?.getTextArea().parentElement?.removeAttribute(name),
-    getAttribute: (name: string) => codeMirror.current?.getTextArea().parentElement?.getAttribute(name),
   }), []);
 
   return (
