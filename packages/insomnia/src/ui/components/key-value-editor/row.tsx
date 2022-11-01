@@ -31,7 +31,6 @@ interface Props {
   allowMultiline?: boolean;
   className?: string;
   descriptionPlaceholder?: string;
-  forceInput?: boolean;
   handleGetAutocompleteNameConstants?: AutocompleteHandler;
   handleGetAutocompleteValueConstants?: AutocompleteHandler;
   hideButtons?: boolean;
@@ -51,7 +50,6 @@ export const Row: FC<Props> = ({
   allowMultiline,
   className,
   descriptionPlaceholder,
-  forceInput,
   handleGetAutocompleteNameConstants,
   handleGetAutocompleteValueConstants,
   hideButtons,
@@ -93,7 +91,6 @@ export const Row: FC<Props> = ({
             placeholder={namePlaceholder || 'Name'}
             defaultValue={pair.name}
             getAutocompleteConstants={() => handleGetAutocompleteNameConstants?.(pair) || []}
-            forceInput={forceInput}
             readOnly={readOnly}
             onChange={name => onChange({ ...pair, name })}
           />
@@ -130,7 +127,7 @@ export const Row: FC<Props> = ({
           ) : (
             <OneLineEditor
               readOnly={readOnly}
-              forceInput={forceInput}
+
               type="text"
               placeholder={valuePlaceholder || 'Value'}
               defaultValue={pair.value}
@@ -148,7 +145,7 @@ export const Row: FC<Props> = ({
           >
             <OneLineEditor
               readOnly={readOnly}
-              forceInput={forceInput}
+
               placeholder={descriptionPlaceholder || 'Description'}
               defaultValue={pair.description || ''}
               onChange={description => onChange({ ...pair, description })}

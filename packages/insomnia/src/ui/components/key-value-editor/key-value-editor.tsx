@@ -119,22 +119,29 @@ export const KeyValueEditor: FC<Props> = ({
               description: '',
             }])}
             pair={{ name: '', value: '' }}
-            onChange={() => {}}
-            addPair={() => {}}
+            onChange={() => { }}
+            addPair={() => { }}
           />
         )}
         {isWebSocketRequest ? readOnlyPairs.map((pair, i) => (
-          <Row
-            key={i}
-            showDescription={showDescription}
-            descriptionPlaceholder={descriptionPlaceholder}
-            readOnly
-            hideButtons
-            forceInput
-            pair={pair}
-            onChange={() => {}}
-            addPair={() => {}}
-          />
+          <li key={i} className="key-value-editor__row-wrapper">
+            <div className="key-value-editor__row">
+              <div className="form-control form-control--underlined form-control--wide">
+                <input
+                  style={{ width: '100%' }}
+                  defaultValue={pair.name}
+                />
+              </div>
+              <div className="form-control form-control--underlined form-control--wide">
+                <input
+                  style={{ width: '100%' }}
+                  defaultValue={pair.value}
+                />
+              </div>
+              <button><i className="fa fa-empty" /></button>
+              <button><i className="fa fa-empty" /></button>
+            </div>
+          </li>
         )) : null}
         {pairsWithIds.map(pair => (
           <Row
@@ -160,6 +167,6 @@ export const KeyValueEditor: FC<Props> = ({
           />
         ))}
       </ul>
-    </Fragment>
+    </Fragment >
   );
 };
