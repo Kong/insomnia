@@ -122,7 +122,6 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
   useDocBodyKeyboardShortcuts({
     request_send: () => handleSubmit(),
     request_focusUrl: () => {
-      editorRef.current?.focus();
       editorRef.current?.selectAll();
     },
   });

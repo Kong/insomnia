@@ -277,7 +277,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
 
   useDocBodyKeyboardShortcuts({
     request_focusUrl: () => {
-      inputRef.current?.focus();
       inputRef.current?.selectAll();
     },
     request_send: () => {

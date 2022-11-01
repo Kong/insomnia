@@ -1,6 +1,5 @@
 import './base-imports';
 
-import { invariant } from '@remix-run/router';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintOptions } from 'codemirror';
@@ -11,7 +10,7 @@ import { KeyCombination } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useMount } from 'react-use';
 import vkBeautify from 'vkbeautify';

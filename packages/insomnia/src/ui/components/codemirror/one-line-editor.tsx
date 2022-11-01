@@ -29,12 +29,8 @@ export interface OneLineEditorProps {
 }
 
 export interface OneLineEditorHandle {
-  setValue: (value: string) => void;
-  getValue: () => string;
   selectAll: () => void;
-  focus: () => void;
   focusEnd: () => void;
-  hasFocus: () => boolean;
 }
 export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>(({
   defaultValue,
@@ -198,17 +194,13 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   }, [onPaste]);
 
   useImperativeHandle(ref, () => ({
-    setValue: value => codeMirror.current?.setValue(value),
-    getValue: () => codeMirror.current?.getValue() || '',
     selectAll: () => codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),
-    focus: () => codeMirror.current?.focus(),
     focusEnd: () => {
       if (codeMirror.current && !codeMirror.current.hasFocus()) {
         codeMirror.current.focus();
       }
       codeMirror.current?.getDoc()?.setCursor(codeMirror.current.getDoc().lineCount(), 0);
     },
-    hasFocus: () => codeMirror.current?.hasFocus() || false,
   }), []);
 
   return (
