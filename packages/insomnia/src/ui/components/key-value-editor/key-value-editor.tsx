@@ -4,7 +4,6 @@ import styled from 'styled-components';
 
 import { generateId } from '../../../common/misc';
 import { PromptButton } from '../base/prompt-button';
-import { createKeybindingsHandler } from '../keydown-binder';
 import { AutocompleteHandler, Pair, Row } from './row';
 
 export const Toolbar = styled.div({
@@ -64,15 +63,6 @@ export const KeyValueEditor: FC<Props> = ({
     { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
   ];
 
-  const keyDownHandler = createKeybindingsHandler({
-    'Enter': () => onChange([...pairs, {
-      id: generateId('pair'),
-      name: '',
-      value: '',
-      description: '',
-    }]),
-  });
-
   const [showDescription, setShowDescription] = React.useState(false);
 
   return (
@@ -104,7 +94,7 @@ export const KeyValueEditor: FC<Props> = ({
           Toggle Description
         </button>
       </Toolbar>
-      <ul onKeyDown={keyDownHandler} className={classnames('key-value-editor', 'wide', className)}>
+      <ul className={classnames('key-value-editor', 'wide', className)}>
         {pairs.length === 0 && (
           <Row
             key='empty-row'

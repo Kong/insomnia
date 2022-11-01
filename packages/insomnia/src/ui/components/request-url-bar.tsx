@@ -375,7 +375,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           key={uniquenessKey}
           ref={inputRef}
           onPaste={handleUrlPaste}
-          forceEditor
           type="text"
           getAutocompleteConstants={handleAutocompleteUrls}
           placeholder="https://api.myproduct.com/v1/users"
