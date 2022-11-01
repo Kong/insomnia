@@ -462,6 +462,12 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     return () => codeMirror.current?.on('paste', handlePaste);
   }, [onPaste]);
 
+  useEffect(() => {
+    const handleOnBlur = (_: CodeMirror.Editor, e: FocusEvent) => onBlur?.(e);
+    codeMirror.current?.on('blur', handleOnBlur);
+    return () => codeMirror.current?.on('blur', handleOnBlur);
+  }, [onBlur]);
+
   useEffect(() => codeMirror.current?.setOption('hintOptions', hintOptions), [hintOptions]);
   useEffect(() => codeMirror.current?.setOption('info', infoOptions), [infoOptions]);
   useEffect(() => codeMirror.current?.setOption('jump', jumpOptions), [jumpOptions]);
