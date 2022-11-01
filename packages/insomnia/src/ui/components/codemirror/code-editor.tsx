@@ -284,10 +284,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     },
   });
-  useEffect(() => codeMirror.current?.setOption('hintOptions', hintOptions), [hintOptions]);
-  useEffect(() => codeMirror.current?.setOption('info', infoOptions), [infoOptions]);
-  useEffect(() => codeMirror.current?.setOption('jump', jumpOptions), [jumpOptions]);
-  useEffect(() => codeMirror.current?.setOption('lint', lintOptions), [lintOptions]);
 
   useMount(() => {
     if (!textAreaRef.current) {
@@ -367,27 +363,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         change.update?.(change.from, change.to, change.text.map(normalizeIrregularWhitespace));
       }
     });
-    const debounceTime = typeof debounceMillis === 'number' ? debounceMillis : DEBOUNCE_MILLIS;
-    codeMirror.current.on('changes', misc.debounce(() => {
-      if (onChange) {
-        const value = codeMirror.current?.getDoc().getValue()?.trim() || '';
-        // Disable linting if the document reaches a maximum size or is empty
-        const withinLintingThresholds = value.length > 0 && value.length < MAX_SIZE_FOR_LINTING;
-        const isLintPropOn = !noLint;
-        const shouldLint = withinLintingThresholds && isLintPropOn;
-        const lintOption = lintOptions || true;
-        try {
-          const newValue = shouldLint ? lintOption : false;
-          if (!deepEqual(codeMirror.current?.getOption('lint'), newValue)) {
-            codeMirror.current?.setOption('lint', newValue);
-          }
-        } catch (err) {
-          console.log('Failed to set CodeMirror option', err.message);
-        }
-        onChange(codeMirror.current?.getDoc().getValue() || '');
-        setOriginalCode(codeMirror.current?.getDoc().getValue() || '');
-      }
-    }, debounceTime));
 
     codeMirror.current.on('keydown', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
       // Use default tab behaviour if we're told
@@ -507,6 +482,51 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       codeMirror.current?.closeHintDropdown();
     };
   });
+
+  useEffect(() => {
+    const debounceTime = typeof debounceMillis === 'number' ? debounceMillis : DEBOUNCE_MILLIS;
+    const fn = misc.debounce((doc: CodeMirror.Editor) => {
+      if (onChange) {
+        const value = doc.getValue()?.trim() || '';
+        // Disable linting if the document reaches a maximum size or is empty
+        const withinLintingThresholds = value.length > 0 && value.length < MAX_SIZE_FOR_LINTING;
+        const isLintPropOn = !noLint;
+        const shouldLint = withinLintingThresholds && isLintPropOn;
+        const lintOption = lintOptions || true;
+        try {
+          const newValue = shouldLint ? lintOption : false;
+          if (!deepEqual(codeMirror.current?.getOption('lint'), newValue)) {
+            codeMirror.current?.setOption('lint', newValue);
+          }
+        } catch (err) {
+          console.log('Failed to set CodeMirror option', err.message);
+        }
+        onChange(doc.getValue() || '');
+        setOriginalCode(doc.getValue() || '');
+      }
+    }, debounceTime);
+    codeMirror.current?.on('changes', fn);
+    return () => {
+      codeMirror.current?.off('changes', fn);
+    };
+  }, [debounceMillis, lintOptions, noLint, onChange]);
+
+  useEffect(() => {
+    const handleFocus = (_: CodeMirror.Editor, e: FocusEvent) => onFocus?.(e);
+    codeMirror.current?.on('focus', handleFocus);
+    return () => codeMirror.current?.on('focus', handleFocus);
+  }, [onFocus]);
+
+  useEffect(() => {
+    const handlePaste = (_: CodeMirror.Editor, e: ClipboardEvent) => onPaste?.(e);
+    codeMirror.current?.on('paste', handlePaste);
+    return () => codeMirror.current?.on('paste', handlePaste);
+  }, [onPaste]);
+
+  useEffect(() => codeMirror.current?.setOption('hintOptions', hintOptions), [hintOptions]);
+  useEffect(() => codeMirror.current?.setOption('info', infoOptions), [infoOptions]);
+  useEffect(() => codeMirror.current?.setOption('jump', jumpOptions), [jumpOptions]);
+  useEffect(() => codeMirror.current?.setOption('lint', lintOptions), [lintOptions]);
 
   useImperativeHandle(ref, () => ({
     setValue: value => codeMirror.current?.setValue(value),
