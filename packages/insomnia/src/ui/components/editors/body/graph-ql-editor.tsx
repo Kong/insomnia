@@ -275,9 +275,9 @@ export const GraphQLEditor: FC<Props> = ({
     setState(prevState => ({ ...prevState, body: { ...prevState.body, operationName } }));
   };
   const changeVariables = (variablesInput: string) => {
-    const variables = JSON.parse(variablesInput || 'null');
-    onChange(JSON.stringify({ ...state.body, variables }));
     try {
+      const variables = JSON.parse(variablesInput || 'null');
+      onChange(JSON.stringify({ ...state.body, variables }));
       setState(state => ({
         ...state,
         body: { ...state.body, variables },
@@ -363,9 +363,6 @@ export const GraphQLEditor: FC<Props> = ({
     explorerVisible,
   } = state;
 
-  const body: GraphQLBody = JSON.parse(request.body.text || '');
-  const query = body.query || '';
-
   const variableTypes: Record<string, GraphQLNonNull<any>> = {};
   if (schema) {
     const operationDefinitions = state.documentAST?.definitions.filter(isOperationDefinition);
@@ -436,7 +433,7 @@ export const GraphQLEditor: FC<Props> = ({
     <div className="graphql-editor">
       <Toolbar>
         <Dropdown>
-          <DropdownButton className="btn btn--compact">{state.body.operationName || 'Operations'}</DropdownButton>
+          <DropdownButton disabled={!state.operations.length} className="btn btn--compact">{state.body.operationName || 'Operations'}</DropdownButton>
           {state.operations.map(operationName => (
             <DropdownItem
               key={operationName}
@@ -508,7 +505,7 @@ export const GraphQLEditor: FC<Props> = ({
           dynamicHeight
           manualPrettify
           uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
-          defaultValue={query}
+          defaultValue={requestBody.query || ''}
           className={className}
           onChange={changeQuery}
           mode="graphql"
@@ -554,7 +551,7 @@ export const GraphQLEditor: FC<Props> = ({
           enableNunjucks
           uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
           manualPrettify={false}
-          defaultValue={jsonPrettify(JSON.stringify(body.variables))}
+          defaultValue={jsonPrettify(JSON.stringify(requestBody.variables))}
           className={className}
           getAutocompleteConstants={() => Object.keys(variableTypes)}
           lintOptions={{

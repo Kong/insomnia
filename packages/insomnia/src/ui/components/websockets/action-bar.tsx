@@ -157,7 +157,6 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
             defaultValue={defaultValue}
             onChange={onChange}
             type="text"
-            forceEditor
           />
         </StyledUrlBar>
         {isConnectingOrClosed

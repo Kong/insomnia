@@ -91,7 +91,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             <OneLineEditor
               key={uniquenessKey}
               type="text"
-              forceEditor
               defaultValue={activeRequest.url}
               placeholder="grpcb.in:9000"
               onChange={handleChange.url}
