@@ -19,53 +19,6 @@ const Table: FC = ({ children }) => <table><tbody>{children}</tbody></table>;
 describe('<AuthInputRow />', () => {
   beforeEach(globalBeforeEach);
 
-  it('should mask and toggle the input', async () => {
-    // Arrange
-    await models.settings.patch({  showPasswords: false });
-    const { store } = await createMockStoreWithRequest();
-
-    // Render with mask enabled
-    const { findByLabelText, findByTestId } = render(
-      <AuthInputRow label='inputLabel' property='inputProperty' mask />,
-      { wrapper: withReduxStore(store, Table) }
-    );
-
-    let input = await findByLabelText('inputLabel');
-    expect(input).toHaveAttribute('type', 'password');
-
-    // Act
-    await userEvent.click(await findByTestId('reveal-password-icon'));
-
-    // Assert
-    input = await findByLabelText('inputLabel');
-    expect(input).toHaveAttribute('type', 'text');
-
-    // Act
-    await userEvent.click(await findByTestId('mask-password-icon'));
-
-    // Assert
-    input = await findByLabelText('inputLabel');
-    expect(input).toHaveAttribute('type', 'password');
-  });
-
-  it('should not show masking toggle if all passwords are shown', async () => {
-    // Arrange
-    await models.settings.patch({ showPasswords: true });
-    const { store } = await createMockStoreWithRequest();
-
-    // Render with mask enabled
-    const { findByLabelText, queryAllByTestId } = render(
-      <AuthInputRow label='inputLabel' property='inputProperty' mask />,
-      { wrapper: withReduxStore(store, Table) }
-    );
-
-    // Assert
-    const input = await findByLabelText('inputLabel');
-    expect(input).toHaveAttribute('type', 'text');
-    expect(queryAllByTestId('reveal-password-icon')).toHaveLength(0);
-    expect(queryAllByTestId('mask-password-icon')).toHaveLength(0);
-  });
-
   it('should update the authentication property on typing', async () => {
     // Arrange
     const { store, requestId } = await createMockStoreWithRequest();
@@ -81,6 +34,7 @@ describe('<AuthInputRow />', () => {
     // Act
     expect(await getInput()).not.toHaveFocus();
     await userEvent.click(await getInput());
+    expect(await getInput()).toHaveFocus();
 
     // NOTE: we are typing into a mocked CodeEditor component.
     await userEvent.type(await getInput(), 'inputValue');
