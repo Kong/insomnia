@@ -1,5 +1,10 @@
+import { decodeBase64, encodeBase64 } from '@getinsomnia/api-client/base64';
+import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
+import { invariant } from '@remix-run/router';
+import * as Sentry from '@sentry/electron';
 import * as srp from 'srp-js';
 
+import { getAppWebsiteBaseURL } from '../common/constants';
 import * as crypt from './crypt';
 import * as fetch from './fetch';
 
@@ -278,4 +283,35 @@ function _getSrpParams() {
 
 function _sanitizePassphrase(passphrase: string) {
   return passphrase.trim().normalize('NFKD');
+}
+
+interface AuthBox {
+  token: string;
+  key: string;
+}
+
+/**
+ * Keypair used for the login handshake.
+ * This keypair can be re-used for the entire session.
+ */
+const sessionKeyPair = keyPair();
+
+export async function submitAuthCode(code: string) {
+  try {
+    const rawBox = await decodeBase64(code.trim());
+    const boxData = open(rawBox, sessionKeyPair.publicKey, sessionKeyPair.secretKey);
+    invariant(boxData, 'Invalid authentication code.');
+
+    const decoder = new TextDecoder();
+    const box: AuthBox = JSON.parse(decoder.decode(boxData));
+    await absorbKey(box.token, box.key);
+  } catch (error) {
+    Sentry.captureException(error);
+    throw error;
+  }
+}
+
+export async function getLoginUrl() {
+  const loginKey = await encodeBase64(sessionKeyPair.publicKey);
+  return `${getAppWebsiteBaseURL()}/app/auth-app/?loginKey=${encodeURIComponent(loginKey)}`;
 }
