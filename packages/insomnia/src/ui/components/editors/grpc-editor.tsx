@@ -20,6 +20,6 @@ export const GRPCEditor: FunctionComponent<Props> = ({
     enableNunjucks
     readOnly={readOnly}
     autoPrettify={readOnly}
-    manualPrettify={!readOnly}
+    showPrettifyButton={!readOnly}
   />
 );

@@ -125,7 +125,7 @@ export interface WorkspaceEnvironmentsEditModalHandle {
 }
 export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEditModalHandle, ModalProps>((props, ref) => {
   const modalRef = useRef<ModalHandle>(null);
-  const editorRef = useRef<EnvironmentEditorHandle>(null);
+  const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [state, setState] = useState<State>({
@@ -158,7 +158,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
   function handleShowEnvironment(environment?: Environment) {
     // Don't allow switching if the current one has errors
-    if (editorRef.current?.isValid() && environment !== getSelectedEnvironment()) {
+    if (environmentEditorRef.current?.isValid() && environment !== getSelectedEnvironment()) {
       setState(state => ({
         ...state,
         selectedEnvironmentId: environment?._id || null,
@@ -212,10 +212,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
   const onBlur = () => {
     // Only save if it's valid
-    if (!editorRef.current || !editorRef.current?.isValid()) {
+    if (!environmentEditorRef.current || !environmentEditorRef.current?.isValid()) {
       return;
     }
-    const data = editorRef.current?.getValue();
+    const data = environmentEditorRef.current?.getValue();
     const selectedEnvironment = getSelectedEnvironment();
     if (selectedEnvironment && data) {
       updateEnvironment(selectedEnvironment, {
@@ -396,11 +396,11 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
           </div>
           <div className="env-modal__editor">
             <EnvironmentEditor
-              ref={editorRef}
+              ref={environmentEditorRef}
               key={`${selectedEnvironment ? selectedEnvironment._id : 'n/a'}`}
               environmentInfo={environmentInfo}
               didChange={() => {
-                const isValid = editorRef.current?.isValid() || false;
+                const isValid = environmentEditorRef.current?.isValid() || false;
                 if (state.isValid !== isValid) {
                   setState(state => ({
                     ...state,

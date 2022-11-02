@@ -390,7 +390,7 @@ const WrapperUnitTest: FC = () => {
               >
                 <CodeEditor
                   dynamicHeight
-                  manualPrettify
+                  showPrettifyButton
                   defaultValue={unitTest ? unitTest.code : ''}
                   getAutocompleteSnippets={() => autocompleteSnippets(unitTest)}
                   lintOptions={lintOptions}

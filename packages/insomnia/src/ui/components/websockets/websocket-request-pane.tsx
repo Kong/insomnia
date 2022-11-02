@@ -203,7 +203,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
       }}
     >
       <CodeEditor
-        manualPrettify
+        showPrettifyButton
         uniquenessKey={request._id}
         mode={previewMode}
         ref={editorRef}

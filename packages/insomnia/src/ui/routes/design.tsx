@@ -112,7 +112,7 @@ const RenderEditor: FC<{ editor: RefObject<CodeEditorHandle> }> = ({ editor }) =
       <div className="tall relative overflow-hidden">
         <CodeEditor
           key={uniquenessKey}
-          manualPrettify
+          showPrettifyButton
           ref={editor}
           lintOptions={{ delay: 1000 }}
           mode="openapi"

@@ -7,7 +7,7 @@ import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
-import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
+import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { DisconnectButton } from './disconnect-button';
@@ -69,9 +69,9 @@ export const ConnectionCircle = styled.span({
 
 export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, environmentId, defaultValue, onChange, readyState }) => {
   const isOpen = readyState === ReadyState.OPEN;
-  const editorRef = useRef<OneLineEditorHandle>(null);
+  const oneLineEditorRef = useRef<OneLineEditorHandle>(null);
   useLayoutEffect(() => {
-    editorRef.current?.focusEnd();
+    oneLineEditorRef.current?.focusEnd();
   }, []);
   const handleSubmit = useCallback(async () => {
     if (isOpen) {
@@ -122,8 +122,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
   useDocBodyKeyboardShortcuts({
     request_send: () => handleSubmit(),
     request_focusUrl: () => {
-      editorRef.current?.focus();
-      editorRef.current?.selectAll();
+      oneLineEditorRef.current?.selectAll();
     },
   });
 
@@ -146,12 +145,10 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
       >
         <StyledUrlBar>
           <OneLineEditor
-            ref={editorRef}
-            onKeyDown={event => {
-              if (event.key === 'Enter') {
-                handleSubmit();
-              }
-            }}
+            ref={oneLineEditorRef}
+            onKeyDown={createKeybindingsHandler({
+              'Enter': () => handleSubmit(),
+            })}
             readOnly={readyState === ReadyState.OPEN}
             placeholder="wss://example.com/chat"
             defaultValue={defaultValue}
