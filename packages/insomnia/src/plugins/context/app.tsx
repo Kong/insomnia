@@ -46,7 +46,7 @@ export interface AppContext {
   alert: (
     title: string,
     message?: string
-  ) => Promise<undefined> | ReturnType<typeof showAlert>;
+  ) => ReturnType<typeof showAlert>;
   dialog: (title: string, body: HTMLElement, options?: DialogOptions) => void;
   prompt: (title: string, options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'cancelable'>) => Promise<string>;
   getPath: (name: string) => string;
