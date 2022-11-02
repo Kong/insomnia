@@ -12,7 +12,7 @@ import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useMount } from 'react-use';
+import { useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
 import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
@@ -267,9 +267,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
 
     const showGuttersAndLineNumbers = !hideGutters && !hideLineNumbers;
 
-    const transformEnums = (
-      tagDef: NunjucksParsedTag
-    ): NunjucksParsedTag[] => {
+    const transformEnums = (tagDef: NunjucksParsedTag): NunjucksParsedTag[] => {
       if (tagDef.args[0]?.type === 'enum') {
         return tagDef.args[0].options?.map(option => {
           const optionName = misc.fnOrString(option.displayName, tagDef.args);
@@ -374,6 +372,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         }
       }
     });
+    // NOTE: maybe we don't need this anymore?
     const persistState = () => {
       if (uniquenessKey && codeMirror.current) {
         editorStates[uniquenessKey] = {
@@ -433,10 +432,12 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.foldCode(from, to);
       }
     }
-    return () => {
-      codeMirror.current?.toTextArea();
-      codeMirror.current?.closeHintDropdown();
-    };
+  });
+  useUnmount(() => {
+    console.log('cleanup');
+    codeMirror.current?.toTextArea();
+    codeMirror.current?.closeHintDropdown();
+    codeMirror.current = null;
   });
 
   useEffect(() => {
@@ -461,9 +462,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     }, DEBOUNCE_MILLIS);
     codeMirror.current?.on('changes', fn);
-    return () => {
-      codeMirror.current?.off('changes', fn);
-    };
+    return () => codeMirror.current?.off('changes', fn);
   }, [lintOptions, noLint, onChange]);
 
   useEffect(() => {
@@ -495,7 +494,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     },
   }), []);
 
-  const showFilter = mode && (mode.includes('json') || mode.includes('xml'));
+  const showFilter = readOnly && (mode?.includes('json') || mode?.includes('xml'));
   const showPrettify = showPrettifyButton && mode?.includes('json') || mode?.includes('xml');
 
   return (
@@ -532,7 +531,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                 type="text"
                 title="Filter response body"
                 defaultValue={filter || ''}
-                placeholder={mode.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
+                placeholder={mode?.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
                 onKeyDown={createKeybindingsHandler({
                   'Enter': () => {
                     const filter = inputRef.current?.value;

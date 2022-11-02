@@ -6,7 +6,7 @@ import CodeMirror, { EditorConfiguration } from 'codemirror';
 import { KeyCombination } from 'insomnia-common';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { useMount } from 'react-use';
+import { useMount, useUnmount } from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '../../../common/constants';
 import * as misc from '../../../common/misc';
@@ -168,11 +168,12 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         settings.showVariableSourceAndValue,
       );
     }
-
-    return () => {
-      codeMirror.current?.toTextArea();
-      codeMirror.current?.closeHintDropdown();
-    };
+  });
+  useUnmount(() => {
+    console.log('cleanup');
+    codeMirror.current?.toTextArea();
+    codeMirror.current?.closeHintDropdown();
+    codeMirror.current = null;
   });
 
   useEffect(() => {
@@ -182,9 +183,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       }
     }, DEBOUNCE_MILLIS);
     codeMirror.current?.on('changes', fn);
-    return () => {
-      codeMirror.current?.off('changes', fn);
-    };
+    return () => codeMirror.current?.off('changes', fn);
   }, [onChange]);
 
   useEffect(() => {
@@ -212,7 +211,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       data-editor-type={type || 'text'}
       data-testid="OneLineEditor"
     >
-      <div className={classnames('editor__container', 'input', 'editor--single-line')}>
+      <div className="editor__container input editor--single-line">
         <textarea
           id={id}
           ref={textAreaRef}
