@@ -2,8 +2,8 @@ import { clipboard } from 'electron';
 import React, { FormEvent, forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import * as session from '../../../account/session';
-import { getLoginUrl, submitAuthCode } from '../../../account/session';
 import { clickLink } from '../../../common/electron-helpers';
+import { getLoginUrl, submitAuthCode } from '../../auth-session-provider';
 import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
