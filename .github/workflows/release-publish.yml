@@ -46,11 +46,11 @@ jobs:
           echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
 
       - name: Create Release for Inso CLI
-        uses: avakar/tag-and-release@v1
+        uses: ncipollo/release-action@v1
         id: release_inso_cli
         with:
-          tag_name: lib@${{ env.INSO_VERSION }}
-          release_name: "Inso CLI ${{ env.INSO_VERSION }} 📦"
+          tag: lib@${{ env.INSO_VERSION }}
+          name: "Inso CLI ${{ env.INSO_VERSION }} 📦"
           body: "Full changelog ⇒ https://insomnia.rest/changelog"
           commit: ${{ env.RELEASE_BRANCH }}
           prerelease: ${{ env.IS_PRERELEASE }}
@@ -70,11 +70,11 @@ jobs:
           draft: false
 
       - name: Create Tag and Release
-        uses: avakar/tag-and-release@v1
+        uses: ncipollo/release-action@v1
         id: core_tag_and_release
         with:
-          tag_name: ${{ env.RELEASE_CORE_TAG }}
-          release_name: "Insomnia ${{ env.RELEASE_VERSION }} 📦"
+          tag: ${{ env.RELEASE_CORE_TAG }}
+          name: "Insomnia ${{ env.RELEASE_VERSION }} 📦"
           body: "Full changelog ⇒ https://insomnia.rest/changelog"
           commit: ${{ env.RELEASE_BRANCH }}
           prerelease: ${{ env.IS_PRERELEASE }}
