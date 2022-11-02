@@ -1,4 +1,4 @@
-import React, { FunctionComponent, ReactNode } from 'react';
+import { ReactNode } from 'react';
 import styled from 'styled-components';
 
 export interface ListGroupProps {
@@ -6,7 +6,7 @@ export interface ListGroupProps {
   bordered?: boolean;
 }
 
-const StyledListGroup = styled.ul<ListGroupProps>`
+export const ListGroup = styled.ul<ListGroupProps>`
   list-style-type: none;
   margin: 0;
   padding: 0;
@@ -18,7 +18,3 @@ const StyledListGroup = styled.ul<ListGroupProps>`
      li:last-of-type {border-bottom:none;};
     `}
 `;
-
-export const ListGroup: FunctionComponent<ListGroupProps> = ({ children, bordered }) => {
-  return <StyledListGroup bordered={bordered}>{children}</StyledListGroup>;
-};

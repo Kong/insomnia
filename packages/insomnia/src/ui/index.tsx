@@ -23,6 +23,7 @@ import {
   createMemoryRouter,
   RouterProvider,
   matchPath,
+  Outlet,
 } from 'react-router-dom';
 
 import Root from './routes/root';
@@ -130,12 +131,88 @@ const router = createMemoryRouter(
                               ),
                             },
                             {
-                              path: `${ACTIVITY_UNIT_TEST}`,
+                              path: 'test',
+                              loader: async (...args) =>  (await import('./routes/unit-test')).loader(...args),
                               element: (
                                 <Suspense fallback={<AppLoadingIndicator />}>
                                   <UnitTest />
+                                  <Outlet />
                                 </Suspense>
                               ),
+                              children: [
+                                {
+                                  index: true,
+                                  loader: async (...args) => (await import('./routes/test-suite')).indexLoader(...args),
+                                },
+                                {
+                                  path: 'test-suite',
+                                  children: [
+                                    {
+                                      index: true,
+                                      loader: async (...args) => (await import('./routes/test-suite')).indexLoader(...args),
+                                    },
+                                    {
+                                      path: ':testSuiteId',
+                                      id: ':testSuiteId',
+                                      loader: async (...args) => (await import('./routes/test-suite')).loader(...args),
+                                      children: [
+                                        {
+                                          index: true,
+                                          loader: async (...args) => (await import('./routes/test-results')).indexLoader(...args),
+                                        },
+                                        {
+                                          path: 'test-result',
+                                          children: [
+                                            {
+                                              path: ':testResultId',
+                                              id: ':testResultId',
+                                              loader: async (...args) => (await import('./routes/test-results')).loader(...args),
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          path: 'delete',
+                                          action: async (...args) => (await import('./routes/actions')).deleteTestSuiteAction(...args),
+                                        },
+                                        {
+                                          path: 'rename',
+                                          action: async (...args) => (await import('./routes/actions')).renameTestSuiteAction(...args),
+                                        },
+                                        {
+                                          path: 'run-all-tests',
+                                          action: async (...args) => (await import('./routes/actions')).runAllTestsAction(...args),
+                                        },
+                                        {
+                                          path: 'test',
+                                          children: [
+                                            {
+                                              path: 'new',
+                                              action: async (...args) => (await import('./routes/actions')).createNewTestAction(...args),
+                                            },
+                                            {
+                                              path: ':testId',
+                                              children: [
+                                                {
+                                                  path: 'delete',
+                                                  action: async (...args) => (await import('./routes/actions')).deleteTestAction(...args),
+                                                },
+                                                {
+                                                  path: 'update',
+                                                  action: async (...args) => (await import('./routes/actions')).updateTestAction(...args),
+                                                },
+                                                {
+                                                  path: 'run',
+                                                  action: async (...args) => (await import('./routes/actions')).runTestAction(...args),
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
                             },
                             {
                               path: 'duplicate',
@@ -169,28 +246,28 @@ const router = createMemoryRouter(
                         },
                       ],
                     },
+                  ],
+                },
+                {
+                  path: 'new',
+                  action: async (...args) =>
+                    (await import('./routes/actions')).createNewProjectAction(
+                      ...args
+                    ),
+                },
+                {
+                  path: ':projectId/remote-collections',
+                  loader: async (...args) =>
+                    (
+                      await import('./routes/remote-collections')
+                    ).remoteCollectionsLoader(...args),
+                  children: [
                     {
-                      path: 'new',
+                      path: 'pull',
                       action: async (...args) =>
-                        (await import('./routes/actions')).createNewProjectAction(
-                          ...args
-                        ),
-                    },
-                    {
-                      path: ':projectId/remote-collections',
-                      loader: async (...args) =>
                         (
                           await import('./routes/remote-collections')
-                        ).remoteCollectionsLoader(...args),
-                      children: [
-                        {
-                          path: 'pull',
-                          action: async (...args) =>
-                            (
-                              await import('./routes/remote-collections')
-                            ).pullRemoteCollectionAction(...args),
-                        },
-                      ],
+                        ).pullRemoteCollectionAction(...args),
                     },
                   ],
                 },
@@ -336,7 +413,7 @@ async function renderApp() {
           );
         } else if (activity === ACTIVITY_UNIT_TEST) {
           router.navigate(
-            `/organization/${organizationId}/project/${activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_UNIT_TEST}`
+            `/project/${state.global.activeProjectId}/workspace/${state.global.activeWorkspaceId}/test`
           );
         }
       }
