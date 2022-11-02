@@ -96,11 +96,9 @@ export interface CodeEditorProps {
   // used only for saving env editor state
   onBlur?: (event: FocusEvent) => void;
   onChange?: (value: string) => void;
-  onClick?: React.MouseEventHandler<HTMLDivElement>;
   onClickLink?: CodeMirrorLinkClickCallback;
   // NOTE: This is a hack to define keydown events on the Editor.
   onKeyDown?: (event: KeyboardEvent, value: string) => void;
-  onPaste?: (event: ClipboardEvent) => void;
   placeholder?: string;
   readOnly?: boolean;
   style?: Object;
@@ -164,10 +162,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   noStyleActiveLine,
   onBlur,
   onChange,
-  onClick,
   onClickLink,
   onKeyDown,
-  onPaste,
   placeholder,
   readOnly,
   style,
@@ -404,7 +400,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     codeMirror.current.on('scroll', persistState);
     codeMirror.current.on('fold', persistState);
     codeMirror.current.on('unfold', persistState);
-    codeMirror.current.on('paste', (_, e) => onPaste?.(e));
     codeMirror.current.on('keyHandled', (_: CodeMirror.Editor, _keyName: string, event: Event) => event.stopPropagation());
     codeMirror.current.setCursor({ line: -1, ch: -1 });
 
@@ -472,12 +467,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   }, [lintOptions, noLint, onChange]);
 
   useEffect(() => {
-    const handlePaste = (_: CodeMirror.Editor, e: ClipboardEvent) => onPaste?.(e);
-    codeMirror.current?.on('paste', handlePaste);
-    return () => codeMirror.current?.on('paste', handlePaste);
-  }, [onPaste]);
-
-  useEffect(() => {
     const handleOnBlur = (_: CodeMirror.Editor, e: FocusEvent) => onBlur?.(e);
     codeMirror.current?.on('blur', handleOnBlur);
     return () => codeMirror.current?.on('blur', handleOnBlur);
@@ -523,7 +512,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       <div
         className={classnames('editor__container', 'input', className)}
         style={{ fontSize: `${settings.editorFontSize}px` }}
-        onClick={onClick}
       >
         <textarea
           id={id}
