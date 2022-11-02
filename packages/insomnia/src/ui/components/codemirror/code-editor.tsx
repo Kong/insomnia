@@ -10,9 +10,9 @@ import { KeyCombination } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useMount } from 'react-use';
+import { useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
 import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
@@ -71,13 +71,9 @@ const widget = (cm: CodeMirror.EditorFromTextArea | null, from: CodeMirror.Posit
 };
 // Global object used for storing and persisting editor scroll, lint and folding margin states
 const editorStates: Record<string, EditorState> = {};
-
 export interface CodeEditorProps {
-  autoCloseBrackets?: boolean;
   autoPrettify?: boolean;
   className?: string;
-  debounceMillis?: number;
-  defaultTabBehavior?: boolean;
   defaultValue?: string;
   dynamicHeight?: boolean;
   enableNunjucks?: boolean;
@@ -87,34 +83,23 @@ export interface CodeEditorProps {
   getAutocompleteSnippets?: () => CodeMirror.Snippet[];
   hideGutters?: boolean;
   hideLineNumbers?: boolean;
-  hideScrollbars?: boolean;
   hintOptions?: ShowHintOptions;
   id?: string;
-  ignoreEditorFontSettings?: boolean;
   infoOptions?: GraphQLInfoOptions;
   jumpOptions?: ModifiedGraphQLJumpOptions;
   lintOptions?: Record<string, any>;
-  manualPrettify?: boolean;
+  showPrettifyButton?: boolean;
   mode?: string;
   noLint?: boolean;
   noMatchBrackets?: boolean;
   noStyleActiveLine?: boolean;
+  // used only for saving env editor state
   onBlur?: (event: FocusEvent) => void;
   onChange?: (value: string) => void;
-  onClick?: React.MouseEventHandler<HTMLDivElement>;
   onClickLink?: CodeMirrorLinkClickCallback;
-  onFocus?: (event: FocusEvent) => void;
-  // NOTE: This is a hack to define keydown events on the Editor.
-  onKeyDown?: (event: KeyboardEvent, value: string) => void;
-  onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
-  onPaste?: (event: ClipboardEvent) => void;
   placeholder?: string;
-  raw?: boolean;
   readOnly?: boolean;
-  singleLine?: boolean;
   style?: Object;
-  tabIndex?: number;
-  type?: string;
   // NOTE: for caching scroll and marks
   uniquenessKey?: string;
   updateFilter?: (filter: string) => void;
@@ -146,26 +131,14 @@ const normalizeMimeType = (mode?: string) => {
 export interface CodeEditorHandle {
   setValue: (value: string) => void;
   getValue: () => string;
-  setCursor: (ch: number, line: number) => void;
-  setSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
   scrollToSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
   selectAll: () => void;
   focus: () => void;
   focusEnd: () => void;
-  hasFocus: () => boolean;
-  setAttribute: (name: string, value: string) => void;
-  removeAttribute: (name: string) => void;
-  getAttribute: (name: string) => void;
-  clearSelection: () => void;
-  cursorIndex: () => number | undefined;
-  markText: (from: CodeMirror.Position, to: CodeMirror.Position, options: CodeMirror.TextMarkerOptions) => CodeMirror.TextMarker | undefined;
 }
 export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
-  autoCloseBrackets,
   autoPrettify,
   className,
-  debounceMillis,
-  defaultTabBehavior,
   defaultValue,
   dynamicHeight,
   enableNunjucks,
@@ -175,33 +148,22 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   getAutocompleteSnippets,
   hideGutters,
   hideLineNumbers,
-  hideScrollbars,
   hintOptions,
   id,
-  ignoreEditorFontSettings,
   infoOptions,
   jumpOptions,
   lintOptions,
-  manualPrettify,
+  showPrettifyButton,
   mode,
   noLint,
   noMatchBrackets,
   noStyleActiveLine,
   onBlur,
   onChange,
-  onClick,
   onClickLink,
-  onFocus,
-  onKeyDown,
-  onMouseLeave,
-  onPaste,
   placeholder,
-  raw,
   readOnly,
-  singleLine,
   style,
-  tabIndex,
-  type,
   uniquenessKey,
   updateFilter,
 }, ref) => {
@@ -210,13 +172,11 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
   const [originalCode, setOriginalCode] = useState('');
   const settings = useSelector(selectSettings);
-  const indentSize = ignoreEditorFontSettings ? undefined : settings.editorIndentSize;
-  const indentWithTabs = shouldIndentWithTabs({ mode, indentWithTabs: ignoreEditorFontSettings ? undefined : settings.editorIndentWithTabs });
+  const indentSize = settings.editorIndentSize;
+  const indentWithTabs = shouldIndentWithTabs({ mode, indentWithTabs: settings.editorIndentWithTabs });
   const indentChars = indentWithTabs ? '\t' : new Array((indentSize || TAB_SIZE) + 1).join(' ');
   const extraKeys = {
     'Ctrl-Q': (cm: CodeMirror.Editor) => cm.foldCode(cm.getCursor()),
-    // HACK: So nothing conflicts withe the "Send Request" shortcut
-    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: () => { },
     [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
     // Autocomplete
     'Ctrl-Space': 'autocomplete',
@@ -230,57 +190,69 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     // From https://github.com/codemirror/CodeMirror/issues/988#issuecomment-14921785
     Tab: (cm: CodeMirror.Editor) => cm.somethingSelected() ? cm.indentSelection('add') : cm.replaceSelection(indentChars, 'end'),
   };
-  const {
-    handleRender,
-    handleGetRenderContext,
-  } = useGatedNunjucks({ disabled: !enableNunjucks });
-
-  const prettifyAndSetValue = useCallback((code?: string, filter?: string) => {
+  const { handleRender, handleGetRenderContext } = useGatedNunjucks({ disabled: !enableNunjucks });
+  const prettifyXML = (code: string, filter?:string) => {
+    if (updateFilter && filter) {
+      try {
+        const results = queryXPath(code, filter);
+        code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
+      } catch (err) {
+        // Failed to parse filter (that's ok)
+        code = `<error>${err.message}</error>`;
+      }
+    }
+    try {
+      return vkBeautify.xml(code, indentChars);
+    } catch (error) {
+      // Failed to parse so just return original
+      return code;
+    }
+  };
+  const prettifyJSON = (code: string, filter?:string) => {
+    try {
+      let jsonString = code;
+      if (updateFilter && filter) {
+        try {
+          const codeObj = JSON.parse(code);
+          const results = JSONPath({ json: codeObj, path: filter.trim() });
+          jsonString = JSON.stringify(results);
+        } catch (err) {
+          console.log('[jsonpath] Error: ', err);
+          jsonString = '[]';
+        }
+      }
+      return jsonPrettify(jsonString, indentChars, autoPrettify);
+    } catch (error) {
+      // That's Ok, just leave it
+      return code;
+    }
+  };
+  const maybePrettifyAndSetValue = (code?: string, forcePrettify?: boolean, filter?: string) => {
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
     }
-    setOriginalCode(code);
-    if (autoPrettify) {
+    const shouldPrettify = forcePrettify || autoPrettify;
+    if (shouldPrettify) {
+      setOriginalCode(code);
       if (mode?.includes('xml')) {
-        if (updateFilter && filter) {
-          try {
-            const results = queryXPath(code, filter);
-            code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
-          } catch (err) {
-            code = `<error>${err.message}</error>`;
-          }
-        }
-        try {
-          code = vkBeautify.xml(code, indentChars);
-        } catch (error) { }
+        code = prettifyXML(code, filter);
       } else if (mode?.includes('json')) {
-        try {
-          let jsonString = code;
-          if (updateFilter && filter) {
-            try {
-              const codeObj = JSON.parse(code);
-              const results = JSONPath({ json: codeObj, path: filter.trim() });
-              jsonString = JSON.stringify(results);
-            } catch (err) {
-              console.log('[jsonpath] Error: ', err);
-              jsonString = '[]';
-            }
-          }
-          code = jsonPrettify(jsonString, indentChars, autoPrettify);
-        } catch (error) { }
+        code = prettifyJSON(code, filter);
       }
     }
     // this prevents codeMirror from needlessly setting the same thing repeatedly (which has the effect of moving the user's cursor and resetting the viewport scroll: a bad user experience)
-    if (codeMirror.current?.getValue() !== code) {
-      codeMirror.current?.setValue(code || '');
+    const currentCode = codeMirror.current?.getValue();
+    if (currentCode === code) {
+      return;
     }
-  }, [autoPrettify, indentChars, mode, updateFilter]);
+    codeMirror.current?.setValue(code || '');
+  };
 
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody: () => {
       if (mode?.includes('json') || mode?.includes('xml')) {
-        prettifyAndSetValue(codeMirror.current?.getValue());
+        maybePrettifyAndSetValue(codeMirror.current?.getValue());
       }
     },
   });
@@ -291,11 +263,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     }
 
     const showGuttersAndLineNumbers = !hideGutters && !hideLineNumbers;
-    const canAutocomplete = handleGetRenderContext || getAutocompleteConstants || getAutocompleteSnippets;
 
-    const transformEnums = (
-      tagDef: NunjucksParsedTag
-    ): NunjucksParsedTag[] => {
+    const transformEnums = (tagDef: NunjucksParsedTag): NunjucksParsedTag[] => {
       if (tagDef.args[0]?.type === 'enum') {
         return tagDef.args[0].options?.map(option => {
           const optionName = misc.fnOrString(option.displayName, tagDef.args);
@@ -314,18 +283,17 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       placeholder: placeholder || '',
       foldGutter: showGuttersAndLineNumbers,
       autoRefresh: { delay: 2000 },
-      lineWrapping: ignoreEditorFontSettings ? undefined : (settings.editorLineWrapping ?? true),
-      scrollbarStyle: hideScrollbars ? 'null' : 'native',
+      lineWrapping: settings.editorLineWrapping ?? true,
+      scrollbarStyle: 'native',
       lint: !noLint && !readOnly,
       matchBrackets: !noMatchBrackets,
-      autoCloseBrackets: autoCloseBrackets ?? true,
+      autoCloseBrackets: true,
       tabSize: indentSize || TAB_SIZE,
       indentUnit: indentSize || TAB_SIZE,
       hintOptions,
       info: infoOptions,
       viewportMargin: dynamicHeight ? Infinity : 30,
       readOnly: !!readOnly,
-      tabindex: typeof tabIndex === 'number' ? tabIndex : undefined,
       selectionPointer: 'default',
       jump: jumpOptions,
       styleActiveLine: !noStyleActiveLine,
@@ -341,7 +309,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         name: 'nunjucks',
         baseMode: normalizeMimeType(mode),
       },
-      environmentAutocomplete: canAutocomplete && {
+      environmentAutocomplete: {
         getVariables: async () => !handleGetRenderContext ? [] : (await handleGetRenderContext())?.keys || [],
         getTags: async () => !handleGetRenderContext ? [] : (await getTagDefinitions()).map(transformEnums).flat(),
         getConstants: getAutocompleteConstants,
@@ -352,11 +320,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     };
     codeMirror.current = CodeMirror.fromTextArea(textAreaRef.current, initialOptions);
     codeMirror.current.on('beforeChange', (doc: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
-      const isOneLineEditorWithChange = singleLine && change.text && change.text.length > 1;
-      if (isOneLineEditorWithChange) {
-        // If we're in single-line mode, merge all changed lines into one
-        change.update?.(change.from, change.to, [change.text.join('').replace(/\n/g, ' ')]);
-      }
       const isGraphqlWithChange = doc.getOption('mode') === 'graphql' && change.text.length > 0;
       if (isGraphqlWithChange) {
         // Don't allow non-breaking spaces because they break the GraphQL syntax
@@ -364,12 +327,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     });
 
-    codeMirror.current.on('keydown', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
-      // Use default tab behaviour if we're told
-      if (defaultTabBehavior && event.code === 'Tab') {
-        // @ts-expect-error -- unsound property assignment
-        event.codemirrorIgnore = true;
-      }
+    codeMirror.current.on('keydown', (_: CodeMirror.Editor, event: KeyboardEvent) => {
       const pressedKeyComb: KeyCombination = {
         ctrl: event.ctrlKey,
         alt: event.altKey,
@@ -378,12 +336,14 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         keyCode: event.keyCode,
       };
       const isUserDefinedKeyboardShortcut = isKeyCombinationInRegistry(pressedKeyComb, settings.hotKeyRegistry);
-      const isCodeEditorAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
+      const isAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
         'showAutocomplete': settings.hotKeyRegistry.showAutocomplete,
       });
-      const isEscapeKey = event.code === 'Escape';
       // Stop the editor from handling global keyboard shortcuts except for the autocomplete binding
-      if (isUserDefinedKeyboardShortcut && !isCodeEditorAutoCompleteBinding) {
+      const isShortcutButNotAutocomplete = isUserDefinedKeyboardShortcut && !isAutoCompleteBinding;
+      // Should not capture escape in order to exit modals
+      const isEscapeKey = event.code === 'Escape';
+      if (isShortcutButNotAutocomplete) {
         // @ts-expect-error -- unsound property assignment
         event.codemirrorIgnore = true;
         // Stop the editor from handling the escape key
@@ -392,9 +352,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         event.codemirrorIgnore = true;
       } else {
         event.stopPropagation();
-      }
-      if (onKeyDown && !doc.isHintDropdownActive()) {
-        onKeyDown(event, doc.getValue());
       }
     });
     codeMirror.current.on('keyup', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
@@ -411,6 +368,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         }
       }
     });
+    // NOTE: maybe we don't need this anymore?
     const persistState = () => {
       if (uniquenessKey && codeMirror.current) {
         editorStates[uniquenessKey] = {
@@ -437,18 +395,11 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     codeMirror.current.on('scroll', persistState);
     codeMirror.current.on('fold', persistState);
     codeMirror.current.on('unfold', persistState);
-    codeMirror.current.on('focus', (_, e) => onFocus?.(e));
-    codeMirror.current.on('paste', (_, e) => onPaste?.(e));
     codeMirror.current.on('keyHandled', (_: CodeMirror.Editor, _keyName: string, event: Event) => event.stopPropagation());
-    // Prevent these things if we're type === "password"
-    const preventDefault = (_: CodeMirror.Editor, event: Event) => type?.toLowerCase() === 'password' && event.preventDefault();
-    codeMirror.current.on('copy', preventDefault);
-    codeMirror.current.on('cut', preventDefault);
-    codeMirror.current.on('dragstart', preventDefault);
     codeMirror.current.setCursor({ line: -1, ch: -1 });
 
     // Actually set the value
-    prettifyAndSetValue(defaultValue || '', filter);
+    maybePrettifyAndSetValue(defaultValue || '', false, filter);
     // Clear history so we can't undo the initial set
     codeMirror.current?.clearHistory();
     // Setup nunjucks listeners
@@ -461,10 +412,10 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     }
     // Make URLs clickable
     if (onClickLink) {
-      codeMirror.current?.makeLinksClickable(onClickLink);
+      codeMirror.current.makeLinksClickable(onClickLink);
     }
     // Restore the state
-    if (uniquenessKey && editorStates.hasOwnProperty(uniquenessKey) && codeMirror.current) {
+    if (uniquenessKey && editorStates[uniquenessKey]) {
       const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
       codeMirror.current.scrollTo(scroll.left, scroll.top);
       codeMirror.current.setHistory(history);
@@ -477,14 +428,14 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         codeMirror.current.foldCode(from, to);
       }
     }
-    return () => {
-      codeMirror.current?.toTextArea();
-      codeMirror.current?.closeHintDropdown();
-    };
+  });
+  useUnmount(() => {
+    codeMirror.current?.toTextArea();
+    codeMirror.current?.closeHintDropdown();
+    codeMirror.current = null;
   });
 
   useEffect(() => {
-    const debounceTime = typeof debounceMillis === 'number' ? debounceMillis : DEBOUNCE_MILLIS;
     const fn = misc.debounce((doc: CodeMirror.Editor) => {
       if (onChange) {
         const value = doc.getValue()?.trim() || '';
@@ -504,24 +455,16 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         onChange(doc.getValue() || '');
         setOriginalCode(doc.getValue() || '');
       }
-    }, debounceTime);
+    }, DEBOUNCE_MILLIS);
     codeMirror.current?.on('changes', fn);
-    return () => {
-      codeMirror.current?.off('changes', fn);
-    };
-  }, [debounceMillis, lintOptions, noLint, onChange]);
+    return () => codeMirror.current?.off('changes', fn);
+  }, [lintOptions, noLint, onChange]);
 
   useEffect(() => {
-    const handleFocus = (_: CodeMirror.Editor, e: FocusEvent) => onFocus?.(e);
-    codeMirror.current?.on('focus', handleFocus);
-    return () => codeMirror.current?.on('focus', handleFocus);
-  }, [onFocus]);
-
-  useEffect(() => {
-    const handlePaste = (_: CodeMirror.Editor, e: ClipboardEvent) => onPaste?.(e);
-    codeMirror.current?.on('paste', handlePaste);
-    return () => codeMirror.current?.on('paste', handlePaste);
-  }, [onPaste]);
+    const handleOnBlur = (_: CodeMirror.Editor, e: FocusEvent) => onBlur?.(e);
+    codeMirror.current?.on('blur', handleOnBlur);
+    return () => codeMirror.current?.on('blur', handleOnBlur);
+  }, [onBlur]);
 
   useEffect(() => codeMirror.current?.setOption('hintOptions', hintOptions), [hintOptions]);
   useEffect(() => codeMirror.current?.setOption('info', infoOptions), [infoOptions]);
@@ -533,17 +476,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     getValue: () => codeMirror.current?.getValue() || '',
     selectAll: () => codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),
     focus: () => codeMirror.current?.focus(),
-    refresh: () => codeMirror.current?.refresh(),
-    setCursor: (ch, line = 0) => {
-      if (codeMirror.current && !codeMirror.current.hasFocus()) {
-        codeMirror.current.focus();
-      }
-      codeMirror.current?.setCursor({ line, ch });
-    },
-    setSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
-      codeMirror.current?.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
-      codeMirror.current?.scrollIntoView({ line: lineStart, ch: chStart });
-    },
     scrollToSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
       codeMirror.current?.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
       // If sizing permits, position selection just above center
@@ -555,23 +487,10 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
       codeMirror.current?.getDoc()?.setCursor(codeMirror.current.getDoc().lineCount(), 0);
     },
-    hasFocus: () => codeMirror.current?.hasFocus() || false,
-    setAttribute: (name: string, value: string) => codeMirror.current?.getTextArea().parentElement?.setAttribute(name, value),
-    removeAttribute: (name: string) => codeMirror.current?.getTextArea().parentElement?.removeAttribute(name),
-    getAttribute: (name: string) => codeMirror.current?.getTextArea().parentElement?.getAttribute(name),
-    clearSelection: () => {
-      if (codeMirror.current && !codeMirror.current?.isHintDropdownActive()) {
-        codeMirror.current.setSelection({ line: -1, ch: -1 }, { line: -1, ch: -1 }, { scroll: false },);
-      }
-    },
-    cursorIndex: () => codeMirror.current?.indexFromPos(codeMirror.current.getCursor()),
-    markText: (from: CodeMirror.Position, to: CodeMirror.Position, options: CodeMirror.TextMarkerOptions) => {
-      return codeMirror.current?.getDoc().markText(from, to, options);
-    },
   }), []);
 
-  const showFilter = updateFilter && mode && (mode.includes('json') || mode.includes('xml'));
-  const showPrettify = manualPrettify && mode?.includes('json') || mode?.includes('xml');
+  const showFilter = readOnly && (mode?.includes('json') || mode?.includes('xml'));
+  const showPrettify = showPrettifyButton && mode?.includes('json') || mode?.includes('xml');
 
   return (
     <div
@@ -579,17 +498,14 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         editor: true,
         'editor--dynamic-height': dynamicHeight,
         'editor--readonly': readOnly,
-        'raw-editor': raw,
       })}
       style={style}
-      data-editor-type={type}
+      data-editor-type="text"
       data-testid="CodeEditor"
     >
       <div
         className={classnames('editor__container', 'input', className)}
-        style={ignoreEditorFontSettings ? {} : { fontSize: `${settings.editorFontSize}px` }}
-        onClick={onClick}
-        onMouseLeave={onMouseLeave}
+        style={{ fontSize: `${settings.editorFontSize}px` }}
       >
         <textarea
           id={id}
@@ -610,14 +526,14 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                 type="text"
                 title="Filter response body"
                 defaultValue={filter || ''}
-                placeholder={mode.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
+                placeholder={mode?.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
                 onKeyDown={createKeybindingsHandler({
                   'Enter': () => {
                     const filter = inputRef.current?.value;
                     if (updateFilter) {
                       updateFilter(filter || '');
                     }
-                    prettifyAndSetValue(originalCode, filter);
+                    maybePrettifyAndSetValue(originalCode, false, filter);
                   },
                 })}
                 onChange={e => {
@@ -625,7 +541,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                     if (updateFilter) {
                       updateFilter('');
                     }
-                    prettifyAndSetValue(originalCode);
+                    maybePrettifyAndSetValue(originalCode, false);
                   }
                 }}
               />) : null}
@@ -645,7 +561,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                         if (updateFilter) {
                           updateFilter(filter);
                         }
-                        prettifyAndSetValue(originalCode, filter);
+                        maybePrettifyAndSetValue(originalCode, false, filter);
                       }}
                     >
                       {filter}
@@ -654,7 +570,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                 </Dropdown>
               )) : null}
             {showFilter ?
-              (<button key="help" className="btn btn--compact" onClick={() => showModal(FilterHelpModal, { isJSON: mode?.includes('json') })}>
+              (<button key="help" className="btn btn--compact" onClick={() => showModal(FilterHelpModal, { isJSON: Boolean(mode?.includes('json')) })}>
                 <i className="fa fa-question-circle" />
               </button>) : null}
             {showPrettify ?
@@ -664,7 +580,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                 title="Auto-format request body whitespace"
                 onClick={() => {
                   if (mode?.includes('json') || mode?.includes('xml')) {
-                    prettifyAndSetValue(codeMirror.current?.getValue());
+                    maybePrettifyAndSetValue(codeMirror.current?.getValue(), true);
                   }
                 }}
               >

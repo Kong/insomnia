@@ -34,9 +34,10 @@ import { setTheme } from '../../../plugins/misc';
 import { exchangeCodeForToken } from '../../../sync/git/github-oauth-provider';
 import { exchangeCodeForGitLabToken } from '../../../sync/git/gitlab-oauth-provider';
 import { AskModal } from '../../../ui/components/modals/ask-modal';
+import { submitAuthCode } from '../../auth-session-provider';
 import { AlertModal } from '../../components/modals/alert-modal';
 import { showAlert, showError, showModal } from '../../components/modals/index';
-import { currentLoginModalHandle, LoginModalHandle } from '../../components/modals/login-modal';
+import { LoginModal } from '../../components/modals/login-modal';
 import { SelectModal } from '../../components/modals/select-modal';
 import {
   SettingsModal,
@@ -203,7 +204,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
       break;
 
     case COMMAND_LOGIN:
-      showModal(LoginModalHandle, {
+      showModal(LoginModal, {
         title: args.title,
         message: args.message,
         reauth: true,
@@ -308,11 +309,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
     }
 
     case COMMAND_FINISH_AUTHENTICATION: {
-      if (currentLoginModalHandle) {
-        currentLoginModalHandle?.submitAuthCode(args.box);
-      } else {
-        console.log(`Received auth box, but no login modal... ${command}`);
-      }
+      submitAuthCode(args.box);
       break;
     }
 
@@ -427,17 +424,30 @@ const showSelectExportTypeModal = ({ onDone }: {
     value: defaultValue,
     options,
     message: 'Which format would you like to export as?',
-    onDone: async (selectedFormat: SelectedFormat) => {
-      window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
-      await onDone(selectedFormat);
+    onDone: async selectedFormat => {
+      if (selectedFormat) {
+        window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
+        await onDone(selectedFormat as SelectedFormat);
+      }
     },
   });
 };
 
-const showExportPrivateEnvironmentsModal = (privateEnvNames: string) => showModal(AskModal, {
-  title: 'Export Private Environments?',
-  message: `Do you want to include private environments (${privateEnvNames}) in your export?`,
-});
+const showExportPrivateEnvironmentsModal = async (privateEnvNames: string) => {
+  return new Promise<boolean>(resolve => {
+    showModal(AskModal, {
+      title: 'Export Private Environments?',
+      message: `Do you want to include private environments (${privateEnvNames}) in your export?`,
+      onDone: async (isYes: boolean) => {
+        if (isYes) {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      },
+    });
+  });
+};
 
 const showSaveExportedFileDialog = async ({
   exportedFileNamePrefix,

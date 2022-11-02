@@ -140,7 +140,7 @@ export const ResponsePane: FC<Props> = ({
     <Pane type="response">
       {!response ? null : (
         <PaneHeader className="row-spaced">
-          <div className="no-wrap scrollable scrollable--no-bars pad-left">
+          <div aria-atomic="true" aria-live="polite" className="no-wrap scrollable scrollable--no-bars pad-left">
             <StatusTag statusCode={response.statusCode} statusMessage={response.statusMessage} />
             <TimeTag milliseconds={response.elapsedTime} />
             <SizeTag bytesRead={response.bytesRead} bytesContent={response.bytesContent} />

@@ -14,12 +14,15 @@ import { SyncPullButton } from '../sync-pull-button';
 type Props = ModalProps & {
   vcs: VCS;
 };
-export interface SyncBranchesModalOptions {
-  error: string;
+
+interface State {
+  error?: string;
   newBranchName: string;
   currentBranch: string;
   branches: string[];
   remoteBranches: string[];
+}
+export interface SyncBranchesModalOptions {
   onHide?: () => void;
 }
 export interface SyncBranchesModalHandle {
@@ -28,7 +31,7 @@ export interface SyncBranchesModalHandle {
 }
 export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ vcs }, ref) => {
   const modalRef = useRef<ModalHandle>(null);
-  const [state, setState] = useState<SyncBranchesModalOptions>({
+  const [state, setState] = useState<State>({
     error: '',
     newBranchName: '',
     branches: [],

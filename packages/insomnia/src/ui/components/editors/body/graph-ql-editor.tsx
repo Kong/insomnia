@@ -503,7 +503,7 @@ export const GraphQLEditor: FC<Props> = ({
         <CodeEditor
           ref={editorRef}
           dynamicHeight
-          manualPrettify
+          showPrettifyButton
           uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
           defaultValue={requestBody.query || ''}
           className={className}
@@ -550,7 +550,7 @@ export const GraphQLEditor: FC<Props> = ({
           dynamicHeight
           enableNunjucks
           uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
-          manualPrettify={false}
+          showPrettifyButton={false}
           defaultValue={jsonPrettify(JSON.stringify(requestBody.variables))}
           className={className}
           getAutocompleteConstants={() => Object.keys(variableTypes)}

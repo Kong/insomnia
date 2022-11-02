@@ -21,7 +21,6 @@ import { ResponseCSVViewer } from './response-csv-viewer';
 import { ResponseErrorViewer } from './response-error-viewer';
 import { ResponseMultipartViewer } from './response-multipart-viewer';
 import { ResponsePDFViewer } from './response-pdf-viewer';
-import { ResponseRawViewer } from './response-raw-viewer';
 import { ResponseWebView } from './response-web-view';
 
 let alwaysShowLargeResponses = false;
@@ -71,7 +70,7 @@ export const ResponseViewer = ({
 
   const error = responseError || parseError;
 
-  const _selectableViewRef = useRef<CodeEditorHandle | null>(null);
+  const editorRef = useRef<CodeEditorHandle>(null);
 
   function _handleDismissBlocker() {
     setBlockingBecauseTooLarge(false);
@@ -115,10 +114,10 @@ export const ResponseViewer = ({
 
   const _isViewSelectable = () => {
     return (
-      _selectableViewRef.current != null &&
-      'focus' in _selectableViewRef.current &&
-      typeof _selectableViewRef.current.focus === 'function' &&
-      typeof _selectableViewRef.current.selectAll === 'function'
+      editorRef.current != null &&
+      'focus' in editorRef.current &&
+      typeof editorRef.current.focus === 'function' &&
+      typeof editorRef.current.selectAll === 'function'
     );
   };
 
@@ -128,13 +127,13 @@ export const ResponseViewer = ({
         return;
       }
 
-      if (_selectableViewRef.current) {
-        if ('focus' in _selectableViewRef.current) {
-          _selectableViewRef.current.focus();
+      if (editorRef.current) {
+        if ('focus' in editorRef.current) {
+          editorRef.current.focus();
         }
 
-        if (!largeResponse && 'selectAll' in _selectableViewRef.current) {
-          _selectableViewRef.current.selectAll();
+        if (!largeResponse && 'selectAll' in editorRef.current) {
+          editorRef.current.selectAll();
         }
       }
     },
@@ -384,11 +383,17 @@ export const ResponseViewer = ({
 
   if (previewMode === PREVIEW_MODE_RAW) {
     return (
-      <ResponseRawViewer
+      <CodeEditor
         key={responseId}
-        responseId={responseId}
-        ref={_selectableViewRef}
-        value={_getBody()}
+        ref={editorRef}
+        className="raw-editor"
+        defaultValue={_getBody()}
+        hideLineNumbers
+        mode="text/plain"
+        noMatchBrackets
+        placeholder="..."
+        readOnly
+        uniquenessKey={responseId}
       />
     );
   }
@@ -397,7 +402,7 @@ export const ResponseViewer = ({
   return (
     <CodeEditor
       key={disablePreviewLinks ? 'links-disabled' : 'links-enabled'}
-      ref={_selectableViewRef}
+      ref={editorRef}
       autoPrettify
       defaultValue={_getBody()}
       filter={filter}

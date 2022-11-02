@@ -277,7 +277,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
 
   useDocBodyKeyboardShortcuts({
     request_focusUrl: () => {
-      inputRef.current?.focus();
       inputRef.current?.selectAll();
     },
     request_send: () => {
@@ -290,14 +289,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     },
     request_showOptions: () => {
       dropdownRef.current?.toggle(true);
-    },
-  });
-
-  const handleKeydown = createKeybindingsHandler({
-    'Enter': () => {
-      if (request.url) {
-        send();
-      }
     },
   });
 
@@ -380,7 +371,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           placeholder="https://api.myproduct.com/v1/users"
           defaultValue={url}
           onChange={handleUrlChange}
-          onKeyDown={handleKeydown}
+          onKeyDown={createKeybindingsHandler({
+            'Enter': () => send(),
+          })}
         />
         {isCancellable ? (
           <button

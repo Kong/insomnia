@@ -28,7 +28,7 @@ import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
 import { showError, showModal } from '../modals';
-import { LoginModalHandle } from '../modals/login-modal';
+import { LoginModal } from '../modals/login-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncDeleteModal } from '../modals/sync-delete-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
@@ -425,7 +425,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         {syncMenuHeader}
 
         {!session.isLoggedIn() && (
-          <DropdownItem onClick={() => showModal(LoginModalHandle)}>
+          <DropdownItem onClick={() => showModal(LoginModal)}>
             <i className="fa fa-sign-in" /> Log In
           </DropdownItem>
         )}

@@ -95,7 +95,7 @@ export const BodyEditor: FC<Props> = ({
           Do you want set the <span className="monospace">Content-Type</span> header to{' '}
           <span className="monospace">{newContentType}</span>?
         </p>,
-        onDone: (saidYes: boolean) => {
+        onDone: async (saidYes: boolean) => {
           if (saidYes) {
             models.request.update(newRequest, { headers });
           }

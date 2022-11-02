@@ -3,7 +3,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState }
 
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
-import { CodeEditor, CodeEditorHandle, CodeEditorProps } from '../codemirror/code-editor';
+import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
 // NeDB field names cannot begin with '$' or contain a period '.'
 // Docs: https://github.com/DeNA/nedb#inserting-documents
@@ -55,9 +55,10 @@ export interface EnvironmentInfo {
   propertyOrder: Record<string, any> | null;
 }
 
-interface Props extends Partial<CodeEditorProps> {
+interface Props {
   environmentInfo: EnvironmentInfo;
   didChange: () => void;
+  onBlur?: () => void;
 }
 
 export interface EnvironmentEditorHandle {
@@ -65,12 +66,11 @@ export interface EnvironmentEditorHandle {
   getValue: () => EnvironmentInfo | null;
 }
 
-export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>((props, ref) => {
-  const {
-    environmentInfo,
-    didChange,
-    ...rest
-  } = props;
+export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(({
+  environmentInfo,
+  didChange,
+  onBlur,
+}, ref) => {
   const editorRef = useRef<CodeEditorHandle>(null);
   const [error, setError] = useState('');
   const getValue = useCallback(() => {
@@ -105,26 +105,26 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>((pro
         autoPrettify
         enableNunjucks
         onChange={() => {
-          let value: EnvironmentInfo | null = null;
-          // Check for JSON parse errors
+          setError('');
           try {
-            value = getValue();
+            const value = getValue();
+            // Check for invalid key names
+            if (value?.object) {
+            // Check root and nested properties
+              const err = checkNestedKeys(value.object);
+              if (err) {
+                setError(err);
+              }
+            }
           } catch (err) {
             setError(err.message);
           }
-          // Check for invalid key names
-          if (value?.object) {
-            // Check root and nested properties
-            const err = checkNestedKeys(value.object);
-            if (err) {
-              setError(err);
-            }
-          }
+
           didChange();
         }}
         defaultValue={defaultValue}
         mode="application/json"
-        {...rest}
+        onBlur={onBlur}
       />
       {error && <p className="notice error margin">{error}</p>}
     </div>

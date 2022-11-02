@@ -4,6 +4,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { docsTemplateTags } from '../../../common/documentation';
 import { Request } from '../../../models/request';
 import { isRequest } from '../../../models/request';
+import { WebSocketRequest } from '../../../models/websocket-request';
 import { RenderError } from '../../../templating';
 import { Link } from '../base/link';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
@@ -13,7 +14,7 @@ import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { showModal } from './index';
 export interface RequestRenderErrorModalOptions {
   error: RenderError | null;
-  request: Request | null;
+  request: Request | WebSocketRequest | null;
 }
 export interface RequestRenderErrorModalHandle {
   show: (options: RequestRenderErrorModalOptions) => void;
@@ -26,6 +27,7 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
     error: null,
     request: null,
   });
+  const { request, error } = state;
 
   useImperativeHandle(ref, () => ({
     hide: () => {
@@ -37,15 +39,15 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
     },
   }), []);
 
-  const { request, error } = state;
   const fullPath = `Request.${error?.path}`;
   const result = JSONPath({ json: request, path: `$.${error?.path}` });
   const template = result && result.length ? result[0] : null;
   const locationLabel = template?.includes('\n') ? `line ${error?.location.line} of` : null;
+
   return (
     <Modal ref={modalRef}>
       <ModalHeader>Failed to Render Request</ModalHeader>
-      <ModalBody>{request && error && error ? (
+      <ModalBody>{request && error ? (
         <div className="pad">
           <div className="notice warning">
             <p>
@@ -57,7 +59,7 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
                   className="btn btn--clicky margin-right-sm"
                   onClick={() => {
                     modalRef.current?.hide();
-                    showModal(RequestSettingsModal, { request: state.request });
+                    showModal(RequestSettingsModal, { request });
                   }}
                 >
                   Adjust Render Settings
@@ -85,4 +87,5 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
     </Modal>
   );
 });
+
 RequestRenderErrorModal.displayName = 'RequestRenderErrorModal';

@@ -45,7 +45,7 @@ const useChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): Change
 
     const protoFile = async () => {
       showModal(ProtoFilesModal, {
-        selected: request.protoFileId,
+        selectedId: request.protoFileId,
         onSave: async (protoFileId: string) => {
           if (request.protoFileId !== protoFileId) {
             const initial = models.grpcRequest.init();

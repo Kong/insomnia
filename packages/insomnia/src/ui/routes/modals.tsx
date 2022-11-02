@@ -81,7 +81,7 @@ const Modals: FC = () => {
         <WrapperModal
           ref={instance => registerModal(instance, 'WrapperModal')}
         />
-        <LoginModal ref={registerModal} />
+        <LoginModal ref={instance => registerModal(instance, 'LoginModal')} />
         <AskModal ref={instance => registerModal(instance, 'AskModal')} />
         <SelectModal
           ref={instance => registerModal(instance, 'SelectModal')}

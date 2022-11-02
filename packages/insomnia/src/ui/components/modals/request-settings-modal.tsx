@@ -6,7 +6,8 @@ import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
-import type { Request } from '../../../models/request';
+import { isRequest, Request } from '../../../models/request';
+import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { isWorkspace, Workspace } from '../../../models/workspace';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
@@ -17,11 +18,11 @@ import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 
 export interface RequestSettingsModalOptions {
-  request: Request | GrpcRequest;
+  request: Request | GrpcRequest | WebSocketRequest;
   forceEditMode?: boolean;
 }
 interface State {
-  request: Request | GrpcRequest | null;
+  request: Request | GrpcRequest | WebSocketRequest | null;
   showDescription: boolean;
   defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string | null;
@@ -103,6 +104,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     });
     setState(state => ({ ...state, request: updated }));
   };
+
   return (
     <Modal ref={modalRef}>
       <ModalHeader>
@@ -130,184 +132,311 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
               />
             </label>
           </div>
-          {request && isGrpcRequest(request)
-            ? (
-              <p className="faint italic">
-                Are there any gRPC settings you expect to see? Create a{' '}
-                <a href={'https://github.com/Kong/insomnia/issues/new/choose'}>feature request</a>!
-              </p>
-            )
-            : (
+          {request && isWebSocketRequest(request) && (
+            <>
               <>
-                <>
-                  {showDescription ? (
-                    <MarkdownEditor
-                      ref={editorRef}
-                      className="margin-top"
-                      defaultPreviewMode={defaultPreviewMode}
-                      placeholder="Write a description"
-                      defaultValue={request?.description || ''}
-                      onChange={async (description: string) => {
-                        invariant(request, 'Request is required');
-                        const updated = await models.request.update(request, {
-                          description,
-                        });
-                        setState(state => ({
-                          ...state,
-                          request: updated,
-                          defaultPreviewMode: false,
-                        }));
-                      }}
-                    />
-                  ) : (
-                    <button
-                      onClick={() => setState({ ...state, showDescription: true })}
-                      className="btn btn--outlined btn--super-duper-compact"
-                    >
-                      Add Description
-                    </button>
-                  )}
-                </>
-                <>
-                  <div className="pad-top pad-bottom">
-                    <div className="form-control form-control--thin">
-                      <label>
-                        Send cookies automatically
-                        <input
-                          type="checkbox"
-                          name="settingSendCookies"
-                          checked={request?.settingSendCookies}
-                          onChange={toggleCheckBox}
-                        />
-                      </label>
-                    </div>
-                    <div className="form-control form-control--thin">
-                      <label>
-                        Store cookies automatically
-                        <input
-                          type="checkbox"
-                          name="settingStoreCookies"
-                          checked={request?.settingStoreCookies}
-                          onChange={toggleCheckBox}
-                        />
-                      </label>
-                    </div>
-                    <div className="form-control form-control--thin">
-                      <label>
-                        Automatically encode special characters in URL
-                        <input
-                          type="checkbox"
-                          name="settingEncodeUrl"
-                          checked={request?.settingEncodeUrl}
-                          onChange={toggleCheckBox}
-                        />
-                        <HelpTooltip position="top" className="space-left">
-                          Automatically encode special characters at send time (does not apply to query
-                          parameters editor)
-                        </HelpTooltip>
-                      </label>
-                    </div>
-                    <div className="form-control form-control--thin">
-                      <label>
-                        Skip rendering of request body
-                        <input
-                          type="checkbox"
-                          name="settingDisableRenderRequestBody"
-                          checked={request?.settingDisableRenderRequestBody}
-                          onChange={toggleCheckBox}
-                        />
-                        <HelpTooltip position="top" className="space-left">
-                          Disable rendering of environment variables and tags for the request body
-                        </HelpTooltip>
-                      </label>
-                    </div>
-                    <div className="form-control form-control--thin">
-                      <label>
-                        Rebuild path dot sequences
-                        <HelpTooltip position="top" className="space-left">
-                          This instructs libcurl to squash sequences of "/../" or "/./" that may exist in the
-                          URL's path part and that is supposed to be removed according to RFC 3986 section
-                          5.2.4
-                        </HelpTooltip>
-                        <input
-                          type="checkbox"
-                          name="settingRebuildPath"
-                          checked={request?.settingRebuildPath}
-                          onChange={toggleCheckBox}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                  <div className="form-control form-control--outlined">
+                {showDescription ? (
+                  <MarkdownEditor
+                    ref={editorRef}
+                    className="margin-top"
+                    defaultPreviewMode={defaultPreviewMode}
+                    placeholder="Write a description"
+                    defaultValue={request.description}
+                    onChange={async (description: string) => {
+                      const updated = await requestOperations.update(request, {
+                        description,
+                      });
+                      setState({
+                        ...state,
+                        request: updated,
+                        defaultPreviewMode: false,
+                      });
+                    }}
+                  />
+                ) : (
+                  <button
+                    onClick={() => setState(state => ({ ...state, showDescription: true }))}
+                    className="btn btn--outlined btn--super-duper-compact"
+                  >
+                    Add Description
+                  </button>
+                )}
+              </>
+              <>
+                <div className="pad-top pad-bottom">
+                  <div className="form-control form-control--thin">
                     <label>
-                      Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
-                      <select
-                        // @ts-expect-error -- TSCONVERSION this setting only exists for a Request not GrpcRequest
-                        defaultValue={state.request?.settingFollowRedirects}
-                        name="settingFollowRedirects"
-                        onChange={async event => {
-                          invariant(request, 'Request is required');
-                          const updated = await models.request.update(request, {
-                            [event.currentTarget.name]: event.currentTarget.value,
-                          });
-                          setState(state => ({ ...state, request: updated }));
-                        }}
-                      >
-                        <option value={'global'}>Use global setting</option>
-                        <option value={'off'}>Don't follow redirects</option>
-                        <option value={'on'}>Follow redirects</option>
-                      </select>
+                      Send cookies automatically
+                      <input
+                        type="checkbox"
+                        name="settingSendCookies"
+                        checked={request['settingSendCookies']}
+                        onChange={toggleCheckBox}
+                      />
                     </label>
                   </div>
-                </>
-                <hr />
-                <div className="form-row">
-                  <div className="form-control form-control--outlined">
+                  <div className="form-control form-control--thin">
                     <label>
-                      Move/Copy to Workspace
-                      <HelpTooltip position="top" className="space-left">
-                        Copy or move the current request to a new workspace. It will be placed at the root of
-                        the new workspace's folder structure.
-                      </HelpTooltip>
-                      <select
-                        value={activeWorkspaceIdToCopyTo || '__NULL__'}
-                        onChange={event => {
-                          const { value } = event.currentTarget;
-                          const workspaceId = value === '__NULL__' ? null : value;
-                          setState(state => ({ ...state, activeWorkspaceIdToCopyTo: workspaceId }));
-                        }}
-                      >
-                        <option value="__NULL__">-- Select Workspace --</option>
-                        {workspacesForActiveProject
-                          .filter(w => workspace?._id !== w._id)
-                          .map(w => (
-                            <option key={w._id} value={w._id}>
-                              {w.name}
-                            </option>
-                          ))}
-                      </select>
+                      Store cookies automatically
+                      <input
+                        type="checkbox"
+                        name="settingStoreCookies"
+                        checked={request['settingStoreCookies']}
+                        onChange={toggleCheckBox}
+                      />
                     </label>
-                  </div>
-                  <div className="form-control form-control--no-label width-auto">
-                    <button
-                      disabled={!activeWorkspaceIdToCopyTo}
-                      className="btn btn--clicky"
-                      onClick={handleCopyToWorkspace}
-                    >
-                      Copy
-                    </button>
-                  </div>
-                  <div className="form-control form-control--no-label width-auto">
-                    <button
-                      disabled={!activeWorkspaceIdToCopyTo}
-                      className="btn btn--clicky"
-                      onClick={handleMoveToWorkspace}
-                    >
-                      Move
-                    </button>
                   </div>
                 </div>
-              </>)
+                <div className="form-control form-control--outlined">
+                  <label>
+                    Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
+                    <select
+                      defaultValue={request?.settingFollowRedirects}
+                      name="settingFollowRedirects"
+                      onChange={async event => {
+                        const updated = await requestOperations.update(request, {
+                          [event.currentTarget.name]: event.currentTarget.value,
+                        });
+                        setState(state => ({ ...state, request: updated }));
+                      }}
+                    >
+                      <option value={'global'}>Use global setting</option>
+                      <option value={'off'}>Don't follow redirects</option>
+                      <option value={'on'}>Follow redirects</option>
+                    </select>
+                  </label>
+                </div>
+              </>
+              <hr />
+              <div className="form-row">
+                <div className="form-control form-control--outlined">
+                  <label>
+                    Move/Copy to Workspace
+                    <HelpTooltip position="top" className="space-left">
+                      Copy or move the current request to a new workspace. It will be placed at the root of
+                      the new workspace's folder structure.
+                    </HelpTooltip>
+                    <select
+                      value={activeWorkspaceIdToCopyTo || '__NULL__'}
+                      onChange={event => {
+                        const { value } = event.currentTarget;
+                        const workspaceId = value === '__NULL__' ? null : value;
+                        setState(state => ({ ...state, activeWorkspaceIdToCopyTo: workspaceId }));
+                      }}
+                    >
+                      <option value="__NULL__">-- Select Workspace --</option>
+                      {workspacesForActiveProject.map(w => {
+                        if (workspace && workspace._id === w._id) {
+                          return null;
+                        }
+
+                        return (
+                          <option key={w._id} value={w._id}>
+                            {w.name}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </label>
+                </div>
+                <div className="form-control form-control--no-label width-auto">
+                  <button
+                    disabled={!activeWorkspaceIdToCopyTo}
+                    className="btn btn--clicky"
+                    onClick={handleCopyToWorkspace}
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div className="form-control form-control--no-label width-auto">
+                  <button
+                    disabled={!activeWorkspaceIdToCopyTo}
+                    className="btn btn--clicky"
+                    onClick={handleMoveToWorkspace}
+                  >
+                    Move
+                  </button>
+                </div>
+              </div>
+            </>)}
+          {request && isGrpcRequest(request) && (
+            <p className="faint italic">
+              Are there any gRPC settings you expect to see? Create a{' '}
+              <a href={'https://github.com/Kong/insomnia/issues/new/choose'}>feature request</a>!
+            </p>
+          )}
+          {request && isRequest(request) && (
+            <>
+              <>
+                {showDescription ? (
+                  <MarkdownEditor
+                    ref={editorRef}
+                    className="margin-top"
+                    defaultPreviewMode={defaultPreviewMode}
+                    placeholder="Write a description"
+                    defaultValue={request.description}
+                    onChange={async (description: string) => {
+                      const updated = await models.request.update(request, {
+                        description,
+                      });
+                      setState(state => ({
+                        ...state,
+                        request: updated,
+                        defaultPreviewMode: false,
+                      }));
+                    }}
+                  />
+                ) : (
+                  <button
+                    onClick={() => setState(state => ({ ...state, showDescription: true }))}
+                    className="btn btn--outlined btn--super-duper-compact"
+                  >
+                    Add Description
+                  </button>
+                )}
+              </>
+              <>
+                <div className="pad-top pad-bottom">
+                  <div className="form-control form-control--thin">
+                    <label>
+                      Send cookies automatically
+                      <input
+                        type="checkbox"
+                        name="settingSendCookies"
+                        checked={request['settingSendCookies']}
+                        onChange={toggleCheckBox}
+                      />
+                    </label>
+                  </div>
+                  <div className="form-control form-control--thin">
+                    <label>
+                      Store cookies automatically
+                      <input
+                        type="checkbox"
+                        name="settingStoreCookies"
+                        checked={request['settingStoreCookies']}
+                        onChange={toggleCheckBox}
+                      />
+                    </label>
+                  </div>
+                  <div className="form-control form-control--thin">
+                    <label>
+                      Automatically encode special characters in URL
+                      <input
+                        type="checkbox"
+                        name="settingEncodeUrl"
+                        checked={request['settingEncodeUrl']}
+                        onChange={toggleCheckBox}
+                      />
+                      <HelpTooltip position="top" className="space-left">
+                        Automatically encode special characters at send time (does not apply to query
+                        parameters editor)
+                      </HelpTooltip>
+                    </label>
+                  </div>
+                  <div className="form-control form-control--thin">
+                    <label>
+                      Skip rendering of request body
+                      <input
+                        type="checkbox"
+                        name="settingDisableRenderRequestBody"
+                        checked={request['settingDisableRenderRequestBody']}
+                        onChange={toggleCheckBox}
+                      />
+                      <HelpTooltip position="top" className="space-left">
+                        Disable rendering of environment variables and tags for the request body
+                      </HelpTooltip>
+                    </label>
+                  </div>
+                  <div className="form-control form-control--thin">
+                    <label>
+                      Rebuild path dot sequences
+                      <HelpTooltip position="top" className="space-left">
+                        This instructs libcurl to squash sequences of "/../" or "/./" that may exist in the
+                        URL's path part and that is supposed to be removed according to RFC 3986 section
+                        5.2.4
+                      </HelpTooltip>
+                      <input
+                        type="checkbox"
+                        name="settingRebuildPath"
+                        checked={request['settingRebuildPath']}
+                        onChange={toggleCheckBox}
+                      />
+                    </label>
+                  </div>
+                </div>
+                <div className="form-control form-control--outlined">
+                  <label>
+                    Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
+                    <select
+                      defaultValue={request?.settingFollowRedirects}
+                      name="settingFollowRedirects"
+                      onChange={async event => {
+                        const updated = await models.request.update(request, {
+                          [event.currentTarget.name]: event.currentTarget.value,
+                        });
+                        setState(state => ({ ...state, request: updated }));
+                      }}
+                    >
+                      <option value={'global'}>Use global setting</option>
+                      <option value={'off'}>Don't follow redirects</option>
+                      <option value={'on'}>Follow redirects</option>
+                    </select>
+                  </label>
+                </div>
+              </>
+              <hr />
+              <div className="form-row">
+                <div className="form-control form-control--outlined">
+                  <label>
+                    Move/Copy to Workspace
+                    <HelpTooltip position="top" className="space-left">
+                      Copy or move the current request to a new workspace. It will be placed at the root of
+                      the new workspace's folder structure.
+                    </HelpTooltip>
+                    <select
+                      value={activeWorkspaceIdToCopyTo || '__NULL__'}
+                      onChange={event => {
+                        const { value } = event.currentTarget;
+                        const workspaceId = value === '__NULL__' ? null : value;
+                        setState(state => ({ ...state, activeWorkspaceIdToCopyTo: workspaceId }));
+                      }}
+                    >
+                      <option value="__NULL__">-- Select Workspace --</option>
+                      {workspacesForActiveProject.map(w => {
+                        if (workspace && workspace._id === w._id) {
+                          return null;
+                        }
+
+                        return (
+                          <option key={w._id} value={w._id}>
+                            {w.name}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </label>
+                </div>
+                <div className="form-control form-control--no-label width-auto">
+                  <button
+                    disabled={!activeWorkspaceIdToCopyTo}
+                    className="btn btn--clicky"
+                    onClick={handleCopyToWorkspace}
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div className="form-control form-control--no-label width-auto">
+                  <button
+                    disabled={!activeWorkspaceIdToCopyTo}
+                    className="btn btn--clicky"
+                    onClick={handleMoveToWorkspace}
+                  >
+                    Move
+                  </button>
+                </div>
+              </div>
+            </>)
           }
         </div>
       </ModalBody>

@@ -233,7 +233,6 @@ export const GitSyncDropdown: FC<Props> = ({ workspace, vcs, className }) => {
             <DropdownItem
               onClick={() => showModal(GitStagingModal, {
                 onCommit: refreshState,
-                gitRepository,
               })}
             >
               <i className="fa fa-check" /> Commit
