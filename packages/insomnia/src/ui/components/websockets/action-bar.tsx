@@ -69,9 +69,9 @@ export const ConnectionCircle = styled.span({
 
 export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, environmentId, defaultValue, onChange, readyState }) => {
   const isOpen = readyState === ReadyState.OPEN;
-  const editorRef = useRef<OneLineEditorHandle>(null);
+  const oneLineEditorRef = useRef<OneLineEditorHandle>(null);
   useLayoutEffect(() => {
-    editorRef.current?.focusEnd();
+    oneLineEditorRef.current?.focusEnd();
   }, []);
   const handleSubmit = useCallback(async () => {
     if (isOpen) {
@@ -122,7 +122,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
   useDocBodyKeyboardShortcuts({
     request_send: () => handleSubmit(),
     request_focusUrl: () => {
-      editorRef.current?.selectAll();
+      oneLineEditorRef.current?.selectAll();
     },
   });
 
@@ -145,7 +145,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
       >
         <StyledUrlBar>
           <OneLineEditor
-            ref={editorRef}
+            ref={oneLineEditorRef}
             onKeyDown={event => {
               if (event.key === 'Enter') {
                 handleSubmit();

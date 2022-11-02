@@ -22,7 +22,7 @@ export interface EnvironmentEditModalHandle {
 }
 export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, ModalProps>((props, ref) => {
   const modalRef = useRef<ModalHandle>(null);
-  const editorRef = useRef<EnvironmentEditorHandle>(null);
+  const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
   const [state, setState] = useState<State>({
     requestGroup: null,
     isValid: true,
@@ -38,13 +38,13 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
     },
   }), []);
   const didChange = () => {
-    const isValid = editorRef.current?.isValid() || false;
+    const isValid = environmentEditorRef.current?.isValid() || false;
     setState({ isValid, requestGroup });
     if (!isValid) {
       return;
     }
     try {
-      const data = editorRef.current?.getValue();
+      const data = environmentEditorRef.current?.getValue();
       if (state.requestGroup && data) {
         models.requestGroup.update(state.requestGroup, {
           environment: data.object,
@@ -66,7 +66,7 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
       <ModalHeader>Environment Overrides (JSON Format)</ModalHeader>
       <ModalBody noScroll className="pad-top-sm">
         <EnvironmentEditor
-          ref={editorRef}
+          ref={environmentEditorRef}
           key={requestGroup ? requestGroup._id : 'n/a'}
           environmentInfo={environmentInfo}
           didChange={didChange}
