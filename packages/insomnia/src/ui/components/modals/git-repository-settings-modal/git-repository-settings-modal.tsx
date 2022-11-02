@@ -17,7 +17,7 @@ import { GitLabRepositorySetupFormGroup } from './gitlab-repository-settings-for
 
 interface GitRepositorySettingsModalOptions {
   gitRepository: GitRepository | null;
-  onSubmitEdits: (gitRepoPatch: GitRepository) => Promise<void> | void;
+  onSubmitEdits: (gitRepoPatch: Partial<GitRepository>) => Promise<void> | void;
 }
 export interface GitRepositorySettingsModalHandle {
   show: (options: GitRepositorySettingsModalOptions) => void;
@@ -45,7 +45,7 @@ export const GitRepositorySettingsModal = forwardRef<GitRepositorySettingsModalH
     <Modal ref={modalRef}>
       <ModalForm
         onSubmit={patch => {
-          gitRepository?._id && onSubmitEdits({ ...gitRepository, ...patch });
+          onSubmitEdits({ ...gitRepository, ...patch });
           modalRef.current?.hide();
         }}
         onReset={() => {

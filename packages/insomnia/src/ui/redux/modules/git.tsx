@@ -53,7 +53,7 @@ export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsClient,
     trackSegmentEvent(SegmentEvent.vcsSyncStart, vcsSegmentEventProperties('git', 'setup'));
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
-      onSubmitEdits: async (gitRepoPatch: GitRepository) => {
+      onSubmitEdits: async (gitRepoPatch: Partial<GitRepository>) => {
         const providerName  = getOauth2FormatName(gitRepoPatch.credentials);
 
         dispatch(loadStart());
@@ -65,7 +65,7 @@ export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsClient,
           try {
             await shallowClone({
               fsClient,
-              gitRepository: gitRepoPatch,
+              gitRepository: gitRepoPatch as GitRepository,
             });
           } catch (err) {
             showError({
