@@ -126,12 +126,14 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         keyCode: event.keyCode,
       };
       const isUserDefinedKeyboardShortcut = isKeyCombinationInRegistry(pressedKeyComb, settings.hotKeyRegistry);
-      const isOneLineEditorAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
+      const isAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
         'showAutocomplete': settings.hotKeyRegistry.showAutocomplete,
       });
-      const isEscapeKey = event.code === 'Escape';
       // Stop the editor from handling global keyboard shortcuts except for the autocomplete binding
-      if (isUserDefinedKeyboardShortcut && !isOneLineEditorAutoCompleteBinding) {
+      const isShortcutButNotAutocomplete = isUserDefinedKeyboardShortcut && !isAutoCompleteBinding;
+      // Should not capture escape in order to exit modals
+      const isEscapeKey = event.code === 'Escape';
+      if (isShortcutButNotAutocomplete) {
         // @ts-expect-error -- unsound property assignment
         event.codemirrorIgnore = true;
         // Stop the editor from handling the escape key

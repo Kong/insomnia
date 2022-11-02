@@ -7,7 +7,7 @@ import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
-import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
+import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { DisconnectButton } from './disconnect-button';
@@ -146,11 +146,9 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
         <StyledUrlBar>
           <OneLineEditor
             ref={oneLineEditorRef}
-            onKeyDown={event => {
-              if (event.key === 'Enter') {
-                handleSubmit();
-              }
-            }}
+            onKeyDown={createKeybindingsHandler({
+              'Enter': () => handleSubmit(),
+            })}
             readOnly={readyState === ReadyState.OPEN}
             placeholder="wss://example.com/chat"
             defaultValue={defaultValue}

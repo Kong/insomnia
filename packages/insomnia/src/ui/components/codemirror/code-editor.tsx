@@ -97,8 +97,6 @@ export interface CodeEditorProps {
   onBlur?: (event: FocusEvent) => void;
   onChange?: (value: string) => void;
   onClickLink?: CodeMirrorLinkClickCallback;
-  // NOTE: This is a hack to define keydown events on the Editor.
-  onKeyDown?: (event: KeyboardEvent, value: string) => void;
   placeholder?: string;
   readOnly?: boolean;
   style?: Object;
@@ -163,7 +161,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   onBlur,
   onChange,
   onClickLink,
-  onKeyDown,
   placeholder,
   readOnly,
   style,
@@ -330,7 +327,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     });
 
-    codeMirror.current.on('keydown', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
+    codeMirror.current.on('keydown', (_: CodeMirror.Editor, event: KeyboardEvent) => {
       const pressedKeyComb: KeyCombination = {
         ctrl: event.ctrlKey,
         alt: event.altKey,
@@ -339,12 +336,14 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         keyCode: event.keyCode,
       };
       const isUserDefinedKeyboardShortcut = isKeyCombinationInRegistry(pressedKeyComb, settings.hotKeyRegistry);
-      const isCodeEditorAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
+      const isAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
         'showAutocomplete': settings.hotKeyRegistry.showAutocomplete,
       });
-      const isEscapeKey = event.code === 'Escape';
       // Stop the editor from handling global keyboard shortcuts except for the autocomplete binding
-      if (isUserDefinedKeyboardShortcut && !isCodeEditorAutoCompleteBinding) {
+      const isShortcutButNotAutocomplete = isUserDefinedKeyboardShortcut && !isAutoCompleteBinding;
+      // Should not capture escape in order to exit modals
+      const isEscapeKey = event.code === 'Escape';
+      if (isShortcutButNotAutocomplete) {
         // @ts-expect-error -- unsound property assignment
         event.codemirrorIgnore = true;
         // Stop the editor from handling the escape key
@@ -353,9 +352,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         event.codemirrorIgnore = true;
       } else {
         event.stopPropagation();
-      }
-      if (onKeyDown && !doc.isHintDropdownActive()) {
-        onKeyDown(event, doc.getValue());
       }
     });
     codeMirror.current.on('keyup', (doc: CodeMirror.Editor, event: KeyboardEvent) => {

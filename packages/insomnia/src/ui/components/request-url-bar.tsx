@@ -292,14 +292,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     },
   });
 
-  const handleKeydown = createKeybindingsHandler({
-    'Enter': () => {
-      if (request.url) {
-        send();
-      }
-    },
-  });
-
   const lastPastedTextRef = useRef('');
   const handleImport = useCallback(async (text: string) => {
     // Allow user to paste any import file into the url. If it results in
@@ -379,7 +371,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           placeholder="https://api.myproduct.com/v1/users"
           defaultValue={url}
           onChange={handleUrlChange}
-          onKeyDown={handleKeydown}
+          onKeyDown={createKeybindingsHandler({
+            'Enter': () => send(),
+          })}
         />
         {isCancellable ? (
           <button
