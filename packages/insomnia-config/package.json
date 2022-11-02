@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-config",
-  "version": "3.6.1-beta.2",
+  "version": "3.6.1-beta.3",
   "homepage": "https://insomnia.rest",
   "description": "Configuration for Insomnia",
   "author": "Kong <office@konghq.com>",
@@ -30,11 +30,11 @@
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.2.6",
     "ajv": "^8.6.2",
-    "insomnia-common": "3.6.1-beta.2"
+    "insomnia-common": "^3.6.1-beta.3"
   },
   "devDependencies": {
-    "jest": "^28.1.0",
     "esbuild-runner": "2.2.1",
+    "jest": "^28.1.0",
     "typescript": "^4.5.5",
     "typescript-json-schema": "^0.50.1"
   }
