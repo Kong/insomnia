@@ -66,11 +66,11 @@ export interface EnvironmentEditorHandle {
   getValue: () => EnvironmentInfo | null;
 }
 
-export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>((props, ref) => {
-  const {
-    environmentInfo,
-    didChange,
-  } = props;
+export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(({
+  environmentInfo,
+  didChange,
+  onBlur,
+}, ref) => {
   const editorRef = useRef<CodeEditorHandle>(null);
   const [error, setError] = useState('');
   const getValue = useCallback(() => {
@@ -124,6 +124,7 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>((pro
         }}
         defaultValue={defaultValue}
         mode="application/json"
+        onBlur={onBlur}
       />
       {error && <p className="notice error margin">{error}</p>}
     </div>

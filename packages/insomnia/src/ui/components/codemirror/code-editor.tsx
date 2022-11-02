@@ -430,7 +430,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     }
   });
   useUnmount(() => {
-    console.log('cleanup');
     codeMirror.current?.toTextArea();
     codeMirror.current?.closeHintDropdown();
     codeMirror.current = null;

@@ -172,7 +172,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     }
   });
   useUnmount(() => {
-    console.log('cleanup');
     codeMirror.current?.toTextArea();
     codeMirror.current?.closeHintDropdown();
     codeMirror.current = null;
