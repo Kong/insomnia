@@ -74,7 +74,7 @@ describe('<AccountDropdownButton />', () => {
     render(
       <Provider store={store}>
         <AccountDropdownButton />
-        <LoginModal ref={registerModal} />
+        <LoginModal ref={instance => registerModal(instance, 'LoginModal')} />
       </Provider>, { container }
     );
     const loginBtn = screen.getByText('Log In');
