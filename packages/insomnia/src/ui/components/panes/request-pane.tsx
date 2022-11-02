@@ -79,7 +79,7 @@ export const RequestPane: FC<Props> = ({
   };
 
   const handleEditDescription = useCallback((forceEditMode: boolean) => {
-    showModal(RequestSettingsModal, { request, forceEditMode });
+    request && showModal(RequestSettingsModal, { request, forceEditMode });
   }, [request]);
 
   const handleEditDescriptionAdd = useCallback(() => {

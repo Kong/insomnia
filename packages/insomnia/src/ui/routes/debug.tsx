@@ -6,6 +6,7 @@ import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
+import { isRequest } from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest } from '../../models/websocket-request';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
@@ -59,7 +60,7 @@ export const WrapperDebug: FC = () => {
       },
     request_showSettings:
       () => {
-        if (activeRequest) {
+        if (activeRequest && isRequest(activeRequest)) {
           showModal(RequestSettingsModal, { request: activeRequest });
         }
       },
@@ -144,7 +145,11 @@ export const WrapperDebug: FC = () => {
     showCookiesEditor:
       () => showModal(CookiesModal),
     request_showGenerateCodeEditor:
-      () => showModal(GenerateCodeModal, { request: activeRequest }),
+      () => {
+        if (activeRequest && isRequest(activeRequest)) {
+          showModal(GenerateCodeModal, { request: activeRequest });
+        }
+      },
   });
   // Close all websocket connections when the active environment changes
   useEffect(() => {

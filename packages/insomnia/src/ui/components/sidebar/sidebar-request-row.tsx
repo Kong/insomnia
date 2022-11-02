@@ -161,7 +161,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   }, [requestGroup?._id, activeWorkspaceId]);
 
   const handleShowRequestSettings = useCallback(() => {
-    showModal(RequestSettingsModal, { request });
+    request && showModal(RequestSettingsModal, { request });
   }, [request]);
 
   const [methodOverrideValue, setMethodOverrideValue] = useState<string | null>(null);

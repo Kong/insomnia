@@ -15,7 +15,7 @@ export const useGlobalKeyboardShortcuts = () => {
 
   useDocBodyKeyboardShortcuts({
     workspace_showSettings:
-      () => showModal(WorkspaceSettingsModal, { workspace: activeWorkspace }),
+      () => activeWorkspace && showModal(WorkspaceSettingsModal),
     plugin_reload:
       () => plugins.reloadPlugins(),
     environment_showVariableSourceAndValue:
