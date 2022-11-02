@@ -12,9 +12,13 @@ import { ModalHeader } from '../base/modal-header';
 type Props = ModalProps & {
   vcs: VCS;
 };
-export interface SyncDeleteModalOptions {
-  error: string;
+
+interface State {
+  error?: string;
   workspaceName: string;
+  onHide?: () => void;
+}
+export interface SyncDeleteModalOptions {
   onHide?: () => void;
 }
 export interface SyncDeleteModalHandle {
@@ -23,7 +27,7 @@ export interface SyncDeleteModalHandle {
 }
 export const SyncDeleteModal = forwardRef<SyncDeleteModalHandle, Props>(({ vcs }, ref) => {
   const modalRef = useRef<ModalHandle>(null);
-  const [state, setState] = useState<SyncDeleteModalOptions>({
+  const [state, setState] = useState<State>({
     error: '',
     workspaceName: '',
   });

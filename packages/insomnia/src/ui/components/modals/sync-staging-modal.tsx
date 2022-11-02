@@ -19,6 +19,16 @@ type Props = ModalProps & {
   vcs: VCS;
 };
 
+interface State {
+  status: Status;
+  message: string;
+  error: string;
+  branch: string;
+  lookupMap: LookupMap;
+  onSnapshot: () => Promise<void>;
+  handlePush: () => Promise<void>;
+}
+
 type LookupMap = Record<string, {
   entry: StageEntry;
   changes: null | string[];
@@ -27,11 +37,6 @@ type LookupMap = Record<string, {
 }>;
 
 export interface SyncStagingModalOptions {
-  status: Status;
-  message: string;
-  error: string;
-  branch: string;
-  lookupMap: LookupMap;
   onSnapshot: () => Promise<void>;
   handlePush: () => Promise<void>;
 }
@@ -44,7 +49,7 @@ export interface SyncStagingModalHandle {
 export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs }, ref) => {
   const modalRef = useRef<ModalHandle>(null);
   const syncItems = useSelector(selectSyncItems);
-  const [state, setState] = useState<SyncStagingModalOptions>({
+  const [state, setState] = useState<State>({
     status: {
       stage: {},
       unstaged: {},

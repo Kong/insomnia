@@ -13,7 +13,7 @@ export interface AddKeyCombinationModalOptions {
   keyboardShortcut: KeyboardShortcut | null;
   checkKeyCombinationDuplicate: (pressedKeyComb: KeyCombination) => boolean;
   addKeyCombination: (keyboardShortcut: KeyboardShortcut, keyComb: KeyCombination) => void;
-  pressedKeyCombination: KeyCombination | null;
+  pressedKeyCombination?: KeyCombination | null;
 }
 export interface AddKeyCombinationModalHandle {
   show: (options: AddKeyCombinationModalOptions) => void;

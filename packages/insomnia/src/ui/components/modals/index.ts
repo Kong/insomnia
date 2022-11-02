@@ -38,7 +38,10 @@ export function showModal<TModalProps extends ModalProps & React.RefAttributes<{
   const name = modalComponent.name || modalComponent.displayName;
   invariant(name, 'Modal must have a name or displayName');
   trackPageView(name);
-  return getModalComponentHandle<GetRefHandleFromProps<TModalProps>>(name).show(config);
+
+  const modalHandle = getModalComponentHandle(name) as unknown as GetRefHandleFromProps<TModalProps>;
+
+  return modalHandle.show(config);
 }
 
 export function showPrompt(options: PromptModalOptions) {
@@ -64,8 +67,8 @@ export function hideAllModals() {
   }
 }
 
-function getModalComponentHandle<TModalHandle>(name: string) {
-  const modalComponentRef = modals[name] as TModalHandle;
+function getModalComponentHandle(name: string) {
+  const modalComponentRef = modals[name];
   invariant(modalComponentRef, `Modal ${name} not found`);
 
   return modalComponentRef;

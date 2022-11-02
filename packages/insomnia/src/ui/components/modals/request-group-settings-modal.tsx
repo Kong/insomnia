@@ -16,7 +16,7 @@ import { MarkdownEditor } from '../markdown-editor';
 
 export interface RequestGroupSettingsModalOptions {
   requestGroup: RequestGroup;
-  forceEditMode: boolean;
+  forceEditMode?: boolean;
 }
 interface State {
   requestGroup: RequestGroup | null;
