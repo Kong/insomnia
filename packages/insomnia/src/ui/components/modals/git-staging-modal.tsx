@@ -37,7 +37,7 @@ type Props = ModalProps & {
   gitRepository: GitRepository | null;
 };
 
-export interface GitStagingModalOptions {
+interface State {
   loading: boolean;
   branch: string;
   message: string;
@@ -45,13 +45,17 @@ export interface GitStagingModalOptions {
   onCommit: () => Promise<void>;
   statusNames: Record<string, string>;
 }
+
+export interface GitStagingModalOptions {
+  onCommit: () => Promise<void>;
+}
 export interface GitStagingModalHandle {
   show: (options: GitStagingModalOptions) => void;
   hide: () => void;
 }
 export const GitStagingModal = forwardRef<GitStagingModalHandle, Props>(({ vcs, workspace, gitRepository }, ref) => {
   const modalRef = useRef<ModalHandle>(null);
-  const [state, setState] = useState<GitStagingModalOptions>({
+  const [state, setState] = useState<State>({
     loading: false,
     branch: '',
     message: '',

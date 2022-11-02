@@ -12,6 +12,12 @@ interface Props {
   workspace: Workspace;
 }
 
+interface State {
+  isTag: boolean;
+  template: string;
+  onDone: Function;
+}
+
 interface NunjucksModalOptions {
   template: string;
   onDone: Function;
@@ -23,7 +29,8 @@ export interface NunjucksModalHandle {
 }
 export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>((props, ref) => {
   const modalRef = useRef<ModalHandle>(null);
-  const [state, setState] = useState<NunjucksModalOptions>({
+  const [state, setState] = useState<State>({
+    isTag: false,
     template: '',
     onDone: () => { },
   });
@@ -34,6 +41,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
     },
     show: ({ onDone, template }) => {
       setState({
+        isTag: template.indexOf('{%') === 0,
         template,
         onDone,
       });
@@ -43,31 +51,29 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
 
   const handleTemplateChange = (template: string) => {
     setState(state => ({
+      ...state,
       template,
-      onDone: state.onDone,
     }));
   };
 
   const { workspace } = props;
-  const { template } = state;
+  const { template, isTag } = state;
+  const title = isTag ? 'Tag' : 'Variable';
   let editor: JSX.Element | null = null;
-  let title = '';
-
-  if (template.indexOf('{{') === 0) {
-    title = 'Variable';
-    editor = <VariableEditor onChange={handleTemplateChange} defaultValue={template} />;
-  } else if (template.indexOf('{%') === 0) {
-    title = 'Tag';
+  if (isTag) {
     editor = <TagEditor onChange={handleTemplateChange} defaultValue={template} workspace={workspace} />;
+  } else {
+    editor = <VariableEditor onChange={handleTemplateChange} defaultValue={template} />;
   }
+
   return (
     <Modal
       ref={modalRef}
       onHide={() => {
         state.onDone(state.template);
         setState(state => ({
+          ...state,
           template: '',
-          onDone: state.onDone,
         }));
       }}
     >

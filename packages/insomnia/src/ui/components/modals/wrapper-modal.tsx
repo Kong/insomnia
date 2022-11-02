@@ -5,7 +5,7 @@ import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
 interface WrapperModalOptions {
-  title: string;
+  title: ReactNode;
   body: ReactNode;
   tall?: boolean;
   skinny?: boolean;

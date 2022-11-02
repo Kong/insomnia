@@ -36,7 +36,7 @@ async function askToImportIntoNewWorkspace(): Promise<boolean> {
       message: `Do you want to import into an existing ${strings.workspace.singular.toLowerCase()} or a new one?`,
       yesText: 'Existing',
       noText: 'New',
-      onDone: (yes: boolean) => {
+      onDone: async (yes: boolean) => {
         resolve(yes);
       },
     });
@@ -88,7 +88,7 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, active
             message: 'Do you want to import into the current workspace or a new one?',
             yesText: 'Current',
             noText: 'New Workspace',
-            onDone: (yes: boolean) => {
+            onDone: async (yes: boolean) => {
               resolve(yes ? workspaceId : null);
             },
           });
@@ -117,7 +117,7 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
             message,
             noText: 'Request Collection',
             yesText: 'Design Document',
-            onDone: (yes: boolean) => {
+            onDone: async (yes: boolean) => {
               resolve(yes ? WorkspaceScopeKeys.design : WorkspaceScopeKeys.collection);
             },
           });

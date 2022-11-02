@@ -39,7 +39,7 @@ export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
       title: 'Edit Private Key',
       defaultValue: privateKey,
       onChange,
-      enableRender: handleRender || handleGetRenderContext,
+      enableRender: Boolean(handleRender || handleGetRenderContext),
       placeholder: PRIVATE_KEY_PLACEHOLDER,
       mode: 'text/plain',
       hideMode: true,

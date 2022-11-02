@@ -6,14 +6,14 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 interface State {
   title: string;
-  message: string;
+  message: React.ReactNode;
   yesText: string;
   noText: string;
   onDone?: (success: boolean) => Promise<void>;
 }
 export interface AskModalOptions {
   title?: string;
-  message?: string;
+  message: React.ReactNode;
   onDone?: (success: boolean) => Promise<void>;
   yesText?: string;
   noText?: string;

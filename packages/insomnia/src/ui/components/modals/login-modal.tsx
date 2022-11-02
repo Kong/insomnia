@@ -1,32 +1,14 @@
-import { decodeBase64, encodeBase64 } from '@getinsomnia/api-client/base64';
-import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
-import * as Sentry from '@sentry/electron';
 import { clipboard } from 'electron';
-import React, { Dispatch, FormEvent, forwardRef, memo, RefObject, SetStateAction, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { FormEvent, forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import * as session from '../../../account/session';
-import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { clickLink } from '../../../common/electron-helpers';
+import { getLoginUrl, submitAuthCode } from '../../auth-session-provider';
 import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { showModal } from './index';
-
-/**
- * Keypair used for the login handshake.
- * This keypair can be re-used for the entire session.
- */
-const sessionKeyPair = keyPair();
-
-/**
- * Global of latest modal instance, or null if none exist.
- */
-export let currentLoginModalHandle: LoginModalHandle | null = null;
-
-session.onLoginLogout(() => {
-  currentLoginModalHandle?.hide();
-});
 
 interface State {
   state: 'ready' | 'error' | 'token-entry' | 'loading-session';
@@ -35,67 +17,14 @@ interface State {
 }
 
 interface Options {
-  title: string;
-  message: string;
-  reauth: boolean;
+  title?: string;
+  message?: string;
+  reauth?: boolean;
+  onHide?: () => void;
 }
 
-interface AuthBox {
-  token: string;
-  key: string;
-}
-
-export class LoginModalHandle {
-  constructor(
-    private readonly modalRef: RefObject<ModalHandle>,
-    private readonly setState: Dispatch<SetStateAction<State & Options>>,
-  ) {}
-
-  private async getLoginUrl() {
-    const loginKey = await encodeBase64(sessionKeyPair.publicKey);
-    return `${getAppWebsiteBaseURL()}/app/auth-app/?loginKey=${encodeURIComponent(loginKey)}`;
-  }
-
-  async submitAuthCode(code: string) {
-    this.setState(state => ({ ...state, state: 'loading-session' }));
-    try {
-      const rawBox = await decodeBase64(code.trim());
-      const boxData = open(rawBox, sessionKeyPair.publicKey, sessionKeyPair.secretKey);
-      if (!boxData) {
-        this.setState(state => ({ ...state, state: 'error', error: 'Invalid authentication code.' }));
-        return;
-      }
-      const decoder = new TextDecoder();
-      const box: AuthBox = JSON.parse(decoder.decode(boxData));
-      await session.absorbKey(box.token, box.key);
-    } catch (e) {
-      Sentry.captureException(e);
-      this.setState(state => ({ ...state, state: 'error', error: `Error loading credentials: ${String(e)}` }));
-    }
-  }
-
-  async show(options: Partial<Options> = {}) {
-    const { title, message, reauth } = options;
-    const url = await this.getLoginUrl();
-    this.setState({
-      error: '',
-      state: 'ready',
-      title: title ?? '',
-      message: message ?? '',
-      reauth: reauth ?? false,
-      url,
-    });
-
-    this.modalRef.current?.show();
-
-    if (!reauth) {
-      clickLink(url);
-    }
-  }
-
-  hide() {
-    this.modalRef.current?.hide();
-  }
+export interface LoginModalHandle extends ModalHandle {
+  show: (options?: Options) => void;
 }
 
 export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginModal({ ...props }, ref) {
@@ -111,10 +40,37 @@ export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginMo
     url: '',
   });
 
-  useImperativeHandle(ref, () => {
-    currentLoginModalHandle = new LoginModalHandle(modalRef, setState);
-    return currentLoginModalHandle;
-  }, []);
+  useEffect(() => {
+    session.onLoginLogout(() => {
+      modalRef.current?.hide();
+    });
+  });
+
+  useImperativeHandle(ref, () => ({
+    hide: () => {
+      modalRef.current?.hide;
+    },
+    toggle: () => modalRef.current?.toggle(),
+    isOpen: () => Boolean(modalRef.current?.isOpen()),
+    show: async (options: Partial<Options> = {}) => {
+      const { title, message, reauth } = options;
+      const url = await getLoginUrl();
+      setState({
+        error: '',
+        state: 'ready',
+        title: title ?? '',
+        message: message ?? '',
+        reauth: reauth ?? false,
+        url,
+      });
+
+      modalRef.current?.show();
+
+      if (!reauth) {
+        clickLink(url);
+      }
+    },
+  }), []);
 
   const reset = useCallback(() => {
     setState(state => ({ ...state, state: 'ready', error: '' }));
@@ -124,9 +80,13 @@ export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginMo
     setState(state => ({ ...state, state: 'token-entry' }));
   }, []);
 
-  const submitToken = useCallback((event: FormEvent) => {
+  const submitToken = useCallback(async (event: FormEvent) => {
     event.preventDefault();
-    currentLoginModalHandle?.submitAuthCode(tokenInputRef.current?.value ?? '');
+    try {
+      await submitAuthCode(tokenInputRef.current?.value ?? '');
+    } catch (e) {
+      setState(state => ({ ...state, state: 'error', error: e.message }));
+    }
   }, []);
 
   const copyUrl = useCallback(() => {
@@ -231,4 +191,4 @@ export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginMo
 
 LoginModal.displayName = 'LoginModal';
 
-export const showLoginModal = () => showModal(LoginModalHandle);
+export const showLoginModal = () => showModal(LoginModal);

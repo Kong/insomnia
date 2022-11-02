@@ -33,7 +33,7 @@ export function useVCS({
           return new Promise(resolve => {
             showModal(SyncMergeModal, {
               conflicts,
-              handleDone: (conflicts: MergeConflict[]) => resolve(conflicts),
+              handleDone: (conflicts?: MergeConflict[]) => resolve(conflicts || []),
             });
           });
         });

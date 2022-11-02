@@ -117,7 +117,7 @@ export const Row: FC<Props> = ({
                 defaultValue: pair.value,
                 onChange: (value: string) => onChange({ ...pair, value }),
                 enableRender: enabled,
-                mode: pair.multiline || 'text/plain',
+                mode: pair.multiline && typeof pair.multiline === 'string' ? pair.multiline : 'text/plain',
                 onModeChange: (mode: string) => onChange({ ...pair, multiline: mode }),
               })}
             >

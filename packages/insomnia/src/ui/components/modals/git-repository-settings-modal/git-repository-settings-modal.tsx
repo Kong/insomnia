@@ -17,7 +17,7 @@ import { GitLabRepositorySetupFormGroup } from './gitlab-repository-settings-for
 
 interface GitRepositorySettingsModalOptions {
   gitRepository: GitRepository | null;
-  onSubmitEdits: (gitRepoPatch: Partial<GitRepository>) => void;
+  onSubmitEdits: (gitRepoPatch: Partial<GitRepository>) => Promise<void> | void;
 }
 export interface GitRepositorySettingsModalHandle {
   show: (options: GitRepositorySettingsModalOptions) => void;

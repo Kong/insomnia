@@ -90,7 +90,9 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   }, [handleDuplicateRequest, request]);
 
   const generateCode = useCallback(() => {
-    showModal(GenerateCodeModal, { request });
+    if (isRequest(request)) {
+      showModal(GenerateCodeModal, { request });
+    }
   }, [request]);
 
   const copyAsCurl = useCallback(async () => {
