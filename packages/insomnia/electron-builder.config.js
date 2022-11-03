@@ -102,6 +102,11 @@ const config = {
     executableName: 'insomnia',
     synopsis: 'The Collaborative API Client and Design Tool',
     category: 'Development',
+    desktop: {
+      Name: 'Insomnia',
+      Comment: 'Insomnia is a cross-platform REST client, built on top of Electron.',
+      Categories: 'Development',
+    },
     target: [
       {
         target: 'AppImage',
