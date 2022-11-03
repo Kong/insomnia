@@ -57,7 +57,6 @@ export interface EnvironmentInfo {
 
 interface Props {
   environmentInfo: EnvironmentInfo;
-  didChange: () => void;
   onBlur?: () => void;
 }
 
@@ -68,7 +67,6 @@ export interface EnvironmentEditorHandle {
 
 export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(({
   environmentInfo,
-  didChange,
   onBlur,
 }, ref) => {
   const editorRef = useRef<CodeEditorHandle>(null);
@@ -119,8 +117,6 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(({
           } catch (err) {
             setError(err.message);
           }
-
-          didChange();
         }}
         defaultValue={defaultValue}
         mode="application/json"
