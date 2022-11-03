@@ -132,6 +132,7 @@ app.on('activate', (_error, hasVisibleWindows) => {
   // Create a new window when clicking the doc icon if there isn't one open
   if (!hasVisibleWindows) {
     try {
+      console.log('[main] creating new window for MacOS activate event');
       windowUtils.createWindow();
     } catch (error) {
       // This might happen if 'ready' hasn't fired yet. So we're just going
@@ -159,19 +160,22 @@ const _launchApp = async () => {
       console.error('[app] Failed to get instance lock');
       app.quit();
     } else {
-      app.on('second-instance', () => {
-        // Someone tried to run a second instance, we should focus our window.
+      app.on('second-instance', (_1, args) => {
+        console.log('Second instance listener recieved:', args.join('||'));
         if (window) {
           if (window.isMinimized()) {
             window.restore();
           }
           window.focus();
         }
+        const lastArg = args.slice(-1).join();
+        console.log('[main] Open Deep Link URL sent from second instance', lastArg);
+        window.webContents.send('shell:open', lastArg);
       });
       window = windowUtils.createWindow();
 
-      // Handle URLs when app already open
-      app.addListener('open-url', (_event, url) => {
+      app.on('open-url', (_event, url) => {
+        console.log('[main] Open Deep Link URL', url);
         window.webContents.send('shell:open', url);
       });
     }
