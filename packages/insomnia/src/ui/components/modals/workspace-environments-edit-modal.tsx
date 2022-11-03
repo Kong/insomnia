@@ -183,46 +183,27 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     }));
   }
 
-  async function updateEnvironment(
-    environment: Environment | null,
-    patch: Partial<Environment>,
-  ) {
+  const updateEnvironment = async (environment: Environment | null, patch: Partial<Environment>) => {
     if (environment === null) {
       return;
     }
     // NOTE: Fetch the environment first because it might not be up to date.
-    // For example, editing the body updates silently.
     const realEnvironment = await models.environment.getById(environment._id);
-    const isRoot = realEnvironment?.parentId === workspace?._id;
-    if (isRoot) {
-      setState({ ...state, rootEnvironment: realEnvironment });
-    }
     if (realEnvironment) {
-      models.environment.update(realEnvironment, patch);
+      const updated = await models.environment.update(realEnvironment, patch);
+      // reload the root environment if it changed since its not updated by redux
+      const isRoot = realEnvironment?.parentId === workspace?._id;
+      if (isRoot) {
+        setState({ ...state, rootEnvironment: updated });
+      }
     }
-
-  }
+  };
 
   const getSelectedEnvironment = (): Environment | null => {
     const { selectedEnvironmentId, rootEnvironment } = state;
     return rootEnvironment?._id === selectedEnvironmentId ?
       rootEnvironment :
       environments.filter(e => e.parentId === rootEnvironment?._id).find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
-  };
-
-  const onBlur = () => {
-    // Only save if it's valid
-    if (!environmentEditorRef.current || !environmentEditorRef.current?.isValid()) {
-      return;
-    }
-    const data = environmentEditorRef.current?.getValue();
-    const selectedEnvironment = getSelectedEnvironment();
-    if (selectedEnvironment && data) {
-      updateEnvironment(selectedEnvironment, {
-        data: data.object,
-        dataPropertyOrder: data.propertyOrder,
-      });
-    }
   };
 
   const { rootEnvironment, isValid } = state;
@@ -408,7 +389,20 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                   }));
                 }
               }}
-              onBlur={onBlur}
+              onBlur={() => {
+                // Only save if it's valid
+                if (!environmentEditorRef.current || !environmentEditorRef.current?.isValid()) {
+                  return;
+                }
+                const data = environmentEditorRef.current?.getValue();
+                const selectedEnvironment = getSelectedEnvironment();
+                if (selectedEnvironment && data) {
+                  updateEnvironment(selectedEnvironment, {
+                    data: data.object,
+                    dataPropertyOrder: data.propertyOrder,
+                  });
+                }
+              }}
             />
           </div>
         </div>
