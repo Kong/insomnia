@@ -10,7 +10,6 @@ import { EnvironmentEditor, EnvironmentEditorHandle } from '../editors/environme
 
 interface State {
   requestGroup: RequestGroup | null;
-  isValid: boolean;
 }
 
 export interface EnvironmentEditModalOptions {
@@ -25,7 +24,6 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
   const [state, setState] = useState<State>({
     requestGroup: null,
-    isValid: true,
   });
 
   useImperativeHandle(ref, () => ({
@@ -37,26 +35,8 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
       modalRef.current?.show();
     },
   }), []);
-  const didChange = () => {
-    const isValid = environmentEditorRef.current?.isValid() || false;
-    setState({ isValid, requestGroup });
-    if (!isValid) {
-      return;
-    }
-    try {
-      const data = environmentEditorRef.current?.getValue();
-      if (state.requestGroup && data) {
-        models.requestGroup.update(state.requestGroup, {
-          environment: data.object,
-          environmentPropertyOrder: data.propertyOrder,
-        });
-      }
-    } catch (err) {
-      // Invalid JSON probably
-      return;
-    }
-  };
-  const { requestGroup, isValid } = state;
+
+  const { requestGroup } = state;
   const environmentInfo = {
     object: requestGroup ? requestGroup.environment : {},
     propertyOrder: requestGroup && requestGroup.environmentPropertyOrder,
@@ -69,15 +49,30 @@ export const EnvironmentEditModal = forwardRef<EnvironmentEditModalHandle, Modal
           ref={environmentEditorRef}
           key={requestGroup ? requestGroup._id : 'n/a'}
           environmentInfo={environmentInfo}
-          didChange={didChange}
+          onBlur={() => {
+            setState({ requestGroup });
+            if (environmentEditorRef.current?.isValid()) {
+              try {
+                const data = environmentEditorRef.current?.getValue();
+                if (state.requestGroup && data) {
+                  models.requestGroup.update(state.requestGroup, {
+                    environment: data.object,
+                    environmentPropertyOrder: data.propertyOrder,
+                  });
+                }
+              } catch (err) {
+                console.warn('Failed to update environment', err);
+              }
+            }
+          }}
         />
       </ModalBody>
       <ModalFooter>
         <div className="margin-left italic txt-sm">
           * Used to override data in the global environment
         </div>
-        <button className="btn" disabled={!isValid} onClick={() => modalRef.current?.hide()}>
-          Done
+        <button className="btn" onClick={() => modalRef.current?.hide()}>
+          Close
         </button>
       </ModalFooter>
     </Modal >

@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { FC, forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
+import React, { FC, forwardRef, Fragment, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { docsTemplateTags } from '../../../common/documentation';
@@ -115,7 +115,6 @@ const SidebarList: FC<SidebarListProps> =
       </ul>);
   };
 interface State {
-  isValid: boolean;
   baseEnvironment: Environment | null;
   selectedEnvironmentId: string | null;
 }
@@ -129,7 +128,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [state, setState] = useState<State>({
-    isValid: true,
     baseEnvironment: null,
     selectedEnvironmentId: null,
   });
@@ -200,7 +198,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     }
   };
 
-  const { baseEnvironment, isValid, selectedEnvironmentId } = state;
+  const { baseEnvironment, selectedEnvironmentId } = state;
   const selectedEnvironment = baseEnvironment?._id === selectedEnvironmentId
     ? baseEnvironment
     : environments.filter(e => e.parentId === baseEnvironment?._id).find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
@@ -377,15 +375,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 object: selectedEnvironment?.data || {},
                 propertyOrder: selectedEnvironment?.dataPropertyOrder || null,
               }}
-              didChange={() => {
-                const isValid = environmentEditorRef.current?.isValid() || false;
-                if (state.isValid !== isValid) {
-                  setState(state => ({
-                    ...state,
-                    isValid,
-                  }));
-                }
-              }}
               onBlur={() => {
                 // Only save if it's valid
                 if (!environmentEditorRef.current || !environmentEditorRef.current?.isValid()) {
@@ -408,8 +397,8 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
           * Environment data can be used for&nbsp;
           <Link href={docsTemplateTags}>Nunjucks Templating</Link> in your requests
         </div>
-        <button className="btn" disabled={!isValid} onClick={() => modalRef.current?.hide()}>
-          Done
+        <button className="btn" onClick={() => modalRef.current?.hide()}>
+          Close
         </button>
       </ModalFooter>
     </Modal>
