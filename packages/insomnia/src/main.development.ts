@@ -156,7 +156,7 @@ const _launchApp = async () => {
   // Handle URLs sent via command line args
   ipcMain.once('window-ready', () => {
     // @ts-expect-error -- TSCONVERSION
-    commandLineArgs.length && window.send('run-command', commandLineArgs[0]);
+    commandLineArgs.length && window.send('shell:open', commandLineArgs[0]);
   });
   // Called when second instance launched with args (Windows)
   // @TODO: Investigate why this closes electron when using playwright (tested on macOS)
@@ -179,7 +179,7 @@ const _launchApp = async () => {
       });
       // Handle URLs when app already open
       app.addListener('open-url', (_event, url) => {
-        window.webContents.send('run-command', url);
+        window.webContents.send('shell:open', url);
       });
     }
   }
