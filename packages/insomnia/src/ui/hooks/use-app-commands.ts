@@ -1,4 +1,4 @@
-import { ipcRenderer } from 'electron';
+import { IpcRendererEvent } from 'electron/renderer';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { parse } from 'url';
@@ -12,8 +12,8 @@ export const useAppCommands = () => {
 
   // Handle Application Commands
   useEffect(() => {
-    ipcRenderer.on('run-command', (_, commandUri) => {
-      const parsed = parse(commandUri, true);
+    return window.main.on('shell:open', (_: IpcRendererEvent, url: string) => {
+      const parsed = parse(url, true);
       const command = `${parsed.hostname}${parsed.pathname}`;
       const args = JSON.parse(JSON.stringify(parsed.query));
       args.workspaceId = args.workspaceId || activeWorkspace?._id;
