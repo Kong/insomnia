@@ -388,9 +388,9 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         };
       }
     };
-    codeMirror.current.on('blur', (_, e) => {
+    codeMirror.current.on('blur', () => {
       persistState();
-      onBlur?.(e);
+      onBlur?.();
     });
     codeMirror.current.on('scroll', persistState);
     codeMirror.current.on('fold', persistState);
