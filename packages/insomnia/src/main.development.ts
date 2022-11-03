@@ -160,7 +160,7 @@ const _launchApp = async () => {
     } else {
       // Called when second instance launched with args (Windows/Linux)
       app.on('second-instance', (_1, args) => {
-        console.log('Second instance listener recieved:', args.join('||'));
+        console.log('Second instance listener received:', args.join('||'));
         if (window) {
           if (window.isMinimized()) {
             window.restore();
