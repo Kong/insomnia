@@ -24,19 +24,19 @@ const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 interface SidebarListProps {
   environments: Environment[];
   changeEnvironmentName: (environment: Environment, name?: string) => void;
-  selectedEnvironment: Environment | null;
-  showEnvironment: (e: Environment) => void;
+  selectedEnvironmentId: string | null;
+  showEnvironment: (id: string) => void;
 }
 interface SidebarListItemProps {
   environment: Environment;
   changeEnvironmentName: (environment: Environment, name?: string) => void;
-  selectedEnvironment: Environment | null;
-  showEnvironment: (e: Environment) => void;
+  selectedEnvironmentId: string | null;
+  showEnvironment: (id: string) => void;
 }
 const SidebarListItem: FC<SidebarListItemProps> = ({
   changeEnvironmentName,
   environment,
-  selectedEnvironment,
+  selectedEnvironmentId,
   showEnvironment,
 }: SidebarListItemProps) => {
   const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
@@ -45,12 +45,12 @@ const SidebarListItem: FC<SidebarListItemProps> = ({
     key={environment._id}
     className={classnames({
       'env-modal__sidebar-item': true,
-      'env-modal__sidebar-item--active': selectedEnvironment === environment,
+      'env-modal__sidebar-item--active': selectedEnvironmentId === environment._id,
       // Specify theme because dragging will pull it out to <body>
       'theme--dialog': true,
     })}
   >
-    <button onClick={() => showEnvironment(environment)}>
+    <button onClick={() => showEnvironment(environment._id)}>
       {environment.color ? (
         <i
           className="space-right fa fa-circle"
@@ -82,7 +82,7 @@ const SidebarListItem: FC<SidebarListItemProps> = ({
           onClick={() => {
             if (environment && environment._id !== workspaceMeta?.activeEnvironmentId && workspaceMeta) {
               models.workspaceMeta.update(workspaceMeta, { activeEnvironmentId: environment._id });
-              showEnvironment(environment);
+              showEnvironment(environment._id);
             }
           }}
         >
@@ -97,7 +97,7 @@ const SidebarList: FC<SidebarListProps> =
   ({
     changeEnvironmentName,
     environments,
-    selectedEnvironment,
+    selectedEnvironmentId,
     showEnvironment,
   }: SidebarListProps) => {
     return (
@@ -107,7 +107,7 @@ const SidebarList: FC<SidebarListProps> =
             changeEnvironmentName={changeEnvironmentName}
             environment={environment}
             key={environment._id}
-            selectedEnvironment={selectedEnvironment}
+            selectedEnvironmentId={selectedEnvironmentId}
             showEnvironment={showEnvironment}
           />
           )
@@ -156,12 +156,12 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     },
   }), [workspace, workspaceMeta?.activeEnvironmentId]);
 
-  function handleShowEnvironment(environment?: Environment) {
+  function handleShowEnvironment(environmentId: string | null) {
     // Don't allow switching if the current one has errors
-    if (environmentEditorRef.current?.isValid() && environment !== getSelectedEnvironment()) {
+    if (environmentEditorRef.current?.isValid() && environmentId !== selectedEnvironmentId) {
       setState(state => ({
         ...state,
-        selectedEnvironmentId: environment?._id || null,
+        selectedEnvironmentId: environmentId || null,
       }));
     }
   }
@@ -215,8 +215,8 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     inputRef.current.value = selectedEnvironment?.color || '';
   }
   const environmentInfo = {
-    object: selectedEnvironment ? selectedEnvironment.data : {},
-    propertyOrder: selectedEnvironment && selectedEnvironment.dataPropertyOrder,
+    object: selectedEnvironment?.data || {},
+    propertyOrder: selectedEnvironment?.dataPropertyOrder,
   };
   return (
     <Modal ref={modalRef} wide tall {...props}>
@@ -228,7 +228,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               'env-modal__sidebar-item--active': selectedEnvironmentId === rootEnvironment?._id,
             })}
           >
-            <button onClick={() => handleShowEnvironment(rootEnvironment ?? undefined)}>
+            <button onClick={() => handleShowEnvironment(rootEnvironment?._id || null)}>
               {ROOT_ENVIRONMENT_NAME}
               <HelpTooltip className="space-left">
                 The variables in this environment are always available, regardless of which
@@ -280,7 +280,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
           </div>
           <SidebarList
             environments={environments.filter(e => e.parentId === rootEnvironment?._id)}
-            selectedEnvironment={selectedEnvironment}
+            selectedEnvironmentId={selectedEnvironmentId}
             showEnvironment={handleShowEnvironment}
             changeEnvironmentName={(environment, name) => updateEnvironment(environment._id, { name })}
           />
@@ -288,23 +288,23 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
         <div className="env-modal__main">
           <div className="env-modal__main__header">
             <h1>
-              {rootEnvironment === selectedEnvironment ? (
+              {rootEnvironment?._id === selectedEnvironmentId ? (
                 ROOT_ENVIRONMENT_NAME
               ) : (
                 <Editable
                   singleClick
                   className="wide"
                   onSubmit={name => {
-                    if (selectedEnvironment && name) {
+                    if (selectedEnvironmentId && name) {
                       updateEnvironment(selectedEnvironmentId, { name });
                     }
                   }}
-                  value={selectedEnvironment ? selectedEnvironment.name : ''}
+                  value={selectedEnvironment.name || ''}
                 />
               )}
             </h1>
 
-            {selectedEnvironment && rootEnvironment !== selectedEnvironment ? (
+            {selectedEnvironmentId && rootEnvironment?._id !== selectedEnvironmentId ? (
               <Fragment>
                 <input
                   className="hidden"
