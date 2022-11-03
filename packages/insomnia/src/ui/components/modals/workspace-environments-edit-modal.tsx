@@ -116,7 +116,7 @@ const SidebarList: FC<SidebarListProps> =
   };
 interface State {
   isValid: boolean;
-  rootEnvironment: Environment | null;
+  baseEnvironment: Environment | null;
   selectedEnvironmentId: string | null;
 }
 export interface WorkspaceEnvironmentsEditModalHandle {
@@ -130,7 +130,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
   const [state, setState] = useState<State>({
     isValid: true,
-    rootEnvironment: null,
+    baseEnvironment: null,
     selectedEnvironmentId: null,
   });
 
@@ -145,12 +145,12 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
       if (!workspace) {
         return;
       }
-      const rootEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
+      const baseEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
 
       setState(state => ({
         ...state,
-        rootEnvironment,
-        selectedEnvironmentId: workspaceMeta?.activeEnvironmentId || rootEnvironment._id,
+        baseEnvironment,
+        selectedEnvironmentId: workspaceMeta?.activeEnvironmentId || baseEnvironment._id,
       }));
       modalRef.current?.show();
     },
@@ -168,7 +168,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
   async function handleDeleteEnvironment(environmentId: string | null) {
     // Don't delete the root environment
-    if (!environmentId || environmentId === state.rootEnvironment?._id) {
+    if (!environmentId || environmentId === state.baseEnvironment?._id) {
       return;
     }
     // Unset active environment if it's being deleted
@@ -180,7 +180,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     current && models.environment.remove(current);
     setState(state => ({
       ...state,
-      selectedEnvironmentId: state.rootEnvironment?._id || null,
+      selectedEnvironmentId: state.baseEnvironment?._id || null,
     }));
   }
 
@@ -193,17 +193,17 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     if (realEnvironment) {
       const updated = await models.environment.update(realEnvironment, patch);
       // reload the root environment if it changed since its not updated by redux
-      const isRoot = realEnvironment?.parentId === workspace?._id;
-      if (isRoot) {
-        setState({ ...state, rootEnvironment: updated });
+      const isBaseEnvironement = realEnvironment?.parentId === workspace?._id;
+      if (isBaseEnvironement) {
+        setState({ ...state, baseEnvironment: updated });
       }
     }
   };
 
-  const { rootEnvironment, isValid, selectedEnvironmentId } = state;
-  const selectedEnvironment = rootEnvironment?._id === selectedEnvironmentId
-    ? rootEnvironment
-    : environments.filter(e => e.parentId === rootEnvironment?._id).find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
+  const { baseEnvironment, isValid, selectedEnvironmentId } = state;
+  const selectedEnvironment = baseEnvironment?._id === selectedEnvironmentId
+    ? baseEnvironment
+    : environments.filter(e => e.parentId === baseEnvironment?._id).find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
   const selectedEnvironmentName = selectedEnvironment?.name || '';
   const selectedEnvironmentColor = selectedEnvironment?.color || null;
   if (inputRef.current && selectedEnvironmentColor) {
@@ -216,10 +216,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
         <div className="env-modal__sidebar">
           <li
             className={classnames('env-modal__sidebar-root-item', {
-              'env-modal__sidebar-item--active': selectedEnvironmentId === rootEnvironment?._id,
+              'env-modal__sidebar-item--active': selectedEnvironmentId === baseEnvironment?._id,
             })}
           >
-            <button onClick={() => handleShowEnvironment(rootEnvironment?._id || null)}>
+            <button onClick={() => handleShowEnvironment(baseEnvironment?._id || null)}>
               {ROOT_ENVIRONMENT_NAME}
               <HelpTooltip className="space-left">
                 The variables in this environment are always available, regardless of which
@@ -236,9 +236,9 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               </DropdownButton>
               <DropdownItem
                 onClick={async () => {
-                  if (rootEnvironment) {
+                  if (baseEnvironment) {
                     const environment = await models.environment.create({
-                      parentId: rootEnvironment._id,
+                      parentId: baseEnvironment._id,
                       isPrivate: false,
                     });
                     setState(state => ({
@@ -252,9 +252,9 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               </DropdownItem>
               <DropdownItem
                 onClick={async () => {
-                  if (rootEnvironment) {
+                  if (baseEnvironment) {
                     const environment = await models.environment.create({
-                      parentId: rootEnvironment._id,
+                      parentId: baseEnvironment._id,
                       isPrivate: true,
                     });
                     setState(state => ({
@@ -270,7 +270,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
             </Dropdown>
           </div>
           <SidebarList
-            environments={environments.filter(e => e.parentId === rootEnvironment?._id)}
+            environments={environments.filter(e => e.parentId === baseEnvironment?._id)}
             selectedEnvironmentId={selectedEnvironmentId}
             showEnvironment={handleShowEnvironment}
             changeEnvironmentName={(environment, name) => updateEnvironment(environment._id, { name })}
@@ -279,7 +279,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
         <div className="env-modal__main">
           <div className="env-modal__main__header">
             <h1>
-              {rootEnvironment?._id === selectedEnvironmentId ? (
+              {baseEnvironment?._id === selectedEnvironmentId ? (
                 ROOT_ENVIRONMENT_NAME
               ) : (
                 <Editable
@@ -295,7 +295,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               )}
             </h1>
 
-            {selectedEnvironmentId && rootEnvironment?._id !== selectedEnvironmentId ? (
+            {selectedEnvironmentId && baseEnvironment?._id !== selectedEnvironmentId ? (
               <Fragment>
                 <input
                   className="hidden"
