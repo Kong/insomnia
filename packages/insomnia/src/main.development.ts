@@ -180,11 +180,6 @@ const _launchApp = async () => {
       // Handle URLs when app already open
       app.addListener('open-url', (_event, url) => {
         window.webContents.send('run-command', url);
-        // Apparently a timeout is needed because Chrome steals back focus immediately
-        // after opening the URL.
-        setTimeout(() => {
-          window.focus();
-        }, 100);
       });
     }
   }
