@@ -1,42 +1,43 @@
+import { HttpClient } from 'isomorphic-git';
 
 /** This is a client for isomorphic-git {@link https://isomorphic-git.org/docs/en/http} */
-export const httpClient = {
-  request: async (config: any) => {
-    let response;
-    let body: Buffer | null = null;
-
-    if (config.headers && !config.headers.Accept) {
-      config.headers.Accept = '*/*';
-    }
-
-    if (Array.isArray(config.body)) {
-      body = Buffer.concat(config.body);
-    }
+export const httpClient: HttpClient = {
+  request: async config => {
+    console.log('httpClient', config);
 
     try {
-      response = await window.main.axiosRequest({
+      const response = await window.main.axiosRequest({
         url: config.url,
         method: config.method,
         headers: config.headers,
-        data: body,
+        data: Array.isArray(config.body) && Buffer.concat(config.body),
         responseType: 'arraybuffer',
         maxRedirects: 10,
       });
+      console.log('httpClient response', response);
+      return {
+        url: response.request.res.responseUrl,
+        method: response.request.method,
+        headers: response.headers,
+        body: [response.data],
+        statusCode: response.status,
+        statusMessage: response.statusText,
+      };
     } catch (err) {
+      console.log('httpClient error', err);
       if (!err.response) {
         // NOTE: config.url is unreachable
         throw err;
       }
-      response = err.response;
+      const response = err.response || { request:{}, config:{}, headers:{}, data:{} };
+      return {
+        url: response.request.res.responseUrl,
+        method: response.request.method,
+        headers: response.headers,
+        body: [response.data],
+        statusCode: response.status,
+        statusMessage: response.statusText,
+      };
     }
-
-    return {
-      url: response.request.res.responseUrl,
-      method: response.request.method,
-      headers: response.headers,
-      body: [response.data],
-      statusCode: response.status,
-      statusMessage: response.statusText,
-    };
   },
 };

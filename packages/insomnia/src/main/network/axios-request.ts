@@ -50,6 +50,8 @@ export async function axiosRequest(config: AxiosRequestConfig) {
   return {
     data: response?.data,
     status: response?.status,
+    statusText: response?.statusText,
+    headers: response?.headers,
     request: {
       res: {
         responseUrl: response?.request?.res?.responseUrl,
