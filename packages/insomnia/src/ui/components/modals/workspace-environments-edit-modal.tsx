@@ -200,24 +200,15 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     }
   };
 
-  const getSelectedEnvironment = (): Environment | null => {
-    const { selectedEnvironmentId, rootEnvironment } = state;
-    return rootEnvironment?._id === selectedEnvironmentId ?
-      rootEnvironment :
-      environments.filter(e => e.parentId === rootEnvironment?._id).find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
-  };
-
   const { rootEnvironment, isValid, selectedEnvironmentId } = state;
-
-  const selectedEnvironment = getSelectedEnvironment();
-
-  if (inputRef.current) {
-    inputRef.current.value = selectedEnvironment?.color || '';
+  const selectedEnvironment = rootEnvironment?._id === selectedEnvironmentId
+    ? rootEnvironment
+    : environments.filter(e => e.parentId === rootEnvironment?._id).find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
+  const selectedEnvironmentName = selectedEnvironment?.name || '';
+  const selectedEnvironmentColor = selectedEnvironment?.color || null;
+  if (inputRef.current && selectedEnvironmentColor) {
+    inputRef.current.value = selectedEnvironmentColor;
   }
-  const environmentInfo = {
-    object: selectedEnvironment?.data || {},
-    propertyOrder: selectedEnvironment?.dataPropertyOrder,
-  };
   return (
     <Modal ref={modalRef} wide tall {...props}>
       <ModalHeader>Manage Environments</ModalHeader>
@@ -299,7 +290,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                       updateEnvironment(selectedEnvironmentId, { name });
                     }
                   }}
-                  value={selectedEnvironment.name || ''}
+                  value={selectedEnvironmentName}
                 />
               )}
             </h1>
@@ -315,11 +306,11 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
                 <Dropdown className="space-right" right>
                   <DropdownButton className="btn btn--clicky">
-                    {selectedEnvironment.color && (
+                    {selectedEnvironmentColor && (
                       <i
                         className="fa fa-circle space-right"
                         style={{
-                          color: selectedEnvironment.color,
+                          color: selectedEnvironmentColor,
                         }}
                       />
                     )}
@@ -328,7 +319,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
                   <DropdownItem
                     onClick={() => {
-                      if (!selectedEnvironment.color) {
+                      if (!selectedEnvironmentColor) {
                         // TODO: fix magic-number. Currently this is the `surprise` background color for the default theme,
                         // but we should be grabbing the actual value from the user's actual theme instead.
                         updateEnvironment(selectedEnvironmentId, { color: '#7d69cb' });
@@ -339,15 +330,15 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                     <i
                       className="fa fa-circle"
                       style={{
-                        ...(selectedEnvironment.color ? { color: selectedEnvironment.color } : {}),
+                        ...(selectedEnvironmentColor ? { color: selectedEnvironmentColor } : {}),
                       }}
                     />
-                    {selectedEnvironment.color ? 'Change Color' : 'Assign Color'}
+                    {selectedEnvironmentColor ? 'Change Color' : 'Assign Color'}
                   </DropdownItem>
 
                   <DropdownItem
                     onClick={() => updateEnvironment(selectedEnvironmentId, { color: null })}
-                    disabled={!selectedEnvironment.color}
+                    disabled={!selectedEnvironmentColor}
                   >
                     <i className="fa fa-minus-circle" />
                     Unset Color
@@ -356,11 +347,13 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
                 <button
                   onClick={async () => {
-                    const newEnvironment = await models.environment.duplicate(selectedEnvironment);
-                    setState(state => ({
-                      ...state,
-                      selectedEnvironmentId: newEnvironment._id,
-                    }));
+                    if (selectedEnvironment) {
+                      const newEnvironment = await models.environment.duplicate(selectedEnvironment);
+                      setState(state => ({
+                        ...state,
+                        selectedEnvironmentId: newEnvironment._id,
+                      }));
+                    }
                   }}
                   className="btn btn--clicky space-right"
                 >
@@ -380,7 +373,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
             <EnvironmentEditor
               ref={environmentEditorRef}
               key={`${selectedEnvironmentId || 'n/a'}`}
-              environmentInfo={environmentInfo}
+              environmentInfo={{
+                object: selectedEnvironment?.data || {},
+                propertyOrder: selectedEnvironment?.dataPropertyOrder || null,
+              }}
               didChange={() => {
                 const isValid = environmentEditorRef.current?.isValid() || false;
                 if (state.isValid !== isValid) {
@@ -396,7 +392,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                   return;
                 }
                 const data = environmentEditorRef.current?.getValue();
-                const selectedEnvironment = getSelectedEnvironment();
                 if (selectedEnvironment && data) {
                   updateEnvironment(selectedEnvironmentId, {
                     data: data.object,
