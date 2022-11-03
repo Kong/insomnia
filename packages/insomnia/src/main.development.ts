@@ -162,7 +162,7 @@ const _launchApp = async () => {
   // @TODO: Investigate why this closes electron when using playwright (tested on macOS)
   // and find a better solution.
   if (!process.env.PLAYWRIGHT) {
-  // Deep linking logic - https://www.electronjs.org/docs/latest/tutorial/launch-app-from-url-in-another-app
+    // Deep linking logic - https://www.electronjs.org/docs/latest/tutorial/launch-app-from-url-in-another-app
     const gotTheLock = app.requestSingleInstanceLock();
     if (!gotTheLock) {
       console.error('[app] Failed to get instance lock');
