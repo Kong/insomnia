@@ -1,4 +1,5 @@
 import electron, { app, ipcMain, session } from 'electron';
+import { BrowserWindow } from 'electron/main';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 import path from 'path';
@@ -30,7 +31,6 @@ if (checkIfRestartNeeded()) {
 }
 
 initializeLogging();
-const commandLineArgs = process.argv.slice(1);
 log.info(`Running version ${getAppVersion()}`);
 
 // Override the Electron userData path
@@ -121,12 +121,6 @@ if (defaultProtocolSuccessful) {
   }
 }
 
-function _addUrlToOpen(event: Electron.Event, url: string) {
-  event.preventDefault();
-  commandLineArgs.push(url);
-}
-
-app.on('open-url', _addUrlToOpen);
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
   if (!isMac()) {
@@ -149,14 +143,11 @@ app.on('activate', (_error, hasVisibleWindows) => {
 
 const _launchApp = async () => {
   await _trackStats();
-
-  app.removeListener('open-url', _addUrlToOpen);
-  const window = windowUtils.createWindow();
-
+  let window: BrowserWindow;
   // Handle URLs sent via command line args
   ipcMain.once('window-ready', () => {
-    // @ts-expect-error -- TSCONVERSION
-    commandLineArgs.length && window.send('shell:open', commandLineArgs[0]);
+    console.log('[main] Window ready, handling command line arguments', process.argv);
+    window.webContents.send('shell:open', process.argv.slice(1));
   });
   // Called when second instance launched with args (Windows)
   // @TODO: Investigate why this closes electron when using playwright (tested on macOS)
@@ -177,6 +168,8 @@ const _launchApp = async () => {
           window.focus();
         }
       });
+      window = windowUtils.createWindow();
+
       // Handle URLs when app already open
       app.addListener('open-url', (_event, url) => {
         window.webContents.send('shell:open', url);
