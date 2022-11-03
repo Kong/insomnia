@@ -162,31 +162,33 @@ const _launchApp = async () => {
   // @TODO: Investigate why this closes electron when using playwright (tested on macOS)
   // and find a better solution.
   if (!process.env.PLAYWRIGHT) {
+  // Deep linking logic - https://www.electronjs.org/docs/latest/tutorial/launch-app-from-url-in-another-app
     const gotTheLock = app.requestSingleInstanceLock();
     if (!gotTheLock) {
       console.error('[app] Failed to get instance lock');
-      return;
+      app.quit();
+    } else {
+      app.on('second-instance', () => {
+        // Someone tried to run a second instance, we should focus our window.
+        if (window) {
+          if (window.isMinimized()) {
+            window.restore();
+          }
+          window.focus();
+        }
+      });
+      // Handle URLs when app already open
+      app.addListener('open-url', (_event, url) => {
+        window.webContents.send('run-command', url);
+        // Apparently a timeout is needed because Chrome steals back focus immediately
+        // after opening the URL.
+        setTimeout(() => {
+          window.focus();
+        }, 100);
+      });
     }
   }
 
-  app.on('second-instance', () => {
-    // Someone tried to run a second instance, we should focus our window.
-    if (window) {
-      if (window.isMinimized()) {
-        window.restore();
-      }
-      window.focus();
-    }
-  });
-  // Handle URLs when app already open
-  app.addListener('open-url', (_event, url) => {
-    window.webContents.send('run-command', url);
-    // Apparently a timeout is needed because Chrome steals back focus immediately
-    // after opening the URL.
-    setTimeout(() => {
-      window.focus();
-    }, 100);
-  });
   // Don't send origin header from Insomnia because we're not technically using CORS
   session.defaultSession.webRequest.onBeforeSendHeaders((details, fn) => {
     delete details.requestHeaders.Origin;
