@@ -71,17 +71,11 @@ const UnitTestItemView = ({
 
   const generateSendReqSnippet = useCallback(
     (existingCode: string, requestId: string) => {
-      let variableName = 'response';
-      for (let i = 1; i < 100; i++) {
-        variableName = `response${i}`;
-        // Try next one if code already contains this variable
-        if (existingCode.includes(`const ${variableName} =`)) {
-          continue;
-        }
-        // Found variable that doesn't exist in code yet
-        break;
-      }
+      const variables = existingCode.split('const ').filter(x => x).map(x => x.split(' ')[0]);
+      const numbers = variables.map(x => +x?.match(/(\d+)/)?.[0]).filter(x => !isNaN(x));
+      const highestNumberedConstant = Math.max(...numbers);
 
+      const variableName = 'response' + (highestNumberedConstant + 1);
       return (
         `const ${variableName} = await insomnia.send(${requestId});\n` +
         `expect(${variableName}.status).to.equal(200);`
