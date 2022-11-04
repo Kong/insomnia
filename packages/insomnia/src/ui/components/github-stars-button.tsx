@@ -74,7 +74,7 @@ export const GitHubStarsButton = () => {
   const [error, setError] = useState<Error | null>(null);
 
   useMount(() => {
-    if (incognitoMode) {
+    if (incognitoMode || process.env.INSOMNIA_INCOGNITO_MODE) {
       return;
     }
 
