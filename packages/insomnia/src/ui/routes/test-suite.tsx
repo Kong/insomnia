@@ -1,6 +1,6 @@
 import { invariant } from '@remix-run/router';
 import { isEmpty } from 'ramda';
-import React, { useCallback } from 'react';
+import React, { useRef } from 'react';
 import {
   LoaderFunction,
   redirect,
@@ -17,7 +17,7 @@ import { isRequest, Request } from '../../models/request';
 import { isUnitTest, UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
 import { Editable } from '../components/base/editable';
-import { CodeEditor } from '../components/codemirror/code-editor';
+import { CodeEditor, CodeEditorHandle } from '../components/codemirror/code-editor';
 import { ListGroup, UnitTestItem } from '../components/list-group';
 import { showModal, showPrompt } from '../components/modals';
 import { SelectModal } from '../components/modals/select-modal';
@@ -39,6 +39,7 @@ const UnitTestItemView = ({
   unitTest: UnitTest;
   testsRunning: boolean;
 }) => {
+  const editorRef = useRef<CodeEditorHandle>(null);
   const { projectId, workspaceId, testSuiteId } = useParams() as {
     workspaceId: string;
     projectId: string;
@@ -68,59 +69,6 @@ const UnitTestItemView = ({
     // Enable NodeJS globals
     esversion: 8, // ES8 syntax (async/await, etc)
   };
-
-  const generateSendReqSnippet = useCallback(
-    (existingCode: string, requestId: string) => {
-      const variables = existingCode.split('const ').filter(x => x).map(x => x.split(' ')[0]);
-      const numbers = variables.map(x => +x?.match(/(\d+)/)?.[0]).filter(x => !isNaN(x));
-      const highestNumberedConstant = Math.max(...numbers);
-
-      const variableName = 'response' + (highestNumberedConstant + 1);
-      return (
-        `const ${variableName} = await insomnia.send(${requestId});\n` +
-        `expect(${variableName}.status).to.equal(200);`
-      );
-    },
-    []
-  );
-
-  const autocompleteSnippets = useCallback(
-    (unitTest: UnitTest) => {
-      return [
-        {
-          name: 'Send Current Request',
-          displayValue: '',
-          value: generateSendReqSnippet(unitTest.code, ''),
-        },
-        {
-          name: 'Send Request By ID',
-          displayValue: '',
-          value: async () => {
-            return new Promise(resolve => {
-              showModal(SelectModal, {
-                title: 'Select Request',
-                message: 'Select a request to fill',
-                value: '__NULL__',
-                options: [
-                  {
-                    name: '-- Select Request --',
-                    value: '__NULL__',
-                  },
-                  ...requests.map(({ name, _id }) => ({
-                    name,
-                    displayValue: '',
-                    value: generateSendReqSnippet(unitTest.code, `'${_id}'`),
-                  })),
-                ],
-                onDone: (value: string | null) => resolve(value),
-              });
-            });
-          },
-        },
-      ];
-    },
-    [requests, generateSendReqSnippet]
-  );
 
   return (
     <UnitTestItem
@@ -184,10 +132,51 @@ const UnitTestItemView = ({
       }
     >
       <CodeEditor
+        ref={editorRef}
         dynamicHeight
         showPrettifyButton
         defaultValue={unitTest ? unitTest.code : ''}
-        getAutocompleteSnippets={() => autocompleteSnippets(unitTest)}
+        getAutocompleteSnippets={() => {
+          const value = editorRef.current?.getValue() || '';
+          const variables = value.split('const ').filter(x => x).map(x => x.split(' ')[0]);
+          const numbers = variables.map(x => parseInt(x.match(/(\d+)/)?.[0] || ''))?.filter(x => !isNaN(x));
+          const highestNumberedConstant = Math.max(...numbers);
+          const variableName = 'response' + (highestNumberedConstant + 1);
+          return [
+            {
+              name: 'Send Current Request',
+              displayValue: '',
+              value: `const ${variableName} = await insomnia.send();\n` +
+              `expect(${variableName}.status).to.equal(200);`,
+            },
+            {
+              name: 'Send Request By ID',
+              displayValue: '',
+              value: async () => {
+                return new Promise(resolve => {
+                  showModal(SelectModal, {
+                    title: 'Select Request',
+                    message: 'Select a request to fill',
+                    value: '__NULL__',
+                    options: [
+                      {
+                        name: '-- Select Request --',
+                        value: '__NULL__',
+                      },
+                      ...requests.map(({ name, _id }) => ({
+                        name,
+                        displayValue: '',
+                        value: `const ${variableName} = await insomnia.send('${_id}');\n` +
+                        `expect(${variableName}.status).to.equal(200);`,
+                      })),
+                    ],
+                    onDone: (value: string | null) => resolve(value),
+                  });
+                });
+              },
+            },
+          ];
+        }}
         lintOptions={lintOptions}
         onChange={code =>
           updateUnitTestFetcher.submit(
