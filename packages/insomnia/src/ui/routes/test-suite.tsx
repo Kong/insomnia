@@ -215,12 +215,6 @@ const UnitTestItemView = ({
   );
 };
 
-interface LoaderData {
-  unitTests: UnitTest[];
-  unitTestSuite: UnitTestSuite;
-  requests: Request[];
-}
-
 export const indexLoader: LoaderFunction = async ({ params }) => {
   const { projectId, workspaceId } = params;
   invariant(projectId, 'projectId is required');
@@ -234,23 +228,24 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
       return redirect(
         `/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}`
       );
-    } else {
-      const unitTestSuites = await models.unitTestSuite.findByParentId(workspaceId);
+    }
 
-      if (unitTestSuites.length > 0) {
-        return redirect(
-          `/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuites[0]._id}`
-        );
-      }
+    const unitTestSuites = await models.unitTestSuite.findByParentId(workspaceId);
+    if (unitTestSuites.length > 0) {
+      return redirect(
+        `/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuites[0]._id}`
+      );
     }
   }
-
   return;
 };
 
-export const loader: LoaderFunction = async ({
-  params,
-}): Promise<LoaderData> => {
+interface LoaderData {
+  unitTests: UnitTest[];
+  unitTestSuite: UnitTestSuite;
+  requests: Request[];
+}
+export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> => {
   const { workspaceId, testSuiteId } = params;
 
   invariant(workspaceId, 'Workspace ID is required');
@@ -292,9 +287,7 @@ const TestSuiteRoute = () => {
     projectId: string;
     testSuiteId: string;
   };
-  const { unitTestSuite, unitTests } = useRouteLoaderData(
-    ':testSuiteId'
-  ) as LoaderData;
+  const { unitTestSuite, unitTests } = useRouteLoaderData(':testSuiteId') as LoaderData;
 
   const createUnitTestFetcher = useFetcher();
   const runAllTestsFetcher = useFetcher();

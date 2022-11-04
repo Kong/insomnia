@@ -343,9 +343,7 @@ export const renameTestSuiteAction: ActionFunction = async ({ request, params })
 
   invariant(unitTestSuite, 'Test Suite not found');
 
-  await models.unitTestSuite.update(unitTestSuite, {
-    name,
-  });
+  await models.unitTestSuite.update(unitTestSuite, { name });
 };
 
 // Unit Test
@@ -415,10 +413,8 @@ export const updateTestAction: ActionFunction = async ({ request, params }) => {
   const unitTest = await database.getWhere<UnitTest>(models.unitTest.type, {
     _id: testId,
   });
+  invariant(unitTest, 'Test not found');
 
-  if (!unitTest) {
-    throw new Error('No Unit Test was found');
-  }
   await models.unitTest.update(unitTest, { name, code, requestId: requestId || null });
 };
 
@@ -429,10 +425,7 @@ export const runTestAction: ActionFunction = async ({ params }) => {
   const unitTest = await database.getWhere<UnitTest>(models.unitTest.type, {
     _id: testId,
   });
-
-  if (!unitTest) {
-    throw new Error('No Unit Test was found');
-  }
+  invariant(unitTest, 'Test not found');
 
   const tests: Test[] = [
     {
