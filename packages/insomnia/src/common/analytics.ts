@@ -151,8 +151,9 @@ export async function trackSegmentEvent(
   { queueable, timestamp }: TrackSegmentEventOptions = {},
 ) {
   const settings = await models.settings.getOrCreate();
-
-  if (!settings.enableAnalytics) {
+  // hack to show first app starts in segment when analytics were disabled
+  const allowAnalytics = settings.enableAnalytics && !process.env.INSOMNIA_INCOGNITO_MODE;
+  if (!allowAnalytics) {
     if (queueable) {
       const queuedEvent: QueuedSegmentEvent = {
         event,
@@ -172,10 +173,8 @@ export async function trackSegmentEvent(
 
 export async function trackPageView(name: string) {
   const settings = await models.settings.getOrCreate();
-  if (!settings.enableAnalytics) {
-    return;
-  }
-  sendSegment('page', { name });
+  const allowAnalytics = settings.enableAnalytics && !process.env.INSOMNIA_INCOGNITO_MODE;
+  allowAnalytics && sendSegment('page', { name });
 }
 
 // ~~~~~~~~~~~~~~~~~ //
@@ -199,7 +198,8 @@ db.onChange(async (changes: ChangeBufferEvent[]) => {
   for (const change of changes) {
     const [event, doc] = change;
     const isUpdatingSettings = isSettings(doc) && event === 'update';
-    if (isUpdatingSettings && doc.enableAnalytics) {
+    const allowAnalytics = isUpdatingSettings && doc.enableAnalytics && !process.env.INSOMNIA_INCOGNITO_MODE;
+    if (allowAnalytics) {
       await flushQueuedEvents();
     }
   }

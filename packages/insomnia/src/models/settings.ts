@@ -55,11 +55,11 @@ export function init(): BaseSettings {
      * Only existing users updating from an older version should see the analytics prompt.
      * So by default this flag is set to false, and is toggled to true during initialization for new users.
      */
-    hasPromptedAnalytics: false,
+    hasPromptedAnalytics: false || Boolean(process.env.INSOMNIA_INCOGNITO_MODE),
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',
-    incognitoMode: false,
+    incognitoMode: false || Boolean(process.env.INSOMNIA_INCOGNITO_MODE),
     lightTheme: getAppDefaultLightTheme(),
     maxHistoryResponses: 20,
     maxRedirects: 10,
