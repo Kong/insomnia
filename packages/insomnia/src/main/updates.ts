@@ -1,5 +1,4 @@
 import electron from 'electron';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 
 import {
   CHECK_FOR_UPDATES_INTERVAL,
@@ -11,6 +10,7 @@ import {
 } from '../common/constants';
 import { delay } from '../common/misc';
 import * as models from '../models/index';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '../utils/url/querystring';
 const { autoUpdater, BrowserWindow, ipcMain } = electron;
 
 async function getUpdateUrl(force: boolean): Promise<string | null> {

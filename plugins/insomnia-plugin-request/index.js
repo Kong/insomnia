@@ -1,9 +1,79 @@
-const {
-  buildQueryStringFromParams,
-  joinUrlAndQueryString,
-  smartEncodeUrl,
-} = require('insomnia-url');
 const { jarFromCookies } = require('insomnia-cookies');
+const { format, parse } = require('url');
+/**
+ * Build a querystring from a list of name/value pairs
+ */
+export const buildQueryStringFromParams = (
+  parameters,
+  /** allow empty names and values */
+  strict,
+) => {
+  strict = strict === undefined ? true : strict;
+  const items = [];
+  for (const param of parameters) {
+    const built = buildQueryParameter(param, strict);
+    if (!built) {
+      continue;
+    }
+    items.push(built);
+  }
+  return items.join('&');
+};
+export const joinUrlAndQueryString = (url, qs) => {
+  if (!qs) {
+    return url;
+  }
+  if (!url) {
+    return qs;
+  }
+  const [base, ...hashes] = url.split('#');
+  // TODO: Make this work with URLs that have a #hash component
+  const baseUrl = base || '';
+  const joiner = getJoiner(base);
+  const hash = hashes.length ? `#${hashes.join('#')}` : '';
+  return `${baseUrl}${joiner}${qs}${hash}`;
+};
+/**
+ * Automatically encode the path and querystring components
+ * @param url url to encode
+ * @param encode enable encoding
+ */
+export const smartEncodeUrl = (url, encode) => {
+  // Default autoEncode = true if not passed
+  encode = encode === undefined ? true : encode;
+  const urlWithProto = setDefaultProtocol(url);
+  if (!encode) {
+    return urlWithProto;
+  } else {
+    // Parse the URL into components
+    const parsedUrl = parse(urlWithProto);
+    // ~~~~~~~~~~~ //
+    // 1. Pathname //
+    // ~~~~~~~~~~~ //
+    if (parsedUrl.pathname) {
+      const segments = parsedUrl.pathname.split('/');
+      parsedUrl.pathname = segments
+        .map(s => flexibleEncodeComponent(s, URL_PATH_CHARACTER_WHITELIST))
+        .join('/');
+    }
+    // ~~~~~~~~~~~~~~ //
+    // 2. Querystring //
+    // ~~~~~~~~~~~~~~ //
+    if (parsedUrl.query) {
+      const qsParams = deconstructQueryStringToParams(parsedUrl.query);
+      const encodedQsParams = [];
+      for (const { name, value } of qsParams) {
+        encodedQsParams.push({
+          name: flexibleEncodeComponent(name),
+          value: flexibleEncodeComponent(value),
+        });
+      }
+      parsedUrl.query = buildQueryStringFromParams(encodedQsParams);
+      parsedUrl.search = `?${parsedUrl.query}`;
+    }
+    return format(parsedUrl);
+  }
+};
 
 module.exports.templateTags = [
   {
@@ -48,7 +118,7 @@ module.exports.templateTags = [
           {
             displayName: 'OAuth 2.0 Access Token',
             value: 'oauth2',
-            /* 
+            /*
               This value is left as is and not renamed to 'oauth2-access' so as to not
               break the current release's usage of `oauth2`.
             */
@@ -189,7 +259,7 @@ module.exports.templateTags = [
           if (!doc) {
             throw new Error(
               `Could not get folder by index ${folderIndex}. Must be between 0-${ancestors.length -
-                1}`,
+              1}`,
             );
           }
           return doc ? doc.name : null;

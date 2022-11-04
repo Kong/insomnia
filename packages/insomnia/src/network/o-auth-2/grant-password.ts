@@ -1,6 +1,5 @@
-import { setDefaultProtocol } from 'insomnia-url';
-
 import * as models from '../../models/index';
+import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import * as network from '../network';
 import * as c from './constants';

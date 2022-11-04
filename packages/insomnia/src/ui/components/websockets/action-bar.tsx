@@ -1,10 +1,10 @@
-import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import React, { FC, useCallback, useLayoutEffect, useRef } from 'react';
 import styled from 'styled-components';
 
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';

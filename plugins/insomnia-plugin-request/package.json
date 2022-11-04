@@ -22,7 +22,6 @@
     "test": "jest --silent"
   },
   "dependencies": {
-    "insomnia-cookies": "^3.6.1-beta.3",
-    "insomnia-url": "^3.6.1-beta.3"
+    "insomnia-cookies": "^3.6.1-beta.3"
   }
 }

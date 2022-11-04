@@ -1,10 +1,10 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import * as https from 'https';
-import { setDefaultProtocol } from 'insomnia-url';
 import { parse as urlParse } from 'url';
 
 import { isDevelopment } from '../common/constants';
 import * as models from '../models';
+import { setDefaultProtocol } from '../utils/url/protocol';
 import { isUrlMatchedInNoProxyRule } from './is-url-matched-in-no-proxy-rule';
 
 export async function axiosRequest(config: AxiosRequestConfig) {

@@ -1,4 +1,3 @@
-import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -11,6 +10,7 @@ import { update } from '../../../models/helpers/request-operations';
 import type { Request } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
 import type { Workspace } from '../../../models/workspace';
+import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveEnvironment, selectActiveRequestMeta } from '../../redux/selectors';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';

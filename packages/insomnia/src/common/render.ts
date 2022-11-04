@@ -1,5 +1,4 @@
 import clone from 'clone';
-import { setDefaultProtocol } from 'insomnia-url';
 import orderedJSON from 'json-order';
 
 import * as models from '../models';
@@ -13,6 +12,7 @@ import { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, Workspace } from '../models/workspace';
 import * as templating from '../templating';
 import * as templatingUtils from '../templating/utils';
+import { setDefaultProtocol } from '../utils/url/protocol';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
 

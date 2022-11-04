@@ -2,11 +2,6 @@ import electron, { ipcMain } from 'electron';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
 import { jarFromCookies } from 'insomnia-cookies';
-import {
-  buildQueryStringFromParams,
-  joinUrlAndQueryString,
-  setDefaultProtocol,
-} from 'insomnia-url';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import { KeyObject, PxfObject } from 'tls';
@@ -33,6 +28,8 @@ import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
 import { addSetCookiesToToughCookieJar } from '../../network/network';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
+import { setDefaultProtocol } from '../../utils/url/protocol';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 
 export interface WebSocketConnection extends WebSocket {
   _id: string;
