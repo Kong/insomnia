@@ -90,14 +90,14 @@ export const AnalyticsModal: FC = () => {
   };
 
   useEffect(() => {
-    if (hasPromptedAnalytics || process.env.INSOMNIA_INCOGNITO_MODE) {
+    if (hasPromptedAnalytics) {
       ref.current?.hide();
     } else {
       ref.current?.show();
     }
   }, [hasPromptedAnalytics]);
 
-  if (hasPromptedAnalytics || process.env.INSOMNIA_INCOGNITO_MODE) {
+  if (hasPromptedAnalytics) {
     return null;
   }
 
