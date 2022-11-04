@@ -2,9 +2,9 @@ import { describe, expect, it } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 
-import { prettify } from './json';
+import { jsonPrettify } from './json';
 
-describe('prettify()', () => {
+describe('jsonPrettify()', () => {
   const basePath = path.join(__dirname, './fixtures');
   const files = fs.readdirSync(basePath);
   for (const file of files) {
@@ -18,7 +18,7 @@ describe('prettify()', () => {
     it(`handles ${name}`, () => {
       const input = fs.readFileSync(path.join(basePath, `${slug}-input.json`), 'utf8').trim();
       const output = fs.readFileSync(path.join(basePath, `${slug}-output.json`), 'utf8').trim();
-      const result = prettify(input, '  ');
+      const result = jsonPrettify(input, '  ');
       expect(result).toBe(output);
     });
   }
