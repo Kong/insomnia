@@ -282,7 +282,7 @@ function matchHeader(headers, name) {
 /**
  * Query an XML blob with XPath
  */
-export const queryXPath = (xml, query) => {
+const queryXPath = (xml, query) => {
   const DOMParser = require('xmldom').DOMParser
   const dom = new DOMParser().parseFromString(xml);
   let selectedValues = [];
