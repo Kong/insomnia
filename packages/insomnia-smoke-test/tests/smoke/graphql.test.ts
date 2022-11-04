@@ -20,6 +20,8 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   await page.click('text=CollectionSmoke GraphQLjust now');
   // Open the graphql request
   await page.click('button:has-text("POSTGQLGraphQL request")');
+  // Assert the schema is fetched after switching to GraphQL request
+  await expect(page.locator('.app')).toContainText('schema fetched just now');
 
   // Assert schema documentation stuff
   await page.click('[data-testid="request-pane"] button:has-text("schema")');

@@ -428,7 +428,7 @@ export const GraphQLEditor: FC<Props> = ({
       },
     };
   }
-
+  const canShowSchema = schema && !schemaIsFetching && !schemaFetchError && schemaLastFetchTime > 0;
   return (
     <div className="graphql-editor">
       <Toolbar>
@@ -449,7 +449,7 @@ export const GraphQLEditor: FC<Props> = ({
             onClick={() => {
               setState(state => ({ ...state, explorerVisible: true }));
             }}
-            disabled={!schema}
+            disabled={!canShowSchema}
           >
             <i className="fa fa-file-code-o" /> Show Documentation
           </DropdownItem>
