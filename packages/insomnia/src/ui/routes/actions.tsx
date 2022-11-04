@@ -355,27 +355,10 @@ export const createNewTestAction: ActionFunction = async ({ request, params }) =
   const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
 
-  const generateSendReqSnippet = (existingCode: string, requestId: string) => {
-    let variableName = 'response';
-    for (let i = 1; i < 100; i++) {
-      variableName = `response${i}`;
-      // Try next one if code already contains this variable
-      if (existingCode.includes(`const ${variableName} =`)) {
-        continue;
-      }
-      // Found variable that doesn't exist in code yet
-      break;
-    }
-
-    return (
-      `const ${variableName} = await insomnia.send(${requestId});\n` +
-      `expect(${variableName}.status).to.equal(200);`
-    );
-  };
-
   await models.unitTest.create({
     parentId: testSuiteId,
-    code: generateSendReqSnippet('', ''),
+    code: `const response1 = await insomnia.send();
+expect(response1.status).to.equal(200);`,
     name,
   });
 
