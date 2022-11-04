@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { query } from './query';
+import { queryXPath } from './query';
 
 describe('query()', () => {
   it('handles missing query', () => {

@@ -1,1 +1,0 @@
-export { query } from './query';

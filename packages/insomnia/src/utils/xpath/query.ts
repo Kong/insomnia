@@ -4,22 +4,18 @@ import xpath, { SelectedValue } from 'xpath';
 /**
  * Query an XML blob with XPath
  */
-export const query = (xml: string, query?: string) => {
+export const queryXPath = (xml: string, query?: string) => {
   const dom = new DOMParser().parseFromString(xml);
   let selectedValues: SelectedValue[] = [];
-
   if (query === undefined) {
     throw new Error('Must pass an XPath query.');
   }
-
   try {
     selectedValues = xpath.select(query, dom);
   } catch (err) {
     throw new Error(`Invalid XPath query: ${query}`);
   }
-
   const output = [];
-
   // Functions return plain strings
   if (typeof selectedValues === 'string') {
     output.push({
@@ -55,6 +51,5 @@ export const query = (xml: string, query?: string) => {
       }
     }
   }
-
   return output;
 };
