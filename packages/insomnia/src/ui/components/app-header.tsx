@@ -5,7 +5,6 @@ import styled from 'styled-components';
 
 import coreLogo from '../images/insomnia-logo.svg';
 import { selectIsLoggedIn } from '../redux/selectors';
-import { SettingsButton } from './buttons/settings-button';
 import { AccountDropdownButton } from './dropdowns/account-dropdown/account-dropdown';
 import { GitHubStarsButton } from './github-stars-button';
 
@@ -28,6 +27,7 @@ export interface HeaderProps {
 }
 
 const StyledHeader = styled.div({
+  gridArea: 'Header',
   borderBottom: '1px solid var(--hl-md)',
   display: 'grid',
   padding: 'var(--padding-xs) 0',
@@ -92,7 +92,6 @@ export const AppHeader: FC<AppHeaderProps> = ({
       gridRight={
         <Fragment>
           {gridRight}
-          <SettingsButton />
           <AccountDropdownButton />
         </Fragment>
       }
