@@ -30,7 +30,6 @@ import { SidebarChildren } from '../components/sidebar/sidebar-children';
 import { SidebarFilter } from '../components/sidebar/sidebar-filter';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { WebSocketResponsePane } from '../components/websockets/websocket-response-pane';
-import { WorkspacePageHeader } from '../components/workspace-page-header';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { createRequestGroup } from '../hooks/create-request-group';
 import {
@@ -42,7 +41,7 @@ import {
 } from '../redux/selectors';
 import { selectSidebarFilter } from '../redux/sidebar-selectors';
 
-export const WrapperDebug: FC = () => {
+export const Debug: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
   const activeWorkspace = useSelector(selectActiveWorkspace);
@@ -160,9 +159,6 @@ export const WrapperDebug: FC = () => {
 
   return (
     <PageLayout
-      renderPageHeader={activeWorkspace ?
-        <WorkspacePageHeader />
-        : null}
       renderPageSidebar={activeWorkspace ? <Fragment>
         <div className="sidebar__menu">
           <EnvironmentsDropdown
@@ -234,4 +230,4 @@ export const WrapperDebug: FC = () => {
   );
 };
 
-export default WrapperDebug;
+export default Debug;

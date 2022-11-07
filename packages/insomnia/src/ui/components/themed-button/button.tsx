@@ -6,6 +6,7 @@ export const ButtonSizeEnum = {
   Default: 'default',
   Small: 'small',
   Medium: 'medium',
+  xs: 'xs',
 } as const;
 
 // These variants determine how the `bg` color variable is handled
@@ -70,6 +71,12 @@ export const Button = styled.button<ButtonProps>`
 
   ${({ size }) => {
     switch (size) {
+      case 'xs':
+        return css`
+          padding: 0 calc(var(--padding-md) * 0.5);
+          height: calc(var(--line-height-xs) * 0.5);
+          font-size: var(--font-size-xs);
+        `;
       case 'small':
         return css`
           padding: 0 calc(var(--padding-md) * 0.8);
