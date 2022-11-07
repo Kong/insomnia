@@ -107,7 +107,7 @@ jobs:
         run: echo "timestamp=$(date --iso-8601=seconds)" >> $GITHUB_OUTPUT
 
       - name: Find Comment
-        uses: peter-evans/find-comment@v1
+        uses: peter-evans/find-comment@v2
         id: find-comment
         with:
           issue-number: ${{ steps.find-pull-request.outputs.number }}

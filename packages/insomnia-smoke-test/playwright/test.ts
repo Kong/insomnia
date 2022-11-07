@@ -16,6 +16,7 @@ interface EnvOptions {
   INSOMNIA_APP_WEBSITE_URL: string;
   INSOMNIA_GITHUB_API_URL: string;
   INSOMNIA_GITLAB_API_URL: string;
+  INSOMNIA_INCOGNITO_MODE: string;
 }
 
 export const test = baseTest.extend<{
@@ -30,6 +31,7 @@ export const test = baseTest.extend<{
       INSOMNIA_APP_WEBSITE_URL: webServerUrl + '/website',
       INSOMNIA_GITHUB_API_URL: webServerUrl + '/github-api/graphql',
       INSOMNIA_GITLAB_API_URL: webServerUrl + '/gitlab-api',
+      INSOMNIA_INCOGNITO_MODE: 'true',
     };
 
     const electronApp = await playwright._electron.launch({
@@ -68,8 +70,6 @@ export const test = baseTest.extend<{
     const page = await app.firstWindow();
 
     await page.waitForLoadState();
-
-    await page.click("text=Don't share usage analytics");
 
     await use(page);
   },
