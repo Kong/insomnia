@@ -53,6 +53,7 @@ const router = createMemoryRouter(
   [
     {
       path: '/',
+      loader:async (...args) => (await import('./routes/root')).loader(...args),
       element: <Root />,
       errorElement: <ErrorRoute />,
       children: [

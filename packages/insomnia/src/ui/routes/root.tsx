@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Outlet } from 'react-router-dom';
+import { LoaderFunction, Outlet } from 'react-router-dom';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
+import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Toast } from '../components/toast';
 import { AppHooks } from '../containers/app-hooks';
@@ -20,6 +21,33 @@ import {
   selectIsLoggedIn,
 } from '../redux/selectors';
 import Modals from './modals';
+
+interface Organization {
+  _id: string;
+  name: string;
+}
+
+export interface RootLoaderData {
+  organizations: Organization[];
+}
+
+export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
+  const allProjects = await models.project.all();
+
+  const remoteOrgs = allProjects.filter(isRemoteProject).map(({ _id, name }) => ({
+    _id,
+    name,
+  }));
+
+  const personalOrg = {
+    _id: DEFAULT_PROJECT_ID,
+    name: 'Personal Projects',
+  };
+
+  return {
+    organizations: [personalOrg, ...remoteOrgs],
+  };
+};
 
 interface State {
   isMigratingChildren: boolean;
