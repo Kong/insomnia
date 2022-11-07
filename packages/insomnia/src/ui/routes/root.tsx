@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { LoaderFunction, Outlet } from 'react-router-dom';
+import styled from 'styled-components';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
-import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
+import { defaultOrganization, Organization } from '../../models/organization';
+import { isRemoteProject } from '../../models/project';
+import { AppHeader } from '../components/app-header';
 import { ErrorBoundary } from '../components/error-boundary';
+import { OrganizationsNav } from '../components/organizations-navbar';
 import { Toast } from '../components/toast';
 import { AppHooks } from '../containers/app-hooks';
 import withDragDropContext from '../context/app/drag-drop-context';
@@ -22,11 +26,6 @@ import {
 } from '../redux/selectors';
 import Modals from './modals';
 
-interface Organization {
-  _id: string;
-  name: string;
-}
-
 export interface RootLoaderData {
   organizations: Organization[];
 }
@@ -39,15 +38,23 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
     name,
   }));
 
-  const personalOrg = {
-    _id: DEFAULT_PROJECT_ID,
-    name: 'Personal Projects',
-  };
-
   return {
-    organizations: [personalOrg, ...remoteOrgs],
+    organizations: [defaultOrganization, ...remoteOrgs],
   };
 };
+
+const Layout = styled.div({
+  position: 'relative',
+  height: '100%',
+  width: '100%',
+  display: 'grid',
+  gridTemplate: `
+    'Header Header' auto
+    'Navbar Content' 1fr
+    'Statusbar Statusbar' 20px [row-end]
+    / 50px 1fr;
+  `,
+});
 
 interface State {
   isMigratingChildren: boolean;
@@ -111,7 +118,24 @@ const Root = () => {
         <div className="app" key={uniquenessKey}>
           <ErrorBoundary showAlert>
             <Modals />
-            <Outlet />
+            <Layout>
+              <OrganizationsNav />
+              <div
+                style={{
+                  gridArea: 'Header',
+                }}
+              >
+                <AppHeader
+                  gridCenter={null}
+                />
+              </div>
+              <Outlet />
+              <div
+                style={{
+                  gridArea: 'Statusbar',
+                }}
+              >StatusBar</div>
+            </Layout>
           </ErrorBoundary>
 
           <ErrorBoundary showAlert>
