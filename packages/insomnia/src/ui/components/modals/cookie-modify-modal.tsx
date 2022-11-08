@@ -12,7 +12,7 @@ import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import { Tab, TabList, TabPanel, Tabs } from '../base/tabs';
+import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 export interface CookieModifyModalOptions {
   cookie: Cookie;
@@ -83,16 +83,8 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
       <ModalBody className="cookie-modify">
         {activeCookieJar && cookie && (
           <Tabs>
-            <TabList>
-              <Tab>
-                Friendly
-              </Tab>
-              <Tab>
-                Raw
-              </Tab>
-            </TabList>
-            <TabPanel>
-              <div className="pad">
+            <TabItem key="friendly" title="Friendly">
+              <PanelContainer className="pad">
                 <div className="form-row">
                   <div className="form-control form-control--outlined">
                     <label>
@@ -139,7 +131,7 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
                     <input type="datetime-local" defaultValue={localDateTime} onChange={event => handleCookieUpdate(Object.assign({}, cookie, { expires: event.target.value }))} />
                   </label>
                 </div>
-              </div>
+              </PanelContainer>
               <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
                 <label>
                   Secure
@@ -162,32 +154,34 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
                   />
                 </label>
               </div>
-            </TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad">
-              <div className="form-control form-control--outlined">
-                <label>
-                  Raw Cookie String
-                  <input
-                    type="text"
-                    onChange={event => {
-                      try {
-                        // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
-                        const parsed = toughCookie.Cookie.parse(event.target.value)?.toJSON();
-                        if (parsed) {
-                          // Make sure cookie has an id
-                          parsed.id = cookie.id;
-                          handleCookieUpdate(parsed);
+            </TabItem>
+            <TabItem key="raw" title="Raw">
+              <PanelContainer className="pad">
+                <div className="form-control form-control--outlined">
+                  <label>
+                    Raw Cookie String
+                    <input
+                      type="text"
+                      onChange={event => {
+                        try {
+                          // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
+                          const parsed = toughCookie.Cookie.parse(event.target.value)?.toJSON();
+                          if (parsed) {
+                            // Make sure cookie has an id
+                            parsed.id = cookie.id;
+                            handleCookieUpdate(parsed);
+                          }
+                        } catch (err) {
+                          console.warn(`Failed to parse cookie string "${event.target.value}"`, err);
+                          return;
                         }
-                      } catch (err) {
-                        console.warn(`Failed to parse cookie string "${event.target.value}"`, err);
-                        return;
-                      }
-                    }}
-                    defaultValue={rawDefaultValue}
-                  />
-                </label>
-              </div>
-            </TabPanel>
+                      }}
+                      defaultValue={rawDefaultValue}
+                    />
+                  </label>
+                </div>
+              </PanelContainer>
+            </TabItem>
           </Tabs>
         )}
       </ModalBody>
