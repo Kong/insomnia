@@ -1,6 +1,6 @@
 import React, { FC, forwardRef, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 
 import { COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS } from '../../common/constants';
 import { debounce } from '../../common/misc';
@@ -9,15 +9,6 @@ import { selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
 import { selectPaneHeight, selectPaneWidth, selectSidebarWidth } from '../redux/sidebar-selectors';
 import { ErrorBoundary } from './error-boundary';
 import { Sidebar } from './sidebar/sidebar';
-
-const togglePillKeyframe = keyframes({
-  '0%': {
-    transform: 'translateX(-100%)',
-  },
-  '100%': {
-    transform: 'translateX(0)',
-  },
-});
 
 const verticalStyles = {
   '.sidebar': {
@@ -68,6 +59,7 @@ const LayoutGrid = styled.div<{orientation: 'vertical' | 'horizontal'}>(props =>
   boxSizing: 'border-box',
   color: 'var(--color-font)',
   display: 'grid',
+  overflow: 'hidden',
   '.filter-icon': {
     float: 'right',
     marginRight: 'var(--padding-sm)',
@@ -154,13 +146,6 @@ const LayoutGrid = styled.div<{orientation: 'vertical' | 'horizontal'}>(props =>
     gridRowEnd: 'span 3',
   },
 
-  '.layout-body': {
-    gridColumnStart: '2',
-    gridColumnEnd: 'span 6',
-    gridRowStart: '1',
-    gridRowEnd: 'span 3',
-  },
-
   '.migration': {
     gridColumnStart: '1',
     gridColumnEnd: 'span 6',
@@ -198,15 +183,13 @@ const Pane = forwardRef<HTMLElement, { position: string; children: ReactNode }>(
 
 interface Props {
   renderPageSidebar?: ReactNode;
-  renderPageBody?: ReactNode;
   renderPaneOne?: ReactNode;
   renderPaneTwo?: ReactNode;
 }
 
-export const PageLayout: FC<Props> = ({
+export const SidebarLayout: FC<Props> = ({
   renderPaneOne,
   renderPaneTwo,
-  renderPageBody,
   renderPageSidebar,
 }) => {
   const settings = useSelector(selectSettings);
@@ -400,46 +383,40 @@ export const PageLayout: FC<Props> = ({
           </div>
         </ErrorBoundary>
       )}
-      {renderPageBody ? (
-        <ErrorBoundary showAlert>{renderPageBody}</ErrorBoundary>
-      ) : (
+      {renderPaneOne && (
+        <ErrorBoundary showAlert>
+          <Pane
+            position="one"
+            ref={requestPaneRef}
+          >
+            {renderPaneOne}
+          </Pane>
+        </ErrorBoundary>
+      )}
+      {renderPaneTwo && (
         <>
-          {renderPaneOne && (
-            <ErrorBoundary showAlert>
-              <Pane
-                position="one"
-                ref={requestPaneRef}
-              >
-                {renderPaneOne}
-              </Pane>
-            </ErrorBoundary>
-          )}
-          {renderPaneTwo && (
-            <>
-              <div className="drag drag--pane-horizontal">
-                <div
-                  onMouseDown={handleStartDragPaneHorizontal}
-                  onDoubleClick={handleResetDragPaneHorizontal}
-                />
-              </div>
+          <div className="drag drag--pane-horizontal">
+            <div
+              onMouseDown={handleStartDragPaneHorizontal}
+              onDoubleClick={handleResetDragPaneHorizontal}
+            />
+          </div>
 
-              <div className="drag drag--pane-vertical">
-                <div
-                  onMouseDown={handleStartDragPaneVertical}
-                  onDoubleClick={handleResetDragPaneVertical}
-                />
-              </div>
+          <div className="drag drag--pane-vertical">
+            <div
+              onMouseDown={handleStartDragPaneVertical}
+              onDoubleClick={handleResetDragPaneVertical}
+            />
+          </div>
 
-              <ErrorBoundary showAlert>
-                <Pane
-                  position="two"
-                  ref={responsePaneRef}
-                >
-                  {renderPaneTwo}
-                </Pane>
-              </ErrorBoundary>
-            </>
-          )}
+          <ErrorBoundary showAlert>
+            <Pane
+              position="two"
+              ref={responsePaneRef}
+            >
+              {renderPaneTwo}
+            </Pane>
+          </ErrorBoundary>
         </>
       )}
       {/* Block all mouse activity by showing an overlay while dragging */}

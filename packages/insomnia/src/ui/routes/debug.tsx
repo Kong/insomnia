@@ -20,7 +20,6 @@ import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
 import { RequestSwitcherModal } from '../components/modals/request-switcher-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
-import { PageLayout } from '../components/page-layout';
 import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
 import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
 import { PlaceholderRequestPane } from '../components/panes/placeholder-request-pane';
@@ -28,6 +27,7 @@ import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
 import { SidebarChildren } from '../components/sidebar/sidebar-children';
 import { SidebarFilter } from '../components/sidebar/sidebar-filter';
+import { SidebarLayout } from '../components/sidebar-layout';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { WebSocketResponsePane } from '../components/websockets/websocket-response-pane';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
@@ -158,7 +158,7 @@ export const Debug: FC = () => {
   }, [activeEnvironment?._id]);
 
   return (
-    <PageLayout
+    <SidebarLayout
       renderPageSidebar={activeWorkspace ? <Fragment>
         <div className="sidebar__menu">
           <EnvironmentsDropdown

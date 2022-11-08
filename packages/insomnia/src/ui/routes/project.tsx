@@ -40,8 +40,8 @@ import { DropdownItem } from '../components/base/dropdown/dropdown-item';
 import { DashboardSortDropdown } from '../components/dropdowns/dashboard-sort-dropdown';
 import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
 import { showPrompt } from '../components/modals';
-import { PageLayout } from '../components/page-layout';
-import { WrapperHomeEmptyStatePane } from '../components/panes/wrapper-home-empty-state-pane';
+import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
+import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button';
 import { WorkspaceCard } from '../components/workspace-card';
 import { cloneGitRepository } from '../redux/modules/git';
@@ -61,24 +61,64 @@ const CreateButton = styled(Button).attrs({
   },
 });
 
-const CardContainer = styled.div({
+const CardsContainer = styled.div({
   display: 'flex',
   flexWrap: 'wrap',
-  paddingTop: 'var(--padding-md)',
 });
 
-const Header = styled.h2({
+const SearchFormControl = styled.div({
+  fontSize: 'var(--font-size-md)',
+  maxWidth: '400px',
+  minWidth: '200px',
+});
+
+const SearchInput = styled.input({
+  margin: '0',
+  width: '15rem',
+});
+
+const PaneHeaderTitle = styled.h2({
+  margin: 0,
+  whiteSpace: 'nowrap',
+  textOverflow: 'ellipsis',
+  flex: 1,
+});
+
+const PaneHeaderToolbar = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  flex: 1,
+});
+
+const PaneHeader = styled.div({
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',
-  justifyContent: 'space-between !important',
+  justifyContent: 'space-between',
   width: '100%',
+  margin: 0,
   boxSizing: 'border-box',
+  gap: 'var(--padding-md)',
+  padding: 'var(--padding-md)',
+  backgroundColor: 'var(--color-bg)',
+});
+
+const PaneBody = styled.div({
+  padding: 'var(--padding-md)',
+  overflowY: 'auto',
+  alignItems: 'center',
+  flex: 1,
 });
 
 const Pane = styled.div({
+  position: 'relative',
   display: 'flex',
   flexDirection: 'column',
+  height: '100%',
+  width: '100%',
+  boxSizing: 'border-box',
+  background: 'var(--color-bg)',
 });
 
 const ProjectsSidebar: FC<{projects: Project[]}> = ({ projects }) => {
@@ -383,80 +423,79 @@ const ProjectRoute: FC = () => {
     dispatch(cloneGitRepository({ createFsClient: MemClient.createClient, onComplete: revalidate }));
   }, [dispatch, revalidate]);
 
+  const hasWorkspaces = workspaces.length > 0;
+
   return (
     <Fragment>
-      <PageLayout
+      <SidebarLayout
         renderPageSidebar={<ProjectsSidebar projects={projects} />}
         renderPaneOne={
-          <Pane className='theme-pane'>
-            <div className="document-listing__body pad-bottom">
-              <Header>
-                <h2 className="no-margin">All Files ({workspaces.length})</h2>
-                <div className="row row--right pad-left wide">
-                  <div
-                    className="form-control form-control--outlined no-margin"
-                    style={{
-                      maxWidth: '400px',
-                    }}
-                  >
-                    <input
-                      autoFocus
-                      type="text"
-                      placeholder="Filter..."
-                      onChange={event =>
-                        submit({
-                          filter: event.target.value,
-                          sortOrder,
-                        })
-                      }
-                      className="no-margin"
-                    />
-                    <span className="fa fa-search filter-icon" />
-                  </div>
-                  <DashboardSortDropdown
-                    value={sortOrder}
-                    onSelect={sortOrder => {
+          <Pane>
+            <PaneHeader>
+              <PaneHeaderTitle>All Files ({workspaces.length})</PaneHeaderTitle>
+              <PaneHeaderToolbar>
+                <SearchFormControl
+                  className="form-control form-control--outlined no-margin"
+                >
+                  <SearchInput
+                    autoFocus
+                    type="text"
+                    placeholder="Filter..."
+                    onChange={event =>
                       submit({
+                        filter: event.target.value,
                         sortOrder,
-                        filter,
-                      });
-                    }}
+                      })
+                    }
+                    className="no-margin"
                   />
-                  {isRemoteProject(activeProject) && <RemoteWorkspacesDropdown project={activeProject} />}
-                  <Dropdown>
-                    <DropdownButton buttonClass={CreateButton}>
-                      Create <i className="fa fa-caret-down pad-left-sm" />
-                    </DropdownButton>
-                    <DropdownDivider>New</DropdownDivider>
-                    <DropdownItem onClick={createNewCollection}>
-                      <i className="fa fa-bars" />
-                      Request Collection
-                    </DropdownItem>
-                    <DropdownItem onClick={createNewDocument}>
-                      <i className="fa fa-file-o" />
-                      Design Document
-                    </DropdownItem>
-                    <DropdownDivider>Import From</DropdownDivider>
-                    <DropdownItem onClick={importFromFile}>
-                      <i className="fa fa-plus" />
-                      File
-                    </DropdownItem>
-                    <DropdownItem onClick={importFromURL}>
-                      <i className="fa fa-link" />
-                      URL
-                    </DropdownItem>
-                    <DropdownItem onClick={importFromClipboard}>
-                      <i className="fa fa-clipboard" />
-                      Clipboard
-                    </DropdownItem>
-                    <DropdownItem onClick={importFromGit}>
-                      <i className="fa fa-code-fork" />
-                      Git Clone
-                    </DropdownItem>
-                  </Dropdown>
-                </div>
-              </Header>
-              <CardContainer>
+                  <span className="fa fa-search filter-icon" />
+                </SearchFormControl>
+                <DashboardSortDropdown
+                  value={sortOrder}
+                  onSelect={sortOrder => {
+                    submit({
+                      sortOrder,
+                      filter,
+                    });
+                  }}
+                />
+                {isRemoteProject(activeProject) && <RemoteWorkspacesDropdown project={activeProject} />}
+                <Dropdown>
+                  <DropdownButton buttonClass={CreateButton}>
+                    Create <i className="fa fa-caret-down pad-left-sm" />
+                  </DropdownButton>
+                  <DropdownDivider>New</DropdownDivider>
+                  <DropdownItem onClick={createNewCollection}>
+                    <i className="fa fa-bars" />
+                    Request Collection
+                  </DropdownItem>
+                  <DropdownItem onClick={createNewDocument}>
+                    <i className="fa fa-file-o" />
+                    Design Document
+                  </DropdownItem>
+                  <DropdownDivider>Import From</DropdownDivider>
+                  <DropdownItem onClick={importFromFile}>
+                    <i className="fa fa-plus" />
+                    File
+                  </DropdownItem>
+                  <DropdownItem onClick={importFromURL}>
+                    <i className="fa fa-link" />
+                    URL
+                  </DropdownItem>
+                  <DropdownItem onClick={importFromClipboard}>
+                    <i className="fa fa-clipboard" />
+                    Clipboard
+                  </DropdownItem>
+                  <DropdownItem onClick={importFromGit}>
+                    <i className="fa fa-code-fork" />
+                    Git Clone
+                  </DropdownItem>
+                </Dropdown>
+              </PaneHeaderToolbar>
+            </PaneHeader>
+            <PaneBody>
+              {hasWorkspaces && <CardsContainer>
                 {workspaces.map(workspace => (
                   <WorkspaceCard
                     {...workspace}
@@ -477,14 +516,14 @@ const ProjectRoute: FC = () => {
                     filter={filter}
                   />
                 ))}
-              </CardContainer>
-              {filter && workspaces.length === 0 && (
+              </CardsContainer>}
+              {filter && !hasWorkspaces && (
                 <p className="notice subtle">
                   No documents found for <strong>{filter}</strong>
                 </p>
               )}
-              {!filter && !workspaces.length && (
-                <WrapperHomeEmptyStatePane
+              {!filter && !hasWorkspaces && (
+                <EmptyStatePane
                   createRequestCollection={createNewCollection}
                   createDesignDocument={createNewDocument}
                   importFromFile={importFromFile}
@@ -493,7 +532,7 @@ const ProjectRoute: FC = () => {
                   importFromGit={importFromGit}
                 />
               )}
-            </div>
+            </PaneBody>
           </Pane>
         }
       />
