@@ -12,6 +12,7 @@ import {
 } from '../common/constants';
 import type { RenderedRequest } from '../common/render';
 import { RequestParameter } from '../models/request';
+import { COOKIE, HEADER, QUERY_PARAMS } from './api-key/constants';
 import { getBasicAuthHeader } from './basic-auth/get-header';
 import { getBearerAuthHeader } from './bearer-auth/get-header';
 import getOAuth1Token from './o-auth-1/get-token';
@@ -30,11 +31,19 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     return;
   }
 
-  if (authentication.type === AUTH_API_KEY && authentication.addTo === 'header') {
+  if (authentication.type === AUTH_API_KEY && authentication.addTo === HEADER) {
     const { key, value } = authentication;
     return {
       name: key,
       value: value,
+    } as Header;
+  }
+
+  if (authentication.type === AUTH_API_KEY && authentication.addTo === COOKIE) {
+    const { key, value } = authentication;
+    return {
+      name: 'Cookie',
+      value: `${key}=${value}`,
     } as Header;
   }
 
@@ -158,7 +167,7 @@ export async function getAuthQueryParams(renderedRequest: RenderedRequest) {
     return;
   }
 
-  if (authentication.type === AUTH_API_KEY && authentication.addTo === 'queryParams') {
+  if (authentication.type === AUTH_API_KEY && authentication.addTo === QUERY_PARAMS) {
     const { key, value } = authentication;
     return {
       name: key,

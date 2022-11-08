@@ -28,6 +28,7 @@ import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
 import type { WebSocketResponse } from '../../models/websocket-response';
+import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
 import { addSetCookiesToToughCookieJar } from '../../network/network';
@@ -139,6 +140,7 @@ const openWebSocketConnection = async (
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
     const headers = options.headers;
     let url = options.url;
+    let authCookie = null;
     if (!options.authentication.disabled) {
       if (options.authentication.type === AUTH_BASIC) {
         const { username, password, useISO88591 } = options.authentication;
@@ -147,9 +149,11 @@ const openWebSocketConnection = async (
       }
       if (options.authentication.type === AUTH_API_KEY) {
         const { key, value, addTo } = options.authentication;
-        if (addTo === 'header') {
+        if (addTo === HEADER) {
           headers.push({ name: key, value: value });
-        } else if (addTo === 'queryParams') {
+        } else if (addTo === COOKIE) {
+          authCookie = `${key}=${value}`;
+        } else if (addTo === QUERY_PARAMS) {
           const authQueryParam = {
             name: key,
             value: value,
@@ -198,8 +202,9 @@ const openWebSocketConnection = async (
     if (request.settingSendCookies && options.cookieJar.cookies.length) {
       const jar = jarFromCookies(options.cookieJar.cookies);
       const cookieHeader = jar.getCookieStringSync(options.url);
-      if (cookieHeader) {
-        lowerCasedEnabledHeaders['cookie'] = cookieHeader;
+      const cookieHeaderWithAuth = cookieHeader ? `${cookieHeader};${authCookie ?? ''}` : `${authCookie};`;
+      if (cookieHeaderWithAuth) {
+        lowerCasedEnabledHeaders['cookie'] = cookieHeaderWithAuth;
       }
     }
 

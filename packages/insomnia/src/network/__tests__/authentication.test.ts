@@ -169,12 +169,12 @@ describe('API Key', () => {
       });
     });
 
-    it('Does nothing, when addTo is "queryParams"', async () => {
+    it('Creates cookie with key as name and value as value, when addTo is "cookie"', async () => {
       const authentication = {
         type: AUTH_API_KEY,
         key: 'x-api-key',
         value: 'test',
-        addTo: 'queryParams',
+        addTo: 'cookie',
       };
       const request = {
         url: 'https://insomnia.rest/',
@@ -182,12 +182,14 @@ describe('API Key', () => {
         authentication,
       };
       const header = await getAuthHeader(request, 'https://insomnia.rest/');
-      expect(header).toBeUndefined();
+      expect(header).toEqual({
+        'name': 'Cookie',
+        'value': 'x-api-key=test',
+      });
     });
-
   });
-  describe('getAuthQueryParams', () => {
 
+  describe('getAuthQueryParams', () => {
     it('Creates a query param with key as parameter name and value as parameter value, when addTo is "queryParams"', async () => {
       const authentication = {
         type: AUTH_API_KEY,
@@ -205,22 +207,6 @@ describe('API Key', () => {
         'name': 'x-api-key',
         'value': 'test',
       });
-    });
-
-    it('Does nothing, when addTo is "header"', async () => {
-      const authentication = {
-        type: AUTH_API_KEY,
-        key: 'x-api-key',
-        value: 'test',
-        addTo: 'header',
-      };
-      const request = {
-        url: 'https://insomnia.rest/',
-        method: 'GET',
-        authentication,
-      };
-      const header = await getAuthQueryParams(request, 'https://insomnia.rest/');
-      expect(header).toBeUndefined();
     });
   });
 });
