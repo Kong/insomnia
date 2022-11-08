@@ -1,4 +1,3 @@
-import classnames from 'classnames';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
@@ -14,11 +13,12 @@ import type { Settings } from '../../../models/settings';
 import type { Workspace } from '../../../models/workspace';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveEnvironment, selectActiveRequestMeta } from '../../redux/selectors';
-import { Tab, TabList, TabPanel, Tabs } from '../base/tabs';
+import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
+import { QueryEditor, QueryEditorContainer, QueryEditorPreview } from '../editors/query-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
@@ -27,10 +27,10 @@ import { showModal } from '../modals';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
 import { RequestUrlBar, RequestUrlBarHandle } from '../request-url-bar';
-import { Pane, paneBodyClasses, PaneHeader } from './pane';
+import { Pane, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
 
-const HeaderTabPanel = styled(TabPanel)({
+const HeaderContainer = styled.div({
   display: 'flex',
   flexDirection: 'column',
   position: 'relative',
@@ -182,32 +182,8 @@ export const RequestPane: FC<Props> = ({
           />
         </ErrorBoundary>
       </PaneHeader>
-      <Tabs className={classnames(paneBodyClasses, 'react-tabs')}>
-        <TabList>
-          <Tab>
-            <ContentTypeDropdown onChange={updateRequestMimeType} />
-          </Tab>
-          <Tab>
-            <AuthDropdown />
-          </Tab>
-          <Tab>
-            Query
-            {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
-          </Tab>
-          <Tab>
-            Headers
-            {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
-          </Tab>
-          <Tab>
-            Docs
-            {request.description && (
-              <span className="bubble space-left">
-                <i className="fa fa--skinny fa-check txt-xxs" />
-              </span>
-            )}
-          </Tab>
-        </TabList>
-        <TabPanel key={uniqueKey} className="react-tabs__tab-panel editor-wrapper">
+      <Tabs>
+        <TabItem key="content-type" title={<ContentTypeDropdown onChange={updateRequestMimeType} />}>
           <BodyEditor
             key={uniqueKey}
             request={request}
@@ -215,115 +191,127 @@ export const RequestPane: FC<Props> = ({
             environmentId={environmentId}
             settings={settings}
           />
-        </TabPanel>
-        <TabPanel className="react-tabs__tab-panel scrollable-container">
-          <div className="scrollable">
-            <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
-              <AuthWrapper />
-            </ErrorBoundary>
-          </div>
-        </TabPanel>
-        <TabPanel className="react-tabs__tab-panel query-editor">
-          <div className="pad pad-bottom-sm query-editor__preview">
-            <label className="label--small no-pad-top">Url Preview</label>
-            <code className="txt-sm block faint">
+        </TabItem>
+        <TabItem key="auth" title={<AuthDropdown />}>
+          <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+            <AuthWrapper />
+          </ErrorBoundary>
+        </TabItem>
+        <TabItem key="query" title={<>Query {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}</>}>
+          <QueryEditorContainer>
+            <QueryEditorPreview className="pad pad-bottom-sm">
+              <label className="label--small no-pad-top">Url Preview</label>
+              <code className="txt-sm block faint">
+                <ErrorBoundary
+                  key={uniqueKey}
+                  errorClassName="tall wide vertically-align font-error pad text-center"
+                >
+                  <RenderedQueryString request={request} />
+                </ErrorBoundary>
+              </code>
+            </QueryEditorPreview>
+            <QueryEditor>
               <ErrorBoundary
                 key={uniqueKey}
                 errorClassName="tall wide vertically-align font-error pad text-center"
               >
-                <RenderedQueryString request={request} />
+                <RequestParametersEditor
+                  key={contentType}
+                  request={request}
+                  bulk={settings.useBulkParametersEditor}
+                />
               </ErrorBoundary>
-            </code>
-          </div>
-          <div className="query-editor__editor">
-            <ErrorBoundary
-              key={uniqueKey}
-              errorClassName="tall wide vertically-align font-error pad text-center"
-            >
-              <RequestParametersEditor
-                key={contentType}
-                request={request}
-                bulk={settings.useBulkParametersEditor}
-              />
+            </QueryEditor>
+            <TabPanelFooter>
+              <button
+                className="btn btn--compact"
+                title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
+                onClick={handleImportQueryFromUrl}
+              >
+                Import from URL
+              </button>
+              <button
+                className="btn btn--compact"
+                onClick={handleUpdateSettingsUseBulkParametersEditor}
+              >
+                {settings.useBulkParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
+              </button>
+            </TabPanelFooter>
+          </QueryEditorContainer>
+        </TabItem>
+        <TabItem key="headers" title={<>Headers {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}</>}>
+          <HeaderContainer>
+            <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+              <TabPanelBody>
+                <RequestHeadersEditor
+                  request={request}
+                  bulk={settings.useBulkHeaderEditor}
+                />
+              </TabPanelBody>
             </ErrorBoundary>
-          </div>
-          <TabPanelFooter>
-            <button
-              className="btn btn--compact"
-              title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
-              onClick={handleImportQueryFromUrl}
-            >
-              Import from URL
-            </button>
-            <button
-              className="btn btn--compact"
-              onClick={handleUpdateSettingsUseBulkParametersEditor}
-            >
-              {settings.useBulkParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
-            </button>
-          </TabPanelFooter>
-        </TabPanel>
-        <HeaderTabPanel className="react-tabs__tab-panel">
-          <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
-            <TabPanelBody>
-              <RequestHeadersEditor
-                request={request}
-                bulk={settings.useBulkHeaderEditor}
-              />
-            </TabPanelBody>
-          </ErrorBoundary>
 
-          <TabPanelFooter>
-            <button
-              className="btn btn--compact"
-              onClick={handleUpdateSettingsUseBulkHeaderEditor}
-            >
-              {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
-            </button>
-          </TabPanelFooter>
-        </HeaderTabPanel>
-        <TabPanel key={`docs::${uniqueKey}`} className="react-tabs__tab-panel tall scrollable">
-          {request.description ? (
-            <div>
-              <div className="pull-right pad bg-default">
-                {/* @ts-expect-error -- TSCONVERSION the click handler expects a boolean prop... */}
-                <button className="btn btn--clicky" onClick={handleEditDescription}>
-                  Edit
-                </button>
+            <TabPanelFooter>
+              <button
+                className="btn btn--compact"
+                onClick={handleUpdateSettingsUseBulkHeaderEditor}
+              >
+                {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
+              </button>
+            </TabPanelFooter>
+          </HeaderContainer>
+        </TabItem>
+        <TabItem
+          key="docs"
+          title={<>Docs
+            {request.description && (
+              <span className="bubble space-left">
+                <i className="fa fa--skinny fa-check txt-xxs" />
+              </span>
+            )}</>}
+        >
+          <PanelContainer className="tall">
+            {request.description ? (
+              <div>
+                <div className="pull-right pad bg-default">
+                  {/* @ts-expect-error -- TSCONVERSION the click handler expects a boolean prop... */}
+                  <button className="btn btn--clicky" onClick={handleEditDescription}>
+                    Edit
+                  </button>
+                </div>
+                <div className="pad">
+                  <ErrorBoundary errorClassName="font-error pad text-center">
+                    <MarkdownPreview
+                      heading={request.name}
+                      markdown={request.description}
+                    />
+                  </ErrorBoundary>
+                </div>
               </div>
-              <div className="pad">
-                <ErrorBoundary errorClassName="font-error pad text-center">
-                  <MarkdownPreview
-                    heading={request.name}
-                    markdown={request.description}
-                  />
-                </ErrorBoundary>
+            ) : (
+              <div className="overflow-hidden editor vertically-center text-center">
+                <p className="pad text-sm text-center">
+                  <span className="super-faint">
+                    <i
+                      className="fa fa-file-text-o"
+                      style={{
+                        fontSize: '8rem',
+                        opacity: 0.3,
+                      }}
+                    />
+                  </span>
+                  <br />
+                  <br />
+                  <button
+                    className="btn btn--clicky faint"
+                    onClick={handleEditDescriptionAdd}
+                  >
+                    Add Description
+                  </button>
+                </p>
               </div>
-            </div>
-          ) : (
-            <div className="overflow-hidden editor vertically-center text-center">
-              <p className="pad text-sm text-center">
-                <span className="super-faint">
-                  <i
-                    className="fa fa-file-text-o"
-                    style={{
-                      fontSize: '8rem',
-                      opacity: 0.3,
-                    }}
-                  />
-                </span>
-                <br />
-                <br />
-                <button
-                  className="btn btn--clicky faint"
-                  onClick={handleEditDescriptionAdd}
-                >
-                  Add Description
-                </button>
-              </p>
-            </div>
-          )}
-        </TabPanel>
+            )}
+          </PanelContainer>
+        </TabItem>
       </Tabs>
     </Pane>
   );
