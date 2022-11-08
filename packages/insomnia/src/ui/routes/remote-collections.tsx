@@ -43,7 +43,7 @@ export interface RemoteCollectionsLoaderData {
   remoteBackendProjects: BackendProject[];
 }
 
-export const remoteCollectionsLoader: LoaderFunction = async ({ params }) => {
+export const remoteCollectionsLoader: LoaderFunction = async ({ params }): Promise<RemoteCollectionsLoaderData> => {
   const { projectId } = params;
   invariant(typeof projectId === 'string', 'Project Id is required');
 
@@ -51,24 +51,32 @@ export const remoteCollectionsLoader: LoaderFunction = async ({ params }) => {
 
   invariant(project, 'Project not found');
 
-  const vcs = getVCS();
-  invariant(vcs, 'VCS is not defined');
+  try {
+    const vcs = getVCS();
+    invariant(vcs, 'VCS is not defined');
 
-  const remoteId = project.remoteId;
-  invariant(remoteId, 'Project is not a remote project');
+    const remoteId = project.remoteId;
+    invariant(remoteId, 'Project is not a remote project');
 
-  const localBackendProjects = await vcs.localBackendProjects();
+    const localBackendProjects = await vcs.localBackendProjects();
 
-  const remoteBackendProjects = (await vcs.remoteBackendProjects(remoteId)).filter(({ id, rootDocumentId }) => {
-    const localBackendProjectExists = localBackendProjects.find(p => p.id === id);
-    const workspaceExists = Boolean(models.workspace.getById(rootDocumentId));
-    // Mark as missing if:
-    //   - the backend project doesn't yet exists locally
-    //   - the backend project exists locally but somehow the workspace doesn't anymore
-    return !(workspaceExists && localBackendProjectExists);
-  });
+    const remoteBackendProjects = (await vcs.remoteBackendProjects(remoteId)).filter(({ id, rootDocumentId }) => {
+      const localBackendProjectExists = localBackendProjects.find(p => p.id === id);
+      const workspaceExists = Boolean(models.workspace.getById(rootDocumentId));
+      // Mark as missing if:
+      //   - the backend project doesn't yet exists locally
+      //   - the backend project exists locally but somehow the workspace doesn't anymore
+      return !(workspaceExists && localBackendProjectExists);
+    });
+
+    return {
+      remoteBackendProjects,
+    };
+  } catch (e) {
+    console.warn('Failed to load backend projects', e);
+  }
 
   return {
-    remoteBackendProjects,
+    remoteBackendProjects: [],
   };
 };

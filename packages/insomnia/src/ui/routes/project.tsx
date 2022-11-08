@@ -14,14 +14,12 @@ import {
 } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { isLoggedIn } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
   DashboardSortOrder,
 } from '../../common/constants';
-import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
@@ -32,8 +30,6 @@ import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '../.
 import { isDefaultProject, isRemoteProject, Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { MemClient } from '../../sync/git/mem-client';
-import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
-import { getVCS } from '../../sync/vcs/vcs';
 import { Dropdown } from '../components/base/dropdown/dropdown';
 import { DropdownButton } from '../components/base/dropdown/dropdown-button';
 import { DropdownDivider } from '../components/base/dropdown/dropdown-divider';
@@ -41,6 +37,7 @@ import { DropdownItem } from '../components/base/dropdown/dropdown-item';
 import { DashboardSortDropdown } from '../components/dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
+import { ErrorBoundary } from '../components/error-boundary';
 import { showAlert, showPrompt } from '../components/modals';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
@@ -146,7 +143,6 @@ const SidebarSection = styled.div({
   flexWrap: 'wrap',
   fontSize: 'var(--font-size-sm)',
   color: 'var(--hl)',
-  paddingLeft: 'var(--padding-xs)',
   paddingRight: 'var(--padding-xs)',
   height: 'var(--height-nav)',
 
@@ -537,18 +533,6 @@ export const loader: LoaderFunction = async ({
     .filter(filterWorkspace)
     .sort(sortWorkspaces);
 
-  // Load all projects
-  try {
-    const vcs = getVCS();
-    if (vcs && isLoggedIn()) {
-      const teams = await vcs.teams();
-      const projects = await Promise.all(teams.map(initializeProjectFromTeam));
-      await database.batchModifyDocs({ upsert: projects });
-    }
-  } catch {
-    console.log('Failed to load projects');
-  }
-
   const allProjects = await models.project.all();
 
   const organizationProjects = organizationId === DEFAULT_ORGANIZATION_ID ? allProjects.filter(proj => !isRemoteProject(proj)) : [project];
@@ -650,129 +634,131 @@ const ProjectRoute: FC = () => {
     dispatch(cloneGitRepository({ createFsClient: MemClient.createClient, onComplete: revalidate }));
   }, [dispatch, revalidate]);
 
-  const hasWorkspaces = workspaces.length > 0;
+  const hasWorkspaces = workspaces?.length > 0;
 
   return (
-    <Fragment>
-      <SidebarLayout
-        renderPageSidebar={
-          <OrganizationProjectsSidebar
-            organizationId={organizationId}
-            title={organization.name}
-            projects={projects}
-            activeProject={activeProject}
-          />
-        }
-        renderPaneOne={
-          <Pane>
-            <PaneHeader>
-              <PaneHeaderTitle>All Files ({workspaces.length})</PaneHeaderTitle>
-              <PaneHeaderToolbar>
-                <SearchFormControl className="form-control form-control--outlined no-margin">
-                  <SearchInput
-                    autoFocus
-                    type="text"
-                    placeholder="Filter..."
-                    onChange={event =>
-                      submit({
-                        filter: event.target.value,
-                        sortOrder,
-                      })
-                    }
-                    className="no-margin"
-                  />
-                  <span className="fa fa-search filter-icon" />
-                </SearchFormControl>
-                <DashboardSortDropdown
-                  value={sortOrder}
-                  onSelect={sortOrder => {
-                    submit({
-                      sortOrder,
-                      filter,
-                    });
-                  }}
-                />
-                {isRemoteProject(activeProject) && (
-                  <RemoteWorkspacesDropdown project={activeProject} />
-                )}
-                <Dropdown>
-                  <DropdownButton buttonClass={CreateButton}>
-                    Create <i className="fa fa-caret-down pad-left-sm" />
-                  </DropdownButton>
-                  <DropdownDivider>New</DropdownDivider>
-                  <DropdownItem onClick={createNewCollection}>
-                    <i className="fa fa-bars" />
-                    Request Collection
-                  </DropdownItem>
-                  <DropdownItem onClick={createNewDocument}>
-                    <i className="fa fa-file-o" />
-                    Design Document
-                  </DropdownItem>
-                  <DropdownDivider>Import From</DropdownDivider>
-                  <DropdownItem onClick={importFromFile}>
-                    <i className="fa fa-plus" />
-                    File
-                  </DropdownItem>
-                  <DropdownItem onClick={importFromURL}>
-                    <i className="fa fa-link" />
-                    URL
-                  </DropdownItem>
-                  <DropdownItem onClick={importFromClipboard}>
-                    <i className="fa fa-clipboard" />
-                    Clipboard
-                  </DropdownItem>
-                  <DropdownItem onClick={importFromGit}>
-                    <i className="fa fa-code-fork" />
-                    Git Clone
-                  </DropdownItem>
-                </Dropdown>
-              </PaneHeaderToolbar>
-            </PaneHeader>
-            <PaneBody>
-              {hasWorkspaces && (
-                <CardsContainer>
-                  {workspaces.map(workspace => (
-                    <WorkspaceCard
-                      {...workspace}
-                      projects={projects}
-                      key={workspace.apiSpec._id}
-                      activeProject={activeProject}
-                      onSelect={() =>
-                        navigate(
-                          `/organization/${organizationId}/project/${
-                            activeProject._id
-                          }/workspace/${workspace.workspace._id}/${
-                            workspace.workspace.scope === 'design'
-                              ? ACTIVITY_SPEC
-                              : ACTIVITY_DEBUG
-                          }`
-                        )
+    <ErrorBoundary>
+      <Fragment>
+        <SidebarLayout
+          renderPageSidebar={
+            <OrganizationProjectsSidebar
+              organizationId={organizationId}
+              title={organization.name}
+              projects={projects}
+              activeProject={activeProject}
+            />
+          }
+          renderPaneOne={
+            <Pane>
+              <PaneHeader>
+                <PaneHeaderTitle>All Files ({workspaces.length})</PaneHeaderTitle>
+                <PaneHeaderToolbar>
+                  <SearchFormControl className="form-control form-control--outlined no-margin">
+                    <SearchInput
+                      autoFocus
+                      type="text"
+                      placeholder="Filter..."
+                      onChange={event =>
+                        submit({
+                          filter: event.target.value,
+                          sortOrder,
+                        })
                       }
-                      filter={filter}
+                      className="no-margin"
                     />
-                  ))}
-                </CardsContainer>
-              )}
-              {filter && !hasWorkspaces && (
-                <p className="notice subtle">
-                  No documents found for <strong>{filter}</strong>
-                </p>
-              )}
-              {!filter && !hasWorkspaces && (
-                <EmptyStatePane
-                  createRequestCollection={createNewCollection}
-                  createDesignDocument={createNewDocument}
-                  importFromFile={importFromFile}
-                  importFromURL={importFromURL}
-                  importFromClipboard={importFromClipboard}
-                  importFromGit={importFromGit}
-                />
-              )}
-            </PaneBody>
-          </Pane>
-        }
-      />
-    </Fragment>
+                    <span className="fa fa-search filter-icon" />
+                  </SearchFormControl>
+                  <DashboardSortDropdown
+                    value={sortOrder}
+                    onSelect={sortOrder => {
+                      submit({
+                        sortOrder,
+                        filter,
+                      });
+                    }}
+                  />
+                  {isRemoteProject(activeProject) && (
+                    <RemoteWorkspacesDropdown project={activeProject} />
+                  )}
+                  <Dropdown>
+                    <DropdownButton buttonClass={CreateButton}>
+                      Create <i className="fa fa-caret-down pad-left-sm" />
+                    </DropdownButton>
+                    <DropdownDivider>New</DropdownDivider>
+                    <DropdownItem onClick={createNewCollection}>
+                      <i className="fa fa-bars" />
+                      Request Collection
+                    </DropdownItem>
+                    <DropdownItem onClick={createNewDocument}>
+                      <i className="fa fa-file-o" />
+                      Design Document
+                    </DropdownItem>
+                    <DropdownDivider>Import From</DropdownDivider>
+                    <DropdownItem onClick={importFromFile}>
+                      <i className="fa fa-plus" />
+                      File
+                    </DropdownItem>
+                    <DropdownItem onClick={importFromURL}>
+                      <i className="fa fa-link" />
+                      URL
+                    </DropdownItem>
+                    <DropdownItem onClick={importFromClipboard}>
+                      <i className="fa fa-clipboard" />
+                      Clipboard
+                    </DropdownItem>
+                    <DropdownItem onClick={importFromGit}>
+                      <i className="fa fa-code-fork" />
+                      Git Clone
+                    </DropdownItem>
+                  </Dropdown>
+                </PaneHeaderToolbar>
+              </PaneHeader>
+              <PaneBody>
+                {hasWorkspaces && (
+                  <CardsContainer>
+                    {workspaces.map(workspace => (
+                      <WorkspaceCard
+                        {...workspace}
+                        projects={projects}
+                        key={workspace.apiSpec._id}
+                        activeProject={activeProject}
+                        onSelect={() =>
+                          navigate(
+                            `/organization/${organizationId}/project/${
+                              activeProject._id
+                            }/workspace/${workspace.workspace._id}/${
+                              workspace.workspace.scope === 'design'
+                                ? ACTIVITY_SPEC
+                                : ACTIVITY_DEBUG
+                            }`
+                          )
+                        }
+                        filter={filter}
+                      />
+                    ))}
+                  </CardsContainer>
+                )}
+                {filter && !hasWorkspaces && (
+                  <p className="notice subtle">
+                    No documents found for <strong>{filter}</strong>
+                  </p>
+                )}
+                {!filter && !hasWorkspaces && (
+                  <EmptyStatePane
+                    createRequestCollection={createNewCollection}
+                    createDesignDocument={createNewDocument}
+                    importFromFile={importFromFile}
+                    importFromURL={importFromURL}
+                    importFromClipboard={importFromClipboard}
+                    importFromGit={importFromGit}
+                  />
+                )}
+              </PaneBody>
+            </Pane>
+          }
+        />
+      </Fragment>
+    </ErrorBoundary>
   );
 };
 

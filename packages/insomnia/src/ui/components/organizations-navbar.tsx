@@ -11,6 +11,7 @@ import { ModalBody } from './base/modal-body';
 import { ModalFooter } from './base/modal-footer';
 import { ModalHeader } from './base/modal-header';
 import { showAlert } from './modals';
+import { showLoginModal } from './modals/login-modal';
 import { SvgIcon } from './svg-icon';
 import { Tooltip } from './tooltip';
 
@@ -91,9 +92,15 @@ const SignupModal: FC<{onHide: () => void}> = ({
             gap: 'var(--padding-md)',
           }}
         >
-          <ExternalLink button className="btn" onClick={() => modalRef.current?.hide()} href="https://insomnia.rest/pricing">
+          <button
+            className="btn"
+            onClick={() => {
+              modalRef.current?.hide();
+              showLoginModal();
+            }}
+          >
             Login
-          </ExternalLink>
+          </button>
 
           <ExternalLink
             className="btn"
@@ -122,46 +129,47 @@ export const OrganizationsNav: FC = () => {
           {organizations.map(organization => {
             return (
               <li key={organization._id}>
-                <NavbarItem
-                  to={`/organization/${organization._id}`}
-                  isActive={organizationId === organization._id}
-                >
-                  <Tooltip position='right' message={organization.name}>
+                <Tooltip position='right' message={organization.name}>
+                  <NavbarItem
+                    to={`/organization/${organization._id}`}
+                    isActive={organizationId === organization._id}
+                  >
                     {isDefaultOrganization(organization) ? (<i className='fa fa-home' />) : organization.name.charAt(0).toUpperCase() + organization.name.slice(1).charAt(0).toUpperCase()}
-                  </Tooltip>
-                </NavbarItem>
+                  </NavbarItem>
+                </Tooltip>
               </li>
             );
           })}
           <li>
-            <CreateButton
-              type="button"
-              onClick={() => {
-                if (session.isLoggedIn()) {
-                  showAlert({
-                    title: 'This capability is coming soon',
-                    message: (
-                      <div>
-                        <p>
-                          At the moment it is not possible to create more teams
-                          in Insomnia, but this capability is shipping soon.
-                        </p>
-                        <p>
-                          🚀 Stay tuned!
-                        </p>
-                      </div>
-                    ),
+            <Tooltip position='right' message="Create new project">
+              <CreateButton
+                type="button"
+                onClick={() => {
+                  if (session.isLoggedIn()) {
+                    showAlert({
+                      title: 'This capability is coming soon',
+                      message: (
+                        <div>
+                          <p>
+                            At the moment it is not possible to create more teams
+                            in Insomnia, but this capability is shipping soon.
+                          </p>
+                          <p>
+                            🚀 Stay tuned!
+                          </p>
+                        </div>
+                      ),
                     // 'At the moment it is not possible to create more Teams in Insomnia. We are working hard to enable this capability in the coming months, stay tuned.',
-                  });
-                } else {
-                  setIsSignupModalOpen(true);
-                }
-              }}
-            >
-              <Tooltip position='right' message="Create new project">
+                    });
+                  } else {
+                    setIsSignupModalOpen(true);
+                  }
+                }}
+              >
+
                 <SvgIcon icon="plus" />
-              </Tooltip>
-            </CreateButton>
+              </CreateButton>
+            </Tooltip>
           </li>
         </NavbarList>
       </Navbar>

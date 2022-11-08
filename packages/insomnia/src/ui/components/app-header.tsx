@@ -84,7 +84,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
           <LogoWrapper>
             <img style={{ zIndex: 1 }} src={coreLogo} alt="Insomnia" width="28" height="28" />
           </LogoWrapper>
-          { !isLoggedIn ? <GitHubStarsButton /> : null }
+          {!isLoggedIn ? <GitHubStarsButton /> : null}
         </Fragment>
       )}
       gridCenter={gridCenter}

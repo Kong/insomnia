@@ -65,14 +65,14 @@ const RemoteWorkspaceDropdownItem: FC<{
 RemoteWorkspaceDropdownItem.displayName = DropdownItem.name;
 
 export const RemoteWorkspacesDropdown: FC<Props> = ({ project }) => {
-  const { organizationId } = useParams<{ organizationId: string }>();
+  const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
   const { load, data, state } = useFetcher<RemoteCollectionsLoaderData>();
 
   useEffect(() => {
-    if (isLoggedIn() && project && state === 'idle' && !data) {
-      load(`/project/${project._id}/remote-collections`);
+    if (isLoggedIn() && projectId && state === 'idle' && !data) {
+      load(`/organization/${organizationId}/project/${projectId}/remote-collections`);
     }
-  }, [data, load, project, state]);
+  }, [data, load, organizationId, projectId, state]);
 
   const remoteBackendProjects = data?.remoteBackendProjects ?? [];
 
@@ -91,7 +91,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project }) => {
   }
 
   return (
-    <Dropdown onOpen={() => load(`/project/${project._id}/remote-collections`)}>
+    <Dropdown onOpen={() => load(`/organization/${organizationId}/project/${projectId}/remote-collections`)}>
       <DropdownButton buttonClass={PullButton}>
         Pull <i className="fa fa-caret-down pad-left-sm" />
       </DropdownButton>

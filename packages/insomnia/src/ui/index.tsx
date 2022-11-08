@@ -66,7 +66,7 @@ const router = createMemoryRouter(
               path: ':organizationId',
               children: [
                 {
-                  index:true,
+                  index: true,
                   loader: async (...args) => (await import('./routes/project')).indexLoader(...args),
                 },
                 {

@@ -1,10 +1,8 @@
 import classNames from 'classnames';
 import React, { Fragment } from 'react';
-import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import * as session from '../../account/session';
-import { selectSettings } from '../redux/selectors';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownItem } from './base/dropdown/dropdown-item';
@@ -30,7 +28,7 @@ const Toolbar = styled.div({
 const StyledIcon = styled.i.attrs<StyledIconProps>(props => ({
   className: classNames('fa', props.faIcon),
 }))<StyledIconProps>({
-  marginleft: 'var(--padding-md)',
+  marginLeft: 'var(--padding-md)',
   display: 'flex',
   alignItems: 'center',
   paddingLeft: 'var(--padding-xs)',
@@ -49,7 +47,6 @@ const SignUpButton = styled(Button)({
 });
 
 export const AccountToolbar = () => {
-  const { disablePaidFeatureAds } = useSelector(selectSettings);
   const isLoggedIn = session.isLoggedIn();
 
   return (
@@ -78,18 +75,6 @@ export const AccountToolbar = () => {
               <DropdownItem key="login" onClick={showLoginModal}>
                 <StyledIcon faIcon="fa-sign-in" />Log In
               </DropdownItem>
-              {!disablePaidFeatureAds && (
-                <DropdownItem
-                  key="invite"
-                  buttonClass={Link}
-                  // @ts-expect-error -- TSCONVERSION appears to be genuine
-                  href="https://insomnia.rest/pricing"
-                  button
-                >
-                  <StyledIcon faIcon="fa-users" />{' '}Upgrade Now
-                  <i className="fa fa-star surprise fa-outline" />
-                </DropdownItem>
-              )}
             </Fragment>
           )}
         </Dropdown>
@@ -98,7 +83,7 @@ export const AccountToolbar = () => {
           <Button variant='text' size="small" onClick={showLoginModal}>
             Login
           </Button>
-          <SignUpButton href="https://insomnia.rest/pricing" as={Link} size="small" variant='contained' onClick={showLoginModal}>
+          <SignUpButton href="https://insomnia.rest/pricing" as={Link} size="small" variant='contained'>
             Sign Up
           </SignUpButton>
         </Fragment>
