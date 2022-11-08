@@ -72,7 +72,8 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(({
   const editorRef = useRef<CodeEditorHandle>(null);
   const [error, setError] = useState('');
   const getValue = useCallback(() => {
-    if (!editorRef.current || !editorRef.current.getValue()) {
+    const value = editorRef.current.getValue();
+    if (!editorRef.current || !value) {
       return null;
     }
     const json = orderedJSON.parse(
