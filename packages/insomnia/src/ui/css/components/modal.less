@@ -62,24 +62,23 @@
     background-color: var(--color-bg);
     color: var(--color-font);
     border: 1px solid var(--hl-sm);
+    padding: var(--padding-lg);
+    gap: calc(var(--padding-md) * 1.5);
 
     // Since we disable pointer-events on the parent, re-enable them here
     pointer-events: auto;
   }
 
   .modal__header {
-    overflow: hidden;
-    border-bottom: 1px solid var(--hl-md);
-    height: var(--line-height-md);
-    font-size: var(--font-size-lg);
-    line-height: var(--line-height-md);
+    position: relative;
+    font-size: var(--font-size-xl);
     background-color: var(--color-bg);
     color: var(--color-font);
     display: flex;
     flex-direction: row;
+    align-items: center;
 
     .modal__header__children {
-      padding-left: var(--padding-md);
       width: 100%;
 
       & > * {
@@ -89,7 +88,15 @@
     }
 
     .modal__close-btn {
-      height: 100%;
+      color: var(--color-font-subtle);
+      opacity: 0.5;
+      height: auto;
+      border-radius: var(--radius-sm);
+      padding: 0;
+      &:hover {
+        opacity: 1;
+        background-color: transparent;
+      }
     }
   }
 
@@ -104,6 +111,8 @@
     max-width: 100%;
     background-color: var(--color-bg);
     color: var(--color-font);
+    padding: 0;
+    overflow-y: auto;
 
     &.modal__body--no-scroll {
       overflow: visible;
@@ -112,17 +121,29 @@
   }
 
   .modal__footer {
-    border-top: 1px solid var(--hl-sm);
     background-color: var(--color-bg);
     color: var(--color-font);
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 1px;
+    gap: var(--padding-md);
 
     button {
+      justify-self: end;
+      align-self: flex-end;
+      min-width: 6rem;
       padding: 0 var(--padding-md);
+      height: calc(var(--line-height-md) * 0.8);
+      font-size: var(--font-size-md);
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+
+      &:last-of-type {
+        background-color: var(--color-surprise);
+        color: var(--color-font-surprise);
+      }
+
       &.studio-action-btn {
         color: #0084d5;
         float: left;
