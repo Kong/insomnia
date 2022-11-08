@@ -363,7 +363,8 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
       return redirect(`/organization/${organizationId}/project/${localProjects[0]._id}`);
     }
   } else {
-    return redirect(`/organization/${organizationId}/project/${organizationId}`);
+    const projectId = organizationId;
+    return redirect(`/organization/${organizationId}/project/${projectId}`);
   }
 
   return;

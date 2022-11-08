@@ -1,13 +1,10 @@
-import React, { FunctionComponent, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import React, { FC } from 'react';
+import { NavLink, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
-import type { GlobalActivity } from '../../../common/constants';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../common/constants';
-import { isDesign, Workspace } from '../../../models/workspace';
-import { HandleActivityChange } from '../workspace-page-header';
 
-const StyledNav = styled.nav({
+const Nav = styled.nav({
   display: 'flex',
   justifyContent: 'space-between',
   alignContent: 'space-evenly',
@@ -24,7 +21,7 @@ const StyledNav = styled.nav({
   },
 });
 
-const StyledLink = styled(Link)({
+const Link = styled(NavLink)({
   minWidth: '4rem',
   margin: '0 auto',
   textTransform: 'uppercase',
@@ -43,63 +40,35 @@ const StyledLink = styled(Link)({
   },
 });
 
-interface Props {
-  activity: GlobalActivity;
-  workspace: Workspace;
-  handleActivityChange: HandleActivityChange;
-}
+export const ActivityToggle: FC = () => {
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string}>();
 
-export const ActivityToggle: FunctionComponent<Props> = ({
-  activity,
-  workspace,
-  handleActivityChange,
-}) => {
-  const onChange = useCallback((e: React.MouseEvent<HTMLAnchorElement, MouseEvent>, nextActivity: GlobalActivity) => {
-    // Prevent the default behavior in order to avoid extra re-render.
-    e.preventDefault();
-    handleActivityChange({
-      workspaceId: workspace?._id,
-      nextActivity,
-    });
-  }, [handleActivityChange, workspace]);
-
-  if (!activity) {
+  if (!workspaceId || !projectId || !organizationId) {
     return null;
   }
 
-  if (!workspace || !isDesign(workspace)) {
-    return null;
-  }
+  const workspaceRoutePath = `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}`;
 
   return (
-    <StyledNav>
-      <StyledLink
-        to={ACTIVITY_SPEC}
-        className={activity === ACTIVITY_SPEC ? 'active' : undefined }
-        onClick={e => {
-          onChange(e, ACTIVITY_SPEC);
-        }}
+    <Nav>
+      <Link
+        to={`${workspaceRoutePath}/${ACTIVITY_SPEC}`}
+        className={({ isActive }) => isActive ? 'active' : undefined }
       >
         Design
-      </StyledLink>
-      <StyledLink
-        to={ACTIVITY_DEBUG}
-        className={activity === ACTIVITY_DEBUG ? 'active' : undefined }
-        onClick={e => {
-          onChange(e, ACTIVITY_DEBUG);
-        }}
+      </Link>
+      <Link
+        to={`${workspaceRoutePath}/${ACTIVITY_DEBUG}`}
+        className={({ isActive }) => isActive ? 'active' : undefined }
       >
         Debug
-      </StyledLink>
-      <StyledLink
-        to={ACTIVITY_UNIT_TEST}
-        className={activity === ACTIVITY_UNIT_TEST ? 'active' : undefined }
-        onClick={e => {
-          onChange(e, ACTIVITY_UNIT_TEST);
-        }}
+      </Link>
+      <Link
+        to={`${workspaceRoutePath}/${ACTIVITY_UNIT_TEST}`}
+        className={({ isActive }) => isActive ? 'active' : undefined }
       >
         Test
-      </StyledLink>
-    </StyledNav>
+      </Link>
+    </Nav>
   );
 };

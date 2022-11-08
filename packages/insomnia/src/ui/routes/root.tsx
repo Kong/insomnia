@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { LoaderFunction, Outlet, useNavigate } from 'react-router-dom';
+import { LoaderFunction, Outlet, useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { defaultOrganization, Organization } from '../../models/organization';
 import { isRemoteProject } from '../../models/project';
+import { isDesign } from '../../models/workspace';
 import { AccountToolbar } from '../components/account-toolbar';
+import { ActivityToggle } from '../components/activity-toggle/activity-toggle';
 import { AppHeader } from '../components/app-header';
 import { Breadcrumb } from '../components/breadcrumb';
+import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { OrganizationsNav } from '../components/organizations-navbar';
 import { StatusBar } from '../components/statusbar';
@@ -65,12 +68,44 @@ interface State {
   isMigratingChildren: boolean;
 }
 
+const WorkspaceNavigation: FC = () => {
+  const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const activeProject = useSelector(selectActiveProject);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+
+  const navigate = useNavigate();
+
+  if (!activeWorkspace || !organizationId) {
+    return null;
+  }
+
+  const crumbs = [
+    {
+      onClick: () => navigate(`/organization/${organizationId}/project/${projectId}`),
+      id: activeProject._id,
+      label: activeProject.name,
+      node: <span data-testId="project">{activeProject.name}</span>,
+    },
+    {
+      id: activeWorkspace._id,
+      label: activeWorkspace.name,
+      node: <WorkspaceDropdown />,
+    },
+  ];
+
+  return (
+    <Fragment>
+      <Breadcrumb crumbs={crumbs} />
+      {isDesign(activeWorkspace) && <ActivityToggle />}
+    </Fragment>
+  );
+};
+
 const Root = () => {
   const [state, setState] = useState<State>({
     isMigratingChildren: false,
   });
 
-  const activeProject = useSelector(selectActiveProject);
   const activeCookieJar = useSelector(selectActiveCookieJar);
   const activeApiSpec = useSelector(selectActiveApiSpec);
   const activeWorkspace = useSelector(selectActiveWorkspace);
@@ -106,8 +141,6 @@ const Root = () => {
     update();
   }, [activeApiSpec, activeCookieJar, activeWorkspace, activeWorkspaceMeta, environments, state.isMigratingChildren]);
 
-  const navigate = useNavigate();
-
   if (state.isMigratingChildren) {
     console.log('[app] Waiting for migration to complete');
     return null;
@@ -116,23 +149,6 @@ const Root = () => {
   if (!isFinishedBooting) {
     console.log('[app] Waiting to finish booting');
     return null;
-  }
-
-  const crumbs = [];
-
-  if (activeWorkspace) {
-    crumbs.push({
-      onClick: () => navigate(''),
-      id: activeProject._id,
-      label: activeProject.name,
-      node: activeProject.name,
-    });
-    crumbs.push({
-      onClick: () => navigate(''),
-      id: activeWorkspace._id,
-      label: activeWorkspace.name,
-      node: activeWorkspace.name,
-    });
   }
 
   const uniquenessKey = `${isLoggedIn}::${activeWorkspace?._id || 'n/a'}`;
@@ -146,9 +162,7 @@ const Root = () => {
             <Layout>
               <OrganizationsNav />
               <AppHeader
-                gridCenter={
-                  <Breadcrumb crumbs={crumbs} />
-                }
+                gridCenter={<WorkspaceNavigation />}
                 gridRight={<AccountToolbar />}
               />
               <Outlet />
