@@ -256,8 +256,19 @@ const OrganizationProjectsSidebar: FC<{
             if (activeProject.remoteId) {
               showAlert({
                 title: 'This capability is coming soon',
-                message:
-                    'At the moment it is not possible to create more cloud projects within a Team in Insomnia. We are working hard to enable this capability in the coming months, stay tuned!',
+                okLabel: 'Close',
+                message: (
+                  <div>
+                    <p>
+                      At the moment it is not possible to create more cloud
+                      projects within a team in Insomnia, but this capability is
+                      shipping soon.
+                    </p>
+                    <p>
+                      🚀 Stay tuned!
+                    </p>
+                  </div>
+                ),
               });
             } else {
               const defaultValue = `My ${strings.project.singular}`;

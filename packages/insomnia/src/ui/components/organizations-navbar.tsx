@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
 import { Link, useLoaderData, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -6,6 +6,10 @@ import * as session from '../../account/session';
 import { isDefaultOrganization } from '../../models/organization';
 import { RootLoaderData } from '../routes/root';
 import { Link as ExternalLink } from './base/link';
+import { Modal, ModalHandle } from './base/modal';
+import { ModalBody } from './base/modal-body';
+import { ModalFooter } from './base/modal-footer';
+import { ModalHeader } from './base/modal-header';
 import { showAlert } from './modals';
 import { SvgIcon } from './svg-icon';
 import { Tooltip } from './tooltip';
@@ -42,7 +46,7 @@ const NavbarItem = styled(Link)<{
   outlineOffset: '3px',
   background: 'linear-gradient(137.34deg, #4000BF 4.44%, #154B62 95.33%)',
   '&&': {
-    color: 'var(--color-font)',
+    color: 'var(--color-font-surprise)',
     textDecoration: 'none',
   },
   fontWeight: 'bold',
@@ -64,60 +68,104 @@ const CreateButton = styled.button({
   borderColor: 'transparent',
 });
 
+const SignupModal: FC<{onHide: () => void}> = ({
+  onHide,
+}) => {
+  const modalRef = useRef<ModalHandle>(null);
+
+  useEffect(() => {
+    modalRef.current?.show();
+  }, []);
+
+  return (
+    <Modal onHide={onHide} skinny centered ref={modalRef}>
+      <ModalHeader>Login or sign up</ModalHeader>
+      <ModalBody className="wide pad">
+        Log in or sign up to store your project in the cloud and share it with
+        your team.
+      </ModalBody>
+      <ModalFooter>
+        <div
+          style={{
+            display: 'flex',
+            gap: 'var(--padding-md)',
+          }}
+        >
+          <ExternalLink button className="btn" onClick={() => modalRef.current?.hide()} href="https://insomnia.rest/pricing">
+            Login
+          </ExternalLink>
+
+          <ExternalLink
+            className="btn"
+            onClick={() => {
+              modalRef.current?.hide();
+            }}
+            button
+            href="https://insomnia.rest/pricing"
+          >
+            Sign Up
+          </ExternalLink>
+        </div>
+      </ModalFooter>
+    </Modal>
+  );
+};
+
 export const OrganizationsNav: FC = () => {
   const { organizations } = useLoaderData() as RootLoaderData;
   const { organizationId } = useParams() as { organizationId:string };
-
+  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   return (
-    <Navbar>
-      <NavbarList>
-        {organizations.map(organization => {
-          return (
-            <li key={organization._id}>
-              <NavbarItem
-                to={`/organization/${organization._id}`}
-                isActive={organizationId === organization._id}
-              >
-                <Tooltip position='right' message={organization.name}>
-                  {isDefaultOrganization(organization) ? (<i className='fa fa-home' />) : organization.name.charAt(0).toUpperCase() + organization.name.slice(1).charAt(0).toUpperCase()}
-                </Tooltip>
-              </NavbarItem>
-            </li>
-          );
-        })}
-        <li>
-          <CreateButton
-            type="button"
-            onClick={() => {
-              if (session.isLoggedIn()) {
-                showAlert({
-                  title: 'This capability is coming soon',
-                  message: 'At the moment it is not possible to create more Teams in Insomnia. We are working hard to enable this capability in the coming months, stay tuned.',
-                });
-              } else {
-                showAlert({
-                  title: 'Hey!',
-                  okLabel: (
-                    <ExternalLink
-                      href='https://insomnia.rest/pricing'
-                    >
-                      <i className="fa fa-users" />{' '}Upgrade Now<i className="fa fa-star fa-outline" />
-                    </ExternalLink>
-                  ),
-                  message: (
-                    <div>
-                      <p>{'You are currently not logged in. Log in or signup to store your project in the cloud or share it with your Team.'}</p>
-                    </div>),
-                });
-              }
-            }}
-          >
-            <Tooltip position='right' message="Create new project">
-              <SvgIcon icon="plus" />
-            </Tooltip>
-          </CreateButton>
-        </li>
-      </NavbarList>
-    </Navbar>
+    <Fragment>
+      <Navbar>
+        <NavbarList>
+          {organizations.map(organization => {
+            return (
+              <li key={organization._id}>
+                <NavbarItem
+                  to={`/organization/${organization._id}`}
+                  isActive={organizationId === organization._id}
+                >
+                  <Tooltip position='right' message={organization.name}>
+                    {isDefaultOrganization(organization) ? (<i className='fa fa-home' />) : organization.name.charAt(0).toUpperCase() + organization.name.slice(1).charAt(0).toUpperCase()}
+                  </Tooltip>
+                </NavbarItem>
+              </li>
+            );
+          })}
+          <li>
+            <CreateButton
+              type="button"
+              onClick={() => {
+                if (session.isLoggedIn()) {
+                  showAlert({
+                    title: 'This capability is coming soon',
+                    message: (
+                      <div>
+                        <p>
+                          At the moment it is not possible to create more teams
+                          in Insomnia, but this capability is shipping soon.
+                        </p>
+                        <p>
+                          🚀 Stay tuned!
+                        </p>
+                      </div>
+                    ),
+                    // 'At the moment it is not possible to create more Teams in Insomnia. We are working hard to enable this capability in the coming months, stay tuned.',
+                  });
+                } else {
+                  setIsSignupModalOpen(true);
+                }
+              }}
+            >
+              <Tooltip position='right' message="Create new project">
+                <SvgIcon icon="plus" />
+              </Tooltip>
+            </CreateButton>
+          </li>
+        </NavbarList>
+      </Navbar>
+      {isSignupModalOpen ? <SignupModal onHide={() => setIsSignupModalOpen(false)} /> : null}
+    </Fragment>
   );
 };

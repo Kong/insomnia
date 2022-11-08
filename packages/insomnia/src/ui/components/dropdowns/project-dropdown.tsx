@@ -18,6 +18,9 @@ const Item = styled.div({
   display: 'flex',
   alignItems: 'center',
   gap: 'var(--padding-sm)',
+  'i.fa': {
+    width: 'unset !important',
+  },
 });
 
 const StyledSvgIcon = styled(SvgIcon)({
@@ -58,7 +61,9 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
             )
           }
         >
-          <i className="fa fa-trash-o" /> Delete
+          <Item>
+            <i className="fa fa-trash-o" /> Delete
+          </Item>
         </DropdownItem>
       </Dropdown>
       {isSettingsModalOpen && (

@@ -40,8 +40,8 @@ const StyledIcon = styled.i.attrs<StyledIconProps>(props => ({
 
 const SignUpButton = styled(Button)({
   '&&': {
-    backgroundColor: 'var(--color-notice)',
-    color: 'var(--color-font-notice)',
+    backgroundColor: 'var(--color-info)',
+    color: 'var(--color-font-info)',
     textDecoration: 'none',
     margin: 0,
     boxSizing: 'border-box',

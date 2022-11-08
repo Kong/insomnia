@@ -169,6 +169,7 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
           <Label>
             <LabelIcon
               style={{
+                color: isDesign(workspace) ? 'var(--color-font-info)' : 'var(--color-font-surprise)',
                 backgroundColor: isDesign(workspace) ? 'var(--color-info)' : 'var(--color-surprise)',
               }}
             >{labelIcon}</LabelIcon>
