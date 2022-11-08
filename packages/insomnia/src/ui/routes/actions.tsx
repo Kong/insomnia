@@ -31,7 +31,7 @@ export const renameProjectAction: ActionFunction = async ({
   invariant(typeof name === 'string', 'Name is required');
 
   const { projectId } = params;
-  invariant(typeof projectId === 'string', 'Project ID is required');
+  invariant(projectId, 'Project ID is required');
 
   const project = await models.project.getById(projectId);
 
@@ -46,8 +46,9 @@ export const renameProjectAction: ActionFunction = async ({
 };
 
 export const deleteProjectAction: ActionFunction = async ({ params }) => {
-  const { projectId } = params;
-  invariant(typeof projectId === 'string', 'Project ID is required');
+  const { organizationId, projectId } = params;
+  invariant(organizationId, 'Organization ID is required');
+  invariant(projectId, 'Project ID is required');
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
 
@@ -55,7 +56,7 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   await models.project.remove(project);
 
   trackSegmentEvent(SegmentEvent.projectLocalDelete);
-  return redirect(`/project/${DEFAULT_PROJECT_ID}`);
+  return redirect(`/organization/${organizationId}/project/${DEFAULT_PROJECT_ID}`);
 };
 
 // Workspace
@@ -63,9 +64,9 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   params,
   request,
 }) => {
-  const { projectId } = params;
-
-  invariant(typeof projectId === 'string', 'Project ID is required');
+  const { organizationId, projectId } = params;
+  invariant(organizationId, 'Organization ID is required');
+  invariant(projectId, 'Project ID is required');
 
   const project = await models.project.getById(projectId);
 
@@ -107,7 +108,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   );
 
   return redirect(
-    `/project/${projectId}/workspace/${workspace._id}/${
+    `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${
       workspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
     }`
   );
@@ -117,7 +118,7 @@ export const deleteWorkspaceAction: ActionFunction = async ({
   params,
   request,
 }) => {
-  const { projectId } = params;
+  const { organizationId, projectId } = params;
   invariant(projectId, 'projectId is required');
 
   const project = await models.project.getById(projectId);
@@ -134,10 +135,12 @@ export const deleteWorkspaceAction: ActionFunction = async ({
   await models.stats.incrementDeletedRequestsForDescendents(workspace);
   await models.workspace.remove(workspace);
 
-  return redirect(`/project/${projectId}`);
+  return redirect(`/organization/${organizationId}/project/${projectId}`);
 };
 
-export const duplicateWorkspaceAction: ActionFunction = async ({ request }) => {
+export const duplicateWorkspaceAction: ActionFunction = async ({ request, params }) => {
+  const { organizationId } = params;
+  invariant(organizationId, 'Organization Id is required');
   const formData = await request.formData();
   const projectId = formData.get('projectId');
   invariant(typeof projectId === 'string', 'Project ID is required');
@@ -170,7 +173,7 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request }) => {
   }
 
   return redirect(
-    `/project/${projectId}/workspace/${newWorkspace._id}/${
+    `/organization/${organizationId}/project/${projectId}/workspace/${newWorkspace._id}/${
       newWorkspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
     }`
   );

@@ -9,7 +9,7 @@ export interface AlertModalOptions {
   title?: string;
   message?: ReactNode;
   addCancel?: boolean;
-  okLabel?: string;
+  okLabel?: React.ReactNode;
   onConfirm?: () => void | Promise<void>;
 }
 export interface AlertModalHandle {

@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
@@ -17,6 +17,7 @@ interface WorkspaceDuplicateModalProps extends ModalProps {
 }
 
 export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ workspace, projects, ...modalProps }) => {
+  const { organizationId } = useParams<{organizationId: string}>();
   const { Form } = useFetcher();
   const modalRef = useRef<ModalHandle>(null);
 
@@ -34,7 +35,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
               modalRef.current?.hide();
             }}
             method='post'
-            action={`/project/${workspace.parentId}/workspace/${workspace._id}/duplicate`}
+            action={`/organization/${organizationId}/project/${workspace.parentId}/workspace/${workspace._id}/duplicate`}
             id="workspace-duplicate-form"
             className="wide pad"
           >

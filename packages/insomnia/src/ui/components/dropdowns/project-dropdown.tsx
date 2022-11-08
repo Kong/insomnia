@@ -1,6 +1,6 @@
 import { invariant } from '@remix-run/router';
 import React, { FC, Fragment, useState } from 'react';
-import { useFetcher, useNavigate, useRevalidator } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams, useRevalidator } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { strings } from '../../../common/strings';
@@ -85,6 +85,7 @@ interface Props {
 
 export const ProjectDropdown: FC<Props> = ({ activeProject, projects }) => {
   const { revalidate, state } = useRevalidator();
+  const { organizationId } = useParams<{organizationId: string}>();
   const navigate = useNavigate();
   const { submit } = useFetcher();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -165,7 +166,7 @@ export const ProjectDropdown: FC<Props> = ({ activeProject, projects }) => {
                     name,
                   },
                   {
-                    action: '/project/new',
+                    action: `/organization/${organizationId}/project/new`,
                     method: 'post',
                   }
                 ),

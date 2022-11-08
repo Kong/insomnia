@@ -1,5 +1,5 @@
 import React, { FC, Fragment, useCallback, useState } from 'react';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
@@ -78,6 +78,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 
 export const WorkspaceCardDropdown: FC<Props> = props => {
   const { workspace, apiSpec, projects } = props;
+  const { organizationId } = useParams<{ organizationId: string }>();
   const fetcher = useFetcher();
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
 
@@ -105,7 +106,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                 fetcher.submit(
                   { name, workspaceId: workspace._id },
                   {
-                    action: `/project/${workspace.parentId}/workspace/update`,
+                    action: `/organization/${organizationId}/project/${workspace.parentId}/workspace/update`,
                     method: 'post',
                   }
                 ),
@@ -136,7 +137,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                 fetcher.submit(
                   { workspaceId: workspace._id },
                   {
-                    action: `/project/${workspace.parentId}/workspace/delete`,
+                    action: `/organization/${organizationId}/project/${workspace.parentId}/workspace/delete`,
                     method: 'post',
                   }
                 );

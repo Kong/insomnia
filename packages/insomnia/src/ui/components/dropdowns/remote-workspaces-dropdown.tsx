@@ -1,5 +1,5 @@
 import React, { FC, useEffect } from 'react';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { isLoggedIn } from '../../../account/session';
@@ -29,7 +29,8 @@ const RemoteWorkspaceDropdownItem: FC<{
   backendProjectId: string;
   name: string;
   projectId: string;
-}> = ({ remoteId, backendProjectId, name, projectId }) => {
+  organizationId: string;
+}> = ({ remoteId, backendProjectId, name, projectId, organizationId }) => {
   const { submit, state } = useFetcher();
 
   return (
@@ -43,7 +44,7 @@ const RemoteWorkspaceDropdownItem: FC<{
             backendProjectId,
           },
           {
-            action: `project/${projectId}/remote-collections/pull`,
+            action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
             method: 'post',
           }
         )
@@ -64,6 +65,7 @@ const RemoteWorkspaceDropdownItem: FC<{
 RemoteWorkspaceDropdownItem.displayName = DropdownItem.name;
 
 export const RemoteWorkspacesDropdown: FC<Props> = ({ project }) => {
+  const { organizationId } = useParams<{ organizationId: string }>();
   const { load, data, state } = useFetcher<RemoteCollectionsLoaderData>();
 
   useEffect(() => {
@@ -111,6 +113,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project }) => {
           name={backendProject.name}
           backendProjectId={backendProject.id}
           remoteId={project.remoteId}
+          organizationId={organizationId || ''}
         />
       ))}
     </Dropdown>

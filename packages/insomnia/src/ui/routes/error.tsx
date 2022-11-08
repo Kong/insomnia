@@ -8,6 +8,7 @@ import {
 } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { DEFAULT_PROJECT_ID } from '../../models/project';
 import { Mailto } from '../components/base/mailto';
 import { Button } from '../components/themed-button';
@@ -55,7 +56,7 @@ export const ErrorRoute: FC = () => {
       </p>
       <h2>Message:</h2>
       <pre>{errorMessage}</pre>
-      <Button onClick={() => navigate(`/project/${DEFAULT_PROJECT_ID}`)}>
+      <Button onClick={() => navigate(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`)}>
         Try to reload the app{' '}
         <span>{navigation.state === 'loading' ? <Spinner /> : null}</span>
       </Button>

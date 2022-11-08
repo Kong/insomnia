@@ -1,11 +1,13 @@
 import { invariant } from '@remix-run/router';
 import React, { FC, Fragment, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import {
   LoaderFunction,
+  redirect,
   useFetcher,
   useLoaderData,
   useNavigate,
+  useParams,
   useRevalidator,
   useSearchParams,
   useSubmit,
@@ -25,27 +27,24 @@ import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { sortProjects } from '../../models/helpers/project';
+import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { isRemoteProject, Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
 import { getVCS } from '../../sync/vcs/vcs';
-import { AppHeader } from '../components/app-header';
 import { Dropdown } from '../components/base/dropdown/dropdown';
 import { DropdownButton } from '../components/base/dropdown/dropdown-button';
 import { DropdownDivider } from '../components/base/dropdown/dropdown-divider';
 import { DropdownItem } from '../components/base/dropdown/dropdown-item';
 import { DashboardSortDropdown } from '../components/dropdowns/dashboard-sort-dropdown';
-import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
 import { showPrompt } from '../components/modals';
 import { PageLayout } from '../components/page-layout';
 import { WrapperHomeEmptyStatePane } from '../components/panes/wrapper-home-empty-state-pane';
-import { SvgIcon } from '../components/svg-icon';
 import { Button } from '../components/themed-button';
 import { WorkspaceCard } from '../components/workspace-card';
 import { cloneGitRepository } from '../redux/modules/git';
-import { selectIsLoading } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import {
   importClipBoard,
@@ -68,6 +67,28 @@ const CardContainer = styled.div({
   paddingTop: 'var(--padding-md)',
 });
 
+const Header = styled.h2({
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between !important',
+  width: '100%',
+  boxSizing: 'border-box',
+});
+
+const Pane = styled.div({
+  display: 'flex',
+  flexDirection: 'column',
+});
+
+const ProjectsSidebar: FC<{projects: Project[]}> = ({ projects }) => {
+  return <div>
+    {projects.map(project => {
+      return <div key={project._id}>{project.name}</div>;
+    })}
+  </div>;
+};
+
 interface WorkspaceWithMetadata {
   hasUnsavedChanges: boolean;
   lastModifiedTimestamp: number;
@@ -83,6 +104,22 @@ interface WorkspaceWithMetadata {
   workspace: Workspace;
 }
 
+export const indexLoader: LoaderFunction = async ({ params }) => {
+  const { organizationId } = params;
+  invariant(organizationId, 'Organization ID is required');
+
+  if (models.organization.DEFAULT_ORGANIZATION_ID === organizationId) {
+    const localProjects = (await models.project.all()).filter(proj => !isRemoteProject(proj));
+    if (localProjects[0]._id) {
+      return redirect(`/organization/${organizationId}/project/${localProjects[0]._id}`);
+    }
+  } else {
+    return redirect(`/organization/${organizationId}/project/${organizationId}`);
+  }
+
+  return;
+};
+
 interface LoaderData {
   workspaces: WorkspaceWithMetadata[];
   activeProject: Project;
@@ -94,7 +131,7 @@ export const loader: LoaderFunction = async ({
   request,
 }): Promise<LoaderData> => {
   const search = new URL(request.url).searchParams;
-  const { projectId } = params;
+  const { projectId, organizationId } = params;
   invariant(projectId, 'projectId parameter is required');
 
   const sortOrder = search.get('sortOrder') || 'modified-desc';
@@ -249,7 +286,11 @@ export const loader: LoaderFunction = async ({
     console.log('Failed to load projects');
   }
 
-  const projects = sortProjects(await models.project.all());
+  const allProjects = await models.project.all();
+
+  const organizationProjects = organizationId === DEFAULT_ORGANIZATION_ID ? allProjects.filter(proj => !isRemoteProject(proj)) : [project];
+
+  const projects = sortProjects(organizationProjects);
 
   return {
     workspaces,
@@ -260,8 +301,8 @@ export const loader: LoaderFunction = async ({
 
 const ProjectRoute: FC = () => {
   const { workspaces, activeProject, projects } = useLoaderData() as LoaderData;
+  const { organizationId } = useParams() as {organizationId: string};
   const [searchParams] = useSearchParams();
-  const isLoading = useSelector(selectIsLoading);
   const dispatch = useDispatch();
   const fetcher = useFetcher();
   const { revalidate } = useRevalidator();
@@ -286,7 +327,7 @@ const ProjectRoute: FC = () => {
             scope: 'collection',
           },
           {
-            action: `project/${activeProject._id}/workspace/new`,
+            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
             method: 'post',
           }
         );
@@ -308,7 +349,7 @@ const ProjectRoute: FC = () => {
             scope: 'design',
           },
           {
-            action: `project/${activeProject._id}/workspace/new`,
+            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
             method: 'post',
           }
         );
@@ -345,29 +386,12 @@ const ProjectRoute: FC = () => {
   return (
     <Fragment>
       <PageLayout
-        renderPageHeader={
-          <AppHeader
-            breadcrumbProps={{
-              crumbs: [
-                {
-                  id: 'project',
-                  node: (
-                    <ProjectDropdown
-                      activeProject={activeProject}
-                      projects={projects}
-                    />
-                  ),
-                },
-              ],
-              isLoading,
-            }}
-          />
-        }
-        renderPageBody={
-          <div className="document-listing theme--pane layout-body">
+        renderPageSidebar={<ProjectsSidebar projects={projects} />}
+        renderPaneOne={
+          <Pane className='theme-pane'>
             <div className="document-listing__body pad-bottom">
-              <div className="row-spaced margin-top margin-bottom-sm">
-                <h2 className="no-margin">Dashboard</h2>
+              <Header>
+                <h2 className="no-margin">All Files ({workspaces.length})</h2>
                 <div className="row row--right pad-left wide">
                   <div
                     className="form-control form-control--outlined no-margin"
@@ -431,7 +455,7 @@ const ProjectRoute: FC = () => {
                     </DropdownItem>
                   </Dropdown>
                 </div>
-              </div>
+              </Header>
               <CardContainer>
                 {workspaces.map(workspace => (
                   <WorkspaceCard
@@ -441,7 +465,7 @@ const ProjectRoute: FC = () => {
                     activeProject={activeProject}
                     onSelect={() =>
                       navigate(
-                        `/project/${activeProject._id}/workspace/${
+                        `/organization/${organizationId}/project/${activeProject._id}/workspace/${
                           workspace.workspace._id
                         }/${
                           workspace.workspace.scope === 'design'
@@ -470,14 +494,7 @@ const ProjectRoute: FC = () => {
                 />
               )}
             </div>
-            <div className="document-listing__footer vertically-center">
-              <a className="made-with-love" href="https://konghq.com/">
-                Made with&nbsp;
-                <SvgIcon icon="heart" />
-                &nbsp;by Kong
-              </a>
-            </div>
-          </div>
+          </Pane>
         }
       />
     </Fragment>

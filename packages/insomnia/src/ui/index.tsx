@@ -33,8 +33,10 @@ import {
   setActiveWorkspace,
   setActiveActivity,
 } from './redux/modules/global';
-import { DEFAULT_PROJECT_ID } from '../models/project';
+import { DEFAULT_PROJECT_ID, isRemoteProject } from '../models/project';
 import { ErrorRoute } from './routes/error';
+import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
+import { selectActiveProject } from './redux/selectors';
 const Project = lazy(() => import('./routes/project'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
 const Debug = lazy(() => import('./routes/debug'));
@@ -58,117 +60,131 @@ const router = createMemoryRouter(
       errorElement: <ErrorRoute />,
       children: [
         {
-          path: 'project',
+          path: 'organization',
           children: [
             {
-              path: ':projectId',
-              id: '/project/:projectId',
-              loader: async (...args) =>
-                (await import('./routes/project')).loader(...args),
-              element: (
-                <Suspense fallback={<AppLoadingIndicator />}>
-                  <Project />
-                </Suspense>
-              ),
+              path: ':organizationId',
               children: [
                 {
-                  path: 'delete',
-                  action: async (...args) =>
-                    (await import('./routes/actions')).deleteProjectAction(
-                      ...args
-                    ),
+                  index:true,
+                  loader: async (...args) => (await import('./routes/project')).indexLoader(...args),
                 },
                 {
-                  path: 'rename',
-                  action: async (...args) =>
-                    (await import('./routes/actions')).renameProjectAction(
-                      ...args
-                    ),
-                },
-              ],
-            },
-            {
-              path: ':projectId/workspace',
-              children: [
-                {
-                  path: ':workspaceId',
+                  path: 'project',
                   children: [
                     {
-                      path: `${ACTIVITY_DEBUG}`,
+                      path: ':projectId',
+                      id: '/project/:projectId',
+                      loader: async (...args) =>
+                        (await import('./routes/project')).loader(...args),
                       element: (
                         <Suspense fallback={<AppLoadingIndicator />}>
-                          <Debug />
+                          <Project />
                         </Suspense>
                       ),
+                      children: [
+                        {
+                          path: 'delete',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).deleteProjectAction(
+                              ...args
+                            ),
+                        },
+                        {
+                          path: 'rename',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).renameProjectAction(
+                              ...args
+                            ),
+                        },
+                      ],
                     },
                     {
-                      path: `${ACTIVITY_SPEC}`,
-                      element: (
-                        <Suspense fallback={<AppLoadingIndicator />}>
-                          <Design />
-                        </Suspense>
-                      ),
+                      path: ':projectId/workspace',
+                      children: [
+                        {
+                          path: ':workspaceId',
+                          children: [
+                            {
+                              path: `${ACTIVITY_DEBUG}`,
+                              element: (
+                                <Suspense fallback={<AppLoadingIndicator />}>
+                                  <Debug />
+                                </Suspense>
+                              ),
+                            },
+                            {
+                              path: `${ACTIVITY_SPEC}`,
+                              element: (
+                                <Suspense fallback={<AppLoadingIndicator />}>
+                                  <Design />
+                                </Suspense>
+                              ),
+                            },
+                            {
+                              path: `${ACTIVITY_UNIT_TEST}`,
+                              element: (
+                                <Suspense fallback={<AppLoadingIndicator />}>
+                                  <UnitTest />
+                                </Suspense>
+                              ),
+                            },
+                            {
+                              path: 'duplicate',
+                              action: async (...args) =>
+                                (
+                                  await import('./routes/actions')
+                                ).duplicateWorkspaceAction(...args),
+                            },
+                          ],
+                        },
+                        {
+                          path: 'new',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).createNewWorkspaceAction(
+                              ...args
+                            ),
+                        },
+                        {
+                          path: 'delete',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).deleteWorkspaceAction(
+                              ...args
+                            ),
+                        },
+                        {
+                          path: 'update',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).updateWorkspaceAction(
+                              ...args
+                            ),
+                        },
+                      ],
                     },
                     {
-                      path: `${ACTIVITY_UNIT_TEST}`,
-                      element: (
-                        <Suspense fallback={<AppLoadingIndicator />}>
-                          <UnitTest />
-                        </Suspense>
-                      ),
-                    },
-                    {
-                      path: 'duplicate',
+                      path: 'new',
                       action: async (...args) =>
+                        (await import('./routes/actions')).createNewProjectAction(
+                          ...args
+                        ),
+                    },
+                    {
+                      path: ':projectId/remote-collections',
+                      loader: async (...args) =>
                         (
-                          await import('./routes/actions')
-                        ).duplicateWorkspaceAction(...args),
+                          await import('./routes/remote-collections')
+                        ).remoteCollectionsLoader(...args),
+                      children: [
+                        {
+                          path: 'pull',
+                          action: async (...args) =>
+                            (
+                              await import('./routes/remote-collections')
+                            ).pullRemoteCollectionAction(...args),
+                        },
+                      ],
                     },
                   ],
-                },
-                {
-                  path: 'new',
-                  action: async (...args) =>
-                    (await import('./routes/actions')).createNewWorkspaceAction(
-                      ...args
-                    ),
-                },
-                {
-                  path: 'delete',
-                  action: async (...args) =>
-                    (await import('./routes/actions')).deleteWorkspaceAction(
-                      ...args
-                    ),
-                },
-                {
-                  path: 'update',
-                  action: async (...args) =>
-                    (await import('./routes/actions')).updateWorkspaceAction(
-                      ...args
-                    ),
-                },
-              ],
-            },
-            {
-              path: 'new',
-              action: async (...args) =>
-                (await import('./routes/actions')).createNewProjectAction(
-                  ...args
-                ),
-            },
-            {
-              path: ':projectId/remote-collections',
-              loader: async (...args) =>
-                (
-                  await import('./routes/remote-collections')
-                ).remoteCollectionsLoader(...args),
-              children: [
-                {
-                  path: 'pull',
-                  action: async (...args) =>
-                    (
-                      await import('./routes/remote-collections')
-                    ).pullRemoteCollectionAction(...args),
                 },
               ],
             },
@@ -178,7 +194,7 @@ const router = createMemoryRouter(
     },
   ],
   {
-    initialEntries: [locationHistoryEntry || `/project/${DEFAULT_PROJECT_ID}`],
+    initialEntries: [locationHistoryEntry || `/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`],
   }
 );
 
@@ -213,14 +229,15 @@ async function renderApp() {
         currentPathname = location.pathname;
         const isActivityHome = matchPath(
           {
-            path: '/project/:projectId',
+            path: '/organization/:organizationId/project/:projectId',
+            end: true,
           },
           location.pathname
         );
 
         const isActivityDebug = matchPath(
           {
-            path: `/project/:projectId/workspace/:workspaceId/${ACTIVITY_DEBUG}`,
+            path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_DEBUG}`,
             end: false,
           },
           location.pathname
@@ -228,7 +245,7 @@ async function renderApp() {
 
         const isActivityDesign = matchPath(
           {
-            path: `/project/:projectId/workspace/:workspaceId/${ACTIVITY_SPEC}`,
+            path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_SPEC}`,
             end: false,
           },
           location.pathname
@@ -236,7 +253,7 @@ async function renderApp() {
 
         const isActivityTest = matchPath(
           {
-            path: `/project/:projectId/workspace/:workspaceId/${ACTIVITY_UNIT_TEST}`,
+            path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_UNIT_TEST}`,
             end: false,
           },
           location.pathname
@@ -283,21 +300,24 @@ async function renderApp() {
       const state = store.getState() as RootState;
       const activity = state.global.activeActivity;
 
+      const activeProject = selectActiveProject(state);
+      const organizationId = isRemoteProject(activeProject) ? activeProject._id : DEFAULT_ORGANIZATION_ID;
+
       if (activity !== currentActivity) {
         currentActivity = activity;
         if (activity === ACTIVITY_HOME) {
-          router.navigate(`/project/${state.global.activeProjectId}`);
+          router.navigate(`/organization/${organizationId}/project/${activeProject._id}`);
         } else if (activity === ACTIVITY_DEBUG) {
           router.navigate(
-            `/project/${state.global.activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_DEBUG}`
+            `/organization/${organizationId}/project/${activeProject._id}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_DEBUG}`
           );
         } else if (activity === ACTIVITY_SPEC) {
           router.navigate(
-            `/project/${state.global.activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_SPEC}`
+            `/organization/${organizationId}/project/${activeProject._id}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_SPEC}`
           );
         } else if (activity === ACTIVITY_UNIT_TEST) {
           router.navigate(
-            `/project/${state.global.activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_UNIT_TEST}`
+            `/organization/${organizationId}/project/${activeProject._id}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_UNIT_TEST}`
           );
         }
       }
