@@ -160,7 +160,8 @@ function _migrateScope(workspace: MigrationWorkspace) {
 
 function _migrateIntoDefaultProject(workspace: Workspace) {
   if (!workspace.parentId) {
-    workspace.parentId = DEFAULT_PROJECT_ID;
+    console.warn(`No workspace parentId found for ${workspace._id} setting default ${DEFAULT_PROJECT_ID}`);
+    models.workspace.update(workspace, { parentId: DEFAULT_PROJECT_ID });
   }
 
   return workspace;
