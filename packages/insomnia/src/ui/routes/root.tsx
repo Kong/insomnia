@@ -7,6 +7,7 @@ import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { defaultOrganization, Organization } from '../../models/organization';
 import { isRemoteProject } from '../../models/project';
+import { AccountToolbar } from '../components/account-toolbar';
 import { AppHeader } from '../components/app-header';
 import { Breadcrumb } from '../components/breadcrumb';
 import { ErrorBoundary } from '../components/error-boundary';
@@ -148,6 +149,7 @@ const Root = () => {
                 gridCenter={
                   <Breadcrumb crumbs={crumbs} />
                 }
+                gridRight={<AccountToolbar />}
               />
               <Outlet />
               <StatusBar />

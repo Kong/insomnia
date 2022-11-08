@@ -5,7 +5,6 @@ import styled from 'styled-components';
 
 import coreLogo from '../images/insomnia-logo.svg';
 import { selectIsLoggedIn } from '../redux/selectors';
-import { AccountDropdownButton } from './dropdowns/account-dropdown/account-dropdown';
 import { GitHubStarsButton } from './github-stars-button';
 
 const LogoWrapper = styled.div({
@@ -92,7 +91,6 @@ export const AppHeader: FC<AppHeaderProps> = ({
       gridRight={
         <Fragment>
           {gridRight}
-          <AccountDropdownButton />
         </Fragment>
       }
     />
