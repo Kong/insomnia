@@ -32,6 +32,7 @@ export interface DropdownProps {
   className?: string;
   style?: CSSProperties;
   beside?: boolean;
+  testHandle?: string;
 }
 
 export const dropdownsContainerId = 'dropdowns-container';
@@ -94,6 +95,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
       onOpen,
       onHide,
       wide,
+      testHandle,
     },
     ref
   ) => {
@@ -108,6 +110,8 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
     const dropdownContainerRef = useRef<HTMLDivElement>(null);
     const dropdownListRef = useRef<HTMLDivElement>(null);
     const filterInputRef = useRef<HTMLInputElement>(null);
+
+    const dataTestId = testHandle ? `DropdownButton_${testHandle}` : 'DropdownButton';
 
     const _handleCheckFilterSubmit = useCallback(
       (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -571,6 +575,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
         onClick={_handleClick}
         tabIndex={-1}
         onMouseDown={_handleMouseDown}
+        data-testid={dataTestId}
       >
         {dropdownChildren}
       </div>
