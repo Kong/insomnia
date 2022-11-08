@@ -6,7 +6,6 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { isLoggedIn as _isLoggedIn } from '../../../account/session';
 import { database } from '../../../common/database';
 import * as models from '../../../models';
-import { DEFAULT_PROJECT_ID } from '../../../models/project';
 import { backendProjectWithTeamSchema, teamSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { initializeProjectFromTeam } from '../initialize-model-from';
