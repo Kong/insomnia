@@ -568,6 +568,7 @@ const ProjectRoute: FC = () => {
     showPrompt({
       title: 'Create New Request Collection',
       submitName: 'Create',
+      cancelable: true,
       placeholder: 'My Collection',
       defaultValue: 'My Collection',
       selectText: true,
@@ -590,6 +591,7 @@ const ProjectRoute: FC = () => {
     showPrompt({
       title: 'Create New Design Document',
       submitName: 'Create',
+      cancelable: true,
       placeholder: 'my-spec.yaml',
       defaultValue: 'my-spec.yaml',
       selectText: true,
@@ -613,6 +615,7 @@ const ProjectRoute: FC = () => {
       title: 'Import document from URL',
       submitName: 'Fetch and Import',
       label: 'URL',
+      cancelable: true,
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
         dispatch(
