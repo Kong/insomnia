@@ -25,6 +25,7 @@ import { showAlert, showError, showModal } from '../modals';
 import { GitBranchesModal } from '../modals/git-branches-modal';
 import { GitLogModal } from '../modals/git-log-modal';
 import { GitStagingModal } from '../modals/git-staging-modal';
+import { Button } from '../themed-button';
 
 interface Props {
   workspace: Workspace;
@@ -146,16 +147,30 @@ export const GitSyncDropdown: FC<Props> = ({ workspace, vcs, className }) => {
   return (
     <div className={className}>
       <Dropdown className="wide tall" ref={dropdownRef}>
-        {vcs.isInitialized() ?
-          (<DropdownButton className="btn--clicky-small btn-sync">
-            {iconClassName && <i className={classnames('space-right', iconClassName)} />}
+        {vcs.isInitialized() ? (
+          <DropdownButton
+            buttonClass={Button}
+            // @ts-expect-error -- TSCONVERSION
+            size="small"
+            className="btn--clicky-small btn-sync"
+          >
+            {iconClassName && (
+              <i className={classnames('space-right', iconClassName)} />
+            )}
             <div className="ellipsis">{branch}</div>
             <i className="fa fa-code-fork space-left" />
-          </DropdownButton>) :
-          (<DropdownButton className="btn--clicky-small btn-sync">
+          </DropdownButton>
+        ) : (
+          <DropdownButton
+            buttonClass={Button}
+            // @ts-expect-error -- TSCONVERSION
+            size="small"
+            className="btn--clicky-small btn-sync"
+          >
             <i className="fa fa-code-fork space-right" />
             Setup Git Sync
-          </DropdownButton>)}
+          </DropdownButton>
+        )}
 
         <DropdownDivider>
           Git Sync

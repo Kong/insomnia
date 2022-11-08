@@ -12,6 +12,7 @@ import { AccountToolbar } from '../components/account-toolbar';
 import { ActivityToggle } from '../components/activity-toggle/activity-toggle';
 import { AppHeader } from '../components/app-header';
 import { Breadcrumb } from '../components/breadcrumb';
+import { GitSyncDropdown } from '../components/dropdowns/git-sync-dropdown';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { OrganizationsNav } from '../components/organizations-navbar';
@@ -21,9 +22,11 @@ import { AppHooks } from '../containers/app-hooks';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
+import { useGitVCS } from '../hooks/use-git-vcs';
 import {
   selectActiveApiSpec,
   selectActiveCookieJar,
+  selectActiveGitRepository,
   selectActiveProject,
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
@@ -69,9 +72,15 @@ interface State {
 }
 
 const WorkspaceNavigation: FC = () => {
-  const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   const activeProject = useSelector(selectActiveProject);
   const activeWorkspace = useSelector(selectActiveWorkspace);
+  const gitRepository = useSelector(selectActiveGitRepository);
+  const gitVCS = useGitVCS({
+    workspaceId,
+    projectId,
+    gitRepository,
+  });
 
   const navigate = useNavigate();
 
@@ -97,6 +106,7 @@ const WorkspaceNavigation: FC = () => {
     <Fragment>
       <Breadcrumb crumbs={crumbs} />
       {isDesign(activeWorkspace) && <ActivityToggle />}
+      {isDesign(activeWorkspace) && gitVCS && <GitSyncDropdown workspace={activeWorkspace} vcs={gitVCS} />}
     </Fragment>
   );
 };
