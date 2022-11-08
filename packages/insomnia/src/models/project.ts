@@ -78,8 +78,12 @@ export async function all() {
   const projects = await db.all<Project>(type);
 
   if (!projects.find(c => c._id === DEFAULT_PROJECT_ID)) {
-    await create({ _id: DEFAULT_PROJECT_ID, name: getProductName(), remoteId: null });
-    return db.all<Project>(type);
+    try {
+      await create({ _id: DEFAULT_PROJECT_ID, name: getProductName(), remoteId: null });
+      return db.all<Project>(type);
+    } catch (err) {
+      console.warn('Failed to create default project. It probably already exists', err);
+    }
   }
 
   return projects;
