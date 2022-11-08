@@ -37,7 +37,7 @@ import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
-import { getAuthHeader } from './authentication';
+import { getAuthHeader, getAuthQueryParams } from './authentication';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 // Time since user's last keypress to wait before making the request
@@ -86,8 +86,13 @@ export async function _actuallySend(
           timelinePath,
         });
       };
+      const authQueryParam = await getAuthQueryParams(renderedRequest);
       // Set the URL, including the query parameters
-      const qs = buildQueryStringFromParams(renderedRequest.parameters);
+      const qs = buildQueryStringFromParams(
+        authQueryParam
+          ? renderedRequest.parameters.concat([authQueryParam])
+          : renderedRequest.parameters
+      );
       const url = joinUrlAndQueryString(renderedRequest.url, qs);
       const isUnixSocket = url.match(/https?:\/\/unix:\//);
       let finalUrl, socketPath;

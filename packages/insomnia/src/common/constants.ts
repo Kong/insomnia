@@ -27,6 +27,7 @@ export const getSentryDsn = () => appConfig.sentryDsn;
 export const getAppBuildDate = () => new Date(process.env.BUILD_DATE ?? '').toLocaleDateString();
 export type AuthType =
   | 'none'
+  | 'apikey'
   | 'oauth2'
   | 'oauth1'
   | 'basic'
@@ -278,6 +279,7 @@ const contentTypesMap: Record<string, string[]> = {
 
 // Auth Types
 export const AUTH_NONE = 'none';
+export const AUTH_API_KEY = 'apikey';
 export const AUTH_OAUTH_2 = 'oauth2';
 export const AUTH_OAUTH_1 = 'oauth1';
 export const AUTH_BASIC = 'basic';
@@ -296,6 +298,7 @@ export const JSON_ORDER_PREFIX = '&';
 export const JSON_ORDER_SEPARATOR = '~|';
 
 const authTypesMap: Record<string, string[]> = {
+  [AUTH_API_KEY]: ['API Key', 'API Key Auth'],
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
   [AUTH_NTLM]: ['NTLM', 'Microsoft NTLM'],

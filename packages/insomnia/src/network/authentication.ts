@@ -2,6 +2,7 @@ import * as Hawk from 'hawk';
 import jwtAuthentication from 'jwt-authentication';
 
 import {
+  AUTH_API_KEY,
   AUTH_ASAP,
   AUTH_BASIC,
   AUTH_BEARER,
@@ -10,6 +11,7 @@ import {
   AUTH_OAUTH_2,
 } from '../common/constants';
 import type { RenderedRequest } from '../common/render';
+import { RequestParameter } from '../models/request';
 import { getBasicAuthHeader } from './basic-auth/get-header';
 import { getBearerAuthHeader } from './bearer-auth/get-header';
 import getOAuth1Token from './o-auth-1/get-token';
@@ -26,6 +28,14 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
 
   if (authentication.disabled) {
     return;
+  }
+
+  if (authentication.type === AUTH_API_KEY && authentication.addTo === 'header') {
+    const { key, value } = authentication;
+    return {
+      name: key,
+      value: value,
+    } as Header;
   }
 
   if (authentication.type === AUTH_BASIC) {
@@ -136,6 +146,24 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
         }
       });
     });
+  }
+
+  return;
+}
+
+export async function getAuthQueryParams(renderedRequest: RenderedRequest) {
+  const { authentication } = renderedRequest;
+
+  if (authentication.disabled) {
+    return;
+  }
+
+  if (authentication.type === AUTH_API_KEY && authentication.addTo === 'queryParams') {
+    const { key, value } = authentication;
+    return {
+      name: key,
+      value: value,
+    } as RequestParameter;
   }
 
   return;

@@ -2,7 +2,11 @@ import electron, { ipcMain } from 'electron';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
 import { jarFromCookies } from 'insomnia-cookies';
-import { setDefaultProtocol } from 'insomnia-url';
+import {
+  buildQueryStringFromParams,
+  joinUrlAndQueryString,
+  setDefaultProtocol,
+} from 'insomnia-url';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import { KeyObject, PxfObject } from 'tls';
@@ -15,7 +19,7 @@ import {
   WebSocket,
 } from 'ws';
 
-import { AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
+import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { webSocketRequest } from '../../models';
 import * as models from '../../models';
@@ -134,11 +138,25 @@ const openWebSocketConnection = async (
     const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
     const headers = options.headers;
+    let url = options.url;
     if (!options.authentication.disabled) {
       if (options.authentication.type === AUTH_BASIC) {
         const { username, password, useISO88591 } = options.authentication;
         const encoding = useISO88591 ? 'latin1' : 'utf8';
         headers.push(getBasicAuthHeader(username, password, encoding));
+      }
+      if (options.authentication.type === AUTH_API_KEY) {
+        const { key, value, addTo } = options.authentication;
+        if (addTo === 'header') {
+          headers.push({ name: key, value: value });
+        } else if (addTo === 'queryParams') {
+          const authQueryParam = {
+            name: key,
+            value: value,
+          };
+          const qs = authQueryParam ? buildQueryStringFromParams([authQueryParam]) : '';
+          url = joinUrlAndQueryString(options.url, qs);
+        }
       }
       if (options.authentication.type === AUTH_BEARER) {
         const { token, prefix } = options.authentication;
@@ -191,7 +209,7 @@ const openWebSocketConnection = async (
       'global': settings.followRedirects,
     }[request.settingFollowRedirects] ?? true;
     const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol'];
-    const ws = new WebSocket(options.url, protocols, {
+    const ws = new WebSocket(url, protocols, {
       headers: lowerCasedEnabledHeaders,
       cert: pemCertificates,
       key: pemCertificateKeys,
@@ -205,13 +223,13 @@ const openWebSocketConnection = async (
     ws.on('upgrade', async incomingMessage => {
       // @ts-expect-error -- private property
       const internalRequestHeader = ws._req._header;
-      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(options.url, incomingMessage, internalRequestHeader);
+      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(url, incomingMessage, internalRequestHeader);
       const responsePatch: Partial<WebSocketResponse> = {
         _id: responseId,
         parentId: request._id,
         environmentId: responseEnvironmentId,
         headers: responseHeaders,
-        url: options.url,
+        url: url,
         statusCode,
         statusMessage,
         httpVersion,
@@ -249,14 +267,14 @@ const openWebSocketConnection = async (
       });
       // @ts-expect-error -- private property
       const internalRequestHeader = clientRequest._header;
-      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(options.url, incomingMessage, internalRequestHeader);
+      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(url, incomingMessage, internalRequestHeader);
       timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
       const responsePatch: Partial<WebSocketResponse> = {
         _id: responseId,
         parentId: request._id,
         environmentId: responseEnvironmentId,
         headers: responseHeaders,
-        url: options.url,
+        url: url,
         statusCode,
         statusMessage,
         httpVersion,
