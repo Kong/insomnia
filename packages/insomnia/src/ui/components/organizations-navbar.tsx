@@ -10,6 +10,10 @@ import { showAlert } from './modals';
 import { SvgIcon } from './svg-icon';
 import { Tooltip } from './tooltip';
 
+const Navbar = styled.nav({
+  gridArea: 'Navbar',
+});
+
 const NavbarList = styled.ul({
   display: 'flex',
   flexDirection: 'column',
@@ -24,7 +28,7 @@ const NavbarList = styled.ul({
 });
 
 const NavbarItem = styled(Link)<{
-  active: boolean;
+  isActive: boolean;
 }>(props => ({
   padding: 'var(--padding-sm)',
   borderRadius: 'var(--radius-md)',
@@ -43,7 +47,7 @@ const NavbarItem = styled(Link)<{
   },
   fontWeight: 'bold',
   textShadow: '0 1px 0 var(--hl-md)',
-  outline: `3px solid ${props.active ? 'var(--color-font)' : 'transparent'}`,
+  outline: `3px solid ${props.isActive ? 'var(--color-font)' : 'transparent'}`,
 }));
 
 const CreateButton = styled.button({
@@ -65,20 +69,14 @@ export const OrganizationsNav: FC = () => {
   const { organizationId } = useParams() as { organizationId:string };
 
   return (
-    <nav
-      data-theme="default"
-      className='[theme]'
-      style={{
-        gridArea: 'Navbar',
-      }}
-    >
+    <Navbar>
       <NavbarList>
         {organizations.map(organization => {
           return (
             <li key={organization._id}>
               <NavbarItem
                 to={`/organization/${organization._id}`}
-                active={organizationId === organization._id}
+                isActive={organizationId === organization._id}
               >
                 <Tooltip position='right' message={organization.name}>
                   {isDefaultOrganization(organization) ? (<i className='fa fa-home' />) : organization.name.charAt(0).toUpperCase() + organization.name.slice(1).charAt(0).toUpperCase()}
@@ -120,6 +118,6 @@ export const OrganizationsNav: FC = () => {
           </CreateButton>
         </li>
       </NavbarList>
-    </nav>
+    </Navbar>
   );
 };

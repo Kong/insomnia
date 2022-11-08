@@ -11,14 +11,17 @@ import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isCollection } from '../../models/workspace';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';
+
 // Project
-export const createNewProjectAction: ActionFunction = async ({ request }) => {
+export const createNewProjectAction: ActionFunction = async ({ request, params }) => {
+  const { organizationId } = params;
+  invariant(organizationId, 'Organization ID is required');
   const formData = await request.formData();
   const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
   const project = await models.project.create({ name });
   trackSegmentEvent(SegmentEvent.projectLocalCreate);
-  return redirect(`/project/${project._id}`);
+  return redirect(`/organization/${organizationId}/project/${project._id}`);
 };
 
 export const renameProjectAction: ActionFunction = async ({

@@ -24,11 +24,12 @@ import {
 import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
+import { strings } from '../../common/strings';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { sortProjects } from '../../models/helpers/project';
-import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
-import { isRemoteProject, Project } from '../../models/project';
+import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '../../models/organization';
+import { isDefaultProject, isRemoteProject, Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
@@ -38,8 +39,9 @@ import { DropdownButton } from '../components/base/dropdown/dropdown-button';
 import { DropdownDivider } from '../components/base/dropdown/dropdown-divider';
 import { DropdownItem } from '../components/base/dropdown/dropdown-item';
 import { DashboardSortDropdown } from '../components/dropdowns/dashboard-sort-dropdown';
+import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
-import { showPrompt } from '../components/modals';
+import { showAlert, showPrompt } from '../components/modals';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button';
@@ -121,12 +123,219 @@ const Pane = styled.div({
   background: 'var(--color-bg)',
 });
 
-const ProjectsSidebar: FC<{projects: Project[]}> = ({ projects }) => {
-  return <div>
-    {projects.map(project => {
-      return <div key={project._id}>{project.name}</div>;
-    })}
-  </div>;
+const SidebarTitle = styled.h2({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 'var(--padding-sm)',
+  padding: 'var(--padding-sm)',
+  fontSize: 'var(--font-size-md)',
+  margin: 0,
+  paddingLeft: 'var(--padding-md)',
+  borderBottom: '1px solid var(--hl-md)',
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+  textOverflow: 'ellipsis',
+});
+
+const SidebarSection = styled.div({
+  boxSizing: 'border-box',
+  width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  fontSize: 'var(--font-size-sm)',
+  color: 'var(--hl)',
+  paddingLeft: 'var(--padding-xs)',
+  paddingRight: 'var(--padding-xs)',
+  height: 'var(--height-nav)',
+
+  // Make it scroll when too skinny
+  overflow: 'auto',
+
+  '&::-webkit-scrollbar': {
+    display: 'none',
+  },
+
+  '& > *': {
+    flex: '1',
+    marginTop: 'var(--padding-xs)',
+    marginBottom: 'var(--padding-xs)',
+    maxWidth: '100%',
+  },
+
+  '& > .dropdown > *': {
+    width: '100%',
+  },
+
+  '& > *:first-child': {
+    marginRight: 'var(--padding-xxs)',
+  },
+
+  '& > *:last-child': {
+    marginLeft: 'var(--padding-xxs)',
+  },
+
+  '.sidebar__menu__thing': {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+
+    '& > .sidebar__menu__thing__text': {
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+    },
+
+    'i.fa': {
+      // Bump the drop down caret down a bit
+      position: 'relative',
+      top: '1px',
+    },
+  },
+
+  '.btn': {
+    borderRadius: '900px',
+    height: 'var(--line-height-xxs)',
+    paddingLeft: 'var(--padding-xxs)',
+    paddingRight: 'var(--padding-xxs)',
+    color: 'var(--color-font)',
+
+    '&: hover, &:focus': {
+      opacity: '1',
+    },
+  },
+});
+
+const SidebarSectionTitle = styled.h3({
+  paddingLeft: 'var(--padding-md)',
+  textTransform: 'uppercase',
+  color: 'var(--color-font)',
+  fontSize: 'var(--font-size-xs)',
+});
+
+const Sidebar = styled.div({
+  height: '100%',
+  overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
+});
+
+const OrganizationProjectsSidebar: FC<{
+  title: string;
+  projects: Project[];
+  activeProject: Project;
+  organizationId: string;
+}> = ({ activeProject, projects, title, organizationId }) => {
+  const createNewProjectFetcher = useFetcher();
+  const navigate = useNavigate();
+  return (
+    <Sidebar
+      style={{
+        height: '100%',
+      }}
+    >
+      <SidebarTitle>
+        {title}
+      </SidebarTitle>
+      <SidebarSection>
+        <SidebarSectionTitle>
+          Projects ({projects.length})
+        </SidebarSectionTitle>
+        <Button
+          style={{
+            padding: 'var(--padding-sm)',
+            minWidth: 'auto',
+            width: 'unset',
+            flex: 0,
+          }}
+          variant="text"
+          size="small"
+          onClick={() => {
+            if (activeProject.remoteId) {
+              showAlert({
+                title: 'This capability is coming soon',
+                message:
+                    'At the moment it is not possible to create more cloud projects within a Team in Insomnia. We are working hard to enable this capability in the coming months, stay tuned!',
+              });
+            } else {
+              const defaultValue = `My ${strings.project.singular}`;
+              showPrompt({
+                title: `Create New ${strings.project.singular}`,
+                submitName: 'Create',
+                cancelable: true,
+                placeholder: defaultValue,
+                defaultValue,
+                selectText: true,
+                onComplete: async name =>
+                  createNewProjectFetcher.submit(
+                    {
+                      name,
+                    },
+                    {
+                      action: `/organization/${organizationId}/project/new`,
+                      method: 'post',
+                    }
+                  ),
+              });
+            }
+          }}
+        >
+          <i className="fa fa-plus" />
+        </Button>
+      </SidebarSection>
+      <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
+        {projects.map(proj => {
+          return (
+            <li key={proj._id} className="sidebar__row">
+              <div
+                className={`sidebar__item sidebar__item--request ${
+                  activeProject._id === proj._id
+                    ? 'sidebar__item--active'
+                    : ''
+                }`}
+              >
+                <button
+                  style={{
+                    paddingLeft: 'var(--padding-md)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--padding-sm)',
+                  }}
+                  onClick={() =>
+                    navigate(
+                      `/organization/${organizationId}/project/${proj._id}`
+                    )
+                  }
+                  className="wide"
+                >
+                  {isRemoteProject(activeProject) ? (
+                    <i className="fa fa-globe" />
+                  ) : (
+                    <i className="fa fa-laptop" />
+                  )}{' '}
+                  {proj.name}
+                </button>
+                {!isDefaultProject(proj) && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      height: '100%',
+                      alignItems: 'center',
+                      padding: '0 var(--padding-md)',
+                    }}
+                  >
+                    <ProjectDropdown organizationId={organizationId} project={proj} />
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </Sidebar>
+  );
 };
 
 interface WorkspaceWithMetadata {
@@ -164,6 +373,7 @@ interface LoaderData {
   workspaces: WorkspaceWithMetadata[];
   activeProject: Project;
   projects: Project[];
+  organization: Organization;
 }
 
 export const loader: LoaderFunction = async ({
@@ -172,6 +382,7 @@ export const loader: LoaderFunction = async ({
 }): Promise<LoaderData> => {
   const search = new URL(request.url).searchParams;
   const { projectId, organizationId } = params;
+  invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'projectId parameter is required');
 
   const sortOrder = search.get('sortOrder') || 'modified-desc';
@@ -333,6 +544,10 @@ export const loader: LoaderFunction = async ({
   const projects = sortProjects(organizationProjects);
 
   return {
+    organization: organizationId === DEFAULT_ORGANIZATION_ID ? defaultOrganization : {
+      _id: organizationId,
+      name: projects[0].name,
+    },
     workspaces,
     projects,
     activeProject: project,
@@ -340,7 +555,7 @@ export const loader: LoaderFunction = async ({
 };
 
 const ProjectRoute: FC = () => {
-  const { workspaces, activeProject, projects } = useLoaderData() as LoaderData;
+  const { workspaces, activeProject, projects, organization } = useLoaderData() as LoaderData;
   const { organizationId } = useParams() as {organizationId: string};
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
@@ -367,7 +582,7 @@ const ProjectRoute: FC = () => {
             scope: 'collection',
           },
           {
-            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
+            action: `/organization/${organization._id}/project/${activeProject._id}/workspace/new`,
             method: 'post',
           }
         );
@@ -389,7 +604,7 @@ const ProjectRoute: FC = () => {
             scope: 'design',
           },
           {
-            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
+            action: `/organization/${organization._id}/project/${activeProject._id}/workspace/new`,
             method: 'post',
           }
         );
@@ -428,15 +643,20 @@ const ProjectRoute: FC = () => {
   return (
     <Fragment>
       <SidebarLayout
-        renderPageSidebar={<ProjectsSidebar projects={projects} />}
+        renderPageSidebar={
+          <OrganizationProjectsSidebar
+            organizationId={organizationId}
+            title={organization.name}
+            projects={projects}
+            activeProject={activeProject}
+          />
+        }
         renderPaneOne={
           <Pane>
             <PaneHeader>
               <PaneHeaderTitle>All Files ({workspaces.length})</PaneHeaderTitle>
               <PaneHeaderToolbar>
-                <SearchFormControl
-                  className="form-control form-control--outlined no-margin"
-                >
+                <SearchFormControl className="form-control form-control--outlined no-margin">
                   <SearchInput
                     autoFocus
                     type="text"
@@ -460,7 +680,9 @@ const ProjectRoute: FC = () => {
                     });
                   }}
                 />
-                {isRemoteProject(activeProject) && <RemoteWorkspacesDropdown project={activeProject} />}
+                {isRemoteProject(activeProject) && (
+                  <RemoteWorkspacesDropdown project={activeProject} />
+                )}
                 <Dropdown>
                   <DropdownButton buttonClass={CreateButton}>
                     Create <i className="fa fa-caret-down pad-left-sm" />
@@ -495,28 +717,30 @@ const ProjectRoute: FC = () => {
               </PaneHeaderToolbar>
             </PaneHeader>
             <PaneBody>
-              {hasWorkspaces && <CardsContainer>
-                {workspaces.map(workspace => (
-                  <WorkspaceCard
-                    {...workspace}
-                    projects={projects}
-                    key={workspace.apiSpec._id}
-                    activeProject={activeProject}
-                    onSelect={() =>
-                      navigate(
-                        `/organization/${organizationId}/project/${activeProject._id}/workspace/${
-                          workspace.workspace._id
-                        }/${
-                          workspace.workspace.scope === 'design'
-                            ? ACTIVITY_SPEC
-                            : ACTIVITY_DEBUG
-                        }`
-                      )
-                    }
-                    filter={filter}
-                  />
-                ))}
-              </CardsContainer>}
+              {hasWorkspaces && (
+                <CardsContainer>
+                  {workspaces.map(workspace => (
+                    <WorkspaceCard
+                      {...workspace}
+                      projects={projects}
+                      key={workspace.apiSpec._id}
+                      activeProject={activeProject}
+                      onSelect={() =>
+                        navigate(
+                          `/organization/${organizationId}/project/${
+                            activeProject._id
+                          }/workspace/${workspace.workspace._id}/${
+                            workspace.workspace.scope === 'design'
+                              ? ACTIVITY_SPEC
+                              : ACTIVITY_DEBUG
+                          }`
+                        )
+                      }
+                      filter={filter}
+                    />
+                  ))}
+                </CardsContainer>
+              )}
               {filter && !hasWorkspaces && (
                 <p className="notice subtle">
                   No documents found for <strong>{filter}</strong>
