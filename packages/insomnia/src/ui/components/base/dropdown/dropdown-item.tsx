@@ -12,6 +12,7 @@ interface Props {
   className?: string;
   color?: string;
   unsetStyles?: boolean;
+  dataTestId?: string;
 }
 
 export const DropdownItem = (props: Props) => {
@@ -25,6 +26,7 @@ export const DropdownItem = (props: Props) => {
     selected,
     disabled,
     stayOpenAfterClick,
+    dataTestId,
     ...otherProps
   } = props;
 
@@ -33,8 +35,10 @@ export const DropdownItem = (props: Props) => {
       color,
     }
     : {};
+
+  const _dataTestId = dataTestId ? dataTestId : 'DropDownItem';
   const inner = (
-    <div className={classnames('dropdown__inner', className)}>
+    <div className={classnames('dropdown__inner', className)} data-testid={_dataTestId}>
       <div className="dropdown__text" style={styles}>
         {children}
       </div>

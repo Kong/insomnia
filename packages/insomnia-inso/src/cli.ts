@@ -112,6 +112,7 @@ const makeExportCommand = (commandCreator: CreateCommand) => {
     .command('spec [identifier]')
     .description('Export an API Specification to a file')
     .option('-o, --output <path>', 'save the generated config to a file')
+    .option('-s, --skipAnnotations', 'remove all "x-kong-" annotations ', false)
     .action((identifier, cmd) => {
       let options = getOptions<ExportSpecificationOptions>(cmd);
       options = prepareCommand(options);

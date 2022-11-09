@@ -32,6 +32,24 @@ describe('exportSpecification()', () => {
     expect(logger.__getLogs().log).toEqual([expect.stringContaining("openapi: '3.0.2")]);
   });
 
+  it('should not remove all x-kong annotations from spec if skipAnnotations false', async () => {
+    const result = await exportSpecification('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
+      workingDir: 'src/db/fixtures/git-repo', skipAnnotations: false,
+    });
+    expect(result).toBe(true);
+    expect(writeFileWithCliOptions).not.toHaveBeenCalled();
+    expect(logger.__getLogs().log?.toString()).toContain('x-kong-');
+  });
+
+  it('should remove all x-kong annotations from spec if skipAnnotations true', async () => {
+    const result = await exportSpecification('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
+      workingDir: 'src/db/fixtures/git-repo', skipAnnotations: true,
+    });
+    expect(result).toBe(true);
+    expect(writeFileWithCliOptions).not.toHaveBeenCalled();
+    expect(logger.__getLogs().log?.toString()).not.toContain('x-kong-');
+  });
+
   it('should output document to a file', async () => {
     const outputPath = 'this-is-the-output-path';
     writeFileWithCliOptions.mockResolvedValue(outputPath);

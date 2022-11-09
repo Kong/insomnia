@@ -31,6 +31,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   // No PKCE
   await page.locator('button:has-text("No PKCE")').click();
+  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
 
   const [authorizationCodePage] = await Promise.all([
     app.waitForEvent('window'),
@@ -75,12 +76,18 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   // PKCE SHA256
   await page.locator('button:has-text("PKCE SHA256")').click();
+  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+  await expect(page.locator('#Grant-Type')).toHaveValue('authorization_code');
+  await expect(page.locator('#Code-Challenge-Method')).toHaveValue('S256');
   await sendButton.click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');
 
   // PKCE Plain
   await page.locator('button:has-text("PKCE Plain")').click();
+  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+  await expect(page.locator('#Grant-Type')).toHaveValue('authorization_code');
+  await expect(page.locator('#Code-Challenge-Method')).toHaveValue('plain');
   await sendButton.click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');
@@ -99,6 +106,8 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   // ID Token
   await page.locator('button:has-text("ID Token")').click();
+  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/id-token');
+  await expect(page.locator('#Grant-Type')).toHaveValue('implicit');
 
   const [implicitPage] = await Promise.all([
     app.waitForEvent('window'),
@@ -115,6 +124,8 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   // ID and Access Token
   await page.locator('button:has-text("ID and Access Token")').click();
+  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+  await expect(page.locator('#Grant-Type')).toHaveValue('implicit');
   await sendButton.click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "admin"');
@@ -130,6 +141,8 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   // Client Credentials
   await page.locator('button:has-text("Client Credentials")').click();
+  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/client-credential');
+  await expect(page.locator('#Grant-Type')).toHaveValue('client_credentials');
   await sendButton.click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"clientId": "client_credentials"');
@@ -145,6 +158,8 @@ test('can make oauth2 requests', async ({ app, page }) => {
 
   // Resource Owner Password Credentials
   await page.locator('button:has-text("Resource Owner Password Credentials")').click();
+  await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
+  await expect(page.locator('#Grant-Type')).toHaveValue('password');
   await sendButton.click();
   await expect(statusTag).toContainText('200 OK');
   await expect(responseBody).toContainText('"sub": "foo"');
