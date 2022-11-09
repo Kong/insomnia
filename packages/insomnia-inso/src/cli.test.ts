@@ -205,7 +205,7 @@ describe('cli', () => {
   describe('export spec', () => {
     it('should call exportSpec with no arg', () => {
       inso('export spec');
-      expect(exportSpecification).toHaveBeenCalledWith(undefined, 
+      expect(exportSpecification).toHaveBeenCalledWith(undefined,
         { skipAnnotations: false });
     });
 
