@@ -289,7 +289,7 @@ const OrganizationProjectsSidebar: FC<{
             }
           }}
         >
-          <i className="fa fa-plus" />
+          <i data-testid="CreateProjectButton" className="fa fa-plus" />
         </Button>
       </SidebarSection>
       <ul className="sidebar__list sidebar__list-root theme--sidebar__list">

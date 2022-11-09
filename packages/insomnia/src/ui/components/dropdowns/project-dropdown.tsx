@@ -1,6 +1,7 @@
 import React, { FC, Fragment, useState } from 'react';
 import { useFetcher } from 'react-router-dom';
 import styled from 'styled-components';
+import { toKebabCase } from '../../../common/misc';
 
 import { strings } from '../../../common/strings';
 import {
@@ -42,7 +43,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
   const deleteProjectFetcher = useFetcher();
   return (
     <Fragment>
-      <Dropdown>
+      <Dropdown dataTestId={toKebabCase('ProjectDropDown-' + project.name)}>
         <DropdownButton className="row" title={project.name}>
           <i className="fa fa-ellipsis space-left" />
         </DropdownButton>
