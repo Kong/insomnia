@@ -5,9 +5,7 @@ import { AriaTabListProps, AriaTabPanelProps, useTab, useTabList, useTabPanel } 
 import { Item, ItemProps, TabListState, useTabListState } from 'react-stately';
 import styled from 'styled-components';
 
-type TabItemProps = ItemProps<{
-  className: string;
-}>;
+type TabItemProps = ItemProps<any>;
 
 interface TabProps {
   item: Node<TabItemProps>;
