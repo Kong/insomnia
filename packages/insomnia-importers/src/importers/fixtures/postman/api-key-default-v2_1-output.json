@@ -1,0 +1,35 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2022-11-09T17:15:02.632Z",
+  "__export_source": "insomnia.importers:v0.1.0",
+  "resources": [
+    {
+      "_id": "__GRP_1__",
+      "_type": "request_group",
+      "description": "",
+      "environment": {},
+      "name": "New Collection",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "_id": "__REQ_1__",
+      "parentId": "__GRP_1__",
+      "url": "mockbin.org/request/any",
+      "name": "New Request",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {
+        "type": "apikey",
+        "key": "test",
+        "value": "test",
+        "addTo": "header",
+        "disabled": false
+      },
+      "_type": "request"
+    }
+  ]
+}

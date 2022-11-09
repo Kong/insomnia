@@ -405,6 +405,12 @@ export class ImportPostman {
           headers,
         };
 
+      case 'apikey':
+        return {
+          authentication: this.importApiKeyAuthentication(authentication),
+          headers,
+        };
+
       default:
         return {
           authentication: {},
@@ -684,6 +690,19 @@ export class ImportPostman {
 
   };
 
+  importApiKeyAuthentication = (auth: Authetication) => {
+    if (!auth.apikey) {
+      return {};
+    }
+    const apikey = auth.apikey as V210Auth['apikey'];
+    return {
+      type: 'apikey',
+      key: this.findValueByKey(apikey, 'key'),
+      value: this.findValueByKey(apikey, 'value'),
+      addTo: this.findValueByKey(apikey, 'in')  === 'query' ? 'queryParams' : 'header',
+      disabled: false,
+    };
+  };
   importOauth2Authentication = (auth: Authetication) => {
     if (!auth.oauth2) {
       return {};
