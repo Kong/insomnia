@@ -8,7 +8,7 @@ import { database, database as db } from '../../common/database';
 import * as models from '../../models';
 import { defaultOrganization, Organization } from '../../models/organization';
 import { isRemoteProject } from '../../models/project';
-import { isDesign } from '../../models/workspace';
+import { isCollection, isDesign } from '../../models/workspace';
 import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
 import { getVCS } from '../../sync/vcs/vcs';
 import { AccountToolbar } from '../components/account-toolbar';
@@ -16,6 +16,7 @@ import { ActivityToggle } from '../components/activity-toggle';
 import { AppHeader } from '../components/app-header';
 import { Breadcrumb } from '../components/breadcrumb';
 import { GitSyncDropdown } from '../components/dropdowns/git-sync-dropdown';
+import { SyncDropdown } from '../components/dropdowns/sync-dropdown';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { OrganizationsNav } from '../components/organizations-navbar';
@@ -26,6 +27,7 @@ import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import { useGitVCS } from '../hooks/use-git-vcs';
+import { useVCS } from '../hooks/use-vcs';
 import {
   selectActiveApiSpec,
   selectActiveCookieJar,
@@ -96,6 +98,10 @@ const WorkspaceNavigation: FC = () => {
     gitRepository,
   });
 
+  const vcs = useVCS({
+    workspaceId,
+  });
+
   const navigate = useNavigate();
 
   if (!activeWorkspace || !organizationId) {
@@ -121,6 +127,7 @@ const WorkspaceNavigation: FC = () => {
       <Breadcrumb crumbs={crumbs} />
       {isDesign(activeWorkspace) && <ActivityToggle />}
       {isDesign(activeWorkspace) && gitVCS && <GitSyncDropdown workspace={activeWorkspace} vcs={gitVCS} />}
+      {isCollection(activeWorkspace) && vcs && <SyncDropdown workspace={activeWorkspace} project={activeProject} vcs={vcs} />}
     </Fragment>
   );
 };
