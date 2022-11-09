@@ -79,7 +79,7 @@ const SignupModal: FC<{onHide: () => void}> = ({
   }, []);
 
   return (
-    <Modal onHide={onHide} skinny centered ref={modalRef}>
+    <Modal onHide={onHide} skinny ref={modalRef}>
       <ModalHeader>Login or sign up</ModalHeader>
       <ModalBody className="wide pad">
         Log in or sign up to store your project in the cloud and share it with
@@ -108,7 +108,7 @@ const SignupModal: FC<{onHide: () => void}> = ({
               modalRef.current?.hide();
             }}
             button
-            href="https://insomnia.rest/pricing"
+            href="https://app.insomnia.rest/app/signup/"
           >
             Sign Up
           </ExternalLink>

@@ -3,10 +3,11 @@ import React, { Fragment } from 'react';
 import styled from 'styled-components';
 
 import * as session from '../../account/session';
+import { clickLink } from '../../common/electron-helpers';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownItem } from './base/dropdown/dropdown-item';
-import { Link } from './base/link';
+import { Link as ExternalLink } from './base/link';
 import { PromptButton } from './base/prompt-button';
 import { showLoginModal } from './modals/login-modal';
 import { SvgIcon } from './svg-icon';
@@ -28,7 +29,6 @@ const Toolbar = styled.div({
 const StyledIcon = styled.i.attrs<StyledIconProps>(props => ({
   className: classNames('fa', props.faIcon),
 }))<StyledIconProps>({
-  marginLeft: 'var(--padding-md)',
   display: 'flex',
   alignItems: 'center',
   paddingLeft: 'var(--padding-xs)',
@@ -56,34 +56,32 @@ export const AccountToolbar = () => {
           <DropdownButton noWrap>
             <Tooltip delay={1000} position="bottom" message="Account">
               <Button size='small' style={{ gap: 'var(--padding-xs)' }} variant='text'>
-                {isLoggedIn && (<><SvgIcon icon='user' />{session.getFirstName()} {session.getLastName()}<i className="fa fa-caret-down" /></>)}
-                {!isLoggedIn && (<><SvgIcon icon='user' /></>)}
+                <SvgIcon icon='user' />{session.getFirstName()} {session.getLastName()}<i className="fa fa-caret-down" />
               </Button>
             </Tooltip>
           </DropdownButton>
-          {session.isLoggedIn() ? (
-            <DropdownItem
-              key="login"
-              stayOpenAfterClick
-              buttonClass={PromptButton}
-              onClick={session.logout}
-            >
-              <StyledIcon faIcon="fa-sign-out" />Logout
-            </DropdownItem>
-          ) : (
-            <Fragment>
-              <DropdownItem key="login" onClick={showLoginModal}>
-                <StyledIcon faIcon="fa-sign-in" />Log In
-              </DropdownItem>
-            </Fragment>
-          )}
+          <DropdownItem
+            key="logout"
+            stayOpenAfterClick
+            buttonClass={PromptButton}
+            onClick={session.logout}
+          >
+            <StyledIcon faIcon="fa-sign-out" />Logout
+          </DropdownItem>
+          <DropdownItem
+            key="account-settings"
+            stayOpenAfterClick
+            onClick={() => clickLink('https://app.insomnia.rest/app/account/')}
+          >
+            <StyledIcon faIcon="fa-gear" /> Account Settings
+          </DropdownItem>
         </Dropdown>
       ) : (
         <Fragment>
           <Button variant='text' size="small" onClick={showLoginModal}>
             Login
           </Button>
-          <SignUpButton href="https://insomnia.rest/pricing" as={Link} size="small" variant='contained'>
+          <SignUpButton href="https://app.insomnia.rest/app/signup/" as={ExternalLink} size="small" variant='contained'>
             Sign Up
           </SignUpButton>
         </Fragment>

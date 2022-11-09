@@ -7,6 +7,7 @@ import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
+import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isCollection } from '../../models/workspace';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
@@ -59,7 +60,8 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   await models.project.remove(project);
 
   trackSegmentEvent(SegmentEvent.projectLocalDelete);
-  return redirect(`/organization/${organizationId}/project/${DEFAULT_PROJECT_ID}`);
+
+  return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`);
 };
 
 // Workspace
