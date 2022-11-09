@@ -20,14 +20,14 @@ const verticalStyles = {
   '.pane-one': {
     gridColumnStart: '4',
     gridColumnEnd: 'span 3',
-    gridRowStart: '2',
+    gridRowStart: '1',
     gridRowEnd: 'span 1',
   },
 
   '.pane-two': {
     gridColumnStart: '4',
     gridColumnEnd: 'span 3',
-    gridRowStart: '4',
+    gridRowStart: '3',
     gridRowEnd: 'span 1',
     borderTop: '1px solid var(--hl-md)',
   },
@@ -37,10 +37,10 @@ const verticalStyles = {
   },
 
   '.drag--pane-vertical': {
-    display: 'block',
+    display: 'block !important',
     gridColumnStart: '4',
     gridColumnEnd: 'span 3',
-    gridRowStart: '3',
+    gridRowStart: '2',
     gridRowEnd: 'span 1',
 
     '& > *': {
