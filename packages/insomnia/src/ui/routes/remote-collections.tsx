@@ -2,6 +2,7 @@ import { invariant } from '@remix-run/router';
 import { ActionFunction, LoaderFunction } from 'react-router-dom';
 
 import { database } from '../../common/database';
+import { isNotNullOrUndefined } from '../../common/misc';
 import * as models from '../../models';
 import { RemoteProject } from '../../models/project';
 import { BackendProject } from '../../sync/types';
@@ -58,7 +59,20 @@ export const remoteCollectionsLoader: LoaderFunction = async ({ params }): Promi
     const remoteId = project.remoteId;
     invariant(remoteId, 'Project is not a remote project');
 
-    const localBackendProjects = await vcs.localBackendProjects();
+    const allVCSBackendProjects = await vcs.localBackendProjects();
+    // Filter out backend projects that are not connected to a workspace because the workspace was deleted
+    const getWorkspacesByLocalProjects = allVCSBackendProjects.map(async backendProject => {
+      const workspace = await models.workspace.getById(backendProject.rootDocumentId);
+
+      if (!workspace) {
+        return null;
+      }
+
+      return backendProject;
+    });
+
+    // Map the backend projects to ones with workspaces in parallel
+    const localBackendProjects = (await Promise.all(getWorkspacesByLocalProjects)).filter(isNotNullOrUndefined);
 
     const remoteBackendProjects = (await vcs.remoteBackendProjects(remoteId)).filter(({ id, rootDocumentId }) => {
       const localBackendProjectExists = localBackendProjects.find(p => p.id === id);

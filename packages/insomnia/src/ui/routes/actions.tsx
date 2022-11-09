@@ -140,6 +140,18 @@ export const deleteWorkspaceAction: ActionFunction = async ({
   await models.stats.incrementDeletedRequestsForDescendents(workspace);
   await models.workspace.remove(workspace);
 
+  try {
+    const vcs = getVCS();
+    if (vcs) {
+      const backendProject = await vcs._getBackendProjectByRootDocument(workspace._id);
+      await vcs._removeProject(backendProject);
+
+      console.log({ projectsLOCAL: await vcs.localBackendProjects() });
+    }
+  } catch (err) {
+    console.warn('Failed to remove project from VCS', err);
+  }
+
   return redirect(`/organization/${organizationId}/project/${projectId}`);
 };
 
