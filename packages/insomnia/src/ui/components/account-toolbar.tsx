@@ -61,19 +61,19 @@ export const AccountToolbar = () => {
             </Tooltip>
           </DropdownButton>
           <DropdownItem
+            key="account-settings"
+            stayOpenAfterClick
+            onClick={() => clickLink('https://app.insomnia.rest/app/account/')}
+          >
+            <StyledIcon faIcon="fa-gear" /> Account Settings
+          </DropdownItem>
+          <DropdownItem
             key="logout"
             stayOpenAfterClick
             buttonClass={PromptButton}
             onClick={session.logout}
           >
             <StyledIcon faIcon="fa-sign-out" />Logout
-          </DropdownItem>
-          <DropdownItem
-            key="account-settings"
-            stayOpenAfterClick
-            onClick={() => clickLink('https://app.insomnia.rest/app/account/')}
-          >
-            <StyledIcon faIcon="fa-gear" /> Account Settings
           </DropdownItem>
         </Dropdown>
       ) : (
