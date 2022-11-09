@@ -14,11 +14,9 @@ interface TabProps {
   isNested?: boolean;
 }
 
-// const Tab: FC<TabProps> = ({ item, state, orientation }) => {
 const Tab: FC<TabProps> = ({ item, state, isNested }) => {
   const { key, rendered } = item;
   const ref = createRef<HTMLDivElement>();
-  // const { tabProps, isSelected, isDisabled } = useTab({ key }, state, ref);
   const { tabProps } = useTab({ key }, state, ref);
 
   return (
@@ -54,7 +52,7 @@ const Tabs: FC<TabsProps> = props => {
 
   return (
     <div className={classnames('tabs', props.orientation || '')}>
-      <div {...tabListProps} ref={ref}>
+      <div {...tabListProps} ref={ref} data-nested={props.isNested}>
         {[...state.collection].map((item: Node<TabItemProps>) => (
           <Tab
             key={item.key}

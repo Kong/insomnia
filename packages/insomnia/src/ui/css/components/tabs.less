@@ -14,7 +14,6 @@
   height: 100%;
   box-sizing: border-box;
   background-color: var(--color-bg);
-  border-bottom: 1px solid var(--hl-md);
   overflow: auto;
 
   &::-webkit-scrollbar {
@@ -36,6 +35,19 @@
 
   &:hover::-webkit-scrollbar-thumb {
     background-color: var(--hl-sm);
+  }
+
+  &::after {
+    width: 100%;
+    height: var(--line-height-sm);
+    content: '';
+    border-bottom: 1px solid var(--hl-md);
+  }
+}
+
+[role='tablist'][data-nested="true"] {
+  &::after {
+    border-bottom: none;
   }
 }
 
