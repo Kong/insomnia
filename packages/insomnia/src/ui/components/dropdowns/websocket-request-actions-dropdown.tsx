@@ -1,6 +1,7 @@
 import React, { forwardRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
+import { toKebabCase } from '../../../common/misc';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
@@ -57,7 +58,7 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
   }, [request]);
 
   return (
-    <Dropdown right={right} ref={ref}>
+    <Dropdown right={right} ref={ref} dataTestId={`Dropdown-${toKebabCase(request.name)}`}>
       <DropdownButton>
         <i className="fa fa-caret-down" />
       </DropdownButton>
@@ -88,7 +89,7 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
 
       <DropdownDivider />
 
-      <DropdownItem onClick={handleShowSettings}>
+      <DropdownItem onClick={handleShowSettings} dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`}>
         <i className="fa fa-wrench" /> Settings
         <DropdownHint keyBindings={hotKeyRegistry.request_showSettings} />
       </DropdownItem>

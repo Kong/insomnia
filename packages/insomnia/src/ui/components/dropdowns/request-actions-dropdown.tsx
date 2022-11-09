@@ -5,6 +5,7 @@ import React, { forwardRef, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { exportHarRequest } from '../../../common/har';
+import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
@@ -138,7 +139,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);
   return (
-    <Dropdown right={right} ref={ref} onOpen={onOpen}>
+    <Dropdown right={right} ref={ref} onOpen={onOpen} dataTestId={`Dropdown-${toKebabCase(request.name)}`}>
       <DropdownButton>
         <i className="fa fa-caret-down" />
       </DropdownButton>
@@ -200,7 +201,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
       <DropdownDivider />
 
-      <DropdownItem onClick={handleShowSettings}>
+      <DropdownItem onClick={handleShowSettings} dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`}>
         <i className="fa fa-wrench" /> Settings
         <DropdownHint keyBindings={hotKeyRegistry.request_showSettings} />
       </DropdownItem>
