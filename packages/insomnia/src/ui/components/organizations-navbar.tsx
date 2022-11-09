@@ -93,7 +93,7 @@ const SignupModal: FC<{onHide: () => void}> = ({
           }}
         >
           <button
-            className="btn"
+            className="btn btn--outlined"
             onClick={() => {
               modalRef.current?.hide();
               showLoginModal();
@@ -152,14 +152,13 @@ export const OrganizationsNav: FC = () => {
                         <div>
                           <p>
                             At the moment it is not possible to create more teams
-                            in Insomnia, but this capability is shipping soon.
+                            in Insomnia.
                           </p>
                           <p>
-                            🚀 Stay tuned!
+                            🚀 This feature is coming soon!
                           </p>
                         </div>
                       ),
-                    // 'At the moment it is not possible to create more Teams in Insomnia. We are working hard to enable this capability in the coming months, stay tuned.',
                     });
                   } else {
                     setIsSignupModalOpen(true);

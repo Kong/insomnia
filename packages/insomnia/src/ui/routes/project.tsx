@@ -52,11 +52,14 @@ import {
 } from '../redux/modules/import';
 
 const CreateButton = styled(Button).attrs({
-  variant: 'contained',
-  bg: 'surprise',
+  variant: 'outlined',
 })({
   '&&': {
     marginLeft: 'var(--padding-md)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 'var(--padding-sm)',
+    padding: '0 var(--padding-sm)',
   },
 });
 
@@ -257,11 +260,10 @@ const OrganizationProjectsSidebar: FC<{
                   <div>
                     <p>
                       At the moment it is not possible to create more cloud
-                      projects within a team in Insomnia, but this capability is
-                      shipping soon.
+                      projects within a team in Insomnia.
                     </p>
                     <p>
-                      🚀 Stay tuned!
+                      🚀 This feature is coming soon!
                     </p>
                   </div>
                 ),
@@ -685,7 +687,7 @@ const ProjectRoute: FC = () => {
                   )}
                   <Dropdown>
                     <DropdownButton buttonClass={CreateButton}>
-                      Create <i className="fa fa-caret-down pad-left-sm" />
+                      <i className="fa fa-plus" />Create <i className="fa fa-caret-down pad-left-sm" />
                     </DropdownButton>
                     <DropdownDivider>New</DropdownDivider>
                     <DropdownItem onClick={createNewCollection}>

@@ -38,8 +38,8 @@ const StyledIcon = styled.i.attrs<StyledIconProps>(props => ({
 
 const SignUpButton = styled(Button)({
   '&&': {
-    backgroundColor: 'var(--color-info)',
-    color: 'var(--color-font-info)',
+    backgroundColor: 'var(--color-surprise)',
+    color: 'var(--color-font-surprise)',
     textDecoration: 'none',
     margin: 0,
     boxSizing: 'border-box',
@@ -78,7 +78,7 @@ export const AccountToolbar = () => {
         </Dropdown>
       ) : (
         <Fragment>
-          <Button variant='text' size="small" onClick={showLoginModal}>
+          <Button variant='outlined' size="small" onClick={showLoginModal}>
             Login
           </Button>
           <SignUpButton href="https://app.insomnia.rest/app/signup/" as={ExternalLink} size="small" variant='contained'>
