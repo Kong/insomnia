@@ -110,7 +110,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>(
     const dropdownContainerRef = useRef<HTMLDivElement>(null);
     const dropdownListRef = useRef<HTMLDivElement>(null);
     const filterInputRef = useRef<HTMLInputElement>(null);
-    const _dataTestId = dataTestId || 'dropdown';
 
     const _dataTestId = dataTestId ? dataTestId : 'DropdownButton';
 
