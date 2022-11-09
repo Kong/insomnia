@@ -12,7 +12,7 @@ import { isDesign } from '../../models/workspace';
 import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
 import { getVCS } from '../../sync/vcs/vcs';
 import { AccountToolbar } from '../components/account-toolbar';
-import { ActivityToggle } from '../components/activity-toggle/activity-toggle';
+import { ActivityToggle } from '../components/activity-toggle';
 import { AppHeader } from '../components/app-header';
 import { Breadcrumb } from '../components/breadcrumb';
 import { GitSyncDropdown } from '../components/dropdowns/git-sync-dropdown';
