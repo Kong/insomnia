@@ -1,8 +1,8 @@
 import React, { FC, Fragment, useState } from 'react';
 import { useFetcher } from 'react-router-dom';
 import styled from 'styled-components';
-import { toKebabCase } from '../../../common/misc';
 
+import { toKebabCase } from '../../../common/misc';
 import { strings } from '../../../common/strings';
 import {
   Project,
