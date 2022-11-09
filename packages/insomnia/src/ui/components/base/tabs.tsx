@@ -11,17 +11,18 @@ interface TabProps {
   item: Node<TabItemProps>;
   state: TabListState<TabItemProps>;
   orientation?: Orientation;
+  isNested?: boolean;
 }
 
 // const Tab: FC<TabProps> = ({ item, state, orientation }) => {
-const Tab: FC<TabProps> = ({ item, state }) => {
+const Tab: FC<TabProps> = ({ item, state, isNested }) => {
   const { key, rendered } = item;
   const ref = createRef<HTMLDivElement>();
   // const { tabProps, isSelected, isDisabled } = useTab({ key }, state, ref);
   const { tabProps } = useTab({ key }, state, ref);
 
   return (
-    <div {...tabProps} ref={ref}>
+    <div {...tabProps} ref={ref} data-nested={isNested}>
       {rendered}
     </div>
   );
@@ -42,7 +43,11 @@ const TabPanel: FC<TabPanelProps> = ({ state, ...props }) => {
   );
 };
 
-const Tabs: FC<AriaTabListProps<TabItemProps>> = props => {
+interface TabsProps extends AriaTabListProps<TabItemProps> {
+  isNested?: boolean;
+}
+
+const Tabs: FC<TabsProps> = props => {
   const state = useTabListState(props);
   const ref = createRef<HTMLDivElement>();
   const { tabListProps } = useTabList(props, state, ref);
@@ -56,6 +61,7 @@ const Tabs: FC<AriaTabListProps<TabItemProps>> = props => {
             item={item}
             state={state}
             orientation={props.orientation}
+            isNested={props.isNested}
           />
         ))}
       </div>
