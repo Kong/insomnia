@@ -39,18 +39,17 @@ export async function exportSpecification(
   }
 
   let contents = specFromDb.contents;
-  if (skipAnnotations) {
+  if (Boolean(skipAnnotations)) {
     const yamlObj = YAML.parse(contents);
     deleteField(yamlObj, 'x-kong-');
     contents = YAML.stringify(yamlObj);
-    // logger.log('All x-kong-* annotations removed');
   }
 
   if (output) {
     const outputPath = await writeFileWithCliOptions(output, contents, workingDir);
     logger.log(`Specification exported to "${outputPath}".`);
   } else {
-    logger.log(specFromDb.contents);
+    logger.log(contents);
   }
 
   return true;
