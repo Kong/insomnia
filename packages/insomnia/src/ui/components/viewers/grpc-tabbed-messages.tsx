@@ -1,4 +1,5 @@
 import React, { FunctionComponent } from 'react';
+import styled from 'styled-components';
 
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { TabItem, Tabs } from '../base/tabs';
@@ -23,6 +24,16 @@ interface Props {
   handleGetRenderContext?: HandleGetRenderContext;
 }
 
+const ActionButtonsContainer = styled.div({
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'flex-end',
+  boxSizing: 'border-box',
+  height: 'var(--line-height-sm)',
+  borderBottom: '1px solid var(--hl-lg)',
+  padding: 3,
+});
+
 export const GrpcTabbedMessages: FunctionComponent<Props> = ({
   showActions,
   bodyText,
@@ -35,41 +46,48 @@ export const GrpcTabbedMessages: FunctionComponent<Props> = ({
 }) => {
   const shouldShowBody = !!handleBodyChange;
   const orderedMessages = messages?.sort((a, b) => a.created - b.created) || [];
+
+  const tabItems = [];
+
+  if (shouldShowBody) {
+    tabItems.push(
+      <TabItem key="body" title="Body">
+        <GRPCEditor content={bodyText} handleChange={handleBodyChange} />
+      </TabItem>
+    );
+  }
+
+  orderedMessages.map((m, index) => tabItems.push(
+    <TabItem key={m.id} title={`${tabNamePrefix} ${index + 1}`}>
+      <GRPCEditor content={m.text} readOnly />
+    </TabItem>
+  ));
+
   return (
-    <Tabs key={uniquenessKey}>
-      <div className='tab-action-wrapper'>
-        <div className='tab-action-tabs'>
-          {shouldShowBody &&
-            <TabItem key="body" title="Body">
-              <GRPCEditor content={bodyText} handleChange={handleBodyChange} />
-            </TabItem>}
-          {orderedMessages?.map((m, index) => (
-            <TabItem key={m.id} title={`${tabNamePrefix} ${index + 1}`}>
-              <GRPCEditor content={m.text} readOnly />
-            </TabItem>
-          ))}
-        </div>
-        {showActions && (
-          <>
-            {handleStream && (
-              <button
-                className='btn btn--compact btn--clicky margin-sm bg-default'
-                onClick={handleStream}
-              >
-                Stream <i className='fa fa-plus' />
-              </button>
-            )}
-            {handleCommit && (
-              <button
-                className='btn btn--compact btn--clicky margin-sm bg-surprise'
-                onClick={handleCommit}
-              >
-                Commit <i className='fa fa-arrow-right' />
-              </button>
-            )}
-          </>
-        )}
-      </div>
-    </Tabs>
+    <>
+      {showActions && (
+        <ActionButtonsContainer>
+          {handleStream && (
+            <button
+              className='btn btn--compact btn--clicky-small margin-left-sm bg-default'
+              onClick={handleStream}
+            >
+              Stream <i className='fa fa-plus' />
+            </button>
+          )}
+          {handleCommit && (
+            <button
+              className='btn btn--compact btn--clicky-small margin-left-sm bg-surprise'
+              onClick={handleCommit}
+            >
+              Commit <i className='fa fa-arrow-right' />
+            </button>
+          )}
+        </ActionButtonsContainer>
+      )}
+      <Tabs key={uniquenessKey}>
+        {tabItems}
+      </Tabs>
+    </>
   );
 };
