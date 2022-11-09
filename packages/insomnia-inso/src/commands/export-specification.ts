@@ -39,7 +39,7 @@ export async function exportSpecification(
   }
 
   let contents = specFromDb.contents;
-  if (Boolean(skipAnnotations)) {
+  if (skipAnnotations) {
     const yamlObj = YAML.parse(contents);
     deleteField(yamlObj, 'x-kong-');
     contents = YAML.stringify(yamlObj);
