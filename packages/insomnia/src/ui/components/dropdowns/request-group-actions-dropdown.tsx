@@ -1,8 +1,8 @@
 import classnames from 'classnames';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { toKebabCase } from '../../../common/misc';
 
+import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import * as models from '../../../models';
 import * as requestOperations from '../../../models/helpers/request-operations';
@@ -138,7 +138,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
   }, [dropdownRef, loadingActions,  activeEnvironment, requestGroup, activeProject]);
 
   return (
-    <Dropdown ref={dropdownRef} onOpen={onOpen} testHandle={toKebabCase(requestGroup.name)} {...other}>
+    <Dropdown ref={dropdownRef} onOpen={onOpen} dataTestId={`Dropdown-${toKebabCase(requestGroup.name)}`} {...other}>
       <DropdownButton>
         <i className="fa fa-caret-down" />
       </DropdownButton>
@@ -195,7 +195,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         </DropdownItem>
       ))}
       <DropdownDivider />
-      <DropdownItem onClick={() => handleShowSettings(requestGroup)} testHandle={`Settings-${toKebabCase(requestGroup.name)}`}>
+      <DropdownItem onClick={() => handleShowSettings(requestGroup)} dataTestId={`DropdownItemSettings-${toKebabCase(requestGroup.name)}`}>
         <i className="fa fa-wrench" /> Settings
       </DropdownItem>
     </Dropdown>

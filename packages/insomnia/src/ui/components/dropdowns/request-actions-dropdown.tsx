@@ -139,7 +139,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);
   return (
-    <Dropdown right={right} ref={ref} onOpen={onOpen} testHandle={toKebabCase(request.name)}>
+    <Dropdown right={right} ref={ref} onOpen={onOpen} dataTestId={`Dropdown-${toKebabCase(request.name)}`}>
       <DropdownButton>
         <i className="fa fa-caret-down" />
       </DropdownButton>
@@ -201,7 +201,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
       <DropdownDivider />
 
-      <DropdownItem onClick={handleShowSettings} testHandle={`Settings-${toKebabCase(request.name)}`}>
+      <DropdownItem onClick={handleShowSettings} dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`}>
         <i className="fa fa-wrench" /> Settings
         <DropdownHint keyBindings={hotKeyRegistry.request_showSettings} />
       </DropdownItem>
