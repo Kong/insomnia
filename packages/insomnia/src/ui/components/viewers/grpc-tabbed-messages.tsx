@@ -85,7 +85,7 @@ export const GrpcTabbedMessages: FunctionComponent<Props> = ({
           )}
         </ActionButtonsContainer>
       )}
-      <Tabs key={uniquenessKey}>
+      <Tabs key={uniquenessKey} isNested>
         {tabItems}
       </Tabs>
     </>
