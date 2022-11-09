@@ -1,3 +1,5 @@
+import YAML from 'yaml';
+
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
 import type { GlobalOptions } from '../get-options';
@@ -6,11 +8,22 @@ import { writeFileWithCliOptions } from '../write-file';
 
 export type ExportSpecificationOptions = GlobalOptions & {
   output?: string;
+  skipAnnotations?: boolean;
 };
+
+function  deleteField(obj: any, field: any): void {
+  Object.keys(obj).forEach(key => {
+    if (key.startsWith(field)) {
+      delete obj[key];
+    } else if (typeof obj[key] === 'object') {
+      deleteField(obj[key], field);
+    }
+  });
+}
 
 export async function exportSpecification(
   identifier: string | null | undefined,
-  { output, workingDir, appDataDir, ci, src }: ExportSpecificationOptions,
+  { output, skipAnnotations, workingDir, appDataDir, ci, src }: ExportSpecificationOptions,
 ) {
   const db = await loadDb({
     workingDir,
@@ -25,11 +38,18 @@ export async function exportSpecification(
     return false;
   }
 
+  let contents = specFromDb.contents;
+  if (skipAnnotations) {
+    const yamlObj = YAML.parse(contents);
+    deleteField(yamlObj, 'x-kong-');
+    contents = YAML.stringify(yamlObj);
+  }
+
   if (output) {
-    const outputPath = await writeFileWithCliOptions(output, specFromDb.contents, workingDir);
+    const outputPath = await writeFileWithCliOptions(output, contents, workingDir);
     logger.log(`Specification exported to "${outputPath}".`);
   } else {
-    logger.log(specFromDb.contents);
+    logger.log(contents);
   }
 
   return true;

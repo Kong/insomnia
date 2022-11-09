@@ -205,13 +205,14 @@ describe('cli', () => {
   describe('export spec', () => {
     it('should call exportSpec with no arg', () => {
       inso('export spec');
-      expect(exportSpecification).toHaveBeenCalledWith(undefined, {});
+      expect(exportSpecification).toHaveBeenCalledWith(undefined,
+        { skipAnnotations: false });
     });
 
     it('should call exportSpec with all expected arguments', () => {
-      inso('export spec spc_123 -o output.yaml');
+      inso('export spec spc_123 -o output.yaml -s');
       expect(exportSpecification).toHaveBeenCalledWith('spc_123', {
-        output: 'output.yaml',
+        output: 'output.yaml', skipAnnotations: true,
       });
     });
 

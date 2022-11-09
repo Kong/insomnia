@@ -32,6 +32,7 @@ export type GenerateConfigOptions = GlobalOptions & {
   type: ConversionOption;
   output?: string;
   format?: FormatOption;
+  skipAnnotations?: boolean;
 
   /** a comma-separated list of tags */
   tags?: string;
