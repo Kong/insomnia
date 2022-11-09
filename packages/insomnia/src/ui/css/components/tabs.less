@@ -11,10 +11,11 @@
   display: flex;
   flex-direction: row;
   width: 100%;
-  height: var(--line-height-sm);
+  height: 100%;
   box-sizing: border-box;
   background-color: var(--color-bg);
   border-bottom: 1px solid var(--hl-md);
+  overflow: auto;
 
   &::-webkit-scrollbar {
     height: var(--padding-sm);
@@ -59,9 +60,18 @@
   }
 }
 
-[role='tablist'] [role='tab'][aria-selected='true'] {
+[role='tablist'] [role='tab'][data-nested="true"] {
+  border-width: 0;
+  height: var(--line-height-md);
+}
+
+[role='tablist'] [role='tab'][aria-selected='true']:not([data-nested="true"]) {
   border-left: 1px solid var(--hl-md);
   border-right: 1px solid var(--hl-md);
+}
+
+[role='tablist'] [role='tab'][aria-selected='true'][data-nested="true"] {
+  border-bottom: 2px solid var(--hl-xl);
 }
 
 [role='tab'][aria-disabled] {
