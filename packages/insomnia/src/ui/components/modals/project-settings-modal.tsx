@@ -1,5 +1,6 @@
 import React, { FC, useEffect, useRef } from 'react';
-import { useFetcher } from 'react-router-dom';
+import { OverlayContainer } from 'react-aria';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { strings } from '../../../common/strings';
 import { isRemoteProject, Project } from '../../../models/project';
@@ -15,6 +16,7 @@ export interface ProjectSettingsModalProps extends ModalProps {
 
 export const ProjectSettingsModal: FC<ProjectSettingsModalProps> = ({ project, onHide }) => {
   const modalRef = useRef<ModalHandle>(null);
+  const { organizationId } = useParams<{organizationId: string}>();
   const { submit } = useFetcher();
 
   useEffect(() => {
@@ -24,63 +26,65 @@ export const ProjectSettingsModal: FC<ProjectSettingsModalProps> = ({ project, o
   const isRemote = isRemoteProject(project);
 
   return (
-    <Modal onHide={onHide} ref={modalRef}>
-      <ModalHeader key={`header::${project._id}`}>
-        {strings.project.singular} Settings{' '}
-        <div className="txt-sm selectable faint monospace">{project._id}</div>
-      </ModalHeader>
-      <ModalBody key={`body::${project._id}`} className="pad">
-        <div className="form-control form-control--outlined">
-          <label>
-            Name
-            {isRemote && (
-              <>
-                <HelpTooltip className="space-left">
-                  To rename a {strings.remoteProject.singular.toLowerCase()}{' '}
-                  {strings.project.singular.toLowerCase()} please visit{' '}
-                  <a href="https://app.insomnia.rest/app/teams">
-                    the insomnia website.
-                  </a>
-                </HelpTooltip>
-                <input disabled readOnly defaultValue={project.name} />
-              </>
-            )}
-            {!isRemote && (
-              <input
-                type="text"
-                placeholder={`My ${strings.project.singular}`}
-                defaultValue={project.name}
-                onChange={e => {
-                  submit(
-                    {
-                      name: e.currentTarget.value,
-                    },
-                    {
-                      action: `/project/${project._id}/rename`,
-                      method: 'post',
-                    }
-                  );
-                }}
-              />
-            )}
-          </label>
-        </div>
-        <h2>Actions</h2>
-        <div className="form-control form-control--padded">
-          <PromptButton
-            onClick={() =>
-              submit(
-                {},
-                { method: 'post', action: `/project/${project._id}/delete` }
-              )
-            }
-            className="width-auto btn btn--clicky inline-block"
-          >
-            <i className="fa fa-trash-o" /> Delete
-          </PromptButton>
-        </div>
-      </ModalBody>
-    </Modal>
+    <OverlayContainer>
+      <Modal onHide={onHide} ref={modalRef}>
+        <ModalHeader key={`header::${project._id}`}>
+          {strings.project.singular} Settings{' '}
+          <div className="txt-sm selectable faint monospace">{project._id}</div>
+        </ModalHeader>
+        <ModalBody key={`body::${project._id}`} className="pad">
+          <div className="form-control form-control--outlined">
+            <label>
+              Name
+              {isRemote && (
+                <>
+                  <HelpTooltip className="space-left">
+                    To rename a {strings.remoteProject.singular.toLowerCase()}{' '}
+                    {strings.project.singular.toLowerCase()} please visit{' '}
+                    <a href="https://app.insomnia.rest/app/teams">
+                      the insomnia website.
+                    </a>
+                  </HelpTooltip>
+                  <input disabled readOnly defaultValue={project.name} />
+                </>
+              )}
+              {!isRemote && (
+                <input
+                  type="text"
+                  placeholder={`My ${strings.project.singular}`}
+                  defaultValue={project.name}
+                  onChange={e => {
+                    submit(
+                      {
+                        name: e.currentTarget.value,
+                      },
+                      {
+                        action: `/organization/${organizationId}/project/${project._id}/rename`,
+                        method: 'post',
+                      }
+                    );
+                  }}
+                />
+              )}
+            </label>
+          </div>
+          <h2>Actions</h2>
+          <div className="form-control form-control--padded">
+            <PromptButton
+              onClick={() =>
+                submit(
+                  {},
+                  { method: 'post', action: `/organization/${organizationId}/project/${project._id}/delete` }
+                )
+              }
+              className="width-auto btn btn--clicky inline-block"
+            >
+              <i className="fa fa-trash-o" /> Delete
+            </PromptButton>
+          </div>
+        </ModalBody>
+      </Modal>
+    </OverlayContainer>
   );
 };
 

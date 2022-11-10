@@ -33,8 +33,12 @@ import {
   setActiveWorkspace,
   setActiveActivity,
 } from './redux/modules/global';
-import { DEFAULT_PROJECT_ID } from '../models/project';
+import { DEFAULT_PROJECT_ID, isRemoteProject } from '../models/project';
 import { ErrorRoute } from './routes/error';
+import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
+import { selectActiveProject } from './redux/selectors';
+import { strings } from '../common/strings';
+import { Store } from 'redux';
 const Project = lazy(() => import('./routes/project'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
 const Debug = lazy(() => import('./routes/debug'));
@@ -46,128 +50,149 @@ initializeLogging();
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
-const locationHistoryEntry = localStorage.getItem('locationHistoryEntry');
+let locationHistoryEntry = `/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`;
+const prevLocationHistoryEntry = localStorage.getItem('locationHistoryEntry');
+
+if (prevLocationHistoryEntry && matchPath(prevLocationHistoryEntry, '/organization/:organizationId')) {
+  locationHistoryEntry = prevLocationHistoryEntry;
+}
 
 const router = createMemoryRouter(
   // @TODO - Investigate file based routing to generate these routes:
   [
     {
       path: '/',
+      loader:async (...args) => (await import('./routes/root')).loader(...args),
       element: <Root />,
       errorElement: <ErrorRoute />,
       children: [
         {
-          path: 'project',
+          path: 'organization',
           children: [
             {
-              path: ':projectId',
-              id: '/project/:projectId',
-              loader: async (...args) =>
-                (await import('./routes/project')).loader(...args),
-              element: (
-                <Suspense fallback={<AppLoadingIndicator />}>
-                  <Project />
-                </Suspense>
-              ),
+              path: ':organizationId',
               children: [
                 {
-                  path: 'delete',
-                  action: async (...args) =>
-                    (await import('./routes/actions')).deleteProjectAction(
-                      ...args
-                    ),
+                  index: true,
+                  loader: async (...args) => (await import('./routes/project')).indexLoader(...args),
                 },
                 {
-                  path: 'rename',
-                  action: async (...args) =>
-                    (await import('./routes/actions')).renameProjectAction(
-                      ...args
-                    ),
-                },
-              ],
-            },
-            {
-              path: ':projectId/workspace',
-              children: [
-                {
-                  path: ':workspaceId',
+                  path: 'project',
                   children: [
                     {
-                      path: `${ACTIVITY_DEBUG}`,
+                      path: ':projectId',
+                      id: '/project/:projectId',
+                      loader: async (...args) =>
+                        (await import('./routes/project')).loader(...args),
                       element: (
                         <Suspense fallback={<AppLoadingIndicator />}>
-                          <Debug />
+                          <Project />
                         </Suspense>
                       ),
+                      children: [
+                        {
+                          path: 'delete',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).deleteProjectAction(
+                              ...args
+                            ),
+                        },
+                        {
+                          path: 'rename',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).renameProjectAction(
+                              ...args
+                            ),
+                        },
+                      ],
                     },
                     {
-                      path: `${ACTIVITY_SPEC}`,
-                      element: (
-                        <Suspense fallback={<AppLoadingIndicator />}>
-                          <Design />
-                        </Suspense>
-                      ),
+                      path: ':projectId/workspace',
+                      children: [
+                        {
+                          path: ':workspaceId',
+                          loader: async (...args) => (await import('./routes/workspace')).workspaceLoader(...args),
+                          children: [
+                            {
+                              path: `${ACTIVITY_DEBUG}`,
+                              element: (
+                                <Suspense fallback={<AppLoadingIndicator />}>
+                                  <Debug />
+                                </Suspense>
+                              ),
+                            },
+                            {
+                              path: `${ACTIVITY_SPEC}`,
+                              element: (
+                                <Suspense fallback={<AppLoadingIndicator />}>
+                                  <Design />
+                                </Suspense>
+                              ),
+                            },
+                            {
+                              path: `${ACTIVITY_UNIT_TEST}`,
+                              element: (
+                                <Suspense fallback={<AppLoadingIndicator />}>
+                                  <UnitTest />
+                                </Suspense>
+                              ),
+                            },
+                            {
+                              path: 'duplicate',
+                              action: async (...args) =>
+                                (
+                                  await import('./routes/actions')
+                                ).duplicateWorkspaceAction(...args),
+                            },
+                          ],
+                        },
+                        {
+                          path: 'new',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).createNewWorkspaceAction(
+                              ...args
+                            ),
+                        },
+                        {
+                          path: 'delete',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).deleteWorkspaceAction(
+                              ...args
+                            ),
+                        },
+                        {
+                          path: 'update',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).updateWorkspaceAction(
+                              ...args
+                            ),
+                        },
+                      ],
                     },
                     {
-                      path: `${ACTIVITY_UNIT_TEST}`,
-                      element: (
-                        <Suspense fallback={<AppLoadingIndicator />}>
-                          <UnitTest />
-                        </Suspense>
-                      ),
-                    },
-                    {
-                      path: 'duplicate',
+                      path: 'new',
                       action: async (...args) =>
+                        (await import('./routes/actions')).createNewProjectAction(
+                          ...args
+                        ),
+                    },
+                    {
+                      path: ':projectId/remote-collections',
+                      loader: async (...args) =>
                         (
-                          await import('./routes/actions')
-                        ).duplicateWorkspaceAction(...args),
+                          await import('./routes/remote-collections')
+                        ).remoteCollectionsLoader(...args),
+                      children: [
+                        {
+                          path: 'pull',
+                          action: async (...args) =>
+                            (
+                              await import('./routes/remote-collections')
+                            ).pullRemoteCollectionAction(...args),
+                        },
+                      ],
                     },
                   ],
-                },
-                {
-                  path: 'new',
-                  action: async (...args) =>
-                    (await import('./routes/actions')).createNewWorkspaceAction(
-                      ...args
-                    ),
-                },
-                {
-                  path: 'delete',
-                  action: async (...args) =>
-                    (await import('./routes/actions')).deleteWorkspaceAction(
-                      ...args
-                    ),
-                },
-                {
-                  path: 'update',
-                  action: async (...args) =>
-                    (await import('./routes/actions')).updateWorkspaceAction(
-                      ...args
-                    ),
-                },
-              ],
-            },
-            {
-              path: 'new',
-              action: async (...args) =>
-                (await import('./routes/actions')).createNewProjectAction(
-                  ...args
-                ),
-            },
-            {
-              path: ':projectId/remote-collections',
-              loader: async (...args) =>
-                (
-                  await import('./routes/remote-collections')
-                ).remoteCollectionsLoader(...args),
-              children: [
-                {
-                  path: 'pull',
-                  action: async (...args) =>
-                    (
-                      await import('./routes/remote-collections')
-                    ).pullRemoteCollectionAction(...args),
                 },
               ],
             },
@@ -177,7 +202,7 @@ const router = createMemoryRouter(
     },
   ],
   {
-    initialEntries: [locationHistoryEntry || `/project/${DEFAULT_PROJECT_ID}`],
+    initialEntries: [locationHistoryEntry],
   }
 );
 
@@ -186,8 +211,81 @@ router.subscribe(({ location }) => {
   localStorage.setItem('locationHistoryEntry', location.pathname);
 });
 
+function updateReduxNavigationState(store: Store, pathname: string) {
+  let currentActivity;
+  const isActivityHome = matchPath(
+    {
+      path: '/organization/:organizationId/project/:projectId',
+      end: true,
+    },
+    pathname
+  );
+
+  const isActivityDebug = matchPath(
+    {
+      path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_DEBUG}`,
+      end: false,
+    },
+    pathname
+  );
+
+  const isActivityDesign = matchPath(
+    {
+      path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_SPEC}`,
+      end: false,
+    },
+    pathname
+  );
+
+  const isActivityTest = matchPath(
+    {
+      path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_UNIT_TEST}`,
+      end: false,
+    },
+    pathname
+  );
+
+  if (isActivityDebug) {
+    currentActivity = ACTIVITY_DEBUG;
+    store.dispatch(
+      setActiveProject(isActivityDebug?.params.projectId || '')
+    );
+    store.dispatch(
+      setActiveWorkspace(isActivityDebug?.params.workspaceId || '')
+    );
+    store.dispatch(setActiveActivity(ACTIVITY_DEBUG));
+  } else if (isActivityDesign) {
+    currentActivity = ACTIVITY_SPEC;
+    store.dispatch(
+      setActiveProject(isActivityDesign?.params.projectId || '')
+    );
+    store.dispatch(
+      setActiveWorkspace(isActivityDesign?.params.workspaceId || '')
+    );
+    store.dispatch(setActiveActivity(ACTIVITY_SPEC));
+  } else if (isActivityTest) {
+    currentActivity = ACTIVITY_UNIT_TEST;
+    store.dispatch(
+      setActiveProject(isActivityTest?.params.projectId || '')
+    );
+    store.dispatch(
+      setActiveWorkspace(isActivityTest?.params.workspaceId || '')
+    );
+    store.dispatch(setActiveActivity(ACTIVITY_UNIT_TEST));
+  } else {
+    currentActivity = ACTIVITY_HOME;
+    store.dispatch(
+      setActiveProject(isActivityHome?.params.projectId || '')
+    );
+    store.dispatch(setActiveActivity(ACTIVITY_HOME));
+  }
+
+  return currentActivity;
+}
+
 async function renderApp() {
   await database.initClient();
+  await models.project.seed();
 
   await initPlugins();
 
@@ -207,74 +305,12 @@ async function renderApp() {
     let currentActivity = (store.getState() as RootState).global.activeActivity;
     let currentPathname = router.state.location.pathname;
 
+    currentActivity = updateReduxNavigationState(store, router.state.location.pathname);
+
     router.subscribe(({ location }) => {
       if (location.pathname !== currentPathname) {
         currentPathname = location.pathname;
-        const isActivityHome = matchPath(
-          {
-            path: '/project/:projectId',
-          },
-          location.pathname
-        );
-
-        const isActivityDebug = matchPath(
-          {
-            path: `/project/:projectId/workspace/:workspaceId/${ACTIVITY_DEBUG}`,
-            end: false,
-          },
-          location.pathname
-        );
-
-        const isActivityDesign = matchPath(
-          {
-            path: `/project/:projectId/workspace/:workspaceId/${ACTIVITY_SPEC}`,
-            end: false,
-          },
-          location.pathname
-        );
-
-        const isActivityTest = matchPath(
-          {
-            path: `/project/:projectId/workspace/:workspaceId/${ACTIVITY_UNIT_TEST}`,
-            end: false,
-          },
-          location.pathname
-        );
-
-        if (isActivityDebug) {
-          currentActivity = ACTIVITY_DEBUG;
-          store.dispatch(
-            setActiveProject(isActivityDebug?.params.projectId || '')
-          );
-          store.dispatch(
-            setActiveWorkspace(isActivityDebug?.params.workspaceId || '')
-          );
-          store.dispatch(setActiveActivity(ACTIVITY_DEBUG));
-        } else if (isActivityDesign) {
-          currentActivity = ACTIVITY_SPEC;
-          store.dispatch(
-            setActiveProject(isActivityDesign?.params.projectId || '')
-          );
-          store.dispatch(
-            setActiveWorkspace(isActivityDesign?.params.workspaceId || '')
-          );
-          store.dispatch(setActiveActivity(ACTIVITY_SPEC));
-        } else if (isActivityTest) {
-          currentActivity = ACTIVITY_UNIT_TEST;
-          store.dispatch(
-            setActiveProject(isActivityTest?.params.projectId || '')
-          );
-          store.dispatch(
-            setActiveWorkspace(isActivityTest?.params.workspaceId || '')
-          );
-          store.dispatch(setActiveActivity(ACTIVITY_UNIT_TEST));
-        } else {
-          currentActivity = ACTIVITY_HOME;
-          store.dispatch(
-            setActiveProject(isActivityHome?.params.projectId || '')
-          );
-          store.dispatch(setActiveActivity(ACTIVITY_HOME));
-        }
+        currentActivity = updateReduxNavigationState(store, location.pathname);
       }
     });
 
@@ -282,28 +318,64 @@ async function renderApp() {
       const state = store.getState() as RootState;
       const activity = state.global.activeActivity;
 
+      const activeProject = selectActiveProject(state);
+      const organizationId = activeProject && isRemoteProject(activeProject) ? activeProject._id : DEFAULT_ORGANIZATION_ID;
+
       if (activity !== currentActivity) {
         currentActivity = activity;
+        const activeProjectId = activeProject ? activeProject._id : DEFAULT_PROJECT_ID;
         if (activity === ACTIVITY_HOME) {
-          router.navigate(`/project/${state.global.activeProjectId}`);
+          router.navigate(`/organization/${organizationId}/project/${activeProject._id}`);
         } else if (activity === ACTIVITY_DEBUG) {
           router.navigate(
-            `/project/${state.global.activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_DEBUG}`
+            `/organization/${organizationId}/project/${activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_DEBUG}`
           );
         } else if (activity === ACTIVITY_SPEC) {
           router.navigate(
-            `/project/${state.global.activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_SPEC}`
+            `/organization/${organizationId}/project/${activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_SPEC}`
           );
         } else if (activity === ACTIVITY_UNIT_TEST) {
           router.navigate(
-            `/project/${state.global.activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_UNIT_TEST}`
+            `/organization/${organizationId}/project/${activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_UNIT_TEST}`
           );
         }
       }
+
     });
   };
 
   synchronizeRouterState();
+  // Create an empty workspace with a request if the app is launched for the first time
+  const stats = await models.stats.get();
+
+  const isFirstLaunch = !(stats.launches > 1);
+
+  if (isFirstLaunch) {
+    const workspace = await models.workspace.create({
+      scope: 'design',
+      name: `New ${strings.document.singular}`,
+      parentId: DEFAULT_PROJECT_ID,
+    });
+
+    const { _id: workspaceId } = workspace;
+
+    await models.workspace.ensureChildren(workspace);
+    const request = await models.request.create({ parentId: workspaceId });
+
+    const unitTestSuite = await models.unitTestSuite.create({
+      parentId: workspaceId,
+      name: 'Example Test Suite',
+    });
+
+    await models.workspaceMeta.updateByParentId(workspaceId, {
+      activeRequestId: request._id,
+      activeActivity: ACTIVITY_DEBUG,
+      activeUnitTestSuiteId: unitTestSuite._id,
+    });
+
+    router.navigate(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}/workspace/${workspaceId}/${ACTIVITY_DEBUG}`);
+  }
+
   const root = document.getElementById('root');
 
   if (!root) {

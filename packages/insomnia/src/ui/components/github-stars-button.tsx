@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useMount, useMountedState } from 'react-use';
 import styled from 'styled-components';
@@ -6,36 +6,20 @@ import styled from 'styled-components';
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { selectSettings } from '../redux/selectors';
 import { SvgIcon } from './svg-icon';
+import { Button } from './themed-button';
 
-const Wrapper = styled.div({
+const ButtonGroup = styled.div({
   fontSize: 'var(--font-size-xs)',
-  zIndex: 0,
-  marginLeft: -10,
   display: 'flex',
-  height: '16px',
-  alignSelf: 'center',
-  '& a': {
-    textDecoration: 'none !important',
-    fontWeight: 'normal !important',
-    color: 'var(--hl) !important',
+  border: '1px solid var(--hl)',
+  borderRadius: 'var(--radius-md)',
+  '&>:first-of-type': {
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
   },
-  ':hover': {
-    color: 'var(--color-font) !important',
-    cursor: 'pointer',
-  },
-});
-
-const Star = styled.a({
-  width: 42,
-  justifyContent: 'flex-end',
-  backgroundColor: 'var(--hl-xs)',
-  padding: '2px',
-  alignItems: 'center',
-  display: 'flex',
-  border: '1px solid var(--hl-sm)',
-  color: 'var(--hl) !important',
-  ':hover': {
-    borderColor: 'var(--hl-xl)',
+  '&>:last-of-type': {
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
   },
 });
 
@@ -43,19 +27,18 @@ const Icon = styled(SvgIcon)({
   marginRight: 'var(--padding-xxs)',
 });
 
-const Counter = styled.a({
-  alignItems: 'center',
-  paddingLeft: 4,
-  paddingRight: 5,
-  padding: '0 3px',
-  display: 'flex',
-  fontVariantNumeric: 'tabular-nums',
-  border: '1px solid var(--hl-sm)',
-  borderLeft: 'none',
-  borderRadius: '0 10px 10px 0',
-  ':hover': {
-    color: 'var(--color-surprise) !important',
+const LinkButton = styled(Button).attrs({
+  as: 'a',
+})({
+  '&&': {
+    color: 'var(--hl)',
+    textDecoration: 'none',
   },
+});
+
+const Divider = styled.span({
+  height: 'auto',
+  borderLeft: '1px solid var(--hl)',
 });
 
 const LOCALSTORAGE_GITHUB_STARS_KEY = 'insomnia:github-stars';
@@ -123,17 +106,20 @@ export const GitHubStarsButton = () => {
   const shouldShowCount = !Boolean(error) && !incognitoMode;
 
   return (
-    <Wrapper>
-      <Star onClick={starClick} href="https://github.com/Kong/insomnia">
+    <ButtonGroup>
+      <LinkButton size="xs" variant="text" as={'a'} onClick={starClick} href="https://github.com/Kong/insomnia">
         <Icon icon="github" />
         Star
-      </Star>
+      </LinkButton>
 
       {shouldShowCount ? (
-        <Counter onClick={counterClick} href="https://github.com/Kong/insomnia/stargazers">
-          {starCount.toLocaleString()}
-        </Counter>
+        <Fragment>
+          <Divider />
+          <LinkButton size="xs" variant="text" as={'a'} onClick={counterClick} href="https://github.com/Kong/insomnia/stargazers">
+            {starCount.toLocaleString()}
+          </LinkButton>
+        </Fragment>
       ) : null}
-    </Wrapper>
+    </ButtonGroup>
   );
 };

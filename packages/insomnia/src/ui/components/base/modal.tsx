@@ -110,6 +110,7 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
       className={classes}
       style={{ zIndex }}
       aria-hidden={false}
+      role="dialog"
     >
       <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
       <div className={classnames('modal__content__wrapper', { 'modal--centered': centered })}>

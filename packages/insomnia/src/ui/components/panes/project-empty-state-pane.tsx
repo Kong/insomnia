@@ -1,22 +1,20 @@
 import React, { FC } from 'react';
 import styled from 'styled-components';
 
-import { superFaint, ultraFaint } from '../../css/css-in-js';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { Button } from '../themed-button';
 
 const Wrapper = styled.div({
-  maxHeight: '100%',
-  height: 'calc(100% - 4 * var(--padding-xl))',
+  height: '100%',
+  boxSizing: 'border-box',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: 'var(--padding-xl) var(--padding-xl)',
   textAlign: 'center',
-  ...superFaint,
+  opacity: 'calc(var(--opacity-subtle) * 0.8)',
 });
 
 const Divider = styled.div({
@@ -32,7 +30,7 @@ const Divider = styled.div({
     height: '1px',
     backgroundColor: 'var(--color-font)',
     flexGrow: '1',
-    ...ultraFaint,
+    opacity: 'calc(var(--opacity-subtle) * 0.8)',
     marginRight: '1rem',
   },
   '&::after': {
@@ -40,7 +38,7 @@ const Divider = styled.div({
     height: '1px',
     backgroundColor: 'var(--color-font)',
     flexGrow: '1',
-    ...ultraFaint,
+    opacity: 'calc(var(--opacity-subtle) * 0.8)',
     marginLeft: '1rem',
   },
 });
@@ -58,7 +56,7 @@ interface Props {
   importFromGit: () => void;
 }
 
-export const WrapperHomeEmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, importFromFile, importFromURL, importFromClipboard, importFromGit }) => {
+export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, importFromFile, importFromURL, importFromClipboard, importFromGit }) => {
   return (
     <Wrapper>
       <Title>This is an empty project, to get started create your first resource:</Title>

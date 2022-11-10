@@ -22,13 +22,12 @@ import { ErrorBoundary } from '../components/error-boundary';
 import { ListGroup, UnitTestItem, UnitTestResultItem } from '../components/list-group';
 import { showAlert, showModal, showPrompt } from '../components/modals';
 import { SelectModal } from '../components/modals/select-modal';
-import { PageLayout } from '../components/page-layout';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import type { Child } from '../components/sidebar/sidebar-children';
+import { SidebarLayout } from '../components/sidebar-layout';
 import { SvgIcon } from '../components/svg-icon';
 import { Button } from '../components/themed-button';
 import { UnitTestEditable } from '../components/unit-test-editable';
-import { WorkspacePageHeader } from '../components/workspace-page-header';
 import { selectActiveEnvironment, selectActiveUnitTestResult, selectActiveUnitTests, selectActiveUnitTestSuite, selectActiveUnitTestSuites, selectActiveWorkspace } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
 
@@ -287,7 +286,7 @@ const WrapperUnitTest: FC = () => {
   }, [_runTests]);
 
   return (
-    <PageLayout
+    <SidebarLayout
       renderPageSidebar={
         <ErrorBoundary showAlert>
           <div className="unit-tests__sidebar">
@@ -405,9 +404,6 @@ const WrapperUnitTest: FC = () => {
       }
       renderPaneTwo={
         <TestRunStatus testsRunning={testsRunning} resultsError={resultsError} />
-      }
-      renderPageHeader={
-        <WorkspacePageHeader />
       }
     />
   );

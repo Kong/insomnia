@@ -76,11 +76,16 @@ export function update(project: Project, patch: Partial<Project>) {
 
 export async function all() {
   const projects = await db.all<Project>(type);
-
-  if (!projects.find(c => c._id === DEFAULT_PROJECT_ID)) {
-    await create({ _id: DEFAULT_PROJECT_ID, name: getProductName(), remoteId: null });
-    return db.all<Project>(type);
-  }
-
   return projects;
+}
+
+export async function seed() {
+  const defaultProject = await getById(DEFAULT_PROJECT_ID);
+  if (!defaultProject) {
+    try {
+      await create({ _id: DEFAULT_PROJECT_ID, name: getProductName(), remoteId: null });
+    } catch (err) {
+      console.warn('Failed to create default project. It probably already exists', err);
+    }
+  }
 }

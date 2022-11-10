@@ -15,9 +15,8 @@ import { CodeEditor, CodeEditorHandle } from '../components/codemirror/code-edit
 import { DesignEmptyState } from '../components/design-empty-state';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Notice, NoticeTable } from '../components/notice-table';
-import { PageLayout } from '../components/page-layout';
+import { SidebarLayout } from '../components/sidebar-layout';
 import { SpecEditorSidebar } from '../components/spec-editor/spec-editor-sidebar';
-import { WorkspacePageHeader } from '../components/workspace-page-header';
 import { superFaint } from '../css/css-in-js';
 import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '../hooks/use-vcs-version';
 import { selectActiveApiSpec } from '../redux/selectors';
@@ -239,10 +238,7 @@ export const WrapperDesign: FC = () => {
   const editor = createRef<CodeEditorHandle>();
 
   return (
-    <PageLayout
-      renderPageHeader={(
-        <WorkspacePageHeader />
-      )}
+    <SidebarLayout
       renderPaneOne={<RenderEditor editor={editor} />}
       renderPaneTwo={<RenderPreview />}
       renderPageSidebar={<RenderPageSidebar editor={editor} />}

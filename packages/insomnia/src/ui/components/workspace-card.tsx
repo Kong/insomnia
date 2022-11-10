@@ -1,5 +1,6 @@
 import React, { Fragment } from 'react';
 import { FC } from 'react';
+import styled from 'styled-components';
 
 import {
   ACTIVITY_DEBUG,
@@ -15,6 +16,23 @@ import { Highlight } from './base/highlight';
 import { Card } from './card';
 import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
 import { TimeFromNow } from './time-from-now';
+
+const Label = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  overflow: 'hidden',
+  gap: 'var(--padding-sm)',
+  height: '1.5rem',
+  paddingRight: 'var(--padding-sm)',
+});
+
+const LabelIcon = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '0.2rem',
+  height: '1rem',
+});
 
 export interface WorkspaceCardProps {
   apiSpec: ApiSpec;
@@ -148,10 +166,15 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
       }
       tagLabel={
         label ? (
-          <>
-            <span className="margin-right-xs">{labelIcon}</span>
+          <Label>
+            <LabelIcon
+              style={{
+                color: isDesign(workspace) ? 'var(--color-font-info)' : 'var(--color-font-surprise)',
+                backgroundColor: isDesign(workspace) ? 'var(--color-info)' : 'var(--color-surprise)',
+              }}
+            >{labelIcon}</LabelIcon>
             <Highlight search={filter} text={label} />
-          </>
+          </Label>
         ) : undefined
       }
       docLog={log}

@@ -7,13 +7,14 @@ import { fsClient } from '../../sync/git/fs-client';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR, GitVCS } from '../../sync/git/git-vcs';
 import { NeDBClient } from '../../sync/git/ne-db-client';
 import { routableFSClient } from '../../sync/git/routable-fs-client';
+
 export function useGitVCS({
   workspaceId,
   projectId,
   gitRepository,
 }: {
   workspaceId?: string;
-  projectId: string;
+  projectId?: string;
   gitRepository?: GitRepository | null;
 }) {
   const gitVCSInstanceRef = useRef<GitVCS | null>(null);
@@ -32,7 +33,7 @@ export function useGitVCS({
     }
 
     async function update() {
-      if (workspaceId && gitRepository && gitVCSInstanceRef.current) {
+      if (workspaceId && projectId && gitRepository && gitVCSInstanceRef.current) {
         // Create FS client
         const baseDir = path.join(
           process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),

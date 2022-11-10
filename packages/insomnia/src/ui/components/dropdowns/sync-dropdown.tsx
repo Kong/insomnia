@@ -33,6 +33,7 @@ import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncDeleteModal } from '../modals/sync-delete-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
 import { SyncStagingModal } from '../modals/sync-staging-modal';
+import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
 
 // TODO: handle refetching logic in one place not here in a component
@@ -371,10 +372,19 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
 
   return (
     <div>
-      <Dropdown className="wide tall" onOpen={() => refreshVCSAndRefetchRemote()}>
+      <Dropdown
+        style={{
+          marginLeft: 'var(--padding-md)',
+        }}
+        className="wide tall"
+        onOpen={() => refreshVCSAndRefetchRemote()}
+      >
         {currentBranch === null ?
           <Fragment>Sync</Fragment> :
           <DropdownButton
+            buttonClass={Button}
+            // @ts-expect-error -- TSCONVERSION
+            size="small"
             className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
             disabled={initializing}
           >

@@ -19,7 +19,6 @@ const Header = styled.div({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  padding: 'var(--padding-lg)',
   borderBottom: '1px solid var(--hl-sm)',
 });
 
@@ -37,8 +36,6 @@ const SubHeader = styled.div({
 });
 
 const InsomniaLogo = styled.div({
-  top: '-1.75rem',
-  position: 'absolute',
   width: '100%',
   textAlign: 'center',
   img: {
@@ -51,7 +48,7 @@ const Body = styled.div({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  padding: 'var(--padding-sm) var(--padding-lg) var(--padding-md)',
+  padding: 'var(--padding-sm) 0 var(--padding-md)',
 });
 
 const DemonstrationChart = styled.img({
@@ -62,8 +59,6 @@ const DemonstrationChart = styled.img({
 const ActionButtons = styled.div({
   display: 'flex',
   flexDirection: 'column',
-  marginBottom: 'var(--padding-md)',
-  padding: '0 var(--padding-lg)',
   '& .btn--super-compact': {
     textDecoration: 'underline',
     color: 'var(--hl-xl)',
@@ -104,11 +99,11 @@ export const AnalyticsModal: FC = () => {
   return (
     <Modal centered noEscape skinny ref={ref}>
       <Wrapper>
-        <InsomniaLogo>
-          <img src={coreLogo} alt="Kong" />
-        </InsomniaLogo>
-
         <Header>
+          <InsomniaLogo>
+            <img src={coreLogo} alt="Kong" />
+          </InsomniaLogo>
+
           <Headline>Welcome to {getProductName()}</Headline>
           <SubHeader>{getAppSynopsis()}</SubHeader>
         </Header>
@@ -120,28 +115,27 @@ export const AnalyticsModal: FC = () => {
 
           <p>Help us understand how <strong>you</strong> use {getProductName()} so we can make it better.</p>
         </Body>
-
-        <ActionButtons>
-          <Button
-            key="enable"
-            bg="surprise"
-            radius="3px"
-            size="medium"
-            variant="contained"
-            onClick={onEnable}
-          >
-            Share Usage Analytics
-          </Button>
-
-          <button
-            key="disable"
-            className="btn btn--super-compact"
-            onClick={onDisable}
-          >
-            Don't share usage analytics
-          </button>
-        </ActionButtons>
       </Wrapper>
+      <ActionButtons>
+        <Button
+          key="enable"
+          bg="surprise"
+          radius="3px"
+          size="medium"
+          variant="contained"
+          onClick={onEnable}
+        >
+          Share Usage Analytics
+        </Button>
+
+        <button
+          key="disable"
+          className="btn btn--super-compact"
+          onClick={onDisable}
+        >
+          Don't share usage analytics
+        </button>
+      </ActionButtons>
     </Modal>
   );
 };

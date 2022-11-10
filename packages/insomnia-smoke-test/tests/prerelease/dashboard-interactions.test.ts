@@ -9,40 +9,47 @@ test.describe('Dashboard', async () => {
     test('Can create, rename and delete new project', async ({ page }) => {
       // Return to Dashboard
       await page.click('[data-testid="project"] >> text=Insomnia');
+      await expect(page.locator('.app')).toContainText('All Files (1)');
+      await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
-      // Open projects dropdown
-      await page.click('[data-testid="project"] >> text=Insomnia');
-      await page.click('button:has-text("Create new project")');
+      // Create new project
+      await page.click('[data-testid="CreateProjectButton"]');
       await page.locator('text=Create').nth(1).click();
 
       // Check empty project
       await expect(page.locator('.app')).toContainText('This is an empty project, to get started create your first resource:');
 
       // Rename Project
-      await page.click('[data-testid="project"] >> text=My Project');
+      await page.click('[data-testid="ProjectDropDown-My-Project"] button');
       await page.click('button:has-text("Project Settings")');
       await page.click('[placeholder="My Project"]');
       await page.locator('[placeholder="My Project"]').fill('My Project123');
 
       // Close project settings modal
       await page.locator('.app').press('Escape');
+      await expect(page.locator('.app')).toContainText('My Project123');
 
       // Delete project
-      await page.click('[data-testid="project"] >> text=My Project123');
+      await page.click('[data-testid="ProjectDropDown-My-Project123"] button');
       await page.click('button:has-text("Project Settings")');
-      await page.click('text=Delete');
+      // Click text=NameActions Delete >> button
+      await page.click('text=NameActions Delete >> button');
       await page.click('button:has-text("Click to confirm")');
-      await page.click('button:has-text("Delete")');
 
       // After deleting project, return to default Insomnia Dashboard
-      await expect(page.locator('[data-testid="project"]')).toContainText('Insomnia');
-      await expect(page.locator('.app')).toContainText('Dashboard');
+      await expect(page.locator('.app')).toContainText('Insomnia');
+      await expect(page.locator('.app')).not.toContainText('My Project123');
       await expect(page.locator('.app')).toContainText('New Document');
+      await expect(page.locator('.app')).toContainText('All Files (1)');
+      await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
     });
   });
   test.describe('Interactions', async () => { // Not sure about the name here
     test('Can filter through multiple collections', async ({ app, page }) => {
-      await page.click('[data-testid="project"]');
+      await page.click('[data-testid="project"] >> text=Insomnia');
+      await expect(page.locator('.app')).toContainText('All Files (1)');
+      await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
+
       await page.click('text=Create');
       const text = await loadFixture('multiple-workspaces.yaml');
       await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
@@ -74,14 +81,17 @@ test.describe('Dashboard', async () => {
     });
 
     test('Can create, rename and delete a document', async ({ page }) => {
-      await page.click('[data-testid="project"]');
+      await page.click('[data-testid="project"] >> text=Insomnia');
+      await expect(page.locator('.app')).toContainText('All Files (1)');
+      await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
+
       // Create new document
       await page.click('text=Create');
       await page.click('button:has-text("Design Document")');
       await page.locator('text=Create').nth(1).click();
 
       // Return to dashboard
-      await page.click('[data-testid="project"]');
+      await page.click('[data-testid="project"] >> text=Insomnia');
       await expect(page.locator('.app')).toContainText('my-spec.yaml');
 
       // Rename document
@@ -95,10 +105,10 @@ test.describe('Dashboard', async () => {
       await page.click('text=Documenttest123just now >> button');
       await page.locator('button:has-text("Duplicate")').first().click();
       await page.locator('input[name="name"]').fill('test123-duplicate');
-      await page.click('#root button:has-text("Duplicate")');
+      await page.click('[role="dialog"] button:has-text("Duplicate")');
 
       // Return to dashboard
-      await page.click('[data-testid="project"]');
+      await page.click('[data-testid="project"] >> text=Insomnia');
       await expect(page.locator('.app')).toContainText('test123-duplicate');
 
       const workspaceCards = page.locator('.card-badge');
@@ -112,14 +122,17 @@ test.describe('Dashboard', async () => {
     });
 
     test('Can create, rename and delete a collection', async ({ page }) => {
-      await page.click('[data-testid="project"]');
+      await page.click('[data-testid="project"] >> text=Insomnia');
+      await expect(page.locator('.app')).toContainText('All Files (1)');
+      await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
+
       // Create new collection
       await page.click('text=Create');
       await page.click('button:has-text("Request Collection")');
       await page.locator('text=Create').nth(1).click();
 
       // Return to dashboard
-      await page.click('[data-testid="project"]');
+      await page.click('[data-testid="project"] >> text=Insomnia');
       await expect(page.locator('.app')).toContainText('My Collection');
 
       // Rename collection
@@ -133,10 +146,10 @@ test.describe('Dashboard', async () => {
       await page.click('text=Collectiontest123just now >> button');
       await page.locator('button:has-text("Duplicate")').first().click();
       await page.locator('input[name="name"]').fill('test123-duplicate');
-      await page.click('#root button:has-text("Duplicate")');
+      await page.click('[role="dialog"] button:has-text("Duplicate")');
 
       // Return to dashboard
-      await page.click('[data-testid="project"]');
+      await page.click('[data-testid="project"] >> text=Insomnia');
       await expect(page.locator('.app')).toContainText('test123-duplicate');
       const workspaceCards = page.locator('.card-badge');
       await expect(workspaceCards).toHaveCount(3);

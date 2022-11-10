@@ -5,17 +5,15 @@ import styled from 'styled-components';
 
 import coreLogo from '../images/insomnia-logo.svg';
 import { selectIsLoggedIn } from '../redux/selectors';
-import { Breadcrumb, BreadcrumbProps } from './breadcrumb';
-import { SettingsButton } from './buttons/settings-button';
-import { AccountDropdownButton } from './dropdowns/account-dropdown/account-dropdown';
 import { GitHubStarsButton } from './github-stars-button';
 
 const LogoWrapper = styled.div({
   display: 'flex',
+  width: '50px',
+  justifyContent: 'center',
 });
 
 export interface AppHeaderProps {
-  breadcrumbProps: BreadcrumbProps;
   gridCenter?: ReactNode;
   gridRight?: ReactNode;
 }
@@ -28,9 +26,10 @@ export interface HeaderProps {
 }
 
 const StyledHeader = styled.div({
+  gridArea: 'Header',
   borderBottom: '1px solid var(--hl-md)',
-  padding: 'var(--padding-xxs) var(--padding-sm)',
   display: 'grid',
+  padding: 'var(--padding-xs) 0',
   gridTemplateColumns: '2fr 1.5fr 2fr',
   gridTemplateRows: '1fr',
   gridTemplateAreas: "'header_left header_center header_right'",
@@ -39,6 +38,7 @@ const StyledHeader = styled.div({
     textAlign: 'left',
     display: 'flex',
     alignItems: 'center',
+    gap: 'var(--padding-sm)',
   },
   '.header_center': {
     gridArea: 'header_center',
@@ -72,7 +72,6 @@ const Header: FC<HeaderProps> = ({ className, gridLeft, gridCenter, gridRight })
 Header.displayName = 'Header';
 
 export const AppHeader: FC<AppHeaderProps> = ({
-  breadcrumbProps,
   gridCenter,
   gridRight,
 }) => {
@@ -84,17 +83,14 @@ export const AppHeader: FC<AppHeaderProps> = ({
         <Fragment>
           <LogoWrapper>
             <img style={{ zIndex: 1 }} src={coreLogo} alt="Insomnia" width="28" height="28" />
-            { !isLoggedIn ? <GitHubStarsButton /> : null }
           </LogoWrapper>
-          <Breadcrumb {...breadcrumbProps} />
+          {!isLoggedIn ? <GitHubStarsButton /> : null}
         </Fragment>
       )}
       gridCenter={gridCenter}
       gridRight={
         <Fragment>
           {gridRight}
-          <SettingsButton />
-          <AccountDropdownButton />
         </Fragment>
       }
     />

@@ -12,15 +12,7 @@ module.exports = {
   name: 'default',
   displayName: 'Core Default',
   theme: {
-    background: {
-      default: '#555',
-      success: '#59a210',
-      notice: '#ae9602',
-      warning: '#d07502',
-      danger: '#d04444',
-      surprise: '#7d69cb',
-      info: '#1c90b4',
-    },
+    background: sidebarBackground,
     foreground: {
       default: '#eee',
     },

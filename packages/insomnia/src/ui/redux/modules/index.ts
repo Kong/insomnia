@@ -28,11 +28,6 @@ export async function init(): Promise<Store> {
   fetch.setup(getClientString(), getApiBaseURL());
   fetch.onCommand(newCommand);
 
-  for (const action of global.init()) {
-    // @ts-expect-error needs work for redux-thunk
-    store.dispatch(action);
-  }
-
   return store;
 }
 

@@ -1,6 +1,6 @@
-import classnames from 'classnames';
 import React, { FC, forwardRef, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import styled from 'styled-components';
 
 import { COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS } from '../../common/constants';
 import { debounce } from '../../common/misc';
@@ -9,6 +9,167 @@ import { selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
 import { selectPaneHeight, selectPaneWidth, selectSidebarWidth } from '../redux/sidebar-selectors';
 import { ErrorBoundary } from './error-boundary';
 import { Sidebar } from './sidebar/sidebar';
+
+const verticalStyles = {
+  '.sidebar': {
+    gridColumnStart: '2',
+    gridRowStart: '1',
+    gridRowEnd: 'span 3',
+    minWidth: '0',
+  },
+  '.pane-one': {
+    gridColumnStart: '4',
+    gridColumnEnd: 'span 3',
+    gridRowStart: '1',
+    gridRowEnd: 'span 1',
+  },
+
+  '.pane-two': {
+    gridColumnStart: '4',
+    gridColumnEnd: 'span 3',
+    gridRowStart: '3',
+    gridRowEnd: 'span 1',
+    borderTop: '1px solid var(--hl-md)',
+  },
+
+  '.drag--pane-horizontal': {
+    display: 'none',
+  },
+
+  '.drag--pane-vertical': {
+    display: 'block !important',
+    gridColumnStart: '4',
+    gridColumnEnd: 'span 3',
+    gridRowStart: '2',
+    gridRowEnd: 'span 1',
+
+    '& > *': {
+      cursor: 'ns-resize',
+      height: 'var(--drag-width)',
+      width: '100%',
+      left: '0',
+      // More to the right so it doesn't cover scroll bars
+      top: 'calc(var(--drag-width) / 2 * -1)',
+    },
+  },
+};
+
+const LayoutGrid = styled.div<{orientation: 'vertical' | 'horizontal'}>(props => ({
+  backgroundColor: 'var(--color-bg)',
+  boxSizing: 'border-box',
+  color: 'var(--color-font)',
+  display: 'grid',
+  overflow: 'hidden',
+  '.filter-icon': {
+    float: 'right',
+    marginRight: 'var(--padding-sm)',
+    marginTop: '-22px',
+    position: 'relative',
+    zIndex: '1',
+    color: 'var(--hl-xl)',
+  },
+
+  '.btn-create': {
+    padding: 'var(--padding-sm) var(--padding-md)',
+  },
+
+  '.btn-sync': {
+    textAlign: 'center',
+    borderRadius: 'var(--radius-md)',
+    fontSize: 'var(--font-size-sm)',
+    height: 'var(--line-height-xs)',
+    display: 'flex',
+    flexDirection: 'row',
+    WebkitBoxAlign: 'center',
+    alignItems: 'center',
+    paddingLeft: 'var(--padding-md)',
+    paddingRight: 'var(--padding-md)',
+
+    color: 'var(--color-font-surprise)',
+    backgroundColor: 'var(--color-surprise)',
+    transition: 'none',
+
+    '&:hover': {
+      filter: 'brightness(0.8)',
+    },
+  },
+
+  height: '100%',
+  width: '100%',
+
+  '.sidebar': {
+    gridColumnStart: '2',
+    gridRowStart: '1',
+    gridRowEnd: 'span 3',
+    minWidth: '0',
+  },
+
+  '.drag': {
+    gridRowStart: '1',
+    gridRowEnd: 'span 3',
+    position: 'relative',
+
+    '&.drag--pane-vertical': {
+      display: 'none',
+    },
+
+    '& > *': {
+      // background-color: rgba(255, 0, 0, 0.5);
+      cursor: 'ew-resize',
+      position: 'absolute',
+      height: '100%',
+      zIndex: '9',
+      width: 'var(--drag-width)',
+      top: '0',
+      // More to the right so it doesn't cover scroll bars
+      left: 'calc((var(--drag-width) / 8) * -1)',
+    },
+  },
+
+  '.pane-one, .pane-two': {
+    minWidth: '0',
+    maxHeight: '100%',
+    borderLeft: '1px solid var(--hl-md)',
+    background: 'var(--color-bg)',
+    color: 'var(--color-font)',
+  },
+
+  '.pane-one': {
+    gridColumnStart: '4',
+    gridRowStart: '1',
+    gridRowEnd: 'span 3',
+  },
+
+  '.pane-two': {
+    gridColumnStart: '6',
+    gridRowStart: '1',
+    gridRowEnd: 'span 3',
+  },
+
+  '.migration': {
+    gridColumnStart: '1',
+    gridColumnEnd: 'span 6',
+    gridRowStart: '1',
+    gridRowEnd: 'span 3',
+  },
+
+  '.drag--sidebar': {
+    gridColumnStart: '3',
+    zIndex: '999',
+    gridColumnEnd: 'span 1',
+  },
+
+  '.drag--pane-horizontal': {
+    gridColumnStart: '5',
+    gridColumnEnd: 'span 1',
+  },
+
+  '@media (max-width: 880px)': {
+    ...verticalStyles,
+  },
+
+  ...props.orientation === 'vertical' && verticalStyles,
+}));
 
 const Pane = forwardRef<HTMLElement, { position: string; children: ReactNode }>(
   function Pane({ children, position }, ref) {
@@ -22,17 +183,13 @@ const Pane = forwardRef<HTMLElement, { position: string; children: ReactNode }>(
 
 interface Props {
   renderPageSidebar?: ReactNode;
-  renderPageHeader?: ReactNode;
-  renderPageBody?: ReactNode;
   renderPaneOne?: ReactNode;
   renderPaneTwo?: ReactNode;
 }
 
-export const PageLayout: FC<Props> = ({
+export const SidebarLayout: FC<Props> = ({
   renderPaneOne,
   renderPaneTwo,
-  renderPageBody,
-  renderPageHeader,
   renderPageSidebar,
 }) => {
   const settings = useSelector(selectSettings);
@@ -192,26 +349,22 @@ export const PageLayout: FC<Props> = ({
 
   const realSidebarWidth = activeWorkspaceMeta?.sidebarHidden ? 0 : sidebarWidth;
   const gridRows = renderPaneTwo
-    ? `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
-    : 'auto 1fr';
+    ? `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
+    : '1fr';
   const gridColumns =
     `auto ${realSidebarWidth}rem 0 ` +
     `${renderPaneTwo ? `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)` : '1fr'}`;
+
   return (
-    <div
+    <LayoutGrid
       key="wrapper"
       id="wrapper"
-      className={classnames('wrapper', {
-        'wrapper--vertical': settings.forceVerticalLayout,
-      })}
+      orientation={settings.forceVerticalLayout ? 'vertical' : 'horizontal'}
       style={{
         gridTemplateColumns: gridColumns,
         gridTemplateRows: gridRows,
-        boxSizing: 'border-box',
       }}
     >
-      {renderPageHeader && <ErrorBoundary showAlert>{renderPageHeader}</ErrorBoundary>}
-
       {renderPageSidebar && (
         <ErrorBoundary showAlert>
           <Sidebar
@@ -230,50 +383,44 @@ export const PageLayout: FC<Props> = ({
           </div>
         </ErrorBoundary>
       )}
-      {renderPageBody ? (
-        <ErrorBoundary showAlert>{renderPageBody}</ErrorBoundary>
-      ) : (
+      {renderPaneOne && (
+        <ErrorBoundary showAlert>
+          <Pane
+            position="one"
+            ref={requestPaneRef}
+          >
+            {renderPaneOne}
+          </Pane>
+        </ErrorBoundary>
+      )}
+      {renderPaneTwo && (
         <>
-          {renderPaneOne && (
-            <ErrorBoundary showAlert>
-              <Pane
-                position="one"
-                ref={requestPaneRef}
-              >
-                {renderPaneOne}
-              </Pane>
-            </ErrorBoundary>
-          )}
-          {renderPaneTwo && (
-            <>
-              <div className="drag drag--pane-horizontal">
-                <div
-                  onMouseDown={handleStartDragPaneHorizontal}
-                  onDoubleClick={handleResetDragPaneHorizontal}
-                />
-              </div>
+          <div className="drag drag--pane-horizontal">
+            <div
+              onMouseDown={handleStartDragPaneHorizontal}
+              onDoubleClick={handleResetDragPaneHorizontal}
+            />
+          </div>
 
-              <div className="drag drag--pane-vertical">
-                <div
-                  onMouseDown={handleStartDragPaneVertical}
-                  onDoubleClick={handleResetDragPaneVertical}
-                />
-              </div>
+          <div className="drag drag--pane-vertical">
+            <div
+              onMouseDown={handleStartDragPaneVertical}
+              onDoubleClick={handleResetDragPaneVertical}
+            />
+          </div>
 
-              <ErrorBoundary showAlert>
-                <Pane
-                  position="two"
-                  ref={responsePaneRef}
-                >
-                  {renderPaneTwo}
-                </Pane>
-              </ErrorBoundary>
-            </>
-          )}
+          <ErrorBoundary showAlert>
+            <Pane
+              position="two"
+              ref={responsePaneRef}
+            >
+              {renderPaneTwo}
+            </Pane>
+          </ErrorBoundary>
         </>
       )}
       {/* Block all mouse activity by showing an overlay while dragging */}
       {showDragOverlay ? <div className="blocker-overlay" /> : null}
-    </div>
+    </LayoutGrid>
   );
 };

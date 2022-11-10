@@ -7,18 +7,22 @@ import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
+import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isCollection } from '../../models/workspace';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';
+
 // Project
-export const createNewProjectAction: ActionFunction = async ({ request }) => {
+export const createNewProjectAction: ActionFunction = async ({ request, params }) => {
+  const { organizationId } = params;
+  invariant(organizationId, 'Organization ID is required');
   const formData = await request.formData();
   const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
   const project = await models.project.create({ name });
   trackSegmentEvent(SegmentEvent.projectLocalCreate);
-  return redirect(`/project/${project._id}`);
+  return redirect(`/organization/${organizationId}/project/${project._id}`);
 };
 
 export const renameProjectAction: ActionFunction = async ({
@@ -31,7 +35,7 @@ export const renameProjectAction: ActionFunction = async ({
   invariant(typeof name === 'string', 'Name is required');
 
   const { projectId } = params;
-  invariant(typeof projectId === 'string', 'Project ID is required');
+  invariant(projectId, 'Project ID is required');
 
   const project = await models.project.getById(projectId);
 
@@ -46,8 +50,9 @@ export const renameProjectAction: ActionFunction = async ({
 };
 
 export const deleteProjectAction: ActionFunction = async ({ params }) => {
-  const { projectId } = params;
-  invariant(typeof projectId === 'string', 'Project ID is required');
+  const { organizationId, projectId } = params;
+  invariant(organizationId, 'Organization ID is required');
+  invariant(projectId, 'Project ID is required');
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
 
@@ -55,7 +60,8 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   await models.project.remove(project);
 
   trackSegmentEvent(SegmentEvent.projectLocalDelete);
-  return redirect(`/project/${DEFAULT_PROJECT_ID}`);
+
+  return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`);
 };
 
 // Workspace
@@ -63,9 +69,9 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   params,
   request,
 }) => {
-  const { projectId } = params;
-
-  invariant(typeof projectId === 'string', 'Project ID is required');
+  const { organizationId, projectId } = params;
+  invariant(organizationId, 'Organization ID is required');
+  invariant(projectId, 'Project ID is required');
 
   const project = await models.project.getById(projectId);
 
@@ -107,7 +113,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   );
 
   return redirect(
-    `/project/${projectId}/workspace/${workspace._id}/${
+    `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${
       workspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
     }`
   );
@@ -117,7 +123,7 @@ export const deleteWorkspaceAction: ActionFunction = async ({
   params,
   request,
 }) => {
-  const { projectId } = params;
+  const { organizationId, projectId } = params;
   invariant(projectId, 'projectId is required');
 
   const project = await models.project.getById(projectId);
@@ -134,10 +140,24 @@ export const deleteWorkspaceAction: ActionFunction = async ({
   await models.stats.incrementDeletedRequestsForDescendents(workspace);
   await models.workspace.remove(workspace);
 
-  return redirect(`/project/${projectId}`);
+  try {
+    const vcs = getVCS();
+    if (vcs) {
+      const backendProject = await vcs._getBackendProjectByRootDocument(workspace._id);
+      await vcs._removeProject(backendProject);
+
+      console.log({ projectsLOCAL: await vcs.localBackendProjects() });
+    }
+  } catch (err) {
+    console.warn('Failed to remove project from VCS', err);
+  }
+
+  return redirect(`/organization/${organizationId}/project/${projectId}`);
 };
 
-export const duplicateWorkspaceAction: ActionFunction = async ({ request }) => {
+export const duplicateWorkspaceAction: ActionFunction = async ({ request, params }) => {
+  const { organizationId } = params;
+  invariant(organizationId, 'Organization Id is required');
   const formData = await request.formData();
   const projectId = formData.get('projectId');
   invariant(typeof projectId === 'string', 'Project ID is required');
@@ -158,19 +178,24 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request }) => {
     name,
     parentId: projectId,
   });
+
   await models.workspace.ensureChildren(newWorkspace);
 
-  // Mark for sync if logged in and in the expected project
-  const vcs = getVCS();
-  if (session.isLoggedIn() && vcs && isRemoteProject(duplicateToProject)) {
-    await initializeLocalBackendProjectAndMarkForSync({
-      vcs: vcs.newInstance(),
-      workspace: newWorkspace,
-    });
+  try {
+    // Mark for sync if logged in and in the expected project
+    const vcs = getVCS();
+    if (session.isLoggedIn() && vcs && isRemoteProject(duplicateToProject)) {
+      await initializeLocalBackendProjectAndMarkForSync({
+        vcs: vcs.newInstance(),
+        workspace: newWorkspace,
+      });
+    }
+  } catch (e) {
+    console.warn('Failed to initialize local backend project', e);
   }
 
   return redirect(
-    `/project/${projectId}/workspace/${newWorkspace._id}/${
+    `/organization/${organizationId}/project/${projectId}/workspace/${newWorkspace._id}/${
       newWorkspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
     }`
   );
