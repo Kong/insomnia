@@ -105,7 +105,7 @@ test.describe('Dashboard', async () => {
       await page.click('text=Documenttest123just now >> button');
       await page.locator('button:has-text("Duplicate")').first().click();
       await page.locator('input[name="name"]').fill('test123-duplicate');
-      await page.click('#root button:has-text("Duplicate")');
+      await page.click('[role="dialog"] button:has-text("Duplicate")');
 
       // Return to dashboard
       await page.click('[data-testid="project"] >> text=Insomnia');
@@ -146,7 +146,7 @@ test.describe('Dashboard', async () => {
       await page.click('text=Collectiontest123just now >> button');
       await page.locator('button:has-text("Duplicate")').first().click();
       await page.locator('input[name="name"]').fill('test123-duplicate');
-      await page.click('#root button:has-text("Duplicate")');
+      await page.click('[role="dialog"] button:has-text("Duplicate")');
 
       // Return to dashboard
       await page.click('[data-testid="project"] >> text=Insomnia');
