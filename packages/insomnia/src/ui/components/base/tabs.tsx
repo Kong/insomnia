@@ -51,6 +51,10 @@ const StyledTab = styled.div<StyledTabProps>(({ isNested, isSelected }) => ({
     borderLeft: '0 !important',
   },
 
+  '&:focus-visible': {
+    outline: '0',
+  },
+
   '&:focus': isSelected && !isNested ? {
     backgroundColor: 'var(--hl-md)',
   } : {
