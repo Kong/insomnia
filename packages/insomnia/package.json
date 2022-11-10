@@ -86,7 +86,6 @@
     "insomnia-plugin-uuid": "^3.6.1-beta.3",
     "insomnia-testing": "^3.6.1-beta.3",
     "insomnia-url": "^3.6.1-beta.3",
-    "insomnia-xpath": "^3.6.1-beta.3",
     "isomorphic-git": "^1.10.4",
     "js-yaml": "^3.14.1",
     "jshint": "^2.11.1",
@@ -154,6 +153,7 @@
     "@types/uuid": "^8.3.4",
     "@types/vkbeautify": "^0.99.2",
     "@types/ws": "^8.5.3",
+    "@types/xmldom": "0.1.30",
     "@types/yaml": "^1.9.7",
     "@vitejs/plugin-react": "^1.2.0",
     "buffer": "^6.0.3",
@@ -208,6 +208,8 @@
     "vite": "^2.8.6",
     "vite-plugin-commonjs-externals": "^0.1.1",
     "vkbeautify": "^0.99.1",
+    "xmldom": "^0.5.0",
+    "xpath": "0.0.32",
     "ws": "^8.8.1"
   },
   "dev": {

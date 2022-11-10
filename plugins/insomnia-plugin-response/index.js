@@ -1,6 +1,5 @@
 const { JSONPath } = require('jsonpath-plus');
 const iconv = require('iconv-lite');
-const { query: queryXPath } = require('insomnia-xpath');
 
 function isFilterableField(field) {
   return field !== 'raw' && field !== 'url';
@@ -280,3 +279,56 @@ function matchHeader(headers, name) {
 
   return header.value;
 }
+/**
+ * Query an XML blob with XPath
+ */
+const queryXPath = (xml, query) => {
+  const DOMParser = require('xmldom').DOMParser
+  const dom = new DOMParser().parseFromString(xml);
+  let selectedValues = [];
+  if (query === undefined) {
+    throw new Error('Must pass an XPath query.');
+  }
+  try {
+    selectedValues = require('xpath').select(query, dom);
+  } catch (err) {
+    throw new Error(`Invalid XPath query: ${query}`);
+  }
+  const output = [];
+  // Functions return plain strings
+  if (typeof selectedValues === 'string') {
+    output.push({
+      outer: selectedValues,
+      inner: selectedValues,
+    });
+  } else {
+    for (const selectedValue of selectedValues || []) {
+      switch (selectedValue.constructor.name) {
+        case 'Attr':
+          output.push({
+            outer: selectedValue.toString().trim(),
+            inner: selectedValue.nodeValue,
+          });
+          break;
+
+        case 'Element':
+          output.push({
+            outer: selectedValue.toString().trim(),
+            inner: selectedValue.childNodes.toString(),
+          });
+          break;
+
+        case 'Text':
+          output.push({
+            outer: selectedValue.toString().trim(),
+            inner: selectedValue.toString().trim(),
+          });
+          break;
+
+        default:
+          break;
+      }
+    }
+  }
+  return output;
+};
