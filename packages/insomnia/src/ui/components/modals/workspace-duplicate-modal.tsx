@@ -31,11 +31,8 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
         <ModalHeader>{`Duplicate ${workspace && getWorkspaceLabel(workspace).singular}`}</ModalHeader>
         <ModalBody className="wide">
           <Form
-            onSubmit={() => {
-              modalRef.current?.hide();
-            }}
-            method='post'
             action={`/organization/${organizationId}/project/${workspace.parentId}/workspace/${workspace._id}/duplicate`}
+            method='post'
             id="workspace-duplicate-form"
             className="wide pad"
           >
