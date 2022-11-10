@@ -44,7 +44,7 @@ export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginMo
     session.onLoginLogout(() => {
       modalRef.current?.hide();
     });
-  });
+  }, []);
 
   useImperativeHandle(ref, () => ({
     hide: () => {

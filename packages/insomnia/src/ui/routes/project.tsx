@@ -683,7 +683,7 @@ const ProjectRoute: FC = () => {
                     }}
                   />
                   {isRemoteProject(activeProject) && (
-                    <RemoteWorkspacesDropdown project={activeProject} />
+                    <RemoteWorkspacesDropdown key={activeProject._id} project={activeProject} />
                   )}
                   <Dropdown>
                     <DropdownButton buttonClass={CreateButton}>

@@ -1,9 +1,9 @@
-import React, { FC, Fragment } from 'react';
+import React, { FC, Fragment, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { LoaderFunction, Outlet, useNavigate, useParams } from 'react-router-dom';
+import { LoaderFunction, Outlet, useNavigate, useParams, useRevalidator } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { isLoggedIn } from '../../account/session';
+import { isLoggedIn, onLoginLogout } from '../../account/session';
 import { database } from '../../common/database';
 import * as models from '../../models';
 import { defaultOrganization, Organization } from '../../models/organization';
@@ -112,17 +112,27 @@ const WorkspaceNavigation: FC = () => {
     },
   ];
 
+  console.log('activeWorkspace', activeWorkspace, workspaceId);
+
   return (
     <Fragment>
       <Breadcrumb crumbs={crumbs} />
       {isDesign(activeWorkspace) && <ActivityToggle />}
-      {isDesign(activeWorkspace) && gitVCS && <GitSyncDropdown workspace={activeWorkspace} vcs={gitVCS} />}
-      {isCollection(activeWorkspace) && vcs && <SyncDropdown workspace={activeWorkspace} project={activeProject} vcs={vcs} />}
+      {isDesign(activeWorkspace) && gitVCS && <GitSyncDropdown key={workspaceId} workspace={activeWorkspace} vcs={gitVCS} />}
+      {isCollection(activeWorkspace) && vcs && <SyncDropdown key={workspaceId} workspace={activeWorkspace} project={activeProject} vcs={vcs} />}
     </Fragment>
   );
 };
 
 const Root = () => {
+  const { revalidate } = useRevalidator();
+
+  useEffect(() => {
+    onLoginLogout(() => {
+      revalidate();
+    });
+  }, [revalidate]);
+
   return (
     <GrpcProvider>
       <NunjucksEnabledProvider>
