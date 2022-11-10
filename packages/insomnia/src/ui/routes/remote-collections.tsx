@@ -48,11 +48,9 @@ export const remoteCollectionsLoader: LoaderFunction = async ({ params }): Promi
   const { projectId } = params;
   invariant(typeof projectId === 'string', 'Project Id is required');
 
-  const project = await models.project.getById(projectId);
-
-  invariant(project, 'Project not found');
-
   try {
+    const project = await models.project.getById(projectId);
+    invariant(project, 'Project not found');
     const vcs = getVCS();
     invariant(vcs, 'VCS is not defined');
 
