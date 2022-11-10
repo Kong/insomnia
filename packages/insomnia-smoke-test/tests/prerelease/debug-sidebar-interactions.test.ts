@@ -83,8 +83,10 @@ test.describe('Debug-Sidebar', async () => {
       // TODO implement
     });
 
-    test.fixme('Create a new HTTP request', async () => {
-      // TODO implement
+    test('Create a new HTTP request', async ({ page }) => {
+      await page.locator('div:nth-child(3) > .btn').click();
+      await page.locator('button:has-text("HTTP RequestCtrl + N")').first().click();
+      await expect(page.locator('.app')).toContainText('New Request');
     });
   });
 
