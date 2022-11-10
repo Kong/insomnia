@@ -7,7 +7,7 @@ test.describe('Plugins', async () => {
     // Opening settings
     await page.locator('[data-testid="settings-button"]').click();
     // Switching to Plugins tab
-    await page.locator('li[role="tab"]:has-text("Plugins")').click();
+    await page.locator('div[role="tab"]:has-text("Plugins")').click();
 
     // Generate new plugin
     await page.locator('text=Generate New Plugin').click();
