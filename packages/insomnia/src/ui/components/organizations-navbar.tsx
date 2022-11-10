@@ -1,4 +1,4 @@
-import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import { Link, useLoaderData, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -33,8 +33,8 @@ const NavbarList = styled.ul({
 });
 
 const NavbarItem = styled(Link)<{
-  isActive: boolean;
-}>(props => ({
+  $isActive: boolean;
+}>(({ $isActive }) => ({
   padding: 'var(--padding-sm)',
   borderRadius: 'var(--radius-md)',
   width: '27px',
@@ -52,7 +52,7 @@ const NavbarItem = styled(Link)<{
   },
   fontWeight: 'bold',
   textShadow: '0 1px 0 var(--hl-md)',
-  outline: `3px solid ${props.isActive ? 'var(--color-font)' : 'transparent'}`,
+  outline: `3px solid ${$isActive ? 'var(--color-font)' : 'transparent'}`,
 }));
 
 const CreateButton = styled.button({
@@ -123,7 +123,7 @@ export const OrganizationsNav: FC = () => {
   const { organizationId } = useParams() as { organizationId:string };
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
   return (
-    <Fragment>
+    <>
       <Navbar>
         <NavbarList>
           {organizations.map(organization => {
@@ -132,7 +132,7 @@ export const OrganizationsNav: FC = () => {
                 <Tooltip position='right' message={organization.name}>
                   <NavbarItem
                     to={`/organization/${organization._id}`}
-                    isActive={organizationId === organization._id}
+                    $isActive={organizationId === organization._id}
                   >
                     {isDefaultOrganization(organization) ? (<i className='fa fa-home' />) : organization.name.charAt(0).toUpperCase() + organization.name.slice(1).charAt(0).toUpperCase()}
                   </NavbarItem>
@@ -173,6 +173,6 @@ export const OrganizationsNav: FC = () => {
         </NavbarList>
       </Navbar>
       {isSignupModalOpen ? <SignupModal onHide={() => setIsSignupModalOpen(false)} /> : null}
-    </Fragment>
+    </>
   );
 };
