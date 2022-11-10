@@ -1,5 +1,6 @@
 import { ACTIVITY_HOME } from '../common/constants';
-import { DEFAULT_PROJECT_ID } from '../models/project';
+import { database } from '../common/database';
+import { DEFAULT_PROJECT_ID, type } from '../models/project';
 import { RootState } from '../ui/redux/modules';
 import * as entities from '../ui/redux/modules/entities';
 import { GlobalState } from '../ui/redux/modules/global';
@@ -9,6 +10,17 @@ export const reduxStateForTest = async (global: Partial<GlobalState> = {}): Prom
   const hasDefaultProject = allDocs.find(doc => doc._id === DEFAULT_PROJECT_ID);
 
   if (!hasDefaultProject) {
+    const defaultProject = {
+      _id: DEFAULT_PROJECT_ID,
+      type: 'Project',
+      name: 'Default',
+      modified: Date.now(),
+      created: Date.now(),
+      parentId: 'n/a',
+      isPrivate: true,
+    };
+
+    await database.docCreate(type, defaultProject);
     allDocs.push({
       _id: DEFAULT_PROJECT_ID,
       type: 'Project',
