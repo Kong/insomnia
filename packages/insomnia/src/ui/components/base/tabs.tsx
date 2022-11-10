@@ -4,15 +4,6 @@ import { AriaTabListProps, AriaTabPanelProps, useTab, useTabList, useTabPanel } 
 import { Item, ItemProps, TabListState, useTabListState } from 'react-stately';
 import styled from 'styled-components';
 
-type TabItemProps = ItemProps<any>;
-
-interface TabProps {
-  item: Node<TabItemProps>;
-  state: TabListState<TabItemProps>;
-  orientation?: Orientation;
-  isNested?: boolean;
-}
-
 interface StyledTabProps {
   isNested?: boolean;
   isSelected?: boolean;
@@ -31,32 +22,50 @@ const StyledTab = styled.div<StyledTabProps>(({ isNested, isSelected }) => ({
   borderTop: 'none',
   borderLeft: !isNested && isSelected ? '1px solid var(--hl-md)' : 'none',
   borderRight: !isNested && isSelected ? '1px solid var(--hl-md)' : 'none',
-  borderBottom: isNested && isSelected ? '2px solid var(--hl-xl)' : 'none',
+  borderBottom: isNested && isSelected ? '2px solid var(--hl-xl)' : '1px solid var(--hl-md)',
+
+  '&::after': !isSelected ? {
+    content: '" "',
+    position: 'absolute',
+    top: '0',
+    left: '0',
+    right: '0',
+    bottom: '0',
+  } : {},
+
+  '.bubble': {
+    position: 'relative',
+    bottom: '0.4em',
+    fontSize: '0.8em',
+    minWidth: '0.6em',
+    background: 'var(--hl-sm)',
+    padding: '2px',
+    borderRadius: '3px',
+    display: 'inline-block',
+    textAlign: 'center',
+    lineHeight: '0.8em',
+    border: '1px solid var(--hl-xxs)',
+  },
 
   '&:first-child': {
     borderLeft: '0 !important',
   },
 
-  '&:focus': {
+  '&:focus': isSelected ? {
+    backgroundColor: 'var(--hl-md)',
+  } : {
     outline: '0',
   },
+
+  ...isSelected && {
+    border: '1px solid var(--hl-md)',
+    borderBottomColor: 'transparent',
+
+    '*': {
+      color: 'inherit',
+    },
+  },
 }));
-
-const Tab: FC<TabProps> = ({ item, state, isNested }) => {
-  const { key, rendered } = item;
-  const ref = createRef<HTMLDivElement>();
-  const { tabProps, isSelected } = useTab({ key }, state, ref);
-
-  return (
-    <StyledTab {...tabProps} ref={ref} isSelected={isSelected} isNested={isNested}>
-      {rendered}
-    </StyledTab>
-  );
-};
-
-interface TabPanelProps extends AriaTabPanelProps {
-  state: TabListState<TabItemProps>;
-}
 
 const StyledTabPanel = styled.div({
   width: '100%',
@@ -64,21 +73,6 @@ const StyledTabPanel = styled.div({
   position: 'relative',
   boxSizing: 'border-box',
 });
-
-const TabPanel: FC<TabPanelProps> = ({ state, ...props }) => {
-  const ref = createRef<HTMLDivElement>();
-  const { tabPanelProps } = useTabPanel(props, state, ref);
-
-  return (
-    <StyledTabPanel {...tabPanelProps} ref={ref}>
-      {state.selectedItem?.props.children}
-    </StyledTabPanel>
-  );
-};
-
-interface TabsProps extends AriaTabListProps<TabItemProps> {
-  isNested?: boolean;
-}
 
 const StyledTabsContainer = styled.div({
   width: '100%',
@@ -101,7 +95,6 @@ const StyledTabList = styled.div<StyledTabListProps>(({ isNested }) => ({
   boxSizing: 'border-box',
   backgroundColor: 'var(--color-bg)',
   overflow: 'auto',
-  borderBottom: isNested ? 'none' : '1px solid var(--hl-md)',
 
   '&::-webkit-scrollbar': {
     height: 'var(--padding-sm)',
@@ -121,12 +114,64 @@ const StyledTabList = styled.div<StyledTabListProps>(({ isNested }) => ({
   },
 
   '&::after': {
-    content: '',
+    content: '""',
     width: '100%',
     height: 'var(--line-height-sm)',
     borderBottom: isNested ? 'none' : '1px solid var(--hl-md)',
   },
 }));
+
+const StyledPanelContainer = styled.div({
+  width: '100%',
+  height: '100%',
+  position: 'relative',
+  boxSizing: 'border-box',
+  overflow: 'auto',
+
+  '&::-webkit-scrollbar': {
+    display: 'none',
+  },
+});
+
+type TabItemProps = ItemProps<any>;
+
+interface TabProps {
+  item: Node<TabItemProps>;
+  state: TabListState<TabItemProps>;
+  orientation?: Orientation;
+  isNested?: boolean;
+}
+
+const Tab: FC<TabProps> = ({ item, state, isNested }) => {
+  const { key, rendered } = item;
+  const ref = createRef<HTMLDivElement>();
+  const { tabProps, isSelected } = useTab({ key }, state, ref);
+
+  return (
+    <StyledTab {...tabProps} ref={ref} isSelected={isSelected} isNested={isNested}>
+      {rendered}
+    </StyledTab>
+  );
+};
+
+interface TabPanelProps extends AriaTabPanelProps {
+  state: TabListState<TabItemProps>;
+}
+
+const TabPanel: FC<TabPanelProps> = ({ state, ...props }) => {
+  const ref = createRef<HTMLDivElement>();
+  const { tabPanelProps } = useTabPanel(props, state, ref);
+
+  return (
+    <StyledTabPanel {...tabPanelProps} ref={ref}>
+      {state.selectedItem?.props.children}
+    </StyledTabPanel>
+  );
+};
+
+interface TabsProps extends AriaTabListProps<TabItemProps> {
+  isNested?: boolean;
+}
 
 const Tabs: FC<TabsProps> = props => {
   const state = useTabListState(props);
@@ -158,18 +203,6 @@ interface PanelContainerProps {
   className?: string;
   children: ReactNode;
 }
-
-const StyledPanelContainer = styled.div({
-  width: '100%',
-  height: '100%',
-  position: 'relative',
-  boxSizing: 'border-box',
-  overflow: 'auto',
-
-  '&::-webkit-scrollbar': {
-    display: 'none',
-  },
-});
 
 const PanelContainer: FC<PanelContainerProps> = ({ className, children }) => {
   return (<StyledPanelContainer className={className}>{children}</StyledPanelContainer>);
