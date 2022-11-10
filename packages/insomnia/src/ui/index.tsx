@@ -38,6 +38,7 @@ import { ErrorRoute } from './routes/error';
 import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
 import { selectActiveProject } from './redux/selectors';
 import { strings } from '../common/strings';
+import { Store } from 'redux';
 const Project = lazy(() => import('./routes/project'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
 const Debug = lazy(() => import('./routes/debug'));
@@ -205,6 +206,78 @@ router.subscribe(({ location }) => {
   localStorage.setItem('locationHistoryEntry', location.pathname);
 });
 
+function updateReduxNavigationState(store: Store, pathname: string) {
+  let currentActivity;
+  const isActivityHome = matchPath(
+    {
+      path: '/organization/:organizationId/project/:projectId',
+      end: true,
+    },
+    pathname
+  );
+
+  const isActivityDebug = matchPath(
+    {
+      path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_DEBUG}`,
+      end: false,
+    },
+    pathname
+  );
+
+  const isActivityDesign = matchPath(
+    {
+      path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_SPEC}`,
+      end: false,
+    },
+    pathname
+  );
+
+  const isActivityTest = matchPath(
+    {
+      path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_UNIT_TEST}`,
+      end: false,
+    },
+    pathname
+  );
+
+  if (isActivityDebug) {
+    currentActivity = ACTIVITY_DEBUG;
+    store.dispatch(
+      setActiveProject(isActivityDebug?.params.projectId || '')
+    );
+    store.dispatch(
+      setActiveWorkspace(isActivityDebug?.params.workspaceId || '')
+    );
+    store.dispatch(setActiveActivity(ACTIVITY_DEBUG));
+  } else if (isActivityDesign) {
+    currentActivity = ACTIVITY_SPEC;
+    store.dispatch(
+      setActiveProject(isActivityDesign?.params.projectId || '')
+    );
+    store.dispatch(
+      setActiveWorkspace(isActivityDesign?.params.workspaceId || '')
+    );
+    store.dispatch(setActiveActivity(ACTIVITY_SPEC));
+  } else if (isActivityTest) {
+    currentActivity = ACTIVITY_UNIT_TEST;
+    store.dispatch(
+      setActiveProject(isActivityTest?.params.projectId || '')
+    );
+    store.dispatch(
+      setActiveWorkspace(isActivityTest?.params.workspaceId || '')
+    );
+    store.dispatch(setActiveActivity(ACTIVITY_UNIT_TEST));
+  } else {
+    currentActivity = ACTIVITY_HOME;
+    store.dispatch(
+      setActiveProject(isActivityHome?.params.projectId || '')
+    );
+    store.dispatch(setActiveActivity(ACTIVITY_HOME));
+  }
+
+  return currentActivity;
+}
+
 async function renderApp() {
   await database.initClient();
   await models.project.seed();
@@ -221,113 +294,18 @@ async function renderApp() {
 
   // Create Redux store
   const store = await initStore();
-
-  // Create an empty workspace with a request if the app is launched for the first time
-  const stats = await models.stats.get();
-
-  const isFirstLaunch = !(stats.launches > 1);
-
-  if (isFirstLaunch) {
-    const workspace = await models.workspace.create({
-      scope: 'design',
-      name: `New ${strings.document.singular}`,
-      parentId: DEFAULT_PROJECT_ID,
-    });
-
-    const { _id: workspaceId } = workspace;
-
-    await models.workspace.ensureChildren(workspace);
-    const request = await models.request.create({ parentId: workspaceId });
-
-    const unitTestSuite = await models.unitTestSuite.create({
-      parentId: workspaceId,
-      name: 'Example Test Suite',
-    });
-
-    await models.workspaceMeta.updateByParentId(workspaceId, {
-      activeRequestId: request._id,
-      activeActivity: ACTIVITY_DEBUG,
-      activeUnitTestSuiteId: unitTestSuite._id,
-    });
-
-    router.navigate(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}/workspace/${workspaceId}/${ACTIVITY_DEBUG}`);
-  }
-
   // Synchronizes the Redux store with the router history
   // @HACK: This is temporary until we completely remove navigation through Redux
   const synchronizeRouterState = () => {
     let currentActivity = (store.getState() as RootState).global.activeActivity;
     let currentPathname = router.state.location.pathname;
 
+    currentActivity = updateReduxNavigationState(store, router.state.location.pathname);
+
     router.subscribe(({ location }) => {
       if (location.pathname !== currentPathname) {
         currentPathname = location.pathname;
-        const isActivityHome = matchPath(
-          {
-            path: '/organization/:organizationId/project/:projectId',
-            end: true,
-          },
-          location.pathname
-        );
-
-        const isActivityDebug = matchPath(
-          {
-            path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_DEBUG}`,
-            end: false,
-          },
-          location.pathname
-        );
-
-        const isActivityDesign = matchPath(
-          {
-            path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_SPEC}`,
-            end: false,
-          },
-          location.pathname
-        );
-
-        const isActivityTest = matchPath(
-          {
-            path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_UNIT_TEST}`,
-            end: false,
-          },
-          location.pathname
-        );
-
-        if (isActivityDebug) {
-          currentActivity = ACTIVITY_DEBUG;
-          store.dispatch(
-            setActiveProject(isActivityDebug?.params.projectId || '')
-          );
-          store.dispatch(
-            setActiveWorkspace(isActivityDebug?.params.workspaceId || '')
-          );
-          store.dispatch(setActiveActivity(ACTIVITY_DEBUG));
-        } else if (isActivityDesign) {
-          currentActivity = ACTIVITY_SPEC;
-          store.dispatch(
-            setActiveProject(isActivityDesign?.params.projectId || '')
-          );
-          store.dispatch(
-            setActiveWorkspace(isActivityDesign?.params.workspaceId || '')
-          );
-          store.dispatch(setActiveActivity(ACTIVITY_SPEC));
-        } else if (isActivityTest) {
-          currentActivity = ACTIVITY_UNIT_TEST;
-          store.dispatch(
-            setActiveProject(isActivityTest?.params.projectId || '')
-          );
-          store.dispatch(
-            setActiveWorkspace(isActivityTest?.params.workspaceId || '')
-          );
-          store.dispatch(setActiveActivity(ACTIVITY_UNIT_TEST));
-        } else {
-          currentActivity = ACTIVITY_HOME;
-          store.dispatch(
-            setActiveProject(isActivityHome?.params.projectId || '')
-          );
-          store.dispatch(setActiveActivity(ACTIVITY_HOME));
-        }
+        currentActivity = updateReduxNavigationState(store, location.pathname);
       }
     });
 
@@ -362,6 +340,37 @@ async function renderApp() {
   };
 
   synchronizeRouterState();
+  // Create an empty workspace with a request if the app is launched for the first time
+  const stats = await models.stats.get();
+
+  const isFirstLaunch = !(stats.launches > 1);
+
+  if (isFirstLaunch) {
+    const workspace = await models.workspace.create({
+      scope: 'design',
+      name: `New ${strings.document.singular}`,
+      parentId: DEFAULT_PROJECT_ID,
+    });
+
+    const { _id: workspaceId } = workspace;
+
+    await models.workspace.ensureChildren(workspace);
+    const request = await models.request.create({ parentId: workspaceId });
+
+    const unitTestSuite = await models.unitTestSuite.create({
+      parentId: workspaceId,
+      name: 'Example Test Suite',
+    });
+
+    await models.workspaceMeta.updateByParentId(workspaceId, {
+      activeRequestId: request._id,
+      activeActivity: ACTIVITY_DEBUG,
+      activeUnitTestSuiteId: unitTestSuite._id,
+    });
+
+    router.navigate(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}/workspace/${workspaceId}/${ACTIVITY_DEBUG}`);
+  }
+
   const root = document.getElementById('root');
 
   if (!root) {

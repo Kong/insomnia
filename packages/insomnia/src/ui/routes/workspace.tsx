@@ -27,5 +27,4 @@ export const workspaceLoader: LoaderFunction = async ({
   const flushId = await database.bufferChanges();
   await models.workspace.ensureChildren(workspace);
   await database.flushChanges(flushId);
-
 };
