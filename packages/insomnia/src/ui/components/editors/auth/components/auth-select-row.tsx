@@ -20,7 +20,14 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disab
 
   const selectedValue = authentication.hasOwnProperty(property) ? authentication[property] : options[0].value;
 
-  const onChange = useCallback((event: ChangeEvent<HTMLSelectElement>) => patchAuth({ [property]: event.currentTarget.value }), [patchAuth, property]);
+  const onChange = useCallback((event: ChangeEvent<HTMLSelectElement>) => {
+    let updatedValue = event.currentTarget.value;
+    // Convert boolean strings to boolean values for further processing.
+    if (updatedValue === 'true' || updatedValue === 'false') {
+      updatedValue = JSON.parse(updatedValue);
+    }
+    patchAuth({ [property]: updatedValue });
+  }, [patchAuth, property]);
 
   const id = toKebabCase(label);
 
