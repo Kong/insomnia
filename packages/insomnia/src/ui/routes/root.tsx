@@ -112,8 +112,6 @@ const WorkspaceNavigation: FC = () => {
     },
   ];
 
-  console.log('activeWorkspace', activeWorkspace, workspaceId);
-
   return (
     <Fragment>
       <Breadcrumb crumbs={crumbs} />
