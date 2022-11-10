@@ -1,7 +1,6 @@
 import classnames from 'classnames';
 import { clipboard } from 'electron';
 import fs from 'fs';
-import { json as jsonPrettify } from 'insomnia-prettify';
 import { extension as mimeExtension } from 'mime-types';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
@@ -13,6 +12,7 @@ import * as models from '../../../models';
 import type { Request } from '../../../models/request';
 import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/network';
+import { jsonPrettify } from '../../../utils/prettify/json';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveResponse, selectLoadStartTime, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
