@@ -2,6 +2,7 @@ import React, { FC, ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 
 import {
+  AUTH_API_KEY,
   AUTH_ASAP,
   AUTH_AWS_IAM,
   AUTH_BASIC,
@@ -14,6 +15,7 @@ import {
   AUTH_OAUTH_2,
 } from '../../../../common/constants';
 import { selectActiveRequest } from '../../../redux/selectors';
+import { ApiKeyAuth } from './api-key-auth';
 import { AsapAuth } from './asap-auth';
 import { AWSAuth } from './aws-auth';
 import { BasicAuth } from './basic-auth';
@@ -38,6 +40,8 @@ export const AuthWrapper: FC<{ disabled?: boolean }> = ({ disabled = false }) =>
 
   if (type === AUTH_BASIC) {
     authBody = <BasicAuth disabled={disabled} />;
+  } else if (type === AUTH_API_KEY) {
+    authBody = <ApiKeyAuth disabled={disabled} />;
   } else if (type === AUTH_OAUTH_2) {
     authBody = <OAuth2Auth />;
   } else if (type === AUTH_HAWK) {

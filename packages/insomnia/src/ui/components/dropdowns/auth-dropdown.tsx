@@ -19,6 +19,7 @@ import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 
 const defaultTypes: AuthType[] = [
+  'apikey',
   'basic',
   'digest',
   'oauth1',
@@ -36,6 +37,16 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
     // No Auth
     case 'none':
       return {};
+
+    // API Key Authentication
+    case 'apikey':
+      return {
+        type,
+        disabled: oldAuth.disabled || false,
+        key: oldAuth.key || '',
+        value: oldAuth.value || '',
+        addTo: oldAuth.addTo || 'header',
+      };
 
     // HTTP Basic Authentication
     case 'basic':

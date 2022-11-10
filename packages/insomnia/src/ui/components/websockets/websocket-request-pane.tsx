@@ -27,7 +27,7 @@ import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { RenderedQueryString } from '../rendered-query-string';
 import { WebSocketActionBar } from './action-bar';
 
-const supportedAuthTypes: AuthType[] = ['basic', 'bearer'];
+const supportedAuthTypes: AuthType[] = ['apikey', 'basic', 'bearer'];
 
 const SendMessageForm = styled.form({
   width: '100%',

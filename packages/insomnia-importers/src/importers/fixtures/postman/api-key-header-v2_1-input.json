@@ -1,0 +1,49 @@
+{
+	"info": {
+		"_postman_id": "test",
+		"name": "New Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "test"
+	},
+	"item": [
+		{
+			"name": "New Request",
+			"request": {
+				"auth": {
+					"type": "apikey",
+					"apikey": [
+						{
+							"key": "in",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "value",
+							"value": "test",
+							"type": "string"
+						},
+						{
+							"key": "key",
+							"value": "test",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "mockbin.org/request/any",
+					"host": [
+						"mockbin",
+						"org"
+					],
+					"path": [
+						"request",
+						"any"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
