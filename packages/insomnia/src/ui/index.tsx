@@ -37,6 +37,7 @@ import { DEFAULT_PROJECT_ID, isRemoteProject } from '../models/project';
 import { ErrorRoute } from './routes/error';
 import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
 import { selectActiveProject } from './redux/selectors';
+import { strings } from '../common/strings';
 const Project = lazy(() => import('./routes/project'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
 const Debug = lazy(() => import('./routes/debug'));
@@ -104,6 +105,7 @@ const router = createMemoryRouter(
                       children: [
                         {
                           path: ':workspaceId',
+                          loader: async (...args) => (await import('./routes/workspace')).workspaceLoader(...args),
                           children: [
                             {
                               path: `${ACTIVITY_DEBUG}`,
@@ -205,6 +207,7 @@ router.subscribe(({ location }) => {
 
 async function renderApp() {
   await database.initClient();
+  await models.project.seed();
 
   await initPlugins();
 
@@ -218,6 +221,38 @@ async function renderApp() {
 
   // Create Redux store
   const store = await initStore();
+
+  // Create an empty workspace with a request if the app is launched for the first time
+  const stats = await models.stats.get();
+
+  const isFirstLaunch = !(stats.launches > 1);
+
+  if (isFirstLaunch) {
+    const workspace = await models.workspace.create({
+      scope: 'design',
+      name: `New ${strings.document.singular}`,
+      parentId: DEFAULT_PROJECT_ID,
+    });
+
+    const { _id: workspaceId } = workspace;
+
+    await models.workspace.ensureChildren(workspace);
+    const request = await models.request.create({ parentId: workspaceId });
+
+    const unitTestSuite = await models.unitTestSuite.create({
+      parentId: workspaceId,
+      name: 'Example Test Suite',
+    });
+
+    await models.workspaceMeta.updateByParentId(workspaceId, {
+      activeRequestId: request._id,
+      activeActivity: ACTIVITY_DEBUG,
+      activeUnitTestSuiteId: unitTestSuite._id,
+    });
+
+    router.navigate(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}/workspace/${workspaceId}/${ACTIVITY_DEBUG}`);
+  }
+
   // Synchronizes the Redux store with the router history
   // @HACK: This is temporary until we completely remove navigation through Redux
   const synchronizeRouterState = () => {
@@ -301,26 +336,28 @@ async function renderApp() {
       const activity = state.global.activeActivity;
 
       const activeProject = selectActiveProject(state);
-      const organizationId = isRemoteProject(activeProject) ? activeProject._id : DEFAULT_ORGANIZATION_ID;
+      const organizationId = activeProject && isRemoteProject(activeProject) ? activeProject._id : DEFAULT_ORGANIZATION_ID;
 
       if (activity !== currentActivity) {
         currentActivity = activity;
+        const activeProjectId = activeProject ? activeProject._id : DEFAULT_PROJECT_ID;
         if (activity === ACTIVITY_HOME) {
           router.navigate(`/organization/${organizationId}/project/${activeProject._id}`);
         } else if (activity === ACTIVITY_DEBUG) {
           router.navigate(
-            `/organization/${organizationId}/project/${activeProject._id}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_DEBUG}`
+            `/organization/${organizationId}/project/${activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_DEBUG}`
           );
         } else if (activity === ACTIVITY_SPEC) {
           router.navigate(
-            `/organization/${organizationId}/project/${activeProject._id}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_SPEC}`
+            `/organization/${organizationId}/project/${activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_SPEC}`
           );
         } else if (activity === ACTIVITY_UNIT_TEST) {
           router.navigate(
-            `/organization/${organizationId}/project/${activeProject._id}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_UNIT_TEST}`
+            `/organization/${organizationId}/project/${activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_UNIT_TEST}`
           );
         }
       }
+
     });
   };
 

@@ -557,8 +557,3 @@ export const selectActiveActivity = createSelector(
   selectGlobal,
   global => global.activeActivity,
 );
-
-export const selectIsFinishedBooting = createSelector(
-  selectGlobal,
-  global => global.isFinishedBooting,
-);

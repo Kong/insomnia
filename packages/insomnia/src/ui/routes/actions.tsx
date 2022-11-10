@@ -178,15 +178,20 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
     name,
     parentId: projectId,
   });
+
   await models.workspace.ensureChildren(newWorkspace);
 
-  // Mark for sync if logged in and in the expected project
-  const vcs = getVCS();
-  if (session.isLoggedIn() && vcs && isRemoteProject(duplicateToProject)) {
-    await initializeLocalBackendProjectAndMarkForSync({
-      vcs: vcs.newInstance(),
-      workspace: newWorkspace,
-    });
+  try {
+    // Mark for sync if logged in and in the expected project
+    const vcs = getVCS();
+    if (session.isLoggedIn() && vcs && isRemoteProject(duplicateToProject)) {
+      await initializeLocalBackendProjectAndMarkForSync({
+        vcs: vcs.newInstance(),
+        workspace: newWorkspace,
+      });
+    }
+  } catch (e) {
+    console.warn('Failed to initialize local backend project', e);
   }
 
   return redirect(
