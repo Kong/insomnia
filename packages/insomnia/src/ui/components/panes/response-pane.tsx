@@ -151,7 +151,7 @@ export const ResponsePane: FC<Props> = ({
           />
         </PaneHeader>
       )}
-      <Tabs>
+      <Tabs aria-label="Response pane tabs">
         <TabItem
           key="preview"
           title={

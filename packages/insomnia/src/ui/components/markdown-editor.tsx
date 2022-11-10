@@ -72,7 +72,10 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
 
   return (
     <Wrapper className={className}>
-      <Tabs defaultSelectedKey={defaultPreviewMode ? 'preview' : 'write' }>
+      <Tabs
+        aria-label="Markdown editor tabs"
+        defaultSelectedKey={defaultPreviewMode ? 'preview' : 'write' }
+      >
         <TabItem key="write" title="Write">
           <MarkdownEdit withDynamicHeight={!tall}>
             <div className='form-control form-control--outlined'>

@@ -85,7 +85,7 @@ export const GrpcTabbedMessages: FunctionComponent<Props> = ({
           )}
         </ActionButtonsContainer>
       )}
-      <Tabs key={uniquenessKey} isNested>
+      <Tabs key={uniquenessKey} aria-label="Grpc tabbed messages tabs" isNested>
         {tabItems}
       </Tabs>
     </>

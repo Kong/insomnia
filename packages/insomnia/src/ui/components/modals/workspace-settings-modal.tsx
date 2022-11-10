@@ -221,7 +221,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
         </ModalHeader> : null}
       {workspace ?
         <ModalBody key={`body::${workspace._id}`} noScroll>
-          <Tabs>
+          <Tabs aria-label="Workspace settings tabs">
             <TabItem key="overview" title="Overview">
               <PanelContainer className="pad pad-top-sm">
                 <div className="form-control form-control--outlined">

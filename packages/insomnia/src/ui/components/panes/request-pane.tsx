@@ -182,7 +182,7 @@ export const RequestPane: FC<Props> = ({
           />
         </ErrorBoundary>
       </PaneHeader>
-      <Tabs>
+      <Tabs aria-label="Request pane tabs">
         <TabItem key="content-type" title={<ContentTypeDropdown onChange={updateRequestMimeType} />}>
           <BodyEditor
             key={uniqueKey}

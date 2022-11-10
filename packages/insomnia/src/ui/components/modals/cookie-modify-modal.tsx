@@ -82,7 +82,7 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
       <ModalHeader>Edit Cookie</ModalHeader>
       <ModalBody className="cookie-modify">
         {activeCookieJar && cookie && (
-          <Tabs>
+          <Tabs aria-label="Cookie modify tabs">
             <TabItem key="friendly" title="Friendly">
               <PanelContainer className="pad">
                 <div className="form-row">

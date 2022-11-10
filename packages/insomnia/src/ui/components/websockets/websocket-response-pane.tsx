@@ -191,7 +191,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
           className="tall pane__header__right"
         />
       </PaneHeader>
-      <Tabs>
+      <Tabs aria-label="Websocket response pane tabs">
         <TabItem key="events" title="Events">
           <PaneBodyContent>
             {response.error ? <ResponseErrorViewer url={response.url} error={response.error} />

@@ -77,7 +77,6 @@ const PaneReadOnlyBanner = () => {
   );
 };
 
-
 const QueryEditorWrapper = styled.div({
   flex: '1 0 auto',
   overflowY: 'auto',
@@ -89,7 +88,6 @@ interface FormProps {
   environmentId: string;
   workspaceId: string;
 }
-
 
 const WebSocketRequestForm: FC<FormProps> = ({
   request,
@@ -276,7 +274,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           onChange={handleOnChange}
         />
       </PaneHeader>
-      <Tabs>
+      <Tabs aria-label="Websocket request pane tabs">
         <TabItem key="websocket-preview-mode" title={<WebSocketPreviewModeDropdown previewMode={previewMode} onClick={changeMode} />}>
           <PaneSendButton>
             <SendButton

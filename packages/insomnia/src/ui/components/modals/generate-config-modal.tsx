@@ -94,7 +94,11 @@ export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalPr
     <Modal ref={modalRef} tall>
       <ModalHeader>Generate Config</ModalHeader>
       <ModalBody className="wide">
-        <Tabs defaultSelectedKey={activeTab} onSelectionChange={onSelect}>
+        <Tabs
+          aria-label="General configuration tabs"
+          defaultSelectedKey={activeTab}
+          onSelectionChange={onSelect}
+        >
           {configs.map(config =>
             (<TabItem
               key={config.label}

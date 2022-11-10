@@ -94,6 +94,7 @@ const ModalForm = (props: Props) => {
       <ModalBody key={gitRepository ? gitRepository._id : 'new'}>
         <ErrorBoundary>
           <Tabs
+            aria-label="Git repository settings tabs"
             selectedKey={selectedTab}
             onSelectionChange={(key: Key) => setTab(key as OauthProviderName)}
           >

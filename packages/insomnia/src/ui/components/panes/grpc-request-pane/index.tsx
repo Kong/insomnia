@@ -117,7 +117,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       </PaneHeader>
       <PaneBody>
         {methodType && (
-          <Tabs>
+          <Tabs aria-label="Grpc request pane tabs">
             <TabItem key="method-type" title={methodTypeLabel}>
               <GrpcTabbedMessages
                 uniquenessKey={uniquenessKey}
