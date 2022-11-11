@@ -76,6 +76,7 @@ const StyledTabPanel = styled.div({
   height: '100%',
   position: 'relative',
   boxSizing: 'border-box',
+  overflowY: 'auto',
 });
 
 const StyledTabsContainer = styled.div({
@@ -130,7 +131,7 @@ const StyledPanelContainer = styled.div({
   height: '100%',
   position: 'relative',
   boxSizing: 'border-box',
-  overflow: 'auto',
+  overflowY: 'auto',
 
   '&::-webkit-scrollbar': {
     display: 'none',
