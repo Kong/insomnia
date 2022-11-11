@@ -45,6 +45,7 @@ const StyledHeader = styled.div({
     textAlign: 'center',
     display: 'flex',
     alignItems: 'center',
+    gap: 'var(--padding-sm)',
   },
   '.header_right': {
     gridArea: 'header_right',
