@@ -49,11 +49,12 @@ export const SyncDeleteModal = forwardRef<SyncDeleteModalHandle, Props>(({ vcs }
     try {
       await interceptAccessError({
         action: 'delete',
-        callback: () => vcs.archiveProject(),
+        callback: async () => await vcs.archiveProject(),
         resourceName: state.workspaceName,
         resourceType: strings.collection.singular.toLowerCase(),
       });
       modalRef.current?.hide();
+      state.onHide?.();
     } catch (err) {
       setState(state => ({
         ...state,
