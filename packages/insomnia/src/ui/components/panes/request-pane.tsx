@@ -262,12 +262,16 @@ export const RequestPane: FC<Props> = ({
         </TabItem>
         <TabItem
           key="docs"
-          title={<>Docs
-            {request.description && (
-              <span className="bubble space-left">
-                <i className="fa fa--skinny fa-check txt-xxs" />
-              </span>
-            )}</>}
+          title={
+            <>
+              Docs
+              {request.description && (
+                <span className="bubble space-left">
+                  <i className="fa fa--skinny fa-check txt-xxs" />
+                </span>
+              )}
+            </>
+          }
         >
           <PanelContainer className="tall">
             {request.description ? (

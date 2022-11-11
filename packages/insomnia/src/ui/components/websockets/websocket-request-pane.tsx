@@ -276,22 +276,30 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
       </PaneHeader>
       <Tabs aria-label="Websocket request pane tabs">
         <TabItem key="websocket-preview-mode" title={<WebSocketPreviewModeDropdown previewMode={previewMode} onClick={changeMode} />}>
-          <PaneSendButton>
-            <SendButton
-              type="submit"
-              form="websocketMessageForm"
-              isConnected={readyState === ReadyState.OPEN}
-            >
-              Send
-            </SendButton>
-          </PaneSendButton>
-          <WebSocketRequestForm
-            key={uniqueKey}
-            request={request}
-            previewMode={previewMode}
-            environmentId={environment?._id || ''}
-            workspaceId={workspaceId}
-          />
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+            }}
+          >
+            <PaneSendButton>
+              <SendButton
+                type="submit"
+                form="websocketMessageForm"
+                isConnected={readyState === ReadyState.OPEN}
+              >
+                Send
+              </SendButton>
+            </PaneSendButton>
+            <WebSocketRequestForm
+              key={uniqueKey}
+              request={request}
+              previewMode={previewMode}
+              environmentId={environment?._id || ''}
+              workspaceId={workspaceId}
+            />
+          </div>
         </TabItem>
         <TabItem key="auth" title={<AuthDropdown authTypes={supportedAuthTypes} disabled={disabled} />}>
           {disabled && <PaneReadOnlyBanner />}

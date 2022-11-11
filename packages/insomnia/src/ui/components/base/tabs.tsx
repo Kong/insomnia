@@ -102,7 +102,7 @@ const StyledTabList = styled.div<StyledTabListProps>(({ isNested }) => ({
   overflow: 'auto',
 
   '&::-webkit-scrollbar': {
-    height: 'var(--padding-sm)',
+    height: 'var(--padding-xs)',
     borderRadius: 'calc(var(--padding-sm) / 2)',
   },
 
