@@ -327,10 +327,22 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   if (!vcs.hasBackendProject()) {
     return (
       <div>
-        <Dropdown className="wide tall" onOpen={() => refreshVCSAndRefetchRemote()}>
-          <DropdownButton className="btn btn--compact wide">
+        <Dropdown
+          style={{
+            marginLeft: 'var(--padding-md)',
+          }}
+          className="wide tall"
+          onOpen={() => refreshVCSAndRefetchRemote()}
+        >
+          <DropdownButton
+            buttonClass={Button}
+            // @ts-expect-error -- TSCONVERSION
+            size="small"
+            className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
+          >
             <i className="fa fa-code-fork " /> Setup Sync
           </DropdownButton>
+
           {syncMenuHeader}
           {remoteBackendProjects.length === 0 && (
             <DropdownItem
