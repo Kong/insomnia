@@ -38,6 +38,9 @@ const Link = styled(NavLink)({
   '&:hover,&:active': {
     textDecoration: 'none',
   },
+  '&:focus-visible': {
+    outline: '0',
+  },
 });
 
 export const ActivityToggle: FC = () => {
