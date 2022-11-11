@@ -103,7 +103,7 @@ const WorkspaceNavigation: FC = () => {
       onClick: () => navigate(`/organization/${organizationId}/project/${projectId}`),
       id: activeProject._id,
       label: activeProject.name,
-      node: <span data-testId="project">{activeProject.name}</span>,
+      node: <span data-testid="project">{activeProject.name}</span>,
     },
     {
       id: activeWorkspace._id,
