@@ -1,10 +1,8 @@
-import classnames from 'classnames';
 import { clipboard } from 'electron';
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -15,6 +13,7 @@ import { cancelRequestById } from '../../../network/network';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveResponse, selectLoadStartTime, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
+import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
@@ -28,7 +27,7 @@ import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
 import { BlankPane } from './blank-pane';
-import { Pane, paneBodyClasses, PaneHeader } from './pane';
+import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
@@ -152,38 +151,16 @@ export const ResponsePane: FC<Props> = ({
           />
         </PaneHeader>
       )}
-      <Tabs
-        className={classnames(paneBodyClasses, 'react-tabs')}
-        forceRenderTabPanel
-      >
-        <TabList>
-          <Tab tabIndex="-1">
+      <Tabs aria-label="Response pane tabs">
+        <TabItem
+          key="preview"
+          title={
             <PreviewModeDropdown
               download={handleDownloadResponseBody}
               copyToClipboard={handleCopyResponseToClipboard}
             />
-          </Tab>
-          <Tab tabIndex="-1">
-            <button>
-              Headers{' '}
-              {response.headers.length > 0 && (
-                <span className="bubble">{response.headers.length}</span>
-              )}
-            </button>
-          </Tab>
-          <Tab tabIndex="-1">
-            <button>
-              Cookies{' '}
-              {cookieHeaders.length ? (
-                <span className="bubble">{cookieHeaders.length}</span>
-              ) : null}
-            </button>
-          </Tab>
-          <Tab tabIndex="-1">
-            <button>Timeline</button>
-          </Tab>
-        </TabList>
-        <TabPanel className="react-tabs__tab-panel">
+          }
+        >
           <ResponseViewer
             key={response._id}
             bytes={Math.max(response.bytesContent, response.bytesRead)}
@@ -201,16 +178,36 @@ export const ResponsePane: FC<Props> = ({
             updateFilter={response.error ? undefined : handleSetFilter}
             url={response.url}
           />
-        </TabPanel>
-        <TabPanel className="react-tabs__tab-panel scrollable-container">
-          <div className="scrollable pad">
+        </TabItem>
+        <TabItem
+          key="headers"
+          title={
+            <>
+              Headers
+              {response.headers.length > 0 && (
+                <span className="bubble">{response.headers.length}</span>
+              )}
+            </>
+          }
+        >
+          <PanelContainer className="pad">
             <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseHeadersViewer headers={response.headers} />
             </ErrorBoundary>
-          </div>
-        </TabPanel>
-        <TabPanel className="react-tabs__tab-panel scrollable-container">
-          <div className="scrollable pad">
+          </PanelContainer>
+        </TabItem>
+        <TabItem
+          key="cookies"
+          title={
+            <>
+              Cookies
+              {cookieHeaders.length ? (
+                <span className="bubble">{cookieHeaders.length}</span>
+              ) : null}
+            </>
+          }
+        >
+          <PanelContainer className="pad">
             <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseCookiesViewer
                 cookiesSent={response.settingSendCookies}
@@ -218,16 +215,16 @@ export const ResponsePane: FC<Props> = ({
                 headers={cookieHeaders}
               />
             </ErrorBoundary>
-          </div>
-        </TabPanel>
-        <TabPanel className="react-tabs__tab-panel">
+          </PanelContainer>
+        </TabItem>
+        <TabItem key="timeline" title="Timeline">
           <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
             <ResponseTimelineViewer
               key={response._id}
               timeline={timeline}
             />
           </ErrorBoundary>
-        </TabPanel>
+        </TabItem>
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
         <ResponseTimer

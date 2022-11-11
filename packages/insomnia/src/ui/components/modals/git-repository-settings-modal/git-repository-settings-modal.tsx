@@ -1,5 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+import React, { forwardRef, Key, useImperativeHandle, useRef, useState } from 'react';
 
 import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
@@ -9,6 +8,7 @@ import { type ModalHandle, Modal, ModalProps } from '../../base/modal';
 import { ModalBody } from '../../base/modal-body';
 import { ModalFooter } from '../../base/modal-footer';
 import { ModalHeader } from '../../base/modal-header';
+import { PanelContainer, TabItem, Tabs } from '../../base/tabs';
 import { ErrorBoundary } from '../../error-boundary';
 import { HelpTooltip } from '../../help-tooltip';
 import { CustomRepositorySettingsFormGroup } from './custom-repository-settings-form-group';
@@ -81,7 +81,6 @@ const ModalForm = (props: Props) => {
 
   const [selectedTab, setTab] = useState<OauthProviderName>(initialTab);
 
-  const selectedTabIndex = oauth2Formats.indexOf(selectedTab);
   return (
     <>
       <ModalHeader>
@@ -95,60 +94,34 @@ const ModalForm = (props: Props) => {
       <ModalBody key={gitRepository ? gitRepository._id : 'new'}>
         <ErrorBoundary>
           <Tabs
-            className="react-tabs"
-            onSelect={(index: number) => setTab(oauth2Formats[index])}
-            selectedIndex={selectedTabIndex}
+            aria-label="Git repository settings tabs"
+            selectedKey={selectedTab}
+            onSelectionChange={(key: Key) => setTab(key as OauthProviderName)}
           >
-            <TabList>
-              <Tab>
-                <button>
-                  <i className="fa fa-github" /> GitHub
-                </button>
-              </Tab>
-              <Tab>
-                <button>
-                  <i className="fa fa-gitlab" /> GitLab
-                </button>
-              </Tab>
-              <Tab>
-                <button>
-                  <i className="fa fa-code-fork" /> Git
-                </button>
-              </Tab>
-            </TabList>
-            <TabPanel
-              className="tabs__tab-panel"
-              selectedClassName="pad pad-top-sm"
-              style={{
-                overflow: 'hidden',
-              }}
-            >
-              <GitHubRepositorySetupFormGroup
-                uri={gitRepository?.uri}
-                onSubmit={onSubmit}
-              />
-            </TabPanel>
-            <TabPanel
-              className="tabs__tab-panel"
-              selectedClassName="pad pad-top-sm"
-              style={{
-                overflow: 'hidden',
-              }}
-            >
-              <GitLabRepositorySetupFormGroup
-                uri={gitRepository?.uri}
-                onSubmit={onSubmit}
-              />
-            </TabPanel>
-            <TabPanel
-              className="tabs__tab-panel scrollable"
-              selectedClassName="pad pad-top-sm"
-            >
-              <CustomRepositorySettingsFormGroup
-                gitRepository={gitRepository}
-                onSubmit={onSubmit}
-              />
-            </TabPanel>
+            <TabItem key={oauth2Formats[0]} title={<><i className="fa fa-github" /> GitHub</>}>
+              <PanelContainer className="pad pad-top-sm">
+                <GitHubRepositorySetupFormGroup
+                  uri={gitRepository?.uri}
+                  onSubmit={onSubmit}
+                />
+              </PanelContainer>
+            </TabItem>
+            <TabItem key={oauth2Formats[1]} title={<><i className="fa fa-gitlab" /> GitLab</>}>
+              <PanelContainer className="pad pad-top-sm">
+                <GitLabRepositorySetupFormGroup
+                  uri={gitRepository?.uri}
+                  onSubmit={onSubmit}
+                />
+              </PanelContainer>
+            </TabItem>
+            <TabItem key={oauth2Formats[2]} title={<><i className="fa fa-code-fork" /> Git</>}>
+              <PanelContainer className="pad pad-top-sm">
+                <CustomRepositorySettingsFormGroup
+                  gitRepository={gitRepository}
+                  onSubmit={onSubmit}
+                />
+              </PanelContainer>
+            </TabItem>
           </Tabs>
         </ErrorBoundary>
       </ModalBody>

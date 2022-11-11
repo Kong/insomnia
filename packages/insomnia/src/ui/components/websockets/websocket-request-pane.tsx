@@ -1,7 +1,6 @@
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
@@ -12,10 +11,12 @@ import { WebSocketRequest } from '../../../models/websocket-request';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveRequestMeta, selectSettings } from '../../redux/selectors';
+import { TabItem, Tabs } from '../base/tabs';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { WebSocketPreviewModeDropdown } from '../dropdowns/websocket-preview-mode';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
+import { QueryEditorContainer, QueryEditorPreview } from '../editors/query-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
@@ -76,14 +77,6 @@ const PaneReadOnlyBanner = () => {
   );
 };
 
-const HeaderTabPanel = styled(TabPanel)({
-  display: 'flex',
-  flexDirection: 'column',
-  position: 'relative',
-  height: '100%',
-  overflowY: 'auto',
-});
-
 const QueryEditorWrapper = styled.div({
   flex: '1 0 auto',
   overflowY: 'auto',
@@ -95,22 +88,6 @@ interface FormProps {
   environmentId: string;
   workspaceId: string;
 }
-
-const PayloadTabPanel = styled(TabPanel)({
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100%',
-  width: '100%',
-});
-const QueryEditorTabPanel = styled(TabPanel)({
-  display: 'flex',
-  flexDirection: 'column',
-  overflowY: 'auto',
-});
-
-const AuthTabPanel = styled(TabPanel)({
-  overflowY: 'auto',
-});
 
 const WebSocketRequestForm: FC<FormProps> = ({
   request,
@@ -297,85 +274,69 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           onChange={handleOnChange}
         />
       </PaneHeader>
-      <Tabs className="pane__body theme--pane__body react-tabs">
-        <TabList>
-          <Tab tabIndex="-1" >
-            <WebSocketPreviewModeDropdown previewMode={previewMode} onClick={changeMode} />
-          </Tab>
-          <Tab tabIndex="-1">
-            <AuthDropdown authTypes={supportedAuthTypes} disabled={disabled} />
-          </Tab>
-          <Tab tabIndex='-1'>
-            <button>Query</button>
-          </Tab>
-          <Tab tabIndex="-1">
-            <button>Headers</button>
-          </Tab>
-          <Tab tabIndex="-1">
-            <button>
-              Docs
-              {request.description && (
-                <span className="bubble space-left">
-                  <i className="fa fa--skinny fa-check txt-xxs" />
-                </span>
-              )}
-            </button>
-          </Tab>
-        </TabList>
-        <PayloadTabPanel className="react-tabs__tab-panel">
-          <PaneSendButton>
-            <SendButton
-              type="submit"
-              form="websocketMessageForm"
-              isConnected={readyState === ReadyState.OPEN}
-            >
-              Send
-            </SendButton>
-          </PaneSendButton>
-          <WebSocketRequestForm
-            key={uniqueKey}
-            request={request}
-            previewMode={previewMode}
-            environmentId={environment?._id || ''}
-            workspaceId={workspaceId}
-          />
-        </PayloadTabPanel>
-        <AuthTabPanel className="react-tabs__tab-panel">
+      <Tabs aria-label="Websocket request pane tabs">
+        <TabItem key="websocket-preview-mode" title={<WebSocketPreviewModeDropdown previewMode={previewMode} onClick={changeMode} />}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+            }}
+          >
+            <PaneSendButton>
+              <SendButton
+                type="submit"
+                form="websocketMessageForm"
+                isConnected={readyState === ReadyState.OPEN}
+              >
+                Send
+              </SendButton>
+            </PaneSendButton>
+            <WebSocketRequestForm
+              key={uniqueKey}
+              request={request}
+              previewMode={previewMode}
+              environmentId={environment?._id || ''}
+              workspaceId={workspaceId}
+            />
+          </div>
+        </TabItem>
+        <TabItem key="auth" title={<AuthDropdown authTypes={supportedAuthTypes} disabled={disabled} />}>
           {disabled && <PaneReadOnlyBanner />}
           <AuthWrapper
             key={uniqueKey}
             disabled={disabled}
           />
-        </AuthTabPanel>
-        <QueryEditorTabPanel
-          className="react-tabs__tab-panel query-editor"
-        >
-          {disabled && <PaneReadOnlyBanner />}
-          <div className="pad pad-bottom-sm query-editor__preview">
-            <label className="label--small no-pad-top">Url Preview</label>
-            <code className="txt-sm block faint">
+        </TabItem>
+        <TabItem key="query" title="Query">
+          <QueryEditorContainer>
+            {disabled && <PaneReadOnlyBanner />}
+            <QueryEditorPreview className="pad pad-bottom-sm">
+              <label className="label--small no-pad-top">Url Preview</label>
+              <code className="txt-sm block faint">
+                <ErrorBoundary
+                  key={uniqueKey}
+                  errorClassName="tall wide vertically-align font-error pad text-center"
+                >
+                  <RenderedQueryString request={request} />
+                </ErrorBoundary>
+              </code>
+            </QueryEditorPreview>
+            <QueryEditorWrapper>
               <ErrorBoundary
                 key={uniqueKey}
                 errorClassName="tall wide vertically-align font-error pad text-center"
               >
-                <RenderedQueryString request={request} />
+                <RequestParametersEditor
+                  request={request}
+                  bulk={useBulkParametersEditor}
+                  disabled={disabled}
+                />
               </ErrorBoundary>
-            </code>
-          </div>
-          <QueryEditorWrapper>
-            <ErrorBoundary
-              key={uniqueKey}
-              errorClassName="tall wide vertically-align font-error pad text-center"
-            >
-              <RequestParametersEditor
-                request={request}
-                bulk={useBulkParametersEditor}
-                disabled={disabled}
-              />
-            </ErrorBoundary>
-          </QueryEditorWrapper>
-        </QueryEditorTabPanel>
-        <HeaderTabPanel className="react-tabs__tab-panel">
+            </QueryEditorWrapper>
+          </QueryEditorContainer>
+        </TabItem>
+        <TabItem key="headers" title="Headers">
           {disabled && <PaneReadOnlyBanner />}
           <RequestHeadersEditor
             key={uniqueKey}
@@ -383,8 +344,20 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             bulk={false}
             isDisabled={readyState === ReadyState.OPEN}
           />
-        </HeaderTabPanel>
-        <TabPanel>
+        </TabItem>
+        <TabItem
+          key="docs"
+          title={
+            <>
+              Docs
+              {request.description && (
+                <span className="bubble space-left">
+                  <i className="fa fa--skinny fa-check txt-xxs" />
+                </span>
+              )}
+            </>
+          }
+        >
           {request.description ? (
             <div>
               <div className="pull-right pad bg-default">
@@ -424,7 +397,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
               </p>
             </div>
           )}
-        </TabPanel>
+        </TabItem>
       </Tabs>
     </Pane>
   );

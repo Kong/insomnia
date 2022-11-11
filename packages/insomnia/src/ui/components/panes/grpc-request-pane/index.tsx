@@ -1,6 +1,5 @@
 import React, { FunctionComponent, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../../common/common-headers';
@@ -10,6 +9,7 @@ import type { Settings } from '../../../../models/settings';
 import { useGrpc } from '../../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../../hooks/use-vcs-version';
 import { selectActiveEnvironment } from '../../../redux/selectors';
+import { PanelContainer, TabItem, Tabs } from '../../base/tabs';
 import { GrpcSendButton } from '../../buttons/grpc-send-button';
 import { OneLineEditor } from '../../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
@@ -117,16 +117,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       </PaneHeader>
       <PaneBody>
         {methodType && (
-          <Tabs className="react-tabs" forceRenderTabPanel>
-            <TabList>
-              <Tab>
-                <button>{methodTypeLabel}</button>
-              </Tab>
-              <Tab>
-                <button>Headers</button>
-              </Tab>
-            </TabList>
-            <TabPanel className="react-tabs__tab-panel">
+          <Tabs aria-label="Grpc request pane tabs">
+            <TabItem key="method-type" title={methodTypeLabel}>
               <GrpcTabbedMessages
                 uniquenessKey={uniquenessKey}
                 tabNamePrefix="Stream"
@@ -137,24 +129,22 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 handleStream={handleAction.stream}
                 handleCommit={handleAction.commit}
               />
-            </TabPanel>
-            <TabPanel className="react-tabs__tab-panel">
-              <div className="tall wide scrollable-container">
-                <div className="scrollable">
-                  <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
-                    <KeyValueEditor
-                      namePlaceholder="header"
-                      valuePlaceholder="value"
-                      descriptionPlaceholder="description"
-                      pairs={activeRequest.metadata}
-                      handleGetAutocompleteNameConstants={getCommonHeaderNames}
-                      handleGetAutocompleteValueConstants={getCommonHeaderValues}
-                      onChange={handleChange.metadata}
-                    />
-                  </ErrorBoundary>
-                </div>
-              </div>
-            </TabPanel>
+            </TabItem>
+            <TabItem key="headers" title="Headers">
+              <PanelContainer className="tall wide">
+                <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
+                  <KeyValueEditor
+                    namePlaceholder="header"
+                    valuePlaceholder="value"
+                    descriptionPlaceholder="description"
+                    pairs={activeRequest.metadata}
+                    handleGetAutocompleteNameConstants={getCommonHeaderNames}
+                    handleGetAutocompleteValueConstants={getCommonHeaderValues}
+                    onChange={handleChange.metadata}
+                  />
+                </ErrorBoundary>
+              </PanelContainer>
+            </TabItem>
           </Tabs>
         )}
         {!methodType && (

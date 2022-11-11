@@ -1,5 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+import React, { forwardRef, Key, useImperativeHandle, useRef, useState } from 'react';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import type { ApiSpec } from '../../../models/api-spec';
@@ -11,6 +10,7 @@ import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
+import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { CodeEditor } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
 import { showModal } from './index';
@@ -82,10 +82,10 @@ export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalPr
     }
   };
 
-  const onSelect = (index: number) => {
+  const onSelect = (key: Key) => {
     setState({
       configs,
-      activeTab: index,
+      activeTab: configs.findIndex(c => c.label === key),
     });
   };
   const { configs, activeTab } = state;
@@ -94,38 +94,43 @@ export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalPr
     <Modal ref={modalRef} tall>
       <ModalHeader>Generate Config</ModalHeader>
       <ModalBody className="wide">
-        <Tabs forceRenderTabPanel defaultIndex={activeTab} onSelect={onSelect}>
-          <TabList>{configs.map(config =>
-            (<Tab key={config.label} tabIndex="-1">
-              <button>
-                {config.label}
-                {config.docsLink ?
-                  <>
-                    {' '}
-                    <HelpTooltip>
-                      To learn more about {config.label}
-                      <br />
-                      <Link href={config.docsLink}>Documentation {<i className="fa fa-external-link-square" />}</Link>
-                    </HelpTooltip>
-                  </> : null}
-              </button>
-            </Tab>)
-          )}
-          </TabList>
+        <Tabs
+          aria-label="General configuration tabs"
+          defaultSelectedKey={activeTab}
+          onSelectionChange={onSelect}
+        >
           {configs.map(config =>
-            (<TabPanel key={config.label}>
-              {config.error ?
-                <p className="notice error margin-md">
-                  {config.error}
-                  {config.docsLink ? <><br /><Link href={config.docsLink}>Documentation {<i className="fa fa-external-link-square" />}</Link></> : null}
-                </p> :
-                <CodeEditor
-                  className="tall pad-top-sm"
-                  defaultValue={config.content}
-                  mode={config.mimeType}
-                  readOnly
-                />}
-            </TabPanel>)
+            (<TabItem
+              key={config.label}
+              title={
+                <>
+                  {config.label}
+                  {config.docsLink ?
+                    <>
+                      {' '}
+                      <HelpTooltip>
+                        To learn more about {config.label}
+                        <br />
+                        <Link href={config.docsLink}>Documentation {<i className="fa fa-external-link-square" />}</Link>
+                      </HelpTooltip>
+                    </> : null}
+                </>
+              }
+            >
+              <PanelContainer key={config.label}>
+                {config.error ?
+                  <p className="notice error margin-md">
+                    {config.error}
+                    {config.docsLink ? <><br /><Link href={config.docsLink}>Documentation {<i className="fa fa-external-link-square" />}</Link></> : null}
+                  </p> :
+                  <CodeEditor
+                    className="tall pad-top-sm"
+                    defaultValue={config.content}
+                    mode={config.mimeType}
+                    readOnly
+                  />}
+              </PanelContainer>
+            </TabItem>)
           )}
         </Tabs>
       </ModalBody>

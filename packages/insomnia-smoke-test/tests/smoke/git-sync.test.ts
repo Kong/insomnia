@@ -4,7 +4,7 @@ test('Sign in with GitHub', async ({ app, page }) => {
   await page.locator('text=Setup Git Sync').click();
   await page.locator('button:has-text("Repository Settings")').click();
 
-  await page.locator('li[role="tab"]:has-text("GitHub")').click();
+  await page.locator('div[role="tab"]:has-text("GitHub")').click();
 
   // Prevent the app from opening the browser to the authorization page
   // and return the url that would be created by following the GitHub OAuth flow.

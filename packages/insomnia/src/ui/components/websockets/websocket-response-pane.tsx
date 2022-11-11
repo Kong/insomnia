@@ -1,7 +1,6 @@
 import fs from 'fs';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -10,6 +9,7 @@ import { WebSocketEvent } from '../../../main/network/websocket';
 import { WebSocketResponse } from '../../../models/websocket-response';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { selectActiveResponse } from '../../redux/selectors';
+import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { EmptyStatePane } from '../panes/empty-state-pane';
@@ -191,32 +191,8 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
           className="tall pane__header__right"
         />
       </PaneHeader>
-      <Tabs className="pane__body theme--pane__body react-tabs">
-        <TabList>
-          <Tab tabIndex="-1" >
-            <button>Events</button>
-          </Tab>
-          <Tab tabIndex="-1">
-            <button>
-              Headers{' '}
-              {response?.headers.length > 0 && (
-                <span className="bubble">{response.headers.length}</span>
-              )}
-            </button>
-          </Tab>
-          <Tab tabIndex="-1">
-            <button>
-              Cookies{' '}
-              {cookieHeaders.length ? (
-                <span className="bubble">{cookieHeaders.length}</span>
-              ) : null}
-            </button>
-          </Tab>
-          <Tab tabIndex="-1" >
-            <button>Timeline</button>
-          </Tab>
-        </TabList>
-        <TabPanel className="react-tabs__tab-panel">
+      <Tabs aria-label="Websocket response pane tabs">
+        <TabItem key="events" title="Events">
           <PaneBodyContent>
             {response.error ? <ResponseErrorViewer url={response.url} error={response.error} />
               : <>
@@ -284,16 +260,36 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
                 )}
               </>}
           </PaneBodyContent>
-        </TabPanel>
-        <TabPanel className="react-tabs__tab-panel scrollable-container">
-          <div className="scrollable pad">
+        </TabItem>
+        <TabItem
+          key="headers"
+          title={
+            <>
+              Headers{' '}
+              {response?.headers.length > 0 && (
+                <span className="bubble">{response.headers.length}</span>
+              )}
+            </>
+          }
+        >
+          <PanelContainer className="pad">
             <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseHeadersViewer headers={response.headers} />
             </ErrorBoundary>
-          </div>
-        </TabPanel>
-        <TabPanel className="react-tabs__tab-panel scrollable-container">
-          <div className="scrollable pad">
+          </PanelContainer>
+        </TabItem>
+        <TabItem
+          key="cookies"
+          title={
+            <>
+              Cookies{' '}
+              {cookieHeaders.length ? (
+                <span className="bubble">{cookieHeaders.length}</span>
+              ) : null}
+            </>
+          }
+        >
+          <PanelContainer className="pad">
             <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
               <ResponseCookiesViewer
                 cookiesSent={response.settingSendCookies}
@@ -301,14 +297,14 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
                 headers={cookieHeaders}
               />
             </ErrorBoundary>
-          </div>
-        </TabPanel>
-        <TabPanel className="react-tabs__tab-panel">
+          </PanelContainer>
+        </TabItem>
+        <TabItem key="timeline" title="Timeline">
           <ResponseTimelineViewer
             key={response._id}
             timeline={timeline}
           />
-        </TabPanel>
+        </TabItem>
       </Tabs>
     </ Pane>
   );
