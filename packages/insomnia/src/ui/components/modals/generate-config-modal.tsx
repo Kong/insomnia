@@ -10,7 +10,7 @@ import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import { TabItem, Tabs } from '../base/tabs';
+import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { CodeEditor } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
 import { showModal } from './index';
@@ -117,7 +117,7 @@ export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalPr
                 </>
               }
             >
-              <div key={config.label}>
+              <PanelContainer key={config.label}>
                 {config.error ?
                   <p className="notice error margin-md">
                     {config.error}
@@ -129,7 +129,7 @@ export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalPr
                     mode={config.mimeType}
                     readOnly
                   />}
-              </div>
+              </PanelContainer>
             </TabItem>)
           )}
         </Tabs>
