@@ -117,7 +117,7 @@ const WorkspaceNavigation: FC = () => {
       <Breadcrumb crumbs={crumbs} />
       {isDesign(activeWorkspace) && <ActivityToggle />}
       {isDesign(activeWorkspace) && gitVCS && <GitSyncDropdown key={workspaceId} workspace={activeWorkspace} vcs={gitVCS} />}
-      {isCollection(activeWorkspace) && vcs && <SyncDropdown key={workspaceId} workspace={activeWorkspace} project={activeProject} vcs={vcs} />}
+      {isCollection(activeWorkspace) && isRemoteProject(activeProject) && vcs && <SyncDropdown key={workspaceId} workspace={activeWorkspace} project={activeProject} vcs={vcs} />}
     </Fragment>
   );
 };
