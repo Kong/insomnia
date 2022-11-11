@@ -84,8 +84,8 @@ test.describe('Debug-Sidebar', async () => {
     });
 
     test('Create a new HTTP request', async ({ page }) => {
-      await page.locator('div:nth-child(3) > .btn').click();
-      await page.locator('button:has-text("HTTP RequestCtrl + N")').first().click();
+      await page.locator('[data-testid="SidebarFilter"] [data-testid="SidebarCreateDropdown"] button').click();
+      await page.locator('[data-testid="CreateHttpRequest"]').first().click();
       await expect(page.locator('.app')).toContainText('New Request');
     });
   });

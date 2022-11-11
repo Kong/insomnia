@@ -67,9 +67,9 @@ export const SidebarFilter: FC<Props> = ({ filter }) => {
       await db.flushChanges(flushId);
     }
   };
-
+  const dataTestId = 'SidebarFilter';
   return (
-    <div className="sidebar__filter">
+    <div className="sidebar__filter" data-testid={dataTestId}>
       <div className="form-control form-control--outlined form-control--btn-right">
         <input
           ref={inputRef}
