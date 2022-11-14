@@ -13,6 +13,7 @@ export const useAppCommands = () => {
   // Handle Application Commands
   useEffect(() => {
     return window.main.on('shell:open', (_: IpcRendererEvent, url: string) => {
+      console.log('[renderer] Received Deep Link URL', url);
       const parsed = parse(url, true);
       const command = `${parsed.hostname}${parsed.pathname}`;
       const args = JSON.parse(JSON.stringify(parsed.query));
