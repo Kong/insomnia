@@ -1,5 +1,4 @@
 import { describe, expect, it } from '@jest/globals';
-import { difference } from 'ramda';
 
 import { generateId } from '../../../common/misc';
 import { isGrpcRequest, isGrpcRequestId } from '../../grpc-request';
@@ -15,7 +14,7 @@ const allPrefixes = models.all().map(model => model.prefix);
 
 describe('isGrpcRequest', () => {
   const supported = [models.grpcRequest.type];
-  const unsupported = difference(allTypes, supported);
+  const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {
     expect(
@@ -36,7 +35,7 @@ describe('isGrpcRequest', () => {
 
 describe('isGrpcRequestId', () => {
   const supported = [models.grpcRequest.prefix];
-  const unsupported = difference(allPrefixes, supported);
+  const unsupported = allPrefixes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true if id is prefixed by "%s_"', prefix => {
     expect(isGrpcRequestId(generateId(prefix))).toBe(true);
@@ -49,7 +48,7 @@ describe('isGrpcRequestId', () => {
 
 describe('isRequest', () => {
   const supported = [models.request.type];
-  const unsupported = difference(allTypes, supported);
+  const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {
     expect(
@@ -70,7 +69,7 @@ describe('isRequest', () => {
 
 describe('isRequestGroup', () => {
   const supported = [models.requestGroup.type];
-  const unsupported = difference(allTypes, supported);
+  const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {
     expect(
@@ -91,7 +90,7 @@ describe('isRequestGroup', () => {
 
 describe('isProtoFile', () => {
   const supported = [models.protoFile.type];
-  const unsupported = difference(allTypes, supported);
+  const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {
     expect(
@@ -112,7 +111,7 @@ describe('isProtoFile', () => {
 
 describe('isProtoDirectory', () => {
   const supported = [models.protoDirectory.type];
-  const unsupported = difference(allTypes, supported);
+  const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {
     expect(
@@ -133,7 +132,7 @@ describe('isProtoDirectory', () => {
 
 describe('isWorkspace', () => {
   const supported = [models.workspace.type];
-  const unsupported = difference(allTypes, supported);
+  const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should return true: "%s"', type => {
     expect(

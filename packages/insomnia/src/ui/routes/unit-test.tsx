@@ -1,6 +1,5 @@
 import classnames from 'classnames';
 import { generate, runTests, Test } from 'insomnia-testing';
-import { isEmpty } from 'ramda';
 import React, { FC, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -356,7 +355,7 @@ const WrapperUnitTest: FC = () => {
               <i className="fa fa-play space-left" />
             </HeaderButton>
           </div>
-          {isEmpty(activeUnitTests) ?
+          {activeUnitTests.length === 0 ?
             <div style={{ height: '100%' }}>
               <EmptyStatePane
                 icon={<SvgIcon icon="vial" />}

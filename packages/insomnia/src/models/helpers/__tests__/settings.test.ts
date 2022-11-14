@@ -1,7 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { Settings } from 'insomnia-common';
 import { mocked } from 'jest-mock';
-import { identity } from 'ramda';
 
 import * as _constants from '../../../common/constants';
 import * as electronHelpers from '../../../common/electron-helpers';
@@ -39,7 +38,7 @@ describe('getLocalDevConfigFilePath', () => {
 
 describe('getConfigFile', () => {
   beforeEach(() => {
-    jest.spyOn(settingsHelpers, 'readConfigFile').mockImplementation(identity);
+    jest.spyOn(settingsHelpers, 'readConfigFile').mockImplementation(e => e);
   });
 
   afterAll(jest.resetAllMocks);

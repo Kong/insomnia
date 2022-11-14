@@ -1,5 +1,4 @@
 import { HotKeyRegistry, KeyboardShortcut, KeyCombination, PlatformKeyCombinations } from 'insomnia-common';
-import { forEach } from 'ramda';
 
 import { displayModifierKey, isMac } from './constants';
 import { keyboardKeys } from './keyboard-keys';
@@ -268,11 +267,11 @@ export function constructKeyCombinationDisplay(
   const chars: string[] = [];
 
   const addModifierKeys = (keys: (keyof Omit<KeyCombination, 'keyCode'>)[]) => {
-    forEach(key => {
+    keys.forEach(key => {
       if (keyComb[key]) {
         chars.push(displayModifierKey(key));
       }
-    }, keys);
+    });
   };
 
   if (isMac()) {
