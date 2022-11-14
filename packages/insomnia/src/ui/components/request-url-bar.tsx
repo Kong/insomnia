@@ -7,13 +7,13 @@ import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState }
 import { useDispatch, useSelector } from 'react-redux';
 import { useInterval } from 'react-use';
 
-import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
 import * as models from '../../models';
 import { update } from '../../models/helpers/request-operations';
 import { isRequest, Request } from '../../models/request';
 import * as network from '../../network/network';
+import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { loadRequestStart, loadRequestStop } from '../redux/modules/global';

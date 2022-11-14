@@ -2,7 +2,7 @@ import { invariant } from '@remix-run/router';
 import { ActionFunction, redirect } from 'react-router-dom';
 
 import * as session from '../../account/session';
-import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';

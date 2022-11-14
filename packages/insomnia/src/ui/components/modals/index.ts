@@ -1,6 +1,6 @@
 import { invariant } from '@remix-run/router';
 
-import { trackPageView } from '../../../common/analytics';
+import { trackPageView } from '../../analytics';
 import { ModalProps } from '../base/modal';
 import { AlertModal, AlertModalOptions } from './alert-modal';
 import { ErrorModal, ErrorModalOptions } from './error-modal';

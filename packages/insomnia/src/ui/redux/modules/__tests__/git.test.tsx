@@ -9,7 +9,7 @@ import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
-import { SegmentEvent, trackSegmentEvent } from '../../../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../../analytics';
 import { ACTIVITY_SPEC } from '../../../../common/constants';
 import * as models from '../../../../models';
 import { gitRepositorySchema } from '../../../../models/__schemas__/model-schemas';

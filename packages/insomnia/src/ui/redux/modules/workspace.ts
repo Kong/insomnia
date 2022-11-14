@@ -1,11 +1,11 @@
 import { Dispatch } from 'redux';
 import { RequireExactlyOne } from 'type-fest';
 
-import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, GlobalActivity, isCollectionActivity, isDesignActivity } from '../../../common/constants';
 import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { isCollection, isDesign, Workspace, WorkspaceScope } from '../../../models/workspace';
+import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import { showPrompt } from '../../components/modals';
 import { selectActiveActivity, selectActiveProject, selectWorkspaces } from '../selectors';
 import { RootState } from '.';

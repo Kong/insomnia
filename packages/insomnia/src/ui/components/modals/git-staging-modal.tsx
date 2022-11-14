@@ -3,7 +3,6 @@ import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import YAML from 'yaml';
 
-import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { database as db } from '../../../common/database';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
@@ -14,6 +13,7 @@ import { gitRollback } from '../../../sync/git/git-rollback';
 import { GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GitVCS } from '../../../sync/git/git-vcs';
 import parseGitPath from '../../../sync/git/parse-git-path';
 import { getOauth2FormatName } from '../../../sync/git/utils';
+import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../analytics';
 import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

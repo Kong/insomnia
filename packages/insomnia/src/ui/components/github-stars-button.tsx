@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { useMount, useMountedState } from 'react-use';
 import styled from 'styled-components';
 
-import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { selectSettings } from '../redux/selectors';
 import { SvgIcon } from './svg-icon';
 import { Button } from './themed-button';

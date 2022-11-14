@@ -3,7 +3,6 @@ import React, { FC, Fragment, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useMount } from 'react-use';
 
-import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { database as db } from '../../../common/database';
 import { docsGitSync } from '../../../common/documentation';
 import { isNotNullOrUndefined } from '../../../common/misc';
@@ -12,6 +11,7 @@ import type { Workspace } from '../../../models/workspace';
 import type { GitLogEntry, GitVCS } from '../../../sync/git/git-vcs';
 import { MemClient } from '../../../sync/git/mem-client';
 import { getOauth2FormatName } from '../../../sync/git/utils';
+import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../analytics';
 import { initialize as initializeEntities } from '../../redux/modules/entities';
 import * as gitActions from '../../redux/modules/git';
 import { selectActiveGitRepository } from '../../redux/selectors';

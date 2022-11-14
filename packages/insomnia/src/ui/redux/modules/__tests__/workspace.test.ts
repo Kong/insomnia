@@ -4,7 +4,7 @@ import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
-import { SegmentEvent, trackSegmentEvent } from '../../../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../../analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../../common/constants';
 import { database } from '../../../../common/database';
 import * as models from '../../../../models';

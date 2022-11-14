@@ -18,7 +18,7 @@ import { isWebSocketPayload } from '../models/websocket-payload';
 import { isWebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, Workspace } from '../models/workspace';
 import { resetKeys } from '../sync/ignore-keys';
-import { SegmentEvent, trackSegmentEvent } from './analytics';
+import { SegmentEvent, trackSegmentEvent } from '../ui/analytics';
 import {
   EXPORT_TYPE_API_SPEC,
   EXPORT_TYPE_COOKIE_JAR,

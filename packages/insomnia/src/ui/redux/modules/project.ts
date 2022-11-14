@@ -1,4 +1,4 @@
-import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import { ACTIVITY_HOME } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';

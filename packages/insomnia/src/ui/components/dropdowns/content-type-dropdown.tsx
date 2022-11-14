@@ -1,7 +1,6 @@
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
 import {
   CONTENT_TYPE_EDN,
   CONTENT_TYPE_FILE,
@@ -16,6 +15,7 @@ import {
   getContentTypeName,
 } from '../../../common/constants';
 import { isWebSocketRequest } from '../../../models/websocket-request';
+import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import { selectActiveRequest } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';

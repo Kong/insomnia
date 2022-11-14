@@ -2,7 +2,6 @@ import * as electron from 'electron';
 import React from 'react';
 import type ReactDOM from 'react-dom';
 
-import * as analytics from '../../../src/common/analytics';
 import { axiosRequest as axios } from '../../../src/network/axios-request';
 import { getAppPlatform, getAppVersion } from '../../common/constants';
 import type { RenderPurpose } from '../../common/render';
@@ -11,6 +10,7 @@ import {
   RENDER_PURPOSE_NO_RENDER,
   RENDER_PURPOSE_SEND,
 } from '../../common/render';
+import * as analytics from '../../ui/analytics';
 import { HtmlElementWrapper } from '../../ui/components/html-element-wrapper';
 import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
 import { PromptModalOptions } from '../../ui/components/modals/prompt-modal';

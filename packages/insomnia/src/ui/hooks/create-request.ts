@@ -1,6 +1,5 @@
 import { unreachableCase } from 'ts-assert-unreachable';
 
-import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
   CONTENT_TYPE_GRAPHQL,
   CONTENT_TYPE_JSON,
@@ -12,6 +11,7 @@ import { isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { WorkspaceMeta } from '../../models/workspace-meta';
+import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { showModal } from '../components/modals';
 import { ProtoFilesModal } from '../components/modals/proto-files-modal';
 

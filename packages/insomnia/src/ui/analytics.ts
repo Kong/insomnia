@@ -3,15 +3,15 @@ import { AxiosRequestConfig } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getAccountId } from '../account/session';
-import { ChangeBufferEvent, database as db } from '../common/database';
-import * as models from '../models/index';
-import { isSettings } from '../models/settings';
 import {
   getAppPlatform,
   getAppVersion,
   getProductName,
   getSegmentWriteKey,
-} from './constants';
+} from '../common/constants';
+import { ChangeBufferEvent, database as db } from '../common/database';
+import * as models from '../models/index';
+import { isSettings } from '../models/settings';
 
 const axiosConfig: AxiosRequestConfig = {
   // This is needed to ensure that we use the NodeJS adapter in the render process

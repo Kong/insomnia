@@ -1,7 +1,6 @@
 import React, { FC, Fragment, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
-import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
@@ -9,6 +8,7 @@ import * as requestOperations from '../../models/helpers/request-operations';
 import { isRequest } from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest } from '../../models/websocket-request';
+import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
