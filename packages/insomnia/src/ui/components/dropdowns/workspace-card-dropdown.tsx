@@ -129,6 +129,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
               message: `Do you really want to delete "${workspaceName}"?`,
               yesText: 'Yes',
               noText: 'Cancel',
+              noEscape: false,
               onDone: async (isYes: boolean) => {
                 if (!isYes) {
                   return;

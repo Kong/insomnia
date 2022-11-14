@@ -65,6 +65,7 @@ if (isDevelopment()) {
       message: 'Are you sure you want to clear all models? This operation cannot be undone.',
       yesText: 'Yes',
       noText: 'No',
+      noEscape: false,
       onDone: async (yes: boolean) => {
         if (yes) {
           const bufferId = await database.bufferChanges();

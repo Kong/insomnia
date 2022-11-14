@@ -77,6 +77,7 @@ export const Debug: FC = () => {
         if (activeRequest) {
           showModal(AskModal, {
             title: 'Delete Request?',
+            noEscape: false,
             message: `Really delete ${activeRequest.name}?`,
             onDone: async (confirmed: boolean) => {
               if (confirmed) {

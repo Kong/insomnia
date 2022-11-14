@@ -91,6 +91,7 @@ export const BodyEditor: FC<Props> = ({
       contentTypeHeader.value = newContentType;
       showModal(AskModal, {
         title: 'Change Content-Type',
+        noEscape: false,
         message: <p>
           Do you want set the <span className="monospace">Content-Type</span> header to{' '}
           <span className="monospace">{newContentType}</span>?
