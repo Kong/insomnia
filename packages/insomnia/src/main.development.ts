@@ -148,7 +148,10 @@ const _launchApp = async () => {
   // Handle URLs sent via command line args
   ipcMain.once('window-ready', () => {
     console.log('[main] Window ready, handling command line arguments', process.argv);
-    window.webContents.send('shell:open', process.argv.slice(1));
+    const args = process.argv.slice(1).filter(a => a !== '.');
+    if (args.length) {
+      window.webContents.send('shell:open', args.join());
+    }
   });
   // Disable deep linking in playwright e2e tests in order to run multiple tests in parallel
   if (!process.env.PLAYWRIGHT) {
