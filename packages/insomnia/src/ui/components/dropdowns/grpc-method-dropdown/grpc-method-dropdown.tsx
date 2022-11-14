@@ -54,7 +54,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   handleChange,
   handleChangeProtoFile,
 }) => {
-  const groupedByPkg = useMemo(() => groupGrpcMethodsByPackage(methods), [methods]);
+  const groupedByPkg = groupGrpcMethodsByPackage(methods);
   const useLabel = (fullPath?: string) =>
     useMemo(() => {
       if (fullPath) {

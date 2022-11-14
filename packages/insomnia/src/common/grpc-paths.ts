@@ -57,5 +57,7 @@ function groupBy(list, keyGetter) {
   return map;
 }
 
-export const groupGrpcMethodsByPackage = (grpcMethodDefinitions: GrpcMethodDefinition[]) =>
-  groupBy(grpcMethodDefinitions.map(getMethodInfo), ({ segments }) => segments.packageName || NO_PACKAGE_KEY);
+export const groupGrpcMethodsByPackage = (grpcMethodDefinitions: GrpcMethodDefinition[]): Record<string, GrpcMethodDefinition> =>
+  Object.fromEntries(groupBy(
+    grpcMethodDefinitions.map(getMethodInfo),
+    ({ segments }: { segments: GrpcPathSegments }) => segments.packageName || NO_PACKAGE_KEY));
