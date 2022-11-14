@@ -2,7 +2,6 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import { camelCase } from 'change-case';
 import crypto from 'crypto';
 import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
-import { isPlainObject } from 'ramda-adjunct';
 import { parse as urlParse } from 'url';
 import YAML from 'yaml';
 
@@ -12,6 +11,15 @@ import { unthrowableParseJson } from '../utils';
 export const id = 'openapi3';
 export const name = 'OpenAPI 3.0';
 export const description = 'Importer for OpenAPI 3.0 specification (json/yaml)';
+
+function isPlainObject(value: any) {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return (prototype === null || prototype === Object.prototype || Object.getPrototypeOf(prototype) === null) && !(Symbol.toStringTag in value) && !(Symbol.iterator in value);
+}
 
 /* eslint-disable camelcase -- some camecase is required by the parsing of the spec itself */
 
