@@ -34,15 +34,15 @@ export const SidebarCreateDropdown: FC<Props> = ({ right }) => {
 
     createRequestGroup(activeWorkspaceId);
   }, [activeWorkspaceId]);
-
+  const dataTestId = 'SidebarCreateDropdown';
   return (
-    <Dropdown right={right}>
+    <Dropdown right={right} dataTestId={dataTestId}>
       <DropdownButton className="btn btn--compact">
         <i className="fa fa-plus-circle" />
         <i className="fa fa-caret-down" />
       </DropdownButton>
 
-      <DropdownItem onClick={() => create('HTTP')}>
+      <DropdownItem dataTestId='CreateHttpRequest' onClick={() => create('HTTP')}>
         <i className="fa fa-plus-circle" />HTTP Request
         <DropdownHint keyBindings={hotKeyRegistry.request_createHTTP} />
       </DropdownItem>
