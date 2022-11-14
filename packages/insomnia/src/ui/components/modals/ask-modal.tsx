@@ -9,6 +9,7 @@ interface State {
   message: React.ReactNode;
   yesText: string;
   noText: string;
+  noEscape: boolean | false;
   onDone?: (success: boolean) => Promise<void>;
 }
 export interface AskModalOptions {
@@ -17,6 +18,7 @@ export interface AskModalOptions {
   onDone?: (success: boolean) => Promise<void>;
   yesText?: string;
   noText?: string;
+  noEscape: boolean;
 }
 export interface AskModalHandle {
   show: (options: AskModalOptions) => void;
@@ -29,6 +31,7 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
     message: '',
     yesText: 'Yes',
     noText: 'No',
+    noEscape: false,
     onDone: async () => { },
   });
 
@@ -36,20 +39,21 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
     hide: () => {
       modalRef.current?.hide();
     },
-    show: ({ title, message, onDone, yesText, noText }) => {
+    show: ({ title, message, onDone, yesText, noText, noEscape }) => {
       setState({
         title: title || 'Confirm',
         message: message || 'No message provided',
         yesText: yesText || 'Yes',
         noText: noText || 'No',
+        noEscape: noEscape || false,
         onDone,
       });
       modalRef.current?.show();
     },
   }), []);
-  const { message, title, yesText, noText, onDone } = state;
+  const { message, title, yesText, noText, onDone, noEscape } = state;
   return (
-    <Modal ref={modalRef} noEscape>
+    <Modal ref={modalRef} noEscape={noEscape}>
       <ModalHeader>{title || 'Confirm?'}</ModalHeader>
       <ModalBody className="wide pad">{message}</ModalBody>
       <ModalFooter>

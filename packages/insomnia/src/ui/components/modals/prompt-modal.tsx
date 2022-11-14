@@ -100,7 +100,6 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
     label,
     upperCase,
     hints,
-    cancelable,
   } = state;
   const input = (
     <input
@@ -175,7 +174,8 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
   return (
     <Modal
       ref={modalRef}
-      noEscape={!cancelable}
+      // noEscape={!cancelable}
+      noEscape={false}
       onHide={state.onHide}
     >
       <ModalHeader>{title}</ModalHeader>
@@ -187,6 +187,9 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
       </ModalBody>
       <ModalFooter>
         <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>
+        <button className="btn" onClick={() => modalRef.current?.hide()}>
+          Cancel
+        </button>
         <button className="btn" onClick={handleSubmit}>
           {submitName || 'Submit'}
         </button>

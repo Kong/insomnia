@@ -15,7 +15,7 @@ export interface SelectModalOptions {
   }[];
   title: string | null;
   value: string | null;
-  noEscape?: boolean;
+  noEscape?: boolean | false;
 }
 export interface SelectModalHandle {
   show: (options: SelectModalOptions) => void;
@@ -56,8 +56,12 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
             ))}
           </select>
         </div>
+
       </ModalBody>
       <ModalFooter>
+        <button className="btn" onClick={() => modalRef.current?.hide()}>
+          Cancel
+        </button>
         <button
           className="btn"
           onClick={() => {
