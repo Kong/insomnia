@@ -37,6 +37,64 @@ interface PairsByName {
   [name: string]: Pair[];
 }
 
+// See: https://curl.se/docs/manpage.html#--data-urlencode
+const parseDataUrlEncode = (pairs: Pair[]): Pair[] => {
+  const result: Pair[] = [];
+
+  pairs.forEach(pair => {
+    if (typeof pair !== 'string') {
+      // If the pair is not a string then just push it into result.
+      result.push(encodeURIComponent(pair));
+      return;
+    }
+
+    const equalIndex = pair.indexOf('=');
+    const atIndex = pair.indexOf('@');
+
+    if (equalIndex === -1 && atIndex === -1) {
+      // If pair does not contain '=' and '@' then it is content.
+      result.push(encodeURIComponent(pair));
+      return;
+    }
+
+    if (equalIndex === 0) {
+      // If pair starts with '=', then remove it and encode the rest.
+      result.push(encodeURIComponent(pair.substring(1)));
+      return;
+    }
+
+    if (atIndex === 0) {
+      // TODO: handle '@' character at the start of the pair
+      // Note that we still keep '@' at the begin of filename now, so we know that it should be a filename's content in stead of normal string
+      result.push(encodeURIComponent(pair));
+      return;
+    }
+
+    if (equalIndex > 0) {
+      // Pair is in the form 'name=content'
+      // The name part is expected to be URL-encoded already, but to prevent malformed data input by user, we will decode end encode it again
+      const name = encodeURIComponent(decodeURIComponent(pair.substring(0, equalIndex)));
+      const content = encodeURIComponent(pair.substring(equalIndex + 1));
+      result.push(`${name}=${content}`);
+      return;
+    }
+
+    if (atIndex > 0) {
+      // The pair is in the form 'name@filename', we should use name and filename's content.
+      // TODO: handle '@' character at the middle of the pair
+      const name = encodeURIComponent(decodeURIComponent(pair.substring(0, atIndex)));
+      const fileName = encodeURIComponent(pair.substring(atIndex));
+      result.push(`${name}=${fileName}`);
+      return;
+    }
+
+    // There should be no other case, but in case there is, keep current behavior
+    result.push(encodeURIComponent(pair));
+  });
+
+  return result;
+};
+
 const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   // ~~~~~~~~~~~~~~~~~~~~~ //
   // Collect all the flags //
@@ -102,7 +160,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     }));
 
     url = href.replace(search, '').replace(/\/$/, '');
-  } catch (error) {}
+  } catch (error) { }
 
   /// /////// Authentication //////////
   const [username, password] = getPairValue(pairsByName, '', [
@@ -169,10 +227,11 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   ];
 
   for (const paramName of paramNames) {
-    const pair = pairsByName[paramName];
+    const pairs = pairsByName[paramName];
 
-    if (pair && pair.length) {
-      textBodyParams = textBodyParams.concat(paramName === 'data-urlencode' ? pair.map(item => encodeURIComponent(item)) : pair);
+    if (pairs && pairs.length) {
+      textBodyParams = textBodyParams
+        .concat(paramName === 'data-urlencode' ? parseDataUrlEncode(pairs) : pairs);
     }
   }
 
