@@ -9,9 +9,7 @@ import {
   getProductName,
   getSegmentWriteKey,
 } from '../common/constants';
-import { ChangeBufferEvent, database as db } from '../common/database';
 import * as models from '../models/index';
-import { isSettings } from '../models/settings';
 
 const axiosConfig: AxiosRequestConfig = {
   // This is needed to ensure that we use the NodeJS adapter in the render process
@@ -109,32 +107,6 @@ export function vcsSegmentEventProperties(
   return { type, action, error };
 }
 
-interface QueuedSegmentEvent {
-  event: SegmentEvent;
-  properties?: Record<string, any>;
-  /**
-   * timestamps are required for Queued Segment Events so that when/if the event is enventually fired, it's fired with the timestamp when the event actually occurred.
-   * see: https://segment.com/docs/connections/spec/common
-   */
-  timestamp: Date;
-}
-
-/**
- * Flush any analytics events that were built up when analytics were disabled.
- */
-let queuedEvents: QueuedSegmentEvent[] = [];
-
-async function flushQueuedEvents() {
-  const events = [...queuedEvents];
-
-  // Clear queue before we even start sending to prevent races
-  queuedEvents = [];
-
-  await Promise.all(events.map(({ event, properties, timestamp }) => (
-    trackSegmentEvent(event, properties, { timestamp })
-  )));
-}
-
 interface TrackSegmentEventOptions {
   /**
    * Tracks an analytics event but queues it for later if analytics are currently disabled
@@ -148,27 +120,18 @@ interface TrackSegmentEventOptions {
 export async function trackSegmentEvent(
   event: SegmentEvent,
   properties?: Record<string, any>,
-  { queueable, timestamp }: TrackSegmentEventOptions = {},
+  { timestamp }: TrackSegmentEventOptions = {},
 ) {
   const settings = await models.settings.getOrCreate();
-  // hack to show first app starts in segment when analytics were disabled
   const allowAnalytics = settings.enableAnalytics && !process.env.INSOMNIA_INCOGNITO_MODE;
-  if (!allowAnalytics) {
-    if (queueable) {
-      const queuedEvent: QueuedSegmentEvent = {
-        event,
-        properties,
-        timestamp: new Date(),
-      };
-      queuedEvents.push(queuedEvent);
-    }
-    return;
+
+  if (allowAnalytics) {
+    sendSegment('track', {
+      event,
+      properties,
+      ...(timestamp ? { timestamp } : {}),
+    });
   }
-  sendSegment('track', {
-    event,
-    properties,
-    ...(timestamp ? { timestamp } : {}),
-  });
 }
 
 export async function trackPageView(name: string) {
@@ -191,16 +154,3 @@ function _getOsName() {
       return platform;
   }
 }
-
-// Monitor database changes to see if analytics gets enabled.
-// If analytics become enabled, flush any queued events.
-db.onChange(async (changes: ChangeBufferEvent[]) => {
-  for (const change of changes) {
-    const [event, doc] = change;
-    const isUpdatingSettings = isSettings(doc) && event === 'update';
-    const allowAnalytics = isUpdatingSettings && doc.enableAnalytics && !process.env.INSOMNIA_INCOGNITO_MODE;
-    if (allowAnalytics) {
-      await flushQueuedEvents();
-    }
-  }
-});
