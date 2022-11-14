@@ -439,7 +439,7 @@ export function isNotNullOrUndefined<ValueType>(
 export const toKebabCase = (value: string) => value.replace(/ /g, '-');
 
 export const capitalize = (value: string) => (
-  `${value.slice(0, 1).toUpperCase()}${value.slice(-1).toLowerCase()}`
+  `${value.slice(0, 1).toUpperCase()}${value.slice(1).toLowerCase()}`
 );
 
 export const toTitleCase = (value: string) => (
