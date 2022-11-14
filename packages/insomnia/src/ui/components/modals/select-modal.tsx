@@ -8,7 +8,7 @@ import { showModal } from '.';
 
 export interface SelectModalOptions {
   message: string | null;
-  onDone?: (selectedValue: string | null) => void | Promise<void>;
+  onDone?: (selectedValue: string) => void | Promise<void>;
   options: {
     name: string;
     value: string;
@@ -66,7 +66,7 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
           className="btn"
           onClick={() => {
             modalRef.current?.hide();
-            onDone?.(value);
+            onDone?.(value ?? '');
           }}
         >
           Done
