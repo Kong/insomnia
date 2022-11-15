@@ -122,7 +122,7 @@ export const ResponsePane: FC<Props> = ({
   if (!request) {
     return <BlankPane type="response" />;
   }
-  console.log('response', response?.created);
+
   if (!response) {
     return <BlankPane type="response" />;
   }
