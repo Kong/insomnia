@@ -153,7 +153,7 @@ export const Plugins: FC<Props> = ({ settings }) => {
           <div className="selectable force-pre-wrap">
             <b>{installPluginErrMsg}</b>
             {'\n\nThere may be an issue with the plugin itself, as a note you can discover and install plugins from the '}
-            <a href="https://insomnia.rest/plugins">Plugin Hub.</a>
+            <a href={PLUGIN_HUB_BASE}>Plugin Hub.</a>
             <details>
               <summary>Additional Information</summary>
               <pre className="pad-top-sm force-wrap selectable">
@@ -209,7 +209,7 @@ export const Plugins: FC<Props> = ({ settings }) => {
       <hr />
       <div className="text-right">
         <Button
-          onClick={() => clickLink('https://insomnia.rest/plugins')}
+          onClick={() => clickLink(PLUGIN_HUB_BASE)}
         >
           Browse Plugin Hub
         </Button>
