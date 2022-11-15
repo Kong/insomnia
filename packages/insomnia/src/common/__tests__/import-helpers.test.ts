@@ -1,7 +1,7 @@
 import { describe, expect, it, jest } from '@jest/globals';
 
-import * as modals from '../../../components/modals';
-import { askToImportIntoWorkspace, ForceToWorkspace } from '../helpers';
+import * as modals from '../../ui/components/modals';
+import { askToImportIntoWorkspace, ForceToWorkspace } from '../import';
 
 jest.mock('../../../components/modals');
 
