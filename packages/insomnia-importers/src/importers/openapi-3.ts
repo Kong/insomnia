@@ -343,6 +343,8 @@ const parseSecurity = (
       };
     });
 
+  const apiKeySecuritySchemas = apiKeyHeaders.length + apiKeyCookies.length + apiKeyParams.length;
+
   if (apiKeyCookies.length > 0) {
     apiKeyHeaders.push(apiKeyCookieHeader);
   }
@@ -350,8 +352,10 @@ const parseSecurity = (
   const authentication = (() => {
     const authScheme = supportedSchemes.find(
       scheme =>
-        [SECURITY_TYPE.HTTP, SECURITY_TYPE.OAUTH].includes(scheme.schemeDetails.type) &&
-        (scheme.schemeDetails.type === SECURITY_TYPE.OAUTH || SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.schemeDetails.scheme)),
+        SUPPORTED_SECURITY_TYPES.includes(scheme.schemeDetails.type) &&
+        (scheme.schemeDetails.type === SECURITY_TYPE.OAUTH
+          || (apiKeySecuritySchemas === 1 && scheme.schemeDetails.type === SECURITY_TYPE.API_KEY)
+          || SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.schemeDetails.scheme)),
     );
 
     if (!authScheme) {
@@ -367,15 +371,19 @@ const parseSecurity = (
       case SECURITY_TYPE.OAUTH:
         return parseOAuth2(authScheme.schemeDetails as OpenAPIV3.OAuth2SecurityScheme, authScheme.securityScopes);
 
+      case SECURITY_TYPE.API_KEY:
+        return parseApiKeyAuth(authScheme.schemeDetails as OpenAPIV3.ApiKeySecurityScheme);
+
       default:
         return {};
     }
   })();
 
+  const isApiKeyAuth = authentication?.type?.toLowerCase() === SECURITY_TYPE.API_KEY.toLowerCase();
   return {
-    authentication,
-    headers: apiKeyHeaders,
-    parameters: apiKeyParams,
+    authentication: authentication,
+    headers: isApiKeyAuth ? [] : apiKeyHeaders,
+    parameters: isApiKeyAuth ? [] : apiKeyParams,
   };
 };
 
@@ -623,6 +631,16 @@ const parseHttpAuth = (scheme: string) => {
     default:
       return {};
   }
+};
+
+const parseApiKeyAuth = (schemeDetails: OpenAPIV3.ApiKeySecurityScheme) => {
+  const variableName = camelCase(schemeDetails.name);
+  return {
+    type: SECURITY_TYPE.API_KEY.toLowerCase(),
+    key: schemeDetails.name,
+    value: `{{ ${variableName} }}`,
+    addTo: schemeDetails.in,
+  };
 };
 
 const parseOAuth2Scopes = (

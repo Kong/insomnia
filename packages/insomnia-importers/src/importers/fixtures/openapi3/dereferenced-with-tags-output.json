@@ -155,15 +155,14 @@
     {
       "_id": "req___WORKSPACE_ID__3d1a51d3",
       "_type": "request",
-      "authentication": {},
+      "authentication": {
+        "addTo": "header",
+        "key": "api_key",
+        "type": "apikey",
+        "value": "{{ apiKey }}"
+      },
       "body": {},
-      "headers": [
-        {
-          "disabled": false,
-          "name": "api_key",
-          "value": "{{ apiKey }}"
-        }
-      ],
+      "headers": [],
       "method": "GET",
       "name": "Find pet by ID",
       "parameters": [],
@@ -240,15 +239,14 @@
     {
       "_id": "req___WORKSPACE_ID__443ac9e7",
       "_type": "request",
-      "authentication": {},
+      "authentication": {
+        "addTo": "header",
+        "key": "api_key",
+        "type": "apikey",
+        "value": "{{ apiKey }}"
+      },
       "body": {},
-      "headers": [
-        {
-          "disabled": false,
-          "name": "api_key",
-          "value": "{{ apiKey }}"
-        }
-      ],
+      "headers": [],
       "method": "GET",
       "name": "Returns pet inventories by status",
       "parameters": [],
