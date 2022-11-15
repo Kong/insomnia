@@ -158,14 +158,14 @@ export async function trackPageView(name: string) {
 
 export async function sendTelemetry() {
   if (session.isLoggedIn()) {
-    await axiosRequest({
+    axiosRequest({
       method: 'POST',
       url: `${getApiBaseURL()}/v1/telemetry/`,
       headers: {
         'X-Session-Id': session.getCurrentSessionId(),
       },
-    }).catch((err: unknown) => {
-      console.warn('[analytics] Error sending last ping', err);
+    }).catch((error: unknown) => {
+      console.warn('[analytics] Unexpected error while sending telemetry', error);
     });
   }
 }
