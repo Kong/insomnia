@@ -2,6 +2,8 @@ import { readFileSync } from 'fs';
 import { Settings } from 'insomnia-common';
 import { ErrorResult, INSOMNIA_CONFIG_FILENAME, InsomniaConfig, isErrorResult, validate } from 'insomnia-config';
 import { resolve } from 'path';
+import { mapObjIndexed, once } from 'ramda';
+import { omitBy } from 'ramda-adjunct';
 import { ValueOf } from 'type-fest';
 
 import { isDevelopment } from '../../common/constants';
@@ -290,8 +292,8 @@ export const omitControlledSettings = <
   U extends Partial<Settings>
 >(settings: T, patch: U) => {
   for (const key of Object.keys(settings)) {
-    if (!getControlledStatus(settings)(key as keyof Settings).isControlled) {
-      // @ts-expect-error -- TSCONVERSION
+    if (getControlledStatus(settings)(key as keyof Settings).isControlled) {
+      // @ts-expect-error -- try harder
       delete patch[key];
     }
   }
@@ -300,9 +302,11 @@ export const omitControlledSettings = <
 
 /** for any given setting, whether controlled by the insomnia config or whether controlled by another value, return the calculated value */
 export const getMonkeyPatchedControlledSettings = <T extends Settings>(settings: T) => {
-  const override = Object.keys((setting: any) => (
-    getControlledStatus(settings)(setting).value
-  ));
+  const override = Object.keys(settings).reduce((acc, setting: any) => {
+    // @ts-expect-error -- try harder
+    acc[setting] = getControlledStatus(settings)(setting).value;
+    return acc;
+  }, {} as Partial<Settings>);
   return {
     ...settings,
     ...override,
