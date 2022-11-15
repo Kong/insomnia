@@ -22,7 +22,7 @@ import { DropdownDivider } from './dropdown-divider';
 import { DropdownItem } from './dropdown-item';
 
 export interface DropdownProps {
-  children: DropdownChild | DropdownChild[];
+  children: ReactNode;
   right?: boolean;
   outline?: boolean;
   wide?: boolean;
@@ -35,18 +35,21 @@ export interface DropdownProps {
 }
 
 export const dropdownsContainerId = 'dropdowns-container';
-type DropdownChild = typeof DropdownItem | typeof DropdownDivider | typeof DropdownButton;
 
-const isDropdownItem = (child: DropdownChild) => DropdownItem.name === child.name;
-const isDropdownButton = (child: DropdownChild) => DropdownButton.name === child.name;
-const isDropdownDivider = (child: DropdownChild) => DropdownDivider.name === child.name;
+const isComponent = (match: string) => (child: ReactNode) =>
+  // @ts-expect-error -- try harder
+  child.type.name === match || child.type.displayName === match;
+
+const isDropdownItem = isComponent(DropdownItem.name);
+const isDropdownButton = isComponent(DropdownButton.name);
+const isDropdownDivider = isComponent(DropdownDivider.name);
 
 // This walks the children tree and returns the dropdown specific components.
 // It allows us to use arrays, fragments etc.
-const _getFlattenedChildren = (children: DropdownChild[] | DropdownChild) => {
-  let newChildren: DropdownChild[] = [];
+const _getFlattenedChildren = (children: ReactNode[] | ReactNode) => {
+  let newChildren: ReactNode[] = [];
   // Ensure children is an array
-  const flatChildren: DropdownChild[] = Array.isArray(children) ? children : [children];
+  const flatChildren: ReactNode[] = Array.isArray(children) ? children : [children];
 
   for (const child of flatChildren) {
     if (!child) {
