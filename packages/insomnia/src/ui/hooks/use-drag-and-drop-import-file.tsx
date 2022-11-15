@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { showModal } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
-import { importUri } from '../redux/modules/import';
+import { importUri } from '../import';
 import { selectActiveWorkspace } from '../redux/selectors';
 
 export const useDragAndDropImportFile = () => {

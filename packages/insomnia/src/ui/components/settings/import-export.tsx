@@ -10,7 +10,7 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { ForceToWorkspace } from '../../../common/import';
 import { strings } from '../../../common/strings';
 import { isRequestGroup } from '../../../models/request-group';
-import { importClipBoard, importFile, importUri } from '../../redux/modules/import';
+import { importClipBoard, importFile, importUri } from '../../import';
 import { selectActiveProject, selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName, selectProjects, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject, selectWorkspacesWithResolvedNameForActiveProject } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';

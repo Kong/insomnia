@@ -44,12 +44,12 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button';
 import { WorkspaceCard } from '../components/workspace-card';
-import { cloneGitRepository } from '../redux/modules/git';
 import {
   importClipBoard,
   importFile,
   importUri,
-} from '../redux/modules/import';
+} from '../import';
+import { cloneGitRepository } from '../redux/modules/git';
 import { selectWorkspacesWithResolvedNameForActiveProject } from '../redux/selectors';
 
 const CreateButton = styled(Button).attrs({

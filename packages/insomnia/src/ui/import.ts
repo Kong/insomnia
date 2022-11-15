@@ -7,12 +7,12 @@ import {
   ForceToWorkspace,
   importRaw,
   importUri as _importUri,
-} from '../../../common/import';
-import * as models from '../../../models';
-import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
-import { Workspace, WorkspaceScope } from '../../../models/workspace';
-import { showError, showModal } from '../../components/modals';
-import { AlertModal } from '../../components/modals/alert-modal';
+} from '../common/import';
+import * as models from '../models';
+import { DEFAULT_PROJECT_ID, Project } from '../models/project';
+import { Workspace, WorkspaceScope } from '../models/workspace';
+import { showError, showModal } from './components/modals';
+import { AlertModal } from './components/modals/alert-modal';
 
 export interface ImportOptions {
   workspaceId?: string;
