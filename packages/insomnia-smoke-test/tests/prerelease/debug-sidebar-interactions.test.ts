@@ -51,7 +51,11 @@ test.describe('Debug-Sidebar', async () => {
       await page.locator('.app').press('Escape');
     });
 
-    test.fixme('Open properties of a folder', async () => {
+    test('Open properties of a folder', async ({ page }) => {
+      await page.locator('button:has-text("test folderOPEN")').click();
+      await page.locator('[data-testid="SidebarFilter"] [data-testid="SidebarCreateDropdown"] button').click();
+      await page.locator('[data-testid="Open properties of a folder"]').first().click();
+      await expect(page.locator('.app')).toContainText('Open Folder');
       // TODO implement
     });
 
@@ -88,7 +92,7 @@ test.describe('Debug-Sidebar', async () => {
       await page.locator('[data-testid="CreateHttpRequest"]').first().click();
       await expect(page.locator('.app')).toContainText('New Request');
     });
-  });
 
   // TODO: more scenarios will be added in follow-up iterations of increasing test coverage
+  });
 });

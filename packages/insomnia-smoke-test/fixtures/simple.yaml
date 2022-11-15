@@ -1,8 +1,47 @@
 _type: export
 __export_format: 4
-__export_date: 2022-10-27T10:55:44.440Z
+__export_date: 2022-11-15T17:31:29.274Z
 __export_source: insomnia.desktop.app:v2022.7.0-beta.3
 resources:
+  - _id: req_8213684eaafc4e159a4488defcb2cd43
+    parentId: fld_01de564274824ecaad272330339ea6b2
+    modified: 1668533331435
+    created: 1668533323502
+    url: insomnia.rest
+    name: New Request
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1668533323502
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: fld_01de564274824ecaad272330339ea6b2
+    parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
+    modified: 1668533312225
+    created: 1668533312225
+    name: test folder
+    description: ""
+    environment: {}
+    environmentPropertyOrder: null
+    metaSortKey: -1668533312225
+    _type: request_group
+  - _id: wrk_0702a57d75d44255a8cecd2c5fa87809
+    parentId: null
+    modified: 1666867685193
+    created: 1666867357067
+    name: simple
+    description: ""
+    scope: collection
+    _type: workspace
   - _id: ws-req_6fa6caf4a54c45e39b8bb9d8283a3e33
     parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
     modified: 1666867647526
@@ -19,14 +58,6 @@ resources:
     settingFollowRedirects: global
     description: ""
     _type: websocket_request
-  - _id: wrk_0702a57d75d44255a8cecd2c5fa87809
-    parentId: null
-    modified: 1666867685193
-    created: 1666867357067
-    name: simple
-    description: ""
-    scope: collection
-    _type: workspace
   - _id: greq_3604a6e6344949eaac23a8b13a762072
     parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
     modified: 1666868125350
