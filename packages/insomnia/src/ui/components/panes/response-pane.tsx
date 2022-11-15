@@ -12,7 +12,7 @@ import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/network';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveResponse, selectLoadStartTime, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
+import { selectActiveResponse, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -28,19 +28,19 @@ import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
 import { BlankPane } from './blank-pane';
 import { Pane, PaneHeader } from './pane';
-import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
   request?: Request | null;
+  loadStartTime: number;
 }
 export const ResponsePane: FC<Props> = ({
   request,
+  loadStartTime,
 }) => {
   const response = useSelector(selectActiveResponse) as Response | null;
   const filterHistory = useSelector(selectResponseFilterHistory);
   const filter = useSelector(selectResponseFilter);
   const settings = useSelector(selectSettings);
-  const loadStartTime = useSelector(selectLoadStartTime);
   const previewMode = useSelector(selectResponsePreviewMode);
   const handleSetFilter = async (responseFilter: string) => {
     if (!response) {
@@ -122,16 +122,9 @@ export const ResponsePane: FC<Props> = ({
   if (!request) {
     return <BlankPane type="response" />;
   }
-
+  console.log('response', response?.created);
   if (!response) {
-    return (
-      <PlaceholderResponsePane>
-        <ResponseTimer
-          handleCancel={() => cancelRequestById(request._id)}
-          loadStartTime={loadStartTime}
-        />
-      </PlaceholderResponsePane>
-    );
+    return <BlankPane type="response" />;
   }
   const timeline = models.response.getTimeline(response);
   const cookieHeaders = getSetCookieHeaders(response.headers);

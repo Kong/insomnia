@@ -379,17 +379,6 @@ export const selectActiveOAuth2Token = createSelector(
   },
 );
 
-export const selectLoadingRequestIds = createSelector(
-  selectGlobal,
-  global => global.loadingRequestIds,
-);
-
-export const selectLoadStartTime = createSelector(
-  selectLoadingRequestIds,
-  selectActiveRequest,
-  (loadingRequestIds, activeRequest) => loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1
-);
-
 export const selectUnseenWorkspaces = createSelector(
   selectEntitiesLists,
   entities => {

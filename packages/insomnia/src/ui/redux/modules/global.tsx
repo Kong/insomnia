@@ -93,12 +93,10 @@ export interface GlobalState {
   activeWorkspaceId: string | null;
   activeActivity: GlobalActivity | null;
   isLoggedIn: boolean;
-  loadingRequestIds: Record<string, number>;
 }
 
 export const reducer = combineReducers<GlobalState>({
   dashboardSortOrder: dashboardSortOrderReducer,
-  loadingRequestIds: loadingRequestsReducer,
   activeProjectId: activeProjectReducer,
   activeWorkspaceId: activeWorkspaceReducer,
   activeActivity: activeActivityReducer,

@@ -1,4 +1,4 @@
-import React, { FC, Fragment, useEffect } from 'react';
+import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import * as models from '../../models';
@@ -48,6 +48,7 @@ export const Debug: FC = () => {
   const settings = useSelector(selectSettings);
   const sidebarFilter = useSelector(selectSidebarFilter);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const [loadStartTime, setLoadStartTime] = useState(0);
 
   useDocBodyKeyboardShortcuts({
     request_togglePin:
@@ -205,6 +206,7 @@ export const Debug: FC = () => {
                   request={activeRequest}
                   settings={settings}
                   workspace={activeWorkspace}
+                  setLoadStartTime={setLoadStartTime}
                 />
               )
             )
@@ -221,7 +223,7 @@ export const Debug: FC = () => {
               isWebSocketRequest(activeRequest) ? (
                 <WebSocketResponsePane requestId={activeRequest._id} />
               ) : (
-                <ResponsePane request={activeRequest} />
+                <ResponsePane request={activeRequest} loadStartTime={loadStartTime} />
               )
             )
           )}
