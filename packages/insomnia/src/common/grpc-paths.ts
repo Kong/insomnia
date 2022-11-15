@@ -43,7 +43,7 @@ const getMethodInfo = (method: GrpcMethodDefinition): GrpcMethodInfo => ({
 
 export const NO_PACKAGE_KEY = 'no-package';
 
-function groupBy(list, keyGetter) {
+function groupBy(list: {}[], keyGetter: (item: any) => string):Record<string, any[]> {
   const map = new Map();
   list.forEach(item => {
     const key = keyGetter(item);
@@ -54,10 +54,10 @@ function groupBy(list, keyGetter) {
       collection.push(item);
     }
   });
-  return map;
+  return Object.fromEntries(map);
 }
 
-export const groupGrpcMethodsByPackage = (grpcMethodDefinitions: GrpcMethodDefinition[]): Record<string, GrpcMethodDefinition> =>
-  Object.fromEntries(groupBy(
-    grpcMethodDefinitions.map(getMethodInfo),
-    ({ segments }: { segments: GrpcPathSegments }) => segments.packageName || NO_PACKAGE_KEY));
+export const groupGrpcMethodsByPackage = (grpcMethodDefinitions: GrpcMethodDefinition[]): Record<string, GrpcMethodInfo[]> => {
+  const methodInfoList = grpcMethodDefinitions.map(getMethodInfo);
+  return groupBy(methodInfoList, ({ segments }) => segments.packageName || NO_PACKAGE_KEY);
+};

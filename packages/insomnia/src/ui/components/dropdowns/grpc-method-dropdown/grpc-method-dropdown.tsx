@@ -1,7 +1,6 @@
 import React, { Fragment, FunctionComponent, useMemo } from 'react';
 import styled from 'styled-components';
 
-import type { GrpcMethodInfo } from '../../../../common/grpc-paths';
 import {
   getGrpcPathSegments,
   getShortGrpcPath,
@@ -85,12 +84,12 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
           <DropdownItem disabled>No methods found</DropdownItem>
         </>
       )}
-      {Object.keys(groupedByPkg).map(pkgName => (
-        <Fragment key={pkgName}>
+      {Object.entries(groupedByPkg).map(([name, pkg]) => (
+        <Fragment key={name}>
           <DropdownDivider>
-            {pkgName !== NO_PACKAGE_KEY && <NormalCase>pkg: {pkgName}</NormalCase>}
+            {name !== NO_PACKAGE_KEY && <NormalCase>pkg: {name}</NormalCase>}
           </DropdownDivider>
-          {groupedByPkg[pkgName].map(({ segments, type, fullPath }: GrpcMethodInfo) => (
+          {pkg.map(({ segments, type, fullPath }) => (
             <DropdownItem
               key={fullPath}
               onClick={() => handleChange(fullPath)}
