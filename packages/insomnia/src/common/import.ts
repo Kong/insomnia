@@ -4,12 +4,14 @@ import { convert, ConvertResultType } from 'insomnia-importers';
 import type { ApiSpec } from '../models/api-spec';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
+import { Project } from '../models/project';
 import { isRequest } from '../models/request';
-import { isWorkspace, Workspace } from '../models/workspace';
+import { isWorkspace, Workspace, WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
 import { SegmentEvent, trackSegmentEvent } from '../ui/analytics';
 import { AlertModal } from '../ui/components/modals/alert-modal';
+import { AskModal } from '../ui/components/modals/ask-modal';
 import { showError, showModal } from '../ui/components/modals/index';
-import { ImportToWorkspacePrompt, SetWorkspaceScopePrompt } from '../ui/redux/modules/helpers';
+import { showSelectModal } from '../ui/components/modals/select-modal';
 import {
   BASE_ENVIRONMENT_ID_KEY,
   CONTENT_TYPE_GRAPHQL,
@@ -368,3 +370,149 @@ export const isApiSpecImport = ({ id }: Pick<ConvertResultType, 'id'>) => (
 export const isInsomniaV4Import = ({ id }: Pick<ConvertResultType, 'id'>) => (
   id === 'insomnia-4'
 );
+
+export enum ForceToWorkspace {
+  new = 'new',
+  current = 'current',
+  existing = 'existing'
+}
+
+export type SelectExistingWorkspacePrompt = Promise<string | null>;
+export function askToSelectExistingWorkspace(workspaces: Workspace[]): SelectExistingWorkspacePrompt {
+  return new Promise(resolve => {
+    const options = workspaces.map(workspace => ({ name: workspace.name, value: workspace._id }));
+
+    showSelectModal({
+      title: 'Import',
+      message: `Select a ${strings.workspace.singular.toLowerCase()} to import into`,
+      options,
+      value: options[0]?.value,
+      noEscape: true,
+      onDone: workspaceId => {
+        resolve(workspaceId);
+      },
+    });
+  });
+}
+
+async function askToImportIntoNewWorkspace(): Promise<boolean> {
+  return new Promise(resolve => {
+    showModal(AskModal, {
+      title: 'Import',
+      message: `Do you want to import into an existing ${strings.workspace.singular.toLowerCase()} or a new one?`,
+      yesText: 'Existing',
+      noText: 'New',
+      onDone: async (yes: boolean) => {
+        resolve(yes);
+      },
+    });
+  });
+}
+
+// Returning null instead of a string will create a new workspace
+export type ImportToWorkspacePrompt = () => null | string | Promise<null | string>;
+export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }: { workspaceId?: string; forceToWorkspace?: ForceToWorkspace; activeProjectWorkspaces?: Workspace[] }): ImportToWorkspacePrompt {
+  return function() {
+    switch (forceToWorkspace) {
+      case ForceToWorkspace.new: {
+        return null;
+      }
+
+      case ForceToWorkspace.current: {
+        if (!workspaceId) {
+          return null;
+        }
+
+        return workspaceId;
+      }
+
+      case ForceToWorkspace.existing: {
+        // Return null if there are no available workspaces to chose from.
+        if (activeProjectWorkspaces?.length) {
+          return new Promise(async resolve => {
+            const yes = await askToImportIntoNewWorkspace();
+            if (yes) {
+              const workspaceId = await askToSelectExistingWorkspace(activeProjectWorkspaces);
+              resolve(workspaceId);
+            } else {
+              resolve(null);
+            }
+          });
+        }
+      }
+
+      default: {
+        if (!workspaceId) {
+          return null;
+        }
+
+        return new Promise(resolve => {
+          showModal(AskModal, {
+            title: 'Import',
+            message: 'Do you want to import into the current workspace or a new one?',
+            yesText: 'Current',
+            noText: 'New Workspace',
+            onDone: async (yes: boolean) => {
+              resolve(yes ? workspaceId : null);
+            },
+          });
+        });
+      }
+    }
+  };
+}
+
+export type SetWorkspaceScopePrompt = (name?: string) => WorkspaceScope | Promise<WorkspaceScope>;
+export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScopePrompt {
+  return name => {
+    switch (scope) {
+      case WorkspaceScopeKeys.collection:
+      case WorkspaceScopeKeys.design:
+        return scope;
+
+      default:
+        return new Promise(resolve => {
+          const message = name
+            ? `How would you like to import "${name}"?`
+            : 'Do you want to import as a Request Collection or a Design Document?';
+
+          showModal(AskModal, {
+            title: 'Import As',
+            message,
+            noText: 'Request Collection',
+            yesText: 'Design Document',
+            onDone: async (yes: boolean) => {
+              resolve(yes ? WorkspaceScopeKeys.design : WorkspaceScopeKeys.collection);
+            },
+          });
+        });
+    }
+  };
+}
+
+export type SetProjectIdPrompt = () => Promise<string>;
+export function askToImportIntoProject({ projects, activeProject }: { projects?: Project[]; activeProject?: Project }): SetProjectIdPrompt {
+  return function() {
+    return new Promise(resolve => {
+      // If only one project exists, return that
+      if (projects?.length === 1) {
+        return resolve(projects[0]._id);
+      }
+
+      const options = projects?.map(project => ({ name: project.name, value: project._id })) || [];
+      const defaultValue = activeProject?._id || null;
+
+      showSelectModal({
+        title: 'Import',
+        message: `Select a ${strings.project.singular.toLowerCase()} to import into`,
+        options,
+        value: defaultValue,
+        noEscape: true,
+        onDone: selectedProjectId => {
+          // @ts-expect-error onDone can send null as an argument; why/how?
+          resolve(selectedProjectId);
+        },
+      });
+    });
+  };
+}

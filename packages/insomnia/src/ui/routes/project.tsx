@@ -20,6 +20,7 @@ import {
   ACTIVITY_SPEC,
   DashboardSortOrder,
 } from '../../common/constants';
+import { ForceToWorkspace } from '../../common/import';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
@@ -44,7 +45,6 @@ import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button';
 import { WorkspaceCard } from '../components/workspace-card';
 import { cloneGitRepository } from '../redux/modules/git';
-import { ForceToWorkspace } from '../redux/modules/helpers';
 import {
   importClipBoard,
   importFile,

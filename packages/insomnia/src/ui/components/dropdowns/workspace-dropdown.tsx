@@ -11,7 +11,6 @@ import { isDesign, Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
-import { selectIsLoading } from '../../redux/modules/global';
 import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -29,7 +28,6 @@ export const WorkspaceDropdown: FC = () => {
   const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
   const activeApiSpec = useSelector(selectActiveApiSpec);
   const activeProject = useSelector(selectActiveProject);
-  const isLoading = useSelector(selectIsLoading);
   const settings = useSelector(selectSettings);
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
@@ -117,7 +115,6 @@ export const WorkspaceDropdown: FC = () => {
           {activeWorkspaceName}
         </div>
         <i className="fa fa-caret-down space-left" />
-        {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
       </DropdownButton>
       <DropdownItem onClick={handleShowWorkspaceSettings}>
         <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings

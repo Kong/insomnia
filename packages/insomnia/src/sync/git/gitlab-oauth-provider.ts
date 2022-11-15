@@ -96,7 +96,6 @@ export async function generateAuthorizationUrl() {
 export async function exchangeCodeForGitLabToken(input: {
   code: string;
   state: string;
-  scope: string;
 }) {
   const { code, state } = input;
 

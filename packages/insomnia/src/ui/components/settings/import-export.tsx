@@ -5,11 +5,11 @@ import { useRevalidator } from 'react-router-dom';
 
 import { getProductName } from '../../../common/constants';
 import { docsImportExport } from '../../../common/documentation';
+import { exportAllToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { ForceToWorkspace } from '../../../common/import';
 import { strings } from '../../../common/strings';
 import { isRequestGroup } from '../../../models/request-group';
-import { exportAllToFile } from '../../redux/modules/global';
-import { ForceToWorkspace } from '../../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../../redux/modules/import';
 import { selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';

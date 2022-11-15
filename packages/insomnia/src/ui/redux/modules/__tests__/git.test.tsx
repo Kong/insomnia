@@ -25,7 +25,7 @@ import {
 } from '../../../../test-utils';
 import { SegmentEvent, trackSegmentEvent } from '../../../analytics';
 import { cloneGitRepository, setupGitRepository } from '../git';
-import { LOAD_START, LOAD_STOP, SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT, SET_ACTIVE_WORKSPACE } from '../global';
+import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT, SET_ACTIVE_WORKSPACE } from '../global';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../sync/git/shallow-clone');
@@ -49,12 +49,6 @@ describe('git', () => {
   // Check loading events
   afterEach(() => {
     const actions = store.getActions();
-    // Should always contain one LOAD_START and one LOAD_END
-    expect(actions.filter(({ type }) => type === LOAD_START)).toHaveLength(1);
-    expect(actions.filter(({ type }) => type === LOAD_STOP)).toHaveLength(1);
-    // LOAD_START should never be before LOAD_STOP
-    const startActionIndex = actions.findIndex(({ type }) => type === LOAD_START);
-    const stopActionIndex = actions.findIndex(({ type }) => type === LOAD_STOP);
     expect(stopActionIndex).toBeGreaterThan(startActionIndex);
   });
 
@@ -114,12 +108,6 @@ describe('git', () => {
       // Ensure activity is activated
       expect(store.getActions()).toEqual([
         {
-          type: LOAD_START,
-        },
-        {
-          type: LOAD_STOP,
-        },
-        {
           type: SET_ACTIVE_PROJECT,
           projectId: DEFAULT_PROJECT_ID,
         },
@@ -164,15 +152,6 @@ describe('git', () => {
       const alertArgs = getAndClearShowAlertMockArgs();
       expect(alertArgs.title).toBe('Clone Problem');
       expect(alertArgs.message).toBe('Multiple workspaces found in repository; expected one.');
-      // Ensure activity is activated
-      expect(store.getActions()).toEqual([
-        {
-          type: LOAD_START,
-        },
-        {
-          type: LOAD_STOP,
-        },
-      ]);
     });
 
     it('should fail if workspace already exists', async () => {
@@ -194,15 +173,6 @@ describe('git', () => {
           Workspace <strong>New Collection</strong> already exists. Please delete it before cloning.
         </Fragment>,
       );
-      // Ensure activity is activated
-      expect(store.getActions()).toEqual([
-        {
-          type: LOAD_START,
-        },
-        {
-          type: LOAD_STOP,
-        },
-      ]);
     });
 
     it('should fail if exception during clone and not try again if uri ends with .git', async () => {
@@ -213,14 +183,6 @@ describe('git', () => {
       const alertArgs = getAndClearShowAlertMockArgs();
       expect(alertArgs.title).toBe('Error Cloning Repository');
       expect(alertArgs.message).toBe(err.message);
-      expect(store.getActions()).toEqual([
-        {
-          type: LOAD_START,
-        },
-        {
-          type: LOAD_STOP,
-        },
-      ]);
       expect(shallowClone).toHaveBeenCalledTimes(1);
     });
 
@@ -240,14 +202,6 @@ describe('git', () => {
       expect(alertArgs.message).toBe(
         `Failed to clone with original url (${uri}): ${firstError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUri}): ${secondError.message}`,
       );
-      expect(store.getActions()).toEqual([
-        {
-          type: LOAD_START,
-        },
-        {
-          type: LOAD_STOP,
-        },
-      ]);
       expect(shallowClone).toHaveBeenCalledTimes(2);
     });
 
@@ -355,15 +309,6 @@ describe('git', () => {
       expect(meta?.gitRepositoryId).toBe(repoSettings._id);
       const createdRepo = await models.gitRepository.getById(repoSettings._id);
       expect(createdRepo?.needsFullClone).toBe(true);
-      // Ensure workspace is enabled
-      expect(store.getActions()).toEqual([
-        {
-          type: LOAD_START,
-        },
-        {
-          type: LOAD_STOP,
-        },
-      ]);
     });
   });
 
@@ -398,15 +343,6 @@ describe('git', () => {
       expect(errorArgs.title).toBe('Error Cloning Repository');
       expect(errorArgs.message).toBe(err.message);
       expect(errorArgs.error).toBe(err);
-      // Ensure activity is activated
-      expect(store.getActions()).toEqual([
-        {
-          type: LOAD_START,
-        },
-        {
-          type: LOAD_STOP,
-        },
-      ]);
     });
 
     it('should fail if workspace is found', async () => {
@@ -426,15 +362,6 @@ describe('git', () => {
       expect(alertArgs.message).toBe(
         'This repository is already connected to Insomnia; try creating a clone from the dashboard instead.',
       );
-      // Ensure activity is activated
-      expect(store.getActions()).toEqual([
-        {
-          type: LOAD_START,
-        },
-        {
-          type: LOAD_STOP,
-        },
-      ]);
     });
 
     it('should setup if no .insomnia directory is found', async () => {
@@ -447,15 +374,6 @@ describe('git', () => {
       expect(wMeta?.gitRepositoryId).toBe(repo._id);
       const createdRepo = await models.gitRepository.getById(repo._id);
       expect(createdRepo?.needsFullClone).toBe(true);
-      // Ensure activity is activated
-      expect(store.getActions()).toEqual([
-        {
-          type: LOAD_START,
-        },
-        {
-          type: LOAD_STOP,
-        },
-      ]);
     });
 
     it('should setup if empty .insomnia directory is found', async () => {
@@ -469,15 +387,6 @@ describe('git', () => {
       expect(wMeta?.gitRepositoryId).toBe(repo._id);
       const createdRepo = await models.gitRepository.getById(repo._id);
       expect(createdRepo?.needsFullClone).toBe(true);
-      // Ensure activity is activated
-      expect(store.getActions()).toEqual([
-        {
-          type: LOAD_START,
-        },
-        {
-          type: LOAD_STOP,
-        },
-      ]);
     });
 
     it('should setup if empty .insomnia/workspace directory is found', async () => {
@@ -492,15 +401,6 @@ describe('git', () => {
       expect(wMeta?.gitRepositoryId).toBe(repo._id);
       const createdRepo = await models.gitRepository.getById(repo._id);
       expect(createdRepo?.needsFullClone).toBe(true);
-      // Ensure activity is activated
-      expect(store.getActions()).toEqual([
-        {
-          type: LOAD_START,
-        },
-        {
-          type: LOAD_STOP,
-        },
-      ]);
     });
   });
 });

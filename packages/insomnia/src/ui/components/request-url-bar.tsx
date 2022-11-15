@@ -4,7 +4,7 @@ import * as importers from 'insomnia-importers';
 import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useInterval } from 'react-use';
 
 import { database } from '../../common/database';
@@ -16,7 +16,6 @@ import * as network from '../../network/network';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import { loadRequestStart, loadRequestStop } from '../redux/modules/global';
 import { selectActiveEnvironment, selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
 import { type DropdownHandle, Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
@@ -54,7 +53,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
   const settings = useSelector(selectSettings);
-  const dispatch = useDispatch();
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditorHandle>(null);
@@ -106,9 +104,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       authenticationType: request.authentication?.type,
       mimeType: request.body.mimeType,
     });
-    // Start loading
-    dispatch(loadRequestStart(request._id));
-
     try {
       const responsePatch = await network.send(request._id, activeEnvironment?._id);
       const headers = responsePatch.headers || [];
@@ -175,10 +170,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     } finally {
       // Unset active response because we just made a new one
       await updateRequestMetaByParentId(request._id, { activeResponseId: null });
-      // Stop loading
-      dispatch(loadRequestStop(request._id));
     }
-  }, [activeEnvironment, dispatch, request, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  }, [activeEnvironment, request, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const handleSend = useCallback(async () => {
     if (!request) {
@@ -191,7 +184,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       authenticationType: request.authentication?.type,
       mimeType: request.body.mimeType,
     });
-    dispatch(loadRequestStart(request._id));
     try {
       const responsePatch = await network.send(request._id, activeEnvironment?._id);
       await models.response.create(responsePatch, settings.maxHistoryResponses);
@@ -217,9 +209,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
     // Unset active response because we just made a new one
     await updateRequestMetaByParentId(request._id, { activeResponseId: null });
-    // Stop loading
-    dispatch(loadRequestStop(request._id));
-  }, [activeEnvironment, dispatch, request, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  }, [activeEnvironment, request, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const send = useCallback(() => {
     setCurrentTimeout(undefined);

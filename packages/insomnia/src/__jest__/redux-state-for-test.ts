@@ -39,7 +39,6 @@ export const reduxStateForTest = async (global: Partial<GlobalState> = {}): Prom
       activeActivity: ACTIVITY_HOME,
       activeProjectId: DEFAULT_PROJECT_ID,
       dashboardSortOrder: 'modified-desc',
-      isLoading: false,
       isLoggedIn: false,
       loadingRequestIds: {},
       ...global,

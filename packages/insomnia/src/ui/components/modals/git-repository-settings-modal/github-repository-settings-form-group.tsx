@@ -1,23 +1,19 @@
 import { AxiosResponse } from 'axios';
 import type { GraphQLError } from 'graphql';
 import React, { MouseEvent, useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
 import { GitRepository } from '../../../../models/git-repository';
 import { axiosRequest } from '../../../../network/axios-request';
 import {
+  exchangeCodeForToken,
   generateAuthorizationUrl,
   GITHUB_GRAPHQL_API_URL,
   signOut,
 } from '../../../../sync/git/github-oauth-provider';
-import {
-  COMMAND_GITHUB_OAUTH_AUTHENTICATE,
-  newCommand,
-} from '../../../redux/modules/global';
 import { Button } from '../../themed-button';
-import { showAlert } from '..';
+import { showAlert, showError } from '..';
 
 interface Props {
   uri?: string;
@@ -329,7 +325,6 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
   const [error, setError] = useState('');
   const [authUrl, setAuthUrl] = useState(() => generateAuthorizationUrl());
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const dispatch = useDispatch();
 
   // When we get a new token we reset the authenticating flag and auth url. This happens because we can use the generated url for only one authorization flow.
   useEffect(() => {
@@ -375,12 +370,16 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
                 return;
               }
 
-              const command = newCommand(COMMAND_GITHUB_OAUTH_AUTHENTICATE, {
+              exchangeCodeForToken({
                 code,
                 state,
+              }).catch((error: Error) => {
+                showError({
+                  error,
+                  title: 'Error authorizing GitHub',
+                  message: error.message,
+                });
               });
-
-              command(dispatch);
             }
           }}
         >
