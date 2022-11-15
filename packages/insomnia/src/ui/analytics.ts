@@ -156,9 +156,6 @@ export async function trackPageView(name: string) {
   }
 }
 
-/**
- * This function track the last usage of the app.
- */
 export async function sendTelemetry() {
   if (session.isLoggedIn()) {
     await axiosRequest({
