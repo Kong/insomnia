@@ -466,7 +466,10 @@ export const loader: LoaderFunction = async ({
       name: isDesign(workspace) ? apiSpec.fileName : workspace.name,
       apiSpec,
       specFormatVersion,
-      workspace,
+      workspace: {
+        ...workspace,
+        name: isDesign(workspace) ? apiSpec.fileName : workspace.name,
+      },
     };
   };
 
@@ -560,7 +563,6 @@ const ProjectRoute: FC = () => {
 
   const fetcher = useFetcher();
   const { revalidate } = useRevalidator();
-  const activeProjectWorkspaces = useSelector(selectWorkspacesWithResolvedNameForActiveProject);
   const submit = useSubmit();
   const navigate = useNavigate();
   const filter = searchParams.get('filter') || '';
@@ -622,7 +624,7 @@ const ProjectRoute: FC = () => {
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
         importUri(uri, {
-          activeProjectWorkspaces,
+          activeProjectWorkspaces: workspaces.map(w => w.workspace),
           activeProject,
           projects,
           forceToWorkspace: ForceToWorkspace.existing,
@@ -630,27 +632,27 @@ const ProjectRoute: FC = () => {
         });
       },
     });
-  }, [activeProject, activeProjectWorkspaces, projects, revalidate]);
+  }, [activeProject, projects, revalidate, workspaces]);
 
   const importFromClipboard = useCallback(() => {
     importClipBoard({
-      activeProjectWorkspaces,
+      activeProjectWorkspaces: workspaces.map(w => w.workspace),
       activeProject,
       projects,
       forceToWorkspace: ForceToWorkspace.existing,
       onComplete: revalidate,
     });
-  }, [activeProject, activeProjectWorkspaces, projects, revalidate]);
+  }, [activeProject, projects, revalidate, workspaces]);
 
   const importFromFile = useCallback(() => {
     importFile({
-      activeProjectWorkspaces,
+      activeProjectWorkspaces: workspaces.map(w => w.workspace),
       activeProject,
       projects,
       forceToWorkspace: ForceToWorkspace.existing,
       onComplete: revalidate,
     });
-  }, [activeProject, activeProjectWorkspaces, projects, revalidate]);
+  }, [activeProject, projects, revalidate, workspaces]);
 
   const importFromGit = useCallback(() => {
     dispatch(cloneGitRepository({ createFsClient: MemClient.createClient, onComplete: revalidate }));
