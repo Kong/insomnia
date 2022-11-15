@@ -2,14 +2,17 @@ import Analytics from 'analytics-node';
 import { AxiosRequestConfig } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
+import * as session from '../account/session';
 import { getAccountId } from '../account/session';
 import {
+  getApiBaseURL,
   getAppPlatform,
   getAppVersion,
   getProductName,
   getSegmentWriteKey,
 } from '../common/constants';
 import * as models from '../models/index';
+import { axiosRequest } from '../network/axios-request';
 
 const axiosConfig: AxiosRequestConfig = {
   // This is needed to ensure that we use the NodeJS adapter in the render process
@@ -146,9 +149,24 @@ export async function trackPageView(name: string) {
           console.warn('[analytics] Error sending segment event', error);
         }
       });
+      sendTelemetry();
     } catch (error: unknown) {
       console.warn('[analytics] Unexpected error while sending segment event', error);
     }
+  }
+}
+
+export async function sendTelemetry() {
+  if (session.isLoggedIn()) {
+    axiosRequest({
+      method: 'POST',
+      url: `${getApiBaseURL()}/v1/telemetry/`,
+      headers: {
+        'X-Session-Id': session.getCurrentSessionId(),
+      },
+    }).catch((error: unknown) => {
+      console.warn('[analytics] Unexpected error while sending telemetry', error);
+    });
   }
 }
 
