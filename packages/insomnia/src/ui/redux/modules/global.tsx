@@ -16,7 +16,6 @@ export const SET_ACTIVE_PROJECT = 'global/activate-project';
 export const SET_DASHBOARD_SORT_ORDER = 'global/dashboard-sort-order';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
-export const SET_IS_FINISHED_BOOTING = 'global/is-finished-booting';
 
 // ~~~~~~~~ //
 // REDUCERS //
