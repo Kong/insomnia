@@ -305,10 +305,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       extraKeys: CodeMirror.normalizeKeyMap(extraKeys),
       gutters: showGuttersAndLineNumbers ? ['CodeMirror-lint-markers', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter'] : [],
       foldOptions: { widget: (from: CodeMirror.Position, to: CodeMirror.Position) => widget(codeMirror.current, from, to) },
-      mode: !handleRender ? normalizeMimeType(mode) : {
-        name: 'nunjucks',
-        baseMode: normalizeMimeType(mode),
-      },
+      mode: normalizeMimeType(mode),
       environmentAutocomplete: {
         getVariables: async () => !handleGetRenderContext ? [] : (await handleGetRenderContext())?.keys || [],
         getTags: async () => !handleGetRenderContext ? [] : (await getTagDefinitions()).map(transformEnums).flat(),
@@ -471,6 +468,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   useEffect(() => codeMirror.current?.setOption('info', infoOptions), [infoOptions]);
   useEffect(() => codeMirror.current?.setOption('jump', jumpOptions), [jumpOptions]);
   useEffect(() => codeMirror.current?.setOption('lint', lintOptions), [lintOptions]);
+  useEffect(() => codeMirror.current?.setOption('mode', normalizeMimeType(mode)), [mode]);
 
   useImperativeHandle(ref, () => ({
     setValue: value => codeMirror.current?.setValue(value),
