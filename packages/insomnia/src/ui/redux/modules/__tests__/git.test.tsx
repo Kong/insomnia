@@ -48,7 +48,6 @@ describe('git', () => {
 
   // Check loading events
   afterEach(() => {
-    const actions = store.getActions();
     expect(stopActionIndex).toBeGreaterThan(startActionIndex);
   });
 
