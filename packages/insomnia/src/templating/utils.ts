@@ -87,7 +87,7 @@ export function normalizeToDotAndBracketNotation(prefix: string) {
 }
 
 /**
- * Parse a Nunjucks tag string into a usable abject
+ * Parse a Nunjucks tag string into a usable object
  * @param {string} tagStr - the template string for the tag
  */
 export function tokenizeTag(tagStr: string) {
