@@ -15,8 +15,9 @@ import { Workspace, WorkspaceScope, WorkspaceScopeKeys } from '../../../../model
 import { WorkspaceMeta } from '../../../../models/workspace-meta';
 import { getAndClearShowPromptMockArgs } from '../../../../test-utils';
 import { SegmentEvent, trackSegmentEvent } from '../../../analytics';
+import { createWorkspace } from '../git';
 import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT, SET_ACTIVE_WORKSPACE } from '../global';
-import { activateWorkspace, createWorkspace } from '../workspace';
+import { activateWorkspace } from '../workspace';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../ui/analytics');

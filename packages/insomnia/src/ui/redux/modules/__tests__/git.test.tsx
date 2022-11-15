@@ -46,11 +46,6 @@ describe('git', () => {
     gitRepoBuilder.reset();
   });
 
-  // Check loading events
-  afterEach(() => {
-    expect(stopActionIndex).toBeGreaterThan(startActionIndex);
-  });
-
   describe('cloneGitRepository', () => {
     const dispatchCloneAndSubmitSettings = async (memClient: PromiseFsClient, uri?: string) => {
       const createFsClientMock = jest.fn().mockReturnValue(memClient);
