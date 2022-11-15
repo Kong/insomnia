@@ -1,10 +1,9 @@
 import { KeyCombination } from 'insomnia-common';
-import path from 'path';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
-import { getDataDirectory, getPortableExecutableDir } from './electron-helpers';
+import { getPortableExecutableDir } from './electron-helpers';
 
 const env = process['env'];
 
