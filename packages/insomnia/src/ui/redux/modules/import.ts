@@ -6,7 +6,6 @@ import {
   askToSetWorkspaceScope,
   ForceToWorkspace,
   importRaw,
-  ImportRawConfig,
   ImportResult,
   importUri as _importUri,
 } from '../../../common/import';
@@ -45,23 +44,17 @@ const handleImportResult = (result: ImportResult, errorMessage: string) => {
   return (summary[models.workspace.type] as Workspace[]) || [];
 };
 
-const convertToRawConfig = ({
-  forceToScope,
-  forceToWorkspace,
-  workspaceId,
-  forceToProject,
-  activeProject,
-  activeProjectWorkspaces,
-  projects,
-}: ImportOptions): ImportRawConfig => ({
-  getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-  getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }),
-  // Currently, just return the active project instead of prompting for which project to import into
-  getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject?._id || DEFAULT_PROJECT_ID),
-});
-
 export const importFile = async (
-  options: ImportOptions = {},
+  {
+    forceToScope,
+    forceToWorkspace,
+    workspaceId,
+    forceToProject,
+    activeProject,
+    activeProjectWorkspaces,
+    projects,
+    onComplete,
+  }: ImportOptions = {},
 ) => {
   const openDialogOptions: OpenDialogOptions = {
     title: 'Import Insomnia Data',
@@ -96,7 +89,12 @@ export const importFile = async (
   for (const filePath of filePaths) {
     try {
       const uri = `file://${filePath}`;
-      const config = convertToRawConfig({ ...options });
+      const config = {
+        getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
+        getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }),
+        // Currently, just return the active project instead of prompting for which project to import into
+        getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject?._id || DEFAULT_PROJECT_ID),
+      };
       const result = await _importUri(uri, config);
       handleImportResult(result, 'The file does not contain a valid specification.');
     } catch (err) {
@@ -107,11 +105,19 @@ export const importFile = async (
     }
   }
 
-  options.onComplete?.();
+  onComplete?.();
 };
 
-export const importClipBoard = async (
-  options: ImportOptions = {},
+export const importClipBoard = async ({
+  forceToScope,
+  forceToWorkspace,
+  workspaceId,
+  forceToProject,
+  activeProject,
+  activeProjectWorkspaces,
+  projects,
+  onComplete,
+}: ImportOptions = {},
 ) => {
   const schema = electron.clipboard.readText();
 
@@ -126,7 +132,12 @@ export const importClipBoard = async (
 
   // Let's import all the paths!
   try {
-    const config = convertToRawConfig({ ...options });
+    const config = {
+      getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
+      getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }),
+      // Currently, just return the active project instead of prompting for which project to import into
+      getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject?._id || DEFAULT_PROJECT_ID),
+    };
     const result = await importRaw(schema, config);
     handleImportResult(result, 'Your clipboard does not contain a valid specification.');
   } catch (err) {
@@ -136,16 +147,30 @@ export const importClipBoard = async (
     });
   }
 
-  options.onComplete?.();
+  onComplete?.();
 };
 
 export const importUri = async (
   uri: string,
-  options: ImportOptions = {},
+  {
+    forceToScope,
+    forceToWorkspace,
+    workspaceId,
+    forceToProject,
+    activeProject,
+    activeProjectWorkspaces,
+    projects,
+    onComplete,
+  }: ImportOptions = {},
 ) => {
 
   try {
-    const config = convertToRawConfig({ ...options });
+    const config = {
+      getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
+      getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }),
+      // Currently, just return the active project instead of prompting for which project to import into
+      getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject?._id || DEFAULT_PROJECT_ID),
+    };
     const result = await _importUri(uri, config);
     handleImportResult(result, 'The URI does not contain a valid specification.');
   } catch (err) {
@@ -155,5 +180,5 @@ export const importUri = async (
     });
   }
 
-  options.onComplete?.();
+  onComplete?.();
 };
