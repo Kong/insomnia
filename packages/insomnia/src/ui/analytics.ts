@@ -118,7 +118,7 @@ export async function trackSegmentEvent(
         ...(timestamp ? { timestamp } : {}),
         context,
         anonymousId,
-        userId
+        userId,
       }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);
