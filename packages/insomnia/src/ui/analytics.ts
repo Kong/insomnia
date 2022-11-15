@@ -30,26 +30,6 @@ const getDeviceId = async () => {
   return settings.deviceId || (await models.settings.update(settings, { deviceId: uuidv4() })).deviceId;
 };
 
-const sendSegment = async function sendSegment<T extends 'track' | 'page'>(segmentType: T, options: Parameters<Analytics[T]>[0]) {
-  try {
-    const anonymousId = await getDeviceId() ?? undefined;
-    const userId = getAccountId();
-    const context = {
-      app: { name: getProductName(), version: getAppVersion() },
-      os: { name: _getOsName(), version: process.getSystemVersion() },
-    };
-    // HACK: TypeScript isn't capable (yet) of correlating Analytics[T] here with Parameters<Analytics[T]> in the arguments. Technically, the typing is correct here, TypeScript is just unable to check it.
-    // See related issue microsoft/TypeScript#30581
-    segmentClient?.[segmentType]({ ...options as {event: string}, context, anonymousId, userId }, error => {
-      if (error) {
-        console.warn('[analytics] Error sending segment event', error);
-      }
-    });
-  } catch (error: unknown) {
-    console.warn('[analytics] Unexpected error while sending segment event', error);
-  }
-};
-
 export enum SegmentEvent {
   appStarted = 'App Started',
   collectionCreate = 'Collection Created',
@@ -124,20 +104,52 @@ export async function trackSegmentEvent(
 ) {
   const settings = await models.settings.getOrCreate();
   const allowAnalytics = settings.enableAnalytics && !process.env.INSOMNIA_INCOGNITO_MODE;
-
   if (allowAnalytics) {
-    sendSegment('track', {
-      event,
-      properties,
-      ...(timestamp ? { timestamp } : {}),
-    });
+    try {
+      const anonymousId = await getDeviceId() ?? undefined;
+      const userId = getAccountId();
+      const context = {
+        app: { name: getProductName(), version: getAppVersion() },
+        os: { name: _getOsName(), version: process.getSystemVersion() },
+      };
+      segmentClient.track({
+        event,
+        properties,
+        ...(timestamp ? { timestamp } : {}),
+        context,
+        anonymousId,
+        userId
+      }, error => {
+        if (error) {
+          console.warn('[analytics] Error sending segment event', error);
+        }
+      });
+    } catch (error: unknown) {
+      console.warn('[analytics] Unexpected error while sending segment event', error);
+    }
   }
 }
 
 export async function trackPageView(name: string) {
   const settings = await models.settings.getOrCreate();
   const allowAnalytics = settings.enableAnalytics && !process.env.INSOMNIA_INCOGNITO_MODE;
-  allowAnalytics && sendSegment('page', { name });
+  if (allowAnalytics) {
+    try {
+      const anonymousId = await getDeviceId() ?? undefined;
+      const userId = getAccountId();
+      const context = {
+        app: { name: getProductName(), version: getAppVersion() },
+        os: { name: _getOsName(), version: process.getSystemVersion() },
+      };
+      segmentClient.page({ name, context, anonymousId, userId }, error => {
+        if (error) {
+          console.warn('[analytics] Error sending segment event', error);
+        }
+      });
+    } catch (error: unknown) {
+      console.warn('[analytics] Unexpected error while sending segment event', error);
+    }
+  }
 }
 
 // ~~~~~~~~~~~~~~~~~ //
