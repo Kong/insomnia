@@ -3,15 +3,13 @@ import { AxiosRequestConfig } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getAccountId } from '../account/session';
-import { ChangeBufferEvent, database as db } from '../common/database';
-import * as models from '../models/index';
-import { isSettings } from '../models/settings';
 import {
   getAppPlatform,
   getAppVersion,
   getProductName,
   getSegmentWriteKey,
-} from './constants';
+} from '../common/constants';
+import * as models from '../models/index';
 
 const axiosConfig: AxiosRequestConfig = {
   // This is needed to ensure that we use the NodeJS adapter in the render process
@@ -30,26 +28,6 @@ const segmentClient = new Analytics(getSegmentWriteKey(), {
 const getDeviceId = async () => {
   const settings = await models.settings.getOrCreate();
   return settings.deviceId || (await models.settings.update(settings, { deviceId: uuidv4() })).deviceId;
-};
-
-const sendSegment = async function sendSegment<T extends 'track' | 'page'>(segmentType: T, options: Parameters<Analytics[T]>[0]) {
-  try {
-    const anonymousId = await getDeviceId() ?? undefined;
-    const userId = getAccountId();
-    const context = {
-      app: { name: getProductName(), version: getAppVersion() },
-      os: { name: _getOsName(), version: process.getSystemVersion() },
-    };
-    // HACK: TypeScript isn't capable (yet) of correlating Analytics[T] here with Parameters<Analytics[T]> in the arguments. Technically, the typing is correct here, TypeScript is just unable to check it.
-    // See related issue microsoft/TypeScript#30581
-    segmentClient?.[segmentType]({ ...options as {event: string}, context, anonymousId, userId }, error => {
-      if (error) {
-        console.warn('[analytics] Error sending segment event', error);
-      }
-    });
-  } catch (error: unknown) {
-    console.warn('[analytics] Unexpected error while sending segment event', error);
-  }
 };
 
 export enum SegmentEvent {
@@ -109,32 +87,6 @@ export function vcsSegmentEventProperties(
   return { type, action, error };
 }
 
-interface QueuedSegmentEvent {
-  event: SegmentEvent;
-  properties?: Record<string, any>;
-  /**
-   * timestamps are required for Queued Segment Events so that when/if the event is enventually fired, it's fired with the timestamp when the event actually occurred.
-   * see: https://segment.com/docs/connections/spec/common
-   */
-  timestamp: Date;
-}
-
-/**
- * Flush any analytics events that were built up when analytics were disabled.
- */
-let queuedEvents: QueuedSegmentEvent[] = [];
-
-async function flushQueuedEvents() {
-  const events = [...queuedEvents];
-
-  // Clear queue before we even start sending to prevent races
-  queuedEvents = [];
-
-  await Promise.all(events.map(({ event, properties, timestamp }) => (
-    trackSegmentEvent(event, properties, { timestamp })
-  )));
-}
-
 interface TrackSegmentEventOptions {
   /**
    * Tracks an analytics event but queues it for later if analytics are currently disabled
@@ -148,33 +100,56 @@ interface TrackSegmentEventOptions {
 export async function trackSegmentEvent(
   event: SegmentEvent,
   properties?: Record<string, any>,
-  { queueable, timestamp }: TrackSegmentEventOptions = {},
+  { timestamp }: TrackSegmentEventOptions = {},
 ) {
   const settings = await models.settings.getOrCreate();
-  // hack to show first app starts in segment when analytics were disabled
   const allowAnalytics = settings.enableAnalytics && !process.env.INSOMNIA_INCOGNITO_MODE;
-  if (!allowAnalytics) {
-    if (queueable) {
-      const queuedEvent: QueuedSegmentEvent = {
+  if (allowAnalytics) {
+    try {
+      const anonymousId = await getDeviceId() ?? undefined;
+      const userId = getAccountId();
+      const context = {
+        app: { name: getProductName(), version: getAppVersion() },
+        os: { name: _getOsName(), version: process.getSystemVersion() },
+      };
+      segmentClient.track({
         event,
         properties,
-        timestamp: new Date(),
-      };
-      queuedEvents.push(queuedEvent);
+        ...(timestamp ? { timestamp } : {}),
+        context,
+        anonymousId,
+        userId,
+      }, error => {
+        if (error) {
+          console.warn('[analytics] Error sending segment event', error);
+        }
+      });
+    } catch (error: unknown) {
+      console.warn('[analytics] Unexpected error while sending segment event', error);
     }
-    return;
   }
-  sendSegment('track', {
-    event,
-    properties,
-    ...(timestamp ? { timestamp } : {}),
-  });
 }
 
 export async function trackPageView(name: string) {
   const settings = await models.settings.getOrCreate();
   const allowAnalytics = settings.enableAnalytics && !process.env.INSOMNIA_INCOGNITO_MODE;
-  allowAnalytics && sendSegment('page', { name });
+  if (allowAnalytics) {
+    try {
+      const anonymousId = await getDeviceId() ?? undefined;
+      const userId = getAccountId();
+      const context = {
+        app: { name: getProductName(), version: getAppVersion() },
+        os: { name: _getOsName(), version: process.getSystemVersion() },
+      };
+      segmentClient.page({ name, context, anonymousId, userId }, error => {
+        if (error) {
+          console.warn('[analytics] Error sending segment event', error);
+        }
+      });
+    } catch (error: unknown) {
+      console.warn('[analytics] Unexpected error while sending segment event', error);
+    }
+  }
 }
 
 // ~~~~~~~~~~~~~~~~~ //
@@ -191,16 +166,3 @@ function _getOsName() {
       return platform;
   }
 }
-
-// Monitor database changes to see if analytics gets enabled.
-// If analytics become enabled, flush any queued events.
-db.onChange(async (changes: ChangeBufferEvent[]) => {
-  for (const change of changes) {
-    const [event, doc] = change;
-    const isUpdatingSettings = isSettings(doc) && event === 'update';
-    const allowAnalytics = isUpdatingSettings && doc.enableAnalytics && !process.env.INSOMNIA_INCOGNITO_MODE;
-    if (allowAnalytics) {
-      await flushQueuedEvents();
-    }
-  }
-});

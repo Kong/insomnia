@@ -9,7 +9,6 @@ import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
-import { SegmentEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_SPEC } from '../../../../common/constants';
 import * as models from '../../../../models';
 import { gitRepositorySchema } from '../../../../models/__schemas__/model-schemas';
@@ -24,12 +23,13 @@ import {
   getAndClearShowModalMockArgs,
   getAndClearShowPromptMockArgs,
 } from '../../../../test-utils';
+import { SegmentEvent, trackSegmentEvent } from '../../../analytics';
 import { cloneGitRepository, setupGitRepository } from '../git';
 import { LOAD_START, LOAD_STOP, SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT, SET_ACTIVE_WORKSPACE } from '../global';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../sync/git/shallow-clone');
-jest.mock('../../../../common/analytics');
+jest.mock('../../../../ui/analytics');
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);

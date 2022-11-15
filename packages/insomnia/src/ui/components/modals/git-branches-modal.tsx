@@ -2,10 +2,10 @@ import classnames from 'classnames';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { database as db } from '../../../common/database';
 import { GitVCS } from '../../../sync/git/git-vcs';
 import { getOauth2FormatName } from '../../../sync/git/utils';
+import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../analytics';
 import { initialize as initializeEntities } from '../../redux/modules/entities';
 import { selectActiveGitRepository } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';

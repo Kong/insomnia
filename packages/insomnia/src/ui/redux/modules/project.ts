@@ -1,8 +1,8 @@
-import { SegmentEvent, trackSegmentEvent } from '../../../common/analytics';
 import { ACTIVITY_HOME } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
 import { DEFAULT_PROJECT_ID, isRemoteProject, Project } from '../../../models/project';
+import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import { showAlert, showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveProject } from './global';
 

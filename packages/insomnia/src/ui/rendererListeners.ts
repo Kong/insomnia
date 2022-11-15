@@ -8,6 +8,7 @@ import { isNotDefaultProject } from '../models/project';
 import * as plugins from '../plugins';
 import * as themes from '../plugins/misc';
 import * as templating from '../templating';
+import { SegmentEvent, trackSegmentEvent } from './analytics';
 import { showModal } from './components/modals';
 import { AskModal } from './components/modals/ask-modal';
 import { SelectModal } from './components/modals/select-modal';
@@ -96,3 +97,5 @@ ipcRenderer.on('reload-plugins', async () => {
 ipcRenderer.on('toggle-preferences-shortcuts', () => {
   showModal(SettingsModal, { tab: TAB_INDEX_SHORTCUTS });
 });
+
+trackSegmentEvent(SegmentEvent.appStarted, {});

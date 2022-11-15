@@ -2,7 +2,6 @@ import { invariant } from '@remix-run/router';
 import { ActionFunction, redirect } from 'react-router-dom';
 
 import * as session from '../../account/session';
-import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';
@@ -12,6 +11,7 @@ import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isCollection } from '../../models/workspace';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';
+import { SegmentEvent, trackSegmentEvent } from '../analytics';
 
 // Project
 export const createNewProjectAction: ActionFunction = async ({ request, params }) => {

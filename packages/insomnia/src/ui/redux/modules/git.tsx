@@ -3,7 +3,6 @@ import path from 'path';
 import React, { ReactNode } from 'react';
 import YAML from 'yaml';
 
-import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../../common/analytics';
 import { database as db } from '../../../common/database';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
@@ -15,6 +14,7 @@ import { forceWorkspaceScopeToDesign } from '../../../sync/git/force-workspace-s
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../../../sync/git/git-vcs';
 import { shallowClone } from '../../../sync/git/shallow-clone';
 import { addDotGit, getOauth2FormatName, translateSSHtoHTTP } from '../../../sync/git/utils';
+import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../analytics';
 import { showAlert, showError, showModal } from '../../components/modals';
 import { GitRepositorySettingsModal } from '../../components/modals/git-repository-settings-modal';
 import { selectActiveProject } from '../selectors';

@@ -5,7 +5,6 @@ import React, { FC, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { documentationLinks } from '../../common/documentation';
 import * as models from '../../models';
 import { isRequest, Request } from '../../models/request';
@@ -13,6 +12,7 @@ import { isRequestGroup } from '../../models/request-group';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
+import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { Dropdown } from '../components/base/dropdown/dropdown';
 import { DropdownButton } from '../components/base/dropdown/dropdown-button';
 import { DropdownItem } from '../components/base/dropdown/dropdown-item';

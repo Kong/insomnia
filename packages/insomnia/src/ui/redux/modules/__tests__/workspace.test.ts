@@ -4,7 +4,6 @@ import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
-import { SegmentEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../../common/constants';
 import { database } from '../../../../common/database';
 import * as models from '../../../../models';
@@ -15,11 +14,12 @@ import { DEFAULT_PROJECT_ID } from '../../../../models/project';
 import { Workspace, WorkspaceScope, WorkspaceScopeKeys } from '../../../../models/workspace';
 import { WorkspaceMeta } from '../../../../models/workspace-meta';
 import { getAndClearShowPromptMockArgs } from '../../../../test-utils';
+import { SegmentEvent, trackSegmentEvent } from '../../../analytics';
 import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT, SET_ACTIVE_WORKSPACE } from '../global';
 import { activateWorkspace, createWorkspace } from '../workspace';
 
 jest.mock('../../../components/modals');
-jest.mock('../../../../common/analytics');
+jest.mock('../../../../ui/analytics');
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);

@@ -18,7 +18,7 @@ import {
   setActiveWorkspace,
 } from '../global';
 
-jest.mock('../../../../common/analytics');
+jest.mock('../../../../ui/analytics');
 
 describe('global', () => {
   beforeEach(async () => {

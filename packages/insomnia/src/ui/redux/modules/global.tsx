@@ -5,7 +5,6 @@ import React, { Fragment } from 'react';
 import { combineReducers, Dispatch } from 'redux';
 import { unreachableCase } from 'ts-assert-unreachable';
 
-import { trackPageView } from '../../../common/analytics';
 import type { DashboardSortOrder, GlobalActivity } from '../../../common/constants';
 import {
   ACTIVITY_HOME,
@@ -33,6 +32,7 @@ import { setTheme } from '../../../plugins/misc';
 import { exchangeCodeForToken } from '../../../sync/git/github-oauth-provider';
 import { exchangeCodeForGitLabToken } from '../../../sync/git/gitlab-oauth-provider';
 import { AskModal } from '../../../ui/components/modals/ask-modal';
+import { trackPageView } from '../../analytics';
 import { submitAuthCode } from '../../auth-session-provider';
 import { AlertModal } from '../../components/modals/alert-modal';
 import { showAlert, showError, showModal } from '../../components/modals/index';

@@ -6,10 +6,10 @@ import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
 import { isRequest } from '../models/request';
 import { isWorkspace, Workspace } from '../models/workspace';
+import { SegmentEvent, trackSegmentEvent } from '../ui/analytics';
 import { AlertModal } from '../ui/components/modals/alert-modal';
 import { showError, showModal } from '../ui/components/modals/index';
 import { ImportToWorkspacePrompt, SetWorkspaceScopePrompt } from '../ui/redux/modules/helpers';
-import { SegmentEvent, trackSegmentEvent } from './analytics';
 import {
   BASE_ENVIRONMENT_ID_KEY,
   CONTENT_TYPE_GRAPHQL,

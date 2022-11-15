@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 import { getAppSynopsis, getProductName } from '../../../common/constants';
 import * as models from '../../../models';
+import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import chartSrc from '../../images/chart.svg';
 import coreLogo from '../../images/insomnia-logo.svg';
 import { selectSettings } from '../../redux/selectors';
@@ -76,6 +77,7 @@ export const AnalyticsModal: FC = () => {
       enableAnalytics: true,
       hasPromptedAnalytics: true,
     });
+    trackSegmentEvent(SegmentEvent.appStarted, {});
   }, []);
   const onDisable = async () => {
     await models.settings.patch({

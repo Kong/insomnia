@@ -5,7 +5,6 @@ import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electro
 import path from 'path';
 
 import appConfig from '../config/config.json';
-import { SegmentEvent, trackSegmentEvent } from './common/analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import { disableSpellcheckerDownload } from './common/electron-helpers';
@@ -215,8 +214,6 @@ async function _trackStats() {
     lastVersion: oldStats.currentVersion,
     launches: oldStats.launches + 1,
   });
-
-  trackSegmentEvent(SegmentEvent.appStarted, {}, { queueable: true });
 
   ipcMain.once('window-ready', () => {
     const { currentVersion, launches, lastVersion } = stats;
