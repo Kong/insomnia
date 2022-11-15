@@ -10,8 +10,6 @@ import { trackPageView } from '../../analytics';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
-const LOAD_REQUEST_START = 'global/load-request-start';
-const LOAD_REQUEST_STOP = 'global/load-request-stop';
 export const SET_ACTIVE_PROJECT = 'global/activate-project';
 export const SET_DASHBOARD_SORT_ORDER = 'global/dashboard-sort-order';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
@@ -54,23 +52,6 @@ function activeWorkspaceReducer(state: string | null = null, action: any) {
   switch (action.type) {
     case SET_ACTIVE_WORKSPACE:
       return action.workspaceId;
-
-    default:
-      return state;
-  }
-}
-
-function loadingRequestsReducer(state: Record<string, number> = {}, action: any) {
-  switch (action.type) {
-    case LOAD_REQUEST_START:
-      return Object.assign({}, state, {
-        [action.requestId]: action.time,
-      });
-
-    case LOAD_REQUEST_STOP:
-      return Object.assign({}, state, {
-        [action.requestId]: -1,
-      });
 
     default:
       return state;
