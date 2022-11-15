@@ -5,7 +5,7 @@ import path from 'path';
 
 import appConfig from '../../config/config.json';
 import { ParsedApiSpec } from '../common/api-specs';
-import { PLUGIN_PATH } from '../common/constants';
+import { getDataDirectory } from '../common/electron-helpers';
 import { resolveHomePath } from '../common/misc';
 import * as models from '../models';
 import { GrpcRequest } from '../models/grpc-request';
@@ -209,9 +209,10 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
       .filter(p => p)
       .map(resolveHomePath);
     // Make sure the default directories exist
-    mkdirp.sync(PLUGIN_PATH);
+    const pluginPath = path.join(getDataDirectory(), 'plugins');
+    mkdirp.sync(pluginPath);
     // Also look in node_modules folder in each directory
-    const basePaths = [PLUGIN_PATH, ...extraPaths];
+    const basePaths = [pluginPath, ...extraPaths];
     const extendedPaths = basePaths.map(p => path.join(p, 'node_modules'));
     const allPaths = [...basePaths, ...extendedPaths];
     // Store plugins in a map so that plugins with the same
