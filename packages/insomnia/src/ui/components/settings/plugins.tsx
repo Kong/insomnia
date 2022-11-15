@@ -4,10 +4,9 @@ import React, { FC, useEffect, useState } from 'react';
 import {
   NPM_PACKAGE_BASE,
   PLUGIN_HUB_BASE,
-  PLUGIN_PATH,
 } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
-import { clickLink } from '../../../common/electron-helpers';
+import { clickLink, getDataDirectory } from '../../../common/electron-helpers';
 import * as models from '../../../models';
 import type { Settings } from '../../../models/settings';
 import { createPlugin } from '../../../plugins/create';
@@ -254,7 +253,7 @@ export const Plugins: FC<Props> = ({ settings }) => {
           style={{
             marginLeft: '0.3em',
           }}
-          onClick={() => window.shell.showItemInFolder(PLUGIN_PATH)}
+          onClick={() => window.shell.showItemInFolder(path.join(getDataDirectory(), 'plugins'))}
         >
           Reveal Plugins Folder
         </Button>

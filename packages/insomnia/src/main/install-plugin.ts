@@ -6,8 +6,8 @@ import fsx from 'fs-extra';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
-import { isDevelopment, isWindows, PLUGIN_PATH } from '../common/constants';
-import { getTempDir } from '../common/electron-helpers';
+import { isDevelopment, isWindows } from '../common/constants';
+import { getDataDirectory, getTempDir } from '../common/electron-helpers';
 
 const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
 
@@ -51,7 +51,7 @@ export default async function(lookupName: string) {
       info = await _isInsomniaPlugin(lookupName);
       // Get actual module name without version suffixes and things
       const moduleName = info.name;
-      const pluginDir = path.join(PLUGIN_PATH, moduleName);
+      const pluginDir = path.join(getDataDirectory(), 'plugins', moduleName);
 
       // Make plugin directory
       mkdirp.sync(pluginDir);

@@ -3,14 +3,14 @@ import mkdirp from 'mkdirp';
 import path from 'path';
 import rimraf from 'rimraf';
 
-import { PLUGIN_PATH } from '../common/constants';
+import { getDataDirectory } from '../common/electron-helpers';
 
 export async function createPlugin(
   moduleName: string,
   version: string,
   mainJs: string,
 ) {
-  const pluginDir = path.join(PLUGIN_PATH, moduleName);
+  const pluginDir = path.join(getDataDirectory(), 'plugins', moduleName);
 
   if (fs.existsSync(pluginDir)) {
     throw new Error(`Plugin already exists at "${pluginDir}"`);
