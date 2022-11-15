@@ -1,6 +1,5 @@
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
 import { AutoComplete } from 'enquirer';
-import { flatten } from 'ramda';
 
 import { logger } from '../../logger';
 import type { Database } from '../index';
@@ -69,7 +68,7 @@ export const promptTestSuites = async (
   const prompt = new AutoComplete({
     name: 'testSuite',
     message: 'Select a document or unit test suite',
-    choices: flatten(choices),
+    choices: choices.flat(),
   });
   logger.trace('Prompt for document or test suite');
   const [idIsh] = (await prompt.run()).split(' - ').reverse();

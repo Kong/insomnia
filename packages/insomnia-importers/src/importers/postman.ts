@@ -1,5 +1,3 @@
-import { reject } from 'ramda';
-
 import { Converter, ImportRequest, Parameter } from '../entities';
 import {
   Auth as V200Auth,
@@ -322,7 +320,7 @@ export class ImportPostman {
     // It is a business logic decision to remove the "Authorization" header.
     // If you think about it, this makes sense because if you've used Insomnia to fill out an Authorization form (e.g. Basic Auth), you wouldn't then also want the header to be added separately.
     // If users want to manually set up these headers they still aboslutely can, of course, but we try to keep thigns simple and help users out.
-    const headers = reject(isAuthorizationHeader, originalHeaders);
+    const headers = originalHeaders.filter(h => !isAuthorizationHeader(h));
 
     if (!authentication) {
       if (authorizationHeader) {
@@ -481,7 +479,7 @@ export class ImportPostman {
         service: credentials?.[3],
         ...(sessionToken ? { sessionToken } : {}),
       },
-      headers: reject(isAMZSecurityTokenHeader, headers),
+      headers: headers.filter(h => !isAMZSecurityTokenHeader(h)),
     };
   };
 

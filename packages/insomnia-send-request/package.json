@@ -39,8 +39,6 @@
     "nunjucks": "^3.2.1",
     "oauth-1.0a": "^2.2.6",
     "openapi-2-kong": "^3.6.1-beta.3",
-    "ramda": "^0.27.1",
-    "ramda-adjunct": "^2.33.0",
     "tough-cookie": "^4.0.0",
     "ts-assert-unreachable": "^0.0.9",
     "url-join": "^4.0.1",

@@ -1,5 +1,3 @@
-import { groupBy, map, pipe } from 'ramda';
-
 import type { GrpcMethodDefinition, GrpcMethodType } from '../network/grpc/method';
 import { getMethodType } from '../network/grpc/method';
 const PROTO_PATH_REGEX = /^\/(?:(?<package>[\w.]+)\.)?(?<service>\w+)\/(?<method>\w+)$/;
@@ -45,8 +43,21 @@ const getMethodInfo = (method: GrpcMethodDefinition): GrpcMethodInfo => ({
 
 export const NO_PACKAGE_KEY = 'no-package';
 
-export const groupGrpcMethodsByPackage = (grpcMethodDefinitions: GrpcMethodDefinition[]) => pipe(
-  () => grpcMethodDefinitions,
-  map(getMethodInfo),
-  groupBy(({ segments }) => segments.packageName || NO_PACKAGE_KEY),
-)();
+function groupBy(list: {}[], keyGetter: (item: any) => string):Record<string, any[]> {
+  const map = new Map();
+  list.forEach(item => {
+    const key = keyGetter(item);
+    const collection = map.get(key);
+    if (!collection) {
+      map.set(key, [item]);
+    } else {
+      collection.push(item);
+    }
+  });
+  return Object.fromEntries(map);
+}
+
+export const groupGrpcMethodsByPackage = (grpcMethodDefinitions: GrpcMethodDefinition[]): Record<string, GrpcMethodInfo[]> => {
+  const methodInfoList = grpcMethodDefinitions.map(getMethodInfo);
+  return groupBy(methodInfoList, ({ segments }) => segments.packageName || NO_PACKAGE_KEY);
+};

@@ -2,8 +2,6 @@ import { readFileSync } from 'fs';
 import { Settings } from 'insomnia-common';
 import { ErrorResult, INSOMNIA_CONFIG_FILENAME, InsomniaConfig, isErrorResult, validate } from 'insomnia-config';
 import { resolve } from 'path';
-import { mapObjIndexed, once } from 'ramda';
-import { omitBy } from 'ramda-adjunct';
 import { ValueOf } from 'type-fest';
 
 import { isDevelopment } from '../../common/constants';
@@ -127,7 +125,7 @@ export const isParseError = (input: ConfigError | ParseError): input is ParseErr
  *
  * note that it is a business rule that the config is never read again after startup, hence the `once` usage.
  */
-export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> | ConfigError | ParseError) = once(() => {
+export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> | ConfigError | ParseError) = () => {
   const configFileResult = getConfigFile();
 
   if (isFailedParseResult(configFileResult)) {
@@ -154,7 +152,7 @@ export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> |
 
   // This cast is important for testing intentionally bad values (the above validation will catch it, anyway)
   return (insomniaConfig as InsomniaConfig).settings || {};
-});
+};
 
 interface Condition {
   /** note: conditions are only suitable for boolean settings at this time */
@@ -204,7 +202,7 @@ export type SettingsControl<T extends keyof Settings> =
   | SettingControlledSetting<T>
   | ConfigControlledSetting<T>
   | UncontrolledSetting
-;
+  ;
 
 const isSettingControlledByCondition = (condition: Condition, setting: keyof Settings, value: ValueOf<Settings>) => {
   return condition.when === value
@@ -291,17 +289,22 @@ export const omitControlledSettings = <
   T extends Settings,
   U extends Partial<Settings>
 >(settings: T, patch: U) => {
-  return omitBy((_value, setting: string) => (
-    // TODO: unsound type casting
-    getControlledStatus(settings)(setting as keyof Settings).isControlled
-  ), patch);
+  for (const key of Object.keys(settings)) {
+    if (getControlledStatus(settings)(key as keyof Settings).isControlled) {
+      // @ts-expect-error -- try harder
+      delete patch[key];
+    }
+  }
+  return patch;
 };
 
 /** for any given setting, whether controlled by the insomnia config or whether controlled by another value, return the calculated value */
 export const getMonkeyPatchedControlledSettings = <T extends Settings>(settings: T) => {
-  const override = mapObjIndexed((_value, setting: keyof Settings) => (
-    getControlledStatus(settings)(setting).value
-  ), settings) as T;
+  const override = Object.keys(settings).reduce((acc, setting: any) => {
+    // @ts-expect-error -- try harder
+    acc[setting] = getControlledStatus(settings)(setting).value;
+    return acc;
+  }, {} as Partial<Settings>);
   return {
     ...settings,
     ...override,

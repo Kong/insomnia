@@ -1,6 +1,5 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { describe, expect, it } from '@jest/globals';
-import { difference } from 'ramda';
 
 import * as models from '../../../models';
 import { baseModelSchema, grpcRequestModelSchema, requestGroupModelSchema, requestModelSchema } from '../../../models/__schemas__/model-schemas';
@@ -18,7 +17,7 @@ const grpcRequestModelBuilder = createBuilder(grpcRequestModelSchema);
 describe('shouldShowInSidebar', () => {
   const allTypes = models.types();
   const supported = [models.request.type, models.requestGroup.type, models.grpcRequest.type, models.webSocketRequest.type];
-  const unsupported = difference(allTypes, supported);
+  const unsupported = allTypes.filter(x => !supported.includes(x));
 
   it.each(supported)('should show %s in sidebar', type => {
     expect(shouldShowInSidebar(baseModelBuilder.type(type).build())).toBe(true);

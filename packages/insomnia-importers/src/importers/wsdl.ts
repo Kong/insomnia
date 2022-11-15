@@ -5,7 +5,6 @@ import {
   getWSDLServices,
   Swagger,
 } from 'apiconnect-wsdl';
-import { path as ramdaPath } from 'ramda';
 
 import { Converter } from '../entities';
 import * as postman from './postman';
@@ -13,6 +12,17 @@ import * as postman from './postman';
 export const id = 'wsdl';
 export const name = 'WSDL';
 export const description = 'Importer for WSDL files';
+
+const pathToSwagger = (swagger: any, path: string[]) => {
+  return path.reduce((acc, v: string) => {
+    try {
+      acc = acc[v];
+    } catch (e) {
+      return undefined;
+    }
+    return acc;
+  }, swagger);
+};
 
 const convertToPostman = (items: Swagger[]) => {
   const item = items.map(swagger => {
@@ -27,7 +37,7 @@ const convertToPostman = (items: Swagger[]) => {
         const paths = api.parameters[0].schema.$ref.split('/');
         paths.shift();
         paths.push('example');
-        const example = ramdaPath(paths, swagger);
+        const example = pathToSwagger(swagger, paths);
         item.push({
           name: api.operationId,
           description: api.description || '',

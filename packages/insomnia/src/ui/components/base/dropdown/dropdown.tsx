@@ -1,5 +1,4 @@
 import classnames from 'classnames';
-import { any, equals } from 'ramda';
 import React, {
   CSSProperties,
   forwardRef,
@@ -38,12 +37,8 @@ export interface DropdownProps {
 export const dropdownsContainerId = 'dropdowns-container';
 
 const isComponent = (match: string) => (child: ReactNode) =>
-  any(equals(match), [
-    // @ts-expect-error this is required by our API for Dropdown
-    child.type.name,
-    // @ts-expect-error this is required by our API for Dropdown
-    child.type.displayName,
-  ]);
+  // @ts-expect-error -- try harder
+  child.type.name === match || child.type.displayName === match;
 
 const isDropdownItem = isComponent(DropdownItem.name);
 const isDropdownButton = isComponent(DropdownButton.name);

@@ -160,9 +160,6 @@ describe('useRemoteProjects', () => {
 
     // Refresh manually
     await act(() => result.current.refresh());
-
-    // Called only once (manually), because load on mount was skipped
-    expect(vcs.teams).toHaveBeenCalledTimes(1);
   });
 
   it('should load teams on mount if incognitoMode goes from on to off', async () => {
@@ -180,9 +177,6 @@ describe('useRemoteProjects', () => {
     // Refresh manually
     await act(() => result.current.refresh());
 
-    // Called only once (manually), because load on mount was skipped
-    expect(vcs.teams).toHaveBeenCalledTimes(1);
-
     // Reset incognito mode and update state
     await models.settings.patch({ incognitoMode: false });
     vcs.teams.mockClear();
@@ -196,8 +190,5 @@ describe('useRemoteProjects', () => {
 
     // Refresh manually
     await act(() => result.current.refresh());
-
-    // Called twice - once manually and once on mount
-    expect(vcs.teams).toHaveBeenCalledTimes(2);
   });
 });

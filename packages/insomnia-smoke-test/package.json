@@ -39,7 +39,6 @@
     "@types/graphql": "^14.5.0",
     "@types/mkdirp": "^1.0.1",
     "@types/oidc-provider": "^7.8.1",
-    "@types/ramda": "^0.27.45",
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.3",
     "concurrently": "^7.0.0",
@@ -55,8 +54,6 @@
     "jest": "^28.1.0",
     "mkdirp": "^1.0.4",
     "oidc-provider": "^7.10.6",
-    "ramda": "^0.27.1",
-    "ramda-adjunct": "^2.34.0",
     "uuid": "^8.3.2",
     "ws": "^8.8.1",
     "xvfb-maybe": "^0.2.1"
