@@ -64,6 +64,7 @@
     "@stoplight/spectral-core": "^1.12.2",
     "@stoplight/spectral-formats": "^1.2.0",
     "@stoplight/spectral-rulesets": "^1.9.0",
+    "@stoplight/types": "^13.8.0",
     "axios": "^0.21.2",
     "commander": "^5.1.0",
     "consola": "^2.15.0",
