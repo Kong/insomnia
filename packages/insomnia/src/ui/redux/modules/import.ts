@@ -1,6 +1,4 @@
 import electron, { OpenDialogOptions } from 'electron';
-import { AnyAction } from 'redux';
-import { ThunkAction } from 'redux-thunk';
 
 import {
   askToImportIntoProject,
@@ -17,8 +15,6 @@ import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
 import { Workspace, WorkspaceScope } from '../../../models/workspace';
 import { showError, showModal } from '../../components/modals';
 import { AlertModal } from '../../components/modals/alert-modal';
-import { selectActiveProject, selectProjects, selectWorkspacesWithResolvedNameForActiveProject } from '../selectors';
-import { RootState } from '.';
 
 export interface ImportOptions {
   workspaceId?: string;
@@ -57,19 +53,16 @@ const convertToRawConfig = ({
   activeProject,
   activeProjectWorkspaces,
   projects,
-}: ImportOptions): ImportRawConfig => {
+}: ImportOptions): ImportRawConfig => ({
+  getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
+  getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }),
+  // Currently, just return the active project instead of prompting for which project to import into
+  getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject?._id || DEFAULT_PROJECT_ID),
+});
 
-  return ({
-    getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-    getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }),
-    // Currently, just return the active project instead of prompting for which project to import into
-    getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject?._id || DEFAULT_PROJECT_ID),
-  });
-};
-
-export const importFile = (
+export const importFile = async (
   options: ImportOptions = {},
-): ThunkAction<void, RootState, void, AnyAction> => async (_, getState) => {
+) => {
   const openDialogOptions: OpenDialogOptions = {
     title: 'Import Insomnia Data',
     buttonLabel: 'Import',
@@ -99,15 +92,11 @@ export const importFile = (
     // It was cancelled, so let's bail out
     return;
   }
-  const state = getState();
-  const activeProject = selectActiveProject(state);
-  const activeProjectWorkspaces = selectWorkspacesWithResolvedNameForActiveProject(state);
-  const projects = selectProjects(state);
   // Let's import all the files!
   for (const filePath of filePaths) {
     try {
       const uri = `file://${filePath}`;
-      const config = convertToRawConfig({ ...options, activeProject, activeProjectWorkspaces, projects });
+      const config = convertToRawConfig({ ...options });
       const result = await _importUri(uri, config);
       handleImportResult(result, 'The file does not contain a valid specification.');
     } catch (err) {
@@ -121,7 +110,9 @@ export const importFile = (
   options.onComplete?.();
 };
 
-export const readFromClipBoard = () => {
+export const importClipBoard = async (
+  options: ImportOptions = {},
+) => {
   const schema = electron.clipboard.readText();
 
   if (!schema) {
@@ -129,25 +120,13 @@ export const readFromClipBoard = () => {
       title: 'Import Failed',
       message: 'Your clipboard appears to be empty.',
     });
-  }
-
-  return schema;
-};
-
-export const importClipBoard = (
-  options: ImportOptions = {},
-): ThunkAction<void, RootState, void, AnyAction> => async (_, getState) => {
-  const schema = readFromClipBoard();
-  if (!schema) {
     return;
+
   }
-  const state = getState();
-  const activeProject = selectActiveProject(state);
-  const activeProjectWorkspaces = selectWorkspacesWithResolvedNameForActiveProject(state);
-  const projects = selectProjects(state);
+
   // Let's import all the paths!
   try {
-    const config = convertToRawConfig({ ...options, activeProject, activeProjectWorkspaces, projects });
+    const config = convertToRawConfig({ ...options });
     const result = await importRaw(schema, config);
     handleImportResult(result, 'Your clipboard does not contain a valid specification.');
   } catch (err) {
@@ -160,16 +139,13 @@ export const importClipBoard = (
   options.onComplete?.();
 };
 
-export const importUri = (
+export const importUri = async (
   uri: string,
   options: ImportOptions = {},
-): ThunkAction<void, RootState, void, AnyAction> => async (_, getState) => {
-  const state = getState();
-  const activeProject = selectActiveProject(state);
-  const activeProjectWorkspaces = selectWorkspacesWithResolvedNameForActiveProject(state);
-  const projects = selectProjects(state);
+) => {
+
   try {
-    const config = convertToRawConfig({ ...options, activeProject, activeProjectWorkspaces, projects });
+    const config = convertToRawConfig({ ...options });
     const result = await _importUri(uri, config);
     handleImportResult(result, 'The URI does not contain a valid specification.');
   } catch (err) {

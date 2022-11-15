@@ -1,6 +1,6 @@
 import { invariant } from '@remix-run/router';
 import React, { FC, Fragment, useCallback } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   LoaderFunction,
   redirect,
@@ -50,6 +50,7 @@ import {
   importFile,
   importUri,
 } from '../redux/modules/import';
+import { selectWorkspacesWithResolvedNameForActiveProject } from '../redux/selectors';
 
 const CreateButton = styled(Button).attrs({
   variant: 'outlined',
@@ -299,10 +300,9 @@ const OrganizationProjectsSidebar: FC<{
           return (
             <li key={proj._id} className="sidebar__row">
               <div
-                className={`sidebar__item sidebar__item--request ${
-                  activeProject._id === proj._id
-                    ? 'sidebar__item--active'
-                    : ''
+                className={`sidebar__item sidebar__item--request ${activeProject._id === proj._id
+                  ? 'sidebar__item--active'
+                  : ''
                 }`}
               >
                 <button
@@ -450,8 +450,8 @@ export const loader: LoaderFunction = async ({
 
     const hasUnsavedChanges = Boolean(
       isDesign(workspace) &&
-        workspaceMeta?.cachedGitLastCommitTime &&
-        apiSpec.modified > workspaceMeta?.cachedGitLastCommitTime
+      workspaceMeta?.cachedGitLastCommitTime &&
+      apiSpec.modified > workspaceMeta?.cachedGitLastCommitTime
     );
 
     return {
@@ -554,12 +554,13 @@ export const loader: LoaderFunction = async ({
 
 const ProjectRoute: FC = () => {
   const { workspaces, activeProject, projects, organization } = useLoaderData() as LoaderData;
-  const { organizationId } = useParams() as {organizationId: string};
+  const { organizationId } = useParams() as { organizationId: string };
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
+
   const fetcher = useFetcher();
   const { revalidate } = useRevalidator();
-
+  const activeProjectWorkspaces = useSelector(selectWorkspacesWithResolvedNameForActiveProject);
   const submit = useSubmit();
   const navigate = useNavigate();
   const filter = searchParams.get('filter') || '';
@@ -620,20 +621,36 @@ const ProjectRoute: FC = () => {
       cancelable: true,
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
-        dispatch(
-          importUri(uri, { forceToWorkspace: ForceToWorkspace.existing, onComplete: revalidate })
-        );
+        importUri(uri, {
+          activeProjectWorkspaces,
+          activeProject,
+          projects,
+          forceToWorkspace: ForceToWorkspace.existing,
+          onComplete: revalidate,
+        });
       },
     });
-  }, [dispatch, revalidate]);
+  }, [activeProject, activeProjectWorkspaces, projects, revalidate]);
 
   const importFromClipboard = useCallback(() => {
-    dispatch(importClipBoard({ forceToWorkspace: ForceToWorkspace.existing, onComplete: revalidate }));
-  }, [dispatch, revalidate]);
+    importClipBoard({
+      activeProjectWorkspaces,
+      activeProject,
+      projects,
+      forceToWorkspace: ForceToWorkspace.existing,
+      onComplete: revalidate,
+    });
+  }, [activeProject, activeProjectWorkspaces, projects, revalidate]);
 
   const importFromFile = useCallback(() => {
-    dispatch(importFile({ forceToWorkspace: ForceToWorkspace.existing, onComplete: revalidate }));
-  }, [dispatch, revalidate]);
+    importFile({
+      activeProjectWorkspaces,
+      activeProject,
+      projects,
+      forceToWorkspace: ForceToWorkspace.existing,
+      onComplete: revalidate,
+    });
+  }, [activeProject, activeProjectWorkspaces, projects, revalidate]);
 
   const importFromGit = useCallback(() => {
     dispatch(cloneGitRepository({ createFsClient: MemClient.createClient, onComplete: revalidate }));
@@ -729,12 +746,10 @@ const ProjectRoute: FC = () => {
                         activeProject={activeProject}
                         onSelect={() =>
                           navigate(
-                            `/organization/${organizationId}/project/${
-                              activeProject._id
-                            }/workspace/${workspace.workspace._id}/${
-                              workspace.workspace.scope === 'design'
-                                ? ACTIVITY_SPEC
-                                : ACTIVITY_DEBUG
+                            `/organization/${organizationId}/project/${activeProject._id
+                            }/workspace/${workspace.workspace._id}/${workspace.workspace.scope === 'design'
+                              ? ACTIVITY_SPEC
+                              : ACTIVITY_DEBUG
                             }`
                           )
                         }
