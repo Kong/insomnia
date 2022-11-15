@@ -1,5 +1,4 @@
-import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
-
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import * as c from './constants';
 import { getOAuthSession, responseToObject } from './misc';
 

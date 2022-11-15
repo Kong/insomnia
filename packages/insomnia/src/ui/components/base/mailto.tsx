@@ -1,6 +1,6 @@
-import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import React, { FC, ReactNode } from 'react';
 
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { Link } from './link';
 
 interface Props {

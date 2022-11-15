@@ -468,7 +468,7 @@ export const getHttpVersion = (preferredHttpVersion: string) => {
       return { log: `Unknown HTTP version specified ${preferredHttpVersion}` };
   }
 };
-export const setDefaultProtocol = (url: string, defaultProto?: string) => {
+const setDefaultProtocol = (url: string, defaultProto?: string) => {
   const trimmedUrl = url.trim();
   defaultProto = defaultProto || 'http:';
 

@@ -85,7 +85,6 @@
     "insomnia-plugin-response": "^3.6.1-beta.3",
     "insomnia-plugin-uuid": "^3.6.1-beta.3",
     "insomnia-testing": "^3.6.1-beta.3",
-    "insomnia-url": "^3.6.1-beta.3",
     "isomorphic-git": "^1.10.4",
     "js-yaml": "^3.14.1",
     "jshint": "^2.11.1",

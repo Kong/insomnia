@@ -25,13 +25,10 @@ export const joinUrlAndQueryString = (url: string, qs: string) => {
   if (!qs) {
     return url;
   }
-
   if (!url) {
     return qs;
   }
-
   const [base, ...hashes] = url.split('#');
-
   // TODO: Make this work with URLs that have a #hash component
   const baseUrl = base || '';
   const joiner = getJoiner(base);
@@ -94,23 +91,18 @@ export const buildQueryParameter = (
  */
 export const buildQueryStringFromParams = (
   parameters: { name: string; value?: string }[],
-
   /** allow empty names and values */
   strict?: boolean,
 ) => {
   strict = strict === undefined ? true : strict;
   const items = [];
-
   for (const param of parameters) {
     const built = buildQueryParameter(param, strict);
-
     if (!built) {
       continue;
     }
-
     items.push(built);
   }
-
   return items.join('&');
 };
 

@@ -1,5 +1,4 @@
 import classnames from 'classnames';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import React, { forwardRef, Fragment, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -11,6 +10,7 @@ import { isRequest, Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { Workspace } from '../../../models/workspace';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveRequest, selectActiveWorkspace, selectActiveWorkspaceMeta, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';

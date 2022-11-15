@@ -8,7 +8,6 @@ import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonN
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { Maybe } from 'graphql-language-service';
 import { jarFromCookies } from 'insomnia-cookies';
-import { buildQueryStringFromParams, joinUrlAndQueryString, setDefaultProtocol } from 'insomnia-url';
 import prettier from 'prettier';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
@@ -22,6 +21,8 @@ import type { Request } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
 import { axiosRequest } from '../../../../network/axios-request';
 import { jsonPrettify } from '../../../../utils/prettify/json';
+import { setDefaultProtocol } from '../../../../utils/url/protocol';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../../utils/url/querystring';
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../../base/dropdown/dropdown-divider';

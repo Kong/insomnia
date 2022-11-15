@@ -1,12 +1,6 @@
 import clone from 'clone';
 import fs from 'fs';
 import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
-import {
-  buildQueryStringFromParams,
-  joinUrlAndQueryString,
-  setDefaultProtocol,
-  smartEncodeUrl,
-} from 'insomnia-url';
 import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -37,6 +31,12 @@ import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
+import { setDefaultProtocol } from '../utils/url/protocol';
+import {
+  buildQueryStringFromParams,
+  joinUrlAndQueryString,
+  smartEncodeUrl,
+} from '../utils/url/querystring';
 import { getAuthHeader, getAuthQueryParams } from './authentication';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
