@@ -28,6 +28,7 @@ import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
 import { BlankPane } from './blank-pane';
 import { Pane, PaneHeader } from './pane';
+import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
   request?: Request | null;
@@ -123,8 +124,16 @@ export const ResponsePane: FC<Props> = ({
     return <BlankPane type="response" />;
   }
 
+  // If there is no previous response, show placeholder for loading indicator
   if (!response) {
-    return <BlankPane type="response" />;
+    return (
+      <PlaceholderResponsePane>
+        <ResponseTimer
+          handleCancel={() => cancelRequestById(request._id)}
+          loadStartTime={runningRequests[request._id]}
+        />
+      </PlaceholderResponsePane>
+    );
   }
   const timeline = models.response.getTimeline(response);
   const cookieHeaders = getSetCookieHeaders(response.headers);
