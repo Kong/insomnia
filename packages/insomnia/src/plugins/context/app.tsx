@@ -48,7 +48,7 @@ export interface AppContext {
     message?: string
   ) => ReturnType<typeof showAlert>;
   dialog: (title: string, body: HTMLElement, options?: DialogOptions) => void;
-  prompt: (title: string, options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName' | 'cancelable'>) => Promise<string>;
+  prompt: (title: string, options?: Pick<PromptModalOptions, 'label' | 'defaultValue' | 'submitName'>) => Promise<string>;
   getPath: (name: string) => string;
   getInfo: () => AppInfo;
   showSaveDialog: (options?: ShowDialogOptions) => Promise<string | null>;

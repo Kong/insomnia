@@ -18,7 +18,6 @@ interface State {
   label?: string | null;
   placeholder?: string | null;
   inputType?: string | null;
-  cancelable?: boolean | null;
   onComplete?: (arg0: string) => Promise<void> | void;
   onHide?: () => void;
   onDeleteHint?: ((arg0?: string) => void) | null;
@@ -31,7 +30,6 @@ export interface PromptModalOptions {
   selectText?: boolean;
   upperCase?: boolean;
   hint?: string;
-  cancelable?: boolean;
   inputType?: string;
   placeholder?: string;
   validate?: (arg0: string) => string;
@@ -61,7 +59,6 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
     label: '',
     placeholder: '',
     inputType: '',
-    cancelable: true,
     onComplete: undefined,
     onDeleteHint: undefined,
     onHide: undefined,
@@ -100,7 +97,6 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
     label,
     upperCase,
     hints,
-    cancelable,
   } = state;
   const input = (
     <input
@@ -175,7 +171,6 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
   return (
     <Modal
       ref={modalRef}
-      noEscape={!cancelable}
       onHide={state.onHide}
     >
       <ModalHeader>{title}</ModalHeader>

@@ -49,7 +49,7 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
   }), []);
   const { message, title, yesText, noText, onDone } = state;
   return (
-    <Modal ref={modalRef} noEscape>
+    <Modal ref={modalRef}>
       <ModalHeader>{title || 'Confirm?'}</ModalHeader>
       <ModalBody className="wide pad">{message}</ModalBody>
       <ModalFooter>

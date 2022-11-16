@@ -399,7 +399,6 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, active
                   message: `Select a ${strings.workspace.singular.toLowerCase()} to import into`,
                   options,
                   value: options[0]?.value,
-                  noEscape: true,
                   onDone: workspaceId => {
                     resolve(workspaceId);
                   },
@@ -476,7 +475,6 @@ export function askToImportIntoProject({ projects, activeProject }: { projects?:
         message: `Select a ${strings.project.singular.toLowerCase()} to import into`,
         options,
         value: defaultValue,
-        noEscape: true,
         onDone: selectedProjectId => {
           // @ts-expect-error onDone can send null as an argument; why/how?
           resolve(selectedProjectId);
