@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import React from 'react';
 import { useSelector } from 'react-redux';
 
+import { isDevelopment } from '../../common/constants';
 import { askToImportIntoProject, askToImportIntoWorkspace, askToSetWorkspaceScope, importUri } from '../../common/import';
 import * as models from '../../models';
 import { reloadPlugins } from '../../plugins';
@@ -29,8 +30,13 @@ export const useAppCommands = () => {
   const projects = useSelector(selectProjects);
   useEffect(() => {
     return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
-      const urlWithoutParams = url.substring(0, url.indexOf('?'));
+      // Get the url without params
+      let urlWithoutParams = url.substring(0, url.indexOf('?')) || url;
       const params = Object.fromEntries(new URL(url).searchParams);
+      // Change protocol for dev redirects to match switch case
+      if (isDevelopment()) {
+        urlWithoutParams = urlWithoutParams.replace('insomniadev://', 'insomnia://');
+      }
       switch (urlWithoutParams) {
         case 'insomnia://app/alert':
           showModal(AlertModal, {
