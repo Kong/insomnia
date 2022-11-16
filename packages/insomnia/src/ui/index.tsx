@@ -53,7 +53,7 @@ document.title = getProductName();
 let locationHistoryEntry = `/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`;
 const prevLocationHistoryEntry = localStorage.getItem('locationHistoryEntry');
 
-if (prevLocationHistoryEntry && matchPath(prevLocationHistoryEntry, '/organization/:organizationId')) {
+if (prevLocationHistoryEntry && matchPath({ path: '/organization/:organizationId', end: false }, prevLocationHistoryEntry)) {
   locationHistoryEntry = prevLocationHistoryEntry;
 }
 
