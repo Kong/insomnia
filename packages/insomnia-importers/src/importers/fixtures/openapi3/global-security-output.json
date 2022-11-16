@@ -65,15 +65,14 @@
       "url": "{{ base_url }}/override",
       "body": {},
       "method": "GET",
-      "parameters": [
-        {
-          "name": "apiKeyHere",
-          "disabled": false,
-          "value": "{{ apiKeyHere }}"
-        }
-      ],
+      "parameters": [],
       "headers": [],
-      "authentication": {},
+      "authentication": {
+        "addTo": "query",
+        "key": "apiKeyHere",
+        "type": "apikey",
+        "value": "{{ apiKeyHere }}"
+      },
       "_type": "request",
       "_id": "req___WORKSPACE_ID__b410454b"
     }
