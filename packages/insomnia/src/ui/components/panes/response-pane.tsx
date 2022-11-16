@@ -31,11 +31,11 @@ import { Pane, PaneHeader } from './pane';
 
 interface Props {
   request?: Request | null;
-  loadStartTime: number;
+  runningRequests: Record<string, number>;
 }
 export const ResponsePane: FC<Props> = ({
   request,
-  loadStartTime,
+  runningRequests,
 }) => {
   const response = useSelector(selectActiveResponse) as Response | null;
   const filterHistory = useSelector(selectResponseFilterHistory);
@@ -222,7 +222,7 @@ export const ResponsePane: FC<Props> = ({
       <ErrorBoundary errorClassName="font-error pad text-center">
         <ResponseTimer
           handleCancel={() => cancelRequestById(request._id)}
-          loadStartTime={loadStartTime}
+          loadStartTime={runningRequests[request._id]}
         />
       </ErrorBoundary>
     </Pane>

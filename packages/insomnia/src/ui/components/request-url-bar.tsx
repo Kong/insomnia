@@ -36,7 +36,7 @@ interface Props {
   onUrlChange: (r: Request, url: string) => Promise<Request>;
   request: Request;
   uniquenessKey: string;
-  setLoadStartTime: (n: number) => void;
+  setLoading: (l: boolean) => void;
 }
 
 export interface RequestUrlBarHandle {
@@ -48,7 +48,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   onUrlChange,
   request,
   uniquenessKey,
-  setLoadStartTime,
+  setLoading,
 }, ref) => {
   const downloadPath = useSelector(selectResponseDownloadPath);
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
@@ -106,7 +106,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       authenticationType: request.authentication?.type,
       mimeType: request.body.mimeType,
     });
-    setLoadStartTime(Date.now());
+    setLoading(true);
     try {
       const responsePatch = await network.send(request._id, activeEnvironment?._id);
       const headers = responsePatch.headers || [];
@@ -173,9 +173,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     } finally {
       // Unset active response because we just made a new one
       await updateRequestMetaByParentId(request._id, { activeResponseId: null });
-      setLoadStartTime(0);
+      setLoading(false);
     }
-  }, [activeEnvironment?._id, request, setLoadStartTime, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  }, [activeEnvironment?._id, request, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const handleSend = useCallback(async () => {
     if (!request) {
@@ -188,7 +188,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       authenticationType: request.authentication?.type,
       mimeType: request.body.mimeType,
     });
-    setLoadStartTime(Date.now());
+    setLoading(true);
     try {
       const responsePatch = await network.send(request._id, activeEnvironment?._id);
       await models.response.create(responsePatch, settings.maxHistoryResponses);
@@ -214,8 +214,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
     // Unset active response because we just made a new one
     await updateRequestMetaByParentId(request._id, { activeResponseId: null });
-    setLoadStartTime(0);
-  }, [activeEnvironment?._id, request, setLoadStartTime, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+    setLoading(false);
+  }, [activeEnvironment?._id, request, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const send = useCallback(() => {
     setCurrentTimeout(undefined);

@@ -1,3 +1,4 @@
+import { invariant } from '@remix-run/router';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -48,7 +49,14 @@ export const Debug: FC = () => {
   const settings = useSelector(selectSettings);
   const sidebarFilter = useSelector(selectSidebarFilter);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
-  const [loadStartTime, setLoadStartTime] = useState(0);
+  const [runningRequests, setRunningRequests] = useState({});
+  const setLoading = (isLoading: boolean) => {
+    invariant(activeRequest, 'No active request');
+    setRunningRequests({
+      ...runningRequests,
+      [activeRequest._id]: isLoading ? Date.now() : 0,
+    });
+  };
 
   useDocBodyKeyboardShortcuts({
     request_togglePin:
@@ -206,7 +214,7 @@ export const Debug: FC = () => {
                   request={activeRequest}
                   settings={settings}
                   workspace={activeWorkspace}
-                  setLoadStartTime={setLoadStartTime}
+                  setLoading={setLoading}
                 />
               )
             )
@@ -223,7 +231,7 @@ export const Debug: FC = () => {
               isWebSocketRequest(activeRequest) ? (
                 <WebSocketResponsePane requestId={activeRequest._id} />
               ) : (
-                <ResponsePane request={activeRequest} loadStartTime={loadStartTime} />
+                <ResponsePane request={activeRequest} runningRequests={runningRequests} />
               )
             )
           )}
