@@ -191,7 +191,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     Tab: (cm: CodeMirror.Editor) => cm.somethingSelected() ? cm.indentSelection('add') : cm.replaceSelection(indentChars, 'end'),
   };
   const { handleRender, handleGetRenderContext } = useGatedNunjucks({ disabled: !enableNunjucks });
-  const prettifyXML = (code: string, filter?:string) => {
+  const prettifyXML = (code: string, filter?: string) => {
     if (updateFilter && filter) {
       try {
         const results = queryXPath(code, filter);
@@ -208,7 +208,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       return code;
     }
   };
-  const prettifyJSON = (code: string, filter?:string) => {
+  const prettifyJSON = (code: string, filter?: string) => {
     try {
       let jsonString = code;
       if (updateFilter && filter) {
@@ -305,7 +305,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       extraKeys: CodeMirror.normalizeKeyMap(extraKeys),
       gutters: showGuttersAndLineNumbers ? ['CodeMirror-lint-markers', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter'] : [],
       foldOptions: { widget: (from: CodeMirror.Position, to: CodeMirror.Position) => widget(codeMirror.current, from, to) },
-      mode: normalizeMimeType(mode),
+      mode: !handleRender ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) },
       environmentAutocomplete: {
         getVariables: async () => !handleGetRenderContext ? [] : (await handleGetRenderContext())?.keys || [],
         getTags: async () => !handleGetRenderContext ? [] : (await getTagDefinitions()).map(transformEnums).flat(),
@@ -468,7 +468,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   useEffect(() => codeMirror.current?.setOption('info', infoOptions), [infoOptions]);
   useEffect(() => codeMirror.current?.setOption('jump', jumpOptions), [jumpOptions]);
   useEffect(() => codeMirror.current?.setOption('lint', lintOptions), [lintOptions]);
-  useEffect(() => codeMirror.current?.setOption('mode', normalizeMimeType(mode)), [mode]);
+  useEffect(() => codeMirror.current?.setOption('mode', !handleRender ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) }), [handleRender, mode]);
 
   useImperativeHandle(ref, () => ({
     setValue: value => codeMirror.current?.setValue(value),
