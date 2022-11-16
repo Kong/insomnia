@@ -8,7 +8,7 @@ import { showModal } from '.';
 
 export interface SelectModalOptions {
   message: string | null;
-  onDone?: (selectedValue: string) => void | Promise<void>;
+  onDone?: (selectedValue: string | null) => void | Promise<void>;
   options: {
     name: string;
     value: string;
@@ -59,18 +59,20 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
 
       </ModalBody>
       <ModalFooter>
-        <button className="btn" onClick={() => modalRef.current?.hide()}>
-          Cancel
-        </button>
-        <button
-          className="btn"
-          onClick={() => {
-            modalRef.current?.hide();
-            onDone?.(value ?? '');
-          }}
-        >
-          Done
-        </button>
+        <>
+          { noEscape ? <button className="btn" onClick={() => modalRef.current?.hide()}>
+            Cancel
+          </button> : null }
+          <button
+            className="btn"
+            onClick={() => {
+              modalRef.current?.hide();
+              onDone?.(value);
+            }}
+          >
+            Done
+          </button>
+        </>
       </ModalFooter>
     </Modal>
   );

@@ -174,7 +174,6 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
   return (
     <Modal
       ref={modalRef}
-      // noEscape={!cancelable}
       noEscape={false}
       onHide={state.onHide}
     >
