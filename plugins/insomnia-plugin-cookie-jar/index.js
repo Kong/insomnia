@@ -1,4 +1,22 @@
-const { jarFromCookies } = require('insomnia-cookies');
+const { CookieJar } = require('tough-cookie');
+/**
+ * Get a request.jar() from a list of cookie objects
+ */
+ const jarFromCookies = (cookies) => {
+  let jar;
+  try {
+    // For some reason, fromJSON modifies `cookies`.
+    // Create a copy first just to be sure.
+    const copy = JSON.stringify({ cookies });
+    jar = CookieJar.fromJSON(copy);
+  } catch (error) {
+    console.log('[cookies] Failed to initialize cookie jar', error);
+    jar = new CookieJar();
+  }
+  jar.rejectPublicSuffixes = false;
+  jar.looseMode = true;
+  return jar;
+};
 
 module.exports.templateTags = [
   {

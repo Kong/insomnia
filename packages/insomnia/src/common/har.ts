@@ -1,10 +1,8 @@
 import clone from 'clone';
 import fs from 'fs';
-import { jarFromCookies } from 'insomnia-cookies';
-import { Cookie as toughCookie } from 'tough-cookie';
+import { Cookie as ToughCookie } from 'tough-cookie';
 
 import * as models from '../models';
-import type { Cookie } from '../models/cookie-jar';
 import type { Request } from '../models/request';
 import { newBodyRaw } from '../models/request';
 import type { Response } from '../models/response';
@@ -15,6 +13,7 @@ import * as pluginContexts from '../plugins/context/index';
 import { RenderError } from '../templating/index';
 import { smartEncodeUrl } from '../utils/url/querystring';
 import { getAppVersion } from './constants';
+import { jarFromCookies } from './cookies';
 import { database } from './database';
 import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
 import type { RenderedRequest } from './render';
@@ -420,10 +419,10 @@ function getResponseCookies(response: Response) {
   const headers = response.headers.filter(Boolean) as HarCookie[];
   const responseCookies = getSetCookieHeaders(headers)
     .reduce((accumulator, harCookie) => {
-      let cookie: null | undefined | toughCookie = null;
+      let cookie: null | undefined | ToughCookie = null;
 
       try {
-        cookie = toughCookie.parse(harCookie.value || '');
+        cookie = ToughCookie.parse(harCookie.value || '');
       } catch (error) {}
 
       if (cookie === null || cookie === undefined) {
@@ -432,13 +431,13 @@ function getResponseCookies(response: Response) {
 
       return [
         ...accumulator,
-        mapCookie(cookie as unknown as Cookie),
+        mapCookie(cookie),
       ];
     }, [] as HarCookie[]);
   return responseCookies;
 }
 
-function mapCookie(cookie: Cookie) {
+function mapCookie(cookie: ToughCookie) {
   const harCookie: HarCookie = {
     name: cookie.key,
     value: cookie.value,

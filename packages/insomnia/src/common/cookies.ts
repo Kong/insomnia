@@ -1,5 +1,7 @@
 import { Cookie, CookieJar, CookieJSON } from 'tough-cookie';
 
+import type { Cookie as CookieModel } from '../models/cookie-jar';
+
 /**
  * Get a list of cookie objects from a request.jar()
  */
@@ -20,7 +22,7 @@ export const cookiesFromJar = (cookieJar: CookieJar): Promise<CookieJSON[]> => {
 /**
  * Get a request.jar() from a list of cookie objects
  */
-export const jarFromCookies = (cookies: Cookie[]) => {
+export const jarFromCookies = (cookies: Cookie[] | CookieModel[]) => {
   let jar: CookieJar;
 
   try {

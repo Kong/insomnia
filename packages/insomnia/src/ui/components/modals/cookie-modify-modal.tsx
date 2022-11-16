@@ -1,10 +1,10 @@
 import clone from 'clone';
 import { isValid } from 'date-fns';
-import { cookieToString } from 'insomnia-cookies';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import * as toughCookie from 'tough-cookie';
+import { Cookie as ToughCookie } from 'tough-cookie';
 
+import { cookieToString } from '../../../common/cookies';
 import * as models from '../../../models';
 import type { Cookie } from '../../../models/cookie-jar';
 import { selectActiveCookieJar } from '../../redux/selectors';
@@ -71,7 +71,8 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
     rawDefaultValue = '';
   } else {
     try {
-      rawDefaultValue = cookieToString(toughCookie.Cookie.fromJSON(JSON.stringify(cookie)));
+      const c = ToughCookie.fromJSON(JSON.stringify(cookie));
+      rawDefaultValue = c ? cookieToString(c) : '';
     } catch (err) {
       console.warn('Failed to parse cookie string', err);
       rawDefaultValue = '';
@@ -165,7 +166,7 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
                       onChange={event => {
                         try {
                           // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
-                          const parsed = toughCookie.Cookie.parse(event.target.value)?.toJSON();
+                          const parsed = ToughCookie.parse(event.target.value)?.toJSON();
                           if (parsed) {
                             // Make sure cookie has an id
                             parsed.id = cookie.id;

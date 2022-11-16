@@ -28,6 +28,6 @@
     "test": "jest --silent"
   },
   "dependencies": {
-    "insomnia-cookies": "^3.6.1-beta.3"
+    "tough-cookie": "^2.3.3"
   }
 }

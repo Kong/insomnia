@@ -1,8 +1,8 @@
-import { cookieToString } from 'insomnia-cookies';
 import React, { FC, useCallback } from 'react';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
+import { cookieToString } from '../../common/cookies';
 import { Cookie } from '../../models/cookie-jar';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
@@ -29,8 +29,8 @@ const CookieRow: FC<{
   index: number;
   deleteCookie: (cookie: Cookie) => void;
 }> = ({ cookie, index, deleteCookie }) => {
-
-  const cookieString = cookieToString(ToughCookie.fromJSON(cookie));
+  const c = ToughCookie.fromJSON(cookie);
+  const cookieString = c ? cookieToString(c) : '';
   return <tr className="selectable" key={index}>
     <td>
       <RenderedText>{cookie.domain || ''}</RenderedText>

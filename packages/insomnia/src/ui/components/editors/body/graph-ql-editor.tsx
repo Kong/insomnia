@@ -7,11 +7,11 @@ import { readFileSync } from 'fs';
 import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonNullTypeNode, OperationDefinitionNode, parse, typeFromAST } from 'graphql';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { Maybe } from 'graphql-language-service';
-import { jarFromCookies } from 'insomnia-cookies';
 import prettier from 'prettier';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 
+import { jarFromCookies } from '../../../../common/cookies';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../../common/render';
