@@ -478,7 +478,7 @@ export function askToImportIntoProject({ projects, activeProject }: { projects?:
         value: defaultValue,
         noEscape: true,
         onDone: selectedProjectId => {
-          resolve(selectedProjectId);
+          resolve(selectedProjectId || '');
         },
       });
     });
