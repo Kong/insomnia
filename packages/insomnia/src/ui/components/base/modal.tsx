@@ -11,7 +11,6 @@ export interface ModalProps {
   tall?: boolean;
   wide?: boolean;
   skinny?: boolean;
-  noEscape?: boolean;
   onShow?: Function;
   onHide?: Function;
   children?: ReactNode;
@@ -28,7 +27,6 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
   centered,
   children,
   className,
-  noEscape,
   onHide: onHideProp,
   onShow,
   skinny,
@@ -69,29 +67,21 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
     'theme--dialog',
     className,
     { 'modal--fixed-height': tall },
-    { 'modal--noescape': noEscape },
     { 'modal--wide': wide },
     { 'modal--skinny': skinny },
   );
 
   useEffect(() => {
-    // Don't check for close keys if we don't want them
-    if (noEscape) {
-      return;
-    }
-
     const closeElements = containerRef.current?.querySelectorAll('[data-close-modal]');
 
     for (const element of closeElements || []) {
       element.addEventListener('click', hide);
     }
-  }, [hide, open, noEscape]);
+  }, [hide, open]);
 
   const handleKeydown = createKeybindingsHandler({
     'Escape': () => {
-      if (!noEscape) {
-        hide();
-      }
+      hide();
     },
   });
   useEffect(() => {

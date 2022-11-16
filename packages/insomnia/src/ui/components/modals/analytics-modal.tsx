@@ -99,7 +99,7 @@ export const AnalyticsModal: FC = () => {
   }
 
   return (
-    <Modal centered noEscape skinny ref={ref}>
+    <Modal centered skinny ref={ref}>
       <Wrapper>
         <Header>
           <InsomniaLogo>

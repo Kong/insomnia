@@ -15,7 +15,6 @@ export interface SelectModalOptions {
   }[];
   title: string | null;
   value: string | null;
-  noEscape?: boolean;
 }
 export interface SelectModalHandle {
   show: (options: SelectModalOptions) => void;
@@ -40,10 +39,10 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
       modalRef.current?.show();
     },
   }), []);
-  const { message, title, options, value, noEscape, onDone } = state;
+  const { message, title, options, value, onDone } = state;
 
   return (
-    <Modal ref={modalRef} noEscape={noEscape}>
+    <Modal ref={modalRef}>
       <ModalHeader>{title || 'Confirm?'}</ModalHeader>
       <ModalBody className="wide pad">
         <p>{message}</p>
