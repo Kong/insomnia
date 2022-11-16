@@ -1,6 +1,5 @@
 import clone from 'clone';
 import fs from 'fs';
-import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
 import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -8,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
+import { cookiesFromJar, jarFromCookies } from '../common/cookies';
 import { database as db } from '../common/database';
 import { getDataDirectory } from '../common/electron-helpers';
 import {
@@ -25,6 +25,7 @@ import {
 import type { ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
 import { ClientCertificate } from '../models/client-certificate';
+import { Cookie, CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import type { Request } from '../models/request';
 import type { Settings } from '../models/settings';
@@ -74,7 +75,7 @@ export async function _actuallySend(
         // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
         const nodejsCancelCurlRequest = process.type === 'renderer'
           ? window.main.cancelCurlRequest
-          :  (await import('../main/network/libcurl-promise')).cancelCurlRequest;
+          : (await import('../main/network/libcurl-promise')).cancelCurlRequest;
 
         nodejsCancelCurlRequest(renderedRequest._id);
         return resolve({
@@ -147,7 +148,8 @@ export async function _actuallySend(
           rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
           const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
           if (hasCookiesToPersist) {
-            await models.cookieJar.update(cookieJar, { cookies });
+            const patch: Partial<CookieJar> = { cookies };
+            await models.cookieJar.update(cookieJar, patch);
             timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
           }
         }
@@ -220,7 +222,7 @@ export const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentU
       }
     }
   }
-  const cookies = await cookiesFromJar(jar);
+  const cookies = (await cookiesFromJar(jar)) as Cookie[];
   return { cookies, rejectedCookies };
 };
 

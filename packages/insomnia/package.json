@@ -66,7 +66,6 @@
     "iconv-lite": "^0.6.3",
     "insomnia-common": "^3.6.1-beta.3",
     "insomnia-config": "^3.6.1-beta.3",
-    "insomnia-cookies": "^3.6.1-beta.3",
     "insomnia-importers": "^3.6.1-beta.3",
     "insomnia-plugin-base64": "^3.6.1-beta.3",
     "insomnia-plugin-cookie-jar": "^3.6.1-beta.3",

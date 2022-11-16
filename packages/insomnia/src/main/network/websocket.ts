@@ -1,7 +1,6 @@
 import electron, { ipcMain } from 'electron';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
-import { jarFromCookies } from 'insomnia-cookies';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import { KeyObject, PxfObject } from 'tls';
@@ -15,6 +14,7 @@ import {
 } from 'ws';
 
 import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
+import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { webSocketRequest } from '../../models';
 import * as models from '../../models';

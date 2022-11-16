@@ -1,7 +1,7 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { Cookie, CookieJar, CookieSerialized } from 'tough-cookie';
 
-import { cookiesFromJar, jarFromCookies } from './cookies';
+import { cookiesFromJar, jarFromCookies } from '../cookies';
 
 describe('jarFromCookies()', () => {
   it('returns valid cookies', done => {
