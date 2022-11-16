@@ -12,7 +12,7 @@ import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/network';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveResponse, selectLoadStartTime, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
+import { selectActiveResponse, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -32,15 +32,16 @@ import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
   request?: Request | null;
+  runningRequests: Record<string, number>;
 }
 export const ResponsePane: FC<Props> = ({
   request,
+  runningRequests,
 }) => {
   const response = useSelector(selectActiveResponse) as Response | null;
   const filterHistory = useSelector(selectResponseFilterHistory);
   const filter = useSelector(selectResponseFilter);
   const settings = useSelector(selectSettings);
-  const loadStartTime = useSelector(selectLoadStartTime);
   const previewMode = useSelector(selectResponsePreviewMode);
   const handleSetFilter = async (responseFilter: string) => {
     if (!response) {
@@ -123,12 +124,13 @@ export const ResponsePane: FC<Props> = ({
     return <BlankPane type="response" />;
   }
 
+  // If there is no previous response, show placeholder for loading indicator
   if (!response) {
     return (
       <PlaceholderResponsePane>
         <ResponseTimer
           handleCancel={() => cancelRequestById(request._id)}
-          loadStartTime={loadStartTime}
+          loadStartTime={runningRequests[request._id]}
         />
       </PlaceholderResponsePane>
     );
@@ -229,7 +231,7 @@ export const ResponsePane: FC<Props> = ({
       <ErrorBoundary errorClassName="font-error pad text-center">
         <ResponseTimer
           handleCancel={() => cancelRequestById(request._id)}
-          loadStartTime={loadStartTime}
+          loadStartTime={runningRequests[request._id]}
         />
       </ErrorBoundary>
     </Pane>

@@ -62,6 +62,7 @@ interface Props {
   request?: Request | null;
   settings: Settings;
   workspace: Workspace;
+  setLoading: (l: boolean) => void;
 }
 
 export const RequestPane: FC<Props> = ({
@@ -69,6 +70,7 @@ export const RequestPane: FC<Props> = ({
   request,
   settings,
   workspace,
+  setLoading,
 }) => {
 
   const updateRequestUrl = (request: Request, url: string) => {
@@ -179,6 +181,7 @@ export const RequestPane: FC<Props> = ({
             handleAutocompleteUrls={autocompleteUrls}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             request={request}
+            setLoading={setLoading}
           />
         </ErrorBoundary>
       </PaneHeader>

@@ -2,76 +2,11 @@ import { Dispatch } from 'redux';
 import { RequireExactlyOne } from 'type-fest';
 
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, GlobalActivity, isCollectionActivity, isDesignActivity } from '../../../common/constants';
-import { database } from '../../../common/database';
 import * as models from '../../../models';
-import { isCollection, isDesign, Workspace, WorkspaceScope } from '../../../models/workspace';
-import { SegmentEvent, trackSegmentEvent } from '../../analytics';
-import { showPrompt } from '../../components/modals';
-import { selectActiveActivity, selectActiveProject, selectWorkspaces } from '../selectors';
+import { isCollection, isDesign, Workspace } from '../../../models/workspace';
+import { selectActiveActivity, selectWorkspaces } from '../selectors';
 import { RootState } from '.';
 import { setActiveActivity, setActiveProject, setActiveWorkspace } from './global';
-
-type OnWorkspaceCreateCallback = (arg0: Workspace) => Promise<void> | void;
-
-const createWorkspaceAndChildren = async (patch: Partial<Workspace>) => {
-  const flushId = await database.bufferChanges();
-
-  const workspace = await models.workspace.create(patch);
-  await models.workspace.ensureChildren(workspace);
-
-  await database.flushChanges(flushId);
-  return workspace;
-};
-
-const actuallyCreate = (patch: Partial<Workspace>, onCreate?: OnWorkspaceCreateCallback) => {
-  return async (dispatch: any) => {
-    const workspace = await createWorkspaceAndChildren(patch);
-
-    if (onCreate) {
-      await onCreate(workspace);
-    }
-
-    trackSegmentEvent(SegmentEvent.collectionCreate);
-
-    await dispatch(activateWorkspace({ workspace }));
-  };
-};
-
-export const createWorkspace = ({ scope, onCreate }: {
-  scope: WorkspaceScope;
-  onCreate?: OnWorkspaceCreateCallback;
-}) => {
-  return (dispatch: any, getState: any) => {
-    const activeProject = selectActiveProject(getState());
-
-    const design = isDesign({
-      scope,
-    });
-    const title = design ? 'Design Document' : 'Request Collection';
-    const defaultValue = design ? 'my-spec.yaml' : 'My Collection';
-    const segmentEvent = design ? SegmentEvent.documentCreate : SegmentEvent.collectionCreate;
-    showPrompt({
-      title: `Create New ${title}`,
-      submitName: 'Create',
-      placeholder: defaultValue,
-      defaultValue,
-      selectText: true,
-      onComplete: async name => {
-        await dispatch(
-          actuallyCreate(
-            {
-              name,
-              scope,
-              parentId: activeProject._id,
-            },
-            onCreate,
-          ),
-        );
-        trackSegmentEvent(segmentEvent);
-      },
-    });
-  };
-};
 
 export const activateWorkspace = ({ workspace, workspaceId }: RequireExactlyOne<{workspace: Workspace; workspaceId: string}>) => {
   return async (dispatch: Dispatch, getState: () => RootState) => {

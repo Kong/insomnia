@@ -10,7 +10,6 @@ export interface CrumbProps {
 export interface BreadcrumbProps {
   crumbs: CrumbProps[];
   className?: string;
-  isLoading?: boolean;
 }
 
 const StyledBreadcrumb = styled.ul`
@@ -61,13 +60,10 @@ const Crumb: FC<CrumbProps> = ({ id, node, onClick }) => (
   </li>
 );
 
-export const Breadcrumb: FC<BreadcrumbProps> = ({ crumbs, className, isLoading }) => (
+export const Breadcrumb: FC<BreadcrumbProps> = ({ crumbs, className }) => (
   <Fragment>
     <StyledBreadcrumb className={className}>
       {crumbs.map(Crumb)}
     </StyledBreadcrumb>
-    {isLoading ? (
-      <i className="fa fa-refresh fa-spin space-left" />
-    ) : null}
   </Fragment>
 );

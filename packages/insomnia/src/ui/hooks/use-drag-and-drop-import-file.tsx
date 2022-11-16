@@ -1,15 +1,16 @@
 import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import { showModal } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
-import { importUri } from '../redux/modules/import';
-import { selectActiveWorkspace } from '../redux/selectors';
+import { importUri } from '../import';
+import { selectActiveProject, selectActiveWorkspace, selectProjects, selectWorkspacesWithResolvedNameForActiveProject } from '../redux/selectors';
 
 export const useDragAndDropImportFile = () => {
   const activeWorkspace = useSelector(selectActiveWorkspace);
-  const dispatch = useDispatch();
-  const handleImportUri = dispatch(importUri);
+  const activeProjectWorkspaces = useSelector(selectWorkspacesWithResolvedNameForActiveProject);
+  const activeProject = useSelector(selectActiveProject);
+  const projects = useSelector(selectProjects);
 
   // Global Drag and Drop for importing files
   useEffect(() => {
@@ -46,7 +47,12 @@ export const useDragAndDropImportFile = () => {
           ),
           addCancel: true,
         });
-        handleImportUri(`file://${file.path}`, { workspaceId: activeWorkspace?._id });
+        importUri(`file://${file.path}`, {
+          activeProjectWorkspaces,
+          activeProject,
+          projects,
+          workspaceId: activeWorkspace?._id,
+        });
       },
       false,
     );

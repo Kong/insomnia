@@ -1,23 +1,19 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
 import { GitRepository } from '../../../../models/git-repository';
 import { axiosRequest } from '../../../../network/axios-request';
 import {
+  exchangeCodeForGitLabToken,
   generateAuthorizationUrl,
   getGitLabOauthApiURL,
   refreshToken,
   signOut,
 } from '../../../../sync/git/gitlab-oauth-provider';
-import {
-  COMMAND_GITLAB_OAUTH_AUTHENTICATE,
-  newCommand,
-} from '../../../redux/modules/global';
 import { Button } from '../../themed-button';
-import { showAlert } from '..';
+import { showAlert, showError } from '..';
 
 interface Props {
   uri?: string;
@@ -281,7 +277,6 @@ interface GitLabSignInFormProps {
 const GitLabSignInForm = ({ token }: GitLabSignInFormProps) => {
   const [authUrl, setAuthUrl] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const dispatch = useDispatch();
 
   // When we get a new token we reset the authenticating flag and auth url. This happens because we can use the generated url for only one authorization flow.
   useEffect(() => {
@@ -323,12 +318,16 @@ const GitLabSignInForm = ({ token }: GitLabSignInFormProps) => {
               const state = parsedURL.searchParams.get('state');
 
               if (typeof code === 'string' && typeof state === 'string') {
-                const command = newCommand(COMMAND_GITLAB_OAUTH_AUTHENTICATE, {
+                exchangeCodeForGitLabToken({
                   code,
                   state,
+                }).catch((error: Error) => {
+                  showError({
+                    error,
+                    title: 'Error authorizing GitLab',
+                    message: error.message,
+                  });
                 });
-
-                command(dispatch);
               }
             }
           }}

@@ -20,6 +20,7 @@ import {
   ACTIVITY_SPEC,
   DashboardSortOrder,
 } from '../../common/constants';
+import { ForceToWorkspace } from '../../common/import';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
@@ -43,13 +44,12 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button';
 import { WorkspaceCard } from '../components/workspace-card';
-import { cloneGitRepository } from '../redux/modules/git';
-import { ForceToWorkspace } from '../redux/modules/helpers';
 import {
   importClipBoard,
   importFile,
   importUri,
-} from '../redux/modules/import';
+} from '../import';
+import { cloneGitRepository } from '../redux/modules/git';
 
 const CreateButton = styled(Button).attrs({
   variant: 'outlined',
@@ -299,10 +299,9 @@ const OrganizationProjectsSidebar: FC<{
           return (
             <li key={proj._id} className="sidebar__row">
               <div
-                className={`sidebar__item sidebar__item--request ${
-                  activeProject._id === proj._id
-                    ? 'sidebar__item--active'
-                    : ''
+                className={`sidebar__item sidebar__item--request ${activeProject._id === proj._id
+                  ? 'sidebar__item--active'
+                  : ''
                 }`}
               >
                 <button
@@ -450,8 +449,8 @@ export const loader: LoaderFunction = async ({
 
     const hasUnsavedChanges = Boolean(
       isDesign(workspace) &&
-        workspaceMeta?.cachedGitLastCommitTime &&
-        apiSpec.modified > workspaceMeta?.cachedGitLastCommitTime
+      workspaceMeta?.cachedGitLastCommitTime &&
+      apiSpec.modified > workspaceMeta?.cachedGitLastCommitTime
     );
 
     return {
@@ -466,7 +465,10 @@ export const loader: LoaderFunction = async ({
       name: isDesign(workspace) ? apiSpec.fileName : workspace.name,
       apiSpec,
       specFormatVersion,
-      workspace,
+      workspace: {
+        ...workspace,
+        name: isDesign(workspace) ? apiSpec.fileName : workspace.name,
+      },
     };
   };
 
@@ -554,12 +556,12 @@ export const loader: LoaderFunction = async ({
 
 const ProjectRoute: FC = () => {
   const { workspaces, activeProject, projects, organization } = useLoaderData() as LoaderData;
-  const { organizationId } = useParams() as {organizationId: string};
+  const { organizationId } = useParams() as { organizationId: string };
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
+
   const fetcher = useFetcher();
   const { revalidate } = useRevalidator();
-
   const submit = useSubmit();
   const navigate = useNavigate();
   const filter = searchParams.get('filter') || '';
@@ -620,20 +622,36 @@ const ProjectRoute: FC = () => {
       cancelable: true,
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
-        dispatch(
-          importUri(uri, { forceToWorkspace: ForceToWorkspace.existing, onComplete: revalidate })
-        );
+        importUri(uri, {
+          activeProjectWorkspaces: workspaces.map(w => w.workspace),
+          activeProject,
+          projects,
+          forceToWorkspace: ForceToWorkspace.existing,
+          onComplete: revalidate,
+        });
       },
     });
-  }, [dispatch, revalidate]);
+  }, [activeProject, projects, revalidate, workspaces]);
 
   const importFromClipboard = useCallback(() => {
-    dispatch(importClipBoard({ forceToWorkspace: ForceToWorkspace.existing, onComplete: revalidate }));
-  }, [dispatch, revalidate]);
+    importClipBoard({
+      activeProjectWorkspaces: workspaces.map(w => w.workspace),
+      activeProject,
+      projects,
+      forceToWorkspace: ForceToWorkspace.existing,
+      onComplete: revalidate,
+    });
+  }, [activeProject, projects, revalidate, workspaces]);
 
   const importFromFile = useCallback(() => {
-    dispatch(importFile({ forceToWorkspace: ForceToWorkspace.existing, onComplete: revalidate }));
-  }, [dispatch, revalidate]);
+    importFile({
+      activeProjectWorkspaces: workspaces.map(w => w.workspace),
+      activeProject,
+      projects,
+      forceToWorkspace: ForceToWorkspace.existing,
+      onComplete: revalidate,
+    });
+  }, [activeProject, projects, revalidate, workspaces]);
 
   const importFromGit = useCallback(() => {
     dispatch(cloneGitRepository({ createFsClient: MemClient.createClient, onComplete: revalidate }));
@@ -729,12 +747,10 @@ const ProjectRoute: FC = () => {
                         activeProject={activeProject}
                         onSelect={() =>
                           navigate(
-                            `/organization/${organizationId}/project/${
-                              activeProject._id
-                            }/workspace/${workspace.workspace._id}/${
-                              workspace.workspace.scope === 'design'
-                                ? ACTIVITY_SPEC
-                                : ACTIVITY_DEBUG
+                            `/organization/${organizationId}/project/${activeProject._id
+                            }/workspace/${workspace.workspace._id}/${workspace.workspace.scope === 'design'
+                              ? ACTIVITY_SPEC
+                              : ACTIVITY_DEBUG
                             }`
                           )
                         }
