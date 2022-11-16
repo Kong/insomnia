@@ -478,7 +478,6 @@ export function askToImportIntoProject({ projects, activeProject }: { projects?:
         value: defaultValue,
         noEscape: true,
         onDone: selectedProjectId => {
-          // @ts-expect-error onDone can send null as an argument; why/how?
           resolve(selectedProjectId);
         },
       });

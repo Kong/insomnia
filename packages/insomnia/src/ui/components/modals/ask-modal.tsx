@@ -18,7 +18,7 @@ export interface AskModalOptions {
   onDone?: (success: boolean) => Promise<void>;
   yesText?: string;
   noText?: string;
-  noEscape: boolean;
+  noEscape?: boolean;
 }
 export interface AskModalHandle {
   show: (options: AskModalOptions) => void;
