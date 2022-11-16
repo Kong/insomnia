@@ -1,6 +1,6 @@
 import { invariant } from '@remix-run/router';
 import React, { FC, Fragment, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import {
   LoaderFunction,
   redirect,
@@ -50,7 +50,6 @@ import {
   importUri,
 } from '../import';
 import { cloneGitRepository } from '../redux/modules/git';
-import { selectWorkspacesWithResolvedNameForActiveProject } from '../redux/selectors';
 
 const CreateButton = styled(Button).attrs({
   variant: 'outlined',
