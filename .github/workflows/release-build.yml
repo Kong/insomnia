@@ -47,6 +47,8 @@ jobs:
           NODE_OPTIONS: '--max_old_space_size=6144'
           APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID || '' }}
           APPLE_ID_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
+          CSC_LINK: ${{ matrix.os == 'macos-latest' && secrets[matrix.csc_link_secret] || '' }}
+          CSC_KEY_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets[matrix.csc_key_password_secret] || '' }}
           # FIXME(filipe): revert back when we have the code signing cert
           # CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
           # CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
