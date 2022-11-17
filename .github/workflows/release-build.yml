@@ -20,11 +20,8 @@ jobs:
             csc_link_secret: DESIGNER_MAC_CSC_LINK
             csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
           - os: windows-latest
-            # FIXME(filipe): revert back when we have the code signing cert
-            # csc_link_secret: DESIGNER_WINDOWS_CSC_LINK
-            # csc_key_password_secret: DESIGNER_WINDOWS_CSC_KEY_PASSWORD
-            csc_link_secret: ''
-            csc_key_password_secret: ''
+            csc_link_secret: DESIGNER_WINDOWS_CSC_LINK
+            csc_key_password_secret: DESIGNER_WINDOWS_CSC_KEY_PASSWORD
           - os: ubuntu-latest
             csc_link_secret: ''
             csc_key_password_secret: ''
@@ -40,18 +37,21 @@ jobs:
       - name: Bootstrap packages
         run: npm run bootstrap
 
-      - name: Package app
+      - name: Package app (MacOS only)
+        if: matrix.os == 'macos-latest'
         shell: bash
         run: npm run app-package
         env:
           NODE_OPTIONS: '--max_old_space_size=6144'
           APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID || '' }}
           APPLE_ID_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
-          CSC_LINK: ${{ matrix.os == 'macos-latest' && secrets[matrix.csc_link_secret] || '' }}
-          CSC_KEY_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets[matrix.csc_key_password_secret] || '' }}
-          # FIXME(filipe): revert back when we have the code signing cert
-          # CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
-          # CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
+          CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
+          CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
+
+      - name: Package app (Windows and Linux)
+        if: matrix.os != 'macos-latest'
+        shell: bash
+        run: npm run app-package
 
       - name: Setup Inso CLI version env var
         run:
