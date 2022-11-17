@@ -10,7 +10,7 @@
       ]
     },
     "settings": {
-      "$ref": "#/definitions/AllowedSettings"
+      "$ref": "#/definitions/Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"disablePaidFeatureAds\"|\"incognitoMode\">>"
     }
   },
   "additionalProperties": false,
@@ -18,7 +18,7 @@
     "insomniaConfig"
   ],
   "definitions": {
-    "AllowedSettings": {
+    "Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"disablePaidFeatureAds\"|\"incognitoMode\">>": {
       "type": "object",
       "properties": {
         "allowNotificationRequests": {
@@ -42,14 +42,7 @@
           "type": "boolean"
         }
       },
-      "additionalProperties": false,
-      "required": [
-        "allowNotificationRequests",
-        "disablePaidFeatureAds",
-        "disableUpdateNotification",
-        "enableAnalytics",
-        "incognitoMode"
-      ]
+      "additionalProperties": false
     }
   },
   "$schema": "http://json-schema.org/draft-07/schema#"

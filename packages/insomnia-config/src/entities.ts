@@ -3,7 +3,7 @@ export const INSOMNIA_CONFIG_FILENAME = 'insomnia.config.json';
 
 export type ConfigVersion = '1.0.0';
 
-export interface AllowedSettings {
+interface Settings {
   /** If false, Insomnia won't send requests to the api.insomnia.rest/notifications endpoint. This can have effects like: users won’t be notified in-app about billing issues, and they won’t receive tips about app usage. */
   allowNotificationRequests: boolean;
   /** If true, Insomnia won’t show a notification when new updates are available. Users can still check for updates in Preferences. */
@@ -15,6 +15,13 @@ export interface AllowedSettings {
   /** If true, won’t make any network requests other than the requests you ask it to send. This configuration controls Send Usage Stats (`enableAnalytics`) and Allow Notification Requests (`allowNotificationRequests`). */
   incognitoMode: boolean;
 }
+export type AllowedSettings = Partial<Pick<Settings,
+  | 'allowNotificationRequests'
+  | 'disableUpdateNotification'
+  | 'enableAnalytics'
+  | 'disablePaidFeatureAds'
+  | 'incognitoMode'
+>>;
 
 /**
  * Configuration for Insomnia.
