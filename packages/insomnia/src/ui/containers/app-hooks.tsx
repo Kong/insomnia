@@ -1,4 +1,4 @@
-import { ipcRenderer } from 'electron/renderer';
+import { ipcRenderer } from 'electron';
 import { FC, useEffect } from 'react';
 
 import { useAppCommands } from '../hooks/use-app-commands';

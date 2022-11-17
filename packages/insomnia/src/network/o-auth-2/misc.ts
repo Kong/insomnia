@@ -1,8 +1,10 @@
-import { BrowserWindow } from 'electron';
+import electron from 'electron';
 import querystring from 'querystring';
 import { v4 as uuidv4 } from 'uuid';
 
 import * as models from '../../models/index';
+
+const { BrowserWindow } = electron;
 
 export enum ChromiumVerificationResult {
   BLIND_TRUST = 0,
