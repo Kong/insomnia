@@ -12,7 +12,7 @@ import { Tooltip } from '../tooltip';
 const StatusButton = styled(Button).attrs({
   size: 'xs',
 })({
-  height: '20px',
+  height: '30px',
   borderRadius: 0,
   gap: 'var(--padding-xs)',
 });
