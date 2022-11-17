@@ -63,7 +63,6 @@ export function createWindow() {
     }
   }
 
-  console.log('😭😭😭😭😭😭😭😭 [main] Creating window');
   mainWindow = new BrowserWindow({
     // Make sure we don't initialize the window outside the bounds
     x: isVisibleOnAnyDisplay ? x : undefined,
