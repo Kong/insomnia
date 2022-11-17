@@ -13,6 +13,7 @@
     "send-request",
     "src",
     "vite.config.ts",
+    "vite-plugin-electron-node-require"
   ],
   "exclude": [
     "**/@types/mocha",
