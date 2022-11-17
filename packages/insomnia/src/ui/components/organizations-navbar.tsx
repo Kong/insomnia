@@ -82,8 +82,7 @@ const SignupModal: FC<{onHide: () => void}> = ({
     <Modal onHide={onHide} skinny ref={modalRef}>
       <ModalHeader>Login or sign up</ModalHeader>
       <ModalBody className="wide pad">
-        Log in or sign up to store your project in the cloud and share it with
-        your team.
+        Log in or sign up to create a new organization with Insomnia.
       </ModalBody>
       <ModalFooter>
         <div

@@ -72,7 +72,7 @@ const Layout = styled.div({
   gridTemplate: `
     'Header Header' auto
     'Navbar Content' 1fr
-    'Statusbar Statusbar' 20px [row-end]
+    'Statusbar Statusbar' 30px [row-end]
     / 50px 1fr;
   `,
 });
