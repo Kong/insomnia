@@ -37,7 +37,8 @@ jobs:
       - name: Bootstrap packages
         run: npm run bootstrap
 
-      - name: Package app
+      - name: Package app (MacOS only)
+        if: matrix.os == 'macos-latest'
         shell: bash
         run: npm run app-package
         env:
@@ -46,6 +47,13 @@ jobs:
           APPLE_ID_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
+
+      - name: Package app (Windows and Linux)
+        if: matrix.os != 'macos-latest'
+        shell: bash
+        run: npm run app-package
+        env:
+          NODE_OPTIONS: '--max_old_space_size=6144'
 
       - name: Setup Inso CLI version env var
         run:
