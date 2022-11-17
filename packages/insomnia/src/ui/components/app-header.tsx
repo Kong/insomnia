@@ -30,7 +30,7 @@ const StyledHeader = styled.div({
   borderBottom: '1px solid var(--hl-md)',
   display: 'grid',
   padding: 'var(--padding-xs) 0',
-  gridTemplateColumns: '2fr 1.5fr 2fr',
+  gridTemplateColumns: '1fr 1fr 1fr',
   gridTemplateRows: '1fr',
   gridTemplateAreas: "'header_left header_center header_right'",
   '.header_left': {
@@ -45,6 +45,7 @@ const StyledHeader = styled.div({
     textAlign: 'center',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   '.header_right': {
     gridArea: 'header_right',
