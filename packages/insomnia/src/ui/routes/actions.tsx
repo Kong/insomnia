@@ -240,7 +240,7 @@ export const createNewTestSuiteAction: ActionFunction = async ({
   request,
   params,
 }) => {
-  const { workspaceId, projectId } = params;
+  const { organizationId, workspaceId, projectId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   const formData = await request.formData();
   const name = formData.get('name');
@@ -253,11 +253,11 @@ export const createNewTestSuiteAction: ActionFunction = async ({
 
   trackSegmentEvent(SegmentEvent.testSuiteCreate);
 
-  return redirect(`/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}`);
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}`);
 };
 
 export const deleteTestSuiteAction: ActionFunction = async ({ params }) => {
-  const { workspaceId, projectId, testSuiteId } = params;
+  const { organizationId, workspaceId, projectId, testSuiteId } = params;
   invariant(typeof testSuiteId === 'string', 'Test Suite ID is required');
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   invariant(typeof projectId === 'string', 'Project ID is required');
@@ -273,7 +273,7 @@ export const deleteTestSuiteAction: ActionFunction = async ({ params }) => {
   trackSegmentEvent(SegmentEvent.testSuiteDelete);
 
   if (params.testSuiteId === testSuiteId) {
-    return redirect(`/project/${projectId}/workspace/${workspaceId}/test`);
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test`);
   } else {
     return null;
   }
@@ -282,7 +282,7 @@ export const deleteTestSuiteAction: ActionFunction = async ({ params }) => {
 export const runAllTestsAction: ActionFunction = async ({
   params,
 }) => {
-  const { projectId, workspaceId, testSuiteId } = params;
+  const { organizationId, projectId, workspaceId, testSuiteId } = params;
   invariant(typeof projectId === 'string', 'Project ID is required');
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   invariant(typeof testSuiteId === 'string', 'Test Suite ID is required');
@@ -301,8 +301,6 @@ export const runAllTestsAction: ActionFunction = async ({
       defaultRequestId: t.requestId,
     }));
 
-  console.log('tests', tests);
-
   const src = generate([{ name: 'My Suite', suites: [], tests }]);
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
@@ -315,8 +313,6 @@ export const runAllTestsAction: ActionFunction = async ({
 
   const results = await runTests(src, { sendRequest });
 
-  console.log({ results });
-
   const testResult = await models.unitTestResult.create({
     results,
     parentId: workspaceId,
@@ -324,7 +320,7 @@ export const runAllTestsAction: ActionFunction = async ({
 
   trackSegmentEvent(SegmentEvent.unitTestRun);
 
-  return redirect(`/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
 };
 
 export const renameTestSuiteAction: ActionFunction = async ({ request, params }) => {
@@ -402,7 +398,7 @@ export const updateTestAction: ActionFunction = async ({ request, params }) => {
 };
 
 export const runTestAction: ActionFunction = async ({ params }) => {
-  const { projectId, workspaceId, testSuiteId, testId } = params;
+  const { organizationId, projectId, workspaceId, testSuiteId, testId } = params;
   invariant(typeof testId === 'string', 'Test ID is required');
 
   const unitTest = await database.getWhere<UnitTest>(models.unitTest.type, {
@@ -435,5 +431,5 @@ export const runTestAction: ActionFunction = async ({ params }) => {
 
   trackSegmentEvent(SegmentEvent.unitTestRun);
 
-  return redirect(`/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
 };

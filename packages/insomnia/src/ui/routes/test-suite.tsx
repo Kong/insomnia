@@ -1,5 +1,4 @@
 import { invariant } from '@remix-run/router';
-import { isEmpty } from 'ramda';
 import React, { useRef } from 'react';
 import {
   LoaderFunction,
@@ -40,10 +39,11 @@ const UnitTestItemView = ({
   testsRunning: boolean;
 }) => {
   const editorRef = useRef<CodeEditorHandle>(null);
-  const { projectId, workspaceId, testSuiteId } = useParams() as {
+  const { projectId, workspaceId, testSuiteId, organizationId } = useParams() as {
     workspaceId: string;
     projectId: string;
     testSuiteId: string;
+    organizationId: string;
   };
   const { unitTestSuite, requests } = useRouteLoaderData(
     ':testSuiteId'
@@ -85,7 +85,7 @@ const UnitTestItemView = ({
                 : event.currentTarget.value,
           },
           {
-            action: `/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
             method: 'post',
           }
         )
@@ -94,7 +94,7 @@ const UnitTestItemView = ({
         deleteUnitTestFetcher.submit(
           {},
           {
-            action: `/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test/${unitTest._id}/delete`,
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test/${unitTest._id}/delete`,
             method: 'post',
           }
         )
@@ -103,7 +103,7 @@ const UnitTestItemView = ({
         runTestFetcher.submit(
           {},
           {
-            action: `/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test/${unitTest._id}/run`,
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test/${unitTest._id}/run`,
             method: 'post',
           }
         )
@@ -122,7 +122,7 @@ const UnitTestItemView = ({
                 requestId: unitTest.requestId || '',
               },
               {
-                action: `/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
                 method: 'post',
               }
             )
@@ -186,7 +186,7 @@ const UnitTestItemView = ({
               requestId: unitTest.requestId || '',
             },
             {
-              action: `/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
               method: 'post',
             }
           )
@@ -199,7 +199,8 @@ const UnitTestItemView = ({
 };
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
-  const { projectId, workspaceId } = params;
+  const { organizationId, projectId, workspaceId } = params;
+  invariant(organizationId, 'organizationId is required');
   invariant(projectId, 'projectId is required');
   invariant(workspaceId, 'workspaceId is required');
 
@@ -209,16 +210,16 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
     if (unitTestSuite) {
       return redirect(
-        `/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}`
+        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}`
       );
     }
+  }
 
-    const unitTestSuites = await models.unitTestSuite.findByParentId(workspaceId);
-    if (unitTestSuites.length > 0) {
-      return redirect(
-        `/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuites[0]._id}`
-      );
-    }
+  const unitTestSuites = await models.unitTestSuite.findByParentId(workspaceId);
+  if (unitTestSuites.length > 0) {
+    return redirect(
+      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuites[0]._id}`
+    );
   }
   return;
 };
@@ -265,9 +266,10 @@ export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> =>
 };
 
 const TestSuiteRoute = () => {
-  const { projectId, workspaceId } = useParams() as {
-    workspaceId: string;
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
     projectId: string;
+    workspaceId: string;
     testSuiteId: string;
   };
   const { unitTestSuite, unitTests } = useRouteLoaderData(':testSuiteId') as LoaderData;
@@ -278,23 +280,23 @@ const TestSuiteRoute = () => {
 
   const testsRunning = runAllTestsFetcher.state === 'submitting';
 
+  const testSuiteName = renameTestSuiteFetcher.formData?.get('name')?.toString() ?? unitTestSuite.name;
   return (
     <div className="unit-tests theme--pane__body">
       <div className="unit-tests__top-header">
         <h2>
+          YOza
           <Editable
             singleClick
-            onSubmit={name =>
-              name &&
-              renameTestSuiteFetcher.submit(
-                { name },
-                {
-                  action: `/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/rename`,
-                  method: 'post',
-                }
-              )
+            onSubmit={name => name && renameTestSuiteFetcher.submit(
+              { name },
+              {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/rename`,
+                method: 'post',
+              }
+            )
             }
-            value={unitTestSuite.name}
+            value={testSuiteName}
           />
         </h2>
         <HeaderButton
@@ -306,15 +308,14 @@ const TestSuiteRoute = () => {
               submitName: 'New Test',
               label: 'Test Name',
               selectText: true,
-              cancelable: true,
-              onComplete: async name => {
+              onComplete: name => {
                 createUnitTestFetcher.submit(
                   {
                     name,
                   },
                   {
                     method: 'post',
-                    action: `/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/new`,
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/new`,
                   }
                 );
               },
@@ -331,7 +332,7 @@ const TestSuiteRoute = () => {
               {},
               {
                 method: 'post',
-                action: `/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/run-all-tests`,
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/run-all-tests`,
               }
             );
           }}
@@ -342,7 +343,7 @@ const TestSuiteRoute = () => {
           <i className="fa fa-play space-left" />
         </HeaderButton>
       </div>
-      {isEmpty(unitTests) ? (
+      {unitTests.length === 0 ? (
         <div style={{ height: '100%' }}>
           <EmptyStatePane
             icon={<SvgIcon icon="vial" />}

@@ -1,8 +1,16 @@
-// eslint-disable-next-line simple-import-sort/imports
+import './rendererListeners';
+
+import { invariant } from '@remix-run/router';
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
-import './rendererListeners';
+import {
+  createMemoryRouter,
+  matchPath,
+  RouterProvider,
+} from 'react-router-dom';
+import { Store } from 'redux';
+
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
@@ -13,33 +21,25 @@ import {
 } from '../common/constants';
 import { database } from '../common/database';
 import { initializeLogging } from '../common/log';
+import { strings } from '../common/strings';
 import * as models from '../models';
+import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
+import { DEFAULT_PROJECT_ID, isRemoteProject } from '../models/project';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
-import { init as initStore, RootState } from './redux/modules';
-import { initializeSentry } from './sentry';
-import {
-  createMemoryRouter,
-  RouterProvider,
-  matchPath,
-  Outlet,
-} from 'react-router-dom';
-
-import Root from './routes/root';
-import './css/index.less'; // this import must come after `Root`.
 import { AppLoadingIndicator } from './components/app-loading-indicator';
+import { init as initStore, RootState } from './redux/modules';
 import {
+  setActiveActivity,
   setActiveProject,
   setActiveWorkspace,
-  setActiveActivity,
 } from './redux/modules/global';
-import { DEFAULT_PROJECT_ID, isRemoteProject } from '../models/project';
-import { ErrorRoute } from './routes/error';
-import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
 import { selectActiveProject } from './redux/selectors';
-import { strings } from '../common/strings';
-import { Store } from 'redux';
+import { ErrorRoute } from './routes/error';
+import Root from './routes/root';
+import { initializeSentry } from './sentry';
+
 const Project = lazy(() => import('./routes/project'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
 const Debug = lazy(() => import('./routes/debug'));
@@ -131,12 +131,11 @@ const router = createMemoryRouter(
                               ),
                             },
                             {
-                              path: 'test',
+                              path: 'test/*',
                               loader: async (...args) =>  (await import('./routes/unit-test')).loader(...args),
                               element: (
                                 <Suspense fallback={<AppLoadingIndicator />}>
                                   <UnitTest />
-                                  <Outlet />
                                 </Suspense>
                               ),
                               children: [
@@ -150,6 +149,10 @@ const router = createMemoryRouter(
                                     {
                                       index: true,
                                       loader: async (...args) => (await import('./routes/test-suite')).indexLoader(...args),
+                                    },
+                                    {
+                                      path: 'new',
+                                      action: async (...args) => (await import('./routes/actions')).createNewTestSuiteAction(...args),
                                     },
                                     {
                                       path: ':testSuiteId',
@@ -246,28 +249,28 @@ const router = createMemoryRouter(
                         },
                       ],
                     },
-                  ],
-                },
-                {
-                  path: 'new',
-                  action: async (...args) =>
-                    (await import('./routes/actions')).createNewProjectAction(
-                      ...args
-                    ),
-                },
-                {
-                  path: ':projectId/remote-collections',
-                  loader: async (...args) =>
-                    (
-                      await import('./routes/remote-collections')
-                    ).remoteCollectionsLoader(...args),
-                  children: [
                     {
-                      path: 'pull',
+                      path: 'new',
                       action: async (...args) =>
+                        (await import('./routes/actions')).createNewProjectAction(
+                          ...args
+                        ),
+                    },
+                    {
+                      path: ':projectId/remote-collections',
+                      loader: async (...args) =>
                         (
                           await import('./routes/remote-collections')
-                        ).pullRemoteCollectionAction(...args),
+                        ).remoteCollectionsLoader(...args),
+                      children: [
+                        {
+                          path: 'pull',
+                          action: async (...args) =>
+                            (
+                              await import('./routes/remote-collections')
+                            ).pullRemoteCollectionAction(...args),
+                        },
+                      ],
                     },
                   ],
                 },
@@ -316,7 +319,7 @@ function updateReduxNavigationState(store: Store, pathname: string) {
 
   const isActivityTest = matchPath(
     {
-      path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_UNIT_TEST}`,
+      path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test',
       end: false,
     },
     pathname
@@ -413,7 +416,7 @@ async function renderApp() {
           );
         } else if (activity === ACTIVITY_UNIT_TEST) {
           router.navigate(
-            `/project/${state.global.activeProjectId}/workspace/${state.global.activeWorkspaceId}/test`
+            `/organization/${organizationId}/project/${state.global.activeProjectId}/workspace/${state.global.activeWorkspaceId}/test`
           );
         }
       }
@@ -455,9 +458,7 @@ async function renderApp() {
 
   const root = document.getElementById('root');
 
-  if (!root) {
-    throw new Error('Could not find root element');
-  }
+  invariant(root, 'Could not find root element');
 
   ReactDOM.createRoot(root).render(
     <Provider store={store}>
