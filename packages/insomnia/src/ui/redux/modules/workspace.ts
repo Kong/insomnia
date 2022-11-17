@@ -1,5 +1,5 @@
 import { Dispatch } from 'redux';
-import { RequireExactlyOne } from 'type-fest';
+import type { RequireExactlyOne } from 'type-fest';
 
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, GlobalActivity, isCollectionActivity, isDesignActivity } from '../../../common/constants';
 import * as models from '../../../models';

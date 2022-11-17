@@ -1,5 +1,5 @@
 import { createSelector } from 'reselect';
-import { ValueOf } from 'type-fest';
+import type { ValueOf } from 'type-fest';
 
 import { isWorkspaceActivity, PREVIEW_MODE_SOURCE } from '../../common/constants';
 import * as models from '../../models';

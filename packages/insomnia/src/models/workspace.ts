@@ -1,4 +1,4 @@
-import { Merge } from 'type-fest';
+import type { Merge } from 'type-fest';
 
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';

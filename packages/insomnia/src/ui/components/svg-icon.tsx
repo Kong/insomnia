@@ -1,6 +1,6 @@
 import React, { Component, CSSProperties, NamedExoticComponent, ReactNode, SVGProps } from 'react';
 import styled from 'styled-components';
-import { ValueOf } from 'type-fest';
+import type { ValueOf } from 'type-fest';
 
 import { SvgIcnArrowRight } from './assets/svgr/IcnArrowRight';
 import { SvgIcnBitbucketLogo } from './assets/svgr/IcnBitbucketLogo';

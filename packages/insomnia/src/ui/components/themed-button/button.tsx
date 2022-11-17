@@ -1,6 +1,6 @@
 import { ButtonHTMLAttributes } from 'react';
 import styled, { css } from 'styled-components';
-import { ValueOf } from 'type-fest';
+import type { ValueOf } from 'type-fest';
 
 export const ButtonSizeEnum = {
   Default: 'default',

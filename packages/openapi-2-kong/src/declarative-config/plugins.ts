@@ -1,6 +1,6 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
 import { OpenAPIV3 } from 'openapi-types';
-import { Entry } from 'type-fest';
+import type { Entry } from 'type-fest';
 
 import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
 import { DCPlugin } from '../types/declarative-config';

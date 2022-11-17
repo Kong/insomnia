@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { Settings } from 'insomnia-common';
 import { ErrorResult, INSOMNIA_CONFIG_FILENAME, InsomniaConfig, isErrorResult, validate } from 'insomnia-config';
 import { resolve } from 'path';
-import { ValueOf } from 'type-fest';
+import type { ValueOf } from 'type-fest';
 
 import { isDevelopment } from '../../common/constants';
 import { getDataDirectory, getPortableExecutableDir } from '../../common/electron-helpers';

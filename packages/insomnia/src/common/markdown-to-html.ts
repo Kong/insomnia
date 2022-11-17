@@ -1,4 +1,4 @@
-import { sanitize } from 'dompurify';
+import dompurify from 'dompurify';
 import { marked } from 'marked';
 
 marked.setOptions({
@@ -10,4 +10,4 @@ marked.setOptions({
   smartypants: false,
 });
 
-export const markdownToHTML = (input: string) => sanitize(marked.parse(input));
+export const markdownToHTML = (input: string) => dompurify.sanitize(marked.parse(input));

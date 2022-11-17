@@ -1,5 +1,5 @@
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
-import { ValueOf } from 'type-fest';
+import type { ValueOf } from 'type-fest';
 
 import { generateId } from '../../../common/misc';
 import * as models from '../../../models';
