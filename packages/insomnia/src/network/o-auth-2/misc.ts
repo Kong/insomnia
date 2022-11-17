@@ -4,8 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import * as models from '../../models/index';
 
-const { BrowserWindow } = electron;
-
 export enum ChromiumVerificationResult {
   BLIND_TRUST = 0,
   USE_CHROMIUM_RESULT = -3
@@ -83,7 +81,7 @@ export function authorizeUserInWindow({
     } = await models.settings.getOrCreate();
 
     // Create a child window
-    const child = new BrowserWindow({
+    const child = new electron.BrowserWindow({
       webPreferences: {
         nodeIntegration: false,
         partition: sessionId,
