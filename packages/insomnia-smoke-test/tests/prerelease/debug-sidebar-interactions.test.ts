@@ -53,10 +53,9 @@ test.describe('Debug-Sidebar', async () => {
 
     test('Open properties of a folder', async ({ page }) => {
       await page.locator('button:has-text("test folderOPEN")').click();
-      await page.locator('[data-testid="SidebarFilter"] [data-testid="SidebarCreateDropdown"] button').click();
-      await page.locator('[data-testid="Open properties of a folder"]').first().click();
-      await expect(page.locator('.app')).toContainText('Open Folder');
-      // TODO implement
+      await page.locator('[data-testid="Dropdown-test-folder"] button').click();
+      await page.locator('[data-testid="DropdownItemSettings-test-folder"]').click();
+      await expect(page.locator('.app')).toContainText('Folder Settings fld');
     });
 
     test.fixme('Open properties of the collection', async () => {
