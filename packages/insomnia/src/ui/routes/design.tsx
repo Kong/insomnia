@@ -1,10 +1,7 @@
-import 'swagger-ui-react/swagger-ui.css';
-
 import { IRuleResult } from '@stoplight/spectral-core';
 import React, { createRef, FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
-import SwaggerUI from 'swagger-ui-react';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import { database } from '../../common/database';
@@ -17,6 +14,7 @@ import { ErrorBoundary } from '../components/error-boundary';
 import { Notice, NoticeTable } from '../components/notice-table';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { SpecEditorSidebar } from '../components/spec-editor/spec-editor-sidebar';
+import { SwaggerUI } from '../components/swagger-ui';
 import { superFaint } from '../css/css-in-js';
 import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '../hooks/use-vcs-version';
 import { selectActiveApiSpec } from '../redux/selectors';

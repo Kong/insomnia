@@ -10,7 +10,7 @@ const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;
-  tags: PluginTemplateTag['name'][] | null = null;
+  tags: PluginTemplateTag['name'][] = [];
 
   constructor(ext: PluginTemplateTag, plugin: Plugin) {
     this._ext = ext;
@@ -30,7 +30,7 @@ export default class BaseExtension {
   }
 
   getName() {
-    return this._ext?.displayName || this.getTag();
+    return typeof this._ext?.displayName === 'string' ? this._ext?.displayName : this.getTag();
   }
 
   getDescription() {

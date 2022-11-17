@@ -1,5 +1,5 @@
 import electron, { app, ipcMain, session } from 'electron';
-import { BrowserWindow } from 'electron/main';
+import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 import path from 'path';
@@ -224,7 +224,6 @@ async function _trackStats() {
       return;
     }
 
-    const { BrowserWindow } = electron;
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
       url: changelogUrl(),

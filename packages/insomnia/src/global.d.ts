@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import type { MainBridgeAPI } from './main/ipc/main';
 
 declare global {

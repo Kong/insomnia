@@ -1,4 +1,4 @@
-import electron, { BrowserWindow, MenuItemConstructorOptions } from 'electron';
+import electron, { type BrowserWindow as ElectronBrowserWindow, type MenuItemConstructorOptions } from 'electron';
 import fs from 'fs';
 import * as os from 'os';
 import path from 'path';
@@ -19,14 +19,14 @@ import { clickLink, getDataDirectory } from '../common/electron-helpers';
 import * as log from '../common/log';
 import LocalStorage from './local-storage';
 
-const { app, Menu, shell, dialog, clipboard } = electron;
+const { app, Menu, shell, dialog, clipboard, BrowserWindow } = electron;
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
-let mainWindow: BrowserWindow | null = null;
+let mainWindow: ElectronBrowserWindow | null = null;
 let localStorage: LocalStorage | null = null;
 
 interface Bounds {
@@ -578,7 +578,7 @@ const getZoomFactor = () => {
 };
 
 export const setZoom = (transformer: (current: number) => number) => () => {
-  const browserWindow = electron.BrowserWindow.getFocusedWindow();
+  const browserWindow = BrowserWindow.getFocusedWindow();
 
   if (!browserWindow || !browserWindow.webContents) {
     return;

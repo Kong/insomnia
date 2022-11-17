@@ -1,6 +1,6 @@
 import classnames from 'classnames';
-import * as electron from 'electron';
-import { IpcRendererEvent } from 'electron/renderer';
+import type { IpcRendererEvent } from 'electron';
+import { ipcRenderer } from 'electron';
 import React, { FC, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
@@ -125,9 +125,9 @@ export const Toast: FC = () => {
 
   useEffect(() => {
     const showNotification = (_: IpcRendererEvent, notification: ToastNotification) => handleNotification(notification);
-    electron.ipcRenderer.on('show-notification', showNotification);
+    ipcRenderer.on('show-notification', showNotification);
     return () => {
-      electron.ipcRenderer.removeListener('show-notification', showNotification);
+      ipcRenderer.removeListener('show-notification', showNotification);
     };
   }, []);
 

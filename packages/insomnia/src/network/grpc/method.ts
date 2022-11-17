@@ -1,5 +1,5 @@
 import { MethodDefinition } from '@grpc/grpc-js';
-import { ValueOf } from 'type-fest';
+import type { ValueOf } from 'type-fest';
 
 // TODO(TSCONVERSION) remove this alias and type MethodDefinition correctly
 export type GrpcMethodDefinition = MethodDefinition<any, any>;
