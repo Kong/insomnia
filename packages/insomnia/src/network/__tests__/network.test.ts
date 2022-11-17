@@ -2,7 +2,6 @@ import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import electron from 'electron';
 import fs from 'fs';
-import { HttpVersions } from 'insomnia-common';
 import { join as pathJoin, resolve as pathResolve } from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
@@ -17,6 +16,7 @@ import {
 } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';
+import { HttpVersions } from '../../common/settings';
 import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
 import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
 import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';

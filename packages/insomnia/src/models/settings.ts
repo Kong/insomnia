@@ -1,5 +1,3 @@
-import { HttpVersions, KeyboardShortcut, Settings as BaseSettings, UpdateChannel } from 'insomnia-common';
-
 import {
   getAppDefaultDarkTheme,
   getAppDefaultLightTheme,
@@ -7,6 +5,7 @@ import {
 } from '../common/constants';
 import { database as db } from '../common/database';
 import * as hotkeys from '../common/hotkeys';
+import { HttpVersions, KeyboardShortcut, Settings as BaseSettings, UpdateChannel } from '../common/settings';
 import { getMonkeyPatchedControlledSettings, omitControlledSettings } from './helpers/settings';
 import type { BaseModel } from './index';
 

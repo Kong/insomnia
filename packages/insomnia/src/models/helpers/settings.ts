@@ -1,11 +1,11 @@
 import { readFileSync } from 'fs';
-import { Settings } from 'insomnia-common';
 import { ErrorResult, INSOMNIA_CONFIG_FILENAME, InsomniaConfig, isErrorResult, validate } from 'insomnia-config';
 import { resolve } from 'path';
 import type { ValueOf } from 'type-fest';
 
 import { isDevelopment } from '../../common/constants';
 import { getDataDirectory, getPortableExecutableDir } from '../../common/electron-helpers';
+import { Settings } from '../../common/settings';
 
 interface FailedParseResult {
   syntaxError: SyntaxError;
@@ -122,10 +122,8 @@ export const isParseError = (input: ConfigError | ParseError): input is ParseErr
 
 /**
  * gets settings from the `insomnia.config.json`
- *
- * note that it is a business rule that the config is never read again after startup, hence the `once` usage.
  */
-export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> | ConfigError | ParseError) = () => {
+export const getConfigSettings = (): NonNullable<InsomniaConfig['settings']> | ConfigError | ParseError | {} => {
   const configFileResult = getConfigFile();
 
   if (isFailedParseResult(configFileResult)) {

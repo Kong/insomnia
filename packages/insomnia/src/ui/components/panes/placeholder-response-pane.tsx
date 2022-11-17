@@ -1,9 +1,9 @@
-import { KeyboardShortcut } from 'insomnia-common';
 import React, { FC, PropsWithChildren } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { keyboardShortcutDescriptions } from '../../../common/hotkeys';
+import { KeyboardShortcut } from '../../../common/settings';
 import { selectHotKeyRegistry } from '../../redux/selectors';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';

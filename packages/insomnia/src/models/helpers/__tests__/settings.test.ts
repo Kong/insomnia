@@ -1,9 +1,9 @@
 import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { Settings } from 'insomnia-common';
 import { mocked } from 'jest-mock';
 
 import * as _constants from '../../../common/constants';
 import * as electronHelpers from '../../../common/electron-helpers';
+import { Settings } from '../../../common/settings';
 import * as models from '../../../models';
 import * as settingsHelpers from '../settings';
 import {

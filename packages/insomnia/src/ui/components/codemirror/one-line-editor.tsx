@@ -3,13 +3,13 @@ import './base-imports';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { EditorConfiguration } from 'codemirror';
-import { KeyCombination } from 'insomnia-common';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useMount, useUnmount } from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '../../../common/constants';
 import * as misc from '../../../common/misc';
+import { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';

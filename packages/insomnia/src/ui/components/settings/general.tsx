@@ -1,4 +1,3 @@
-import { HttpVersion, HttpVersions, UpdateChannel } from 'insomnia-common';
 import React, { FC, Fragment } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -13,6 +12,7 @@ import {
   updatesSupported,
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
+import { HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';

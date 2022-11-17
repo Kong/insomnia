@@ -1,10 +1,10 @@
-import { KeyboardShortcut, KeyCombination } from 'insomnia-common';
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import tinykeys, { type KeyBindingMap, createKeybindingsHandler as _createKeybindingsHandler, KeyBindingHandlerOptions } from 'tinykeys';
 
 import { getPlatformKeyCombinations } from '../../common/hotkeys';
 import { keyboardKeys } from '../../common/keyboard-keys';
+import { KeyboardShortcut, KeyCombination } from '../../common/settings';
 import { selectHotKeyRegistry } from '../redux/selectors';
 
 const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyCombination): string =>

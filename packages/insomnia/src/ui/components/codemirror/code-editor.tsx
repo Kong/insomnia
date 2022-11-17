@@ -6,7 +6,6 @@ import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintO
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
-import { KeyCombination } from 'insomnia-common';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -15,6 +14,7 @@ import vkBeautify from 'vkbeautify';
 
 import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import * as misc from '../../../common/misc';
+import { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
 import { jsonPrettify } from '../../../utils/prettify/json';

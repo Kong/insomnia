@@ -1,4 +1,3 @@
-import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from 'insomnia-common';
 import React, { FC } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -9,6 +8,7 @@ import {
   keyboardShortcutDescriptions,
   newDefaultRegistry,
 } from '../../../common/hotkeys';
+import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '../../../common/settings';
 import * as models from '../../../models/index';
 import { selectHotKeyRegistry, selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
