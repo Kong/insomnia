@@ -20,8 +20,11 @@ jobs:
             csc_link_secret: DESIGNER_MAC_CSC_LINK
             csc_key_password_secret: DESIGNER_MAC_CSC_KEY_PASSWORD
           - os: windows-latest
-            csc_link_secret: DESIGNER_WINDOWS_CSC_LINK
-            csc_key_password_secret: DESIGNER_WINDOWS_CSC_KEY_PASSWORD
+            # FIXME(filipe): revert back when we have the code signing cert
+            # csc_link_secret: DESIGNER_WINDOWS_CSC_LINK
+            # csc_key_password_secret: DESIGNER_WINDOWS_CSC_KEY_PASSWORD
+            csc_link_secret: ''
+            csc_key_password_secret: ''
           - os: ubuntu-latest
             csc_link_secret: ''
             csc_key_password_secret: ''
