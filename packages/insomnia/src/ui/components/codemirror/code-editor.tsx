@@ -6,7 +6,7 @@ import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintO
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
-import { KeyCombination } from 'insomnia-common';
+import { KeyCombination } from '../../../common/settings';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';

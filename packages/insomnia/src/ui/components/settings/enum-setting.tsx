@@ -1,4 +1,4 @@
-import { SettingsOfType } from 'insomnia-common';
+import { SettingsOfType } from '../../../common/settings';
 import React, { ChangeEventHandler, PropsWithChildren, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 

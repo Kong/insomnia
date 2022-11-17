@@ -1,6 +1,6 @@
 import classnames from 'classnames';
-import { KeyCombination } from 'insomnia-common';
-import { KeyboardShortcut } from 'insomnia-common';
+import { KeyCombination } from '../../../common/settings';
+import { KeyboardShortcut } from '../../../common/settings';
 import React, { forwardRef, KeyboardEvent, useImperativeHandle, useRef, useState } from 'react';
 
 import { constructKeyCombinationDisplay, isModifierKeyCode } from '../../../common/hotkeys';

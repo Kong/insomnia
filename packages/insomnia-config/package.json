@@ -29,8 +29,7 @@
   },
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.2.6",
-    "ajv": "^8.6.2",
-    "insomnia-common": "^3.6.1-beta.3"
+    "ajv": "^8.6.2"
   },
   "devDependencies": {
     "esbuild-runner": "2.2.1",

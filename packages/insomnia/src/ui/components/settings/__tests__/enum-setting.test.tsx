@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { act, fireEvent, render } from '@testing-library/react';
-import { UpdateChannel } from 'insomnia-common';
 import React from 'react';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
@@ -8,6 +7,7 @@ import thunk from 'redux-thunk';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 import { withReduxStore } from '../../../../__jest__/with-redux-store';
+import { UpdateChannel } from '../../../../common/settings';
 import { RootState } from '../../../redux/modules';
 import { EnumSetting } from '../enum-setting';
 

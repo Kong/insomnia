@@ -1,4 +1,4 @@
-import { Settings } from 'insomnia-common';
+import { Settings } from '../../../common/settings';
 import React, { FC, Fragment, PropsWithChildren } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';

@@ -1,5 +1,4 @@
 import fs from 'fs';
-import type { PluginConfig, PluginConfigMap } from 'insomnia-common';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
@@ -7,6 +6,7 @@ import appConfig from '../../config/config.json';
 import { ParsedApiSpec } from '../common/api-specs';
 import { getDataDirectory } from '../common/electron-helpers';
 import { resolveHomePath } from '../common/misc';
+import type { PluginConfig, PluginConfigMap } from '../common/settings';
 import * as models from '../models';
 import { GrpcRequest } from '../models/grpc-request';
 import type { Request } from '../models/request';

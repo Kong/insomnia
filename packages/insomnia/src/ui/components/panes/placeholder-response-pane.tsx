@@ -1,4 +1,4 @@
-import { KeyboardShortcut } from 'insomnia-common';
+import { KeyboardShortcut } from '../../../common/settings';
 import React, { FC, PropsWithChildren } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';

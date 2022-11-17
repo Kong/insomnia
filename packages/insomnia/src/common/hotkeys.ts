@@ -1,7 +1,6 @@
-import { HotKeyRegistry, KeyboardShortcut, KeyCombination, PlatformKeyCombinations } from 'insomnia-common';
-
 import { displayModifierKey, isMac } from './constants';
 import { keyboardKeys } from './keyboard-keys';
+import { HotKeyRegistry, KeyboardShortcut, KeyCombination, PlatformKeyCombinations } from './settings';
 import { strings } from './strings';
 
 /**

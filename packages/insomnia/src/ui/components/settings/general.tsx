@@ -1,4 +1,4 @@
-import { HttpVersion, HttpVersions, UpdateChannel } from 'insomnia-common';
+import { HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
 import React, { FC, Fragment } from 'react';
 import { useSelector } from 'react-redux';
 

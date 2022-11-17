@@ -3,7 +3,7 @@ import './base-imports';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { EditorConfiguration } from 'codemirror';
-import { KeyCombination } from 'insomnia-common';
+import { KeyCombination } from '../../../common/settings';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useMount, useUnmount } from 'react-use';
