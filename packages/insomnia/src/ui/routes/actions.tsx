@@ -262,9 +262,7 @@ export const deleteTestSuiteAction: ActionFunction = async ({ params }) => {
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   invariant(typeof projectId === 'string', 'Project ID is required');
 
-  const unitTestSuite = await database.getWhere(models.unitTestSuite.type, {
-    _id: testSuiteId,
-  });
+  const unitTestSuite = await models.unitTestSuite.getById(testSuiteId);
 
   invariant(unitTestSuite, 'Test Suite not found');
 
@@ -272,11 +270,7 @@ export const deleteTestSuiteAction: ActionFunction = async ({ params }) => {
 
   trackSegmentEvent(SegmentEvent.testSuiteDelete);
 
-  if (params.testSuiteId === testSuiteId) {
-    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test`);
-  } else {
-    return null;
-  }
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test`);
 };
 
 export const runAllTestsAction: ActionFunction = async ({
