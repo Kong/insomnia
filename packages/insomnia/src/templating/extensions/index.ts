@@ -1,7 +1,7 @@
 import type { Request } from '../../models/request';
 import type { Response } from '../../models/response';
 import type { PluginStore } from '../../plugins/context';
-import type { NunjucksParsedTagArg } from '../utils';
+import type { NunjucksActionTag, NunjucksParsedTagArg } from '../utils';
 
 export type PluginArgumentValue = string | number | boolean;
 
@@ -87,12 +87,12 @@ export interface PluginTemplateTagAction {
 }
 
 export interface PluginTemplateTag {
-  args: PluginArgument[];
+  args: NunjucksParsedTagArg[];
   name: string;
   displayName: DisplayName;
   disablePreview: () => boolean;
   description: string;
-  actions: PluginTemplateTagAction[];
+  actions: NunjucksActionTag[];
   run: (context: PluginTemplateTagContext, ...arg: any[]) => Promise<any> | any;
   deprecated?: boolean;
   validate?: (value: any) => string | null;

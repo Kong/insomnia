@@ -1,5 +1,5 @@
 import { type Environment } from 'nunjucks';
-import * as nunjucks from 'nunjucks/browser/nunjucks';
+import nunjucks from 'nunjucks/browser/nunjucks';
 
 import type { TemplateTag } from '../plugins/index';
 import * as plugins from '../plugins/index';
@@ -26,10 +26,14 @@ export const RENDER_VARS = 'variables';
 export const RENDER_TAGS = 'tags';
 export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
 
+type NunjucksEnvironment = Environment & {
+  extensions: Record<string, BaseExtension>;
+};
+
 // Cached globals
-let nunjucksVariablesOnly: Environment | null = null;
-let nunjucksTagsOnly: Environment | null = null;
-let nunjucksAll: Environment | null = null;
+let nunjucksVariablesOnly: NunjucksEnvironment | null = null;
+let nunjucksTagsOnly: NunjucksEnvironment | null = null;
+let nunjucksAll: NunjucksEnvironment | null = null;
 
 /**
  * Render text based on stuff
@@ -109,13 +113,14 @@ export function reload() {
  */
 export async function getTagDefinitions() {
   const env = await getNunjucks(RENDER_ALL);
+
   return Object.keys(env.extensions)
     .map(k => env.extensions[k])
     .filter(ext => !ext.isDeprecated())
     .sort((a, b) => (a.getPriority() > b.getPriority() ? 1 : -1))
     .map<NunjucksParsedTag>(ext => ({
-      name: ext.getTag(),
-      displayName: ext.getName(),
+      name: ext.getTag() || '',
+      displayName: ext.getName() || '',
       liveDisplayName: ext.getLiveDisplayName(),
       description: ext.getDescription(),
       disablePreview: ext.getDisablePreview(),
@@ -124,7 +129,7 @@ export async function getTagDefinitions() {
     }));
 }
 
-async function getNunjucks(renderMode: string) {
+async function getNunjucks(renderMode: string): Promise<NunjucksEnvironment> {
   if (renderMode === RENDER_VARS && nunjucksVariablesOnly) {
     return nunjucksVariablesOnly;
   }
@@ -170,7 +175,7 @@ async function getNunjucks(renderMode: string) {
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   // Create Env with Extensions //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  const nj = nunjucks.configure(config);
+  const nunjucksEnvironment = nunjucks.configure(config) as NunjucksEnvironment;
   let allTemplateTagPlugins: TemplateTag[];
 
   try {
@@ -184,27 +189,27 @@ async function getNunjucks(renderMode: string) {
 
   const allExtensions = allTemplateTagPlugins;
 
-  for (let i = 0; i < allExtensions.length; i++) {
-    const { templateTag, plugin } = allExtensions[i];
-    templateTag.priority = templateTag.priority || i * 100;
+  for (const extension of allExtensions) {
+    const { templateTag, plugin } = extension;
+    templateTag.priority = templateTag.priority || allExtensions.indexOf(extension);
     // @ts-expect-error -- TSCONVERSION
     const instance = new BaseExtension(templateTag, plugin);
-    nj.addExtension(instance.getTag(), instance);
+    nunjucksEnvironment.addExtension(instance.getTag() || '', instance);
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`
-    nj.addFilter('debug', (o: any) => o);
+    nunjucksEnvironment.addFilter('debug', (o: any) => o);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~ //
   // Cache Env and Return //
   // ~~~~~~~~~~~~~~~~~~~~ //
   if (renderMode === RENDER_VARS) {
-    nunjucksVariablesOnly = nj;
+    nunjucksVariablesOnly = nunjucksEnvironment;
   } else if (renderMode === RENDER_TAGS) {
-    nunjucksTagsOnly = nj;
+    nunjucksTagsOnly = nunjucksEnvironment;
   } else {
-    nunjucksAll = nj;
+    nunjucksAll = nunjucksEnvironment;
   }
 
-  return nj;
+  return nunjucksEnvironment;
 }
