@@ -55,12 +55,11 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
         </DropdownItem>
         <DropdownItem
           buttonClass={PromptButton}
-          onClick={() => {
+          onClick={() =>
             deleteProjectFetcher.submit(
               {},
               { method: 'post', action: `/organization/${organizationId}/project/${project._id}/delete` }
-            );
-          }
+            )
           }
         >
           <Item>
