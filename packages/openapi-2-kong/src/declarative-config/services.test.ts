@@ -353,18 +353,18 @@ describe('services', () => {
       } as OpenAPIV3.OpenIdSecurityScheme;
 
       if (!spec.components) {
-        spec.components = {}
+        spec.components = {};
       }
 
       spec.components.securitySchemes = {
-        "common-aad-scheme": securityScheme
+        'common-aad-scheme': securityScheme,
       };
 
       spec.security = [
         {
-          "common-aad-scheme": ["Api.Security.All"],
+          'common-aad-scheme': ['Api.Security.All'],
         },
-      ]
+      ];
 
       spec.paths = {
         '/dogs': {
@@ -373,9 +373,9 @@ describe('services', () => {
           post: {
             security: [
               {
-                "common-aad-scheme": ["Api.Security.Write"],
+                'common-aad-scheme': ['Api.Security.Write'],
               },
-            ]
+            ],
           },
         },
       };
@@ -383,7 +383,7 @@ describe('services', () => {
       const specResult = getSpecResult();
       specResult.plugins = [
         {
-          name: "openid-connect",
+          name: 'openid-connect',
           config: {
             'issuer': 'https://idp-endpoint.example.com/.well-kown',
             'auth_methods': ['bearer'],
@@ -409,7 +409,7 @@ describe('services', () => {
           tags,
           plugins: [
             {
-              name: "openid-connect",
+              name: 'openid-connect',
               config: {
                 'issuer': 'https://idp-endpoint.example.com/.well-kown',
                 'auth_methods': ['bearer'],
@@ -420,7 +420,6 @@ describe('services', () => {
           ],
         },
       ];
-      
 
       expect(await generateServices(spec, tags)).toEqual([specResult]);
     });
@@ -441,23 +440,23 @@ describe('services', () => {
       } as OpenAPIV3.OpenIdSecurityScheme;
 
       if (!spec.components) {
-        spec.components = {}
+        spec.components = {};
       }
 
       spec.components.securitySchemes = {
-        "common-aad-scheme": securityScheme
+        'common-aad-scheme': securityScheme,
       };
-      
+
       spec.security = [
         {
-          "common-aad-scheme": ["Api.Security.All"],
+          'common-aad-scheme': ['Api.Security.All'],
         },
-      ]
+      ];
 
       const specResult = getSpecResult();
       specResult.plugins = [
         {
-          name: "openid-connect",
+          name: 'openid-connect',
           config: {
             'issuer': 'https://idp-endpoint.example.com/.well-kown',
             'auth_methods': ['bearer'],
@@ -465,7 +464,7 @@ describe('services', () => {
           },
           tags: tags,
         },
-      ]
+      ];
 
       expect(await generateServices(spec, tags)).toEqual([specResult]);
     });
