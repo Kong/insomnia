@@ -1,4 +1,5 @@
 import { invariant } from '@remix-run/router';
+import { generate, runTests, Test } from 'insomnia-testing';
 import { ActionFunction, redirect } from 'react-router-dom';
 
 import * as session from '../../account/session';
@@ -8,7 +9,9 @@ import * as models from '../../models';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
+import { UnitTest } from '../../models/unit-test';
 import { isCollection } from '../../models/workspace';
+import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
@@ -230,4 +233,197 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
     name,
     description: description || workspace.description,
   });
+};
+
+// Test Suite
+export const createNewTestSuiteAction: ActionFunction = async ({
+  request,
+  params,
+}) => {
+  const { organizationId, workspaceId, projectId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  const formData = await request.formData();
+  const name = formData.get('name');
+  invariant(typeof name === 'string', 'Name is required');
+
+  const unitTestSuite = await models.unitTestSuite.create({
+    parentId: workspaceId,
+    name,
+  });
+
+  trackSegmentEvent(SegmentEvent.testSuiteCreate);
+
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}`);
+};
+
+export const deleteTestSuiteAction: ActionFunction = async ({ params }) => {
+  const { organizationId, workspaceId, projectId, testSuiteId } = params;
+  invariant(typeof testSuiteId === 'string', 'Test Suite ID is required');
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  invariant(typeof projectId === 'string', 'Project ID is required');
+
+  const unitTestSuite = await models.unitTestSuite.getById(testSuiteId);
+
+  invariant(unitTestSuite, 'Test Suite not found');
+
+  await models.unitTestSuite.remove(unitTestSuite);
+
+  trackSegmentEvent(SegmentEvent.testSuiteDelete);
+
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test`);
+};
+
+export const runAllTestsAction: ActionFunction = async ({
+  params,
+}) => {
+  const { organizationId, projectId, workspaceId, testSuiteId } = params;
+  invariant(typeof projectId === 'string', 'Project ID is required');
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  invariant(typeof testSuiteId === 'string', 'Test Suite ID is required');
+
+  const unitTests = await database.find<UnitTest>(models.unitTest.type, {
+    parentId: testSuiteId,
+  });
+  invariant(unitTests, 'No unit tests found');
+  console.log('unitTests', unitTests);
+
+  const tests: Test[] = unitTests
+    .filter(t => t !== null)
+    .map(t => ({
+      name: t.name,
+      code: t.code,
+      defaultRequestId: t.requestId,
+    }));
+
+  const src = generate([{ name: 'My Suite', suites: [], tests }]);
+
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
+    workspaceId
+  );
+
+  const sendRequest = getSendRequestCallback(
+    workspaceMeta?.activeEnvironmentId || undefined
+  );
+
+  const results = await runTests(src, { sendRequest });
+
+  const testResult = await models.unitTestResult.create({
+    results,
+    parentId: workspaceId,
+  });
+
+  trackSegmentEvent(SegmentEvent.unitTestRun);
+
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
+};
+
+export const renameTestSuiteAction: ActionFunction = async ({ request, params }) => {
+  const { workspaceId, projectId, testSuiteId } = params;
+  invariant(typeof testSuiteId === 'string', 'Test Suite ID is required');
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  invariant(typeof projectId === 'string', 'Project ID is required');
+
+  const formData = await request.formData();
+  const name = formData.get('name');
+  invariant(typeof name === 'string', 'Name is required');
+
+  const unitTestSuite = await database.getWhere(models.unitTestSuite.type, {
+    _id: testSuiteId,
+  });
+
+  invariant(unitTestSuite, 'Test Suite not found');
+
+  await models.unitTestSuite.update(unitTestSuite, { name });
+};
+
+// Unit Test
+export const createNewTestAction: ActionFunction = async ({ request, params }) => {
+  const { testSuiteId } = params;
+  invariant(typeof testSuiteId === 'string', 'Test Suite ID is required');
+  const formData = await request.formData();
+
+  const name = formData.get('name');
+  invariant(typeof name === 'string', 'Name is required');
+
+  await models.unitTest.create({
+    parentId: testSuiteId,
+    code: `const response1 = await insomnia.send();
+expect(response1.status).to.equal(200);`,
+    name,
+  });
+
+  trackSegmentEvent(SegmentEvent.unitTestCreate);
+};
+
+export const deleteTestAction: ActionFunction = async ({ params }) => {
+  const { testId } = params;
+  invariant(typeof testId === 'string', 'Test ID is required');
+
+  const unitTest = await database.getWhere<UnitTest>(models.unitTest.type, {
+    _id: testId,
+  });
+
+  invariant(unitTest, 'Test not found');
+
+  await models.unitTest.remove(unitTest);
+  trackSegmentEvent(SegmentEvent.unitTestDelete);
+};
+
+export const updateTestAction: ActionFunction = async ({ request, params }) => {
+  const { testId } = params;
+  const formData = await request.formData();
+  invariant(typeof testId === 'string', 'Test ID is required');
+  const code = formData.get('code');
+  invariant(typeof code === 'string', 'Code is required');
+  const name = formData.get('name');
+  invariant(typeof name === 'string', 'Name is required');
+  const requestId = formData.get('requestId');
+
+  if (requestId) {
+    invariant(typeof requestId === 'string', 'Request ID is required');
+  }
+
+  const unitTest = await database.getWhere<UnitTest>(models.unitTest.type, {
+    _id: testId,
+  });
+  invariant(unitTest, 'Test not found');
+
+  await models.unitTest.update(unitTest, { name, code, requestId: requestId || null });
+};
+
+export const runTestAction: ActionFunction = async ({ params }) => {
+  const { organizationId, projectId, workspaceId, testSuiteId, testId } = params;
+  invariant(typeof testId === 'string', 'Test ID is required');
+
+  const unitTest = await database.getWhere<UnitTest>(models.unitTest.type, {
+    _id: testId,
+  });
+  invariant(unitTest, 'Test not found');
+
+  const tests: Test[] = [
+    {
+      name: unitTest.name,
+      code: unitTest.code,
+      defaultRequestId: unitTest.requestId,
+    },
+  ];
+  const src = generate([{ name: 'My Suite', suites: [], tests }]);
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
+    unitTest.parentId
+  );
+
+  const sendRequest = getSendRequestCallback(
+    workspaceMeta?.activeEnvironmentId || undefined
+  );
+
+  const results = await runTests(src, { sendRequest });
+
+  const testResult = await models.unitTestResult.create({
+    results,
+    parentId: unitTest.parentId,
+  });
+
+  trackSegmentEvent(SegmentEvent.unitTestRun);
+
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
 };

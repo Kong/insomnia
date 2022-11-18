@@ -1,8 +1,16 @@
-// eslint-disable-next-line simple-import-sort/imports
+import './rendererListeners';
+
+import { invariant } from '@remix-run/router';
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
-import './rendererListeners';
+import {
+  createMemoryRouter,
+  matchPath,
+  RouterProvider,
+} from 'react-router-dom';
+import { Store } from 'redux';
+
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
@@ -13,32 +21,25 @@ import {
 } from '../common/constants';
 import { database } from '../common/database';
 import { initializeLogging } from '../common/log';
+import { strings } from '../common/strings';
 import * as models from '../models';
+import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
+import { DEFAULT_PROJECT_ID, isRemoteProject } from '../models/project';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
-import { init as initStore, RootState } from './redux/modules';
-import { initializeSentry } from './sentry';
-import {
-  createMemoryRouter,
-  RouterProvider,
-  matchPath,
-} from 'react-router-dom';
-
-import Root from './routes/root';
-import './css/index.less'; // this import must come after `Root`.
 import { AppLoadingIndicator } from './components/app-loading-indicator';
+import { init as initStore, RootState } from './redux/modules';
 import {
+  setActiveActivity,
   setActiveProject,
   setActiveWorkspace,
-  setActiveActivity,
 } from './redux/modules/global';
-import { DEFAULT_PROJECT_ID, isRemoteProject } from '../models/project';
-import { ErrorRoute } from './routes/error';
-import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
 import { selectActiveProject } from './redux/selectors';
-import { strings } from '../common/strings';
-import { Store } from 'redux';
+import { ErrorRoute } from './routes/error';
+import Root from './routes/root';
+import { initializeSentry } from './sentry';
+
 const Project = lazy(() => import('./routes/project'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
 const Debug = lazy(() => import('./routes/debug'));
@@ -62,7 +63,7 @@ const router = createMemoryRouter(
   [
     {
       path: '/',
-      loader:async (...args) => (await import('./routes/root')).loader(...args),
+      loader: async (...args) => (await import('./routes/root')).loader(...args),
       element: <Root />,
       errorElement: <ErrorRoute />,
       children: [
@@ -130,12 +131,91 @@ const router = createMemoryRouter(
                               ),
                             },
                             {
-                              path: `${ACTIVITY_UNIT_TEST}`,
+                              path: 'test/*',
+                              loader: async (...args) =>  (await import('./routes/unit-test')).loader(...args),
                               element: (
                                 <Suspense fallback={<AppLoadingIndicator />}>
                                   <UnitTest />
                                 </Suspense>
                               ),
+                              children: [
+                                {
+                                  index: true,
+                                  loader: async (...args) => (await import('./routes/test-suite')).indexLoader(...args),
+                                },
+                                {
+                                  path: 'test-suite',
+                                  children: [
+                                    {
+                                      index: true,
+                                      loader: async (...args) => (await import('./routes/test-suite')).indexLoader(...args),
+                                    },
+                                    {
+                                      path: 'new',
+                                      action: async (...args) => (await import('./routes/actions')).createNewTestSuiteAction(...args),
+                                    },
+                                    {
+                                      path: ':testSuiteId',
+                                      id: ':testSuiteId',
+                                      loader: async (...args) => (await import('./routes/test-suite')).loader(...args),
+                                      children: [
+                                        {
+                                          index: true,
+                                          loader: async (...args) => (await import('./routes/test-results')).indexLoader(...args),
+                                        },
+                                        {
+                                          path: 'test-result',
+                                          children: [
+                                            {
+                                              path: ':testResultId',
+                                              id: ':testResultId',
+                                              loader: async (...args) => (await import('./routes/test-results')).loader(...args),
+                                            },
+                                          ],
+                                        },
+                                        {
+                                          path: 'delete',
+                                          action: async (...args) => (await import('./routes/actions')).deleteTestSuiteAction(...args),
+                                        },
+                                        {
+                                          path: 'rename',
+                                          action: async (...args) => (await import('./routes/actions')).renameTestSuiteAction(...args),
+                                        },
+                                        {
+                                          path: 'run-all-tests',
+                                          action: async (...args) => (await import('./routes/actions')).runAllTestsAction(...args),
+                                        },
+                                        {
+                                          path: 'test',
+                                          children: [
+                                            {
+                                              path: 'new',
+                                              action: async (...args) => (await import('./routes/actions')).createNewTestAction(...args),
+                                            },
+                                            {
+                                              path: ':testId',
+                                              children: [
+                                                {
+                                                  path: 'delete',
+                                                  action: async (...args) => (await import('./routes/actions')).deleteTestAction(...args),
+                                                },
+                                                {
+                                                  path: 'update',
+                                                  action: async (...args) => (await import('./routes/actions')).updateTestAction(...args),
+                                                },
+                                                {
+                                                  path: 'run',
+                                                  action: async (...args) => (await import('./routes/actions')).runTestAction(...args),
+                                                },
+                                              ],
+                                            },
+                                          ],
+                                        },
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
                             },
                             {
                               path: 'duplicate',
@@ -239,7 +319,7 @@ function updateReduxNavigationState(store: Store, pathname: string) {
 
   const isActivityTest = matchPath(
     {
-      path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_UNIT_TEST}`,
+      path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test',
       end: false,
     },
     pathname
@@ -336,7 +416,7 @@ async function renderApp() {
           );
         } else if (activity === ACTIVITY_UNIT_TEST) {
           router.navigate(
-            `/organization/${organizationId}/project/${activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_UNIT_TEST}`
+            `/organization/${organizationId}/project/${state.global.activeProjectId}/workspace/${state.global.activeWorkspaceId}/test`
           );
         }
       }
@@ -378,9 +458,7 @@ async function renderApp() {
 
   const root = document.getElementById('root');
 
-  if (!root) {
-    throw new Error('Could not find root element');
-  }
+  invariant(root, 'Could not find root element');
 
   ReactDOM.createRoot(root).render(
     <Provider store={store}>
