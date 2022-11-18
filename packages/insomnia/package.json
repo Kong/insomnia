@@ -149,7 +149,7 @@
     "@types/ws": "^8.5.3",
     "@types/xmldom": "0.1.30",
     "@types/yaml": "^1.9.7",
-    "@vitejs/plugin-react": "^1.2.0",
+    "@vitejs/plugin-react": "^2.2.0",
     "buffer": "^6.0.3",
     "classnames": "^2.3.1",
     "codemirror": "^5.65.2",
