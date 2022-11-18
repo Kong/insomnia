@@ -285,7 +285,6 @@ const TestSuiteRoute = () => {
     <div className="unit-tests theme--pane__body">
       <div className="unit-tests__top-header">
         <h2>
-          YOza
           <Editable
             singleClick
             onSubmit={name => name && renameTestSuiteFetcher.submit(
