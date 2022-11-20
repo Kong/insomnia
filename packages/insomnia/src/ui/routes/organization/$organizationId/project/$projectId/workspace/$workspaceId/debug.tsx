@@ -1,48 +1,47 @@
-import React, { FC, Fragment, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-
-import * as models from '../../models';
-import { isGrpcRequest } from '../../models/grpc-request';
-import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
-import * as requestOperations from '../../models/helpers/request-operations';
-import { isRequest } from '../../models/request';
-import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
-import { isWebSocketRequest } from '../../models/websocket-request';
-import { invariant } from '../../utils/invariant';
-import { SegmentEvent, trackSegmentEvent } from '../analytics';
-import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
-import { ErrorBoundary } from '../components/error-boundary';
-import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
-import { showModal } from '../components/modals';
-import { AskModal } from '../components/modals/ask-modal';
-import { CookiesModal, showCookiesModal } from '../components/modals/cookies-modal';
-import { GenerateCodeModal } from '../components/modals/generate-code-modal';
-import { PromptModal } from '../components/modals/prompt-modal';
-import { RequestSettingsModal } from '../components/modals/request-settings-modal';
-import { RequestSwitcherModal } from '../components/modals/request-switcher-modal';
-import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
-import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
-import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
-import { PlaceholderRequestPane } from '../components/panes/placeholder-request-pane';
-import { RequestPane } from '../components/panes/request-pane';
-import { ResponsePane } from '../components/panes/response-pane';
-import { SidebarChildren } from '../components/sidebar/sidebar-children';
-import { SidebarFilter } from '../components/sidebar/sidebar-filter';
-import { SidebarLayout } from '../components/sidebar-layout';
-import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
-import { WebSocketResponsePane } from '../components/websockets/websocket-response-pane';
-import { updateRequestMetaByParentId } from '../hooks/create-request';
-import { createRequestGroup } from '../hooks/create-request-group';
+import * as models from '@insomnia/models';
+import { isGrpcRequest } from '@insomnia/models/grpc-request';
+import { getByParentId as getGrpcRequestMetaByParentId } from '@insomnia/models/grpc-request-meta';
+import * as requestOperations from '@insomnia/models/helpers/request-operations';
+import { isRequest } from '@insomnia/models/request';
+import { getByParentId as getRequestMetaByParentId } from '@insomnia/models/request-meta';
+import { isWebSocketRequest } from '@insomnia/models/websocket-request';
+import { SegmentEvent, trackSegmentEvent } from '@insomnia/ui/analytics';
+import { EnvironmentsDropdown } from '@insomnia/ui/components/dropdowns/environments-dropdown';
+import { ErrorBoundary } from '@insomnia/ui/components/error-boundary';
+import { useDocBodyKeyboardShortcuts } from '@insomnia/ui/components/keydown-binder';
+import { showModal } from '@insomnia/ui/components/modals';
+import { AskModal } from '@insomnia/ui/components/modals/ask-modal';
+import { CookiesModal, showCookiesModal } from '@insomnia/ui/components/modals/cookies-modal';
+import { GenerateCodeModal } from '@insomnia/ui/components/modals/generate-code-modal';
+import { PromptModal } from '@insomnia/ui/components/modals/prompt-modal';
+import { RequestSettingsModal } from '@insomnia/ui/components/modals/request-settings-modal';
+import { RequestSwitcherModal } from '@insomnia/ui/components/modals/request-switcher-modal';
+import { WorkspaceEnvironmentsEditModal } from '@insomnia/ui/components/modals/workspace-environments-edit-modal';
+import { GrpcRequestPane } from '@insomnia/ui/components/panes/grpc-request-pane';
+import { GrpcResponsePane } from '@insomnia/ui/components/panes/grpc-response-pane';
+import { PlaceholderRequestPane } from '@insomnia/ui/components/panes/placeholder-request-pane';
+import { RequestPane } from '@insomnia/ui/components/panes/request-pane';
+import { ResponsePane } from '@insomnia/ui/components/panes/response-pane';
+import { SidebarChildren } from '@insomnia/ui/components/sidebar/sidebar-children';
+import { SidebarFilter } from '@insomnia/ui/components/sidebar/sidebar-filter';
+import { SidebarLayout } from '@insomnia/ui/components/sidebar-layout';
+import { WebSocketRequestPane } from '@insomnia/ui/components/websockets/websocket-request-pane';
+import { WebSocketResponsePane } from '@insomnia/ui/components/websockets/websocket-response-pane';
+import { updateRequestMetaByParentId } from '@insomnia/ui/hooks/create-request';
+import { createRequestGroup } from '@insomnia/ui/hooks/create-request-group';
 import {
   selectActiveEnvironment,
   selectActiveRequest,
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
   selectSettings,
-} from '../redux/selectors';
-import { selectSidebarFilter } from '../redux/sidebar-selectors';
+} from '@insomnia/ui/redux/selectors';
+import { selectSidebarFilter } from '@insomnia/ui/redux/sidebar-selectors';
+import { invariant } from '@remix-run/router';
+import React, { FC, Fragment, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 
-export const Debug: FC = () => {
+const Debug: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
   const activeWorkspace = useSelector(selectActiveWorkspace);

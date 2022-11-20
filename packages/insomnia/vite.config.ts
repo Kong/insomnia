@@ -5,6 +5,7 @@ import { defineConfig } from 'vite';
 
 import pkg from './package.json';
 import { electronNodeRequire } from './vite-plugin-electron-node-require';
+import remixRoutes from './vite-plugin-remix-routes';
 
 export default defineConfig(({ mode }) => {
   const __DEV__ = mode !== 'production';
@@ -17,6 +18,11 @@ export default defineConfig(({ mode }) => {
       __DEV__: JSON.stringify(__DEV__),
       'process.env.NODE_ENV': JSON.stringify(mode),
       'process.env.INSOMNIA_ENV': JSON.stringify(mode),
+    },
+    resolve: {
+      alias: {
+        '@insomnia': path.join(__dirname, 'src'),
+      },
     },
     server: {
       port: pkg.dev['dev-server-port'],
@@ -38,6 +44,9 @@ export default defineConfig(({ mode }) => {
       exclude: ['@getinsomnia/node-libcurl'],
     },
     plugins: [
+      remixRoutes({
+        appDirectory: path.join(__dirname, 'src', 'ui'),
+      }),
       // Allows us to import modules that will be resolved by Node's require() function.
       // e.g. import fs from 'fs'; will get transformed to const fs = require('fs'); so that it works in the renderer process.
       // This is necessary because we use nodeIntegration: true in the renderer process and allow importing modules from node.

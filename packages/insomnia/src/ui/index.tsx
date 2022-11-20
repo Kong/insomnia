@@ -1,6 +1,6 @@
 import './rendererListeners';
 
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import {
@@ -9,6 +9,7 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 import { Store } from 'redux';
+import routes from 'virtual:remix-routes';
 
 import {
   ACTIVITY_DEBUG,
@@ -28,7 +29,6 @@ import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
 import { invariant } from '../utils/invariant';
-import { AppLoadingIndicator } from './components/app-loading-indicator';
 import { init as initStore, RootState } from './redux/modules';
 import {
   setActiveActivity,
@@ -40,10 +40,7 @@ import { ErrorRoute } from './routes/error';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
 
-const Project = lazy(() => import('./routes/project'));
-const UnitTest = lazy(() => import('./routes/unit-test'));
-const Debug = lazy(() => import('./routes/debug'));
-const Design = lazy(() => import('./routes/design'));
+console.log(routes);
 
 initializeSentry();
 initializeLogging();
@@ -66,230 +63,220 @@ const router = createMemoryRouter(
       loader: async (...args) => (await import('./routes/root')).loader(...args),
       element: <Root />,
       errorElement: <ErrorRoute />,
-      children: [
-        {
-          path: 'organization',
-          children: [
-            {
-              path: ':organizationId',
-              children: [
-                {
-                  index: true,
-                  loader: async (...args) => (await import('./routes/project')).indexLoader(...args),
-                },
-                {
-                  path: 'project',
-                  children: [
-                    {
-                      path: ':projectId',
-                      id: '/project/:projectId',
-                      loader: async (...args) =>
-                        (await import('./routes/project')).loader(...args),
-                      element: (
-                        <Suspense fallback={<AppLoadingIndicator />}>
-                          <Project />
-                        </Suspense>
-                      ),
-                      children: [
-                        {
-                          path: 'delete',
-                          action: async (...args) =>
-                            (await import('./routes/actions')).deleteProjectAction(
-                              ...args
-                            ),
-                        },
-                        {
-                          path: 'rename',
-                          action: async (...args) =>
-                            (await import('./routes/actions')).renameProjectAction(
-                              ...args
-                            ),
-                        },
-                      ],
-                    },
-                    {
-                      path: ':projectId/workspace',
-                      children: [
-                        {
-                          path: ':workspaceId',
-                          loader: async (...args) => (await import('./routes/workspace')).workspaceLoader(...args),
-                          children: [
-                            {
-                              path: `${ACTIVITY_DEBUG}`,
-                              element: (
-                                <Suspense fallback={<AppLoadingIndicator />}>
-                                  <Debug />
-                                </Suspense>
-                              ),
-                            },
-                            {
-                              path: `${ACTIVITY_SPEC}`,
-                              loader: async (...args) => (await import('./routes/design')).loader(...args),
-                              element: (
-                                <Suspense fallback={<AppLoadingIndicator />}>
-                                  <Design />
-                                </Suspense>
-                              ),
-                              children: [
-                                {
-                                  path: 'update',
-                                  action: async (...args) => (await import('./routes/actions')).updateApiSpecAction(...args),
-                                },
-                                {
-                                  path: 'generate-request-collection',
-                                  action: async (...args) => (await import('./routes/actions')).generateCollectionFromApiSpecAction(...args),
-                                },
-                              ],
-                            },
-                            {
-                              path: 'test/*',
-                              loader: async (...args) =>  (await import('./routes/unit-test')).loader(...args),
-                              element: (
-                                <Suspense fallback={<AppLoadingIndicator />}>
-                                  <UnitTest />
-                                </Suspense>
-                              ),
-                              children: [
-                                {
-                                  index: true,
-                                  loader: async (...args) => (await import('./routes/test-suite')).indexLoader(...args),
-                                },
-                                {
-                                  path: 'test-suite',
-                                  children: [
-                                    {
-                                      index: true,
-                                      loader: async (...args) => (await import('./routes/test-suite')).indexLoader(...args),
-                                    },
-                                    {
-                                      path: 'new',
-                                      action: async (...args) => (await import('./routes/actions')).createNewTestSuiteAction(...args),
-                                    },
-                                    {
-                                      path: ':testSuiteId',
-                                      id: ':testSuiteId',
-                                      loader: async (...args) => (await import('./routes/test-suite')).loader(...args),
-                                      children: [
-                                        {
-                                          index: true,
-                                          loader: async (...args) => (await import('./routes/test-results')).indexLoader(...args),
-                                        },
-                                        {
-                                          path: 'test-result',
-                                          children: [
-                                            {
-                                              path: ':testResultId',
-                                              id: ':testResultId',
-                                              loader: async (...args) => (await import('./routes/test-results')).loader(...args),
-                                            },
-                                          ],
-                                        },
-                                        {
-                                          path: 'delete',
-                                          action: async (...args) => (await import('./routes/actions')).deleteTestSuiteAction(...args),
-                                        },
-                                        {
-                                          path: 'rename',
-                                          action: async (...args) => (await import('./routes/actions')).renameTestSuiteAction(...args),
-                                        },
-                                        {
-                                          path: 'run-all-tests',
-                                          action: async (...args) => (await import('./routes/actions')).runAllTestsAction(...args),
-                                        },
-                                        {
-                                          path: 'test',
-                                          children: [
-                                            {
-                                              path: 'new',
-                                              action: async (...args) => (await import('./routes/actions')).createNewTestAction(...args),
-                                            },
-                                            {
-                                              path: ':testId',
-                                              children: [
-                                                {
-                                                  path: 'delete',
-                                                  action: async (...args) => (await import('./routes/actions')).deleteTestAction(...args),
-                                                },
-                                                {
-                                                  path: 'update',
-                                                  action: async (...args) => (await import('./routes/actions')).updateTestAction(...args),
-                                                },
-                                                {
-                                                  path: 'run',
-                                                  action: async (...args) => (await import('./routes/actions')).runTestAction(...args),
-                                                },
-                                              ],
-                                            },
-                                          ],
-                                        },
-                                      ],
-                                    },
-                                  ],
-                                },
-                              ],
-                            },
-                            {
-                              path: 'duplicate',
-                              action: async (...args) =>
-                                (
-                                  await import('./routes/actions')
-                                ).duplicateWorkspaceAction(...args),
-                            },
-                          ],
-                        },
-                        {
-                          path: 'new',
-                          action: async (...args) =>
-                            (await import('./routes/actions')).createNewWorkspaceAction(
-                              ...args
-                            ),
-                        },
-                        {
-                          path: 'delete',
-                          action: async (...args) =>
-                            (await import('./routes/actions')).deleteWorkspaceAction(
-                              ...args
-                            ),
-                        },
-                        {
-                          path: 'update',
-                          action: async (...args) =>
-                            (await import('./routes/actions')).updateWorkspaceAction(
-                              ...args
-                            ),
-                        },
-                      ],
-                    },
-                    {
-                      path: 'new',
-                      action: async (...args) =>
-                        (await import('./routes/actions')).createNewProjectAction(
-                          ...args
-                        ),
-                    },
-                    {
-                      path: ':projectId/remote-collections',
-                      loader: async (...args) =>
-                        (
-                          await import('./routes/remote-collections')
-                        ).remoteCollectionsLoader(...args),
-                      children: [
-                        {
-                          path: 'pull',
-                          action: async (...args) =>
-                            (
-                              await import('./routes/remote-collections')
-                            ).pullRemoteCollectionAction(...args),
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
+      children: routes,
+      // children: [
+      //   {
+      //     path: 'organization',
+      //     children: [
+      //       {
+      //         path: ':organizationId',
+      //         children: [
+      //           {
+      //             index: true,
+      //             loader: async (...args) => (await import('./routes/project')).indexLoader(...args),
+      //           },
+      //           {
+      //             path: 'project',
+      //             children: [
+      //               {
+      //                 path: ':projectId',
+      //                 id: '/project/:projectId',
+      //                 loader: async (...args) =>
+      //                   (await import('./routes/project')).loader(...args),
+      //                 element: (
+      //                   <Suspense fallback={<AppLoadingIndicator />}>
+      //                     <Project />
+      //                   </Suspense>
+      //                 ),
+      //                 children: [
+      //                   {
+      //                     path: 'delete',
+      //                     action: async (...args) =>
+      //                       (await import('./routes/actions')).deleteProjectAction(
+      //                         ...args
+      //                       ),
+      //                   },
+      //                   {
+      //                     path: 'rename',
+      //                     action: async (...args) =>
+      //                       (await import('./routes/actions')).renameProjectAction(
+      //                         ...args
+      //                       ),
+      //                   },
+      //                 ],
+      //               },
+      //               {
+      //                 path: ':projectId/workspace',
+      //                 children: [
+      //                   {
+      //                     path: ':workspaceId',
+      //                     loader: async (...args) => (await import('./routes/workspace')).workspaceLoader(...args),
+      //                     children: [
+      //                       {
+      //                         path: `${ACTIVITY_DEBUG}`,
+      //                         element: (
+      //                           <Suspense fallback={<AppLoadingIndicator />}>
+      //                             <Debug />
+      //                           </Suspense>
+      //                         ),
+      //                       },
+      //                       {
+      //                         path: `${ACTIVITY_SPEC}`,
+      //                         element: (
+      //                           <Suspense fallback={<AppLoadingIndicator />}>
+      //                             <Design />
+      //                           </Suspense>
+      //                         ),
+      //                       },
+      //                       {
+      //                         path: 'test/*',
+      //                         loader: async (...args) =>  (await import('./routes/unit-test')).loader(...args),
+      //                         element: (
+      //                           <Suspense fallback={<AppLoadingIndicator />}>
+      //                             <UnitTest />
+      //                           </Suspense>
+      //                         ),
+      //                         children: [
+      //                           {
+      //                             index: true,
+      //                             loader: async (...args) => (await import('./routes/test-suite')).indexLoader(...args),
+      //                           },
+      //                           {
+      //                             path: 'test-suite',
+      //                             children: [
+      //                               {
+      //                                 index: true,
+      //                                 loader: async (...args) => (await import('./routes/test-suite')).indexLoader(...args),
+      //                               },
+      //                               {
+      //                                 path: 'new',
+      //                                 action: async (...args) => (await import('./routes/actions')).createNewTestSuiteAction(...args),
+      //                               },
+      //                               {
+      //                                 path: ':testSuiteId',
+      //                                 id: ':testSuiteId',
+      //                                 loader: async (...args) => (await import('./routes/test-suite')).loader(...args),
+      //                                 children: [
+      //                                   {
+      //                                     index: true,
+      //                                     loader: async (...args) => (await import('./routes/test-results')).indexLoader(...args),
+      //                                   },
+      //                                   {
+      //                                     path: 'test-result',
+      //                                     children: [
+      //                                       {
+      //                                         path: ':testResultId',
+      //                                         id: ':testResultId',
+      //                                         loader: async (...args) => (await import('./routes/test-results')).loader(...args),
+      //                                       },
+      //                                     ],
+      //                                   },
+      //                                   {
+      //                                     path: 'delete',
+      //                                     action: async (...args) => (await import('./routes/actions')).deleteTestSuiteAction(...args),
+      //                                   },
+      //                                   {
+      //                                     path: 'rename',
+      //                                     action: async (...args) => (await import('./routes/actions')).renameTestSuiteAction(...args),
+      //                                   },
+      //                                   {
+      //                                     path: 'run-all-tests',
+      //                                     action: async (...args) => (await import('./routes/actions')).runAllTestsAction(...args),
+      //                                   },
+      //                                   {
+      //                                     path: 'test',
+      //                                     children: [
+      //                                       {
+      //                                         path: 'new',
+      //                                         action: async (...args) => (await import('./routes/actions')).createNewTestAction(...args),
+      //                                       },
+      //                                       {
+      //                                         path: ':testId',
+      //                                         children: [
+      //                                           {
+      //                                             path: 'delete',
+      //                                             action: async (...args) => (await import('./routes/actions')).deleteTestAction(...args),
+      //                                           },
+      //                                           {
+      //                                             path: 'update',
+      //                                             action: async (...args) => (await import('./routes/actions')).updateTestAction(...args),
+      //                                           },
+      //                                           {
+      //                                             path: 'run',
+      //                                             action: async (...args) => (await import('./routes/actions')).runTestAction(...args),
+      //                                           },
+      //                                         ],
+      //                                       },
+      //                                     ],
+      //                                   },
+      //                                 ],
+      //                               },
+      //                             ],
+      //                           },
+      //                         ],
+      //                       },
+      //                       {
+      //                         path: 'duplicate',
+      //                         action: async (...args) =>
+      //                           (
+      //                             await import('./routes/actions')
+      //                           ).duplicateWorkspaceAction(...args),
+      //                       },
+      //                     ],
+      //                   },
+      //                   {
+      //                     path: 'new',
+      //                     action: async (...args) =>
+      //                       (await import('./routes/actions')).createNewWorkspaceAction(
+      //                         ...args
+      //                       ),
+      //                   },
+      //                   {
+      //                     path: 'delete',
+      //                     action: async (...args) =>
+      //                       (await import('./routes/actions')).deleteWorkspaceAction(
+      //                         ...args
+      //                       ),
+      //                   },
+      //                   {
+      //                     path: 'update',
+      //                     action: async (...args) =>
+      //                       (await import('./routes/actions')).updateWorkspaceAction(
+      //                         ...args
+      //                       ),
+      //                   },
+      //                 ],
+      //               },
+      //               {
+      //                 path: 'new',
+      //                 action: async (...args) =>
+      //                   (await import('./routes/actions')).createNewProjectAction(
+      //                     ...args
+      //                   ),
+      //               },
+      //               {
+      //                 path: ':projectId/remote-collections',
+      //                 loader: async (...args) =>
+      //                   (
+      //                     await import('./routes/remote_collections')
+      //                   ).remoteCollectionsLoader(...args),
+      //                 children: [
+      //                   {
+      //                     path: 'pull',
+      //                     action: async (...args) =>
+      //                       (
+      //                         await import('./routes/remote_collections')
+      //                       ).pullRemoteCollectionAction(...args),
+      //                   },
+      //                 ],
+      //               },
+      //             ],
+      //           },
+      //         ],
+      //       },
+      //     ],
+      //   },
+      // ],
     },
   ],
   {

@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { isLoggedIn } from '../../../account/session';
 import { strings } from '../../../common/strings';
 import { RemoteProject } from '../../../models/project';
-import { RemoteCollectionsLoaderData } from '../../routes/remote-collections';
+import { RemoteCollectionsLoaderData } from '../../routes/remote_collections';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';

@@ -1,3 +1,40 @@
+import { parseApiSpec, ParsedApiSpec } from '@insomnia/common/api-specs';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_SPEC,
+  DashboardSortOrder,
+} from '@insomnia/common/constants';
+import { ForceToWorkspace } from '@insomnia/common/import';
+import { fuzzyMatchAll, isNotNullOrUndefined } from '@insomnia/common/misc';
+import { descendingNumberSort, sortMethodMap } from '@insomnia/common/sorting';
+import { strings } from '@insomnia/common/strings';
+import * as models from '@insomnia/models';
+import { ApiSpec } from '@insomnia/models/api-spec';
+import { sortProjects } from '@insomnia/models/helpers/project';
+import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '@insomnia/models/organization';
+import { isDefaultProject, isRemoteProject, Project } from '@insomnia/models/project';
+import { isDesign, Workspace } from '@insomnia/models/workspace';
+import { MemClient } from '@insomnia/sync/git/mem-client';
+import { Dropdown } from '@insomnia/ui/components/base/dropdown/dropdown';
+import { DropdownButton } from '@insomnia/ui/components/base/dropdown/dropdown-button';
+import { DropdownDivider } from '@insomnia/ui/components/base/dropdown/dropdown-divider';
+import { DropdownItem } from '@insomnia/ui/components/base/dropdown/dropdown-item';
+import { DashboardSortDropdown } from '@insomnia/ui/components/dropdowns/dashboard-sort-dropdown';
+import { ProjectDropdown } from '@insomnia/ui/components/dropdowns/project-dropdown';
+import { RemoteWorkspacesDropdown } from '@insomnia/ui/components/dropdowns/remote-workspaces-dropdown';
+import { ErrorBoundary } from '@insomnia/ui/components/error-boundary';
+import { showAlert, showPrompt } from '@insomnia/ui/components/modals';
+import { EmptyStatePane } from '@insomnia/ui/components/panes/project-empty-state-pane';
+import { SidebarLayout } from '@insomnia/ui/components/sidebar-layout';
+import { Button } from '@insomnia/ui/components/themed-button';
+import { WorkspaceCard } from '@insomnia/ui/components/workspace-card';
+import {
+  importClipBoard,
+  importFile,
+  importUri,
+} from '@insomnia/ui/import';
+import { cloneGitRepository } from '@insomnia/ui/redux/modules/git';
+import { invariant } from '@insomnia/utils/invariant';
 import React, { FC, Fragment, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import {
@@ -12,44 +49,6 @@ import {
   useSubmit,
 } from 'react-router-dom';
 import styled from 'styled-components';
-
-import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
-import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_SPEC,
-  DashboardSortOrder,
-} from '../../common/constants';
-import { ForceToWorkspace } from '../../common/import';
-import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
-import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
-import { strings } from '../../common/strings';
-import * as models from '../../models';
-import { ApiSpec } from '../../models/api-spec';
-import { sortProjects } from '../../models/helpers/project';
-import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '../../models/organization';
-import { isDefaultProject, isRemoteProject, Project } from '../../models/project';
-import { isDesign, Workspace } from '../../models/workspace';
-import { MemClient } from '../../sync/git/mem-client';
-import { invariant } from '../../utils/invariant';
-import { Dropdown } from '../components/base/dropdown/dropdown';
-import { DropdownButton } from '../components/base/dropdown/dropdown-button';
-import { DropdownDivider } from '../components/base/dropdown/dropdown-divider';
-import { DropdownItem } from '../components/base/dropdown/dropdown-item';
-import { DashboardSortDropdown } from '../components/dropdowns/dashboard-sort-dropdown';
-import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
-import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
-import { ErrorBoundary } from '../components/error-boundary';
-import { showAlert, showPrompt } from '../components/modals';
-import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
-import { SidebarLayout } from '../components/sidebar-layout';
-import { Button } from '../components/themed-button';
-import { WorkspaceCard } from '../components/workspace-card';
-import {
-  importClipBoard,
-  importFile,
-  importUri,
-} from '../import';
-import { cloneGitRepository } from '../redux/modules/git';
 
 const CreateButton = styled(Button).attrs({
   variant: 'outlined',

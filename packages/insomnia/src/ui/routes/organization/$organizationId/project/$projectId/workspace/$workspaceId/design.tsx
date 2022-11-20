@@ -1,3 +1,22 @@
+import { ACTIVITY_SPEC } from '@insomnia/common/constants';
+import { debounce } from '@insomnia/common/misc';
+import { ApiSpec } from '@insomnia/models/api-spec';
+import * as models from '@insomnia/models/index';
+import {
+  CodeEditor,
+  CodeEditorHandle,
+} from '@insomnia/ui/components/codemirror/code-editor';
+import { DesignEmptyState } from '@insomnia/ui/components/design-empty-state';
+import { ErrorBoundary } from '@insomnia/ui/components/error-boundary';
+import { Notice, NoticeTable } from '@insomnia/ui/components/notice-table';
+import { SidebarLayout } from '@insomnia/ui/components/sidebar-layout';
+import { SpecEditorSidebar } from '@insomnia/ui/components/spec-editor/spec-editor-sidebar';
+import { superFaint } from '@insomnia/ui/css/css-in-js';
+import {
+  useActiveApiSpecSyncVCSVersion,
+  useGitVCSVersion,
+} from '@insomnia/ui/hooks/use-vcs-version';
+import { invariant } from '@insomnia/utils/invariant';
 import type { IRuleResult } from '@stoplight/spectral-core';
 import React, { createRef, FC, useCallback, useMemo } from 'react';
 import {
@@ -7,26 +26,6 @@ import {
   useParams,
 } from 'react-router-dom';
 import styled from 'styled-components';
-
-import { ACTIVITY_SPEC } from '../../common/constants';
-import { debounce } from '../../common/misc';
-import { ApiSpec } from '../../models/api-spec';
-import * as models from '../../models/index';
-import { invariant } from '../../utils/invariant';
-import {
-  CodeEditor,
-  CodeEditorHandle,
-} from '../components/codemirror/code-editor';
-import { DesignEmptyState } from '../components/design-empty-state';
-import { ErrorBoundary } from '../components/error-boundary';
-import { Notice, NoticeTable } from '../components/notice-table';
-import { SidebarLayout } from '../components/sidebar-layout';
-import { SpecEditorSidebar } from '../components/spec-editor/spec-editor-sidebar';
-import { superFaint } from '../css/css-in-js';
-import {
-  useActiveApiSpecSyncVCSVersion,
-  useGitVCSVersion,
-} from '../hooks/use-vcs-version';
 
 const isLintError = (result: IRuleResult) => result.severity === 0;
 
