@@ -150,7 +150,7 @@ export const OrganizationsNav: FC = () => {
               <li key={organization._id}>
                 <Tooltip position='right' message={organization.name}>
                   <NavbarItem
-                    to={`/organization/${organization._id}`}
+                    to={`organization/${organization._id}`}
                     $isActive={organizationId === organization._id}
                   >
                     {isDefaultOrganization(organization) ? (<i className='fa fa-home' />) : getNameInitials(organization.name)}

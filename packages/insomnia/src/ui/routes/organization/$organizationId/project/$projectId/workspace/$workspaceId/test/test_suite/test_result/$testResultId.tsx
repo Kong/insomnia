@@ -1,30 +1,14 @@
+import { database } from '@insomnia/common/database';
+import * as models from '@insomnia/models';
+import { UnitTestResult } from '@insomnia/models/unit-test-result';
+import { ListGroup, UnitTestResultItem } from '@insomnia/ui/components/list-group';
+import { invariant } from '@insomnia/utils/invariant';
 import React, { FC } from 'react';
-import { LoaderFunction, redirect, useRouteLoaderData } from 'react-router-dom';
-
-import { database } from '../../common/database';
-import * as models from '../../models';
-import { UnitTestResult } from '../../models/unit-test-result';
-import { invariant } from '../../utils/invariant';
-import { ListGroup, UnitTestResultItem } from '../components/list-group';
+import { LoaderFunction, useRouteLoaderData } from 'react-router-dom';
 
 interface TestResultsData {
   testResult: UnitTestResult;
 }
-
-export const indexLoader: LoaderFunction = async ({ params }) => {
-  const { organizationId, projectId, workspaceId, testSuiteId } = params;
-  invariant(projectId, 'Project ID is required');
-  invariant(organizationId, 'Organization ID is required');
-  invariant(workspaceId, 'Workspace ID is required');
-  invariant(testSuiteId, 'Test suite ID is required');
-
-  const testResult = await models.unitTestResult.getLatestByParentId(workspaceId);
-  if (testResult) {
-    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
-  }
-
-  return;
-};
 
 export const loader: LoaderFunction = async ({
   params,

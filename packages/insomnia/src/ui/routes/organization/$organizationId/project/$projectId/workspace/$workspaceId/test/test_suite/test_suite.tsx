@@ -1,29 +1,27 @@
+import { database } from '@insomnia/common/database';
+import { documentationLinks } from '@insomnia/common/documentation';
+import * as models from '@insomnia/models';
+import { isRequest, Request } from '@insomnia/models/request';
+import { isUnitTest, UnitTest } from '@insomnia/models/unit-test';
+import { UnitTestSuite } from '@insomnia/models/unit-test-suite';
+import { Editable } from '@insomnia/ui/components/base/editable';
+import { CodeEditor, CodeEditorHandle } from '@insomnia/ui/components/codemirror/code-editor';
+import { ListGroup, UnitTestItem } from '@insomnia/ui/components/list-group';
+import { showModal, showPrompt } from '@insomnia/ui/components/modals';
+import { SelectModal } from '@insomnia/ui/components/modals/select-modal';
+import { EmptyStatePane } from '@insomnia/ui/components/panes/empty-state-pane';
+import { SvgIcon } from '@insomnia/ui/components/svg-icon';
+import { Button } from '@insomnia/ui/components/themed-button';
+import { UnitTestEditable } from '@insomnia/ui/components/unit-test-editable';
+import { invariant } from '@insomnia/utils/invariant';
 import React, { useRef } from 'react';
 import {
   LoaderFunction,
-  redirect,
   useFetcher,
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
 import styled from 'styled-components';
-
-import { database } from '../../common/database';
-import { documentationLinks } from '../../common/documentation';
-import * as models from '../../models';
-import { isRequest, Request } from '../../models/request';
-import { isUnitTest, UnitTest } from '../../models/unit-test';
-import { UnitTestSuite } from '../../models/unit-test-suite';
-import { invariant } from '../../utils/invariant';
-import { Editable } from '../components/base/editable';
-import { CodeEditor, CodeEditorHandle } from '../components/codemirror/code-editor';
-import { ListGroup, UnitTestItem } from '../components/list-group';
-import { showModal, showPrompt } from '../components/modals';
-import { SelectModal } from '../components/modals/select-modal';
-import { EmptyStatePane } from '../components/panes/empty-state-pane';
-import { SvgIcon } from '../components/svg-icon';
-import { Button } from '../components/themed-button';
-import { UnitTestEditable } from '../components/unit-test-editable';
 
 const HeaderButton = styled(Button)({
   '&&': {
@@ -198,37 +196,12 @@ const UnitTestItemView = ({
   );
 };
 
-export const indexLoader: LoaderFunction = async ({ params }) => {
-  const { organizationId, projectId, workspaceId } = params;
-  invariant(organizationId, 'organizationId is required');
-  invariant(projectId, 'projectId is required');
-  invariant(workspaceId, 'workspaceId is required');
-
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-  if (workspaceMeta?.activeUnitTestSuiteId) {
-    const unitTestSuite = await models.unitTestSuite.getById(workspaceMeta.activeUnitTestSuiteId);
-
-    if (unitTestSuite) {
-      return redirect(
-        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}`
-      );
-    }
-  }
-
-  const unitTestSuites = await models.unitTestSuite.findByParentId(workspaceId);
-  if (unitTestSuites.length > 0) {
-    return redirect(
-      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuites[0]._id}`
-    );
-  }
-  return;
-};
-
 interface LoaderData {
   unitTests: UnitTest[];
   unitTestSuite: UnitTestSuite;
   requests: Request[];
 }
+
 export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> => {
   const { workspaceId, testSuiteId } = params;
 

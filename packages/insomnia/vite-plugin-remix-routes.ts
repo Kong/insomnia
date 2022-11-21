@@ -117,7 +117,9 @@ interface Components {
 export function stringifyRoutes(routes: Route[], context: Context) {
   const components: Components = { sync: [], async: [] };
   const routesString = routesToString(routes, context, components);
-
+  components.sync.push(
+    'import { Outlet as ReactRouterOutlet } from \'react-router-dom\';'
+  );
   return {
     routesString,
     componentsString: [...components.sync, ...components.async].join('\n'),
@@ -158,7 +160,7 @@ function routeToString(
 
   props.set(
     'element',
-    `${componentName}.default ? createElement(${componentName}.default) : undefined`
+    `${componentName}.default ? createElement(${componentName}.default) : createElement(ReactRouterOutlet)`
   );
   props.set('loader', `${componentName}.loader`);
   props.set('action', `${componentName}.action`);

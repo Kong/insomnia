@@ -12,7 +12,7 @@ import { ActionFunction, redirect } from 'react-router-dom';
 
 // Workspace
 
-export const createNewWorkspaceAction: ActionFunction = async ({
+export const action: ActionFunction = async ({
   params, request,
 }) => {
   const { organizationId, projectId } = params;

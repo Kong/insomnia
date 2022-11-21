@@ -2,7 +2,7 @@ import * as models from '@insomnia/models';
 import { invariant } from '@remix-run/router';
 import { ActionFunction } from 'react-router-dom';
 
-export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
+export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const workspaceId = formData.get('workspaceId');
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');

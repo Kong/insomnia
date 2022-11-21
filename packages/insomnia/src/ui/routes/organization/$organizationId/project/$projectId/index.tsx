@@ -22,7 +22,6 @@ import { DropdownItem } from '@insomnia/ui/components/base/dropdown/dropdown-ite
 import { DashboardSortDropdown } from '@insomnia/ui/components/dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from '@insomnia/ui/components/dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from '@insomnia/ui/components/dropdowns/remote-workspaces-dropdown';
-import { ErrorBoundary } from '@insomnia/ui/components/error-boundary';
 import { showAlert, showPrompt } from '@insomnia/ui/components/modals';
 import { EmptyStatePane } from '@insomnia/ui/components/panes/project-empty-state-pane';
 import { SidebarLayout } from '@insomnia/ui/components/sidebar-layout';
@@ -39,12 +38,12 @@ import React, { FC, Fragment, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import {
   LoaderFunction,
-  redirect,
   useFetcher,
   useLoaderData,
   useNavigate,
   useParams,
   useRevalidator,
+  useRouteError,
   useSearchParams,
   useSubmit,
 } from 'react-router-dom';
@@ -359,23 +358,6 @@ interface WorkspaceWithMetadata {
   workspace: Workspace;
 }
 
-export const indexLoader: LoaderFunction = async ({ params }) => {
-  const { organizationId } = params;
-  invariant(organizationId, 'Organization ID is required');
-
-  if (models.organization.DEFAULT_ORGANIZATION_ID === organizationId) {
-    const localProjects = (await models.project.all()).filter(proj => !isRemoteProject(proj));
-    if (localProjects[0]._id) {
-      return redirect(`/organization/${organizationId}/project/${localProjects[0]._id}`);
-    }
-  } else {
-    const projectId = organizationId;
-    return redirect(`/organization/${organizationId}/project/${projectId}`);
-  }
-
-  return;
-};
-
 interface LoaderData {
   workspaces: WorkspaceWithMetadata[];
   activeProject: Project;
@@ -555,6 +537,10 @@ export const loader: LoaderFunction = async ({
 const ProjectRoute: FC = () => {
   const { workspaces, activeProject, projects, organization } = useLoaderData() as LoaderData;
   const { organizationId } = useParams() as { organizationId: string };
+  console.log({
+    activeProject,
+    organization,
+  });
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
 
@@ -655,127 +641,133 @@ const ProjectRoute: FC = () => {
   const hasWorkspaces = workspaces?.length > 0;
 
   return (
-    <ErrorBoundary>
-      <Fragment>
-        <SidebarLayout
-          renderPageSidebar={
-            <OrganizationProjectsSidebar
-              organizationId={organizationId}
-              title={organization.name}
-              projects={projects}
-              activeProject={activeProject}
-            />
-          }
-          renderPaneOne={
-            <Pane>
-              <PaneHeader>
-                <PaneHeaderTitle>All Files ({workspaces.length})</PaneHeaderTitle>
-                <PaneHeaderToolbar>
-                  <SearchFormControl className="form-control form-control--outlined no-margin">
-                    <SearchInput
-                      autoFocus
-                      type="text"
-                      placeholder="Filter..."
-                      onChange={event =>
-                        submit({
-                          filter: event.target.value,
-                          sortOrder,
-                        })
-                      }
-                      className="no-margin"
-                    />
-                    <span className="fa fa-search filter-icon" />
-                  </SearchFormControl>
-                  <DashboardSortDropdown
-                    value={sortOrder}
-                    onSelect={sortOrder => {
+    <Fragment>
+      <SidebarLayout
+        renderPageSidebar={
+          <OrganizationProjectsSidebar
+            organizationId={organizationId}
+            title={organization.name}
+            projects={projects}
+            activeProject={activeProject}
+          />
+        }
+        renderPaneOne={
+          <Pane>
+            <PaneHeader>
+              <PaneHeaderTitle>All Files ({workspaces.length})</PaneHeaderTitle>
+              <PaneHeaderToolbar>
+                <SearchFormControl className="form-control form-control--outlined no-margin">
+                  <SearchInput
+                    autoFocus
+                    type="text"
+                    placeholder="Filter..."
+                    onChange={event =>
                       submit({
+                        filter: event.target.value,
                         sortOrder,
-                        filter,
-                      });
-                    }}
+                      })
+                    }
+                    className="no-margin"
                   />
-                  {isRemoteProject(activeProject) && (
-                    <RemoteWorkspacesDropdown key={activeProject._id} project={activeProject} />
-                  )}
-                  <Dropdown>
-                    <DropdownButton buttonClass={CreateButton}>
-                      <i className="fa fa-plus" />Create <i className="fa fa-caret-down pad-left-sm" />
-                    </DropdownButton>
-                    <DropdownDivider>New</DropdownDivider>
-                    <DropdownItem onClick={createNewCollection}>
-                      <i className="fa fa-bars" />
-                      Request Collection
-                    </DropdownItem>
-                    <DropdownItem onClick={createNewDocument}>
-                      <i className="fa fa-file-o" />
-                      Design Document
-                    </DropdownItem>
-                    <DropdownDivider>Import From</DropdownDivider>
-                    <DropdownItem onClick={importFromFile}>
-                      <i className="fa fa-plus" />
-                      File
-                    </DropdownItem>
-                    <DropdownItem onClick={importFromURL}>
-                      <i className="fa fa-link" />
-                      URL
-                    </DropdownItem>
-                    <DropdownItem onClick={importFromClipboard}>
-                      <i className="fa fa-clipboard" />
-                      Clipboard
-                    </DropdownItem>
-                    <DropdownItem onClick={importFromGit}>
-                      <i className="fa fa-code-fork" />
-                      Git Clone
-                    </DropdownItem>
-                  </Dropdown>
-                </PaneHeaderToolbar>
-              </PaneHeader>
-              <PaneBody>
-                {hasWorkspaces && (
-                  <CardsContainer>
-                    {workspaces.map(workspace => (
-                      <WorkspaceCard
-                        {...workspace}
-                        projects={projects}
-                        key={workspace.apiSpec._id}
-                        activeProject={activeProject}
-                        onSelect={() =>
-                          navigate(
-                            `/organization/${organizationId}/project/${activeProject._id
-                            }/workspace/${workspace.workspace._id}/${workspace.workspace.scope === 'design'
-                              ? ACTIVITY_SPEC
-                              : ACTIVITY_DEBUG
-                            }`
-                          )
-                        }
-                        filter={filter}
-                      />
-                    ))}
-                  </CardsContainer>
+                  <span className="fa fa-search filter-icon" />
+                </SearchFormControl>
+                <DashboardSortDropdown
+                  value={sortOrder}
+                  onSelect={sortOrder => {
+                    submit({
+                      sortOrder,
+                      filter,
+                    });
+                  }}
+                />
+                {isRemoteProject(activeProject) && (
+                  <RemoteWorkspacesDropdown key={activeProject._id} project={activeProject} />
                 )}
-                {filter && !hasWorkspaces && (
-                  <p className="notice subtle">
-                    No documents found for <strong>{filter}</strong>
-                  </p>
-                )}
-                {!filter && !hasWorkspaces && (
-                  <EmptyStatePane
-                    createRequestCollection={createNewCollection}
-                    createDesignDocument={createNewDocument}
-                    importFromFile={importFromFile}
-                    importFromURL={importFromURL}
-                    importFromClipboard={importFromClipboard}
-                    importFromGit={importFromGit}
-                  />
-                )}
-              </PaneBody>
-            </Pane>
-          }
-        />
-      </Fragment>
-    </ErrorBoundary>
+                <Dropdown>
+                  <DropdownButton buttonClass={CreateButton}>
+                    <i className="fa fa-plus" />Create <i className="fa fa-caret-down pad-left-sm" />
+                  </DropdownButton>
+                  <DropdownDivider>New</DropdownDivider>
+                  <DropdownItem onClick={createNewCollection}>
+                    <i className="fa fa-bars" />
+                    Request Collection
+                  </DropdownItem>
+                  <DropdownItem onClick={createNewDocument}>
+                    <i className="fa fa-file-o" />
+                    Design Document
+                  </DropdownItem>
+                  <DropdownDivider>Import From</DropdownDivider>
+                  <DropdownItem onClick={importFromFile}>
+                    <i className="fa fa-plus" />
+                    File
+                  </DropdownItem>
+                  <DropdownItem onClick={importFromURL}>
+                    <i className="fa fa-link" />
+                    URL
+                  </DropdownItem>
+                  <DropdownItem onClick={importFromClipboard}>
+                    <i className="fa fa-clipboard" />
+                    Clipboard
+                  </DropdownItem>
+                  <DropdownItem onClick={importFromGit}>
+                    <i className="fa fa-code-fork" />
+                    Git Clone
+                  </DropdownItem>
+                </Dropdown>
+              </PaneHeaderToolbar>
+            </PaneHeader>
+            <PaneBody>
+              {hasWorkspaces && (
+                <CardsContainer>
+                  {workspaces.map(workspace => (
+                    <WorkspaceCard
+                      {...workspace}
+                      projects={projects}
+                      key={workspace.apiSpec._id}
+                      activeProject={activeProject}
+                      onSelect={() =>
+                        navigate(
+                          `/organization/${organizationId}/project/${activeProject._id
+                          }/workspace/${workspace.workspace._id}/${workspace.workspace.scope === 'design'
+                            ? ACTIVITY_SPEC
+                            : ACTIVITY_DEBUG
+                          }`
+                        )
+                      }
+                      filter={filter}
+                    />
+                  ))}
+                </CardsContainer>
+              )}
+              {filter && !hasWorkspaces && (
+                <p className="notice subtle">
+                  No documents found for <strong>{filter}</strong>
+                </p>
+              )}
+              {!filter && !hasWorkspaces && (
+                <EmptyStatePane
+                  createRequestCollection={createNewCollection}
+                  createDesignDocument={createNewDocument}
+                  importFromFile={importFromFile}
+                  importFromURL={importFromURL}
+                  importFromClipboard={importFromClipboard}
+                  importFromGit={importFromGit}
+                />
+              )}
+            </PaneBody>
+          </Pane>
+        }
+      />
+    </Fragment>
   );
+};
+
+export const ErrorBoundary = () => {
+  const error = useRouteError();
+
+  return <div>
+    {error ? <code>{JSON.stringify(error)}</code> : null}
+  </div>;
 };
 
 export default ProjectRoute;

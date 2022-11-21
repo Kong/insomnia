@@ -3,7 +3,7 @@ import { isRemoteProject } from '@insomnia/models/project';
 import { invariant } from '@remix-run/router';
 import { ActionFunction } from 'react-router-dom';
 
-export const renameProjectAction: ActionFunction = async ({
+export const action: ActionFunction = async ({
   request, params,
 }) => {
   const formData = await request.formData();
