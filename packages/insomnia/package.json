@@ -39,7 +39,8 @@
     "test:watch": "jest --watch",
     "type-check": "tsc --noEmit --project tsconfig.build.json",
     "type-check:watch": "npm run type-check -- --watch",
-    "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/"
+    "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/",
+    "generate-config": "esr ./src/utils/config/generated/generate.ts"
   },
   "dependencies": {
     "@getinsomnia/node-libcurl": "2.3.5-6",
@@ -50,6 +51,8 @@
     "@stoplight/spectral-core": "^1.12.2",
     "@stoplight/spectral-formats": "^1.2.0",
     "@stoplight/spectral-rulesets": "^1.9.0",
+    "@apideck/better-ajv-errors": "^0.2.6",
+    "ajv": "^8.6.2",
     "analytics-node": "^6.0.0",
     "aws4": "^1.11.0",
     "axios": "^0.21.2",
@@ -64,7 +67,6 @@
     "html-entities": "^1.2.0",
     "httpsnippet": "^2.0.0",
     "iconv-lite": "^0.6.3",
-    "insomnia-config": "^3.6.1-beta.4",
     "insomnia-importers": "^3.6.1-beta.4",
     "insomnia-plugin-base64": "^3.6.1-beta.4",
     "insomnia-plugin-cookie-jar": "^3.6.1-beta.4",
@@ -197,6 +199,7 @@
     "tinykeys": "^1.4.0",
     "type-fest": "^2.12.0",
     "typescript": "^4.5.5",
+    "typescript-json-schema": "^0.50.1",
     "vite": "^3.2.3",
     "vkbeautify": "^0.99.1",
     "ws": "^8.8.1",
