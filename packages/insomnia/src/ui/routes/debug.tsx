@@ -1,4 +1,3 @@
-import { invariant } from '@remix-run/router';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -9,6 +8,7 @@ import * as requestOperations from '../../models/helpers/request-operations';
 import { isRequest } from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest } from '../../models/websocket-request';
+import { invariant } from '../../utils/invariant';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';

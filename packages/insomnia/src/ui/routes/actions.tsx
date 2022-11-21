@@ -1,4 +1,3 @@
-import { invariant } from '@remix-run/router';
 import { generate, runTests, Test } from 'insomnia-testing';
 import { ActionFunction, redirect } from 'react-router-dom';
 
@@ -14,6 +13,7 @@ import { isCollection } from '../../models/workspace';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';
+import { invariant } from '../../utils/invariant';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
 
 // Project

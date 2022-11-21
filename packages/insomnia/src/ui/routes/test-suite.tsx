@@ -1,4 +1,3 @@
-import { invariant } from '@remix-run/router';
 import React, { useRef } from 'react';
 import {
   LoaderFunction,
@@ -15,6 +14,7 @@ import * as models from '../../models';
 import { isRequest, Request } from '../../models/request';
 import { isUnitTest, UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
+import { invariant } from '../../utils/invariant';
 import { Editable } from '../components/base/editable';
 import { CodeEditor, CodeEditorHandle } from '../components/codemirror/code-editor';
 import { ListGroup, UnitTestItem } from '../components/list-group';

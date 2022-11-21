@@ -1,4 +1,3 @@
-import { invariant } from '@remix-run/router';
 import React, { FC, Fragment, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import {
@@ -31,6 +30,7 @@ import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '../.
 import { isDefaultProject, isRemoteProject, Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { MemClient } from '../../sync/git/mem-client';
+import { invariant } from '../../utils/invariant';
 import { Dropdown } from '../components/base/dropdown/dropdown';
 import { DropdownButton } from '../components/base/dropdown/dropdown-button';
 import { DropdownDivider } from '../components/base/dropdown/dropdown-divider';
