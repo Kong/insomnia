@@ -34,6 +34,6 @@
   "dependencies": {
     "chai": "^4.3.4",
     "mkdirp": "^1.0.4",
-    "mocha": "^8.3.2"
+    "mocha": "^10.1.0"
   }
 }
