@@ -3,8 +3,8 @@ import { ipcMain } from 'electron';
 
 import { GrpcRequestEventEnum } from '../../common/grpc-events';
 import * as grpc from '../../network/grpc';
-import { ResponseCallbacks } from '../../network/grpc/response-callbacks';
 import * as grpcIpcMain from '../ipc/grpc';
+import { ResponseCallbacks } from '../ipc/grpc';
 
 jest.mock('../../network/grpc');
 
