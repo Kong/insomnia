@@ -58,8 +58,10 @@ test.describe('Debug-Sidebar', async () => {
       await expect(page.locator('.app')).toContainText('Folder Settings fld');
     });
 
-    test.fixme('Open properties of the collection', async () => {
-      // TODO implement
+    test('Open properties of the collection', async ({ page }) => {
+      await page.locator('button:has-text("simple")').click();
+      await page.locator('button:has-text("Collection Settings")').click();
+      await expect(page.locator('.app')).toContainText('Collection Settings wrk');
     });
 
     test.fixme('Filter by request name', async () => {
