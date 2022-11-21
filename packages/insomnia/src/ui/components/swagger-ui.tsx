@@ -1,46 +1,40 @@
 import 'swagger-ui-dist/swagger-ui.css';
 
 import React, { FC, useEffect, useRef } from 'react';
-import { SwaggerConfigs, SwaggerUIBundle as createSwaggerUI } from 'swagger-ui-dist';
+import { Spec, SwaggerConfigs, SwaggerUIBundle as createSwaggerUI } from 'swagger-ui-dist';
 
-export const SwaggerUI: FC<SwaggerConfigs> = props => {
-  const swaggerUIRef = useRef<SwaggerConfigs | null>(null);
-  const domNodeRef = useRef(null);
+// Keep an instance of swagger-ui because it doesn't have a teardown method
+let SwaggerUIInstance: SwaggerConfigs | null = null;
+
+export const SwaggerUI: FC<{
+  spec: Spec;
+  supportedSubmitMethods: string[];
+}> = ({
+  spec,
+  supportedSubmitMethods,
+}) => {
+  const domNodeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    swaggerUIRef.current = createSwaggerUI({
-      ...props,
-      domNode: domNodeRef.current,
-    });
-  }, [props]);
-
-  useEffect(() => {
-    const swaggerUI = swaggerUIRef?.current;
+    const swaggerUI = SwaggerUIInstance;
 
     if (swaggerUI) {
-      const prevStateUrl = swaggerUIRef?.current?.specSelectors.url();
-      if (props.url !== prevStateUrl) {
-        // flush current content
-        swaggerUI.specActions.updateSpec('');
-
-        if (props.url) {
-          // update the internal URL
-          swaggerUI.specActions.updateUrl(props.url);
-          // trigger remote definition fetch
-          swaggerUI.system.specActions.download(props.url);
-        }
-      }
-
       const prevStateSpec = swaggerUI.specSelectors.specStr();
-      if (props.spec && (props.spec !== prevStateSpec)) {
-        if (typeof props.spec === 'object') {
-          swaggerUI.specActions.updateSpec(JSON.stringify(props.spec));
+      if (spec && (spec !== prevStateSpec)) {
+        if (typeof spec === 'object') {
+          swaggerUI.specActions.updateSpec(JSON.stringify(spec));
         } else {
-          swaggerUI.specActions.updateSpec(props.spec);
+          swaggerUI.specActions.updateSpec(spec);
         }
       }
+    } else {
+      SwaggerUIInstance = createSwaggerUI({
+        domNode: domNodeRef.current,
+        spec,
+        supportedSubmitMethods,
+      });
     }
-  }, [props.spec, props.url]);
+  }, [supportedSubmitMethods, spec]);
 
   return <div ref={domNodeRef} />;
 };

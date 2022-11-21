@@ -17,7 +17,7 @@ To get editor integration for this schema, tell your IDE about it.  For example,
       "fileMatch": [
         "insomnia.config.json",
       ],
-      "url": "https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-config/src/generated/schemas/insomnia.schema.json"
+      "url": "https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia/src/utils/config/generated/schemas/insomnia.schema.json"
     }
   ]
 }

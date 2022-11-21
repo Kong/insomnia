@@ -2,6 +2,7 @@ import React, { FunctionComponent, ReactNode } from 'react';
 import useToggle from 'react-use/lib/useToggle';
 import styled from 'styled-components';
 
+import { Request } from '../../../models/request';
 import { SvgIcon } from '../svg-icon';
 import { Button } from '../themed-button';
 import { ListGroupItem } from './list-group-item';
@@ -17,15 +18,10 @@ export interface UnitTestItemProps {
   onDeleteTest?: () => void;
   onRunTest?: () => void;
   testNameEditable?: ReactNode;
-  testsRunning?: TestItem[] | null;
+  testsRunning?: boolean;
   onSetActiveRequest: React.ChangeEventHandler<HTMLSelectElement>;
   selectedRequestId?: string | null;
-  selectableRequests: {
-    name: string;
-    request: Request & {
-      _id: string;
-    };
-  }[];
+  selectableRequests: Request[];
 }
 
 const StyledResultListItem = styled(ListGroupItem)`
@@ -62,7 +58,6 @@ const StyledUnitTestContent = styled.div`
 `;
 
 export const UnitTestItem: FunctionComponent<UnitTestItemProps> = ({
-  item,
   children,
   onDeleteTest,
   onRunTest,
@@ -105,7 +100,7 @@ export const UnitTestItem: FunctionComponent<UnitTestItemProps> = ({
         <Button
           variant="text"
           onClick={onRunTest}
-          disabled={Boolean(testsRunning?.find(({ _id }) => _id === item._id))}
+          disabled={testsRunning}
         >
           <SvgIcon icon="play" />
         </Button>

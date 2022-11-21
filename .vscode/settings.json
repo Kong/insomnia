@@ -4,7 +4,7 @@
       "fileMatch": [
         "insomnia.config.json",
       ],
-      "url": "./packages/insomnia-config/src/generated/schemas/insomnia.schema.json"
+      "url": "./packages/insomnia/src/utils/config/generated/schemas/insomnia.schema.json"
     }
   ],
   "files.associations": {

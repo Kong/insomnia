@@ -16,7 +16,7 @@ const compilerOptions: CompilerOptions = {
 const basePath = '.';
 
 const program = getProgramFromFiles(
-  [resolve('./src/entities.ts')],
+  [resolve('./src/utils/config/entities.ts')],
   compilerOptions,
   basePath,
 );
@@ -31,6 +31,6 @@ if (schema === null) {
   throw new Error('failed to generate Insomnia Config');
 }
 
-const schemaDestination = './src/generated/schemas/insomnia.schema.json';
+const schemaDestination = './src/utils/config/generated/schemas/insomnia.schema.json';
 const stringSchema = JSON.stringify(schema, null, 2);
 writeFileSync(schemaDestination, stringSchema);

@@ -1,11 +1,12 @@
 import { readFileSync } from 'fs';
-import { ErrorResult, INSOMNIA_CONFIG_FILENAME, InsomniaConfig, isErrorResult, validate } from 'insomnia-config';
 import { resolve } from 'path';
 import type { ValueOf } from 'type-fest';
 
 import { isDevelopment } from '../../common/constants';
 import { getDataDirectory, getPortableExecutableDir } from '../../common/electron-helpers';
 import { Settings } from '../../common/settings';
+import { INSOMNIA_CONFIG_FILENAME, InsomniaConfig } from '../../utils/config/entities';
+import { ErrorResult, isErrorResult, validate } from '../../utils/config/validate';
 
 interface FailedParseResult {
   syntaxError: SyntaxError;
