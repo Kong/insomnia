@@ -6,19 +6,48 @@ import { test } from '../../playwright/test';
 test.describe('Design interactions', async () => {
 
   test.fixme('Requests are auto-generated when switching tabs', async ({ page }) => {
-    // TODO implement
+    // TODO(filipe) - this is currently not working
     await page.click('[data-testid="project"] >> text=Insomnia');
     await expect(true).toBeTruthy();
   });
 
+  test('Can import an OpenAPI 3 spec into a Design Document', async ({ app, page }) => {
+    // Setup
+    await page.click('[data-testid="project"] >> text=Insomnia');
+    await page.click('text=Create');
+    const text = await loadFixture('openapi3.yaml');
+    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
+    await page.click('button:has-text("Clipboard")');
+    await page.click('div[role="dialog"] button:has-text("New")');
+    await page.click('div[role="dialog"] >> text=Design Document');
+    await page.click('text=DocumentSmoke Test API server 1.0.0v1.0.0OpenAPI 3.0.0just now');
+
+    // Renders the spec code and preview
+    const codeEditor = page.locator('.pane-one');
+    await expect(codeEditor).toContainText('openapi: 3.0.0');
+    const specPreview = page.locator('.information-container');
+    await expect(specPreview).toContainText('this is an example description in an OpenAPI Doc');
+
+    // Created requests from spec
+    await page.locator('text=Debug').click();
+    await expect(page.locator('.app')).toContainText('File');
+    await expect(page.locator('.app')).toContainText('Misc');
+    await expect(page.locator('.app')).toContainText('Auth');
+
+    // Created Environment from spec
+    await page.click('#wrapper button:has-text("OpenAPI env")');
+    await page.click('button:has-text("Manage Environments")');
+    await page.click('text=/.*"localhost:4010".*/');
+  });
+
   test.fixme('Can filter values in Design sidebar', async ({ page }) => {
-    // TODO implement
+    // TODO(filipe) implement in another PR
     await page.click('[data-testid="project"] >> text=Insomnia');
     await expect(true).toBeTruthy();
   });
 
   test.fixme('[INS-567] Requests are not duplicated when switching between tabs', async ({ page }) => {
-    // TODO implement
+    // TODO(filipe) implement in another PR
     await page.click('[data-testid="project"] >> text=Insomnia');
     await expect(true).toBeTruthy();
   });
