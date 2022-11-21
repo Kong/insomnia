@@ -128,10 +128,9 @@ export const ResponsePane: FC<Props> = ({
   if (!response) {
     return (
       <PlaceholderResponsePane>
-        <ResponseTimer
+        {runningRequests[request._id] && <ResponseTimer
           handleCancel={() => cancelRequestById(request._id)}
-          loadStartTime={runningRequests[request._id]}
-        />
+        />}
       </PlaceholderResponsePane>
     );
   }
@@ -229,10 +228,9 @@ export const ResponsePane: FC<Props> = ({
         </TabItem>
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
-        <ResponseTimer
+        {runningRequests[request._id] && <ResponseTimer
           handleCancel={() => cancelRequestById(request._id)}
-          loadStartTime={runningRequests[request._id]}
-        />
+        />}
       </ErrorBoundary>
     </Pane>
   );
