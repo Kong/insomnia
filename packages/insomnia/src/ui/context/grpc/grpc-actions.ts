@@ -145,17 +145,11 @@ const invalidateMany = (requestIds: string[]) => ({
   requestIds,
 });
 
-const loadMethods = async (requestId: string, protoFileId: string) => {
-  console.log(`[gRPC] loading proto file methods pf=${protoFileId}`);
-  const protoFile = await models.protoFile.getById(protoFileId);
-  const methods = await protoLoader.loadMethods(protoFile);
-
-  return {
-    type: GrpcActionTypeEnum.loadMethods,
-    requestId,
-    payload: methods,
-  } as LoadMethodsAction;
-};
+const loadMethods = (requestId: string, methods: GrpcMethodDefinition[]) => ({
+  type: GrpcActionTypeEnum.loadMethods,
+  requestId,
+  payload: methods,
+});
 
 export const grpcActions = {
   reset,

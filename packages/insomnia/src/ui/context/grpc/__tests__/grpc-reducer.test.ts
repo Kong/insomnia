@@ -235,35 +235,6 @@ describe('grpcReducer actions', () => {
     });
   });
 
-  describe('loadMethods', () => {
-    beforeEach(() => {
-      globalBeforeEach();
-    });
-
-    it('should store methods after they are loaded', async () => {
-      const state: GrpcState = {
-        a: requestStateBuilder.reset().running(true).build(),
-        b: requestStateBuilder
-          .reset()
-          .methods([methodBuilder.reset().build()])
-          .reloadMethods(true)
-          .build(),
-      };
-      const newMethods = [methodBuilder.reset().build()];
-      protoLoader.loadMethods.mockResolvedValue(newMethods);
-      const newState = grpcReducer(state, await grpcActions.loadMethods('b', 'pfid'));
-      const expectedRequestState: GrpcRequestState = {
-        ...state.b,
-        reloadMethods: false,
-        methods: newMethods,
-      };
-      expect(newState).toStrictEqual({
-        a: state.a,
-        b: expectedRequestState,
-      });
-    });
-  });
-
   it('should throw error if action not found', () => {
     expect(() =>
       grpcReducer(

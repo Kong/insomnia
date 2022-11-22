@@ -41,7 +41,6 @@ describe('useProtoFileReload', () => {
       initialProps: r1,
     });
     expect(grpcActions.clear).toHaveBeenCalledWith(r1._id);
-    expect(grpcActions.loadMethods).toHaveBeenCalledWith(r1._id, r1.protoFileId);
     setTimeout(() => {
       expect(dispatch).toHaveBeenCalledTimes(2);
     }, 100);
@@ -53,7 +52,6 @@ describe('useProtoFileReload', () => {
     };
     rerender(r2);
     expect(grpcActions.clear).toHaveBeenCalledWith(r2._id);
-    expect(grpcActions.loadMethods).toHaveBeenCalledWith(r2._id, r2.protoFileId);
     setTimeout(() => {
       expect(dispatch).toHaveBeenCalledTimes(2);
     }, 100);
@@ -65,7 +63,6 @@ describe('useProtoFileReload', () => {
     };
     rerender(r3);
     expect(grpcActions.clear).toHaveBeenCalledWith(r3._id);
-    expect(grpcActions.loadMethods).toHaveBeenCalledWith(r3._id, r3.protoFileId);
     setTimeout(() => {
       expect(dispatch).toHaveBeenCalledTimes(2);
     }, 100);

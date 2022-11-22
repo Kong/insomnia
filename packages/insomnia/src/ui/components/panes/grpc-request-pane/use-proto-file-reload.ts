@@ -1,6 +1,8 @@
 import { useAsync } from 'react-use';
 
+import * as models from '../../../../models';
 import type { GrpcRequest } from '../../../../models/grpc-request';
+import * as protoLoader from '../../../../network/grpc/proto-loader';
 import type { GrpcDispatch, GrpcRequestState } from '../../../context/grpc';
 import { grpcActions } from '../../../context/grpc';
 
@@ -18,8 +20,10 @@ const useProtoFileReload = (
 
     grpcDispatch(grpcActions.clear(_id));
 
-    // @ts-expect-error -- TSCONVERSION
-    grpcDispatch(await grpcActions.loadMethods(_id, protoFileId));
+    console.log(`[gRPC] loading proto file methods pf=${protoFileId}`);
+    const protoFile = await models.protoFile.getById(protoFileId);
+    const methods = await protoLoader.loadMethods(protoFile);
+    grpcDispatch(grpcActions.loadMethods(_id, methods));
   }, [_id, protoFileId, reloadMethods, grpcDispatch, running]);
 };
 
