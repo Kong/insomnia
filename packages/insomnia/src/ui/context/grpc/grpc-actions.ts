@@ -73,7 +73,7 @@ export type GrpcAction =
 
 export type GrpcActionMany = InvalidateManyAction;
 
-export type GrpcDispatch = (action?: GrpcAction) => void;
+export type GrpcDispatch = (action: GrpcAction) => void;
 
 const reset = (requestId: string): ResetAction => ({
   type: 'reset',
