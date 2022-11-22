@@ -1,12 +1,15 @@
 import React, { FunctionComponent, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useAsync } from 'react-use';
 import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../../common/common-headers';
 import { documentationLinks } from '../../../../common/documentation';
+import * as models from '../../../../models';
 import type { GrpcRequest } from '../../../../models/grpc-request';
 import type { Settings } from '../../../../models/settings';
-import { useGrpc } from '../../../context/grpc';
+import * as protoLoader from '../../../../network/grpc/proto-loader';
+import { grpcActions, useGrpc } from '../../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../../hooks/use-vcs-version';
 import { selectActiveEnvironment } from '../../../redux/selectors';
 import { PanelContainer, TabItem, Tabs } from '../../base/tabs';
@@ -23,9 +26,7 @@ import { Pane, PaneBody, PaneHeader } from '../pane';
 import useActionHandlers from './use-action-handlers';
 import useChangeHandlers from './use-change-handlers';
 import useExistingGrpcUrls from './use-existing-grpc-urls';
-import useProtoFileReload from './use-proto-file-reload';
 import useSelectedMethod from './use-selected-method';
-
 interface Props {
   activeRequest: GrpcRequest;
   environmentId: string;
@@ -56,14 +57,26 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   environmentId,
   workspaceId,
 }) => {
-  const [state, dispatch] = useGrpc(activeRequest._id);
-  const { requestMessages, running, methods } = state;
-  useProtoFileReload(state, dispatch, activeRequest);
+  const [state, grpcDispatch] = useGrpc(activeRequest._id);
+  const { requestMessages, running, reloadMethods, methods } = state;
+  const { _id, protoFileId } = activeRequest;
+  useAsync(async () => {
+    // don't actually reload until the request has stopped running or if methods do not need to be reloaded
+    if (!reloadMethods || running) {
+      return;
+    }
+    grpcDispatch(grpcActions.clear(_id));
+    console.log(`[gRPC] loading proto file methods pf=${protoFileId}`);
+    const protoFile = await models.protoFile.getById(protoFileId);
+    const methods = await protoLoader.loadMethods(protoFile);
+    grpcDispatch(grpcActions.loadMethods(_id, methods));
+  }, [_id, protoFileId, reloadMethods, grpcDispatch, running]);
+
   const selection = useSelectedMethod(state, activeRequest);
   const { method, methodType, methodTypeLabel, enableClientStream } = selection;
-  const handleChange = useChangeHandlers(activeRequest, dispatch);
+  const handleChange = useChangeHandlers(activeRequest, grpcDispatch);
   // @ts-expect-error -- TSCONVERSION methodType can be undefined
-  const handleAction = useActionHandlers(activeRequest._id, environmentId, methodType, dispatch);
+  const handleAction = useActionHandlers(activeRequest._id, environmentId, methodType, grpcDispatch);
   const getExistingGrpcUrls = useExistingGrpcUrls(workspaceId, activeRequest._id);
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
