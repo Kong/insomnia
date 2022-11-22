@@ -54,35 +54,32 @@ const StyledUrlEditor = styled.div`
 const StyledDropdown = styled.div`
   flex: 1 0 auto;
 `;
-interface MethodSelection {
-  method?: MethodDefinition<any, any>;
-  methodType?: GrpcMethodType;
-  methodTypeLabel?: string;
-  enableClientStream?: boolean;
-}
+
 export const GrpcRequestPane: FunctionComponent<Props> = ({
   activeRequest,
   workspaceId,
 }) => {
   const [state, grpcDispatch] = useGrpc(activeRequest._id);
   const { requestMessages, running, reloadMethods, methods } = state;
-  const { _id, protoFileId, protoMethodName } = activeRequest;
   useAsync(async () => {
     // don't actually reload until the request has stopped running or if methods do not need to be reloaded
     if (!reloadMethods || running) {
       return;
     }
-    grpcDispatch(grpcActions.clear(_id));
-    console.log(`[gRPC] loading proto file methods pf=${protoFileId}`);
-    if (!protoFileId) {
+    grpcDispatch(grpcActions.clear(activeRequest._id));
+    console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
+    if (!activeRequest.protoFileId) {
       return;
     }
-    const protoFile = await models.protoFile.getById(protoFileId);
+    const protoFile = await models.protoFile.getById(activeRequest.protoFileId);
     const methods = await protoLoader.loadMethods(protoFile);
-    grpcDispatch(grpcActions.loadMethods(_id, methods));
-  }, [_id, protoFileId, reloadMethods, grpcDispatch, running]);
+    grpcDispatch(grpcActions.loadMethods(activeRequest._id, methods));
+  }, [activeRequest._id, activeRequest.protoFileId, reloadMethods, grpcDispatch, running]);
 
-  const [selection, setSelection] = useState<MethodSelection>({});
+  const [selection, setSelection] = useState<{
+    method?: MethodDefinition<any, any>;
+    methodType?: GrpcMethodType;
+  }>({});
   // if methods are waiting to be reloaded because they are stale, don't update the method selection.
   //  This is a bit of a hack needed to avoid a split-second blank state showing on the page because
   //  component refreshes are also triggered by database changes and before the methods have been updated.
@@ -90,25 +87,14 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     if (reloadMethods) {
       return;
     }
-
-    const selectedMethod = methods.find(c => c.path === protoMethodName);
-    const methodType = selectedMethod && getMethodType(selectedMethod);
-    // @ts-expect-error -- TSCONVERSION undefined as index
-    const methodTypeLabel = GrpcMethodTypeName[methodType];
-    const enableClientStream = canClientStream(methodType);
+    const method = methods.find(c => c.path === activeRequest.protoMethodName);
     setSelection({
-      method: selectedMethod,
-      methodType,
-      methodTypeLabel,
-      enableClientStream,
+      method,
+      methodType: method && getMethodType(method),
     });
-  }, [methods, protoMethodName, reloadMethods]);
+  }, [methods, activeRequest.protoMethodName, reloadMethods]);
 
-  const { method, methodType, methodTypeLabel, enableClientStream } = selection;
-  const getExistingGrpcUrls = async () => {
-    const workspace = await models.workspace.getById(workspaceId);
-    return queryAllWorkspaceUrls(workspace, models.grpcRequest.type, activeRequest._id);
-  };
+  const { method, methodType } = selection;
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
@@ -146,7 +132,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               defaultValue={activeRequest.url}
               placeholder="grpcb.in:9000"
               onChange={url => models.grpcRequest.update(activeRequest, { url })}
-              getAutocompleteConstants={getExistingGrpcUrls}
+              getAutocompleteConstants={async () => {
+                const workspace = await models.workspace.getById(workspaceId);
+                return queryAllWorkspaceUrls(workspace, models.grpcRequest.type, activeRequest._id);
+              }}
             />
           </StyledUrlEditor>
           <StyledDropdown>
@@ -158,23 +147,21 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 models.grpcRequest.update(activeRequest, { protoMethodName });
                 grpcDispatch(grpcActions.clear(activeRequest._id));
               }}
-              handleChangeProtoFile={() => {
-                showModal(ProtoFilesModal, {
-                  selectedId: activeRequest.protoFileId,
-                  onSave: async (protoFileId: string) => {
-                    if (activeRequest.protoFileId !== protoFileId) {
-                      const initial = models.grpcRequest.init();
-                      // Reset the body as it is no longer relevant
-                      await models.grpcRequest.update(activeRequest, {
-                        protoFileId,
-                        body: initial.body,
-                        protoMethodName: initial.protoMethodName,
-                      });
-                      grpcDispatch(grpcActions.invalidate(activeRequest._id));
-                    }
-                  },
-                });
-              }}
+              handleChangeProtoFile={() => showModal(ProtoFilesModal, {
+                selectedId: activeRequest.protoFileId,
+                onSave: async (protoFileId: string) => {
+                  if (activeRequest.protoFileId !== protoFileId) {
+                    await models.grpcRequest.update(activeRequest, {
+                      protoFileId,
+                      body: {
+                        text: '{}',
+                      },
+                      protoMethodName: '',
+                    });
+                    grpcDispatch(grpcActions.invalidate(activeRequest._id));
+                  }
+                },
+              })}
             />
           </StyledDropdown>
 
@@ -189,7 +176,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       <PaneBody>
         {methodType && (
           <Tabs aria-label="Grpc request pane tabs">
-            <TabItem key="method-type" title={methodTypeLabel}>
+            <TabItem key="method-type" title={GrpcMethodTypeName[methodType]}>
               <GrpcTabbedMessages
                 uniquenessKey={uniquenessKey}
                 tabNamePrefix="Stream"
@@ -198,7 +185,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 handleBodyChange={value => models.grpcRequest.update(activeRequest, {
                   body: { ...activeRequest.body, text: value },
                 })}
-                showActions={running && enableClientStream}
+                showActions={running && canClientStream(methodType)}
                 handleStream={async () => {
                   const requestBody = await getRenderedGrpcRequestMessage({
                     request: activeRequest,
