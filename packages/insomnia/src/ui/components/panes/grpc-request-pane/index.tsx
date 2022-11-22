@@ -8,7 +8,7 @@ import { getCommonHeaderNames, getCommonHeaderValues } from '../../../../common/
 import { documentationLinks } from '../../../../common/documentation';
 import { GrpcRequestEventEnum } from '../../../../common/grpc-events';
 import * as models from '../../../../models';
-import type { GrpcRequest } from '../../../../models/grpc-request';
+import type { GrpcRequest, GrpcRequestHeader } from '../../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../../models/settings';
 import { prepareGrpcMessage, prepareGrpcRequest } from '../../../../network/grpc/prepare';
@@ -23,11 +23,12 @@ import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown/grpc-me
 import { ErrorBoundary } from '../../error-boundary';
 import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
+import { showModal } from '../../modals';
+import { ProtoFilesModal } from '../../modals/proto-files-modal';
 import { SvgIcon } from '../../svg-icon';
 import { GrpcTabbedMessages } from '../../viewers/grpc-tabbed-messages';
 import { EmptyStatePane } from '../empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../pane';
-import useChangeHandlers from './use-change-handlers';
 import useSelectedMethod from './use-selected-method';
 interface Props {
   activeRequest: GrpcRequest;
@@ -74,7 +75,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
 
   const selection = useSelectedMethod(state, activeRequest);
   const { method, methodType, methodTypeLabel, enableClientStream } = selection;
-  const handleChange = useChangeHandlers(activeRequest, grpcDispatch);
   const getExistingGrpcUrls = async () => {
     const workspace = await models.workspace.getById(workspaceId);
     return queryAllWorkspaceUrls(workspace, models.grpcRequest.type, activeRequest._id);
@@ -110,7 +110,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               type="text"
               defaultValue={activeRequest.url}
               placeholder="grpcb.in:9000"
-              onChange={handleChange.url}
+              onChange={url => models.grpcRequest.update(activeRequest, { url })}
               getAutocompleteConstants={getExistingGrpcUrls}
             />
           </StyledUrlEditor>
@@ -119,8 +119,27 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               disabled={running}
               methods={methods}
               selectedMethod={method}
-              handleChange={handleChange.method}
-              handleChangeProtoFile={handleChange.protoFile}
+              handleChange={protoMethodName => {
+                models.grpcRequest.update(activeRequest, { protoMethodName });
+                grpcDispatch(grpcActions.clear(activeRequest._id));
+              }}
+              handleChangeProtoFile={() => {
+                showModal(ProtoFilesModal, {
+                  selectedId: activeRequest.protoFileId,
+                  onSave: async (protoFileId: string) => {
+                    if (activeRequest.protoFileId !== protoFileId) {
+                      const initial = models.grpcRequest.init();
+                      // Reset the body as it is no longer relevant
+                      await models.grpcRequest.update(activeRequest, {
+                        protoFileId,
+                        body: initial.body,
+                        protoMethodName: initial.protoMethodName,
+                      });
+                      grpcDispatch(grpcActions.invalidate(activeRequest._id));
+                    }
+                  },
+                });
+              }}
             />
           </StyledDropdown>
 
@@ -141,7 +160,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 tabNamePrefix="Stream"
                 messages={requestMessages}
                 bodyText={activeRequest.body.text}
-                handleBodyChange={handleChange.body}
+                handleBodyChange={value => models.grpcRequest.update(activeRequest, {
+                  body: { ...activeRequest.body, text: value },
+                })}
                 showActions={running && enableClientStream}
                 handleStream={async () => {
                   const preparedMessage = await prepareGrpcMessage(activeRequest._id, environmentId);
@@ -162,7 +183,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     pairs={activeRequest.metadata}
                     handleGetAutocompleteNameConstants={getCommonHeaderNames}
                     handleGetAutocompleteValueConstants={getCommonHeaderValues}
-                    onChange={handleChange.metadata}
+                    onChange={(metadata: GrpcRequestHeader[]) => models.grpcRequest.update(activeRequest, { metadata })}
                   />
                 </ErrorBoundary>
               </PanelContainer>

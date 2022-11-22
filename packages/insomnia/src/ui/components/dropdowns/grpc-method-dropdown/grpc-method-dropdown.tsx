@@ -38,8 +38,8 @@ interface Props {
   disabled?: boolean;
   methods: MethodDefinition<any, any>[];
   selectedMethod?: MethodDefinition<any, any>;
-  handleChange: (arg0: string) => Promise<void>;
-  handleChangeProtoFile: () => Promise<void>;
+  handleChange: (arg0: string) => void;
+  handleChangeProtoFile: () => void;
 }
 
 const NormalCase = styled.span`
