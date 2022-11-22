@@ -1,5 +1,6 @@
 openapi: 3.0.0
 info:
+  description: this is an example description in an OpenAPI Doc
   title: Smoke Test API server
   version: 1.0.0
 servers:
