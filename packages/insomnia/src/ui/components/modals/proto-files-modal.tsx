@@ -1,11 +1,13 @@
+import { ipcRenderer } from 'electron';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
+import * as models from '../../../models';
 import type { ProtoFile } from '../../../models/proto-file';
 import * as protoManager from '../../../network/grpc/proto-manager';
 import type { GrpcDispatch } from '../../context/grpc';
-import { grpcActions, sendGrpcIpcMultiple } from '../../context/grpc';
+import { grpcActions } from '../../context/grpc';
 import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
 import { selectActiveWorkspace } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
@@ -47,9 +49,16 @@ export const ProtoFilesModal = forwardRef<ProtoFilesModalHandle, Props>(({ grpcD
   const clearSelection = () => setState({ selectedId: '', onSave: state.onSave });
 
   const handleUpdate = async (protoFile: ProtoFile) => protoManager.updateFile(protoFile, async updatedId => {
-    const action = await grpcActions.invalidateMany(updatedId);
-    grpcDispatch(action);
-    sendGrpcIpcMultiple(GrpcRequestEventEnum.cancelMultiple, action?.requestIds);
+    const impacted = await models.grpcRequest.findByProtoFileId(updatedId);
+    // skip invalidation if no requests are linked to the proto file
+    if (!impacted?.length) {
+      return;
+    }
+    const requestIds = impacted.map(g => g._id);
+    grpcDispatch(grpcActions.invalidateMany(requestIds));
+    if (requestIds?.length) {
+      ipcRenderer.send(GrpcRequestEventEnum.cancelMultiple, requestIds);
+    }
   });
 
   if (!workspace) {

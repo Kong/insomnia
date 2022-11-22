@@ -4,15 +4,15 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { grpcMocks } from '../../../__mocks__/@grpc/grpc-js';
+import { ResponseCallbacks as ResponseCallbacksMock } from '../../../main/ipc/grpc';
 import { grpcMethodDefinitionSchema } from '../../../ui/context/grpc/__schemas__';
 import { grpcIpcMessageParamsSchema } from '../__schemas__/grpc-ipc-message-params-schema';
 import { grpcIpcRequestParamsSchema } from '../__schemas__/grpc-ipc-request-params-schema';
 import callCache from '../call-cache';
 import * as grpc from '../index';
 import * as protoLoader from '../proto-loader';
-import { ResponseCallbacks as ResponseCallbacksMock } from '../response-callbacks';
 
-jest.mock('../response-callbacks');
+jest.mock('../../../main/ipc/grpc');
 jest.mock('../proto-loader');
 jest.mock('@grpc/grpc-js');
 

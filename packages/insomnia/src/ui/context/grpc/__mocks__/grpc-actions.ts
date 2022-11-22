@@ -8,7 +8,7 @@ module.exports = {
     start: jest.fn(),
     stop: jest.fn(),
     responseMessage: jest.fn(),
-    requestMessage: jest.fn(),
+    requestStream: jest.fn(),
     error: jest.fn(),
     status: jest.fn(),
     invalidate: jest.fn(),

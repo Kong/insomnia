@@ -1,7 +1,6 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { describe, expect, it } from '@jest/globals';
 
-import { GrpcMethodTypeEnum } from '../../network/grpc/method';
 import { grpcMethodDefinitionSchema } from '../../ui/context/grpc/__schemas__';
 import {
   getGrpcPathSegments,
@@ -110,7 +109,7 @@ describe('groupGrpcMethodsByPackage', () => {
           serviceName: 'service',
           methodName: 'bd',
         },
-        type: GrpcMethodTypeEnum.bidi,
+        type: 'bidi',
         fullPath: noPackage.path,
       },
     ]);
@@ -121,7 +120,7 @@ describe('groupGrpcMethodsByPackage', () => {
           serviceName: 'service',
           methodName: 'u',
         },
-        type: GrpcMethodTypeEnum.unary,
+        type: 'unary',
         fullPath: packageMethod1.path,
       },
       {
@@ -130,7 +129,7 @@ describe('groupGrpcMethodsByPackage', () => {
           serviceName: 'service',
           methodName: 'ss',
         },
-        type: GrpcMethodTypeEnum.server,
+        type: 'server',
         fullPath: packageMethod2.path,
       },
     ]);
@@ -141,7 +140,7 @@ describe('groupGrpcMethodsByPackage', () => {
           serviceName: 'service',
           methodName: 'cs',
         },
-        type: GrpcMethodTypeEnum.client,
+        type: 'client',
         fullPath: newPackage.path,
       },
     ]);

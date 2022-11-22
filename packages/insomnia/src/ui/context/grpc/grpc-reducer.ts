@@ -1,17 +1,10 @@
-import { ServiceError, StatusObject } from '@grpc/grpc-js';
+import { MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
 
-import type { GrpcMethodDefinition } from '../../../network/grpc/method';
 import type {
-  ErrorAction,
   GrpcAction,
   GrpcActionMany,
   GrpcMessage,
-  LoadMethodsAction,
-  RequestMessageAction,
-  ResponseMessageAction,
-  StatusAction,
 } from './grpc-actions';
-import { GrpcActionTypeEnum } from './grpc-actions';
 
 export interface GrpcRequestState {
   running: boolean;
@@ -19,14 +12,14 @@ export interface GrpcRequestState {
   responseMessages: GrpcMessage[];
   status?: StatusObject;
   error?: ServiceError;
-  methods: GrpcMethodDefinition[];
+  methods: MethodDefinition<any, any>[];
   reloadMethods: boolean;
 }
 
 // TODO: delete from here when deleting a request - INS-288
 export type GrpcState = Record<string, GrpcRequestState>;
 
-const INITIAL_GRPC_REQUEST_STATE: GrpcRequestState = {
+export const INITIAL_GRPC_REQUEST_STATE: GrpcRequestState = {
   running: false,
   requestMessages: [],
   responseMessages: [],
@@ -48,84 +41,71 @@ const _patch = (state: GrpcState, requestId: string, requestState: GrpcRequestSt
   [requestId]: requestState,
 });
 
-export const findGrpcRequestState = (state: GrpcState, requestId: string): GrpcRequestState => {
-  return state[requestId] || INITIAL_GRPC_REQUEST_STATE;
-};
-
-const multiRequestReducer = (state: GrpcState, action: GrpcActionMany): GrpcState => {
-  const requestIds = action.requestIds;
-
-  switch (action.type) {
-    case GrpcActionTypeEnum.invalidateMany: {
-      const newStates: GrpcState = {};
-      requestIds.forEach(id => {
-        const oldState = findGrpcRequestState(state, id);
-        const newState: GrpcRequestState = { ...oldState, reloadMethods: true };
-        newStates[id] = newState;
-      });
-      return { ...state, ...newStates };
-    }
-
-    default: {
-      throw new Error(`Unhandled multi request action type: ${action.type}`);
-    }
+export const grpcReducer = (
+  state: GrpcState,
+  action: GrpcAction | GrpcActionMany,
+): GrpcState => {
+  if (!action) {
+    return state;
   }
-};
-
-const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState => {
   // @ts-expect-error -- TSCONVERSION
-  const requestId = action.requestId;
-  const oldState = findGrpcRequestState(state, requestId);
+  const { requestIds, requestId } = action;
+  if (requestIds && action.type === 'invalidateMany') {
+    const newStates: GrpcState = {};
+    requestIds.forEach((id: string) => {
+      const oldState = state[id] || INITIAL_GRPC_REQUEST_STATE;
+      const newState: GrpcRequestState = { ...oldState, reloadMethods: true };
+      newStates[id] = newState;
+    });
+    return { ...state, ...newStates };
+  }
+
+  const oldState = state[requestId] || INITIAL_GRPC_REQUEST_STATE;
 
   switch (action.type) {
-    case GrpcActionTypeEnum.reset: {
+    case 'reset': {
       return _patch(state, requestId, INITIAL_GRPC_REQUEST_STATE);
     }
 
-    case GrpcActionTypeEnum.start: {
+    case 'start': {
       return _patch(state, requestId, { ...oldState, running: true });
     }
 
-    case GrpcActionTypeEnum.stop: {
+    case 'stop': {
       return _patch(state, requestId, { ...oldState, running: false });
     }
 
-    case GrpcActionTypeEnum.requestMessage: {
-      const { payload }: RequestMessageAction = action;
+    case 'requestStream': {
       return _patch(state, requestId, {
         ...oldState,
-        requestMessages: [...oldState.requestMessages, payload],
+        requestMessages: [...oldState.requestMessages, action.payload],
       });
     }
 
-    case GrpcActionTypeEnum.responseMessage: {
-      const { payload }: ResponseMessageAction = action;
+    case 'responseMessage': {
       return _patch(state, requestId, {
         ...oldState,
-        responseMessages: [...oldState.responseMessages, payload],
+        responseMessages: [...oldState.responseMessages, action.payload],
       });
     }
 
-    case GrpcActionTypeEnum.error: {
-      const { payload }: ErrorAction = action;
-      return _patch(state, requestId, { ...oldState, error: payload });
+    case 'error': {
+      return _patch(state, requestId, { ...oldState, error: action.payload });
     }
 
-    case GrpcActionTypeEnum.status: {
-      const { payload }: StatusAction = action;
-      return _patch(state, requestId, { ...oldState, status: payload });
+    case 'status': {
+      return _patch(state, requestId, { ...oldState, status: action.payload });
     }
 
-    case GrpcActionTypeEnum.clear: {
+    case 'clear': {
       return _patch(state, requestId, { ...oldState, ...CLEAR_GRPC_REQUEST_STATE });
     }
 
-    case GrpcActionTypeEnum.loadMethods: {
-      const { payload }: LoadMethodsAction = action;
-      return _patch(state, requestId, { ...oldState, methods: payload, reloadMethods: false });
+    case 'loadMethods': {
+      return _patch(state, requestId, { ...oldState, methods: action.payload, reloadMethods: false });
     }
 
-    case GrpcActionTypeEnum.invalidate: {
+    case 'invalidate': {
       return _patch(state, requestId, { ...oldState, reloadMethods: true });
     }
 
@@ -133,19 +113,4 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
       throw new Error(`Unhandled single request action type: ${action.type}`);
     }
   }
-};
-
-export const grpcReducer = (
-  state: GrpcState,
-  action?: GrpcAction | GrpcActionMany,
-): GrpcState => {
-  if (!action) {
-    return state;
-  }
-
-  // @ts-expect-error -- TSCONVERSION
-  return action.requestIds
-    // @ts-expect-error -- TSCONVERSION
-    ? multiRequestReducer(state, action)
-    : singleRequestReducer(state, action);
 };

@@ -1,7 +1,6 @@
 import React, { FunctionComponent } from 'react';
 
 import type { GrpcMethodType } from '../../../network/grpc/method';
-import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
 import { Button, ButtonProps } from '../themed-button';
 
 interface Props {
@@ -38,7 +37,7 @@ export const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, 
 
   return (
     <Button {...buttonProps} onClick={handleStart}>
-      {methodType === GrpcMethodTypeEnum.unary ? 'Send' : 'Start'}
+      {methodType === 'unary' ? 'Send' : 'Start'}
     </Button>
   );
 };

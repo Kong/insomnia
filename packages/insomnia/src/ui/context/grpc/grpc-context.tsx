@@ -1,25 +1,36 @@
 import React, { createContext, FunctionComponent, ReactNode, useContext, useEffect, useReducer } from 'react';
 
-import type { GrpcDispatch } from './grpc-actions';
-import { grpcIpcRenderer } from './grpc-ipc-renderer';
-import type { GrpcRequestState, GrpcState } from './grpc-reducer';
-import { findGrpcRequestState, grpcReducer } from './grpc-reducer';
+import { GrpcResponseEventEnum } from '../../../common/grpc-events';
+import { grpcActions, GrpcDispatch } from './grpc-actions';
+import { GrpcRequestState, GrpcState, INITIAL_GRPC_REQUEST_STATE } from './grpc-reducer';
+import { grpcReducer } from './grpc-reducer';
 
 interface Props {
   children: ReactNode;
 }
 
 // These should not be exported, so that they are only accessed in a controlled manner
-const GrpcStateContext = createContext<GrpcState | undefined>(undefined);
-const GrpcDispatchContext = createContext<GrpcDispatch | undefined>(undefined);
+const GrpcStateContext = createContext<GrpcState>({});
+const GrpcDispatchContext = createContext<GrpcDispatch>(e => e);
 
 export const GrpcProvider: FunctionComponent<Props> = ({ children }) => {
   const [state, dispatch] = useReducer(grpcReducer, {});
   // Only add listeners on mount
-  useEffect(() => {
-    grpcIpcRenderer.init(dispatch);
-    return grpcIpcRenderer.destroy;
-  }, []);
+  useEffect(() => window.main.on(GrpcResponseEventEnum.start, (_, requestId) => {
+    dispatch(grpcActions.start(requestId));
+  }), []);
+  useEffect(() => window.main.on(GrpcResponseEventEnum.end, (_, requestId) => {
+    dispatch(grpcActions.stop(requestId));
+  }), []);
+  useEffect(() => window.main.on(GrpcResponseEventEnum.data, (_, requestId, val) => {
+    dispatch(grpcActions.responseMessage(requestId, val));
+  }), []);
+  useEffect(() => window.main.on(GrpcResponseEventEnum.error, (_, requestId, err) => {
+    dispatch(grpcActions.error(requestId, err));
+  }), []);
+  useEffect(() => window.main.on(GrpcResponseEventEnum.status, (_, requestId, status) => {
+    dispatch(grpcActions.status(requestId, status));
+  }), []);
   return (
     <GrpcStateContext.Provider value={state}>
       <GrpcDispatchContext.Provider value={dispatch}>{children}</GrpcDispatchContext.Provider>
@@ -38,7 +49,7 @@ export const useGrpcRequestState = (requestId: string): GrpcRequestState => {
     throw new Error('useGrpcRequestState must be invoked with a request id');
   }
 
-  return findGrpcRequestState(context, requestId);
+  return context[requestId] || INITIAL_GRPC_REQUEST_STATE;
 };
 
 export const useGrpcDispatch = (): GrpcDispatch => {

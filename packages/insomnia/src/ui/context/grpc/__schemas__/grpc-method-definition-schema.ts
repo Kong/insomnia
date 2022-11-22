@@ -1,8 +1,7 @@
 import type { Schema } from '@develohpanda/fluent-builder';
+import { MethodDefinition } from '@grpc/grpc-js';
 
-import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
-
-export const grpcMethodDefinitionSchema: Schema<GrpcMethodDefinition> = {
+export const grpcMethodDefinitionSchema: Schema<MethodDefinition<any, any>> = {
   path: () => '/package.service/method',
   originalName: () => 'method',
   responseStream: () => false,

@@ -1,6 +1,6 @@
 import type { Schema } from '@develohpanda/fluent-builder';
 
-import type { GrpcIpcMessageParams } from '../prepare';
+import { GrpcIpcMessageParams } from '..';
 
 export const grpcIpcMessageParamsSchema: Schema<GrpcIpcMessageParams> = {
   requestId: () => 'gr',

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { GrpcResponseEventEnum } from '../../../common/grpc-events';
-import { ResponseCallbacks } from '../response-callbacks';
+import { ResponseCallbacks } from '../../../main/ipc/grpc';
 
 describe('response-callbacks', () => {
   const event = {

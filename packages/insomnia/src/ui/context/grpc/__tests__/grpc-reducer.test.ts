@@ -1,9 +1,6 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { globalBeforeEach } from '../../../../__jest__/before-each';
-import * as models from '../../../../models';
-import * as protoLoader from '../../../../network/grpc/proto-loader';
 import {
   grpcMessageSchema,
   grpcMethodDefinitionSchema,
@@ -12,7 +9,7 @@ import {
 } from '../__schemas__';
 import { grpcActions } from '../grpc-actions';
 import type { GrpcRequestState, GrpcState } from '../grpc-reducer';
-import { findGrpcRequestState, grpcReducer } from '../grpc-reducer';
+import { grpcReducer } from '../grpc-reducer';
 
 jest.mock('../../../../network/grpc/proto-loader');
 
@@ -29,22 +26,6 @@ const expectedInitialState: GrpcRequestState = {
   methods: [],
   reloadMethods: true,
 };
-
-describe('findGrpcRequestState', () => {
-  it('should return the initial state if not found', () => {
-    const state: GrpcState = {
-      found: requestStateBuilder.reset().build(),
-    };
-    expect(findGrpcRequestState(state, 'not-found')).toStrictEqual(expectedInitialState);
-  });
-
-  it('should return the request state if found', () => {
-    const state: GrpcState = {
-      found: requestStateBuilder.reset().build(),
-    };
-    expect(findGrpcRequestState(state, 'found')).toStrictEqual(state.found);
-  });
-});
 
 describe('grpcReducer actions', () => {
   const mockDateNowResult = 1234;
@@ -106,7 +87,7 @@ describe('grpcReducer actions', () => {
     });
   });
 
-  describe('requestMessage', () => {
+  describe('requestStream', () => {
     it('should append request message', () => {
       const existingMessage = messageBuilder.reset().build();
       const state: GrpcState = {
@@ -114,7 +95,7 @@ describe('grpcReducer actions', () => {
         b: requestStateBuilder.reset().requestMessages([existingMessage]).build(),
       };
       const newMessage = '{"prop":"anything"}';
-      const newState = grpcReducer(state, grpcActions.requestMessage('b', newMessage));
+      const newState = grpcReducer(state, grpcActions.requestStream('b', newMessage));
       const expectedMessage = expect.objectContaining({
         id: expect.stringMatching(/^[a-z0-9]{32}$/),
         text: newMessage,
@@ -205,75 +186,6 @@ describe('grpcReducer actions', () => {
     });
   });
 
-  describe('invalidateMany', () => {
-    beforeEach(() => {
-      globalBeforeEach();
-    });
-
-    it('should set reloadMethods to true only for requests that refer to the updated proto file', async () => {
-      const parentId = 'wrk_1';
-      // Create 3 requests, two of them referencing the protofile in question
-      const pf = await models.protoFile.create({
-        parentId,
-      });
-      const r1 = 'r1';
-      const r2 = 'r2';
-      const r3 = 'r3';
-      await models.grpcRequest.create({
-        parentId,
-        _id: r1,
-      });
-      await models.grpcRequest.create({
-        parentId,
-        _id: r2,
-        protoFileId: pf._id,
-      });
-      await models.grpcRequest.create({
-        parentId,
-        _id: r3,
-        protoFileId: pf._id,
-      });
-      // Setup original state for each request
-      const originalState: GrpcState = {
-        [r1]: requestStateBuilder.reset().reloadMethods(false).build(),
-        [r2]: requestStateBuilder.reset().reloadMethods(false).build(),
-        [r3]: requestStateBuilder.reset().reloadMethods(false).build(),
-      };
-      // Dispatch an invalidateMany action, with the modified protofile id as an argument
-      const newState = grpcReducer(originalState, await grpcActions.invalidateMany(pf._id));
-      // Expect r1 to remain unchanged, while r2 and r3 have reloadMethods set to true
-      const r1Expected = originalState[r1];
-      const r2Expected = { ...originalState[r2], reloadMethods: true };
-      const r3Expected = { ...originalState[r3], reloadMethods: true };
-      expect(newState).toStrictEqual({
-        [r1]: r1Expected,
-        [r2]: r2Expected,
-        [r3]: r3Expected,
-      });
-    });
-
-    it('should do nothing if no requests found for the proto file', async () => {
-      const parentId = 'wrk_1';
-      // Create a request not linked to the proto file
-      const pf = await models.protoFile.create({
-        parentId,
-      });
-      const r1 = 'r1';
-      await models.grpcRequest.create({
-        parentId,
-        _id: r1,
-      });
-      // Setup original state
-      const originalState: GrpcState = {
-        [r1]: requestStateBuilder.reset().reloadMethods(false).build(),
-      };
-      // Dispatch an invalidateMany action, with the modified proto file id as an argument
-      const newState = grpcReducer(originalState, await grpcActions.invalidateMany(pf._id));
-      // Expect no state change
-      expect(newState).toStrictEqual(originalState);
-    });
-  });
-
   describe('clear', () => {
     it('should clear per-run state', () => {
       const state: GrpcState = {
@@ -296,35 +208,6 @@ describe('grpcReducer actions', () => {
         responseMessages: [],
         status: undefined,
         error: undefined,
-      };
-      expect(newState).toStrictEqual({
-        a: state.a,
-        b: expectedRequestState,
-      });
-    });
-  });
-
-  describe('loadMethods', () => {
-    beforeEach(() => {
-      globalBeforeEach();
-    });
-
-    it('should store methods after they are loaded', async () => {
-      const state: GrpcState = {
-        a: requestStateBuilder.reset().running(true).build(),
-        b: requestStateBuilder
-          .reset()
-          .methods([methodBuilder.reset().build()])
-          .reloadMethods(true)
-          .build(),
-      };
-      const newMethods = [methodBuilder.reset().build()];
-      protoLoader.loadMethods.mockResolvedValue(newMethods);
-      const newState = grpcReducer(state, await grpcActions.loadMethods('b', 'pfid'));
-      const expectedRequestState: GrpcRequestState = {
-        ...state.b,
-        reloadMethods: false,
-        methods: newMethods,
       };
       expect(newState).toStrictEqual({
         a: state.a,
