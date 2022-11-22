@@ -55,8 +55,3 @@ export const grpcIpcRenderer = {
   init,
   destroy,
 };
-export const sendGrpcIpcMultiple = (channel: GrpcRequestEvent, requestIds?: string[]) => {
-  if (requestIds?.length) {
-    ipcRenderer.send(channel, requestIds);
-  }
-};

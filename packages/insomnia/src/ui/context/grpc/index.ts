@@ -8,4 +8,3 @@ export {
   useGrpcRequestState,
   GrpcDispatchModalWrapper,
 } from './grpc-context';
-export { sendGrpcIpcMultiple } from './grpc-ipc-renderer';

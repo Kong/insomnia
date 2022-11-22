@@ -2,10 +2,10 @@ import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { ipcRenderer } from 'electron';
 
-import { GrpcRequestEventEnum, GrpcResponseEventEnum } from '../../../../common/grpc-events';
+import { GrpcResponseEventEnum } from '../../../../common/grpc-events';
 import { grpcStatusObjectSchema } from '../__schemas__';
 import { grpcActions } from '../grpc-actions';
-import { grpcIpcRenderer, sendGrpcIpcMultiple } from '../grpc-ipc-renderer';
+import { grpcIpcRenderer } from '../grpc-ipc-renderer';
 
 jest.mock('../grpc-actions', () => ({
   grpcActions: {
@@ -88,27 +88,4 @@ describe('destroy', () => {
       expect(ipcRenderer.removeAllListeners).toHaveBeenCalledWith(channel);
     },
   );
-});
-
-describe('sendGrpcIpcMultiple', () => {
-  const channel = GrpcRequestEventEnum.cancelMultiple;
-
-  it('should send requestIds on channel', () => {
-    const requestIds = ['abc', '123'];
-    sendGrpcIpcMultiple(channel, requestIds);
-    expect(ipcRenderer.send).toHaveBeenCalledTimes(1);
-    expect(ipcRenderer.send).toHaveBeenCalledWith(channel, requestIds);
-  });
-
-  it('should not send on channel when request ids is empty', () => {
-    sendGrpcIpcMultiple(channel, []);
-    expect(ipcRenderer.send).not.toHaveBeenCalled();
-  });
-
-  it('should not send on channel when request ids is undefined', () => {
-    sendGrpcIpcMultiple(channel, undefined);
-    sendGrpcIpcMultiple(channel, null);
-    sendGrpcIpcMultiple(channel);
-    expect(ipcRenderer.send).not.toHaveBeenCalled();
-  });
 });
