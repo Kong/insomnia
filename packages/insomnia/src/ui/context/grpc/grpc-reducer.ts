@@ -1,14 +1,9 @@
 import { MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
 
 import type {
-  ErrorAction,
   GrpcAction,
   GrpcActionMany,
   GrpcMessage,
-  LoadMethodsAction,
-  RequestMessageAction,
-  ResponseMessageAction,
-  StatusAction,
 } from './grpc-actions';
 
 export interface GrpcRequestState {
@@ -46,29 +41,25 @@ const _patch = (state: GrpcState, requestId: string, requestState: GrpcRequestSt
   [requestId]: requestState,
 });
 
-const multiRequestReducer = (state: GrpcState, action: GrpcActionMany): GrpcState => {
-  const requestIds = action.requestIds;
-
-  switch (action.type) {
-    case 'invalidateMany': {
-      const newStates: GrpcState = {};
-      requestIds.forEach(id => {
-        const oldState = state[id] || INITIAL_GRPC_REQUEST_STATE;
-        const newState: GrpcRequestState = { ...oldState, reloadMethods: true };
-        newStates[id] = newState;
-      });
-      return { ...state, ...newStates };
-    }
-
-    default: {
-      throw new Error(`Unhandled multi request action type: ${action.type}`);
-    }
+export const grpcReducer = (
+  state: GrpcState,
+  action: GrpcAction | GrpcActionMany,
+): GrpcState => {
+  if (!action) {
+    return state;
   }
-};
-
-const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState => {
   // @ts-expect-error -- TSCONVERSION
-  const requestId = action.requestId;
+  const { requestIds, requestId } = action;
+  if (requestIds && action.type === 'invalidateMany') {
+    const newStates: GrpcState = {};
+    requestIds.forEach((id: string) => {
+      const oldState = state[id] || INITIAL_GRPC_REQUEST_STATE;
+      const newState: GrpcRequestState = { ...oldState, reloadMethods: true };
+      newStates[id] = newState;
+    });
+    return { ...state, ...newStates };
+  }
+
   const oldState = state[requestId] || INITIAL_GRPC_REQUEST_STATE;
 
   switch (action.type) {
@@ -85,29 +76,25 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case 'requestStream': {
-      const { payload }: RequestMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
-        requestMessages: [...oldState.requestMessages, payload],
+        requestMessages: [...oldState.requestMessages, action.payload],
       });
     }
 
     case 'responseMessage': {
-      const { payload }: ResponseMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
-        responseMessages: [...oldState.responseMessages, payload],
+        responseMessages: [...oldState.responseMessages, action.payload],
       });
     }
 
     case 'error': {
-      const { payload }: ErrorAction = action;
-      return _patch(state, requestId, { ...oldState, error: payload });
+      return _patch(state, requestId, { ...oldState, error: action.payload });
     }
 
     case 'status': {
-      const { payload }: StatusAction = action;
-      return _patch(state, requestId, { ...oldState, status: payload });
+      return _patch(state, requestId, { ...oldState, status: action.payload });
     }
 
     case 'clear': {
@@ -115,8 +102,7 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case 'loadMethods': {
-      const { payload }: LoadMethodsAction = action;
-      return _patch(state, requestId, { ...oldState, methods: payload, reloadMethods: false });
+      return _patch(state, requestId, { ...oldState, methods: action.payload, reloadMethods: false });
     }
 
     case 'invalidate': {
@@ -127,19 +113,4 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
       throw new Error(`Unhandled single request action type: ${action.type}`);
     }
   }
-};
-
-export const grpcReducer = (
-  state: GrpcState,
-  action: GrpcAction | GrpcActionMany,
-): GrpcState => {
-  if (!action) {
-    return state;
-  }
-
-  // @ts-expect-error -- TSCONVERSION
-  return action.requestIds
-    // @ts-expect-error -- TSCONVERSION
-    ? multiRequestReducer(state, action)
-    : singleRequestReducer(state, action);
 };
