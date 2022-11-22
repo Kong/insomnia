@@ -1,9 +1,6 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
-import { globalBeforeEach } from '../../../../__jest__/before-each';
-import * as models from '../../../../models';
-import * as protoLoader from '../../../../network/grpc/proto-loader';
 import {
   grpcMessageSchema,
   grpcMethodDefinitionSchema,
