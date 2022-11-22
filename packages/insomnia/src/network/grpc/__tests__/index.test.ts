@@ -12,7 +12,7 @@ import callCache from '../call-cache';
 import * as grpc from '../index';
 import * as protoLoader from '../proto-loader';
 
-jest.mock('../response-callbacks');
+jest.mock('../../../main/ipc/grpc');
 jest.mock('../proto-loader');
 jest.mock('@grpc/grpc-js');
 
