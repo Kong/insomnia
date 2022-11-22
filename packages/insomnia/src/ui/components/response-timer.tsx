@@ -4,31 +4,25 @@ import { REQUEST_SETUP_TEARDOWN_COMPENSATION, REQUEST_TIME_TO_SHOW_COUNTER } fro
 
 interface Props {
   handleCancel: DOMAttributes<HTMLButtonElement>['onClick'];
-  loadStartTime: number;
 }
 
-export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, loadStartTime }) => {
+export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel }) => {
   const [milliseconds, setMilliseconds] = useState(0);
-  const isLoading = loadStartTime > 0;
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    if (isLoading) {
-      interval = setInterval(() => {
-        setMilliseconds(Date.now() - loadStartTime - REQUEST_SETUP_TEARDOWN_COMPENSATION);
-      }, 100);
-    }
+    const loadStartTime = Date.now();
+
+    interval = setInterval(() => {
+      setMilliseconds(Date.now() - loadStartTime - REQUEST_SETUP_TEARDOWN_COMPENSATION);
+    }, 100);
     return () => {
       if (interval !== null) {
         setMilliseconds(0);
         clearInterval(interval);
       }
     };
-  }, [loadStartTime, isLoading]);
-
-  if (!isLoading) {
-    return null;
-  }
+  }, []);
 
   const seconds = milliseconds / 1000;
   return (

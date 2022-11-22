@@ -1,4 +1,3 @@
-import { invariant } from '@remix-run/router';
 import { ActionFunction, LoaderFunction } from 'react-router-dom';
 
 import { database } from '../../common/database';
@@ -8,6 +7,7 @@ import { RemoteProject } from '../../models/project';
 import { BackendProject } from '../../sync/types';
 import { pullBackendProject } from '../../sync/vcs/pull-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';
+import { invariant } from '../../utils/invariant';
 
 export const pullRemoteCollectionAction: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
