@@ -197,7 +197,6 @@ export const Debug: FC = () => {
             isGrpcRequest(activeRequest) ? (
               <GrpcRequestPane
                 activeRequest={activeRequest}
-                environmentId={activeEnvironment ? activeEnvironment._id : ''}
                 workspaceId={activeWorkspace._id}
                 settings={settings}
               />

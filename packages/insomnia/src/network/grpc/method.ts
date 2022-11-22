@@ -1,50 +1,39 @@
 import { MethodDefinition } from '@grpc/grpc-js';
-import type { ValueOf } from 'type-fest';
 
-// TODO(TSCONVERSION) remove this alias and type MethodDefinition correctly
-export type GrpcMethodDefinition = MethodDefinition<any, any>;
-
-export const GrpcMethodTypeEnum = {
-  unary: 'unary',
-  server: 'server',
-  client: 'client',
-  bidi: 'bidi',
-} as const;
-
-export type GrpcMethodType = ValueOf<typeof GrpcMethodTypeEnum>;
+export type GrpcMethodType = 'unary' | 'server' | 'client' | 'bidi';
 
 export const getMethodType = ({
   requestStream,
   responseStream,
-}: GrpcMethodDefinition): GrpcMethodType => {
+}: MethodDefinition<any, any>): GrpcMethodType => {
   if (requestStream) {
     if (responseStream) {
-      return GrpcMethodTypeEnum.bidi;
+      return 'bidi';
     } else {
-      return GrpcMethodTypeEnum.client;
+      return 'client';
     }
   } else {
     if (responseStream) {
-      return GrpcMethodTypeEnum.server;
+      return 'server';
     } else {
-      return GrpcMethodTypeEnum.unary;
+      return 'unary';
     }
   }
 };
 
 export const GrpcMethodTypeName = {
-  [GrpcMethodTypeEnum.unary]: 'Unary',
-  [GrpcMethodTypeEnum.server]: 'Server Streaming',
-  [GrpcMethodTypeEnum.client]: 'Client Streaming',
-  [GrpcMethodTypeEnum.bidi]: 'Bi-directional Streaming',
+  unary: 'Unary',
+  server: 'Server Streaming',
+  client: 'Client Streaming',
+  bidi: 'Bi-directional Streaming',
 } as const;
 
 export const GrpcMethodTypeAcronym = {
-  [GrpcMethodTypeEnum.unary]: 'U',
-  [GrpcMethodTypeEnum.server]: 'SS',
-  [GrpcMethodTypeEnum.client]: 'CS',
-  [GrpcMethodTypeEnum.bidi]: 'BD',
+  unary: 'U',
+  server: 'SS',
+  client: 'CS',
+  bidi: 'BD',
 } as const;
 
 export const canClientStream = (methodType?: GrpcMethodType) =>
-  methodType === GrpcMethodTypeEnum.client || methodType === GrpcMethodTypeEnum.bidi;
+  methodType === 'client' || methodType === 'bidi';

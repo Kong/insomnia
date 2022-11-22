@@ -7,8 +7,7 @@ import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
 import callCache from './call-cache';
-import type { GrpcMethodDefinition } from './method';
-import { getMethodType, GrpcMethodTypeEnum } from './method';
+import { getMethodType } from './method';
 import parseGrpcUrl from './parse-grpc-url';
 import type { GrpcIpcMessageParams, GrpcIpcRequestParams } from './prepare';
 import * as protoLoader from './proto-loader';
@@ -116,7 +115,7 @@ interface RequestData {
   requestId: string;
   respond: ResponseCallbacks;
   client: ServiceClient;
-  method: GrpcMethodDefinition;
+  method: grpc.MethodDefinition<any, any>;
   metadata: GrpcRequestHeader[];
 }
 const _createClient = (

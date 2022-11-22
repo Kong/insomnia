@@ -1,7 +1,8 @@
+import { MethodDefinition } from '@grpc/grpc-js';
 import { useEffect, useState } from 'react';
 
 import type { GrpcRequest } from '../../../../models/grpc-request';
-import type { GrpcMethodDefinition, GrpcMethodType } from '../../../../network/grpc/method';
+import type { GrpcMethodType } from '../../../../network/grpc/method';
 import {
   canClientStream,
   getMethodType,
@@ -10,7 +11,7 @@ import {
 import type { GrpcRequestState } from '../../../context/grpc';
 
 interface MethodSelection {
-  method?: GrpcMethodDefinition;
+  method?: MethodDefinition<any, any>;
   methodType?: GrpcMethodType;
   methodTypeLabel?: string;
   enableClientStream?: boolean;

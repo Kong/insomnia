@@ -31,7 +31,6 @@ import useChangeHandlers from './use-change-handlers';
 import useSelectedMethod from './use-selected-method';
 interface Props {
   activeRequest: GrpcRequest;
-  environmentId: string;
   workspaceId: string;
   settings: Settings;
 }
@@ -56,7 +55,6 @@ const StyledDropdown = styled.div`
 
 export const GrpcRequestPane: FunctionComponent<Props> = ({
   activeRequest,
-  environmentId,
   workspaceId,
 }) => {
   const [state, grpcDispatch] = useGrpc(activeRequest._id);
@@ -85,6 +83,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const activeEnvironment = useSelector(selectActiveEnvironment);
+  const environmentId = activeEnvironment?._id || 'n/a';
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniquenessKey = `${activeEnvironment?.modified}::${activeRequest?._id}::${gitVersion}::${activeRequestSyncVersion}`;
 
