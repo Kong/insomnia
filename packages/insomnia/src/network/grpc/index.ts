@@ -162,16 +162,16 @@ export const start = async (
   };
   let call;
   switch (methodType) {
-    case GrpcMethodTypeEnum.unary:
+    case 'unary':
       call = _makeUnaryRequest(requestParams, request.body.text || '');
       break;
-    case GrpcMethodTypeEnum.server:
+    case 'server':
       call = _makeServerStreamRequest(requestParams, request.body.text || '');
       break;
-    case GrpcMethodTypeEnum.client:
+    case 'client':
       call = _makeClientStreamRequest(requestParams);
       break;
-    case GrpcMethodTypeEnum.bidi:
+    case 'bidi':
       call = _makeBidiStreamRequest(requestParams);
       break;
     default:

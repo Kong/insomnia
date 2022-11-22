@@ -8,7 +8,6 @@ import {
   RENDER_PURPOSE_SEND,
 } from '../../../common/render';
 import * as models from '../../../models';
-import { GrpcMethodTypeEnum } from '../method';
 import { prepareGrpcMessage, prepareGrpcRequest } from '../prepare';
 
 jest.mock('../../../common/render');
@@ -19,7 +18,7 @@ const getRenderedGrpcRequestMessage = mocked(_getRenderedGrpcRequestMessage);
 describe('prepareGrpcRequest', () => {
   beforeEach(globalBeforeEach);
 
-  it.each([GrpcMethodTypeEnum.unary, GrpcMethodTypeEnum.server])(
+  it.each(['unary', 'server'])(
     'should prepare grpc request with all properties: %s',
     async methodType => {
       const w = await models.workspace.create();
@@ -45,7 +44,7 @@ describe('prepareGrpcRequest', () => {
     },
   );
 
-  it.each([GrpcMethodTypeEnum.client, GrpcMethodTypeEnum.bidi])(
+  it.each(['client', 'bidi'])(
     'should prepare grpc request and ignore body: %s',
     async methodType => {
       const w = await models.workspace.create();
