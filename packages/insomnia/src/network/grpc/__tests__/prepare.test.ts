@@ -70,30 +70,3 @@ describe('prepareGrpcRequest', () => {
     },
   );
 });
-
-describe('prepareGrpcMessage', () => {
-  beforeEach(globalBeforeEach);
-
-  it('should prepare grpc message with only body', async () => {
-    const w = await models.workspace.create();
-    const env = await models.environment.create({
-      parentId: w._id,
-    });
-    const gr = await models.grpcRequest.create({
-      parentId: w._id,
-    });
-    getRenderedGrpcRequestMessage.mockResolvedValue(gr.body);
-    const result = await prepareGrpcMessage(gr._id, env._id);
-    expect(getRenderedGrpcRequestMessage).toHaveBeenLastCalledWith(
-      {
-        request: gr,
-        environmentId: env._id,
-        purpose: RENDER_PURPOSE_SEND,
-      },
-    );
-    expect(result).toEqual({
-      body: gr.body,
-      requestId: gr._id,
-    });
-  });
-});

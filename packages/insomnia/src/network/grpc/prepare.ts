@@ -37,22 +37,3 @@ export const prepareGrpcRequest = async (
     request,
   };
 };
-
-export const prepareGrpcMessage = async (
-  requestId: string,
-  environmentId: string,
-): Promise<GrpcIpcMessageParams> => {
-  const req = await models.grpcRequest.getById(requestId);
-  const requestBody = await getRenderedGrpcRequestMessage({
-    // @ts-expect-error -- TSCONVERSION req can be null but should not try to render if it is null
-    request: req,
-    environmentId,
-    purpose: RENDER_PURPOSE_SEND,
-  },
-  );
-  return {
-    body: requestBody,
-    // @ts-expect-error -- TSCONVERSION req can be null
-    requestId: req._id,
-  };
-};

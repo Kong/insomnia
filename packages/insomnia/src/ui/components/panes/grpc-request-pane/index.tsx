@@ -7,11 +7,12 @@ import styled from 'styled-components';
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../../common/common-headers';
 import { documentationLinks } from '../../../../common/documentation';
 import { GrpcRequestEventEnum } from '../../../../common/grpc-events';
+import { getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../../common/render';
 import * as models from '../../../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../../models/settings';
-import { prepareGrpcMessage, prepareGrpcRequest } from '../../../../network/grpc/prepare';
+import { prepareGrpcRequest } from '../../../../network/grpc/prepare';
 import * as protoLoader from '../../../../network/grpc/proto-loader';
 import { grpcActions, useGrpc } from '../../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../../hooks/use-vcs-version';
@@ -165,7 +166,15 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 })}
                 showActions={running && enableClientStream}
                 handleStream={async () => {
-                  const preparedMessage = await prepareGrpcMessage(activeRequest._id, environmentId);
+                  const requestBody = await getRenderedGrpcRequestMessage({
+                    request: activeRequest,
+                    environmentId,
+                    purpose: RENDER_PURPOSE_SEND,
+                  });
+                  const preparedMessage = {
+                    body: requestBody,
+                    requestId: activeRequest._id,
+                  };
                   ipcRenderer.send(GrpcRequestEventEnum.sendMessage, preparedMessage);
                   // @ts-expect-error -- TSCONVERSION
                   grpcDispatch(grpcActions.requestMessage(activeRequest._id, preparedMessage.body.text));
