@@ -1,14 +1,17 @@
-import React, { FunctionComponent, useCallback } from 'react';
+import { ipcRenderer } from 'electron';
+import React, { FunctionComponent } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../../common/common-headers';
 import { documentationLinks } from '../../../../common/documentation';
+import { GrpcRequestEventEnum } from '../../../../common/grpc-events';
 import * as models from '../../../../models';
 import type { GrpcRequest } from '../../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../../models/settings';
+import { prepareGrpcMessage, prepareGrpcRequest } from '../../../../network/grpc/prepare';
 import * as protoLoader from '../../../../network/grpc/proto-loader';
 import { grpcActions, useGrpc } from '../../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../../hooks/use-vcs-version';
@@ -24,7 +27,6 @@ import { SvgIcon } from '../../svg-icon';
 import { GrpcTabbedMessages } from '../../viewers/grpc-tabbed-messages';
 import { EmptyStatePane } from '../empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../pane';
-import useActionHandlers from './use-action-handlers';
 import useChangeHandlers from './use-change-handlers';
 import useSelectedMethod from './use-selected-method';
 interface Props {
@@ -75,8 +77,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const selection = useSelectedMethod(state, activeRequest);
   const { method, methodType, methodTypeLabel, enableClientStream } = selection;
   const handleChange = useChangeHandlers(activeRequest, grpcDispatch);
-  // @ts-expect-error -- TSCONVERSION methodType can be undefined
-  const handleAction = useActionHandlers(activeRequest._id, environmentId, methodType, grpcDispatch);
   const getExistingGrpcUrls = async () => {
     const workspace = await models.workspace.getById(workspaceId);
     return queryAllWorkspaceUrls(workspace, models.grpcRequest.type, activeRequest._id);
@@ -88,12 +88,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniquenessKey = `${activeEnvironment?.modified}::${activeRequest?._id}::${gitVersion}::${activeRequestSyncVersion}`;
 
-  const { start } = handleAction;
-  const handleRequestSend = useCallback(() => {
+  const handleRequestSend = async () => {
     if (method && !running) {
-      start();
+      const preparedRequest = await prepareGrpcRequest(activeRequest._id, environmentId, methodType);
+      ipcRenderer.send(GrpcRequestEventEnum.start, preparedRequest);
+      grpcDispatch(grpcActions.clear(activeRequest._id));
     }
-  }, [method, running, start]);
+  };
 
   useDocBodyKeyboardShortcuts({
     request_send: handleRequestSend,
@@ -127,8 +128,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           <GrpcSendButton
             running={running}
             methodType={methodType}
-            handleCancel={handleAction.cancel}
-            handleStart={handleAction.start}
+            handleCancel={() => ipcRenderer.send(GrpcRequestEventEnum.cancel, activeRequest._id)}
+            handleStart={handleRequestSend}
           />
         </StyledUrlBar>
       </PaneHeader>
@@ -143,8 +144,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 bodyText={activeRequest.body.text}
                 handleBodyChange={handleChange.body}
                 showActions={running && enableClientStream}
-                handleStream={handleAction.stream}
-                handleCommit={handleAction.commit}
+                handleStream={async () => {
+                  const preparedMessage = await prepareGrpcMessage(activeRequest._id, environmentId);
+                  ipcRenderer.send(GrpcRequestEventEnum.sendMessage, preparedMessage);
+                  // @ts-expect-error -- TSCONVERSION
+                  grpcDispatch(grpcActions.requestMessage(activeRequest._id, preparedMessage.body.text));
+                }}
+                handleCommit={() => ipcRenderer.send(GrpcRequestEventEnum.commit, activeRequest._id)}
               />
             </TabItem>
             <TabItem key="headers" title="Headers">
