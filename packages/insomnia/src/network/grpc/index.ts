@@ -2,6 +2,7 @@ import * as grpc from '@grpc/grpc-js';
 import { Call, ServiceError } from '@grpc/grpc-js';
 import { ServiceClient } from '@grpc/grpc-js/build/src/make-client';
 
+import { RenderedGrpcRequestBody } from '../../common/render';
 import { ResponseCallbacks } from '../../main/ipc/grpc';
 import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
@@ -9,7 +10,6 @@ import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
 import callCache from './call-cache';
 import { getMethodType } from './method';
 import parseGrpcUrl from './parse-grpc-url';
-import type { GrpcIpcMessageParams, GrpcIpcRequestParams } from './prepare';
 import * as protoLoader from './proto-loader';
 
 const _makeUnaryRequest = (
@@ -191,6 +191,14 @@ export const start = async (
 const _setupStatusListener = (call: Call, requestId: string, respond: ResponseCallbacks) => {
   call.on('status', s => respond.sendStatus(requestId, s));
 };
+export interface GrpcIpcRequestParams {
+  request: RenderedGrpcRequest;
+}
+
+export interface GrpcIpcMessageParams {
+  requestId: string;
+  body: RenderedGrpcRequestBody;
+}
 export const sendMessage = (
   { body, requestId }: GrpcIpcMessageParams,
   respond: ResponseCallbacks,

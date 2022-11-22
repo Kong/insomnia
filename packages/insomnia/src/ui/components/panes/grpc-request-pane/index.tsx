@@ -7,12 +7,12 @@ import styled from 'styled-components';
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../../common/common-headers';
 import { documentationLinks } from '../../../../common/documentation';
 import { GrpcRequestEventEnum } from '../../../../common/grpc-events';
-import { getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../../common/render';
+import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../../common/render';
 import * as models from '../../../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../../models/settings';
-import { prepareGrpcRequest } from '../../../../network/grpc/prepare';
+import { canClientStream } from '../../../../network/grpc/method';
 import * as protoLoader from '../../../../network/grpc/proto-loader';
 import { grpcActions, useGrpc } from '../../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../../hooks/use-vcs-version';
@@ -90,8 +90,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
 
   const handleRequestSend = async () => {
     if (method && !running) {
-      const preparedRequest = await prepareGrpcRequest(activeRequest._id, environmentId, methodType);
-      ipcRenderer.send(GrpcRequestEventEnum.start, preparedRequest);
+      const request = await getRenderedGrpcRequest({
+        request: activeRequest,
+        environmentId,
+        purpose: RENDER_PURPOSE_SEND,
+        skipBody: canClientStream(methodType),
+      });
+      ipcRenderer.send(GrpcRequestEventEnum.start, { request });
       grpcDispatch(grpcActions.clear(activeRequest._id));
     }
   };
