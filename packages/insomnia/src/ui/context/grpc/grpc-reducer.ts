@@ -10,7 +10,6 @@ import type {
   ResponseMessageAction,
   StatusAction,
 } from './grpc-actions';
-import { GrpcActionTypeEnum } from './grpc-actions';
 
 export interface GrpcRequestState {
   running: boolean;
@@ -55,7 +54,7 @@ const multiRequestReducer = (state: GrpcState, action: GrpcActionMany): GrpcStat
   const requestIds = action.requestIds;
 
   switch (action.type) {
-    case GrpcActionTypeEnum.invalidateMany: {
+    case 'invalidateMany': {
       const newStates: GrpcState = {};
       requestIds.forEach(id => {
         const oldState = findGrpcRequestState(state, id);
@@ -77,19 +76,19 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
   const oldState = findGrpcRequestState(state, requestId);
 
   switch (action.type) {
-    case GrpcActionTypeEnum.reset: {
+    case 'reset': {
       return _patch(state, requestId, INITIAL_GRPC_REQUEST_STATE);
     }
 
-    case GrpcActionTypeEnum.start: {
+    case 'start': {
       return _patch(state, requestId, { ...oldState, running: true });
     }
 
-    case GrpcActionTypeEnum.stop: {
+    case 'stop': {
       return _patch(state, requestId, { ...oldState, running: false });
     }
 
-    case GrpcActionTypeEnum.requestMessage: {
+    case 'requestStream': {
       const { payload }: RequestMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
@@ -97,7 +96,7 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
       });
     }
 
-    case GrpcActionTypeEnum.responseMessage: {
+    case 'responseMessage': {
       const { payload }: ResponseMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
@@ -105,26 +104,26 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
       });
     }
 
-    case GrpcActionTypeEnum.error: {
+    case 'error': {
       const { payload }: ErrorAction = action;
       return _patch(state, requestId, { ...oldState, error: payload });
     }
 
-    case GrpcActionTypeEnum.status: {
+    case 'status': {
       const { payload }: StatusAction = action;
       return _patch(state, requestId, { ...oldState, status: payload });
     }
 
-    case GrpcActionTypeEnum.clear: {
+    case 'clear': {
       return _patch(state, requestId, { ...oldState, ...CLEAR_GRPC_REQUEST_STATE });
     }
 
-    case GrpcActionTypeEnum.loadMethods: {
+    case 'loadMethods': {
       const { payload }: LoadMethodsAction = action;
       return _patch(state, requestId, { ...oldState, methods: payload, reloadMethods: false });
     }
 
-    case GrpcActionTypeEnum.invalidate: {
+    case 'invalidate': {
       return _patch(state, requestId, { ...oldState, reloadMethods: true });
     }
 

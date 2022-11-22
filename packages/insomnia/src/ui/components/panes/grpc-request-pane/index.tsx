@@ -1,5 +1,6 @@
+import { MethodDefinition } from '@grpc/grpc-js';
 import { ipcRenderer } from 'electron';
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
@@ -12,7 +13,7 @@ import * as models from '../../../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../../models/settings';
-import { canClientStream } from '../../../../network/grpc/method';
+import { canClientStream, getMethodType, GrpcMethodType, GrpcMethodTypeName } from '../../../../network/grpc/method';
 import * as protoLoader from '../../../../network/grpc/proto-loader';
 import { grpcActions, useGrpc } from '../../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../../hooks/use-vcs-version';
@@ -30,7 +31,6 @@ import { SvgIcon } from '../../svg-icon';
 import { GrpcTabbedMessages } from '../../viewers/grpc-tabbed-messages';
 import { EmptyStatePane } from '../empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../pane';
-import useSelectedMethod from './use-selected-method';
 interface Props {
   activeRequest: GrpcRequest;
   workspaceId: string;
@@ -54,14 +54,19 @@ const StyledUrlEditor = styled.div`
 const StyledDropdown = styled.div`
   flex: 1 0 auto;
 `;
-
+interface MethodSelection {
+  method?: MethodDefinition<any, any>;
+  methodType?: GrpcMethodType;
+  methodTypeLabel?: string;
+  enableClientStream?: boolean;
+}
 export const GrpcRequestPane: FunctionComponent<Props> = ({
   activeRequest,
   workspaceId,
 }) => {
   const [state, grpcDispatch] = useGrpc(activeRequest._id);
   const { requestMessages, running, reloadMethods, methods } = state;
-  const { _id, protoFileId } = activeRequest;
+  const { _id, protoFileId, protoMethodName } = activeRequest;
   useAsync(async () => {
     // don't actually reload until the request has stopped running or if methods do not need to be reloaded
     if (!reloadMethods || running) {
@@ -74,7 +79,28 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     grpcDispatch(grpcActions.loadMethods(_id, methods));
   }, [_id, protoFileId, reloadMethods, grpcDispatch, running]);
 
-  const selection = useSelectedMethod(state, activeRequest);
+  const [selection, setSelection] = useState<MethodSelection>({});
+  // if methods are waiting to be reloaded because they are stale, don't update the method selection.
+  //  This is a bit of a hack needed to avoid a split-second blank state showing on the page because
+  //  component refreshes are also triggered by database changes and before the methods have been updated.
+  useEffect(() => {
+    if (reloadMethods) {
+      return;
+    }
+
+    const selectedMethod = methods.find(c => c.path === protoMethodName);
+    const methodType = selectedMethod && getMethodType(selectedMethod);
+    // @ts-expect-error -- TSCONVERSION undefined as index
+    const methodTypeLabel = GrpcMethodTypeName[methodType];
+    const enableClientStream = canClientStream(methodType);
+    setSelection({
+      method: selectedMethod,
+      methodType,
+      methodTypeLabel,
+      enableClientStream,
+    });
+  }, [methods, protoMethodName, reloadMethods]);
+
   const { method, methodType, methodTypeLabel, enableClientStream } = selection;
   const getExistingGrpcUrls = async () => {
     const workspace = await models.workspace.getById(workspaceId);
@@ -182,7 +208,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   };
                   ipcRenderer.send(GrpcRequestEventEnum.sendMessage, preparedMessage);
                   // @ts-expect-error -- TSCONVERSION
-                  grpcDispatch(grpcActions.requestMessage(activeRequest._id, preparedMessage.body.text));
+                  grpcDispatch(grpcActions.requestStream(activeRequest._id, preparedMessage.body.text));
                 }}
                 handleCommit={() => ipcRenderer.send(GrpcRequestEventEnum.commit, activeRequest._id)}
               />

@@ -106,7 +106,7 @@ describe('grpcReducer actions', () => {
     });
   });
 
-  describe('requestMessage', () => {
+  describe('requestStream', () => {
     it('should append request message', () => {
       const existingMessage = messageBuilder.reset().build();
       const state: GrpcState = {
@@ -114,7 +114,7 @@ describe('grpcReducer actions', () => {
         b: requestStateBuilder.reset().requestMessages([existingMessage]).build(),
       };
       const newMessage = '{"prop":"anything"}';
-      const newState = grpcReducer(state, grpcActions.requestMessage('b', newMessage));
+      const newState = grpcReducer(state, grpcActions.requestStream('b', newMessage));
       const expectedMessage = expect.objectContaining({
         id: expect.stringMatching(/^[a-z0-9]{32}$/),
         text: newMessage,
