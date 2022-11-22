@@ -5,7 +5,7 @@ import { IpcMainEvent } from 'electron';
 import { GrpcResponseEventEnum } from '../../common/grpc-events';
 import { GrpcRequestEventEnum } from '../../common/grpc-events';
 import * as grpc from '../../network/grpc';
-import { GrpcIpcRequestParams } from '../../network/grpc/prepare';
+import { GrpcIpcRequestParams } from '../../network/grpc';
 
 export function registergRPCHandlers() {
   ipcMain.on(GrpcRequestEventEnum.start, (event, params: GrpcIpcRequestParams) =>

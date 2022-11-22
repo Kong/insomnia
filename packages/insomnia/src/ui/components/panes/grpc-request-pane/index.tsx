@@ -74,6 +74,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     }
     grpcDispatch(grpcActions.clear(_id));
     console.log(`[gRPC] loading proto file methods pf=${protoFileId}`);
+    if (!protoFileId) {
+      return;
+    }
     const protoFile = await models.protoFile.getById(protoFileId);
     const methods = await protoLoader.loadMethods(protoFile);
     grpcDispatch(grpcActions.loadMethods(_id, methods));

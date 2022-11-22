@@ -8,17 +8,17 @@ export interface GrpcMessage {
   created: number;
 }
 
-export type GrpcActionType =  'reset' |
-'clear' |
-'start' |
-'stop' |
-'responseMessage' |
-'requestStream' |
-'error' |
-'invalidate' |
-'invalidateMany' |
-'loadMethods' |
-'status';
+export type GrpcActionType = 'reset' |
+  'clear' |
+  'start' |
+  'stop' |
+  'responseMessage' |
+  'requestStream' |
+  'error' |
+  'invalidate' |
+  'invalidateMany' |
+  'loadMethods' |
+  'status';
 
 interface Action<T extends GrpcActionType> {
   type: T;
@@ -132,12 +132,12 @@ const invalidate = (requestId: string): InvalidateAction => ({
   requestId,
 });
 
-const invalidateMany = (requestIds: string[]) => ({
+const invalidateMany = (requestIds: string[]): InvalidateManyAction => ({
   type: 'invalidateMany',
   requestIds,
 });
 
-const loadMethods = (requestId: string, methods: MethodDefinition<any, any>[]) => ({
+const loadMethods = (requestId: string, methods: MethodDefinition<any, any>[]): LoadMethodsAction => ({
   type: 'loadMethods',
   requestId,
   payload: methods,

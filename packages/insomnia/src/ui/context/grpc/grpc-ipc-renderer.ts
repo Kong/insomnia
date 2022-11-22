@@ -1,6 +1,5 @@
 import { ipcRenderer } from 'electron';
 
-import type { GrpcRequestEvent } from '../../../common/grpc-events';
 import { GrpcResponseEventEnum } from '../../../common/grpc-events';
 import type { GrpcDispatch } from './grpc-actions';
 import { grpcActions } from './grpc-actions';

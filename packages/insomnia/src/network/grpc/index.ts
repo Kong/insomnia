@@ -2,7 +2,7 @@ import * as grpc from '@grpc/grpc-js';
 import { Call, ServiceError } from '@grpc/grpc-js';
 import { ServiceClient } from '@grpc/grpc-js/build/src/make-client';
 
-import { RenderedGrpcRequestBody } from '../../common/render';
+import { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import { ResponseCallbacks } from '../../main/ipc/grpc';
 import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
