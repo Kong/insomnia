@@ -140,19 +140,10 @@ const invalidate = (requestId: string): InvalidateAction => ({
   requestId,
 });
 
-const invalidateMany = async (protoFileId: string) => {
-  const impacted = await models.grpcRequest.findByProtoFileId(protoFileId);
-
-  // skip invalidation if no requests are linked to the proto file
-  if (!impacted?.length) {
-    return undefined;
-  }
-
-  return {
-    type: GrpcActionTypeEnum.invalidateMany,
-    requestIds: impacted.map(g => g._id),
-  } as InvalidateManyAction;
-};
+const invalidateMany = (requestIds: string[]) => ({
+  type: GrpcActionTypeEnum.invalidateMany,
+  requestIds,
+});
 
 const loadMethods = async (requestId: string, protoFileId: string) => {
   console.log(`[gRPC] loading proto file methods pf=${protoFileId}`);
