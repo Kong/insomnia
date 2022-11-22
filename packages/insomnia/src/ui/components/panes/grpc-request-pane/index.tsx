@@ -7,6 +7,7 @@ import { getCommonHeaderNames, getCommonHeaderValues } from '../../../../common/
 import { documentationLinks } from '../../../../common/documentation';
 import * as models from '../../../../models';
 import type { GrpcRequest } from '../../../../models/grpc-request';
+import { queryAllWorkspaceUrls } from '../../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../../models/settings';
 import * as protoLoader from '../../../../network/grpc/proto-loader';
 import { grpcActions, useGrpc } from '../../../context/grpc';
@@ -25,7 +26,6 @@ import { EmptyStatePane } from '../empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../pane';
 import useActionHandlers from './use-action-handlers';
 import useChangeHandlers from './use-change-handlers';
-import useExistingGrpcUrls from './use-existing-grpc-urls';
 import useSelectedMethod from './use-selected-method';
 interface Props {
   activeRequest: GrpcRequest;
@@ -77,7 +77,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const handleChange = useChangeHandlers(activeRequest, grpcDispatch);
   // @ts-expect-error -- TSCONVERSION methodType can be undefined
   const handleAction = useActionHandlers(activeRequest._id, environmentId, methodType, grpcDispatch);
-  const getExistingGrpcUrls = useExistingGrpcUrls(workspaceId, activeRequest._id);
+  const getExistingGrpcUrls = async () => {
+    const workspace = await models.workspace.getById(workspaceId);
+    return queryAllWorkspaceUrls(workspace, models.grpcRequest.type, activeRequest._id);
+  };
+
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const activeEnvironment = useSelector(selectActiveEnvironment);
