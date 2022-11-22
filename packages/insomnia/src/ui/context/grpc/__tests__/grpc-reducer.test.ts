@@ -9,7 +9,7 @@ import {
 } from '../__schemas__';
 import { grpcActions } from '../grpc-actions';
 import type { GrpcRequestState, GrpcState } from '../grpc-reducer';
-import { findGrpcRequestState, grpcReducer } from '../grpc-reducer';
+import { grpcReducer } from '../grpc-reducer';
 
 jest.mock('../../../../network/grpc/proto-loader');
 
@@ -26,22 +26,6 @@ const expectedInitialState: GrpcRequestState = {
   methods: [],
   reloadMethods: true,
 };
-
-describe('findGrpcRequestState', () => {
-  it('should return the initial state if not found', () => {
-    const state: GrpcState = {
-      found: requestStateBuilder.reset().build(),
-    };
-    expect(findGrpcRequestState(state, 'not-found')).toStrictEqual(expectedInitialState);
-  });
-
-  it('should return the request state if found', () => {
-    const state: GrpcState = {
-      found: requestStateBuilder.reset().build(),
-    };
-    expect(findGrpcRequestState(state, 'found')).toStrictEqual(state.found);
-  });
-});
 
 describe('grpcReducer actions', () => {
   const mockDateNowResult = 1234;

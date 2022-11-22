@@ -24,7 +24,7 @@ export interface GrpcRequestState {
 // TODO: delete from here when deleting a request - INS-288
 export type GrpcState = Record<string, GrpcRequestState>;
 
-const INITIAL_GRPC_REQUEST_STATE: GrpcRequestState = {
+export const INITIAL_GRPC_REQUEST_STATE: GrpcRequestState = {
   running: false,
   requestMessages: [],
   responseMessages: [],
@@ -46,10 +46,6 @@ const _patch = (state: GrpcState, requestId: string, requestState: GrpcRequestSt
   [requestId]: requestState,
 });
 
-export const findGrpcRequestState = (state: GrpcState, requestId: string): GrpcRequestState => {
-  return state[requestId] || INITIAL_GRPC_REQUEST_STATE;
-};
-
 const multiRequestReducer = (state: GrpcState, action: GrpcActionMany): GrpcState => {
   const requestIds = action.requestIds;
 
@@ -57,7 +53,7 @@ const multiRequestReducer = (state: GrpcState, action: GrpcActionMany): GrpcStat
     case 'invalidateMany': {
       const newStates: GrpcState = {};
       requestIds.forEach(id => {
-        const oldState = findGrpcRequestState(state, id);
+        const oldState = state[id] || INITIAL_GRPC_REQUEST_STATE;
         const newState: GrpcRequestState = { ...oldState, reloadMethods: true };
         newStates[id] = newState;
       });
@@ -73,7 +69,7 @@ const multiRequestReducer = (state: GrpcState, action: GrpcActionMany): GrpcStat
 const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState => {
   // @ts-expect-error -- TSCONVERSION
   const requestId = action.requestId;
-  const oldState = findGrpcRequestState(state, requestId);
+  const oldState = state[requestId] || INITIAL_GRPC_REQUEST_STATE;
 
   switch (action.type) {
     case 'reset': {

@@ -2,8 +2,8 @@ import React, { createContext, FunctionComponent, ReactNode, useContext, useEffe
 
 import { GrpcResponseEventEnum } from '../../../common/grpc-events';
 import { grpcActions, GrpcDispatch } from './grpc-actions';
-import type { GrpcRequestState, GrpcState } from './grpc-reducer';
-import { findGrpcRequestState, grpcReducer } from './grpc-reducer';
+import { GrpcRequestState, GrpcState, INITIAL_GRPC_REQUEST_STATE } from './grpc-reducer';
+import { grpcReducer } from './grpc-reducer';
 
 interface Props {
   children: ReactNode;
@@ -49,7 +49,7 @@ export const useGrpcRequestState = (requestId: string): GrpcRequestState => {
     throw new Error('useGrpcRequestState must be invoked with a request id');
   }
 
-  return findGrpcRequestState(context, requestId);
+  return context[requestId] || INITIAL_GRPC_REQUEST_STATE;
 };
 
 export const useGrpcDispatch = (): GrpcDispatch => {
