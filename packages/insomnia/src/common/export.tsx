@@ -2,7 +2,6 @@ import clone from 'clone';
 import { format } from 'date-fns';
 import fs from 'fs';
 import { NoParamCallback } from 'fs-extra';
-import { Insomnia4Data } from 'insomnia-importers';
 import path from 'path';
 import React from 'react';
 import { unreachableCase } from 'ts-assert-unreachable';
@@ -29,6 +28,7 @@ import { SegmentEvent, trackSegmentEvent } from '../ui/analytics';
 import { showAlert, showError, showModal } from '../ui/components/modals';
 import { AskModal } from '../ui/components/modals/ask-modal';
 import { SelectModal } from '../ui/components/modals/select-modal';
+import { Insomnia4Data } from '../utils/importers/importers';
 import {
   EXPORT_TYPE_API_SPEC,
   EXPORT_TYPE_COOKIE_JAR,
