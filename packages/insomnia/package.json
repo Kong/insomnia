@@ -52,7 +52,7 @@
     "@stoplight/spectral-formats": "^1.2.0",
     "@stoplight/spectral-rulesets": "^1.9.0",
     "@apideck/better-ajv-errors": "^0.2.6",
-    "@apidevtools/swagger-parser": "10.0.2",
+    "@apidevtools/swagger-parser": "10.1.0",
     "apiconnect-wsdl": "^1.8.31",
     "change-case": "^4.1.1",
     "ajv": "^8.6.2",
