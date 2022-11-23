@@ -94,7 +94,7 @@ export const ResponsePane: FC<Props> = ({
     const readStream = models.response.getBodyStream(response);
     const dataBuffers: any[] = [];
 
-    if (readStream && outputPath) {
+    if (readStream && outputPath && typeof readStream !== 'string') {
       readStream.on('data', data => {
         dataBuffers.push(data);
       });

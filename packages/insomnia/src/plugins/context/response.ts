@@ -52,7 +52,6 @@ export function init(response?: MaybeResponse) {
       },
 
       getBodyStream() {
-        // @ts-expect-error -- TSCONVERSION
         return models.response.getBodyStream(response);
       },
 

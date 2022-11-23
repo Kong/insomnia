@@ -84,7 +84,7 @@ export const PreviewModeDropdown: FC<Props> = ({
     }
     const readStream = models.response.getBodyStream(response);
 
-    if (readStream && filePath) {
+    if (readStream && filePath && typeof readStream !== 'string') {
       const to = fs.createWriteStream(filePath);
       to.write(headers);
       readStream.pipe(to);

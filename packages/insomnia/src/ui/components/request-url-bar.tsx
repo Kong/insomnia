@@ -136,10 +136,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         }
 
         const to = fs.createWriteStream(filename);
-        // @ts-expect-error -- TSCONVERSION
         const readStream = models.response.getBodyStream(responsePatch);
 
-        if (!readStream) {
+        if (!readStream || typeof readStream === 'string') {
           return;
         }
 
