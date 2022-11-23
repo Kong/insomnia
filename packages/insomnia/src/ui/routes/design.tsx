@@ -8,7 +8,6 @@ import {
 } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import { ACTIVITY_SPEC } from '../../common/constants';
 import { debounce } from '../../common/misc';
 import { ApiSpec } from '../../models/api-spec';
@@ -23,7 +22,6 @@ import { ErrorBoundary } from '../components/error-boundary';
 import { Notice, NoticeTable } from '../components/notice-table';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { SpecEditorSidebar } from '../components/spec-editor/spec-editor-sidebar';
-import { SwaggerUI } from '../components/swagger-ui';
 import { superFaint } from '../css/css-in-js';
 import {
   useActiveApiSpecSyncVCSVersion,
@@ -63,7 +61,6 @@ export const Toolbar = styled.div({
 interface LoaderData {
   lintMessages: LintMessage[];
   apiSpec: ApiSpec;
-  swaggerSpec: ParsedApiSpec['contents'];
 }
 
 export const loader: LoaderFunction = async ({
@@ -87,15 +84,9 @@ export const loader: LoaderFunction = async ({
       }));
   }
 
-  let swaggerSpec: ParsedApiSpec['contents'] = {};
-  try {
-    swaggerSpec = parseApiSpec(apiSpec.contents).contents;
-  } catch (err) {}
-
   return {
     lintMessages,
     apiSpec,
-    swaggerSpec,
   };
 };
 
@@ -109,7 +100,7 @@ const Design: FC = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { apiSpec, lintMessages, swaggerSpec } = useLoaderData() as LoaderData;
+  const { apiSpec, lintMessages } = useLoaderData() as LoaderData;
   const editor = createRef<CodeEditorHandle>();
 
   const updateApiSpecFetcher = useFetcher();
@@ -255,43 +246,6 @@ const Design: FC = () => {
             ) : null}
           </div>
         ) : null
-      }
-      renderPaneTwo={
-        apiSpec.contents && swaggerSpec ? (
-          <div id="swagger-ui-wrapper">
-            <ErrorBoundary
-              key={uniquenessKey}
-              invalidationKey={apiSpec.contents}
-              renderError={() => (
-                <div className="text-left margin pad">
-                  <h3>An error occurred while trying to render Swagger UI</h3>
-                  <p>
-                    This preview will automatically refresh, once you have a
-                    valid specification that can be previewed.
-                  </p>
-                </div>
-              )}
-            >
-              <SwaggerUI
-                spec={swaggerSpec}
-                supportedSubmitMethods={[
-                  'get',
-                  'put',
-                  'post',
-                  'delete',
-                  'options',
-                  'head',
-                  'patch',
-                  'trace',
-                ]}
-              />
-            </ErrorBoundary>
-          </div>
-        ) : (
-          <EmptySpaceHelper>
-            Documentation for your OpenAPI spec will render here
-          </EmptySpaceHelper>
-        )
       }
     />
   );
