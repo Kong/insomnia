@@ -1,4 +1,6 @@
-import { IRuleResult } from '@stoplight/spectral-core';
+import type { IRuleResult, RulesetDefinition } from '@stoplight/spectral-core';
+import { Spectral } from '@stoplight/spectral-core';
+import { oas } from '@stoplight/spectral-rulesets';
 import React, { createRef, FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -6,7 +8,6 @@ import styled from 'styled-components';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import { database } from '../../common/database';
 import { debounce } from '../../common/misc';
-import { initializeSpectral, isLintError } from '../../common/spectral';
 import * as models from '../../models/index';
 import { CodeEditor, CodeEditorHandle } from '../components/codemirror/code-editor';
 import { DesignEmptyState } from '../components/design-empty-state';
@@ -18,6 +19,7 @@ import { SwaggerUI } from '../components/swagger-ui';
 import { superFaint } from '../css/css-in-js';
 import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '../hooks/use-vcs-version';
 import { selectActiveApiSpec } from '../redux/selectors';
+export const isLintError = (result: IRuleResult) => result.severity === 0;
 
 const EmptySpaceHelper = styled.div({
   ...superFaint,
@@ -28,8 +30,8 @@ const EmptySpaceHelper = styled.div({
   textAlign: 'center',
 });
 
-// TODO(jackkav): find the right place to do this
-const spectral = initializeSpectral();
+const spectral = new Spectral();
+spectral.setRuleset(oas as RulesetDefinition);
 
 interface LintMessage extends Notice {
   range: IRuleResult['range'];
@@ -68,8 +70,9 @@ const RenderEditor: FC<{ editor: RefObject<CodeEditorHandle> }> = ({ editor }) =
     const update = async () => {
       // Lint only if spec has content
       if (contents && contents.length !== 0) {
-        const results: LintMessage[] = (await spectral.run(contents))
-          .filter(isLintError)
+        const run = await spectral.run(contents);
+
+        const results: LintMessage[] = run.filter(isLintError)
           .map(({ severity, code, message, range }) => ({
             type: severity === 0 ? 'error' : 'warning',
             message: `${code} ${message}`,
