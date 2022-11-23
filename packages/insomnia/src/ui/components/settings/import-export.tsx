@@ -1,4 +1,3 @@
-import { importers } from 'insomnia-importers';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useRevalidator } from 'react-router-dom';
@@ -10,6 +9,7 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { ForceToWorkspace } from '../../../common/import';
 import { strings } from '../../../common/strings';
 import { isRequestGroup } from '../../../models/request-group';
+import { importers } from '../../../utils/importers/importers';
 import { importClipBoard, importFile, importUri } from '../../import';
 import { selectActiveProject, selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName, selectProjects, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject, selectWorkspacesWithResolvedNameForActiveProject } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';

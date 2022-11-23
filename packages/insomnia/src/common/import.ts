@@ -1,5 +1,4 @@
 import fs from 'fs';
-import { convert, ConvertResultType } from 'insomnia-importers';
 
 import type { ApiSpec } from '../models/api-spec';
 import type { BaseModel } from '../models/index';
@@ -12,6 +11,7 @@ import { AlertModal } from '../ui/components/modals/alert-modal';
 import { AskModal } from '../ui/components/modals/ask-modal';
 import { showError, showModal } from '../ui/components/modals/index';
 import { showSelectModal } from '../ui/components/modals/select-modal';
+import { convert, ConvertResultType } from '../utils/importers/convert';
 import {
   BASE_ENVIRONMENT_ID_KEY,
   CONTENT_TYPE_GRAPHQL,

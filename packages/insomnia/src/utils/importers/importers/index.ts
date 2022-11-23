@@ -26,7 +26,7 @@ export const importers: Importer[] = [
   wsdl,
 ];
 
-export { Insomnia1Data } from './insomnia-1';
-export { Insomnia2Data } from './insomnia-2';
-export { Insomnia3Data } from './insomnia-3';
-export { Insomnia4Data } from './insomnia-4';
+export type { Insomnia1Data } from './insomnia-1';
+export type { Insomnia2Data } from './insomnia-2';
+export type { Insomnia3Data } from './insomnia-3';
+export type { Insomnia4Data } from './insomnia-4';
