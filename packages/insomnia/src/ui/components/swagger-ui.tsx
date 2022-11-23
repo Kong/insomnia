@@ -34,6 +34,10 @@ export const SwaggerUI: FC<{
         supportedSubmitMethods,
       });
     }
+
+    return () => {
+      SwaggerUIInstance = null;
+    };
   }, [supportedSubmitMethods, spec]);
 
   return <div ref={domNodeRef} />;
