@@ -50,7 +50,7 @@ export const Toolbar = styled.div({
   display: 'flex',
   justifyContent: 'flex-end',
   flexDirection: 'row',
-  borderBottom: '1px solid var(--hl-md)',
+  borderTop: '1px solid var(--hl-md)',
   height: 'var(--line-height-sm)',
   fontSize: 'var(--font-size-sm)',
   '& > button': {
@@ -195,30 +195,6 @@ const Design: FC = () => {
       renderPaneOne={
         apiSpec ? (
           <div className="column tall theme--pane__body">
-            {apiSpec.contents ? (
-              <Toolbar>
-                <button
-                  disabled={lintMessages.length > 0 || generateRequestCollectionFetcher.state !== 'idle'}
-                  className="btn btn--compact"
-                  onClick={() => {
-                    generateRequestCollectionFetcher.submit(
-                      {},
-                      {
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}/generate-request-collection`,
-                        method: 'post',
-                      }
-                    );
-                  }}
-                >
-                  {generateRequestCollectionFetcher.state === 'loading' ? (
-                    <i className="fa fa-spin fa-spinner" />
-                  ) : (
-                    <i className="fa fa-file-import" />
-                  )} Generate Request
-                  Collection
-                </button>
-              </Toolbar>
-            ) : null}
             <div className="tall relative overflow-hidden">
               <CodeEditor
                 key={uniquenessKey}
@@ -253,6 +229,30 @@ const Design: FC = () => {
                 onClick={handleScrollToLintMessage}
               />
             )}
+            {apiSpec.contents ? (
+              <Toolbar>
+                <button
+                  disabled={lintMessages.length > 0 || generateRequestCollectionFetcher.state !== 'idle'}
+                  className="btn btn--compact"
+                  onClick={() => {
+                    generateRequestCollectionFetcher.submit(
+                      {},
+                      {
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}/generate-request-collection`,
+                        method: 'post',
+                      }
+                    );
+                  }}
+                >
+                  {generateRequestCollectionFetcher.state === 'loading' ? (
+                    <i className="fa fa-spin fa-spinner" />
+                  ) : (
+                    <i className="fa fa-file-import" />
+                  )} Generate Request
+                  Collection
+                </button>
+              </Toolbar>
+            ) : null}
           </div>
         ) : null
       }
