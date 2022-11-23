@@ -1,5 +1,4 @@
 import type { IRuleResult } from '@stoplight/spectral-core';
-import CodeMirror from 'codemirror';
 import React, { createRef, FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -18,7 +17,8 @@ import { SwaggerUI } from '../components/swagger-ui';
 import { superFaint } from '../css/css-in-js';
 import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '../hooks/use-vcs-version';
 import { selectActiveApiSpec } from '../redux/selectors';
-export const isLintError = (result: IRuleResult) => result.severity === 0;
+
+const isLintError = (result: IRuleResult) => result.severity === 0;
 
 const EmptySpaceHelper = styled.div({
   ...superFaint,
