@@ -54,7 +54,7 @@ export const Debug: FC = () => {
     invariant(activeRequest, 'No active request');
     setRunningRequests({
       ...runningRequests,
-      [activeRequest._id]: isLoading ? Date.now() : 0,
+      [activeRequest._id]: isLoading ? true : false,
     });
   };
 
