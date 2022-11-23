@@ -12,7 +12,7 @@ import * as models from '../../models';
 import { update } from '../../models/helpers/request-operations';
 import { isRequest, Request } from '../../models/request';
 import * as network from '../../network/network';
-import { convert } from '../../utils/importers';
+import { convert } from '../../utils/importers/convert';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
