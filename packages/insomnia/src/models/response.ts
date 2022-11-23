@@ -229,7 +229,6 @@ export const getBodyBuffer = (
   }
   try {
     const rawBuffer = fs.readFileSync(response?.bodyPath);
-    console.log(`[response] Read body ${rawBuffer}`);
     if (response?.bodyCompression === 'zip') {
       return zlib.gunzipSync(rawBuffer);
     } else {
