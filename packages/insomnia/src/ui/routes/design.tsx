@@ -29,6 +29,7 @@ import {
   useActiveApiSpecSyncVCSVersion,
   useGitVCSVersion,
 } from '../hooks/use-vcs-version';
+
 const isLintError = (result: IRuleResult) => result.severity === 0;
 
 const EmptySpaceHelper = styled.div({
@@ -38,6 +39,25 @@ const EmptySpaceHelper = styled.div({
   justifyContent: 'center',
   padding: '2em',
   textAlign: 'center',
+});
+
+export const Toolbar = styled.div({
+  boxSizing: 'content-box',
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
+  backgroundColor: 'var(--color-bg)',
+  display: 'flex',
+  justifyContent: 'flex-end',
+  flexDirection: 'row',
+  borderBottom: '1px solid var(--hl-md)',
+  height: 'var(--line-height-sm)',
+  fontSize: 'var(--font-size-sm)',
+  '& > button': {
+    color: 'var(--hl)',
+    padding: 'var(--padding-xs) var(--padding-xs)',
+    height: '100%',
+  },
 });
 
 interface LoaderData {
@@ -93,6 +113,7 @@ const Design: FC = () => {
   const editor = createRef<CodeEditorHandle>();
 
   const updateApiSpecFetcher = useFetcher();
+  const generateRequestCollectionFetcher = useFetcher();
 
   const onCodeEditorChange = useMemo(() => {
     const handler = async (contents: string) => {
@@ -174,6 +195,30 @@ const Design: FC = () => {
       renderPaneOne={
         apiSpec ? (
           <div className="column tall theme--pane__body">
+            {apiSpec.contents ? (
+              <Toolbar>
+                <button
+                  disabled={lintMessages.length > 0 || generateRequestCollectionFetcher.state !== 'idle'}
+                  className="btn btn--compact"
+                  onClick={() => {
+                    generateRequestCollectionFetcher.submit(
+                      {},
+                      {
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}/generate-request-collection`,
+                        method: 'post',
+                      }
+                    );
+                  }}
+                >
+                  {generateRequestCollectionFetcher.state === 'loading' ? (
+                    <i className="fa fa-spin fa-spinner" />
+                  ) : (
+                    <i className="fa fa-file-import" />
+                  )} Generate Request
+                  Collection
+                </button>
+              </Toolbar>
+            ) : null}
             <div className="tall relative overflow-hidden">
               <CodeEditor
                 key={uniquenessKey}

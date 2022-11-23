@@ -457,7 +457,7 @@ export const updateApiSpecAction: ActionFunction = async ({
 export const generateCollectionFromApiSpecAction: ActionFunction = async ({
   params,
 }) => {
-  const { workspaceId } = params;
+  const { organizationId, projectId, workspaceId } = params;
 
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
@@ -480,4 +480,6 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({
       url: true,
     },
   });
+
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_DEBUG}`);
 };

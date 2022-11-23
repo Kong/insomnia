@@ -135,6 +135,10 @@ const router = createMemoryRouter(
                                   path: 'update',
                                   action: async (...args) => (await import('./routes/actions')).updateApiSpecAction(...args),
                                 },
+                                {
+                                  path: 'generate-request-collection',
+                                  action: async (...args) => (await import('./routes/actions')).generateCollectionFromApiSpecAction(...args),
+                                },
                               ],
                             },
                             {
