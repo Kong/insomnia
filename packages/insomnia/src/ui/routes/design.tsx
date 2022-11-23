@@ -1,6 +1,4 @@
-import type { IRuleResult, RulesetDefinition } from '@stoplight/spectral-core';
-import { Spectral } from '@stoplight/spectral-core';
-import { oas } from '@stoplight/spectral-rulesets';
+import type { IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import React, { createRef, FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -35,15 +33,10 @@ interface LintMessage extends Notice {
   range: IRuleResult['range'];
 }
 
-let spectral: Spectral | null = null;
 CodeMirror.registerHelper('lint', 'openapi', async function(text: string) {
   const isLintError = (result: IRuleResult) => result.severity === 0;
-  if (!spectral) {
-    spectral = new Spectral();
-    spectral.setRuleset(oas as RulesetDefinition);
-  }
-  const run = await spectral.run(text);
 
+  const run = await window.main.spectralRun(text);
   return run.filter(isLintError).map(result => ({
     from: CodeMirror.Pos(result.range.start.line, result.range.start.character),
     to: CodeMirror.Pos(result.range.end.line, result.range.end.character),
@@ -83,11 +76,7 @@ const RenderEditor: FC<{ editor: RefObject<CodeEditorHandle> }> = ({ editor }) =
     const update = async () => {
       // Lint only if spec has content
       if (contents && contents.length !== 0) {
-        if (!spectral) {
-          spectral = new Spectral();
-          spectral.setRuleset(oas as RulesetDefinition);
-        }
-        const run = await spectral.run(contents);
+        const run = await window.main.spectralRun(contents);
 
         const results: LintMessage[] = run.filter(isLintError)
           .map(({ severity, code, message, range }) => ({

@@ -1,3 +1,7 @@
+import type { ISpectralDiagnostic } from '@stoplight/spectral-core';
+import type { RulesetDefinition } from '@stoplight/spectral-core';
+import { Spectral } from '@stoplight/spectral-core';
+import { oas } from '@stoplight/spectral-rulesets';
 import { app, ipcMain, IpcRendererEvent } from 'electron';
 import { writeFile } from 'fs/promises';
 
@@ -8,6 +12,7 @@ import { WebSocketBridgeAPI } from '../network/websocket';
 
 export interface MainBridgeAPI {
   restart: () => void;
+  spectralRun: (content: string) => Promise<ISpectralDiagnostic[]>;
   authorizeUserInWindow: typeof authorizeUserInWindow;
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
@@ -46,5 +51,11 @@ export function registerMainHandlers() {
   ipcMain.on('restart', () => {
     app.relaunch();
     app.exit();
+  });
+
+  ipcMain.handle('spectralRun', (_, content: string) => {
+    const spectral = new Spectral();
+    spectral.setRuleset(oas as RulesetDefinition);
+    return spectral.run(content);
   });
 }
