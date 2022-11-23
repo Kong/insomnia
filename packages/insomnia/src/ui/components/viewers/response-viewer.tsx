@@ -1,8 +1,6 @@
 import iconv from 'iconv-lite';
 import React, {
   Fragment,
-  useCallback,
-  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -62,20 +60,33 @@ export const ResponseViewer = ({
   updateFilter,
   url,
 }: ResponseViewerProps) => {
-  const [largeResponse, setLargeResponse] = useState(false);
-  const [blockingBecauseTooLarge, setBlockingBecauseTooLarge] = useState(false);
-  const [bodyBuffer, setBodyBuffer] = useState<Buffer | null>(null);
-  const [parseError, setError] = useState('');
-  const [hugeResponse, setHugeResponse] = useState(false);
+  const largeResponse = bytes > LARGE_RESPONSE_MB * 1024 * 1024;
+  const hugeResponse = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
+  const [blockingBecauseTooLarge, setBlockingBecauseTooLarge] = useState(!alwaysShowLargeResponses && largeResponse);
+  const [parseError, setParseError] = useState('');
 
-  const error = responseError || parseError;
+  let initialBody = null;
+  try {
+    if (!blockingBecauseTooLarge) {
+      initialBody = getBody();
+    }
+  } catch (err) {
+    setParseError(`Failed reading response from filesystem: ${err.stack}`);
+  }
+  const [bodyBuffer, setBodyBuffer] = useState<Buffer | null>(initialBody);
 
   const editorRef = useRef<CodeEditorHandle>(null);
 
   function _handleDismissBlocker() {
     setBlockingBecauseTooLarge(false);
 
-    _maybeLoadResponseBody(true);
+    try {
+      const bodyBuffer = getBody();
+      setBodyBuffer(bodyBuffer);
+      setBlockingBecauseTooLarge(false);
+    } catch (err) {
+      setParseError(`Failed reading response from filesystem: ${err.stack}`);
+    }
   }
 
   function _handleDisableBlocker() {
@@ -84,49 +95,8 @@ export const ResponseViewer = ({
     _handleDismissBlocker();
   }
 
-  const _maybeLoadResponseBody = useCallback(
-    (forceShow?: boolean) => {
-      const largeResponse = bytes > LARGE_RESPONSE_MB * 1024 * 1024;
-      const hugeResponse = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
-
-      setLargeResponse(largeResponse);
-      setHugeResponse(hugeResponse);
-
-      // Block the response if it's too large
-      if (!forceShow && !alwaysShowLargeResponses && largeResponse) {
-        setBlockingBecauseTooLarge(true);
-      } else {
-        try {
-          const bodyBuffer = getBody();
-          setBodyBuffer(bodyBuffer);
-          setBlockingBecauseTooLarge(false);
-        } catch (err) {
-          setError(`Failed reading response from filesystem: ${err.stack}`);
-        }
-      }
-    },
-    [bytes, getBody]
-  );
-
-  useEffect(() => {
-    _maybeLoadResponseBody();
-  }, [_maybeLoadResponseBody]);
-
-  const _isViewSelectable = () => {
-    return (
-      editorRef.current != null &&
-      'focus' in editorRef.current &&
-      typeof editorRef.current.focus === 'function' &&
-      typeof editorRef.current.selectAll === 'function'
-    );
-  };
-
   useDocBodyKeyboardShortcuts({
     response_focus: () => {
-      if (!_isViewSelectable()) {
-        return;
-      }
-
       if (editorRef.current) {
         if ('focus' in editorRef.current) {
           editorRef.current.focus();
@@ -141,11 +111,9 @@ export const ResponseViewer = ({
 
   function _getContentType() {
     const lowercasedOriginalContentType = originalContentType.toLowerCase();
-
     if (!bodyBuffer || bodyBuffer.length === 0) {
       return lowercasedOriginalContentType;
     }
-
     // Try to detect JSON in all cases (even if a different header is set).
     // Apparently users often send JSON with weird content-types like text/plain.
     try {
@@ -153,10 +121,7 @@ export const ResponseViewer = ({
         JSON.parse(bodyBuffer.toString('utf8'));
         return 'application/json';
       }
-    } catch (error) {
-      // Nothing
-    }
-
+    } catch (error) { }
     // Try to detect HTML in all cases (even if header is set).
     // It is fairly common for webservers to send errors in HTML by default.
     // NOTE: This will probably never throw but I'm not 100% so wrap anyway
@@ -173,23 +138,18 @@ export const ResponseViewer = ({
       ) {
         return 'text/html';
       }
-    } catch (error) {
-      // Nothing
-    }
+    } catch (error) { }
 
     return lowercasedOriginalContentType;
   }
 
-  function _getBody() {
+  function getBodyAsString() {
     if (!bodyBuffer) {
       return '';
     }
-
     // Show everything else as "source"
-    const contentType = _getContentType();
-    const match = contentType.match(/charset=([\w-]+)/);
+    const match = _getContentType().match(/charset=([\w-]+)/);
     const charset = match && match.length >= 2 ? match[1] : 'utf-8';
-
     // Sometimes iconv conversion fails so fallback to regular buffer
     try {
       return iconv.decode(bodyBuffer, charset);
@@ -199,30 +159,10 @@ export const ResponseViewer = ({
     }
   }
 
-  /** Try to detect content-types if there isn't one */
-  function _getMode() {
-    if (_getBody()?.match(/^\s*<\?xml [^?]*\?>/)) {
-      return 'application/xml';
-    }
-
-    return _getContentType();
-  }
-
-  function _handleClickLink(url: string) {
-    const mode = _getMode();
-
-    if (mode === 'application/xml') {
-      clickLink(xmlDecode(url));
-      return;
-    }
-
-    clickLink(url);
-  }
-
-  if (error) {
+  if (responseError || parseError) {
     return (
       <div className="scrollable tall">
-        <ResponseErrorViewer url={url} error={error} />
+        <ResponseErrorViewer url={url} error={responseError || parseError} />
       </div>
     );
   }
@@ -288,7 +228,7 @@ export const ResponseViewer = ({
   const contentType = _getContentType();
   if (
     previewMode === PREVIEW_MODE_FRIENDLY &&
-      contentType.indexOf('image/') === 0
+    contentType.indexOf('image/') === 0
   ) {
     const justContentType = contentType.split(';')[0];
     const base64Body = bodyBuffer.toString('base64');
@@ -312,12 +252,11 @@ export const ResponseViewer = ({
   if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.includes('html')) {
     return (
       <ResponseWebView
-        body={_getBody()}
+        body={getBodyAsString()}
         contentType={contentType}
         key={disableHtmlPreviewJs ? 'no-js' : 'yes-js'}
         url={url}
-        webpreferences={`disableDialogs=true, javascript=${
-          disableHtmlPreviewJs ? 'no' : 'yes'
+        webpreferences={`disableDialogs=true, javascript=${disableHtmlPreviewJs ? 'no' : 'yes'
         }`}
       />
     );
@@ -325,7 +264,7 @@ export const ResponseViewer = ({
 
   if (
     previewMode === PREVIEW_MODE_FRIENDLY &&
-      contentType.indexOf('application/pdf') === 0
+    contentType.indexOf('application/pdf') === 0
   ) {
     return (
       <div className="tall wide scrollable">
@@ -336,7 +275,7 @@ export const ResponseViewer = ({
 
   if (
     previewMode === PREVIEW_MODE_FRIENDLY &&
-      contentType.indexOf('text/csv') === 0
+    contentType.indexOf('text/csv') === 0
   ) {
     return (
       <div className="tall wide scrollable">
@@ -347,7 +286,7 @@ export const ResponseViewer = ({
 
   if (
     previewMode === PREVIEW_MODE_FRIENDLY &&
-      contentType.indexOf('multipart/') === 0
+    contentType.indexOf('multipart/') === 0
   ) {
     return (
       <ResponseMultipartViewer
@@ -368,7 +307,7 @@ export const ResponseViewer = ({
 
   if (
     previewMode === PREVIEW_MODE_FRIENDLY &&
-      contentType.indexOf('audio/') === 0
+    contentType.indexOf('audio/') === 0
   ) {
     const justContentType = contentType.split(';')[0];
     const base64Body = bodyBuffer.toString('base64');
@@ -387,7 +326,7 @@ export const ResponseViewer = ({
         key={responseId}
         ref={editorRef}
         className="raw-editor"
-        defaultValue={_getBody()}
+        defaultValue={getBodyAsString()}
         hideLineNumbers
         mode="text/plain"
         noMatchBrackets
@@ -404,12 +343,12 @@ export const ResponseViewer = ({
       key={disablePreviewLinks ? 'links-disabled' : 'links-enabled'}
       ref={editorRef}
       autoPrettify
-      defaultValue={_getBody()}
+      defaultValue={getBodyAsString()}
       filter={filter}
       filterHistory={filterHistory}
-      mode={_getMode()}
+      mode={getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? 'application/xml' : _getContentType()}
       noMatchBrackets
-      onClickLink={disablePreviewLinks ? undefined : _handleClickLink}
+      onClickLink={url => !disablePreviewLinks && clickLink(getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? xmlDecode(url) : url)}
       placeholder="..."
       readOnly
       uniquenessKey={responseId}
