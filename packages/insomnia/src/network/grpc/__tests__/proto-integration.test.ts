@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { selectFileOrFolder as _selectFileOrFolder } from '../../../common/select-file-or-folder';
@@ -9,11 +9,11 @@ import * as models from '../../../models';
 import * as protoLoader from '../proto-loader';
 import * as protoManager from '../proto-manager';
 
-jest.mock('../../../common/select-file-or-folder', () => ({
-  selectFileOrFolder: jest.fn(),
+vi.mock('../../../common/select-file-or-folder', () => ({
+  selectFileOrFolder: vi.fn(),
 }));
 
-const selectFileOrFolder = _selectFileOrFolder as jest.MockedFunction<typeof _selectFileOrFolder>;
+const selectFileOrFolder = _selectFileOrFolder as vi.MockedFunction<typeof _selectFileOrFolder>;
 
 describe('proto management integration test', () => {
   beforeEach(globalBeforeEach);

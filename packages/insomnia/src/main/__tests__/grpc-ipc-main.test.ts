@@ -1,16 +1,16 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { ipcMain } from 'electron';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GrpcRequestEventEnum } from '../../common/grpc-events';
 import * as grpc from '../../network/grpc';
 import * as grpcIpcMain from '../ipc/grpc';
 import { ResponseCallbacks } from '../ipc/grpc';
 
-jest.mock('../../network/grpc');
+vi.mock('../../network/grpc');
 
 describe('grpcIpcMain', () => {
   const event = {
-    reply: jest.fn(),
+    reply: vi.fn(),
   };
   const id = 'abc';
   beforeEach(() => {

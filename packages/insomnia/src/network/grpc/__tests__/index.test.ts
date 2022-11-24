@@ -1,6 +1,6 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import * as grpcJs from '@grpc/grpc-js';
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { grpcMocks } from '../../../__mocks__/@grpc/grpc-js';
@@ -12,9 +12,9 @@ import callCache from '../call-cache';
 import * as grpc from '../index';
 import * as protoLoader from '../proto-loader';
 
-jest.mock('../../../main/ipc/grpc');
-jest.mock('../proto-loader');
-jest.mock('@grpc/grpc-js');
+vi.mock('../../../main/ipc/grpc');
+vi.mock('../proto-loader');
+vi.mock('@grpc/grpc-js');
 
 const requestParamsBuilder = createBuilder(grpcIpcRequestParamsSchema);
 const messageParamsBuilder = createBuilder(grpcIpcMessageParamsSchema);
@@ -24,7 +24,7 @@ const respond = new ResponseCallbacksMock();
 describe('grpc', () => {
   beforeEach(() => {
     globalBeforeEach();
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     requestParamsBuilder.reset();
     messageParamsBuilder.reset();
     methodBuilder.reset();
@@ -480,7 +480,7 @@ describe('grpc', () => {
     it('should not send a message if a call is not found', () => {
       // Arrange
       const msgParams = messageParamsBuilder.build();
-      const mockWrite = jest.fn();
+      const mockWrite = vi.fn();
       grpcMocks.getMockCall().on('write', mockWrite);
       // Act
       grpc.sendMessage(msgParams, respond);

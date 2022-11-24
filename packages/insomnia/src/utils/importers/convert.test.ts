@@ -1,5 +1,5 @@
-import { describe, expect, it } from '@jest/globals';
 import { fail } from 'assert';
+import { describe, expect, it } from 'vitest';
 
 import { convert } from './convert';
 

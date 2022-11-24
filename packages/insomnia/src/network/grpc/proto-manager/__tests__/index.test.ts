@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
 import { Mock } from 'jest-mock';
 import path from 'path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { database as db } from '../../../../common/database';
@@ -14,24 +14,24 @@ import * as protoManager from '../index';
 const loadMethods = _loadMethods as Mock;
 const loadMethodsFromPath = _loadMethodsFromPath as Mock;
 
-jest.mock('../../../../common/select-file-or-folder', () => ({
-  selectFileOrFolder: jest.fn(),
+vi.mock('../../../../common/select-file-or-folder', () => ({
+  selectFileOrFolder: vi.fn(),
 }));
 
-jest.mock('../../../../ui/components/modals');
-jest.mock('../../proto-loader');
+vi.mock('../../../../ui/components/modals');
+vi.mock('../../proto-loader');
 
 describe('protoManager', () => {
   const selectFileOrFolderMock = selectFileOrFolder as Mock;
   beforeEach(() => {
     globalBeforeEach();
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('addFile', () => {
     it('should not create database entry if file loading canceled', async () => {
       // Arrange
-      const cbMock = jest.fn();
+      const cbMock = vi.fn();
       const w = await models.workspace.create();
       selectFileOrFolderMock.mockResolvedValue({
         canceled: true,
@@ -52,7 +52,7 @@ describe('protoManager', () => {
 
     it('should not create database entry if file loading throws error', async () => {
       // Arrange
-      const cbMock = jest.fn();
+      const cbMock = vi.fn();
       const w = await models.workspace.create();
       const error = new Error();
       selectFileOrFolderMock.mockRejectedValue(error);
@@ -71,7 +71,7 @@ describe('protoManager', () => {
 
     it('should not create database entry if methods cannot be parsed', async () => {
       // Arrange
-      const cbMock = jest.fn();
+      const cbMock = vi.fn();
       const w = await models.workspace.create();
       const error = new Error();
       const filePath = 'path';
@@ -96,14 +96,14 @@ describe('protoManager', () => {
 
     it('should create database entry', async () => {
       // Arrange
-      const cbMock = jest.fn();
+      const cbMock = vi.fn();
       const w = await models.workspace.create();
       const filePath = 'filename.proto';
       selectFileOrFolderMock.mockResolvedValue({
         filePath,
       });
       loadMethodsFromPath.mockResolvedValue(undefined);
-      const fsReadFileSpy = jest.spyOn(fs.promises, 'readFile');
+      const fsReadFileSpy = vi.spyOn(fs.promises, 'readFile');
       const contents = 'contents';
       fsReadFileSpy.mockResolvedValue(contents);
 
@@ -121,7 +121,7 @@ describe('protoManager', () => {
   describe('updateFile', () => {
     it('should update database entry', async () => {
       // Arrange
-      const cbMock = jest.fn();
+      const cbMock = vi.fn();
       const w = await models.workspace.create();
       const pf = await models.protoFile.create({
         parentId: w._id,
@@ -131,7 +131,7 @@ describe('protoManager', () => {
         filePath,
       });
       loadMethodsFromPath.mockResolvedValue(undefined);
-      const fsReadFileSpy = jest.spyOn(fs.promises, 'readFile');
+      const fsReadFileSpy = vi.spyOn(fs.promises, 'readFile');
       const contents = 'contents';
       fsReadFileSpy.mockResolvedValue(contents);
 
@@ -173,7 +173,7 @@ describe('protoManager', () => {
         parentId: w._id,
         name: 'pfName.proto',
       });
-      const cbMock = jest.fn();
+      const cbMock = vi.fn();
 
       // Act
       await protoManager.deleteFile(pf, cbMock);
@@ -203,7 +203,7 @@ describe('protoManager', () => {
         parentId: pd._id,
         name: 'pfName2.proto',
       });
-      const cbMock = jest.fn();
+      const cbMock = vi.fn();
 
       // Act
       await protoManager.deleteDirectory(pd, cbMock);
@@ -223,8 +223,8 @@ describe('protoManager', () => {
     let dbBufferChangesIndefinitelySpy: any | Mock<any, any>;
     let dbFlushChangesSpy: any | Mock<any, any>;
     beforeEach(() => {
-      dbBufferChangesIndefinitelySpy = jest.spyOn(db, 'bufferChangesIndefinitely');
-      dbFlushChangesSpy = jest.spyOn(db, 'flushChanges');
+      dbBufferChangesIndefinitelySpy = vi.spyOn(db, 'bufferChangesIndefinitely');
+      dbFlushChangesSpy = vi.spyOn(db, 'flushChanges');
     });
     afterEach(() => {
       expect(dbBufferChangesIndefinitelySpy).toHaveBeenCalled();
@@ -296,7 +296,7 @@ describe('protoManager', () => {
 
       // Should error when loading the 6th file
       const error = new Error('should-error.proto could not be loaded');
-      const fsPromisesReadFileSpy = jest.spyOn(fs.promises, 'readFile');
+      const fsPromisesReadFileSpy = vi.spyOn(fs.promises, 'readFile');
       fsPromisesReadFileSpy
         .mockResolvedValueOnce('contents of 1.proto')
         .mockResolvedValueOnce('contents of 2.proto')

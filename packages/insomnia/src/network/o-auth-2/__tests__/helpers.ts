@@ -1,6 +1,6 @@
-import { jest } from '@jest/globals';
 import electron from 'electron';
 import EventEmitter from 'events';
+import { vi } from 'vitest';
 
 interface Options {
   redirectTo?: string;
@@ -11,7 +11,7 @@ export function createBWRedirectMock({
   redirectTo,
   setCertificateVerifyProc = () => {},
 }: Options) {
-  electron.BrowserWindow = jest.fn(function() {
+  electron.BrowserWindow = vi.fn(function() {
     this._emitter = new EventEmitter();
 
     this.loadURL = () => this.webContents.emit('did-navigate');

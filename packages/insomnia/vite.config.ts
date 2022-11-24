@@ -24,6 +24,9 @@ export default defineConfig(({ mode }) => {
         strict: true,
       },
     },
+    test: {
+      environment: 'jsdom',
+    },
     build: {
       sourcemap: true,
       outDir: path.join(__dirname, 'build'),

@@ -1,21 +1,21 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import path from 'path';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import * as models from '../../../../models';
 import { loadMethods } from '../index';
 import writeProtoFile from '../write-proto-file';
 
-jest.mock('../write-proto-file', () => ({
+vi.mock('../write-proto-file', () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: vi.fn(),
 }));
 
 describe('loadMethods', () => {
   const protoFilePath = path.join(__dirname, '../../__fixtures__/library/hello.proto');
   beforeEach(() => {
     globalBeforeEach();
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should load methods', async () => {

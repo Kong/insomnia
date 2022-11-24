@@ -1,5 +1,5 @@
-import { describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
+import { describe, expect, it, vi } from 'vitest';
 
 import { getConfigSettings } from '../settings';
 
@@ -13,8 +13,8 @@ describe('getConfigSettings error', () => {
       },
     };
 
-    const readFileSyncSpy = jest.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(invalidConfig));
-    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation();
+    const readFileSyncSpy = vi.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(invalidConfig));
+    const consoleErrorMock = vi.spyOn(console, 'error').mockImplementation();
 
     // Act
     const result = getConfigSettings();

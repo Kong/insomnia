@@ -1,5 +1,5 @@
-import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { mocked } from 'jest-mock';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as _constants from '../../../common/constants';
 import * as electronHelpers from '../../../common/electron-helpers';
@@ -15,13 +15,13 @@ import {
   omitControlledSettings,
 } from '../settings';
 
-jest.mock('../../../common/constants', () => ({
-  ...jest.requireActual('../../../common/constants') as typeof _constants,
-  isDevelopment: jest.fn(),
+vi.mock('../../../common/constants', () => ({
+  ...vi.requireActual('../../../common/constants') as typeof _constants,
+  isDevelopment: vi.fn(),
 }));
 const { isDevelopment } = mocked(_constants);
 
-jest.mock('../settings');
+vi.mock('../settings');
 const getConfigSettings = mocked(_getConfigSettings);
 
 describe('getLocalDevConfigFilePath', () => {
@@ -38,15 +38,15 @@ describe('getLocalDevConfigFilePath', () => {
 
 describe('getConfigFile', () => {
   beforeEach(() => {
-    jest.spyOn(settingsHelpers, 'readConfigFile').mockImplementation(e => e);
+    vi.spyOn(settingsHelpers, 'readConfigFile').mockImplementation(e => e);
   });
 
-  afterAll(jest.resetAllMocks);
+  afterAll(vi.resetAllMocks);
 
   it('prioritizes portable config location over all others', () => {
-    jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue('portableExecutable');
-    jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue('insomniaDataDirectory');
-    jest.spyOn(settingsHelpers, 'getLocalDevConfigFilePath').mockReturnValue('localDev');
+    vi.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue('portableExecutable');
+    vi.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue('insomniaDataDirectory');
+    vi.spyOn(settingsHelpers, 'getLocalDevConfigFilePath').mockReturnValue('localDev');
 
     const result = getConfigFile();
 
@@ -55,9 +55,9 @@ describe('getConfigFile', () => {
   });
 
   it('prioritizes insomnia data directory over local dev when portable config is not found', () => {
-    jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue(undefined);
-    jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue('insomniaDataDirectory');
-    jest.spyOn(settingsHelpers, 'getLocalDevConfigFilePath').mockReturnValue('localDev');
+    vi.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue(undefined);
+    vi.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue('insomniaDataDirectory');
+    vi.spyOn(settingsHelpers, 'getLocalDevConfigFilePath').mockReturnValue('localDev');
 
     const result = getConfigFile();
 
@@ -66,10 +66,10 @@ describe('getConfigFile', () => {
   });
 
   it('returns the local dev config file if no others are found', () => {
-    jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue(undefined);
+    vi.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue(undefined);
     // @ts-expect-error intentionally invalid to simulate the file not being found
-    jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue(undefined);
-    jest.spyOn(settingsHelpers, 'getLocalDevConfigFilePath').mockReturnValue('localDev');
+    vi.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue(undefined);
+    vi.spyOn(settingsHelpers, 'getLocalDevConfigFilePath').mockReturnValue('localDev');
 
     const result = getConfigFile();
 
@@ -79,9 +79,9 @@ describe('getConfigFile', () => {
 
   it('returns an internal fallback if no configs are found (in production mode)', () => {
     isDevelopment.mockReturnValue(false);
-    jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue(undefined);
+    vi.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue(undefined);
     // @ts-expect-error intentionally invalid to simulate the file not being found
-    jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue(undefined);
+    vi.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue(undefined);
 
     const result = getConfigFile();
 

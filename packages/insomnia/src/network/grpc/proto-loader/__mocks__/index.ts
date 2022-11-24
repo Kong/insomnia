@@ -1,7 +1,7 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 module.exports = {
-  loadMethods: jest.fn(),
-  loadMethodsFromPath: jest.fn(),
-  getSelectedMethod: jest.fn(),
+  loadMethods: vi.fn(),
+  loadMethodsFromPath: vi.fn(),
+  getSelectedMethod: vi.fn(),
 };

@@ -1,9 +1,9 @@
-import { jest } from '@jest/globals';
 import isomorphicGitOriginal from 'isomorphic-git';
+import { vi } from 'vitest';
 
 // eslint-disable-next-line filenames/match-exported
-const git = jest.requireActual('isomorphic-git') as typeof isomorphicGitOriginal;
-const mock = jest.createMockFromModule('isomorphic-git') as typeof isomorphicGitOriginal;
+const git = vi.requireActual('isomorphic-git') as typeof isomorphicGitOriginal;
+const mock = vi.createMockFromModule('isomorphic-git') as typeof isomorphicGitOriginal;
 
 git.push = mock.push;
 git.clone = mock.clone;

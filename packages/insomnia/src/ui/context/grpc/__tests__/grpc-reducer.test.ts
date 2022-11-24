@@ -1,5 +1,5 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   grpcMessageSchema,
@@ -11,7 +11,7 @@ import { grpcActions } from '../grpc-actions';
 import type { GrpcRequestState, GrpcState } from '../grpc-reducer';
 import { grpcReducer } from '../grpc-reducer';
 
-jest.mock('../../../../network/grpc/proto-loader');
+vi.mock('../../../../network/grpc/proto-loader');
 
 const messageBuilder = createBuilder(grpcMessageSchema);
 const requestStateBuilder = createBuilder(requestStateSchema);
@@ -31,7 +31,7 @@ describe('grpcReducer actions', () => {
   const mockDateNowResult = 1234;
   const _originalDateNow = Date.now;
   beforeEach(() => {
-    Date.now = jest.fn().mockReturnValue(mockDateNowResult);
+    Date.now = vi.fn().mockReturnValue(mockDateNowResult);
   });
 
   afterEach(() => {

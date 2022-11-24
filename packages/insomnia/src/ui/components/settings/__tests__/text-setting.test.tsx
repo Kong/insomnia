@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
 import { act, fireEvent, render } from '@testing-library/react';
 import React from 'react';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
@@ -35,7 +35,7 @@ describe('<TextSetting />', () => {
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it('should render label text', async () => {
@@ -49,13 +49,13 @@ describe('<TextSetting />', () => {
   });
 
   it('should render help text', async () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const { container, findByRole } = render(textSetting, renderOptions);
 
     fireEvent.mouseMove(container);
     fireEvent.mouseEnter(container.querySelector('.tooltip'));
 
-    act(jest.runAllTimers);
+    act(vi.runAllTimers);
 
     const helpText = await findByRole(/tooltip/);
     expect(helpText).toBeInTheDocument();

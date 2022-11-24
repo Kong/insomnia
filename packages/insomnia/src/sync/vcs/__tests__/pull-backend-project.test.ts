@@ -1,6 +1,6 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { mocked } from 'jest-mock';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
@@ -12,7 +12,7 @@ import MemoryDriver from '../../store/drivers/memory-driver';
 import { pullBackendProject } from '../pull-backend-project';
 import { VCS } from '../vcs';
 
-jest.mock('../vcs');
+vi.mock('../vcs');
 
 const backendProject = createBuilder(backendProjectWithTeamSchema).build();
 
@@ -22,7 +22,7 @@ describe('pullBackendProject()', () => {
   let vcs = newMockedVcs();
 
   beforeEach(async () => {
-    (VCS as jest.MockedClass<typeof VCS>).mockClear();
+    (VCS as vi.MockedClass<typeof VCS>).mockClear();
     await globalBeforeEach();
     vcs = newMockedVcs();
   });

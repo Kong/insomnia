@@ -29,7 +29,7 @@ describe('Dropdown', () => {
   });
 
   it('should render a dropdown', async () => {
-    const onSelect = jest.fn();
+    const onSelect = vi.fn();
 
     const options = [
       { id: 1, label: 'List of Numbers', value: [1, 2, 3] },
@@ -68,7 +68,7 @@ describe('Dropdown', () => {
 
   it('handle navigation via keyboard', async () => {
     const user = userEvent.setup();
-    const onSelect = jest.fn();
+    const onSelect = vi.fn();
 
     const options = [
       { id: 1, label: 'List of Numbers', value: [1, 2, 3] },

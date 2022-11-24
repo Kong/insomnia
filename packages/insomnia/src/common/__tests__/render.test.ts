@@ -1,5 +1,5 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models';
@@ -8,7 +8,7 @@ import { Environment } from '../../models/environment';
 import { Workspace } from '../../models/workspace';
 import * as renderUtils from '../render';
 
-jest.mock('electron');
+vi.mock('electron');
 
 const envBuilder = createBuilder(environmentModelSchema);
 const reqGroupBuilder = createBuilder(requestGroupModelSchema);

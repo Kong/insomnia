@@ -1,11 +1,11 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { PromiseFsClient } from 'isomorphic-git';
 import { mocked } from 'jest-mock';
 import path from 'path';
 import React, { Fragment } from 'react';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
@@ -27,9 +27,9 @@ import { SegmentEvent, trackSegmentEvent } from '../../../analytics';
 import { cloneGitRepository, setupGitRepository } from '../git';
 import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT, SET_ACTIVE_WORKSPACE } from '../global';
 
-jest.mock('../../../components/modals');
-jest.mock('../../../../sync/git/shallow-clone');
-jest.mock('../../../../ui/analytics');
+vi.mock('../../../components/modals');
+vi.mock('../../../../sync/git/shallow-clone');
+vi.mock('../../../../ui/analytics');
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
@@ -48,7 +48,7 @@ describe('git', () => {
 
   describe('cloneGitRepository', () => {
     const dispatchCloneAndSubmitSettings = async (memClient: PromiseFsClient, uri?: string) => {
-      const createFsClientMock = jest.fn().mockReturnValue(memClient);
+      const createFsClientMock = vi.fn().mockReturnValue(memClient);
       // dispatch clone action
       store.dispatch(
         cloneGitRepository({

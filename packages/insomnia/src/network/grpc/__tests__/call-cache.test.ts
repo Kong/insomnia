@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import callCache from '../call-cache';
 
@@ -26,7 +26,7 @@ describe('call-cache', () => {
   });
 
   it('should log to console if id not found', () => {
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const call = callCache.get('abc');
     expect(consoleLogSpy).toHaveBeenCalledWith('[gRPC] client call for req=abc not found');
     expect(call).toBe(undefined);
@@ -50,7 +50,7 @@ describe('call-cache', () => {
   it('should clear and close channel', () => {
     const id = 'abc';
     const channel = {
-      close: jest.fn(),
+      close: vi.fn(),
     };
     const call = {
       call: {
@@ -66,7 +66,7 @@ describe('call-cache', () => {
   });
 
   it('should clear and log to console if channel not found', () => {
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const id = 'abc';
     const call = {};
     callCache.set(id, call);

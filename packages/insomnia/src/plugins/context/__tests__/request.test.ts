@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
@@ -137,7 +137,7 @@ describe('request.*', () => {
   });
 
   it('works for basic getters', async () => {
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
     expect(result.request.getId()).toBe('req_1');
     expect(result.request.getName()).toBe('My Request');

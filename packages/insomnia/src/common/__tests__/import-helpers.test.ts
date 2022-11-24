@@ -1,9 +1,9 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { describe, expect, it, vi } from 'vitest';
 
 import * as modals from '../../ui/components/modals';
 import { askToImportIntoWorkspace, ForceToWorkspace } from '../import';
 
-jest.mock('../../ui/components/modals');
+vi.mock('../../ui/components/modals');
 
 describe('askToImportIntoWorkspace', () => {
   it('should return null if no active workspace', () => {

@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
@@ -19,8 +19,8 @@ import { createWorkspace } from '../git';
 import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT, SET_ACTIVE_WORKSPACE } from '../global';
 import { activateWorkspace } from '../workspace';
 
-jest.mock('../../../components/modals');
-jest.mock('../../../../ui/analytics');
+vi.mock('../../../components/modals');
+vi.mock('../../../../ui/analytics');
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);

@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { render } from '@testing-library/react';
 import React from 'react';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { MockComponent, MockComponentTestId, mockRenderWithProps } from '../../../../__jest__/mock-component';
@@ -11,8 +11,8 @@ import { withReduxStore } from '../../../../__jest__/with-redux-store';
 import { RootState } from '../../../redux/modules';
 import { ResponseViewer, ResponseViewerProps } from '../response-viewer';
 
-jest.mock('../../keydown-binder');
-jest.mock('../../codemirror/code-editor', () => ({
+vi.mock('../../keydown-binder');
+vi.mock('../../codemirror/code-editor', () => ({
   CodeEditor: MockComponent,
 }));
 
@@ -21,7 +21,7 @@ const defaultProps: ResponseViewerProps = {
   contentType: 'application/json',
   disableHtmlPreviewJs: false,
   disablePreviewLinks: false,
-  download: jest.fn,
+  download: vi.fn,
   editorFontSize: 11,
   editorIndentSize: 2,
   editorKeyMap: 'default',

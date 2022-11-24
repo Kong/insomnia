@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
 import * as models from '../../../models';
 import { GIT_INSOMNIA_DIR } from '../git-vcs';

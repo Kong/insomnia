@@ -1,15 +1,15 @@
-import { describe, expect, it, jest } from '@jest/globals';
 import { renderHook } from '@testing-library/react';
 import React, { FC } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 
 import { NunjucksEnabledProvider } from '../nunjucks-enabled-context';
 import { useGatedNunjucks } from '../use-gated-nunjucks';
 import { useNunjucks } from '../use-nunjucks';
 
-jest.mock('../use-nunjucks', () => {
+vi.mock('../use-nunjucks', () => {
   const funcs: ReturnType<typeof useNunjucks> = {
-    handleRender: jest.fn(),
-    handleGetRenderContext: jest.fn(),
+    handleRender: vi.fn(),
+    handleGetRenderContext: vi.fn(),
   };
 
   return ({

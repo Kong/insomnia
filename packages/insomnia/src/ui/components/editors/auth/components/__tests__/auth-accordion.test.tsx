@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React, { FC, PropsWithChildren } from 'react';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { globalBeforeEach } from '../../../../../../__jest__/before-each';
 import { createMockStoreWithRequest } from '../../../../../../__jest__/create-mock-store-with-active-request';

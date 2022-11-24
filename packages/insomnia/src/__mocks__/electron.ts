@@ -1,8 +1,8 @@
-import { jest } from '@jest/globals';
 import { EventEmitter } from 'events';
 import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
+import { vi } from 'vitest';
 
 const RANDOM_STRING = Math.random().toString().replace('.', '');
 
@@ -18,7 +18,7 @@ const remote = {
       return 'en-US';
     },
 
-    exit: jest.fn(),
+    exit: vi.fn(),
   },
   net: {
     request() {
@@ -59,7 +59,7 @@ const remote = {
 };
 
 const dialog = {
-  showErrorBox: jest.fn(),
+  showErrorBox: vi.fn(),
 };
 
 const electron = {
@@ -67,25 +67,25 @@ const electron = {
   remote,
   dialog,
   ipcMain: {
-    on: jest.fn(),
+    on: vi.fn(),
 
     once() {},
   },
   ipcRenderer: {
-    on: jest.fn(),
-    removeAllListeners: jest.fn(),
+    on: vi.fn(),
+    removeAllListeners: vi.fn(),
 
     once() {},
 
-    send: jest.fn(),
+    send: vi.fn(),
   },
   shell: {
-    openExternal: jest.fn(),
+    openExternal: vi.fn(),
   },
   clipboard: {
-    writeText: jest.fn(),
-    readText: jest.fn(),
-    clear: jest.fn(),
+    writeText: vi.fn(),
+    readText: vi.fn(),
+    clear: vi.fn(),
   },
 };
 

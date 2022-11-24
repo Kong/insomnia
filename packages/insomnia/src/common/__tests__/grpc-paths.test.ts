@@ -1,5 +1,5 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
 import { grpcMethodDefinitionSchema } from '../../ui/context/grpc/__schemas__';
 import {

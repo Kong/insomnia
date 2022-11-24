@@ -1,5 +1,5 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import path from 'path';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { FileWithStatus } from '../git-rollback';
 import { gitRollback } from '../git-rollback';
@@ -9,21 +9,21 @@ import { setupDateMocks } from './util';
 
 describe('git rollback', () => {
   describe('mocked', () => {
-    const removeMock = jest.fn().mockResolvedValue(undefined);
-    const unlinkMock = jest.fn().mockResolvedValue(undefined);
-    const undoPendingChangesMock = jest.fn().mockResolvedValue(undefined);
+    const removeMock = vi.fn().mockResolvedValue(undefined);
+    const unlinkMock = vi.fn().mockResolvedValue(undefined);
+    const undoPendingChangesMock = vi.fn().mockResolvedValue(undefined);
 
     let vcs: Partial<GitVCS> = {};
 
     beforeEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
       const fsMock = {
         promises: {
           unlink: unlinkMock,
         },
       };
       vcs = {
-        getFs: jest.fn().mockReturnValue(fsMock),
+        getFs: vi.fn().mockReturnValue(fsMock),
         remove: removeMock,
         undoPendingChanges: undoPendingChangesMock,
       };
@@ -116,7 +116,7 @@ describe('git rollback', () => {
       barTxt = path.join(GIT_INSOMNIA_DIR, 'bar.txt');
       bazTxt = path.join(GIT_INSOMNIA_DIR, 'baz.txt');
     });
-    afterAll(() => jest.restoreAllMocks());
+    afterAll(() => vi.restoreAllMocks());
     beforeEach(setupDateMocks);
 
     it('should rollback files as expected', async () => {

@@ -8,7 +8,7 @@
 //   });
 // });
 
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from 'vitest';
 
 describe('dummy', () => {
   it('does it', () => {

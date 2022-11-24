@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
 import { parse as urlParse } from 'url';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import certificateUrlParse from '../certificate-url-parse';

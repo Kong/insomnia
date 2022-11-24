@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
 import path from 'path';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models';

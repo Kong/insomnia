@@ -1,15 +1,15 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GrpcResponseEventEnum } from '../../../common/grpc-events';
 import { ResponseCallbacks } from '../../../main/ipc/grpc';
 
 describe('response-callbacks', () => {
   const event = {
-    reply: jest.fn(),
+    reply: vi.fn(),
   };
   const id = 'abc';
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   it('should sendData with expected arguments', () => {

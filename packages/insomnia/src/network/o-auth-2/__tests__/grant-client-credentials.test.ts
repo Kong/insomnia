@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getTempDir } from '../../../common/electron-helpers';
@@ -31,7 +31,7 @@ describe('client_credentials', () => {
         resource: RESOURCE,
       }),
     );
-    network.sendWithSettings = jest.fn(() => ({
+    network.sendWithSettings = vi.fn(() => ({
       bodyPath,
       bodyCompression: '',
       parentId: 'req_1',
@@ -128,7 +128,7 @@ describe('client_credentials', () => {
         resource: RESOURCE,
       }),
     );
-    network.sendWithSettings = jest.fn(() => ({
+    network.sendWithSettings = vi.fn(() => ({
       bodyPath,
       bodyCompression: '',
       parentId: 'req_1',

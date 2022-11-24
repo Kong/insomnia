@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import electron from 'electron';
 import { mocked } from 'jest-mock';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import appPackageJson from '../../../../package.json';
 import { globalBeforeEach } from '../../../__jest__/before-each';
@@ -36,7 +36,7 @@ describe('app.alert()', () => {
   beforeEach(globalBeforeEach);
 
   it('does not show alert when not sending', async () => {
-    modals.showAlert = jest.fn();
+    modals.showAlert = vi.fn();
     const result = plugin.init();
     result.app.alert();
     // Make sure it passes correct arguments
@@ -44,7 +44,7 @@ describe('app.alert()', () => {
   });
 
   it('shows alert with message when sending', async () => {
-    modals.showAlert = jest.fn().mockReturnValue('dummy-return-value');
+    modals.showAlert = vi.fn().mockReturnValue('dummy-return-value');
     const result = plugin.init(RENDER_PURPOSE_SEND);
     // Make sure it returns result of showAlert()
     expect(result.app.alert('Title')).toBe('dummy-return-value');
@@ -70,7 +70,7 @@ describe('app.prompt()', () => {
   beforeEach(globalBeforeEach);
 
   it('does not show prompt when not sending', async () => {
-    modals.showPrompt = jest.fn();
+    modals.showPrompt = vi.fn();
     const result = plugin.init();
     result.app.prompt();
     // Make sure it passes correct arguments
@@ -78,7 +78,7 @@ describe('app.prompt()', () => {
   });
 
   it('shows alert with message when sending', async () => {
-    modals.showPrompt = jest.fn();
+    modals.showPrompt = vi.fn();
     const result = plugin.init(RENDER_PURPOSE_SEND);
     // Make sure it returns result of showAlert()
     result.app.prompt('Title');

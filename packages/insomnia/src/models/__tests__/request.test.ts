@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { CONTENT_TYPE_GRAPHQL } from '../../common/constants';
@@ -9,7 +9,7 @@ describe('init()', () => {
   beforeEach(globalBeforeEach);
 
   it('contains all required fields', async () => {
-    Date.now = jest.fn().mockReturnValue(1478795580200);
+    Date.now = vi.fn().mockReturnValue(1478795580200);
     expect(models.request.init()).toEqual({
       isPrivate: false,
       authentication: {},
@@ -35,7 +35,7 @@ describe('create()', () => {
   beforeEach(globalBeforeEach);
 
   it('creates a valid request', async () => {
-    Date.now = jest.fn().mockReturnValue(1478795580200);
+    Date.now = vi.fn().mockReturnValue(1478795580200);
     const request = await models.request.create({
       name: 'Test Request',
       parentId: 'fld_124',
@@ -69,7 +69,7 @@ describe('create()', () => {
   });
 
   it('fails when missing parentId', async () => {
-    Date.now = jest.fn().mockReturnValue(1478795580200);
+    Date.now = vi.fn().mockReturnValue(1478795580200);
     expect(() =>
       models.request.create({
         name: 'Test Request',
@@ -396,7 +396,7 @@ describe('migrate()', () => {
   });
 
   it('migrates from initModel()', async () => {
-    Date.now = jest.fn().mockReturnValue(1478795580200);
+    Date.now = vi.fn().mockReturnValue(1478795580200);
     const original = {
       _id: 'req_123',
       headers: [],

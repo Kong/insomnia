@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models';
@@ -665,11 +665,11 @@ describe('_repairDatabase()', () => {
 describe('duplicate()', () => {
   beforeEach(globalBeforeEach);
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
 
   it('should overwrite appropriate fields on the parent when duplicating', async () => {
     const date = 1478795580200;
-    Date.now = jest.fn().mockReturnValue(date);
+    Date.now = vi.fn().mockReturnValue(date);
     const workspace = await models.workspace.create({
       name: 'Test Workspace',
     });
@@ -696,7 +696,7 @@ describe('duplicate()', () => {
     const workspace = await models.workspace.create({
       name: 'Test Workspace',
     });
-    const spy = jest.spyOn(models.workspace, 'migrate');
+    const spy = vi.spyOn(models.workspace, 'migrate');
     await db.duplicate(workspace);
     expect(spy).not.toHaveBeenCalled();
   });
@@ -704,10 +704,10 @@ describe('duplicate()', () => {
 
 describe('docCreate()', () => {
   beforeEach(globalBeforeEach);
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => vi.restoreAllMocks());
 
   it('should call migrate when creating', async () => {
-    const spy = jest.spyOn(models.workspace, 'migrate');
+    const spy = vi.spyOn(models.workspace, 'migrate');
     await db.docCreate(models.workspace.type, {
       name: 'Test Workspace',
     });

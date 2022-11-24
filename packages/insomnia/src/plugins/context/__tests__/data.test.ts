@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getAppVersion } from '../../../common/constants';
@@ -10,7 +10,7 @@ import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 import * as plugin from '../data';
 
-jest.mock('../../../ui/components/modals');
+vi.mock('../../../ui/components/modals');
 
 describe('init()', () => {
   beforeEach(globalBeforeEach);

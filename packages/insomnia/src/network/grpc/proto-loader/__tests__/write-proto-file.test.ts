@@ -1,9 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
 import { SpyInstance } from 'jest-mock';
 import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import * as models from '../../../../models';
@@ -16,10 +16,10 @@ describe('writeProtoFile', () => {
   let writeFileSpy: SpyInstance<any>;
 
   const _setupSpies = () => {
-    existsSyncSpy = jest.spyOn(fs, 'existsSync');
-    mkdirpSyncSpy = jest.spyOn(mkdirp, 'sync');
-    tmpDirSpy = jest.spyOn(os, 'tmpdir');
-    writeFileSpy = jest.spyOn(fs.promises, 'writeFile');
+    existsSyncSpy = vi.spyOn(fs, 'existsSync');
+    mkdirpSyncSpy = vi.spyOn(mkdirp, 'sync');
+    tmpDirSpy = vi.spyOn(os, 'tmpdir');
+    writeFileSpy = vi.spyOn(fs.promises, 'writeFile');
   };
 
   const _configureSpies = (tmpDir: string, exists: boolean) => {
@@ -46,7 +46,7 @@ describe('writeProtoFile', () => {
   afterEach(() => {
     _restoreSpies();
 
-    jest.resetAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('individual files', () => {

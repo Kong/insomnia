@@ -1,9 +1,9 @@
-import { jest } from '@jest/globals';
+import { vi } from 'vitest';
 
 module.exports = {
-  start: jest.fn(),
-  sendMessage: jest.fn(),
-  commit: jest.fn(),
-  cancel: jest.fn(),
-  cancelMultiple: jest.fn(),
+  start: vi.fn(),
+  sendMessage: vi.fn(),
+  commit: vi.fn(),
+  cancel: vi.fn(),
+  cancelMultiple: vi.fn(),
 };

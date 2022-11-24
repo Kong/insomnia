@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import {
@@ -145,12 +145,12 @@ describe('keyedDebounce()', () => {
   });
 
   it('debounces correctly', async () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const resultsList: Record<string, string[]>[] = [];
-    const setter = jest.fn((result: Record<string, string[]>) => {
+    const setter = vi.fn((result: Record<string, string[]>) => {
       resultsList.push(result);
     });
-    jest.clearAllTimers();
+    vi.clearAllTimers();
     const fn = keyedDebounce<string>(setter, 100);
     fn('foo', 'bar');
     fn('baz', 'bar');
@@ -159,7 +159,7 @@ describe('keyedDebounce()', () => {
     fn('multi', 'foo', 'bar', 'baz');
     expect(resultsList).toEqual([]);
 
-    jest.runAllTimers();
+    vi.runAllTimers();
 
     expect(resultsList).toEqual([
       {
@@ -175,7 +175,7 @@ describe('debounce()', () => {
   beforeEach(globalBeforeEach);
 
   it('debounces correctly', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const resultList = [];
     const fn = debounce((...args) => {
       resultList.push(args);
@@ -186,7 +186,7 @@ describe('debounce()', () => {
     fn('baz', 'bar');
     fn('foo', 'bar3');
     expect(resultList).toEqual([]);
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
     expect(resultList).toEqual([['foo', 'bar3']]);
   });
 });

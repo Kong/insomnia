@@ -1,6 +1,6 @@
 import React, { forwardRef, ForwardRefRenderFunction } from 'react';
 
-export const mockRenderWithProps = jest.fn();
+export const mockRenderWithProps = vi.fn();
 
 export const MockComponentTestId = 'MockComponent';
 

@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { mocked } from 'jest-mock';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
@@ -64,7 +64,7 @@ describe('authorizeUserInWindow()', () => {
   beforeEach(globalBeforeEach);
 
   const getCertificateVerifyCallbackMock = () => {
-    const mockCallback = mocked<(verificationResult: number) => void>(jest.fn());
+    const mockCallback = mocked<(verificationResult: number) => void>(vi.fn());
     window.main = { authorizeUserInWindow: () => Promise.resolve(MOCK_AUTHORIZATION_URL) };
 
     createBWRedirectMock({

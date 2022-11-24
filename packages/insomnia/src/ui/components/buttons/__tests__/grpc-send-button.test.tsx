@@ -1,6 +1,6 @@
-import { describe, expect, it, jest } from '@jest/globals';
 import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
+import { describe, expect, it, vi } from 'vitest';
 
 import { GrpcSendButton } from '../grpc-send-button';
 
@@ -9,8 +9,8 @@ describe('<GrpcSendButton />', () => {
     const { getByRole } = render(
       <GrpcSendButton
         running={false}
-        handleStart={jest.fn()}
-        handleCancel={jest.fn()}
+        handleStart={vi.fn()}
+        handleCancel={vi.fn()}
         methodType={undefined}
       />,
     );
@@ -20,11 +20,11 @@ describe('<GrpcSendButton />', () => {
   });
 
   it('should render cancel button if running', () => {
-    const handleCancel = jest.fn();
+    const handleCancel = vi.fn();
     const { getByRole } = render(
       <GrpcSendButton
         running={true}
-        handleStart={jest.fn()}
+        handleStart={vi.fn()}
         handleCancel={handleCancel}
         methodType={'unary'}
       />,
@@ -37,12 +37,12 @@ describe('<GrpcSendButton />', () => {
   });
 
   it('should render send button if unary RPC', () => {
-    const handleSend = jest.fn();
+    const handleSend = vi.fn();
     const { getByRole } = render(
       <GrpcSendButton
         running={false}
         handleStart={handleSend()}
-        handleCancel={jest.fn()}
+        handleCancel={vi.fn()}
         methodType={'unary'}
       />,
     );
@@ -56,12 +56,12 @@ describe('<GrpcSendButton />', () => {
   it.each(['bidi', 'server', 'client'])(
     'should render start button if streaming RPC: %s',
     type => {
-      const handleSend = jest.fn();
+      const handleSend = vi.fn();
       const { getByRole } = render(
         <GrpcSendButton
           running={false}
           handleStart={handleSend()}
-          handleCancel={jest.fn()}
+          handleCancel={vi.fn()}
           methodType={type}
         />,
       );

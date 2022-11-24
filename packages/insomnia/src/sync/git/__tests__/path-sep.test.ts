@@ -1,9 +1,9 @@
-import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import path from 'path';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { convertToOsSep, convertToPosixSep } from '../path-sep';
 
-jest.mock('path');
+vi.mock('path');
 
 describe('convertToPosixSep()', () => {
   it('should handle empty string', () => {
@@ -20,7 +20,7 @@ describe('convertToPosixSep()', () => {
 describe.each(['win32', 'posix'])('convertToOsSep() where os is %s', osType => {
   beforeAll(() => path.__mockPath(osType));
 
-  afterAll(() => jest.restoreAllMocks());
+  afterAll(() => vi.restoreAllMocks());
 
   it.each(['win32', 'posix'])(`should convert separators from %s to ${osType}`, inputType => {
     const input = path[inputType].join('a', 'b', 'c');

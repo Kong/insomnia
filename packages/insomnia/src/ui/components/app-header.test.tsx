@@ -1,10 +1,10 @@
-import { describe, expect, test } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { Provider } from 'react-redux';
 import configureMockStore from 'redux-mock-store';
 import { MockStoreEnhanced } from 'redux-mock-store';
 import thunk from 'redux-thunk';
+import { describe, expect, test } from 'vitest';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { getDropdownContainer } from '../../__jest__/dropdown-container';

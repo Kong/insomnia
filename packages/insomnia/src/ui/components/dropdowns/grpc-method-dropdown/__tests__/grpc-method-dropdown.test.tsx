@@ -1,8 +1,8 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { fireEvent, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getDropdownContainer } from '../../../../../__jest__/dropdown-container';
 import { grpcMethodDefinitionSchema } from '../../../../context/grpc/__schemas__';
@@ -16,12 +16,12 @@ describe('<GrpcMethodDropdown />', () => {
   });
 
   it('should show "No methods found" and clicking it should do nothing', () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     const { getByRole, queryByText } = render(
       <GrpcMethodDropdown
         methods={[]}
         handleChange={handleChange}
-        handleChangeProtoFile={jest.fn()}
+        handleChangeProtoFile={vi.fn()}
       />,
       { container: getDropdownContainer() }
     );
@@ -35,11 +35,11 @@ describe('<GrpcMethodDropdown />', () => {
   });
 
   it('should allow you to change a proto file when no methods exist', () => {
-    const handleChangeProtoFile = jest.fn();
+    const handleChangeProtoFile = vi.fn();
     const { getByRole, queryByText } = render(
       <GrpcMethodDropdown
         methods={[]}
-        handleChange={jest.fn()}
+        handleChange={vi.fn()}
         handleChangeProtoFile={handleChangeProtoFile}
       />,
       { container: getDropdownContainer() }
@@ -54,11 +54,11 @@ describe('<GrpcMethodDropdown />', () => {
   });
 
   it('should allow you to change a proto file when methods exist', () => {
-    const handleChangeProtoFile = jest.fn();
+    const handleChangeProtoFile = vi.fn();
     const { getByRole, getByText } = render(
       <GrpcMethodDropdown
         methods={[builder.build()]}
-        handleChange={jest.fn()}
+        handleChange={vi.fn()}
         handleChangeProtoFile={handleChangeProtoFile}
       />,
       { container: getDropdownContainer() }
@@ -71,13 +71,13 @@ describe('<GrpcMethodDropdown />', () => {
   });
 
   it('should send selected method path to handle change', async () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     const method = builder.path('/service/method').build();
     const { findByText } = render(
       <GrpcMethodDropdown
         methods={[method]}
         handleChange={handleChange}
-        handleChangeProtoFile={jest.fn()}
+        handleChangeProtoFile={vi.fn()}
       />,
       { container: getDropdownContainer() }
     );
@@ -96,13 +96,13 @@ describe('<GrpcMethodDropdown />', () => {
   });
 
   it('should create a divider with the package name', () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     const method = builder.path('/package.service/method').build();
     const { getByRole, queryByText, getByText } = render(
       <GrpcMethodDropdown
         methods={[method]}
         handleChange={handleChange}
-        handleChangeProtoFile={jest.fn()}
+        handleChangeProtoFile={vi.fn()}
       />,
       { container: getDropdownContainer() }
     );

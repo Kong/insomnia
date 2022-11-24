@@ -1,6 +1,6 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { mocked } from 'jest-mock';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { isLoggedIn as _isLoggedIn } from '../../../account/session';
@@ -12,9 +12,9 @@ import { initializeProjectFromTeam } from '../initialize-model-from';
 import { migrateCollectionsIntoRemoteProject } from '../migrate-collections';
 import { VCS } from '../vcs';
 
-jest.mock('../vcs');
-jest.mock('../../../account/session', () => ({
-  isLoggedIn: jest.fn(),
+vi.mock('../vcs');
+vi.mock('../../../account/session', () => ({
+  isLoggedIn: vi.fn(),
 }));
 
 const isLoggedIn = mocked(_isLoggedIn);

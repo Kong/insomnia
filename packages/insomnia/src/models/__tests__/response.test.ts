@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
+import { beforeEach, describe, expect, it } from 'vitest';
 import zlib from 'zlib';
 
 import { globalBeforeEach } from '../../__jest__/before-each';

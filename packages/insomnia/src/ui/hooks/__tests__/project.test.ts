@@ -1,9 +1,9 @@
 
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { mocked } from 'jest-mock';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
@@ -15,7 +15,7 @@ import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
 import { useRemoteProjects } from '../project';
 
-jest.mock('../../../sync/vcs/vcs');
+vi.mock('../../../sync/vcs/vcs');
 
 const middlewares = [thunk];
 const mockStore = configureMockStore<RootState>(middlewares);

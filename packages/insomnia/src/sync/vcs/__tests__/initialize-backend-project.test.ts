@@ -1,5 +1,5 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
@@ -20,7 +20,7 @@ describe('initialize-backend-project', () => {
       const workspace = await models.workspace.create({ scope: 'design' });
       await models.workspace.ensureChildren(workspace);
       const vcs = new VCS(new MemoryDriver());
-      const switchAndCreateBackendProjectIfNotExistSpy = jest.spyOn(vcs, 'switchAndCreateBackendProjectIfNotExist');
+      const switchAndCreateBackendProjectIfNotExistSpy = vi.spyOn(vcs, 'switchAndCreateBackendProjectIfNotExist');
 
       // Act
       await initializeLocalBackendProjectAndMarkForSync({ workspace, vcs });
@@ -70,10 +70,10 @@ describe('initialize-backend-project', () => {
   describe('pushSnapshotOnInitialize()', () => {
     const vcs = new VCS(new MemoryDriver());
 
-    const pushSpy = jest.spyOn(vcs, 'push');
+    const pushSpy = vi.spyOn(vcs, 'push');
 
     beforeEach(() => {
-      jest.resetAllMocks();
+      vi.resetAllMocks();
     });
 
     afterAll(() => {

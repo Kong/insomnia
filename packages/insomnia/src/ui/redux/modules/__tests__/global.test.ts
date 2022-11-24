@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import {
@@ -18,12 +18,12 @@ import {
   setActiveWorkspace,
 } from '../global';
 
-jest.mock('../../../../ui/analytics');
+vi.mock('../../../../ui/analytics');
 
 describe('global', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     global.localStorage.clear();
   });
 

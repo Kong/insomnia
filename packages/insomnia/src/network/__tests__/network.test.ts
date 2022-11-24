@@ -1,8 +1,8 @@
 import { CurlHttpVersion, CurlNetrc } from '@getinsomnia/node-libcurl';
-import { beforeEach, describe, expect, it } from '@jest/globals';
 import electron from 'electron';
 import fs from 'fs';
 import { join as pathJoin, resolve as pathResolve } from 'path';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import {

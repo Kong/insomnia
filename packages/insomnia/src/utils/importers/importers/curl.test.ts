@@ -1,5 +1,5 @@
-import { describe, expect, it } from '@jest/globals';
 import { quote } from 'shell-quote';
+import { describe, expect, it } from 'vitest';
 
 import { convert } from './curl';
 

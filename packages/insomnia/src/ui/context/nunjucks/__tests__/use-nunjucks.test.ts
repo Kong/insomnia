@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { renderHook } from '@testing-library/react';
 import { mocked } from 'jest-mock';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 import type { PromiseValue } from 'type-fest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
@@ -18,10 +18,10 @@ const renderMock = mocked(render);
 const getRenderContextMock = mocked(getRenderContext);
 const getRenderContextAncestorsMock = mocked(getRenderContextAncestors);
 
-jest.mock('../../../../common/render', () => ({
-  render: jest.fn(),
-  getRenderContext: jest.fn(),
-  getRenderContextAncestors: jest.fn(),
+vi.mock('../../../../common/render', () => ({
+  render: vi.fn(),
+  getRenderContext: vi.fn(),
+  getRenderContextAncestors: vi.fn(),
 }));
 
 const middlewares = [thunk];

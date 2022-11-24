@@ -1,5 +1,5 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
@@ -28,7 +28,7 @@ async function vcs(branch) {
 describe('VCS', () => {
   beforeEach(async () => {
     let ts = 1000000000000;
-    Date.now = jest.fn(() => ts++);
+    Date.now = vi.fn(() => ts++);
     await globalBeforeEach();
   });
 

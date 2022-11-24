@@ -1,12 +1,12 @@
 import grpcJSOriginal from '@grpc/grpc-js';
-import { jest } from '@jest/globals';
 import { EventEmitter } from 'events';
+import { vi } from 'vitest';
 
-const grpcJs = jest.requireActual('@grpc/grpc-js') as typeof grpcJSOriginal;
+const grpcJs = vi.requireActual('@grpc/grpc-js') as typeof grpcJSOriginal;
 
-const mockCallWrite = jest.fn();
-const mockCallEnd = jest.fn();
-const mockCallCancel = jest.fn();
+const mockCallWrite = vi.fn();
+const mockCallEnd = vi.fn();
+const mockCallCancel = vi.fn();
 
 export const status = grpcJs.status;
 
@@ -32,13 +32,13 @@ const makeMockCall = () => {
 
 const getMockCall = () => mockCall;
 
-const mockConstructor = jest.fn();
-const mockMakeUnaryRequest = jest.fn();
-const mockMakeClientStreamRequest = jest.fn();
-const mockMakeServerStreamRequest = jest.fn();
-const mockMakeBidiStreamRequest = jest.fn();
-const mockCreateInsecure = jest.fn();
-const mockCreateSsl = jest.fn();
+const mockConstructor = vi.fn();
+const mockMakeUnaryRequest = vi.fn();
+const mockMakeClientStreamRequest = vi.fn();
+const mockMakeServerStreamRequest = vi.fn();
+const mockMakeBidiStreamRequest = vi.fn();
+const mockCreateInsecure = vi.fn();
+const mockCreateSsl = vi.fn();
 
 export const grpcMocks = {
   getMockCall,
