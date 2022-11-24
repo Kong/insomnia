@@ -22,11 +22,9 @@ test.describe('Design interactions', async () => {
     await page.click('div[role="dialog"] >> text=Design Document');
     await page.click('text=DocumentSmoke Test API server 1.0.0v1.0.0OpenAPI 3.0.0just now');
 
-    // Renders the spec code and preview
+    // Renders the spec code
     const codeEditor = page.locator('.pane-one');
     await expect(codeEditor).toContainText('openapi: 3.0.0');
-    const specPreview = page.locator('.information-container');
-    await expect(specPreview).toContainText('this is an example description in an OpenAPI Doc');
 
     // Created requests from spec
     await page.locator('text=Debug').click();
