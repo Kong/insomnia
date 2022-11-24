@@ -1,13 +1,23 @@
 import type { IRuleResult } from '@stoplight/spectral-core';
-import React, { createRef, FC, RefObject, useCallback, useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { createRef, FC, useCallback, useMemo } from 'react';
+import {
+  LoaderFunction,
+  useFetcher,
+  useLoaderData,
+  useParams,
+} from 'react-router-dom';
 import styled from 'styled-components';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
-import { database } from '../../common/database';
+import { ACTIVITY_SPEC } from '../../common/constants';
 import { debounce } from '../../common/misc';
+import { ApiSpec } from '../../models/api-spec';
 import * as models from '../../models/index';
-import { CodeEditor, CodeEditorHandle } from '../components/codemirror/code-editor';
+import { invariant } from '../../utils/invariant';
+import {
+  CodeEditor,
+  CodeEditorHandle,
+} from '../components/codemirror/code-editor';
 import { DesignEmptyState } from '../components/design-empty-state';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Notice, NoticeTable } from '../components/notice-table';
@@ -15,8 +25,10 @@ import { SidebarLayout } from '../components/sidebar-layout';
 import { SpecEditorSidebar } from '../components/spec-editor/spec-editor-sidebar';
 import { SwaggerUI } from '../components/swagger-ui';
 import { superFaint } from '../css/css-in-js';
-import { useActiveApiSpecSyncVCSVersion, useGitVCSVersion } from '../hooks/use-vcs-version';
-import { selectActiveApiSpec } from '../redux/selectors';
+import {
+  useActiveApiSpecSyncVCSVersion,
+  useGitVCSVersion,
+} from '../hooks/use-vcs-version';
 
 const isLintError = (result: IRuleResult) => result.severity === 0;
 
@@ -29,218 +41,260 @@ const EmptySpaceHelper = styled.div({
   textAlign: 'center',
 });
 
+export const Toolbar = styled.div({
+  boxSizing: 'content-box',
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
+  backgroundColor: 'var(--color-bg)',
+  display: 'flex',
+  justifyContent: 'flex-end',
+  flexDirection: 'row',
+  borderTop: '1px solid var(--hl-md)',
+  height: 'var(--line-height-sm)',
+  fontSize: 'var(--font-size-sm)',
+  '& > button': {
+    color: 'var(--hl)',
+    padding: 'var(--padding-xs) var(--padding-xs)',
+    height: '100%',
+  },
+});
+
+interface LoaderData {
+  lintMessages: LintMessage[];
+  apiSpec: ApiSpec;
+  swaggerSpec: ParsedApiSpec['contents'];
+}
+
+export const loader: LoaderFunction = async ({
+  params,
+}): Promise<LoaderData> => {
+  const { workspaceId } = params;
+  invariant(workspaceId, 'Workspace ID is required');
+  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+  invariant(apiSpec, 'API spec not found');
+
+  let lintMessages: LintMessage[] = [];
+  if (apiSpec.contents && apiSpec.contents.length !== 0) {
+    lintMessages = (await window.main.spectralRun(apiSpec.contents))
+      .filter(isLintError)
+      .map(({ severity, code, message, range }) => ({
+        type: severity === 0 ? 'error' : 'warning',
+        message: `${code} ${message}`,
+        line: range.start.line,
+        // Attach range that will be returned to our click handler
+        range,
+      }));
+  }
+
+  let swaggerSpec: ParsedApiSpec['contents'] = {};
+  try {
+    swaggerSpec = parseApiSpec(apiSpec.contents).contents;
+  } catch (err) {}
+
+  return {
+    lintMessages,
+    apiSpec,
+    swaggerSpec,
+  };
+};
+
 interface LintMessage extends Notice {
   range: IRuleResult['range'];
 }
 
-const RenderEditor: FC<{ editor: RefObject<CodeEditorHandle> }> = ({ editor }) => {
-  const activeApiSpec = useSelector(selectActiveApiSpec);
-  const [lintMessages, setLintMessages] = useState<LintMessage[]>([]);
-  const contents = activeApiSpec?.contents ?? '';
-  const gitVersion = useGitVCSVersion();
-  const syncVersion = useActiveApiSpecSyncVCSVersion();
+const Design: FC = () => {
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
+  const { apiSpec, lintMessages, swaggerSpec } = useLoaderData() as LoaderData;
+  const editor = createRef<CodeEditorHandle>();
 
-  const onImport = useCallback(async (value: string) => {
-    if (!activeApiSpec) {
-      return;
-    }
+  const updateApiSpecFetcher = useFetcher();
+  const generateRequestCollectionFetcher = useFetcher();
 
-    await database.update({ ...activeApiSpec, modified: Date.now(), created: Date.now(), contents: value }, true);
-  }, [activeApiSpec]);
-
-  const uniquenessKey = `${activeApiSpec?._id}::${activeApiSpec?.created}::${gitVersion}::${syncVersion}`;
   const onCodeEditorChange = useMemo(() => {
     const handler = async (contents: string) => {
-      if (!activeApiSpec) {
-        return;
-      }
-
-      await models.apiSpec.update({ ...activeApiSpec, contents });
+      updateApiSpecFetcher.submit(
+        {
+          contents: contents,
+        },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}/update`,
+          method: 'post',
+        }
+      );
     };
 
     return debounce(handler, 500);
-  }, [activeApiSpec]);
+  }, [organizationId, projectId, updateApiSpecFetcher, workspaceId]);
 
-  useEffect(() => {
-    let isMounted = true;
-    const update = async () => {
-      // Lint only if spec has content
-      if (contents && contents.length !== 0) {
-        const run = await window.main.spectralRun(contents);
-
-        const results: LintMessage[] = run.filter(isLintError)
-          .map(({ severity, code, message, range }) => ({
-            type: severity === 0 ? 'error' : 'warning',
-            message: `${code} ${message}`,
-            line: range.start.line,
-            // Attach range that will be returned to our click handler
-            range,
-          }));
-        isMounted && setLintMessages(results);
-      } else {
-        isMounted && setLintMessages([]);
+  const handleScrollToSelection = useCallback(
+    (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
+      if (!editor.current) {
+        return;
       }
-    };
-    update();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [contents]);
-
-  const handleScrollToSelection = useCallback((notice: LintMessage) => {
-    if (!editor.current) {
-      return;
-    }
-    if (!notice.range) {
-      return;
-    }
-    const { start, end } = notice.range;
-    editor.current.scrollToSelection(start.character, end.character, start.line, end.line);
-  }, [editor]);
-
-  if (!activeApiSpec) {
-    return null;
-  }
-
-  return (
-    <div className="column tall theme--pane__body">
-      <div className="tall relative overflow-hidden">
-        <CodeEditor
-          key={uniquenessKey}
-          showPrettifyButton
-          ref={editor}
-          lintOptions={{ delay: 1000 }}
-          mode="openapi"
-          defaultValue={contents}
-          onChange={onCodeEditorChange}
-          uniquenessKey={uniquenessKey}
-        />
-        {contents ? null : (
-          <DesignEmptyState
-            onImport={onImport}
-          />
-        )}
-      </div>
-      {lintMessages.length > 0 && (
-        <NoticeTable
-          notices={lintMessages}
-          onClick={handleScrollToSelection}
-        />
-      )}
-    </div>
+      editor.current.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
+    },
+    [editor]
   );
-};
 
-const RenderPreview: FC = () => {
-  const activeApiSpec = useSelector(selectActiveApiSpec);
-
-  if (!activeApiSpec) {
-    return null;
-  }
-
-  if (!activeApiSpec.contents) {
-    return (
-      <EmptySpaceHelper>
-        Documentation for your OpenAPI spec will render here
-      </EmptySpaceHelper>
-    );
-  }
-
-  let swaggerUiSpec: ParsedApiSpec['contents'] | null = null;
-
-  try {
-    swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
-  } catch (err) { }
-
-  if (!swaggerUiSpec) {
-    swaggerUiSpec = {};
-  }
-
-  return (
-    <div id="swagger-ui-wrapper">
-      <ErrorBoundary
-        invalidationKey={activeApiSpec.contents}
-        renderError={() => (
-          <div className="text-left margin pad">
-            <h3>An error occurred while trying to render Swagger UI</h3>
-            <p>
-              This preview will automatically refresh, once you have a valid specification that
-              can be previewed.
-            </p>
-          </div>
-        )}
-      >
-        <SwaggerUI
-          spec={swaggerUiSpec}
-          supportedSubmitMethods={[
-            'get',
-            'put',
-            'post',
-            'delete',
-            'options',
-            'head',
-            'patch',
-            'trace',
-          ]}
-        />
-      </ErrorBoundary>
-    </div>
+  const handleScrollToLintMessage = useCallback(
+    (notice: LintMessage) => {
+      if (!editor.current) {
+        return;
+      }
+      if (!notice.range) {
+        return;
+      }
+      const { start, end } = notice.range;
+      editor.current.scrollToSelection(
+        start.character,
+        end.character,
+        start.line,
+        end.line
+      );
+    },
+    [editor]
   );
-};
 
-const RenderPageSidebar: FC<{ editor: RefObject<CodeEditorHandle> }> = ({ editor }) => {
-  const activeApiSpec = useSelector(selectActiveApiSpec);
-  const handleScrollToSelection = useCallback((chStart: number, chEnd: number, lineStart: number, lineEnd: number) => {
-    if (!editor.current) {
-      return;
-    }
-    editor.current.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
-  }, [editor]);
-
-  if (!activeApiSpec) {
-    return null;
-  }
-
-  if (!activeApiSpec.contents) {
-    return (
-      <EmptySpaceHelper>
-        A spec navigator will render here
-      </EmptySpaceHelper>
-    );
-  }
-
-  return (
-    <ErrorBoundary
-      invalidationKey={activeApiSpec.contents}
-      renderError={() => (
-        <div className="text-left margin pad">
-          <h4>An error occurred while trying to render your spec's navigation.</h4>
-          <p>
-            This navigation will automatically refresh, once you have a valid specification that
-            can be rendered.
-          </p>
-        </div>
-      )}
-    >
-      <SpecEditorSidebar
-        apiSpec={activeApiSpec}
-        handleSetSelection={handleScrollToSelection}
-      />
-    </ErrorBoundary>
-  );
-};
-
-export const WrapperDesign: FC = () => {
-  const editor = createRef<CodeEditorHandle>();
+  const gitVersion = useGitVCSVersion();
+  const syncVersion = useActiveApiSpecSyncVCSVersion();
+  const uniquenessKey = `${apiSpec?._id}::${apiSpec?.created}::${gitVersion}::${syncVersion}`;
 
   return (
     <SidebarLayout
-      renderPaneOne={<RenderEditor editor={editor} />}
-      renderPaneTwo={<RenderPreview />}
-      renderPageSidebar={<RenderPageSidebar editor={editor} />}
+      renderPageSidebar={
+        apiSpec.contents ? (
+          <ErrorBoundary
+            invalidationKey={apiSpec.contents}
+            renderError={() => (
+              <div className="text-left margin pad">
+                <h4>
+                  An error occurred while trying to render your spec's
+                  navigation.
+                </h4>
+                <p>
+                  This navigation will automatically refresh, once you have a
+                  valid specification that can be rendered.
+                </p>
+              </div>
+            )}
+          >
+            <SpecEditorSidebar
+              apiSpec={apiSpec}
+              handleSetSelection={handleScrollToSelection}
+            />
+          </ErrorBoundary>
+        ) : (
+          <EmptySpaceHelper>A spec navigator will render here</EmptySpaceHelper>
+        )
+      }
+      renderPaneOne={
+        apiSpec ? (
+          <div className="column tall theme--pane__body">
+            <div className="tall relative overflow-hidden">
+              <CodeEditor
+                key={uniquenessKey}
+                showPrettifyButton
+                ref={editor}
+                lintOptions={{ delay: 1000 }}
+                mode="openapi"
+                defaultValue={apiSpec.contents || ''}
+                onChange={onCodeEditorChange}
+                uniquenessKey={uniquenessKey}
+              />
+              {apiSpec.contents ? null : (
+                <DesignEmptyState
+                  onImport={value => {
+                    updateApiSpecFetcher.submit(
+                      {
+                        contents: value,
+                        fromSync: 'true',
+                      },
+                      {
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}/update`,
+                        method: 'post',
+                      }
+                    );
+                  }}
+                />
+              )}
+            </div>
+            {lintMessages.length > 0 && (
+              <NoticeTable
+                notices={lintMessages}
+                onClick={handleScrollToLintMessage}
+              />
+            )}
+            {apiSpec.contents ? (
+              <Toolbar>
+                <button
+                  disabled={lintMessages.length > 0 || generateRequestCollectionFetcher.state !== 'idle'}
+                  className="btn btn--compact"
+                  onClick={() => {
+                    generateRequestCollectionFetcher.submit(
+                      {},
+                      {
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}/generate-request-collection`,
+                        method: 'post',
+                      }
+                    );
+                  }}
+                >
+                  {generateRequestCollectionFetcher.state === 'loading' ? (
+                    <i className="fa fa-spin fa-spinner" />
+                  ) : (
+                    <i className="fa fa-file-import" />
+                  )} Generate Request
+                  Collection
+                </button>
+              </Toolbar>
+            ) : null}
+          </div>
+        ) : null
+      }
+      renderPaneTwo={
+        apiSpec.contents && swaggerSpec ? (
+          <div id="swagger-ui-wrapper">
+            <ErrorBoundary
+              key={uniquenessKey}
+              invalidationKey={apiSpec.contents}
+              renderError={() => (
+                <div className="text-left margin pad">
+                  <h3>An error occurred while trying to render Swagger UI</h3>
+                  <p>
+                    This preview will automatically refresh, once you have a
+                    valid specification that can be previewed.
+                  </p>
+                </div>
+              )}
+            >
+              <SwaggerUI
+                spec={swaggerSpec}
+                supportedSubmitMethods={[
+                  'get',
+                  'put',
+                  'post',
+                  'delete',
+                  'options',
+                  'head',
+                  'patch',
+                  'trace',
+                ]}
+              />
+            </ErrorBoundary>
+          </div>
+        ) : (
+          <EmptySpaceHelper>
+            Documentation for your OpenAPI spec will render here
+          </EmptySpaceHelper>
+        )
+      }
     />
   );
 };
 
-export default WrapperDesign;
+export default Design;

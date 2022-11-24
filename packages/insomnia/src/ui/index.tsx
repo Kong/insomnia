@@ -124,11 +124,22 @@ const router = createMemoryRouter(
                             },
                             {
                               path: `${ACTIVITY_SPEC}`,
+                              loader: async (...args) => (await import('./routes/design')).loader(...args),
                               element: (
                                 <Suspense fallback={<AppLoadingIndicator />}>
                                   <Design />
                                 </Suspense>
                               ),
+                              children: [
+                                {
+                                  path: 'update',
+                                  action: async (...args) => (await import('./routes/actions')).updateApiSpecAction(...args),
+                                },
+                                {
+                                  path: 'generate-request-collection',
+                                  action: async (...args) => (await import('./routes/actions')).generateCollectionFromApiSpecAction(...args),
+                                },
+                              ],
                             },
                             {
                               path: 'test/*',

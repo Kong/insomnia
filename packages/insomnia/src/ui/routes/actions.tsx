@@ -1,9 +1,11 @@
+import type { IRuleResult } from '@stoplight/spectral-core';
 import { generate, runTests, Test } from 'insomnia-testing';
 import { ActionFunction, redirect } from 'react-router-dom';
 
 import * as session from '../../account/session';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
+import { importRaw } from '../../common/import';
 import * as models from '../../models';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
@@ -426,4 +428,58 @@ export const runTestAction: ActionFunction = async ({ params }) => {
   trackSegmentEvent(SegmentEvent.unitTestRun);
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
+};
+
+// Api Spec
+export const updateApiSpecAction: ActionFunction = async ({
+  request,
+  params,
+}) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  const formData = await request.formData();
+  const contents = formData.get('contents');
+  const fromSync = Boolean(formData.get('fromSync'));
+
+  invariant(typeof contents === 'string', 'Contents is required');
+
+  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+
+  invariant(apiSpec, 'API Spec not found');
+  await database.update({
+    ...apiSpec,
+    modified: Date.now(),
+    created: fromSync ? Date.now() : apiSpec.created,
+    contents,
+  }, fromSync);
+};
+
+export const generateCollectionFromApiSpecAction: ActionFunction = async ({
+  params,
+}) => {
+  const { organizationId, projectId, workspaceId } = params;
+
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+
+  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+
+  if (!apiSpec) {
+    throw new Error('No API Specification was found');
+  }
+  const isLintError = (result: IRuleResult) => result.severity === 0;
+  const results = (await window.main.spectralRun(apiSpec.contents)).filter(isLintError);
+  if (apiSpec.contents && results && results.length) {
+    throw new Error('Error Generating Configuration');
+  }
+
+  await importRaw(apiSpec.contents, {
+    getWorkspaceId: () => Promise.resolve(workspaceId),
+    enableDiffBasedPatching: true,
+    enableDiffDeep: true,
+    bypassDiffProps: {
+      url: true,
+    },
+  });
+
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_DEBUG}`);
 };
