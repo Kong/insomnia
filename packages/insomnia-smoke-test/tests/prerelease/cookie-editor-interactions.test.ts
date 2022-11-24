@@ -22,10 +22,18 @@ test.describe('Cookie editor', async () => {
     await page.click('pre[role="presentation"]:has-text("bar")');
     await page.locator('[data-testid="CookieValue"] >> textarea').nth(1).fill('123');
     await page.locator('text=Done').nth(1).click();
-    await page.locator('text=Done').click();
 
     // Create a new cookie
-    // TODO(filipe)
+    await page.click('text=Actions');
+    await page.click('button:has-text("Add Cookie")');
+    await page.locator('text=Edit').first().click();
+
+    // Try to replace text in Raw view
+    await page.click('text=Raw');
+    await page.locator('text=Raw Cookie String >> input[type="text"]').fill('foo2=bar2; Expires=Tue, 19 Jan 2038 03:14:07 GMT; Domain=localhost; Path=/');
+
+    await page.locator('text=Done').nth(1).click();
+    await page.click('text=Done');
 
     // Send http request
     await page.click('button:has-text("GETexample http")');
@@ -33,13 +41,16 @@ test.describe('Cookie editor', async () => {
 
     // Check in the timeline that the cookie was sent
     await page.click('text=Timeline');
-    await page.click('text=foo=b123ar');
+    await page.click('text=foo2=bar2; foo=b123ar');
 
     // Send ws request
-    // TODO(filipe)
+    await page.click('button:has-text("WSexample websocket")');
+    await page.click('text=ws://localhost:4010');
+    await page.click('[data-testid="request-pane"] >> text=Connect');
 
     // Check in the timeline that the cookie was sent
-    // TODO(filipe)
+    await page.click('text=Timeline');
+    await page.click('text=foo2=bar2; foo=b123ar;');
   });
 
 });
