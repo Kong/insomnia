@@ -1,10 +1,9 @@
-import { Call, ServiceError } from '@grpc/grpc-js';
-import * as grpc from '@grpc/grpc-js';
+import { Call, ServiceError, StatusObject } from '@grpc/grpc-js';
+import { credentials, makeGenericClientConstructor, Metadata, status } from '@grpc/grpc-js';
 import { ipcMain } from 'electron';
 import { IpcMainEvent } from 'electron';
 import { parse as urlParse } from 'url';
 
-import { GrpcResponseEventEnum } from '../../common/grpc-events';
 import { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
 import { GrpcRequestHeader } from '../../models/grpc-request';
@@ -53,21 +52,20 @@ export const start = (
 ) => {
   protoLoader.getSelectedMethod(request)?.then(method => {
     if (!method) {
-      event.reply(GrpcResponseEventEnum.error, request._id, new Error(`The gRPC method ${request.protoMethodName} could not be found`));
+      event.reply('grpc.error', request._id, new Error(`The gRPC method ${request.protoMethodName} could not be found`));
       return;
     }
     const methodType = getMethodType(method);
     // Create client
     const { url, enableTls } = parseGrpcUrl(request.url);
     if (!url) {
-      event.reply(GrpcResponseEventEnum.error, request._id, new Error('URL not specified'));
+      event.reply('grpc.error', request._id, new Error('URL not specified'));
       return undefined;
     }
-    const credentials = enableTls ? grpc.credentials.createSsl() : grpc.credentials.createInsecure();
     console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`);
     // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
-    const Client = grpc.makeGenericClientConstructor({});
-    const client = new Client(url, credentials);
+    const Client = makeGenericClientConstructor({});
+    const client = new Client(url, enableTls ? credentials.createSsl() : credentials.createInsecure());
     if (!client) {
       return;
     }
@@ -121,14 +119,15 @@ export const start = (
       // Update request stats
       models.stats.incrementExecutedRequests();
       trackSegmentEvent(SegmentEvent.requestExecute);
-      call.on('status', s => event.reply(GrpcResponseEventEnum.status, request._id, s));
-      event.reply(GrpcResponseEventEnum.start, request._id);
+
+      call.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
+      event.reply('grpc.start', request._id);
       // Save call
       callCache.set(request._id, call);
     } catch (error) {
       // TODO: How do we want to handle this case, where the message cannot be parsed?
       //  Currently an error will be shown, but the stream will not be cancelled.
-      event.reply(GrpcResponseEventEnum.error, request._id, error);
+      event.reply('grpc.error', request._id, error);
     }
     return;
   });
@@ -152,7 +151,7 @@ export const sendMessage = (
       });
     });
   } catch (error) {
-    event.reply(GrpcResponseEventEnum.error, requestId, error);
+    event.reply('grpc.error', requestId, error);
   }
 };
 
@@ -162,19 +161,19 @@ export const cancel = (requestId: string): void => callCache.get(requestId)?.can
 export const cancelMultiple = (requestIds: string[]): void => requestIds.forEach(cancel);
 
 const _setupServerStreamListeners = (event: IpcMainEvent, call: Call, requestId: string) => {
-  call.on('data', data => event.reply(GrpcResponseEventEnum.data, requestId, data));
+  call.on('data', data => event.reply('grpc.data', requestId, data));
   call.on('error', (error: ServiceError) => {
-    if (error && error.code !== grpc.status.CANCELLED) {
-      event.reply(GrpcResponseEventEnum.error, requestId, error);
+    if (error && error.code !== status.CANCELLED) {
+      event.reply('grpc.error', requestId, error);
       // Taken through inspiration from other implementation, needs validation
-      if (error.code === grpc.status.UNKNOWN || error.code === grpc.status.UNAVAILABLE) {
-        event.reply(GrpcResponseEventEnum.end, requestId);
+      if (error.code === status.UNKNOWN || error.code === status.UNAVAILABLE) {
+        event.reply('grpc.end', requestId);
         callCache.delete(requestId);
       }
     }
   });
   call.on('end', () => {
-    event.reply(GrpcResponseEventEnum.end, requestId);
+    event.reply('grpc.end', requestId);
     // @ts-expect-error -- TSCONVERSION channel not found in call
     const channel = callCache.get(requestId)?.call?.call.channel;
     if (channel) {
@@ -188,15 +187,15 @@ const _setupServerStreamListeners = (event: IpcMainEvent, call: Call, requestId:
 
 const _createUnaryCallback = (event: IpcMainEvent, requestId: string) => (err: ServiceError | null, value?: Record<string, any>) => {
   if (!err) {
-    event.reply(GrpcResponseEventEnum.data, requestId, value);
+    event.reply('grpc.data', requestId, value);
   } else {
     // Don't do anything if cancelled
     // TODO: test with other errors
-    if (err.code !== grpc.status.CANCELLED) {
-      event.reply(GrpcResponseEventEnum.error, requestId, err);
+    if (err.code !== status.CANCELLED) {
+      event.reply('grpc.error', requestId, err);
     }
   }
-  event.reply(GrpcResponseEventEnum.end, requestId);
+  event.reply('grpc.end', requestId);
   // @ts-expect-error -- TSCONVERSION channel not found in call
   const channel = callCache.get(requestId)?.call?.call.channel;
   if (channel) {
@@ -209,8 +208,8 @@ const _createUnaryCallback = (event: IpcMainEvent, requestId: string) => (err: S
 
 const filterDisabledMetaData = (
   metadata: GrpcRequestHeader[],
-): grpc.Metadata => {
-  const grpcMetadata = new grpc.Metadata();
+): Metadata => {
+  const grpcMetadata = new Metadata();
   for (const entry of metadata) {
     if (!entry.disabled) {
       grpcMetadata.add(entry.name, entry.value);
