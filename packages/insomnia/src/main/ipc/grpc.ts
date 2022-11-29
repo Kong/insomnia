@@ -1,10 +1,7 @@
 import { Call, ServiceError } from '@grpc/grpc-js';
-import { MethodDefinition } from '@grpc/grpc-js';
 import * as grpc from '@grpc/grpc-js';
-import { ServiceClient } from '@grpc/grpc-js/build/src/make-client';
 import { ipcMain } from 'electron';
 import { IpcMainEvent } from 'electron';
-import { parse as urlParse } from 'url';
 
 import { GrpcResponseEventEnum } from '../../common/grpc-events';
 import { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
@@ -38,12 +35,6 @@ export function registergRPCHandlers() {
   ipcMain.on('grpc.cancelMultiple', (_, requestIds) => cancelMultiple(requestIds));
 }
 
-interface RequestData {
-  requestId: string;
-  client: ServiceClient;
-  method: MethodDefinition<any, any>;
-  metadata: GrpcRequestHeader[];
-}
 export const parseGrpcUrl = (grpcUrl: string) => {
   const { protocol, host, href } = new URL(grpcUrl);
   if (protocol === 'grpcs:') {
@@ -81,12 +72,7 @@ export const start = (
     if (!client) {
       return;
     }
-    const requestParams: RequestData = {
-      requestId,
-      client,
-      method,
-      metadata,
-    };
+
     let call;
     try {
       const messageBody = JSON.parse(request.body.text || '');
@@ -144,9 +130,8 @@ export const start = (
       // TODO: How do we want to handle this case, where the message cannot be parsed?
       //  Currently an error will be shown, but the stream will not be cancelled.
       event.reply(GrpcResponseEventEnum.error, requestId, error);
-      return;
     }
-
+    return;
   });
 };
 
@@ -202,11 +187,7 @@ const _setupServerStreamListeners = (event: IpcMainEvent, call: Call, requestId:
   });
 };
 
-// This function returns a function
-const _createUnaryCallback = (event: IpcMainEvent, requestId: string) => (
-  err: ServiceError | null,
-  value?: Record<string, any>,
-) => {
+const _createUnaryCallback = (event: IpcMainEvent, requestId: string) => (err: ServiceError | null, value?: Record<string, any>) => {
   if (!err) {
     event.reply(GrpcResponseEventEnum.data, requestId, value);
   } else {
