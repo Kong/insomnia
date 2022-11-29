@@ -1,6 +1,6 @@
-import { Call, ServiceError, StatusObject } from '@grpc/grpc-js';
+import { Call, ClientDuplexStream, ClientReadableStream, ServiceError, StatusObject } from '@grpc/grpc-js';
 import { credentials, makeGenericClientConstructor, Metadata, status } from '@grpc/grpc-js';
-import { ipcMain } from 'electron';
+import electron, { ipcMain } from 'electron';
 import { IpcMainEvent } from 'electron';
 import { parse as urlParse } from 'url';
 
@@ -11,7 +11,7 @@ import type { GrpcRequestHeader } from '../../models/grpc-request';
 import * as protoLoader from '../../network/grpc/proto-loader';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
 
-const callCache = new Map<string, Call>();
+const grpcCalls = new Map<string, Call>();
 export interface GrpcIpcRequestParams {
   request: RenderedGrpcRequest;
 }
@@ -70,60 +70,60 @@ export const start = (
       return;
     }
 
-    let call;
     try {
       const messageBody = JSON.parse(request.body.text || '');
       switch (methodType) {
         case 'unary':
-          call = client.makeUnaryRequest(
+          const unaryCall = client.makeUnaryRequest(
             method.path,
             method.requestSerialize,
             method.responseDeserialize,
             messageBody,
             filterDisabledMetaData(request.metadata),
-            _createUnaryCallback(event, request._id),
+            onUnaryResponse(event, request._id),
           );
+          unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
+          grpcCalls.set(request._id, unaryCall);
           break;
         case 'client':
-          call = client.makeClientStreamRequest(
+          const clientCall = client.makeClientStreamRequest(
             method.path,
             method.requestSerialize,
             method.responseDeserialize,
             filterDisabledMetaData(request.metadata),
-            _createUnaryCallback(event, request._id));
+            onUnaryResponse(event, request._id));
+          clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
+          grpcCalls.set(request._id, clientCall);
           break;
         case 'server':
-          call = client.makeServerStreamRequest(
+          const serverCall = client.makeServerStreamRequest(
             method.path,
             method.requestSerialize,
             method.responseDeserialize,
             messageBody,
             filterDisabledMetaData(request.metadata),
           );
-          _setupServerStreamListeners(event, call, request._id);
+          onStreamingResponse(event, serverCall, request._id);
+          grpcCalls.set(request._id, serverCall);
           break;
         case 'bidi':
-          call = client.makeBidiStreamRequest(
+          const bidiCall = client.makeBidiStreamRequest(
             method.path,
             method.requestSerialize,
             method.responseDeserialize,
             filterDisabledMetaData(request.metadata));
-          _setupServerStreamListeners(event, call, request._id);
+          onStreamingResponse(event, bidiCall, request._id);
+          grpcCalls.set(request._id, bidiCall);
           break;
         default:
           return;
-      }
-      if (!call) {
-        return;
       }
       // Update request stats
       models.stats.incrementExecutedRequests();
       trackSegmentEvent(SegmentEvent.requestExecute);
 
-      call.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
       event.reply('grpc.start', request._id);
-      // Save call
-      callCache.set(request._id, call);
+
     } catch (error) {
       // TODO: How do we want to handle this case, where the message cannot be parsed?
       //  Currently an error will be shown, but the stream will not be cancelled.
@@ -144,7 +144,7 @@ export const sendMessage = (
     // Try removing it and using a bidi RPC and notice messages don't send consistently
     process.nextTick(() => {
       // @ts-expect-error -- TSCONVERSION only write if the call is ClientWritableStream | ClientDuplexStream
-      callCache.get(requestId)?.write(messageBody, err => {
+      grpcCalls.get(requestId)?.write(messageBody, err => {
         if (err) {
           console.error('[gRPC] Error when writing to stream', err);
         }
@@ -156,11 +156,12 @@ export const sendMessage = (
 };
 
 // @ts-expect-error -- TSCONVERSION only end if the call is ClientWritableStream | ClientDuplexStream
-export const commit = (requestId: string): void => callCache.get(requestId)?.end();
-export const cancel = (requestId: string): void => callCache.get(requestId)?.cancel();
+export const commit = (requestId: string): void => grpcCalls.get(requestId)?.end();
+export const cancel = (requestId: string): void => grpcCalls.get(requestId)?.cancel();
 export const cancelMultiple = (requestIds: string[]): void => requestIds.forEach(cancel);
 
-const _setupServerStreamListeners = (event: IpcMainEvent, call: Call, requestId: string) => {
+const onStreamingResponse = (event: IpcMainEvent, call: ClientReadableStream<any> | ClientDuplexStream<any, any>, requestId: string) => {
+  call.on('status', (status: StatusObject) => event.reply('grpc.status', requestId, status));
   call.on('data', data => event.reply('grpc.data', requestId, data));
   call.on('error', (error: ServiceError) => {
     if (error && error.code !== status.CANCELLED) {
@@ -168,47 +169,42 @@ const _setupServerStreamListeners = (event: IpcMainEvent, call: Call, requestId:
       // Taken through inspiration from other implementation, needs validation
       if (error.code === status.UNKNOWN || error.code === status.UNAVAILABLE) {
         event.reply('grpc.end', requestId);
-        callCache.delete(requestId);
+        grpcCalls.delete(requestId);
       }
     }
   });
   call.on('end', () => {
     event.reply('grpc.end', requestId);
     // @ts-expect-error -- TSCONVERSION channel not found in call
-    const channel = callCache.get(requestId)?.call?.call.channel;
+    const channel = grpcCalls.get(requestId)?.call?.call.channel;
     if (channel) {
       channel.close();
     } else {
       console.log(`[gRPC] failed to close channel for req=${requestId} because it was not found`);
     }
-    callCache.delete(requestId);
+    grpcCalls.delete(requestId);
   });
 };
 
-const _createUnaryCallback = (event: IpcMainEvent, requestId: string) => (err: ServiceError | null, value?: Record<string, any>) => {
+const onUnaryResponse = (event: IpcMainEvent, requestId: string) => (err: ServiceError | null, value?: Record<string, any>) => {
   if (!err) {
     event.reply('grpc.data', requestId, value);
-  } else {
-    // Don't do anything if cancelled
-    // TODO: test with other errors
-    if (err.code !== status.CANCELLED) {
-      event.reply('grpc.error', requestId, err);
-    }
+  }
+  if (err && err.code !== status.CANCELLED) {
+    event.reply('grpc.error', requestId, err);
   }
   event.reply('grpc.end', requestId);
   // @ts-expect-error -- TSCONVERSION channel not found in call
-  const channel = callCache.get(requestId)?.call?.call.channel;
+  const channel = grpcCalls.get(requestId)?.call?.call.channel;
   if (channel) {
     channel.close();
   } else {
     console.log(`[gRPC] failed to close channel for req=${requestId} because it was not found`);
   }
-  callCache.delete(requestId);
+  grpcCalls.delete(requestId);
 };
 
-const filterDisabledMetaData = (
-  metadata: GrpcRequestHeader[],
-): Metadata => {
+const filterDisabledMetaData = (metadata: GrpcRequestHeader[],): Metadata => {
   const grpcMetadata = new Metadata();
   for (const entry of metadata) {
     if (!entry.disabled) {
@@ -219,3 +215,6 @@ const filterDisabledMetaData = (
 };
 
 export type GrpcMethodType = 'unary' | 'server' | 'client' | 'bidi';
+const closeAllConnections = (): void => grpcCalls.forEach(x => x.cancel());
+
+electron.app.on('window-all-closed', closeAllConnections);

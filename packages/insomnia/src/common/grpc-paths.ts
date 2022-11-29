@@ -36,23 +36,17 @@ export interface GrpcMethodInfo {
   type: GrpcMethodType;
   fullPath: string;
 }
-export const getMethodType = ({
-  requestStream,
-  responseStream,
-}: MethodDefinition<any, any>): GrpcMethodType => {
-  if (requestStream) {
-    if (responseStream) {
-      return 'bidi';
-    } else {
-      return 'client';
-    }
-  } else {
-    if (responseStream) {
-      return 'server';
-    } else {
-      return 'unary';
-    }
+export const getMethodType = ({ requestStream, responseStream }: MethodDefinition<any, any>): GrpcMethodType => {
+  if (requestStream && responseStream) {
+    return 'bidi';
   }
+  if (requestStream) {
+    return 'client';
+  }
+  if (responseStream) {
+    return 'server';
+  }
+  return 'unary';
 };
 
 const getMethodInfo = (method: MethodDefinition<any, any>): GrpcMethodInfo => ({
