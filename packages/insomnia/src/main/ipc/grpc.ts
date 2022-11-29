@@ -9,7 +9,7 @@ import { parse as urlParse } from 'url';
 import { GrpcResponseEventEnum } from '../../common/grpc-events';
 import { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
-import {  GrpcRequestHeader } from '../../models/grpc-request';
+import { GrpcRequestHeader } from '../../models/grpc-request';
 import { getMethodType } from '../../network/grpc/method';
 import * as protoLoader from '../../network/grpc/proto-loader';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
@@ -38,77 +38,21 @@ export function registergRPCHandlers() {
   ipcMain.on('grpc.cancelMultiple', (_, requestIds) => cancelMultiple(requestIds));
 }
 
-const _makeServerStreamRequest = (event: IpcMainEvent,
-  {
-    requestId,
-    method: { path, requestSerialize, responseDeserialize },
-    client,
-    metadata,
-  }: RequestData,
-  messageBody: {},
-): Call | undefined => {
-  // Load initial message
-
-  const call = client.makeServerStreamRequest(
-    path,
-    requestSerialize,
-    responseDeserialize,
-    messageBody,
-    filterDisabledMetaData(metadata),
-  );
-
-  _setupServerStreamListeners(event, call, requestId);
-  // eslint-disable-next-line consistent-return
-  return call;
-
-};
-
-const _makeBidiStreamRequest = (event: IpcMainEvent, {
-  requestId,
-  method: { path, requestSerialize, responseDeserialize },
-  client,
-  metadata,
-}: RequestData): Call | undefined => {
-  const call = client.makeBidiStreamRequest(path, requestSerialize, responseDeserialize, filterDisabledMetaData(metadata));
-  _setupServerStreamListeners(event, call, requestId);
-  return call;
-};
-
 interface RequestData {
   requestId: string;
   client: ServiceClient;
   method: MethodDefinition<any, any>;
   metadata: GrpcRequestHeader[];
 }
-export const parseGrpcUrl = (
-  grpcUrl?: string,
-): {
-  url: string;
-  enableTls: boolean;
-} => {
-  const { protocol, host, href } = urlParse(grpcUrl?.toLowerCase() || '');
-
-  switch (protocol) {
-    case 'grpcs:':
-      return {
-        // @ts-expect-error -- TSCONVERSION host can be undefined
-        url: host,
-        enableTls: true,
-      };
-
-    case 'grpc:':
-      return {
-        // @ts-expect-error -- TSCONVERSION host can be undefined
-        url: host,
-        enableTls: false,
-      };
-
-    default:
-      return {
-        url: href,
-        enableTls: false,
-      };
+export const parseGrpcUrl = (grpcUrl: string) => {
+  const { protocol, host, href } = new URL(grpcUrl);
+  if (protocol === 'grpcs:') {
+    return { url: host, enableTls: true };
   }
+  if (protocol === 'grpc:') {
+    return { url: host, enableTls: false };
+  }
+  return { url: href, enableTls: false };
 };
 
 export const start = (
@@ -157,9 +101,6 @@ export const start = (
             _createUnaryCallback(event, requestId),
           );
           break;
-        case 'server':
-          call = _makeServerStreamRequest(event, requestParams, messageBody);
-          break;
         case 'client':
           call = client.makeClientStreamRequest(
             method.path,
@@ -168,8 +109,23 @@ export const start = (
             filterDisabledMetaData(metadata),
             _createUnaryCallback(event, requestId));
           break;
+        case 'server':
+          call = client.makeServerStreamRequest(
+            method.path,
+            method.requestSerialize,
+            method.responseDeserialize,
+            messageBody,
+            filterDisabledMetaData(metadata),
+          );
+          _setupServerStreamListeners(event, call, requestId);
+          break;
         case 'bidi':
-          call = _makeBidiStreamRequest(event, requestParams);
+          call = client.makeBidiStreamRequest(
+            method.path,
+            method.requestSerialize,
+            method.responseDeserialize,
+            filterDisabledMetaData(metadata));
+          _setupServerStreamListeners(event, call, requestId);
           break;
         default:
           return;
@@ -205,7 +161,11 @@ export const sendMessage = (
     // Try removing it and using a bidi RPC and notice messages don't send consistently
     process.nextTick(() => {
       // @ts-expect-error -- TSCONVERSION only write if the call is ClientWritableStream | ClientDuplexStream
-      callCache.get(requestId)?.write(messageBody, _streamWriteCallback);
+      callCache.get(requestId)?.write(messageBody, err => {
+        if (err) {
+          console.error('[gRPC] Error when writing to stream', err);
+        }
+      });
     });
   } catch (error) {
     event.reply(GrpcResponseEventEnum.error, requestId, error);
@@ -247,14 +207,14 @@ const _createUnaryCallback = (event: IpcMainEvent, requestId: string) => (
   err: ServiceError | null,
   value?: Record<string, any>,
 ) => {
-  if (err) {
+  if (!err) {
+    event.reply(GrpcResponseEventEnum.data, requestId, value);
+  } else {
     // Don't do anything if cancelled
     // TODO: test with other errors
     if (err.code !== grpc.status.CANCELLED) {
       event.reply(GrpcResponseEventEnum.error, requestId, err);
     }
-  } else {
-    event.reply(GrpcResponseEventEnum.data, requestId, value);
   }
   event.reply(GrpcResponseEventEnum.end, requestId);
   // @ts-expect-error -- TSCONVERSION channel not found in call
@@ -265,14 +225,6 @@ const _createUnaryCallback = (event: IpcMainEvent, requestId: string) => (
     console.log(`[gRPC] failed to close channel for req=${requestId} because it was not found`);
   }
   callCache.delete(requestId);
-};
-
-type WriteCallback = (error: Error | null | undefined) => void;
-
-const _streamWriteCallback: WriteCallback = err => {
-  if (err) {
-    console.error('[gRPC] Error when writing to stream', err);
-  }
 };
 
 const filterDisabledMetaData = (
