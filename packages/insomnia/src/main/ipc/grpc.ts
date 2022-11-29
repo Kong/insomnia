@@ -1,4 +1,4 @@
-import { Call, ServiceError, StatusObject } from '@grpc/grpc-js';
+import { Call, ServiceError } from '@grpc/grpc-js';
 import { MethodDefinition } from '@grpc/grpc-js';
 import * as grpc from '@grpc/grpc-js';
 import { ServiceClient } from '@grpc/grpc-js/build/src/make-client';
@@ -9,7 +9,7 @@ import { parse as urlParse } from 'url';
 import { GrpcResponseEventEnum } from '../../common/grpc-events';
 import { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
-import { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
+import {  GrpcRequestHeader } from '../../models/grpc-request';
 import { getMethodType } from '../../network/grpc/method';
 import * as protoLoader from '../../network/grpc/proto-loader';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
@@ -37,41 +37,12 @@ export function registergRPCHandlers() {
   ipcMain.on('grpc.cancel', (_, requestId) => cancel(requestId));
   ipcMain.on('grpc.cancelMultiple', (_, requestIds) => cancelMultiple(requestIds));
 }
-interface IResponseCallbacks {
-  sendData(requestId: string, val: Record<string, any> | undefined): void;
-  sendError(requestId: string, err: ServiceError): void;
-  sendStart(requestId: string): void;
-  sendEnd(requestId: string): void;
-  sendStatus(requestId: string, status: StatusObject): void;
-}
-export class ResponseCallbacks implements IResponseCallbacks {
-  _event: IpcMainEvent;
-  constructor(event: IpcMainEvent) {
-    this._event = event;
-  }
-  sendData(requestId: string, val: Record<string, any>) {
-    this._event.reply(GrpcResponseEventEnum.data, requestId, val);
-  }
-  sendError(requestId: string, err: Error) {
-    this._event.reply(GrpcResponseEventEnum.error, requestId, err);
-  }
-  sendStart(requestId: string) {
-    this._event.reply(GrpcResponseEventEnum.start, requestId);
-  }
-  sendEnd(requestId: string) {
-    this._event.reply(GrpcResponseEventEnum.end, requestId);
-  }
-  sendStatus(requestId: string, status: StatusObject) {
-    this._event.reply(GrpcResponseEventEnum.status, requestId, status);
-  }
-}
 
-const _makeServerStreamRequest = (
+const _makeServerStreamRequest = (event: IpcMainEvent,
   {
     requestId,
     method: { path, requestSerialize, responseDeserialize },
     client,
-    respond,
     metadata,
   }: RequestData,
   messageBody: {},
@@ -86,27 +57,25 @@ const _makeServerStreamRequest = (
     filterDisabledMetaData(metadata),
   );
 
-  _setupServerStreamListeners(call, requestId, respond);
+  _setupServerStreamListeners(event, call, requestId);
   // eslint-disable-next-line consistent-return
   return call;
 
 };
 
-const _makeBidiStreamRequest = ({
+const _makeBidiStreamRequest = (event: IpcMainEvent, {
   requestId,
   method: { path, requestSerialize, responseDeserialize },
   client,
-  respond,
   metadata,
 }: RequestData): Call | undefined => {
   const call = client.makeBidiStreamRequest(path, requestSerialize, responseDeserialize, filterDisabledMetaData(metadata));
-  _setupServerStreamListeners(call, requestId, respond);
+  _setupServerStreamListeners(event, call, requestId);
   return call;
 };
 
 interface RequestData {
   requestId: string;
-  respond: ResponseCallbacks;
   client: ServiceClient;
   method: MethodDefinition<any, any>;
   metadata: GrpcRequestHeader[];
@@ -141,40 +110,30 @@ export const parseGrpcUrl = (
       };
   }
 };
-const _createClient = (
-  req: GrpcRequest,
-  respond: ResponseCallbacks,
-): ServiceClient | undefined => {
-  const { url, enableTls } = parseGrpcUrl(req.url);
-  if (!url) {
-    respond.sendError(req._id, new Error('URL not specified'));
-    return undefined;
-  }
-  const credentials = enableTls ? grpc.credentials.createSsl() : grpc.credentials.createInsecure();
-  console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`);
-  // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
-  const Client = grpc.makeGenericClientConstructor({});
-  return new Client(url, credentials);
-};
 
 export const start = (
   event: IpcMainEvent,
   { request }: GrpcIpcRequestParams,
 ) => {
-  const respond = new ResponseCallbacks(event);
   const requestId = request._id;
   const metadata = request.metadata;
   protoLoader.getSelectedMethod(request)?.then(method => {
     if (!method) {
-      respond.sendError(
-        requestId,
-        new Error(`The gRPC method ${request.protoMethodName} could not be found`),
-      );
+      event.reply(GrpcResponseEventEnum.error, requestId, new Error(`The gRPC method ${request.protoMethodName} could not be found`));
       return;
     }
     const methodType = getMethodType(method);
     // Create client
-    const client = _createClient(request, respond);
+    const { url, enableTls } = parseGrpcUrl(request.url);
+    if (!url) {
+      event.reply(GrpcResponseEventEnum.error, requestId, new Error('URL not specified'));
+      return undefined;
+    }
+    const credentials = enableTls ? grpc.credentials.createSsl() : grpc.credentials.createInsecure();
+    console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`);
+    // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
+    const Client = grpc.makeGenericClientConstructor({});
+    const client = new Client(url, credentials);
     if (!client) {
       return;
     }
@@ -182,7 +141,6 @@ export const start = (
       requestId,
       client,
       method,
-      respond,
       metadata,
     };
     let call;
@@ -196,11 +154,11 @@ export const start = (
             method.responseDeserialize,
             messageBody,
             filterDisabledMetaData(metadata),
-            _createUnaryCallback(requestId, respond),
+            _createUnaryCallback(event, requestId),
           );
           break;
         case 'server':
-          call = _makeServerStreamRequest(requestParams, messageBody);
+          call = _makeServerStreamRequest(event, requestParams, messageBody);
           break;
         case 'client':
           call = client.makeClientStreamRequest(
@@ -208,10 +166,10 @@ export const start = (
             method.requestSerialize,
             method.responseDeserialize,
             filterDisabledMetaData(metadata),
-            _createUnaryCallback(requestId, respond));
+            _createUnaryCallback(event, requestId));
           break;
         case 'bidi':
-          call = _makeBidiStreamRequest(requestParams);
+          call = _makeBidiStreamRequest(event, requestParams);
           break;
         default:
           return;
@@ -222,14 +180,14 @@ export const start = (
       // Update request stats
       models.stats.incrementExecutedRequests();
       trackSegmentEvent(SegmentEvent.requestExecute);
-      call.on('status', s => respond.sendStatus(requestId, s));
-      respond.sendStart(requestId);
+      call.on('status', s => event.reply(GrpcResponseEventEnum.status, requestId, s));
+      event.reply(GrpcResponseEventEnum.start, requestId);
       // Save call
       callCache.set(requestId, call);
     } catch (error) {
       // TODO: How do we want to handle this case, where the message cannot be parsed?
       //  Currently an error will be shown, but the stream will not be cancelled.
-      respond.sendError(requestId, error);
+      event.reply(GrpcResponseEventEnum.error, requestId, error);
       return;
     }
 
@@ -240,18 +198,17 @@ export const sendMessage = (
   event: IpcMainEvent,
   { body, requestId }: GrpcIpcMessageParams,
 ) => {
-  const respond = new ResponseCallbacks(event);
   try {
     const messageBody = JSON.parse(body.text || '');
     // HACK BUT DO NOT REMOVE
     // this must happen in the next tick otherwise the stream does not flush correctly
     // Try removing it and using a bidi RPC and notice messages don't send consistently
     process.nextTick(() => {
-    // @ts-expect-error -- TSCONVERSION only write if the call is ClientWritableStream | ClientDuplexStream
+      // @ts-expect-error -- TSCONVERSION only write if the call is ClientWritableStream | ClientDuplexStream
       callCache.get(requestId)?.write(messageBody, _streamWriteCallback);
     });
   } catch (error) {
-    respond.sendError(requestId, error);
+    event.reply(GrpcResponseEventEnum.error, requestId, error);
   }
 };
 
@@ -260,20 +217,20 @@ export const commit = (requestId: string): void => callCache.get(requestId)?.end
 export const cancel = (requestId: string): void => callCache.get(requestId)?.cancel();
 export const cancelMultiple = (requestIds: string[]): void => requestIds.forEach(cancel);
 
-const _setupServerStreamListeners = (call: Call, requestId: string, respond: ResponseCallbacks) => {
-  call.on('data', data => respond.sendData(requestId, data));
+const _setupServerStreamListeners = (event: IpcMainEvent, call: Call, requestId: string) => {
+  call.on('data', data => event.reply(GrpcResponseEventEnum.data, requestId, data));
   call.on('error', (error: ServiceError) => {
     if (error && error.code !== grpc.status.CANCELLED) {
-      respond.sendError(requestId, error);
+      event.reply(GrpcResponseEventEnum.error, requestId, error);
       // Taken through inspiration from other implementation, needs validation
       if (error.code === grpc.status.UNKNOWN || error.code === grpc.status.UNAVAILABLE) {
-        respond.sendEnd(requestId);
+        event.reply(GrpcResponseEventEnum.end, requestId);
         callCache.delete(requestId);
       }
     }
   });
   call.on('end', () => {
-    respond.sendEnd(requestId);
+    event.reply(GrpcResponseEventEnum.end, requestId);
     // @ts-expect-error -- TSCONVERSION channel not found in call
     const channel = callCache.get(requestId)?.call?.call.channel;
     if (channel) {
@@ -286,7 +243,7 @@ const _setupServerStreamListeners = (call: Call, requestId: string, respond: Res
 };
 
 // This function returns a function
-const _createUnaryCallback = (requestId: string, respond: ResponseCallbacks) => (
+const _createUnaryCallback = (event: IpcMainEvent, requestId: string) => (
   err: ServiceError | null,
   value?: Record<string, any>,
 ) => {
@@ -294,14 +251,12 @@ const _createUnaryCallback = (requestId: string, respond: ResponseCallbacks) => 
     // Don't do anything if cancelled
     // TODO: test with other errors
     if (err.code !== grpc.status.CANCELLED) {
-      respond.sendError(requestId, err);
+      event.reply(GrpcResponseEventEnum.error, requestId, err);
     }
   } else {
-    // TODO: unsound non-null assertion
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    respond.sendData(requestId, value!);
+    event.reply(GrpcResponseEventEnum.data, requestId, value);
   }
-  respond.sendEnd(requestId);
+  event.reply(GrpcResponseEventEnum.end, requestId);
   // @ts-expect-error -- TSCONVERSION channel not found in call
   const channel = callCache.get(requestId)?.call?.call.channel;
   if (channel) {
