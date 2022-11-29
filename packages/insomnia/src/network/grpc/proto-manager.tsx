@@ -3,15 +3,108 @@ import fs from 'fs';
 import path from 'path';
 import React from 'react';
 
-import { database as db } from '../../../common/database';
-import { selectFileOrFolder } from '../../../common/select-file-or-folder';
-import { GRPC_LOADER_OPTIONS } from '../../../main/ipc/grpc';
-import * as models from '../../../models';
-import type { ProtoDirectory } from '../../../models/proto-directory';
-import { isProtoFile, ProtoFile } from '../../../models/proto-file';
-import { showAlert, showError } from '../../../ui/components/modals';
-import writeProtoFile from '../proto-loader/write-proto-file';
-import ingestProtoDirectory from './ingest-proto-directory';
+import { database as db } from '../../common/database';
+import { selectFileOrFolder } from '../../common/select-file-or-folder';
+import { GRPC_LOADER_OPTIONS } from '../../main/ipc/grpc';
+import * as models from '../../models';
+import type { ProtoDirectory } from '../../models/proto-directory';
+import { isProtoFile, ProtoFile } from '../../models/proto-file';
+import { showAlert, showError } from '../../ui/components/modals';
+import writeProtoFile from './write-proto-file';
+
+interface IngestResult {
+  createdDir?: ProtoDirectory | null;
+  createdIds: string[];
+  error?: Error | null;
+}
+
+export class ProtoDirectoryLoader {
+  createdIds: string[] = [];
+  rootDirPath: string;
+  workspaceId: string;
+
+  constructor(rootDirPath: string, workspaceId: string) {
+    this.rootDirPath = rootDirPath;
+    this.workspaceId = workspaceId;
+  }
+
+  async _parseDir(entryPath: string, parentId: string) {
+    const result = await this._ingest(entryPath, parentId);
+    return Boolean(result);
+  }
+
+  async _parseFile(entryPath: string, parentId: string) {
+    const extension = path.extname(entryPath);
+
+    // Ignore if not a .proto file
+    if (extension !== '.proto') {
+      return false;
+    }
+
+    const contents = await fs.promises.readFile(entryPath, 'utf-8');
+    const name = path.basename(entryPath);
+    const { _id } = await models.protoFile.create({
+      name,
+      parentId,
+      protoText: contents,
+    });
+    this.createdIds.push(_id);
+    return true;
+  }
+
+  async _ingest(dirPath: string, parentId: string): Promise<ProtoDirectory | null> {
+    // Check exists
+    if (!fs.existsSync(dirPath)) {
+      return null;
+    }
+
+    const newDirId = models.protoDirectory.createId();
+    // Read contents
+    const entries = await fs.promises.readdir(dirPath, {
+      withFileTypes: true,
+    });
+    // Loop and read all entries
+    let filesFound = false;
+
+    for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      const fullEntryPath = path.resolve(dirPath, entry.name);
+      const result = await (entry.isDirectory()
+        ? this._parseDir(fullEntryPath, newDirId)
+        : this._parseFile(fullEntryPath, newDirId));
+      filesFound = filesFound || result;
+    }
+
+    // Only create the directory if a .proto file is found in the tree
+    if (filesFound) {
+      const createdProtoDir = await models.protoDirectory.create({
+        _id: newDirId,
+        name: path.basename(dirPath),
+        parentId,
+      });
+      this.createdIds.push(createdProtoDir._id);
+      return createdProtoDir;
+    }
+
+    return null;
+  }
+
+  async load() {
+    try {
+      const createdDir = await this._ingest(this.rootDirPath, this.workspaceId);
+      return {
+        createdDir,
+        createdIds: this.createdIds,
+        error: null,
+      } as IngestResult;
+    } catch (error) {
+      return {
+        createdDir: null,
+        createdIds: this.createdIds,
+        error,
+      } as IngestResult;
+    }
+  }
+}
 
 export async function deleteFile(protoFile: ProtoFile, callback: (arg0: string) => void) {
   showAlert({
@@ -65,7 +158,7 @@ export async function addDirectory(workspaceId: string) {
       return;
     }
 
-    const result = await ingestProtoDirectory(filePath, workspaceId);
+    const result = await new ProtoDirectoryLoader(filePath, workspaceId).load();
     createdIds = result.createdIds;
     const { error, createdDir } = result;
 

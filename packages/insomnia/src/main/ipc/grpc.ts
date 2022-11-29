@@ -9,7 +9,7 @@ import { getMethodType } from '../../common/grpc-paths';
 import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
-import writeProtoFile from '../../network/grpc/proto-loader/write-proto-file';
+import writeProtoFile from '../../network/grpc/write-proto-file';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
 import { invariant } from '../../utils/invariant';
 
