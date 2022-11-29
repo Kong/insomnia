@@ -8,11 +8,7 @@ import { database as db } from '../../../../common/database';
 import { selectFileOrFolder } from '../../../../common/select-file-or-folder';
 import * as models from '../../../../models';
 import * as modals from '../../../../ui/components/modals';
-import { loadMethods as _loadMethods, loadMethodsFromPath as _loadMethodsFromPath } from '../../proto-loader';
 import * as protoManager from '../index';
-
-const loadMethods = _loadMethods as Mock;
-const loadMethodsFromPath = _loadMethodsFromPath as Mock;
 
 jest.mock('../../../../common/select-file-or-folder', () => ({
   selectFileOrFolder: jest.fn(),
@@ -78,7 +74,6 @@ describe('protoManager', () => {
       selectFileOrFolderMock.mockResolvedValue({
         filePath,
       });
-      loadMethodsFromPath.mockRejectedValue(error);
 
       // Act
       await protoManager.addFile(w._id, cbMock);
@@ -102,7 +97,6 @@ describe('protoManager', () => {
       selectFileOrFolderMock.mockResolvedValue({
         filePath,
       });
-      loadMethodsFromPath.mockResolvedValue(undefined);
       const fsReadFileSpy = jest.spyOn(fs.promises, 'readFile');
       const contents = 'contents';
       fsReadFileSpy.mockResolvedValue(contents);
@@ -130,7 +124,6 @@ describe('protoManager', () => {
       selectFileOrFolderMock.mockResolvedValue({
         filePath,
       });
-      loadMethodsFromPath.mockResolvedValue(undefined);
       const fsReadFileSpy = jest.spyOn(fs.promises, 'readFile');
       const contents = 'contents';
       fsReadFileSpy.mockResolvedValue(contents);

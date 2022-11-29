@@ -1,5 +1,6 @@
-import { Call, ClientDuplexStream, ClientReadableStream, ServiceError, StatusObject } from '@grpc/grpc-js';
+import { Call, ClientDuplexStream, ClientReadableStream, MethodDefinition, ServiceDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
 import { credentials, makeGenericClientConstructor, Metadata, status } from '@grpc/grpc-js';
+import { AnyDefinition, EnumTypeDefinition, load, MessageTypeDefinition } from '@grpc/proto-loader';
 import electron, { ipcMain } from 'electron';
 import { IpcMainEvent } from 'electron';
 import { parse as urlParse } from 'url';
@@ -7,9 +8,10 @@ import { parse as urlParse } from 'url';
 import { getMethodType } from '../../common/grpc-paths';
 import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
-import type { GrpcRequestHeader } from '../../models/grpc-request';
-import * as protoLoader from '../../network/grpc/proto-loader';
+import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
+import writeProtoFile from '../../network/grpc/proto-loader/write-proto-file';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
+import { invariant } from '../../utils/invariant';
 
 const grpcCalls = new Map<string, Call>();
 export interface GrpcIpcRequestParams {
@@ -45,12 +47,35 @@ export const parseGrpcUrl = (grpcUrl: string) => {
   }
   return { url: href, enableTls: false };
 };
+export const GRPC_LOADER_OPTIONS = {
+  keepCase: true,
+  longs: String,
+  enums: String,
+  defaults: true,
+  oneofs: true,
+};
+export const isTypeOrEnumDefinition = (obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => 'format' in obj; // same check exists internally in the grpc library
 
+export const isServiceDefinition = (obj: AnyDefinition): obj is ServiceDefinition => !isTypeOrEnumDefinition(obj);
+
+// TODO: instead of reloading the methods from the protoFile,
+//  just get it from what has already been loaded in the react component,
+//  or from the cache
+//  We can't send the method over IPC because of the following deprecation in Electron v9
+//  https://www.electronjs.org/docs/breaking-changes#behavior-changed-sending-non-js-objects-over-ipc-now-throws-an-exception
+export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDefinition<any, any> | undefined> => {
+  invariant(request.protoFileId, 'protoFileId is required');
+  const protoFile = await models.protoFile.getById(request.protoFileId);
+  invariant(protoFile?.protoText, `No proto file found for gRPC request ${request._id}`);
+  const { filePath, dirs } = await writeProtoFile(protoFile);
+  const definition = await load(filePath, { ...GRPC_LOADER_OPTIONS, includeDirs: dirs });
+  return Object.values(definition).filter(isServiceDefinition).flatMap(Object.values).find(c => c.path === request.protoMethodName);
+};
 export const start = (
   event: IpcMainEvent,
   { request }: GrpcIpcRequestParams,
 ) => {
-  protoLoader.getSelectedMethod(request)?.then(method => {
+  getSelectedMethod(request)?.then(method => {
     if (!method) {
       event.reply('grpc.error', request._id, new Error(`The gRPC method ${request.protoMethodName} could not be found`));
       return;

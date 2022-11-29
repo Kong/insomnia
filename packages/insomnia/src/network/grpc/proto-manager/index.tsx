@@ -1,14 +1,16 @@
+import { load } from '@grpc/proto-loader';
 import fs from 'fs';
 import path from 'path';
 import React from 'react';
 
 import { database as db } from '../../../common/database';
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';
+import { GRPC_LOADER_OPTIONS } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
 import type { ProtoDirectory } from '../../../models/proto-directory';
 import { isProtoFile, ProtoFile } from '../../../models/proto-file';
 import { showAlert, showError } from '../../../ui/components/modals';
-import * as protoLoader from '../proto-loader';
+import writeProtoFile from '../proto-loader/write-proto-file';
 import ingestProtoDirectory from './ingest-proto-directory';
 
 export async function deleteFile(protoFile: ProtoFile, callback: (arg0: string) => void) {
@@ -90,13 +92,14 @@ export async function addDirectory(workspaceId: string) {
     const loadedEntities = await db.withDescendants(createdDir);
     const loadedFiles = loadedEntities.filter(isProtoFile);
 
-    for (const file of loadedFiles) {
+    for (const protoFile of loadedFiles) {
       try {
-        await protoLoader.loadMethods(file);
+        const { filePath, dirs } = await writeProtoFile(protoFile);
+        load(filePath, { ...GRPC_LOADER_OPTIONS, includeDirs: dirs });
       } catch (error) {
         showError({
           title: 'Invalid Proto File',
-          message: `The file ${file.name} could not be parsed`,
+          message: `The file ${protoFile.name} could not be parsed`,
           error,
         });
         rollback = true;
@@ -120,7 +123,6 @@ export async function addDirectory(workspaceId: string) {
     }
   }
 }
-
 async function _readFile() {
   try {
     // Select file
@@ -136,7 +138,7 @@ async function _readFile() {
 
     // Try parse proto file to make sure the file is valid
     try {
-      await protoLoader.loadMethodsFromPath(filePath);
+      load(filePath, GRPC_LOADER_OPTIONS);
     } catch (error) {
       showError({
         title: 'Invalid Proto File',
@@ -156,7 +158,7 @@ async function _readFile() {
   } catch (error) {
     showError({ error });
   }
-  return undefined;
+  return;
 }
 
 export async function addFile(workspaceId: string, callback: (arg0: string) => void) {

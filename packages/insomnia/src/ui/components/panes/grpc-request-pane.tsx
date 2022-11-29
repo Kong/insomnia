@@ -1,4 +1,5 @@
-import { MethodDefinition } from '@grpc/grpc-js';
+import { MethodDefinition, ServiceDefinition } from '@grpc/grpc-js';
+import { AnyDefinition, EnumTypeDefinition, load, MessageTypeDefinition } from '@grpc/proto-loader';
 import React, { FunctionComponent, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
@@ -8,12 +9,12 @@ import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/com
 import { documentationLinks } from '../../../common/documentation';
 import { getMethodType } from '../../../common/grpc-paths';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../common/render';
-import type { GrpcMethodType } from '../../../main/ipc/grpc';
+import { GRPC_LOADER_OPTIONS, GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../models/settings';
-import * as protoLoader from '../../../network/grpc/proto-loader';
+import writeProtoFile from '../../../network/grpc/proto-loader/write-proto-file';
 import { grpcActions, useGrpc } from '../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveEnvironment } from '../../redux/selectors';
@@ -60,6 +61,9 @@ export const GrpcMethodTypeName = {
   client: 'Client Streaming',
   bidi: 'Bi-directional Streaming',
 } as const;
+const isTypeOrEnumDefinition = (obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => 'format' in obj; // same check exists internally in the grpc library
+const isServiceDefinition = (obj: AnyDefinition): obj is ServiceDefinition => !isTypeOrEnumDefinition(obj);
+
 export const GrpcRequestPane: FunctionComponent<Props> = ({
   activeRequest,
   workspaceId,
@@ -77,8 +81,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       return;
     }
     const protoFile = await models.protoFile.getById(activeRequest.protoFileId);
-    const methods = await protoLoader.loadMethods(protoFile);
-    grpcDispatch(grpcActions.loadMethods(activeRequest._id, methods));
+    if (protoFile) {
+      const { filePath, dirs } = await writeProtoFile(protoFile);
+      const definition = await load(filePath, { ...GRPC_LOADER_OPTIONS, includeDirs: dirs });
+      const methods = Object.values(definition).filter(isServiceDefinition).flatMap(Object.values);
+      grpcDispatch(grpcActions.loadMethods(activeRequest._id, methods));
+    }
   }, [activeRequest._id, activeRequest.protoFileId, reloadMethods, grpcDispatch, running]);
 
   const [selection, setSelection] = useState<{
