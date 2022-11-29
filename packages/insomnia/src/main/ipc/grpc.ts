@@ -2,6 +2,7 @@ import { Call, ServiceError } from '@grpc/grpc-js';
 import * as grpc from '@grpc/grpc-js';
 import { ipcMain } from 'electron';
 import { IpcMainEvent } from 'electron';
+import { parse as urlParse } from 'url';
 
 import { GrpcResponseEventEnum } from '../../common/grpc-events';
 import { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
@@ -36,7 +37,7 @@ export function registergRPCHandlers() {
 }
 
 export const parseGrpcUrl = (grpcUrl: string) => {
-  const { protocol, host, href } = new URL(grpcUrl);
+  const { protocol, host, href } = urlParse(grpcUrl?.toLowerCase() || '');
   if (protocol === 'grpcs:') {
     return { url: host, enableTls: true };
   }
@@ -50,18 +51,16 @@ export const start = (
   event: IpcMainEvent,
   { request }: GrpcIpcRequestParams,
 ) => {
-  const requestId = request._id;
-  const metadata = request.metadata;
   protoLoader.getSelectedMethod(request)?.then(method => {
     if (!method) {
-      event.reply(GrpcResponseEventEnum.error, requestId, new Error(`The gRPC method ${request.protoMethodName} could not be found`));
+      event.reply(GrpcResponseEventEnum.error, request._id, new Error(`The gRPC method ${request.protoMethodName} could not be found`));
       return;
     }
     const methodType = getMethodType(method);
     // Create client
     const { url, enableTls } = parseGrpcUrl(request.url);
     if (!url) {
-      event.reply(GrpcResponseEventEnum.error, requestId, new Error('URL not specified'));
+      event.reply(GrpcResponseEventEnum.error, request._id, new Error('URL not specified'));
       return undefined;
     }
     const credentials = enableTls ? grpc.credentials.createSsl() : grpc.credentials.createInsecure();
@@ -83,8 +82,8 @@ export const start = (
             method.requestSerialize,
             method.responseDeserialize,
             messageBody,
-            filterDisabledMetaData(metadata),
-            _createUnaryCallback(event, requestId),
+            filterDisabledMetaData(request.metadata),
+            _createUnaryCallback(event, request._id),
           );
           break;
         case 'client':
@@ -92,8 +91,8 @@ export const start = (
             method.path,
             method.requestSerialize,
             method.responseDeserialize,
-            filterDisabledMetaData(metadata),
-            _createUnaryCallback(event, requestId));
+            filterDisabledMetaData(request.metadata),
+            _createUnaryCallback(event, request._id));
           break;
         case 'server':
           call = client.makeServerStreamRequest(
@@ -101,17 +100,17 @@ export const start = (
             method.requestSerialize,
             method.responseDeserialize,
             messageBody,
-            filterDisabledMetaData(metadata),
+            filterDisabledMetaData(request.metadata),
           );
-          _setupServerStreamListeners(event, call, requestId);
+          _setupServerStreamListeners(event, call, request._id);
           break;
         case 'bidi':
           call = client.makeBidiStreamRequest(
             method.path,
             method.requestSerialize,
             method.responseDeserialize,
-            filterDisabledMetaData(metadata));
-          _setupServerStreamListeners(event, call, requestId);
+            filterDisabledMetaData(request.metadata));
+          _setupServerStreamListeners(event, call, request._id);
           break;
         default:
           return;
@@ -122,14 +121,14 @@ export const start = (
       // Update request stats
       models.stats.incrementExecutedRequests();
       trackSegmentEvent(SegmentEvent.requestExecute);
-      call.on('status', s => event.reply(GrpcResponseEventEnum.status, requestId, s));
-      event.reply(GrpcResponseEventEnum.start, requestId);
+      call.on('status', s => event.reply(GrpcResponseEventEnum.status, request._id, s));
+      event.reply(GrpcResponseEventEnum.start, request._id);
       // Save call
-      callCache.set(requestId, call);
+      callCache.set(request._id, call);
     } catch (error) {
       // TODO: How do we want to handle this case, where the message cannot be parsed?
       //  Currently an error will be shown, but the stream will not be cancelled.
-      event.reply(GrpcResponseEventEnum.error, requestId, error);
+      event.reply(GrpcResponseEventEnum.error, request._id, error);
     }
     return;
   });
