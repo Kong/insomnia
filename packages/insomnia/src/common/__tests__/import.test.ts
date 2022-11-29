@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { apiSpec, request, requestGroup, workspace, environment, workspaceMeta } from '../../models';
+import { apiSpec, environment, request, requestGroup, workspace } from '../../models';
 import { DEFAULT_PROJECT_ID } from '../../models/project';
 import * as importUtil from '../import';
 
