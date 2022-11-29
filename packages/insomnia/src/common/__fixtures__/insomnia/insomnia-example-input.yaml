@@ -1,0 +1,70 @@
+_type: export
+__export_format: 4
+__export_date: 2022-11-29T16:27:19.066Z
+__export_source: insomnia.desktop.app:v2022.7.0-beta.5
+resources:
+  - _id: req_123
+    parentId: wrk_123
+    modified: 1669739211182
+    created: 1669739179867
+    url: mockbin.org/request/any/{{ _.base }}/{{ _.sub }}
+    name: New Request
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers: []
+    authentication: {}
+    metaSortKey: -1669739179868
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
+  - _id: wrk_123
+    parentId: null
+    modified: 1669739177487
+    created: 1669739177487
+    name: Example
+    description: ""
+    scope: collection
+    _type: workspace
+  - _id: env_123_from_export
+    parentId: wrk_123
+    modified: 1669739193740
+    created: 1669739177493
+    name: Base Environment
+    data:
+      base: 123
+    dataPropertyOrder:
+      "&":
+        - base
+    color: null
+    isPrivate: false
+    metaSortKey: 1669739177493
+    _type: environment
+  - _id: spc_5c1a165d02d34d228374d37566154a4a
+    parentId: wrk_123
+    modified: 1669739177487
+    created: 1669739177487
+    fileName: Example
+    contents: ""
+    contentType: yaml
+    _type: api_spec
+  - _id: env_sub123
+    parentId: env_123_from_export
+    modified: 1669739204645
+    created: 1669739194224
+    name: sub
+    data:
+      sub: 456
+    dataPropertyOrder:
+      "&":
+        - sub
+    color: null
+    isPrivate: false
+    metaSortKey: 1669739194224
+    _type: environment
