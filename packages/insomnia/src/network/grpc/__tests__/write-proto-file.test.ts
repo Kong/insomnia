@@ -7,7 +7,7 @@ import path from 'path';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
-import writeProtoFile from '../write-proto-file';
+import { writeProtoFile } from '../write-proto-file';
 
 describe('writeProtoFile', () => {
   let existsSyncSpy: SpyInstance<any>;

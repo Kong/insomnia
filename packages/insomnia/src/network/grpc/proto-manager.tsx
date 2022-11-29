@@ -10,7 +10,7 @@ import * as models from '../../models';
 import type { ProtoDirectory } from '../../models/proto-directory';
 import { isProtoFile, ProtoFile } from '../../models/proto-file';
 import { showAlert, showError } from '../../ui/components/modals';
-import writeProtoFile from './write-proto-file';
+import { writeProtoFile } from './write-proto-file';
 
 interface IngestResult {
   createdDir?: ProtoDirectory | null;

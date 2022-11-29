@@ -108,7 +108,7 @@ const recursiveWriteProtoDirectory = async (
   return [dirPath, ...createdDirs.flat()];
 };
 
-const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult> => {
+export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult> => {
   // Find all ancestors
   const ancestors = await db.withAncestors(protoFile, [
     models.protoDirectory.type,
@@ -135,5 +135,3 @@ const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult> => {
     return writeIndividualProtoFile(protoFile);
   }
 };
-
-export default writeProtoFile;
