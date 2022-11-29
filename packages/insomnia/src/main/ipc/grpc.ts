@@ -4,10 +4,10 @@ import { ipcMain } from 'electron';
 import { IpcMainEvent } from 'electron';
 import { parse as urlParse } from 'url';
 
-import { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
+import { getMethodType } from '../../common/grpc-paths';
+import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
-import { GrpcRequestHeader } from '../../models/grpc-request';
-import { getMethodType } from '../../network/grpc/method';
+import type { GrpcRequestHeader } from '../../models/grpc-request';
 import * as protoLoader from '../../network/grpc/proto-loader';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
 
@@ -217,3 +217,5 @@ const filterDisabledMetaData = (
   }
   return grpcMetadata;
 };
+
+export type GrpcMethodType = 'unary' | 'server' | 'client' | 'bidi';

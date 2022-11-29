@@ -1,7 +1,7 @@
 import { MethodDefinition } from '@grpc/grpc-js';
 
-import type { GrpcMethodType } from '../network/grpc/method';
-import { getMethodType } from '../network/grpc/method';
+import { GrpcMethodType } from '../main/ipc/grpc';
+
 const PROTO_PATH_REGEX = /^\/(?:(?<package>[\w.]+)\.)?(?<service>\w+)\/(?<method>\w+)$/;
 
 interface GrpcPathSegments {
@@ -36,6 +36,24 @@ export interface GrpcMethodInfo {
   type: GrpcMethodType;
   fullPath: string;
 }
+export const getMethodType = ({
+  requestStream,
+  responseStream,
+}: MethodDefinition<any, any>): GrpcMethodType => {
+  if (requestStream) {
+    if (responseStream) {
+      return 'bidi';
+    } else {
+      return 'client';
+    }
+  } else {
+    if (responseStream) {
+      return 'server';
+    } else {
+      return 'unary';
+    }
+  }
+};
 
 const getMethodInfo = (method: MethodDefinition<any, any>): GrpcMethodInfo => ({
   segments: getGrpcPathSegments(method.path),

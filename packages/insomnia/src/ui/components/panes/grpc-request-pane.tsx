@@ -6,12 +6,13 @@ import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { documentationLinks } from '../../../common/documentation';
+import { getMethodType } from '../../../common/grpc-paths';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../common/render';
+import type { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../models/settings';
-import { canClientStream, getMethodType, GrpcMethodType, GrpcMethodTypeName } from '../../../network/grpc/method';
 import * as protoLoader from '../../../network/grpc/proto-loader';
 import { grpcActions, useGrpc } from '../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
@@ -52,7 +53,13 @@ const StyledUrlEditor = styled.div`
 const StyledDropdown = styled.div`
   flex: 1 0 auto;
 `;
-
+export const canClientStream = (methodType?: GrpcMethodType) => methodType === 'client' || methodType === 'bidi';
+export const GrpcMethodTypeName = {
+  unary: 'Unary',
+  server: 'Server Streaming',
+  client: 'Client Streaming',
+  bidi: 'Bi-directional Streaming',
+} as const;
 export const GrpcRequestPane: FunctionComponent<Props> = ({
   activeRequest,
   workspaceId,

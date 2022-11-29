@@ -1,7 +1,8 @@
 import { describe, expect, it } from '@jest/globals';
 
-import type { GrpcMethodType } from '../method';
-import { canClientStream, getMethodType, GrpcMethodTypeName } from '../method';
+import { getMethodType } from '../../../common/grpc-paths';
+import { GrpcMethodType } from '../../../main/ipc/grpc';
+import { canClientStream } from '../../../ui/components/panes/grpc-request-pane';
 
 describe('getMethodType', () => {
   it('should return unary', () => {
@@ -38,17 +39,6 @@ describe('getMethodType', () => {
         responseStream: true,
       }),
     ).toBe('bidi');
-  });
-});
-
-describe('GrpcMethodTypeName', () => {
-  it.each([
-    ['unary', 'Unary'],
-    ['server', 'Server Streaming'],
-    ['client', 'Client Streaming'],
-    ['bidi', 'Bi-directional Streaming'],
-  ])('should return expected result', (type: GrpcMethodType, expectedString: string) => {
-    expect(GrpcMethodTypeName[type]).toBe(expectedString);
   });
 });
 
