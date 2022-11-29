@@ -5,7 +5,6 @@ import React from 'react';
 
 import { database as db } from '../../common/database';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
-import { GRPC_LOADER_OPTIONS } from '../../main/ipc/grpc';
 import * as models from '../../models';
 import type { ProtoDirectory } from '../../models/proto-directory';
 import { isProtoFile, ProtoFile } from '../../models/proto-file';
@@ -188,7 +187,13 @@ export async function addDirectory(workspaceId: string) {
     for (const protoFile of loadedFiles) {
       try {
         const { filePath, dirs } = await writeProtoFile(protoFile);
-        load(filePath, { ...GRPC_LOADER_OPTIONS, includeDirs: dirs });
+        load(filePath, {
+          keepCase: true,
+          longs: String,
+          enums: String,
+          defaults: true,
+          oneofs: true,
+          includeDirs: dirs });
       } catch (error) {
         showError({
           title: 'Invalid Proto File',
@@ -231,7 +236,13 @@ async function _readFile() {
 
     // Try parse proto file to make sure the file is valid
     try {
-      load(filePath, GRPC_LOADER_OPTIONS);
+      load(filePath, {
+        keepCase: true,
+        longs: String,
+        enums: String,
+        defaults: true,
+        oneofs: true,
+      });
     } catch (error) {
       showError({
         title: 'Invalid Proto File',

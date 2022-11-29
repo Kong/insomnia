@@ -42,7 +42,14 @@ const loadMethods = async (protoFileId: string): Promise<MethodDefinition<any, a
   const protoFile = await models.protoFile.getById(protoFileId);
   invariant(protoFile, `Proto file ${protoFileId} not found`);
   const { filePath, dirs } = await writeProtoFile(protoFile);
-  const definition = await load(filePath, { ...GRPC_LOADER_OPTIONS, includeDirs: dirs });
+  const definition = await load(filePath, {
+    keepCase: true,
+    longs: String,
+    enums: String,
+    defaults: true,
+    oneofs: true,
+    includeDirs: dirs,
+  });
   return Object.values(definition).filter(isServiceDefinition).flatMap(Object.values);
 };
 
@@ -56,28 +63,26 @@ export const parseGrpcUrl = (grpcUrl: string) => {
   }
   return { url: href, enableTls: false };
 };
-export const GRPC_LOADER_OPTIONS = {
-  keepCase: true,
-  longs: String,
-  enums: String,
-  defaults: true,
-  oneofs: true,
-};
 
 // TODO: instead of reloading the methods from the protoFile,
 //  just get it from what has already been loaded in the react component,
 //  or from the cache
 //  We can't send the method over IPC because of the following deprecation in Electron v9
 //  https://www.electronjs.org/docs/breaking-changes#behavior-changed-sending-non-js-objects-over-ipc-now-throws-an-exception
-const isTypeOrEnumDefinition = (obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => 'format' in obj; // same check exists internally in the grpc library
-const isServiceDefinition = (obj: AnyDefinition): obj is ServiceDefinition => !isTypeOrEnumDefinition(obj);
 export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDefinition<any, any> | undefined> => {
   invariant(request.protoFileId, 'protoFileId is required');
   const protoFile = await models.protoFile.getById(request.protoFileId);
   invariant(protoFile?.protoText, `No proto file found for gRPC request ${request._id}`);
   const { filePath, dirs } = await writeProtoFile(protoFile);
-  const definition = await load(filePath, { ...GRPC_LOADER_OPTIONS, includeDirs: dirs });
-  return Object.values(definition).filter(isServiceDefinition).flatMap(Object.values).find(c => c.path === request.protoMethodName);
+  const definition = await load(filePath, {
+    keepCase: true,
+    longs: String,
+    enums: String,
+    defaults: true,
+    oneofs: true,
+    includeDirs: dirs,
+  });
+  return Object.values(definition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format).flatMap(Object.values).find(c => c.path === request.protoMethodName);
 };
 
 export const start = (
