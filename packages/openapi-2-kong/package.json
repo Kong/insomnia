@@ -2,7 +2,7 @@
   "private": true,
   "name": "openapi-2-kong",
   "license": "Apache-2.0",
-  "version": "3.6.1-beta.4",
+  "version": "3.6.1-beta.5",
   "author": "Kong <office@konghq.com>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,9 +16,9 @@
     "test": "jest"
   },
   "dependencies": {
+    "@apidevtools/swagger-parser": "10.1.0",
     "openapi-types": "^8.0.0",
     "slugify": "1.6.5",
-    "@apidevtools/swagger-parser": "10.1.0",
     "url-join": "^4.0.1",
     "yaml": "2.0.0-5"
   },
