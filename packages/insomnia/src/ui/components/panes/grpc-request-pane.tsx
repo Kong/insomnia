@@ -1,5 +1,4 @@
 import { MethodDefinition } from '@grpc/grpc-js';
-import { ipcRenderer } from 'electron';
 import React, { FunctionComponent, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
@@ -7,13 +6,13 @@ import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { documentationLinks } from '../../../common/documentation';
-import { GrpcRequestEventEnum } from '../../../common/grpc-events';
+import { getMethodType } from '../../../common/grpc-paths';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../common/render';
+import type { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../models/settings';
-import { canClientStream, getMethodType, GrpcMethodType, GrpcMethodTypeName } from '../../../network/grpc/method';
 import * as protoLoader from '../../../network/grpc/proto-loader';
 import { grpcActions, useGrpc } from '../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
@@ -54,7 +53,13 @@ const StyledUrlEditor = styled.div`
 const StyledDropdown = styled.div`
   flex: 1 0 auto;
 `;
-
+export const canClientStream = (methodType?: GrpcMethodType) => methodType === 'client' || methodType === 'bidi';
+export const GrpcMethodTypeName = {
+  unary: 'Unary',
+  server: 'Server Streaming',
+  client: 'Client Streaming',
+  bidi: 'Bi-directional Streaming',
+} as const;
 export const GrpcRequestPane: FunctionComponent<Props> = ({
   activeRequest,
   workspaceId,
@@ -111,7 +116,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         purpose: RENDER_PURPOSE_SEND,
         skipBody: canClientStream(methodType),
       });
-      ipcRenderer.send(GrpcRequestEventEnum.start, { request });
+      window.main.grpc.start({ request });
       grpcDispatch(grpcActions.clear(activeRequest._id));
     }
   };
@@ -168,7 +173,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           <GrpcSendButton
             running={running}
             methodType={methodType}
-            handleCancel={() => ipcRenderer.send(GrpcRequestEventEnum.cancel, activeRequest._id)}
+            handleCancel={() => window.main.grpc.cancel(activeRequest._id)}
             handleStart={handleRequestSend}
           />
         </StyledUrlBar>
@@ -196,11 +201,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     body: requestBody,
                     requestId: activeRequest._id,
                   };
-                  ipcRenderer.send(GrpcRequestEventEnum.sendMessage, preparedMessage);
+                  window.main.grpc.sendMessage(preparedMessage);
                   // @ts-expect-error -- TSCONVERSION
                   grpcDispatch(grpcActions.requestStream(activeRequest._id, preparedMessage.body.text));
                 }}
-                handleCommit={() => ipcRenderer.send(GrpcRequestEventEnum.commit, activeRequest._id)}
+                handleCommit={() => window.main.grpc.commit(activeRequest._id)}
               />
             </TabItem>
             <TabItem key="headers" title="Headers">

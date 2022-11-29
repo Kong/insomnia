@@ -1,6 +1,5 @@
 import React, { createContext, FunctionComponent, ReactNode, useContext, useEffect, useReducer } from 'react';
 
-import { GrpcResponseEventEnum } from '../../../common/grpc-events';
 import { grpcActions, GrpcDispatch } from './grpc-actions';
 import { GrpcRequestState, GrpcState, INITIAL_GRPC_REQUEST_STATE } from './grpc-reducer';
 import { grpcReducer } from './grpc-reducer';
@@ -16,19 +15,19 @@ const GrpcDispatchContext = createContext<GrpcDispatch>(e => e);
 export const GrpcProvider: FunctionComponent<Props> = ({ children }) => {
   const [state, dispatch] = useReducer(grpcReducer, {});
   // Only add listeners on mount
-  useEffect(() => window.main.on(GrpcResponseEventEnum.start, (_, requestId) => {
+  useEffect(() => window.main.on('grpc.start', (_, requestId) => {
     dispatch(grpcActions.start(requestId));
   }), []);
-  useEffect(() => window.main.on(GrpcResponseEventEnum.end, (_, requestId) => {
+  useEffect(() => window.main.on('grpc.end', (_, requestId) => {
     dispatch(grpcActions.stop(requestId));
   }), []);
-  useEffect(() => window.main.on(GrpcResponseEventEnum.data, (_, requestId, val) => {
+  useEffect(() => window.main.on('grpc.data', (_, requestId, val) => {
     dispatch(grpcActions.responseMessage(requestId, val));
   }), []);
-  useEffect(() => window.main.on(GrpcResponseEventEnum.error, (_, requestId, err) => {
+  useEffect(() => window.main.on('grpc.error', (_, requestId, err) => {
     dispatch(grpcActions.error(requestId, err));
   }), []);
-  useEffect(() => window.main.on(GrpcResponseEventEnum.status, (_, requestId, status) => {
+  useEffect(() => window.main.on('grpc.status', (_, requestId, status) => {
     dispatch(grpcActions.status(requestId, status));
   }), []);
   return (

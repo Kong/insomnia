@@ -1,8 +1,6 @@
-import { ipcRenderer } from 'electron';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import * as models from '../../../models';
 import type { ProtoFile } from '../../../models/proto-file';
 import * as protoManager from '../../../network/grpc/proto-manager';
@@ -57,7 +55,7 @@ export const ProtoFilesModal = forwardRef<ProtoFilesModalHandle, Props>(({ grpcD
     const requestIds = impacted.map(g => g._id);
     grpcDispatch(grpcActions.invalidateMany(requestIds));
     if (requestIds?.length) {
-      ipcRenderer.send(GrpcRequestEventEnum.cancelMultiple, requestIds);
+      window.main.grpc.cancelMultiple(requestIds);
     }
   });
 
