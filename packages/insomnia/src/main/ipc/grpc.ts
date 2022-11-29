@@ -11,10 +11,11 @@ import { GrpcRequestEventEnum } from '../../common/grpc-events';
 import { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
 import { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
-import callCache from '../../network/grpc/call-cache';
 import { getMethodType } from '../../network/grpc/method';
 import * as protoLoader from '../../network/grpc/proto-loader';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
+
+const callCache = new Map<string, Call>();
 
 export function registergRPCHandlers() {
   ipcMain.on(GrpcRequestEventEnum.start, (event, params: GrpcIpcRequestParams) =>
@@ -307,13 +308,20 @@ const _setupServerStreamListeners = (call: Call, requestId: string, respond: Res
       // Taken through inspiration from other implementation, needs validation
       if (error.code === grpc.status.UNKNOWN || error.code === grpc.status.UNAVAILABLE) {
         respond.sendEnd(requestId);
-        callCache.clear(requestId);
+        callCache.delete(requestId);
       }
     }
   });
   call.on('end', () => {
     respond.sendEnd(requestId);
-    callCache.clear(requestId);
+    // @ts-expect-error -- TSCONVERSION channel not found in call
+    const channel = callCache.get(requestId)?.call?.call.channel;
+    if (channel) {
+      channel.close();
+    } else {
+      console.log(`[gRPC] failed to close channel for req=${requestId} because it was not found`);
+    }
+    callCache.delete(requestId);
   });
 };
 
@@ -334,7 +342,14 @@ const _createUnaryCallback = (requestId: string, respond: ResponseCallbacks) => 
     respond.sendData(requestId, value!);
   }
   respond.sendEnd(requestId);
-  callCache.clear(requestId);
+  // @ts-expect-error -- TSCONVERSION channel not found in call
+  const channel = callCache.get(requestId)?.call?.call.channel;
+  if (channel) {
+    channel.close();
+  } else {
+    console.log(`[gRPC] failed to close channel for req=${requestId} because it was not found`);
+  }
+  callCache.delete(requestId);
 };
 
 type WriteCallback = (error: Error | null | undefined) => void;
