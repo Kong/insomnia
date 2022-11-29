@@ -7,7 +7,6 @@ import { IpcMainEvent } from 'electron';
 import { parse as urlParse } from 'url';
 
 import { GrpcResponseEventEnum } from '../../common/grpc-events';
-import { GrpcRequestEventEnum } from '../../common/grpc-events';
 import { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
 import { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
@@ -16,20 +15,19 @@ import * as protoLoader from '../../network/grpc/proto-loader';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
 
 const callCache = new Map<string, Call>();
-
+export interface gRPCBridgeAPI {
+  start: (options: GrpcIpcRequestParams) => void;
+  sendMessage: (options: GrpcIpcMessageParams) => void;
+  commit: typeof commit;
+  cancel: typeof cancel;
+  cancelMultiple: typeof cancelMultiple;
+}
 export function registergRPCHandlers() {
-  ipcMain.on(GrpcRequestEventEnum.start, (event, params: GrpcIpcRequestParams) =>
-    start(params, new ResponseCallbacks(event)),
-  );
-  ipcMain.on(GrpcRequestEventEnum.sendMessage, (event, params: GrpcIpcRequestParams) =>
-    // @ts-expect-error -- TSCONVERSION
-    sendMessage(params, new ResponseCallbacks(event)),
-  );
-  ipcMain.on(GrpcRequestEventEnum.commit, (_, requestId) => commit(requestId));
-  ipcMain.on(GrpcRequestEventEnum.cancel, (_, requestId) => cancel(requestId));
-  ipcMain.on(GrpcRequestEventEnum.cancelMultiple, (_, requestIdS) =>
-    cancelMultiple(requestIdS),
-  );
+  ipcMain.on('grpc.start', start);
+  ipcMain.on('grpc.sendMessage', sendMessage);
+  ipcMain.on('grpc.commit', (_, requestId) => commit(requestId));
+  ipcMain.on('grpc.cancel', (_, requestId) => cancel(requestId));
+  ipcMain.on('grpc.cancelMultiple', (_, requestIds) => cancelMultiple(requestIds));
 }
 interface IResponseCallbacks {
   sendData(requestId: string, val: Record<string, any> | undefined): void;
@@ -212,60 +210,62 @@ const _createClient = (
   return new Client(url, credentials);
 };
 
-export const start = async (
+export const start = (
+  event: IpcMainEvent,
   { request }: GrpcIpcRequestParams,
-  respond: ResponseCallbacks,
 ) => {
+  const respond = new ResponseCallbacks(event);
   const requestId = request._id;
   const metadata = request.metadata;
-  const method = await protoLoader.getSelectedMethod(request);
-  if (!method) {
-    respond.sendError(
-      requestId,
-      new Error(`The gRPC method ${request.protoMethodName} could not be found`),
-    );
-    return;
-  }
-  const methodType = getMethodType(method);
-  // Create client
-  const client = _createClient(request, respond);
-  if (!client) {
-    return;
-  }
-  const requestParams: RequestData = {
-    requestId,
-    client,
-    method,
-    respond,
-    metadata,
-  };
-  let call;
-  switch (methodType) {
-    case 'unary':
-      call = _makeUnaryRequest(requestParams, request.body.text || '');
-      break;
-    case 'server':
-      call = _makeServerStreamRequest(requestParams, request.body.text || '');
-      break;
-    case 'client':
-      call = _makeClientStreamRequest(requestParams);
-      break;
-    case 'bidi':
-      call = _makeBidiStreamRequest(requestParams);
-      break;
-    default:
+  protoLoader.getSelectedMethod(request)?.then(method => {
+    if (!method) {
+      respond.sendError(
+        requestId,
+        new Error(`The gRPC method ${request.protoMethodName} could not be found`),
+      );
       return;
-  }
-  if (!call) {
-    return;
-  }
-  // Update request stats
-  models.stats.incrementExecutedRequests();
-  trackSegmentEvent(SegmentEvent.requestExecute);
-  _setupStatusListener(call, requestId, respond);
-  respond.sendStart(requestId);
-  // Save call
-  callCache.set(requestId, call);
+    }
+    const methodType = getMethodType(method);
+    // Create client
+    const client = _createClient(request, respond);
+    if (!client) {
+      return;
+    }
+    const requestParams: RequestData = {
+      requestId,
+      client,
+      method,
+      respond,
+      metadata,
+    };
+    let call;
+    switch (methodType) {
+      case 'unary':
+        call = _makeUnaryRequest(requestParams, request.body.text || '');
+        break;
+      case 'server':
+        call = _makeServerStreamRequest(requestParams, request.body.text || '');
+        break;
+      case 'client':
+        call = _makeClientStreamRequest(requestParams);
+        break;
+      case 'bidi':
+        call = _makeBidiStreamRequest(requestParams);
+        break;
+      default:
+        return;
+    }
+    if (!call) {
+      return;
+    }
+    // Update request stats
+    models.stats.incrementExecutedRequests();
+    trackSegmentEvent(SegmentEvent.requestExecute);
+    _setupStatusListener(call, requestId, respond);
+    respond.sendStart(requestId);
+    // Save call
+    callCache.set(requestId, call);
+  });
 };
 const _setupStatusListener = (call: Call, requestId: string, respond: ResponseCallbacks) => {
   call.on('status', s => respond.sendStatus(requestId, s));
@@ -279,9 +279,11 @@ export interface GrpcIpcMessageParams {
   body: RenderedGrpcRequestBody;
 }
 export const sendMessage = (
+  event: IpcMainEvent,
   { body, requestId }: GrpcIpcMessageParams,
-  respond: ResponseCallbacks,
 ) => {
+  const respond = new ResponseCallbacks(event);
+
   const messageBody = _parseMessage(body.text || '', requestId, respond);
   if (!messageBody) {
     return;
@@ -296,9 +298,9 @@ export const sendMessage = (
 };
 
 // @ts-expect-error -- TSCONVERSION only end if the call is ClientWritableStream | ClientDuplexStream
-export const commit = (requestId: string) => callCache.get(requestId)?.end();
-export const cancel = (requestId: string) => callCache.get(requestId)?.cancel();
-export const cancelMultiple = (requestIds: string[]) => requestIds.forEach(cancel);
+export const commit = (requestId: string): void => callCache.get(requestId)?.end();
+export const cancel = (requestId: string): void => callCache.get(requestId)?.cancel();
+export const cancelMultiple = (requestIds: string[]): void => requestIds.forEach(cancel);
 
 const _setupServerStreamListeners = (call: Call, requestId: string, respond: ResponseCallbacks) => {
   call.on('data', data => respond.sendData(requestId, data));

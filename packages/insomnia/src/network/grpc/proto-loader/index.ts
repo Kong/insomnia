@@ -45,8 +45,7 @@ export const loadMethodsFromPath = async (
 //  or from the cache
 //  We can't send the method over IPC because of the following deprecation in Electron v9
 //  https://www.electronjs.org/docs/breaking-changes#behavior-changed-sending-non-js-objects-over-ipc-now-throws-an-exception
-// @ts-expect-error -- TSCONVERSION
-export const getSelectedMethod = async (request: GrpcRequest): MethodDefinition<any, any> | undefined => {
+export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDefinition<any, any> | undefined> => {
   // @ts-expect-error -- TSCONVERSION
   const protoFile = await models.protoFile.getById(request.protoFileId);
   const methods = await loadMethods(protoFile);
