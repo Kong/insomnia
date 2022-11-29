@@ -88,7 +88,7 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
               <PanelContainer className="pad">
                 <div className="form-row">
                   <div className="form-control form-control--outlined">
-                    <label>
+                    <label data-testid="CookieKey">
                       Key
                       <OneLineEditor
                         defaultValue={(cookie && cookie.key || '').toString()}
@@ -97,7 +97,7 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
                     </label>
                   </div>
                   <div className="form-control form-control--outlined">
-                    <label>
+                    <label data-testid="CookieValue">
                       Value
                       <OneLineEditor
                         defaultValue={(cookie && cookie.value || '').toString()}
@@ -108,7 +108,7 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
                 </div>
                 <div className="form-row">
                   <div className="form-control form-control--outlined">
-                    <label>
+                    <label data-testid="CookieDomain">
                       Domain
                       <OneLineEditor
                         defaultValue={(cookie && cookie.domain || '').toString()}
@@ -117,7 +117,7 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
                     </label>
                   </div>
                   <div className="form-control form-control--outlined">
-                    <label>
+                    <label data-testid="CookiePath">
                       Path
                       <OneLineEditor
                         defaultValue={(cookie && cookie.path || '').toString()}
@@ -127,7 +127,7 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
                   </div>
                 </div>
                 <div className="form-control form-control--outlined">
-                  <label>
+                  <label data-testid="CookieExpires">
                     Expires
                     <input type="datetime-local" defaultValue={localDateTime} onChange={event => handleCookieUpdate(Object.assign({}, cookie, { expires: event.target.value }))} />
                   </label>
