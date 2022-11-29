@@ -15,6 +15,14 @@ import * as protoLoader from '../../network/grpc/proto-loader';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
 
 const callCache = new Map<string, Call>();
+export interface GrpcIpcRequestParams {
+  request: RenderedGrpcRequest;
+}
+
+export interface GrpcIpcMessageParams {
+  requestId: string;
+  body: RenderedGrpcRequestBody;
+}
 export interface gRPCBridgeAPI {
   start: (options: GrpcIpcRequestParams) => void;
   sendMessage: (options: GrpcIpcMessageParams) => void;
@@ -58,55 +66,6 @@ export class ResponseCallbacks implements IResponseCallbacks {
   }
 }
 
-const _makeUnaryRequest = (
-  {
-    requestId,
-    method: { path, requestSerialize, responseDeserialize },
-    client,
-    respond,
-    metadata,
-  }: RequestData,
-  bodyText: string,
-): Call | undefined => {
-  // Create callback
-  const callback = _createUnaryCallback(requestId, respond);
-  // Load initial message
-  const messageBody = _parseMessage(bodyText, requestId, respond);
-  if (!messageBody) {
-    return;
-  }
-  const grpcMetadata = _parseMetadata(metadata, requestId, respond);
-  if (!grpcMetadata) {
-    return;
-  }
-  // eslint-disable-next-line consistent-return
-  return client.makeUnaryRequest(
-    path,
-    requestSerialize,
-    responseDeserialize,
-    messageBody,
-    grpcMetadata,
-    callback,
-  );
-};
-
-const _makeClientStreamRequest = ({
-  requestId,
-  method: { path, requestSerialize, responseDeserialize },
-  client,
-  respond,
-  metadata,
-}: RequestData): Call | undefined => {
-  // Create callback
-  const callback = _createUnaryCallback(requestId, respond);
-  const grpcMetadata = _parseMetadata(metadata, requestId, respond);
-  if (!grpcMetadata) {
-    return;
-  }
-  // Make call
-  return client.makeClientStreamRequest(path, requestSerialize, responseDeserialize, grpcMetadata, callback);
-};
-
 const _makeServerStreamRequest = (
   {
     requestId,
@@ -115,29 +74,22 @@ const _makeServerStreamRequest = (
     respond,
     metadata,
   }: RequestData,
-  bodyText: string,
+  messageBody: {},
 ): Call | undefined => {
   // Load initial message
-  const messageBody = _parseMessage(bodyText, requestId, respond);
-  if (!messageBody) {
-    return;
-  }
-  const grpcMetadata = _parseMetadata(metadata, requestId, respond);
-  if (!grpcMetadata) {
-    return;
-  }
-  // Make call
+
   const call = client.makeServerStreamRequest(
     path,
     requestSerialize,
     responseDeserialize,
     messageBody,
-    grpcMetadata,
+    filterDisabledMetaData(metadata),
   );
 
   _setupServerStreamListeners(call, requestId, respond);
   // eslint-disable-next-line consistent-return
   return call;
+
 };
 
 const _makeBidiStreamRequest = ({
@@ -147,12 +99,7 @@ const _makeBidiStreamRequest = ({
   respond,
   metadata,
 }: RequestData): Call | undefined => {
-  const grpcMetadata = _parseMetadata(metadata, requestId, respond);
-  if (!grpcMetadata) {
-    return;
-  }
-  // Make call
-  const call = client.makeBidiStreamRequest(path, requestSerialize, responseDeserialize, grpcMetadata);
+  const call = client.makeBidiStreamRequest(path, requestSerialize, responseDeserialize, filterDisabledMetaData(metadata));
   _setupServerStreamListeners(call, requestId, respond);
   return call;
 };
@@ -239,62 +186,73 @@ export const start = (
       metadata,
     };
     let call;
-    switch (methodType) {
-      case 'unary':
-        call = _makeUnaryRequest(requestParams, request.body.text || '');
-        break;
-      case 'server':
-        call = _makeServerStreamRequest(requestParams, request.body.text || '');
-        break;
-      case 'client':
-        call = _makeClientStreamRequest(requestParams);
-        break;
-      case 'bidi':
-        call = _makeBidiStreamRequest(requestParams);
-        break;
-      default:
+    try {
+      const messageBody = JSON.parse(request.body.text || '');
+      switch (methodType) {
+        case 'unary':
+          call = client.makeUnaryRequest(
+            method.path,
+            method.requestSerialize,
+            method.responseDeserialize,
+            messageBody,
+            filterDisabledMetaData(metadata),
+            _createUnaryCallback(requestId, respond),
+          );
+          break;
+        case 'server':
+          call = _makeServerStreamRequest(requestParams, messageBody);
+          break;
+        case 'client':
+          call = client.makeClientStreamRequest(
+            method.path,
+            method.requestSerialize,
+            method.responseDeserialize,
+            filterDisabledMetaData(metadata),
+            _createUnaryCallback(requestId, respond));
+          break;
+        case 'bidi':
+          call = _makeBidiStreamRequest(requestParams);
+          break;
+        default:
+          return;
+      }
+      if (!call) {
         return;
-    }
-    if (!call) {
+      }
+      // Update request stats
+      models.stats.incrementExecutedRequests();
+      trackSegmentEvent(SegmentEvent.requestExecute);
+      call.on('status', s => respond.sendStatus(requestId, s));
+      respond.sendStart(requestId);
+      // Save call
+      callCache.set(requestId, call);
+    } catch (error) {
+      // TODO: How do we want to handle this case, where the message cannot be parsed?
+      //  Currently an error will be shown, but the stream will not be cancelled.
+      respond.sendError(requestId, error);
       return;
     }
-    // Update request stats
-    models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute);
-    _setupStatusListener(call, requestId, respond);
-    respond.sendStart(requestId);
-    // Save call
-    callCache.set(requestId, call);
+
   });
 };
-const _setupStatusListener = (call: Call, requestId: string, respond: ResponseCallbacks) => {
-  call.on('status', s => respond.sendStatus(requestId, s));
-};
-export interface GrpcIpcRequestParams {
-  request: RenderedGrpcRequest;
-}
 
-export interface GrpcIpcMessageParams {
-  requestId: string;
-  body: RenderedGrpcRequestBody;
-}
 export const sendMessage = (
   event: IpcMainEvent,
   { body, requestId }: GrpcIpcMessageParams,
 ) => {
   const respond = new ResponseCallbacks(event);
-
-  const messageBody = _parseMessage(body.text || '', requestId, respond);
-  if (!messageBody) {
-    return;
-  }
-  // HACK BUT DO NOT REMOVE
-  // this must happen in the next tick otherwise the stream does not flush correctly
-  // Try removing it and using a bidi RPC and notice messages don't send consistently
-  process.nextTick(() => {
+  try {
+    const messageBody = JSON.parse(body.text || '');
+    // HACK BUT DO NOT REMOVE
+    // this must happen in the next tick otherwise the stream does not flush correctly
+    // Try removing it and using a bidi RPC and notice messages don't send consistently
+    process.nextTick(() => {
     // @ts-expect-error -- TSCONVERSION only write if the call is ClientWritableStream | ClientDuplexStream
-    callCache.get(requestId)?.write(messageBody, _streamWriteCallback);
-  });
+      callCache.get(requestId)?.write(messageBody, _streamWriteCallback);
+    });
+  } catch (error) {
+    respond.sendError(requestId, error);
+  }
 };
 
 // @ts-expect-error -- TSCONVERSION only end if the call is ClientWritableStream | ClientDuplexStream
@@ -362,35 +320,13 @@ const _streamWriteCallback: WriteCallback = err => {
   }
 };
 
-const _parseMessage = (
-  bodyText: string,
-  requestId: string,
-  respond: ResponseCallbacks,
-): Record<string, any> | undefined => {
-  try {
-    return JSON.parse(bodyText);
-  } catch (error) {
-    // TODO: How do we want to handle this case, where the message cannot be parsed?
-    //  Currently an error will be shown, but the stream will not be cancelled.
-    respond.sendError(requestId, error);
-    return undefined;
-  }
-};
-
-const _parseMetadata = (
+const filterDisabledMetaData = (
   metadata: GrpcRequestHeader[],
-  requestId: string,
-  respond: ResponseCallbacks,
-): grpc.Metadata | undefined => {
+): grpc.Metadata => {
   const grpcMetadata = new grpc.Metadata();
   for (const entry of metadata) {
     if (!entry.disabled) {
-      try {
-        grpcMetadata.add(entry.name, entry.value);
-      } catch (err) {
-        respond.sendError(requestId, err);
-        return undefined;
-      }
+      grpcMetadata.add(entry.name, entry.value);
     }
   }
   return grpcMetadata;
