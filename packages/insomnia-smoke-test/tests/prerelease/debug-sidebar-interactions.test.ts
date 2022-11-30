@@ -64,8 +64,10 @@ test.describe('Debug-Sidebar', async () => {
       await expect(page.locator('.app')).toContainText('Collection Settings wrk');
     });
 
-    test.fixme('Filter by request name', async () => {
-      // TODO implement
+    test('Filter by request name', async ({ page }) => {
+      await page.locator('[placeholder="Filter"]').click();
+      await page.locator('[placeholder="Filter"]').fill('example http');
+      await page.locator('button:has-text("GETexample http")').click();
     });
 
     test.fixme('Filter by a folder name', async () => {
