@@ -6,7 +6,7 @@ import { test } from '../../playwright/test';
 test.describe('Dashboard', async () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   test.describe('Projects', async () => {
-    test.skip('Can create, rename and delete new project', async ({ page }) => {
+    test('Can create, rename and delete new project', async ({ page }) => {
       // Return to Dashboard
       await page.click('[data-testid="project"] >> text=Insomnia');
       await expect(page.locator('.app')).toContainText('All Files (1)');
