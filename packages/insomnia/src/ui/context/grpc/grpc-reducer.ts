@@ -1,5 +1,6 @@
-import { MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
+import { ServiceError, StatusObject } from '@grpc/grpc-js';
 
+import { GrpcMethodInfo } from '../../../common/grpc-paths';
 import type {
   GrpcAction,
   GrpcActionMany,
@@ -12,7 +13,7 @@ export interface GrpcRequestState {
   responseMessages: GrpcMessage[];
   status?: StatusObject;
   error?: ServiceError;
-  methods: MethodDefinition<any, any>[];
+  methods: GrpcMethodInfo[];
   reloadMethods: boolean;
 }
 

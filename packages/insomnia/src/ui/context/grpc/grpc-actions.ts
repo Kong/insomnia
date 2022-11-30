@@ -1,5 +1,6 @@
-import { MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
+import { ServiceError, StatusObject } from '@grpc/grpc-js';
 
+import { GrpcMethodInfo } from '../../../common/grpc-paths';
 import { generateId } from '../../../common/misc';
 
 export interface GrpcMessage {
@@ -54,7 +55,7 @@ export type ErrorAction = Action<'error'> & Payload<ServiceError>;
 export type StatusAction = Action<'status'> & Payload<StatusObject>;
 
 export type LoadMethodsAction = Action<'loadMethods'> &
-  Payload<MethodDefinition<any, any>[]>;
+  Payload<GrpcMethodInfo[]>;
 
 type InvalidateManyAction = ActionMany<'invalidateMany'>;
 
@@ -137,7 +138,7 @@ const invalidateMany = (requestIds: string[]): InvalidateManyAction => ({
   requestIds,
 });
 
-const loadMethods = (requestId: string, methods: MethodDefinition<any, any>[]): LoadMethodsAction => ({
+const loadMethods = (requestId: string, methods: GrpcMethodInfo[]): LoadMethodsAction => ({
   type: 'loadMethods',
   requestId,
   payload: methods,

@@ -1,4 +1,3 @@
-import { MethodDefinition } from '@grpc/grpc-js';
 import React, { FunctionComponent, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
@@ -6,7 +5,7 @@ import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { documentationLinks } from '../../../common/documentation';
-import { getMethodType } from '../../../common/grpc-paths';
+import { GrpcMethodInfo } from '../../../common/grpc-paths';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../common/render';
 import { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
@@ -81,7 +80,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   }, [activeRequest._id, activeRequest.protoFileId, reloadMethods, grpcDispatch, running]);
 
   const [selection, setSelection] = useState<{
-    method?: MethodDefinition<any, any>;
+    method?: GrpcMethodInfo;
     methodType?: GrpcMethodType;
   }>({});
   // if methods are waiting to be reloaded because they are stale, don't update the method selection.
@@ -91,10 +90,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     if (reloadMethods) {
       return;
     }
-    const method = methods.find(c => c.path === activeRequest.protoMethodName);
+    const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
     setSelection({
       method,
-      methodType: method && getMethodType(method),
+      methodType: method?.type,
     });
   }, [methods, activeRequest.protoMethodName, reloadMethods]);
 

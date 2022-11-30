@@ -1,14 +1,14 @@
-import { Call, ClientDuplexStream, ClientReadableStream, MethodDefinition, ServiceDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
+import { Call, ClientDuplexStream, ClientReadableStream, MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
 import { credentials, makeGenericClientConstructor, Metadata, status } from '@grpc/grpc-js';
 import { AnyDefinition, EnumTypeDefinition, load, MessageTypeDefinition } from '@grpc/proto-loader';
 import electron, { ipcMain } from 'electron';
 import { IpcMainEvent } from 'electron';
-import { parse as urlParse } from 'url';
 
-import { getMethodType } from '../../common/grpc-paths';
+import { getMethodInfo, getMethodType, GrpcMethodInfo } from '../../common/grpc-paths';
 import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
+import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
 import { writeProtoFile } from '../../network/grpc/write-proto-file';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
 import { invariant } from '../../utils/invariant';
@@ -38,7 +38,7 @@ export function registergRPCHandlers() {
   ipcMain.on('grpc.cancelMultiple', (_, requestIds) => cancelMultiple(requestIds));
   ipcMain.handle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
 }
-const loadMethods = async (protoFileId: string): Promise<MethodDefinition<any, any>[]> => {
+const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
   const protoFile = await models.protoFile.getById(protoFileId);
   invariant(protoFile, `Proto file ${protoFileId} not found`);
   const { filePath, dirs } = await writeProtoFile(protoFile);
@@ -50,18 +50,8 @@ const loadMethods = async (protoFileId: string): Promise<MethodDefinition<any, a
     oneofs: true,
     includeDirs: dirs,
   });
-  return Object.values(definition).filter(isServiceDefinition).flatMap(Object.values);
-};
-
-export const parseGrpcUrl = (grpcUrl: string) => {
-  const { protocol, host, href } = urlParse(grpcUrl?.toLowerCase() || '');
-  if (protocol === 'grpcs:') {
-    return { url: host, enableTls: true };
-  }
-  if (protocol === 'grpc:') {
-    return { url: host, enableTls: false };
-  }
-  return { url: href, enableTls: false };
+  const methods = Object.values(definition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format).flatMap(Object.values);
+  return methods.map(getMethodInfo);
 };
 
 // TODO: instead of reloading the methods from the protoFile,

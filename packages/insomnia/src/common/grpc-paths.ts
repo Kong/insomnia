@@ -49,7 +49,7 @@ export const getMethodType = ({ requestStream, responseStream }: MethodDefinitio
   return 'unary';
 };
 
-const getMethodInfo = (method: MethodDefinition<any, any>): GrpcMethodInfo => ({
+export const getMethodInfo = (method: MethodDefinition<any, any>): GrpcMethodInfo => ({
   segments: getGrpcPathSegments(method.path),
   type: getMethodType(method),
   fullPath: method.path,
@@ -71,7 +71,6 @@ function groupBy(list: {}[], keyGetter: (item: any) => string):Record<string, an
   return Object.fromEntries(map);
 }
 
-export const groupGrpcMethodsByPackage = (grpcMethodDefinitions: MethodDefinition<any, any>[]): Record<string, GrpcMethodInfo[]> => {
-  const methodInfoList = grpcMethodDefinitions.map(getMethodInfo);
+export const groupGrpcMethodsByPackage = (methodInfoList: GrpcMethodInfo[]): Record<string, GrpcMethodInfo[]> => {
   return groupBy(methodInfoList, ({ segments }) => segments.packageName || NO_PACKAGE_KEY);
 };

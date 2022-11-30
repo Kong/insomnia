@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { parseGrpcUrl } from '../../../main/ipc/grpc';
+import { parseGrpcUrl } from '../parse-grpc-url';
 
 describe('parseGrpcUrl', () => {
   it.each([
