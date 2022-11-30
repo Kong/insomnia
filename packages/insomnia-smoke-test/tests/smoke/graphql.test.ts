@@ -16,6 +16,8 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
 
   // Import from clipboard
   await page.click('button:has-text("Clipboard")');
+  // Import as new collection
+  await page.click('div[role="dialog"] button:has-text("New")');
   // Open the new collection workspace
   await page.click('text=CollectionSmoke GraphQLjust now');
   // Open the graphql request

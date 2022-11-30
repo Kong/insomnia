@@ -6,7 +6,7 @@ import { test } from '../../playwright/test';
 test.describe('Dashboard', async () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   test.describe('Projects', async () => {
-    test('Can create, rename and delete new project', async ({ page }) => {
+    test.skip('Can create, rename and delete new project', async ({ page }) => {
       // Return to Dashboard
       await page.click('[data-testid="project"] >> text=Insomnia');
       await expect(page.locator('.app')).toContainText('All Files (1)');
@@ -24,6 +24,9 @@ test.describe('Dashboard', async () => {
       await page.click('button:has-text("Project Settings")');
       await page.click('[placeholder="My Project"]');
       await page.locator('[placeholder="My Project"]').fill('My Project123');
+
+      // Check that the project name is updated on modal
+      await expect(page.locator('.app')).toContainText('My Project123');
 
       // Close project settings modal
       await page.locator('.app').press('Escape');
@@ -54,6 +57,7 @@ test.describe('Dashboard', async () => {
       const text = await loadFixture('multiple-workspaces.yaml');
       await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
       await page.click('button:has-text("Clipboard")');
+      await page.click('div[role="dialog"] button:has-text("New")');
 
       // Check that 10 new workspaces are imported besides the default one
       const workspaceCards = page.locator('.card-badge');
