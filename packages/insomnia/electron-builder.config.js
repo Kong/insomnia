@@ -106,6 +106,7 @@ const config = {
       Name: 'Insomnia',
       Comment: 'Insomnia is a cross-platform REST client, built on top of Electron.',
       Categories: 'Development',
+      Keywords: 'GraphQL;REST;gRPC;SOAP;openAPI;GitOps;',
     },
     target: [
       {

@@ -1,4 +1,3 @@
-import { invariant } from '@remix-run/router';
 import classnames from 'classnames';
 import React, { FC, Suspense } from 'react';
 import {
@@ -14,6 +13,7 @@ import {
 
 import * as models from '../../models';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
+import { invariant } from '../../utils/invariant';
 import { Dropdown } from '../components/base/dropdown/dropdown';
 import { DropdownButton } from '../components/base/dropdown/dropdown-button';
 import { DropdownItem } from '../components/base/dropdown/dropdown-item';

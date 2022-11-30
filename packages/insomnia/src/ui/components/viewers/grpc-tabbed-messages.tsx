@@ -16,7 +16,7 @@ interface Props {
   tabNamePrefix: 'Stream' | 'Response';
   bodyText?: string;
   uniquenessKey: string;
-  handleBodyChange?: (arg0: string) => Promise<void>;
+  handleBodyChange?: (arg0: string) => void;
   handleStream?: () => void;
   handleCommit?: () => void;
   showActions?: boolean;

@@ -1,10 +1,6 @@
-import { ServiceError, StatusObject } from '@grpc/grpc-js';
-import type { ValueOf } from 'type-fest';
+import { MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
 
 import { generateId } from '../../../common/misc';
-import * as models from '../../../models';
-import type { GrpcMethodDefinition } from '../../../network/grpc/method';
-import * as protoLoader from '../../../network/grpc/proto-loader';
 
 export interface GrpcMessage {
   id: string;
@@ -12,21 +8,17 @@ export interface GrpcMessage {
   created: number;
 }
 
-export const GrpcActionTypeEnum = {
-  reset: 'reset',
-  clear: 'clear',
-  start: 'start',
-  stop: 'stop',
-  responseMessage: 'responseMessage',
-  requestMessage: 'requestStream',
-  error: 'error',
-  invalidate: 'invalidate',
-  invalidateMany: 'invalidateMany',
-  loadMethods: 'loadMethods',
-  status: 'status',
-} as const;
-
-type GrpcActionType = ValueOf<typeof GrpcActionTypeEnum>;
+export type GrpcActionType = 'reset' |
+  'clear' |
+  'start' |
+  'stop' |
+  'responseMessage' |
+  'requestStream' |
+  'error' |
+  'invalidate' |
+  'invalidateMany' |
+  'loadMethods' |
+  'status';
 
 interface Action<T extends GrpcActionType> {
   type: T;
@@ -42,29 +34,29 @@ interface Payload<T> {
   payload: T;
 }
 
-type ResetAction = Action<typeof GrpcActionTypeEnum.reset>;
+type ResetAction = Action<'reset'>;
 
-type ClearAction = Action<typeof GrpcActionTypeEnum.clear>;
+type ClearAction = Action<'clear'>;
 
-type StartAction = Action<typeof GrpcActionTypeEnum.start>;
+type StartAction = Action<'start'>;
 
-type StopAction = Action<typeof GrpcActionTypeEnum.stop>;
+type StopAction = Action<'stop'>;
 
-type InvalidateAction = Action<typeof GrpcActionTypeEnum.invalidate>;
+type InvalidateAction = Action<'invalidate'>;
 
-export type RequestMessageAction = Action<typeof GrpcActionTypeEnum.requestMessage> & Payload<GrpcMessage>;
+export type RequestMessageAction = Action<'requestStream'> & Payload<GrpcMessage>;
 
-export type ResponseMessageAction = Action<typeof GrpcActionTypeEnum.responseMessage> &
+export type ResponseMessageAction = Action<'responseMessage'> &
   Payload<GrpcMessage>;
 
-export type ErrorAction = Action<typeof GrpcActionTypeEnum.error> & Payload<ServiceError>;
+export type ErrorAction = Action<'error'> & Payload<ServiceError>;
 
-export type StatusAction = Action<typeof GrpcActionTypeEnum.status> & Payload<StatusObject>;
+export type StatusAction = Action<'status'> & Payload<StatusObject>;
 
-export type LoadMethodsAction = Action<typeof GrpcActionTypeEnum.loadMethods> &
-  Payload<GrpcMethodDefinition[]>;
+export type LoadMethodsAction = Action<'loadMethods'> &
+  Payload<MethodDefinition<any, any>[]>;
 
-type InvalidateManyAction = ActionMany<typeof GrpcActionTypeEnum.invalidateMany>;
+type InvalidateManyAction = ActionMany<'invalidateMany'>;
 
 export type GrpcAction =
   | ClearAction
@@ -81,25 +73,25 @@ export type GrpcAction =
 
 export type GrpcActionMany = InvalidateManyAction;
 
-export type GrpcDispatch = (action?: GrpcAction) => void;
+export type GrpcDispatch = (action: GrpcAction) => void;
 
 const reset = (requestId: string): ResetAction => ({
-  type: GrpcActionTypeEnum.reset,
+  type: 'reset',
   requestId,
 });
 
 const start = (requestId: string): StartAction => ({
-  type: GrpcActionTypeEnum.start,
+  type: 'start',
   requestId,
 });
 
 const stop = (requestId: string): StopAction => ({
-  type: GrpcActionTypeEnum.stop,
+  type: 'stop',
   requestId,
 });
 
 const responseMessage = (requestId: string, value: Record<string, any>): ResponseMessageAction => ({
-  type: GrpcActionTypeEnum.responseMessage,
+  type: 'responseMessage',
   requestId,
   payload: {
     id: generateId(),
@@ -108,8 +100,8 @@ const responseMessage = (requestId: string, value: Record<string, any>): Respons
   },
 });
 
-const requestMessage = (requestId: string, text: string): RequestMessageAction => ({
-  type: GrpcActionTypeEnum.requestMessage,
+const requestStream = (requestId: string, text: string): RequestMessageAction => ({
+  type: 'requestStream',
   requestId,
   payload: {
     id: generateId(),
@@ -119,52 +111,37 @@ const requestMessage = (requestId: string, text: string): RequestMessageAction =
 });
 
 const error = (requestId: string, error: ServiceError): ErrorAction => ({
-  type: GrpcActionTypeEnum.error,
+  type: 'error',
   requestId,
   payload: error,
 });
 
 const status = (requestId: string, status: StatusObject): StatusAction => ({
-  type: GrpcActionTypeEnum.status,
+  type: 'status',
   requestId,
   payload: status,
 });
 
 const clear = (requestId: string): ClearAction => ({
-  type: GrpcActionTypeEnum.clear,
+  type: 'clear',
   requestId,
 });
 
 const invalidate = (requestId: string): InvalidateAction => ({
-  type: GrpcActionTypeEnum.invalidate,
+  type: 'invalidate',
   requestId,
 });
 
-const invalidateMany = async (protoFileId: string) => {
-  const impacted = await models.grpcRequest.findByProtoFileId(protoFileId);
+const invalidateMany = (requestIds: string[]): InvalidateManyAction => ({
+  type: 'invalidateMany',
+  requestIds,
+});
 
-  // skip invalidation if no requests are linked to the proto file
-  if (!impacted?.length) {
-    return undefined;
-  }
-
-  return {
-    type: GrpcActionTypeEnum.invalidateMany,
-    requestIds: impacted.map(g => g._id),
-  } as InvalidateManyAction;
-};
-
-const loadMethods = async (requestId: string, protoFileId: string) => {
-  console.log(`[gRPC] loading proto file methods pf=${protoFileId}`);
-  const protoFile = await models.protoFile.getById(protoFileId);
-  const methods = await protoLoader.loadMethods(protoFile);
-
-  return {
-    type: GrpcActionTypeEnum.loadMethods,
-    requestId,
-    payload: methods,
-  } as LoadMethodsAction;
-};
+const loadMethods = (requestId: string, methods: MethodDefinition<any, any>[]): LoadMethodsAction => ({
+  type: 'loadMethods',
+  requestId,
+  payload: methods,
+});
 
 export const grpcActions = {
   reset,
@@ -172,7 +149,7 @@ export const grpcActions = {
   start,
   stop,
   responseMessage,
-  requestMessage,
+  requestStream,
   error,
   status,
   invalidate,

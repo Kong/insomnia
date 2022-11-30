@@ -199,26 +199,50 @@ export function getLatestByParentId(parentId: string) {
   });
 }
 
-export function getBodyStream<T extends Response, TFail extends Readable>(
-  response: T,
-  readFailureValue?: TFail | null,
-) {
-  return getBodyStreamFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
-}
-
-export const getBodyBuffer = <TFail = null>(
+export const getBodyStream = (
   response?: { bodyPath?: string; bodyCompression?: Compression },
-  readFailureValue?: TFail | null,
-) => getBodyBufferFromPath(
-    response?.bodyPath || '',
-    response?.bodyCompression || null,
-    readFailureValue,
-  );
+  readFailureValue?: string,
+): Readable | string | null => {
+  if (!response?.bodyPath) {
+    return null;
+  }
+  try {
+    fs.statSync(response?.bodyPath);
+  } catch (err) {
+    console.warn('Failed to read response body', err.message);
+    return readFailureValue === undefined ? null : readFailureValue;
+  }
+  if (response?.bodyCompression === 'zip') {
+    return fs.createReadStream(response?.bodyPath).pipe(zlib.createGunzip());
+  } else {
+    return fs.createReadStream(response?.bodyPath);
+  }
+};
+
+export const getBodyBuffer = (
+  response?: { bodyPath?: string; bodyCompression?: Compression },
+  readFailureValue?: string,
+): Buffer | string | null => {
+  if (!response?.bodyPath) {
+    // No body, so return empty Buffer
+    return Buffer.alloc(0);
+  }
+  try {
+    const rawBuffer = fs.readFileSync(response?.bodyPath);
+    if (response?.bodyCompression === 'zip') {
+      return zlib.gunzipSync(rawBuffer);
+    } else {
+      return rawBuffer;
+    }
+  } catch (err) {
+    console.warn('Failed to read response body', err.message);
+    return readFailureValue === undefined ? null : readFailureValue;
+  }
+};
 
 export function getTimeline(response: Response, showBody?: boolean) {
   const { timelinePath, bodyPath } = response;
 
-  // No body, so return empty Buffer
   if (!timelinePath) {
     return [];
   }
@@ -239,56 +263,6 @@ export function getTimeline(response: Response, showBody?: boolean) {
   } catch (err) {
     console.warn('Failed to read response body', err.message);
     return [];
-  }
-}
-
-function getBodyStreamFromPath<TFail extends Readable>(
-  bodyPath: string,
-  compression: Compression,
-  readFailureValue?: TFail | null,
-): Readable | null | TFail {
-  // No body, so return empty Buffer
-  if (!bodyPath) {
-    return null;
-  }
-
-  try {
-    fs.statSync(bodyPath);
-  } catch (err) {
-    console.warn('Failed to read response body', err.message);
-    return readFailureValue === undefined ? null : readFailureValue;
-  }
-
-  const readStream = fs.createReadStream(bodyPath);
-
-  if (compression === 'zip') {
-    return readStream.pipe(zlib.createGunzip());
-  } else {
-    return readStream;
-  }
-}
-
-function getBodyBufferFromPath<T>(
-  bodyPath: string,
-  compression: Compression,
-  readFailureValue?: T | null,
-) {
-  // No body, so return empty Buffer
-  if (!bodyPath) {
-    return Buffer.alloc(0);
-  }
-
-  try {
-    const rawBuffer = fs.readFileSync(bodyPath);
-
-    if (compression === 'zip') {
-      return zlib.gunzipSync(rawBuffer);
-    } else {
-      return rawBuffer;
-    }
-  } catch (err) {
-    console.warn('Failed to read response body', err.message);
-    return readFailureValue === undefined ? null : readFailureValue;
   }
 }
 

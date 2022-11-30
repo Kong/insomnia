@@ -1,12 +1,10 @@
 import fs from 'fs';
 import React, { FC, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { documentationLinks } from '../../common/documentation';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
 import { faint } from '../css/css-in-js';
-import { selectActiveApiSpec } from '../redux/selectors';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownItem } from './base/dropdown/dropdown-item';
@@ -123,12 +121,6 @@ const SecondaryAction: FC<Props> = ({ onImport }) => {
 };
 
 export const DesignEmptyState: FC<Props> = ({ onImport }) => {
-  const activeApiSpec = useSelector(selectActiveApiSpec);
-
-  if (!activeApiSpec || activeApiSpec.contents) {
-    return null;
-  }
-
   return (
     <Wrapper>
       <EmptyStatePane

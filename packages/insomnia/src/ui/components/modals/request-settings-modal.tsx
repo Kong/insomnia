@@ -1,4 +1,3 @@
-import { invariant } from '@remix-run/router';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -9,6 +8,7 @@ import * as requestOperations from '../../../models/helpers/request-operations';
 import { isRequest, Request } from '../../../models/request';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { isWorkspace, Workspace } from '../../../models/workspace';
+import { invariant } from '../../../utils/invariant';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

@@ -107,6 +107,7 @@ export const convert: Converter = async rawData => {
       return postman.convert(postmanJson);
     }
   } catch (error) {
+    console.error(error);
     // Nothing
   }
 

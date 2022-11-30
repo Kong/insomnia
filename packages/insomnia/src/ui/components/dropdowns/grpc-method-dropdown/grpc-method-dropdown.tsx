@@ -1,3 +1,4 @@
+import { MethodDefinition } from '@grpc/grpc-js';
 import React, { Fragment, FunctionComponent, useMemo } from 'react';
 import styled from 'styled-components';
 
@@ -7,7 +8,6 @@ import {
   groupGrpcMethodsByPackage,
   NO_PACKAGE_KEY,
 } from '../../../../common/grpc-paths';
-import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
@@ -36,10 +36,10 @@ const DropdownMethodButtonLabel = styled.div({
 
 interface Props {
   disabled?: boolean;
-  methods: GrpcMethodDefinition[];
-  selectedMethod?: GrpcMethodDefinition;
-  handleChange: (arg0: string) => Promise<void>;
-  handleChangeProtoFile: () => Promise<void>;
+  methods: MethodDefinition<any, any>[];
+  selectedMethod?: MethodDefinition<any, any>;
+  handleChange: (arg0: string) => void;
+  handleChangeProtoFile: () => void;
 }
 
 const NormalCase = styled.span`
