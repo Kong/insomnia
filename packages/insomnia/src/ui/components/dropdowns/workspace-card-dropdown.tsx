@@ -137,7 +137,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                 fetcher.submit(
                   { workspaceId: workspace._id },
                   {
-                    action: `/organization/${organizationId}/project/${workspace.parentId}/workspace/delete`,
+                    action: `/organization/${organizationId}/project/${workspace.parentId}/workspace/${workspace._id}/delete`,
                     method: 'post',
                   }
                 );
