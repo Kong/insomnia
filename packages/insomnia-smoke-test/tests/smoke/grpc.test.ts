@@ -17,6 +17,7 @@ test('can send gRPC requests', async ({ app, page }) => {
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   await page.click('button:has-text("Clipboard")');
+  await page.click('div[role="dialog"] button:has-text("New")');
   await page.click('text=CollectionSmoke gRPCjust now');
 
   await page.click('button:has-text("gRPCsay hi!")');

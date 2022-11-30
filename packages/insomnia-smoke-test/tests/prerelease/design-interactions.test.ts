@@ -57,6 +57,7 @@ test.describe('Design interactions', async () => {
     const text = await loadFixture('unit-test.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
     await page.click('button:has-text("Clipboard")');
+    await page.click('div[role="dialog"] button:has-text("New")');
     await page.click('text=unit-test.yamljust now');
 
     // Switch to Test tab

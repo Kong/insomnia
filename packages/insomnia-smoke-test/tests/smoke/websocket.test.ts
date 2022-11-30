@@ -17,6 +17,7 @@ test('can make websocket connection', async ({ app, page }) => {
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   await page.click('button:has-text("Clipboard")');
+  await page.click('div[role="dialog"] button:has-text("New")');
   await page.click('text=CollectionWebSocketsjust now');
 
   await page.click('button:has-text("localhost:4010")');
