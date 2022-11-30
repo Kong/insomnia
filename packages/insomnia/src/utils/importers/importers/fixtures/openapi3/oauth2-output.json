@@ -21,7 +21,7 @@
       "parentId": "__WORKSPACE_ID__"
     },
     {
-      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_id": "env___BASE_ENVIRONMENT_ID___sub__64c0ce7d",
       "_type": "environment",
       "data": {
         "base_path": "/v1",
@@ -31,7 +31,7 @@
         "oauth2RedirectUrl": "http://localhost/",
         "scheme": "https"
       },
-      "name": "OpenAPI env",
+      "name": "OpenAPI env api.server.test",
       "parentId": "__BASE_ENVIRONMENT_ID__"
     },
     {

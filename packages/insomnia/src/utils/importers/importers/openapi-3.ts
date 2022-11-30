@@ -136,7 +136,7 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
   let servers: OpenAPIV3.ServerObject[] | undefined;
 
   if (!document.servers) {
-    servers = [{url: 'http://example.com/'}];
+    servers = [{ url: 'http://example.com/' }];
   } else {
     servers = document.servers;
   }
@@ -146,35 +146,35 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
   );
 
   return servers
-      .map(server => {
-        const currentServerUrl = getServerUrl(server);
-        const protocol = currentServerUrl.protocol || '';
+    .map(server => {
+      const currentServerUrl = getServerUrl(server);
+      const protocol = currentServerUrl.protocol || '';
 
-        // Base path is pulled out of the URL, and the trailing slash is removed
-        const basePath = (currentServerUrl.pathname || '').replace(/\/$/, '');
+      // Base path is pulled out of the URL, and the trailing slash is removed
+      const basePath = (currentServerUrl.pathname || '').replace(/\/$/, '');
 
-        const hash = crypto
-            .createHash('sha1')
-            .update(server.url)
-            .digest('hex')
-            .slice(0, 8);
-        const openapiEnv: ImportRequest = {
-          _type: 'environment',
-          _id: `env___BASE_ENVIRONMENT_ID___sub__${hash}`,
-          parentId: baseEnv._id,
-          name: `OpenAPI env ${currentServerUrl.host}`,
-          data: {
-            // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
-            scheme: protocol.replace(/:$/, '') || ['http'],
-            base_path: basePath,
-            host: currentServerUrl.host || '',
-            ...securityVariables,
-          },
-        };
+      const hash = crypto
+        .createHash('sha1')
+        .update(server.url)
+        .digest('hex')
+        .slice(0, 8);
+      const openapiEnv: ImportRequest = {
+        _type: 'environment',
+        _id: `env___BASE_ENVIRONMENT_ID___sub__${hash}`,
+        parentId: baseEnv._id,
+        name: `OpenAPI env ${currentServerUrl.host}`,
+        data: {
+          // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
+          scheme: protocol.replace(/:$/, '') || ['http'],
+          base_path: basePath,
+          host: currentServerUrl.host || '',
+          ...securityVariables,
+        },
+      };
 
-        return openapiEnv;
-      }) || [];
-}
+      return openapiEnv;
+    }) || [];
+};
 
 /**
  * Create request definitions based on openapi document.

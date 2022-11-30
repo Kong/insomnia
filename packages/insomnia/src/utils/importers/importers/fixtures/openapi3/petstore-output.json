@@ -41,6 +41,8 @@
         "apiKey": "apiKey",
         "base_path": "/v2",
         "host": "petstore-preprod.swagger.io",
+        "oauth2ClientId": "clientId",
+        "oauth2RedirectUrl": "http://localhost/",
         "scheme": "http"
       },
       "name": "OpenAPI env petstore-preprod.swagger.io",
