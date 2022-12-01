@@ -21,8 +21,9 @@ import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-metho
 import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
-import { showModal } from '../modals';
+import { showAlert, showModal } from '../modals';
 import { ProtoFilesModal } from '../modals/proto-files-modal';
+import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { SvgIcon } from '../svg-icon';
 import { GrpcTabbedMessages } from '../viewers/grpc-tabbed-messages';
 import { EmptyStatePane } from './empty-state-pane';
@@ -88,14 +89,36 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const methodType = method?.type;
   const handleRequestSend = async () => {
     if (method && !running) {
-      const request = await getRenderedGrpcRequest({
-        request: activeRequest,
-        environmentId,
-        purpose: RENDER_PURPOSE_SEND,
-        skipBody: canClientStream(methodType),
-      });
-      window.main.grpc.start({ request });
-      grpcDispatch(grpcActions.clear(activeRequest._id));
+      try {
+        const request = await getRenderedGrpcRequest({
+          request: activeRequest,
+          environmentId,
+          purpose: RENDER_PURPOSE_SEND,
+          skipBody: canClientStream(methodType),
+        });
+        window.main.grpc.start({ request });
+        grpcDispatch(grpcActions.clear(activeRequest._id));
+      } catch (err) {
+        if (err.type === 'render') {
+          showModal(RequestRenderErrorModal, {
+            request: activeRequest,
+            error: err,
+          });
+        } else {
+          showAlert({
+            title: 'Unexpected Request Failure',
+            message: (
+              <div>
+                <p>The request failed due to an unhandled error:</p>
+                <code className="wide selectable">
+                  <pre>{err.message}</pre>
+                </code>
+              </div>
+            ),
+          });
+        }
+      }
+
     }
   };
 

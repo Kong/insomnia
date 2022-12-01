@@ -2,6 +2,7 @@ import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { docsTemplateTags } from '../../../common/documentation';
+import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
 import { isRequest } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
@@ -14,7 +15,7 @@ import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { showModal } from './index';
 export interface RequestRenderErrorModalOptions {
   error: RenderError | null;
-  request: Request | WebSocketRequest | null;
+  request: Request | WebSocketRequest | GrpcRequest | null;
 }
 export interface RequestRenderErrorModalHandle {
   show: (options: RequestRenderErrorModalOptions) => void;
