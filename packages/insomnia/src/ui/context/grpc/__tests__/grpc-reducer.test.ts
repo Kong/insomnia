@@ -11,8 +11,6 @@ import { grpcActions } from '../grpc-actions';
 import type { GrpcRequestState, GrpcState } from '../grpc-reducer';
 import { grpcReducer } from '../grpc-reducer';
 
-jest.mock('../../../../network/grpc/proto-loader');
-
 const messageBuilder = createBuilder(grpcMessageSchema);
 const requestStateBuilder = createBuilder(requestStateSchema);
 const statusBuilder = createBuilder(grpcStatusObjectSchema);

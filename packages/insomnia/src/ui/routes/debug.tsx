@@ -163,6 +163,7 @@ export const Debug: FC = () => {
   useEffect(() => {
     return () => {
       window.main.webSocket.closeAll();
+      window.main.grpc.closeAll();
     };
   }, [activeEnvironment?._id]);
 

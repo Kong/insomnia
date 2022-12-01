@@ -5,8 +5,8 @@ import type { WebSocketBridgeAPI } from './main/network/websocket';
 
 const webSocket: WebSocketBridgeAPI = {
   open: options => ipcRenderer.invoke('webSocket.open', options),
-  close: options => ipcRenderer.invoke('webSocket.close', options),
-  closeAll: () => ipcRenderer.invoke('webSocket.closeAll'),
+  close: options => ipcRenderer.send('webSocket.close', options),
+  closeAll: () => ipcRenderer.send('webSocket.closeAll'),
   readyState: {
     getCurrent: options => ipcRenderer.invoke('webSocket.readyState', options),
   },
@@ -21,6 +21,8 @@ const grpc: gRPCBridgeAPI = {
   commit: options => ipcRenderer.send('grpc.commit', options),
   cancel: options => ipcRenderer.send('grpc.cancel', options),
   cancelMultiple: options => ipcRenderer.send('grpc.cancelMultiple', options),
+  closeAll: () => ipcRenderer.send('grpc.closeAll'),
+  loadMethods: options => ipcRenderer.invoke('grpc.loadMethods', options),
 };
 const main: Window['main'] = {
   restart: () => ipcRenderer.send('restart'),

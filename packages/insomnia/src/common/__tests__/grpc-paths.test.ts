@@ -1,12 +1,8 @@
-import { createBuilder } from '@develohpanda/fluent-builder';
 import { describe, expect, it } from '@jest/globals';
 
-import { grpcMethodDefinitionSchema } from '../../ui/context/grpc/__schemas__';
 import {
   getGrpcPathSegments,
   getShortGrpcPath,
-  groupGrpcMethodsByPackage,
-  NO_PACKAGE_KEY,
 } from '../grpc-paths';
 
 describe('getGrpcPathSegments', () => {
@@ -69,80 +65,5 @@ describe('getShortGrpcPath', () => {
       fullPath,
     );
     expect(shortPath).toBe(fullPath);
-  });
-});
-const methodBuilder = createBuilder(grpcMethodDefinitionSchema);
-
-describe('groupGrpcMethodsByPackage', () => {
-  it('should group methods by package', () => {
-    const packageMethod1 = methodBuilder
-      .path('/package1.service/u')
-      .requestStream(false)
-      .responseStream(false)
-      .build();
-    const packageMethod2 = methodBuilder
-      .path('/package1.service/ss')
-      .requestStream(false)
-      .responseStream(true)
-      .build();
-    const newPackage = methodBuilder
-      .path('/package2.service/cs')
-      .requestStream(true)
-      .responseStream(false)
-      .build();
-    const noPackage = methodBuilder
-      .path('/service/bd')
-      .requestStream(true)
-      .responseStream(true)
-      .build();
-    const grouped = groupGrpcMethodsByPackage([
-      packageMethod1,
-      packageMethod2,
-      newPackage,
-      noPackage,
-    ]);
-    expect(Object.keys(grouped).length).toBe(3);
-    expect(grouped[NO_PACKAGE_KEY]).toStrictEqual([
-      {
-        segments: {
-          packageName: undefined,
-          serviceName: 'service',
-          methodName: 'bd',
-        },
-        type: 'bidi',
-        fullPath: noPackage.path,
-      },
-    ]);
-    expect(grouped.package1).toStrictEqual([
-      {
-        segments: {
-          packageName: 'package1',
-          serviceName: 'service',
-          methodName: 'u',
-        },
-        type: 'unary',
-        fullPath: packageMethod1.path,
-      },
-      {
-        segments: {
-          packageName: 'package1',
-          serviceName: 'service',
-          methodName: 'ss',
-        },
-        type: 'server',
-        fullPath: packageMethod2.path,
-      },
-    ]);
-    expect(grouped.package2).toStrictEqual([
-      {
-        segments: {
-          packageName: 'package2',
-          serviceName: 'service',
-          methodName: 'cs',
-        },
-        type: 'client',
-        fullPath: newPackage.path,
-      },
-    ]);
   });
 });

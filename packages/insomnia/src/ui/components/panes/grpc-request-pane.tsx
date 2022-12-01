@@ -1,19 +1,16 @@
-import { MethodDefinition } from '@grpc/grpc-js';
-import React, { FunctionComponent, useEffect, useState } from 'react';
+import React, { FunctionComponent } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { documentationLinks } from '../../../common/documentation';
-import { getMethodType } from '../../../common/grpc-paths';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../common/render';
-import type { GrpcMethodType } from '../../../main/ipc/grpc';
+import { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../models/settings';
-import * as protoLoader from '../../../network/grpc/proto-loader';
 import { grpcActions, useGrpc } from '../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveEnvironment } from '../../redux/selectors';
@@ -24,8 +21,9 @@ import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-metho
 import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
-import { showModal } from '../modals';
+import { showAlert, showModal } from '../modals';
 import { ProtoFilesModal } from '../modals/proto-files-modal';
+import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { SvgIcon } from '../svg-icon';
 import { GrpcTabbedMessages } from '../viewers/grpc-tabbed-messages';
 import { EmptyStatePane } from './empty-state-pane';
@@ -60,6 +58,7 @@ export const GrpcMethodTypeName = {
   client: 'Client Streaming',
   bidi: 'Bi-directional Streaming',
 } as const;
+
 export const GrpcRequestPane: FunctionComponent<Props> = ({
   activeRequest,
   workspaceId,
@@ -76,30 +75,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     if (!activeRequest.protoFileId) {
       return;
     }
-    const protoFile = await models.protoFile.getById(activeRequest.protoFileId);
-    const methods = await protoLoader.loadMethods(protoFile);
+    const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
     grpcDispatch(grpcActions.loadMethods(activeRequest._id, methods));
   }, [activeRequest._id, activeRequest.protoFileId, reloadMethods, grpcDispatch, running]);
-
-  const [selection, setSelection] = useState<{
-    method?: MethodDefinition<any, any>;
-    methodType?: GrpcMethodType;
-  }>({});
-  // if methods are waiting to be reloaded because they are stale, don't update the method selection.
-  //  This is a bit of a hack needed to avoid a split-second blank state showing on the page because
-  //  component refreshes are also triggered by database changes and before the methods have been updated.
-  useEffect(() => {
-    if (reloadMethods) {
-      return;
-    }
-    const method = methods.find(c => c.path === activeRequest.protoMethodName);
-    setSelection({
-      method,
-      methodType: method && getMethodType(method),
-    });
-  }, [methods, activeRequest.protoMethodName, reloadMethods]);
-
-  const { method, methodType } = selection;
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
@@ -107,17 +85,40 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const environmentId = activeEnvironment?._id || 'n/a';
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniquenessKey = `${activeEnvironment?.modified}::${activeRequest?._id}::${gitVersion}::${activeRequestSyncVersion}`;
-
+  const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
+  const methodType = method?.type;
   const handleRequestSend = async () => {
     if (method && !running) {
-      const request = await getRenderedGrpcRequest({
-        request: activeRequest,
-        environmentId,
-        purpose: RENDER_PURPOSE_SEND,
-        skipBody: canClientStream(methodType),
-      });
-      window.main.grpc.start({ request });
-      grpcDispatch(grpcActions.clear(activeRequest._id));
+      try {
+        const request = await getRenderedGrpcRequest({
+          request: activeRequest,
+          environmentId,
+          purpose: RENDER_PURPOSE_SEND,
+          skipBody: canClientStream(methodType),
+        });
+        window.main.grpc.start({ request });
+        grpcDispatch(grpcActions.clear(activeRequest._id));
+      } catch (err) {
+        if (err.type === 'render') {
+          showModal(RequestRenderErrorModal, {
+            request: activeRequest,
+            error: err,
+          });
+        } else {
+          showAlert({
+            title: 'Unexpected Request Failure',
+            message: (
+              <div>
+                <p>The request failed due to an unhandled error:</p>
+                <code className="wide selectable">
+                  <pre>{err.message}</pre>
+                </code>
+              </div>
+            ),
+          });
+        }
+      }
+
     }
   };
 
