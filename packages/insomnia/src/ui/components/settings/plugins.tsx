@@ -240,6 +240,7 @@ export const Plugins: FC<Props> = ({ settings }) => {
                   ].join('\n'),
                 );
               } catch (err) {
+                console.error(err);
                 showAlert({
                   title: 'Failed to Create Plugin',
                   message: err.message,
