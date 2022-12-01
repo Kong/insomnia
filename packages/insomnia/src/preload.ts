@@ -21,6 +21,7 @@ const grpc: gRPCBridgeAPI = {
   commit: options => ipcRenderer.send('grpc.commit', options),
   cancel: options => ipcRenderer.send('grpc.cancel', options),
   cancelMultiple: options => ipcRenderer.send('grpc.cancelMultiple', options),
+  closeAll: () => ipcRenderer.send('grpc.closeAll'),
   loadMethods: options => ipcRenderer.invoke('grpc.loadMethods', options),
 };
 const main: Window['main'] = {

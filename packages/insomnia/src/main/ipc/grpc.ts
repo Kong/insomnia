@@ -29,6 +29,7 @@ export interface gRPCBridgeAPI {
   cancel: typeof cancel;
   cancelMultiple: typeof cancelMultiple;
   loadMethods: typeof loadMethods;
+  closeAll: typeof closeAll;
 }
 export function registergRPCHandlers() {
   ipcMain.on('grpc.start', start);
@@ -36,6 +37,7 @@ export function registergRPCHandlers() {
   ipcMain.on('grpc.commit', (_, requestId) => commit(requestId));
   ipcMain.on('grpc.cancel', (_, requestId) => cancel(requestId));
   ipcMain.on('grpc.cancelMultiple', (_, requestIds) => cancelMultiple(requestIds));
+  ipcMain.on('grpc.closeAll', closeAll);
   ipcMain.handle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
 }
 const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
@@ -244,6 +246,6 @@ const filterDisabledMetaData = (metadata: GrpcRequestHeader[],): Metadata => {
 };
 
 export type GrpcMethodType = 'unary' | 'server' | 'client' | 'bidi';
-const closeAllConnections = (): void => grpcCalls.forEach(x => x.cancel());
+const closeAll = (): void => grpcCalls.forEach(x => x.cancel());
 
-electron.app.on('window-all-closed', closeAllConnections);
+electron.app.on('window-all-closed', closeAll);
