@@ -10,12 +10,14 @@ import gitlabApi from './gitlab-api';
 import { root, schema } from './graphql';
 import { startGRPCServer } from './grpc';
 import { oauthRoutes } from './oauth';
+import { startRouteGuideGRPCServer } from './prerelease-grpc';
 import { startWebSocketServer } from './websocket';
 
 const app = express();
 const port = 4010;
 const httpsPort = 4011;
 const grpcPort = 50051;
+const grpcRouteGuidePort = 50052;
 
 app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
@@ -60,24 +62,26 @@ app.use('/graphql', graphqlHTTP({
 }));
 
 startGRPCServer(grpcPort).then(() => {
-  const server = app.listen(port, () => {
-    console.log(`Listening at http://localhost:${port}`);
-    console.log(`Listening at ws://localhost:${port}`);
-  });
+  startRouteGuideGRPCServer(grpcRouteGuidePort).then(() => {
+    const server = app.listen(port, () => {
+      console.log(`Listening at http://localhost:${port}`);
+      console.log(`Listening at ws://localhost:${port}`);
+    });
 
-  const httpsServer = createServer({
-    cert: readFileSync(join(__dirname, '../fixtures/certificates/localhost.pem')),
-    ca: readFileSync(join(__dirname, '../fixtures/certificates/rootCA.pem')),
-    key: readFileSync(join(__dirname, '../fixtures/certificates/localhost-key.pem')),
-    // Only allow connections using valid client certificates
-    requestCert: true,
-    rejectUnauthorized: true,
-  }, app);
-  httpsServer.listen(httpsPort, () => {
-    console.log(`Listening at https://localhost:${httpsPort}`);
-    console.log(`Listening at wss://localhost:${httpsPort}`);
-  });
+    const httpsServer = createServer({
+      cert: readFileSync(join(__dirname, '../fixtures/certificates/localhost.pem')),
+      ca: readFileSync(join(__dirname, '../fixtures/certificates/rootCA.pem')),
+      key: readFileSync(join(__dirname, '../fixtures/certificates/localhost-key.pem')),
+      // Only allow connections using valid client certificates
+      requestCert: true,
+      rejectUnauthorized: true,
+    }, app);
+    httpsServer.listen(httpsPort, () => {
+      console.log(`Listening at https://localhost:${httpsPort}`);
+      console.log(`Listening at wss://localhost:${httpsPort}`);
+    });
 
-  startWebSocketServer(server);
-  startWebSocketServer(httpsServer);
+    startWebSocketServer(server);
+    startWebSocketServer(httpsServer);
+  });
 });
