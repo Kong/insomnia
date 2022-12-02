@@ -1,8 +1,10 @@
 import { Call, ClientDuplexStream, ClientReadableStream, MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
-import { credentials, makeGenericClientConstructor, Metadata, status } from '@grpc/grpc-js';
-import { AnyDefinition, EnumTypeDefinition, load, MessageTypeDefinition } from '@grpc/proto-loader';
+import { credentials, Metadata, status } from '@grpc/grpc-js';
+import { AnyDefinition, EnumTypeDefinition, MessageTypeDefinition } from '@grpc/proto-loader';
+import * as protoLoader from '@grpc/proto-loader';
 import electron, { ipcMain } from 'electron';
 import { IpcMainEvent } from 'electron';
+import { Client } from 'grpc-reflection-js';
 
 import { getMethodInfo, getMethodType, GrpcMethodInfo } from '../../common/grpc-paths';
 import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
@@ -44,7 +46,7 @@ const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
   const protoFile = await models.protoFile.getById(protoFileId);
   invariant(protoFile, `Proto file ${protoFileId} not found`);
   const { filePath, dirs } = await writeProtoFile(protoFile);
-  const definition = await load(filePath, {
+  const definition = await protoLoader.load(filePath, {
     keepCase: true,
     longs: String,
     enums: String,
@@ -52,6 +54,7 @@ const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
     oneofs: true,
     includeDirs: dirs,
   });
+  console.log(definition);
   const methods = Object.values(definition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format).flatMap(Object.values);
   return methods.map(getMethodInfo);
 };
@@ -66,7 +69,7 @@ export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDef
   const protoFile = await models.protoFile.getById(request.protoFileId);
   invariant(protoFile?.protoText, `No proto file found for gRPC request ${request._id}`);
   const { filePath, dirs } = await writeProtoFile(protoFile);
-  const definition = await load(filePath, {
+  const definition = await protoLoader.load(filePath, {
     keepCase: true,
     longs: String,
     enums: String,
@@ -76,7 +79,27 @@ export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDef
   });
   return Object.values(definition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format).flatMap(Object.values).find(c => c.path === request.protoMethodName);
 };
+const reflection = async (url: string, client: Client) => {
+  const services = (await client.listServices()) as string[];
+  const serviceRoots = await Promise.all(
+    services
+      .filter(s => s && s !== 'grpc.reflection.v1alpha.ServerReflection')
+      .map((service: string) => client.fileContainingSymbol(service))
+  );
 
+  const protos = serviceRoots.map(root => {
+    return {
+      fileName: root.files[root.files.length - 1],
+      filePath: url,
+      protoText: 'proto text not supported in gRPC reflection',
+      ast: protoLoader.loadFileDescriptorSetFromObject(root.toJSON()),
+      root: root,
+    };
+  });
+  // protoLoader.
+  // console.log(protoLoader.loadSync(root));
+  return protos;
+};
 export const start = (
   event: IpcMainEvent,
   { request }: GrpcIpcRequestParams,
@@ -94,72 +117,73 @@ export const start = (
       return undefined;
     }
     console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`);
-    // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
-    const Client = makeGenericClientConstructor({});
     const client = new Client(url, enableTls ? credentials.createSsl() : credentials.createInsecure());
-    if (!client) {
+    if (!client.grpcClient) {
       return;
     }
+    reflection(url, client).then(services => {
+      console.log(services);
+      try {
+        const messageBody = JSON.parse(request.body.text || '');
+        switch (methodType) {
+          case 'unary':
+            const unaryCall = client.grpcClient.makeUnaryRequest(
+              method.path,
+              method.requestSerialize,
+              method.responseDeserialize,
+              messageBody,
+              filterDisabledMetaData(request.metadata),
+              onUnaryResponse(event, request._id),
+            );
+            unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
+            grpcCalls.set(request._id, unaryCall);
+            break;
+          case 'client':
+            const clientCall = client.grpcClient.makeClientStreamRequest(
+              method.path,
+              method.requestSerialize,
+              method.responseDeserialize,
+              filterDisabledMetaData(request.metadata),
+              onUnaryResponse(event, request._id));
+            clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
+            grpcCalls.set(request._id, clientCall);
+            break;
+          case 'server':
+            const serverCall = client.grpcClient.makeServerStreamRequest(
+              method.path,
+              method.requestSerialize,
+              method.responseDeserialize,
+              messageBody,
+              filterDisabledMetaData(request.metadata),
+            );
+            onStreamingResponse(event, serverCall, request._id);
+            grpcCalls.set(request._id, serverCall);
+            break;
+          case 'bidi':
+            const bidiCall = client.grpcClient.makeBidiStreamRequest(
+              method.path,
+              method.requestSerialize,
+              method.responseDeserialize,
+              filterDisabledMetaData(request.metadata));
+            onStreamingResponse(event, bidiCall, request._id);
+            grpcCalls.set(request._id, bidiCall);
+            break;
+          default:
+            return;
+        }
+        // Update request stats
+        models.stats.incrementExecutedRequests();
+        trackSegmentEvent(SegmentEvent.requestExecute);
 
-    try {
-      const messageBody = JSON.parse(request.body.text || '');
-      switch (methodType) {
-        case 'unary':
-          const unaryCall = client.makeUnaryRequest(
-            method.path,
-            method.requestSerialize,
-            method.responseDeserialize,
-            messageBody,
-            filterDisabledMetaData(request.metadata),
-            onUnaryResponse(event, request._id),
-          );
-          unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
-          grpcCalls.set(request._id, unaryCall);
-          break;
-        case 'client':
-          const clientCall = client.makeClientStreamRequest(
-            method.path,
-            method.requestSerialize,
-            method.responseDeserialize,
-            filterDisabledMetaData(request.metadata),
-            onUnaryResponse(event, request._id));
-          clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
-          grpcCalls.set(request._id, clientCall);
-          break;
-        case 'server':
-          const serverCall = client.makeServerStreamRequest(
-            method.path,
-            method.requestSerialize,
-            method.responseDeserialize,
-            messageBody,
-            filterDisabledMetaData(request.metadata),
-          );
-          onStreamingResponse(event, serverCall, request._id);
-          grpcCalls.set(request._id, serverCall);
-          break;
-        case 'bidi':
-          const bidiCall = client.makeBidiStreamRequest(
-            method.path,
-            method.requestSerialize,
-            method.responseDeserialize,
-            filterDisabledMetaData(request.metadata));
-          onStreamingResponse(event, bidiCall, request._id);
-          grpcCalls.set(request._id, bidiCall);
-          break;
-        default:
-          return;
-      }
-      // Update request stats
-      models.stats.incrementExecutedRequests();
-      trackSegmentEvent(SegmentEvent.requestExecute);
+        event.reply('grpc.start', request._id);
 
-      event.reply('grpc.start', request._id);
-
-    } catch (error) {
+      } catch (error) {
       // TODO: How do we want to handle this case, where the message cannot be parsed?
       //  Currently an error will be shown, but the stream will not be cancelled.
-      event.reply('grpc.error', request._id, error);
-    }
+        event.reply('grpc.error', request._id, error);
+      }
+    });
+
     return;
   });
 };
