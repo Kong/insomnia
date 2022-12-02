@@ -45,7 +45,7 @@
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.2.6",
     "@apidevtools/swagger-parser": "10.1.0",
-    "@getinsomnia/node-libcurl": "2.3.5-6",
+    "@getinsomnia/node-libcurl": "2.3.5-7",
     "@grpc/grpc-js": "^1.1.8",
     "@grpc/proto-loader": "^0.5.5",
     "@jest/globals": "^28.1.0",
@@ -163,7 +163,7 @@
     "cross-env": "^7.0.3",
     "date-fns": "^2.28.0",
     "deep-equal": "^1.0.1",
-    "electron": "21.2.0",
+    "electron": "22.0.0",
     "electron-builder": "23.0.7",
     "electron-builder-squirrel-windows": "23.0.7",
     "electron-devtools-installer": "^3.2.0",
