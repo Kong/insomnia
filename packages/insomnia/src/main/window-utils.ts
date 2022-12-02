@@ -114,8 +114,8 @@ export function createWindow() {
     clickLink(url);
   });
 
-  mainWindow?.webContents.on('new-window', event => {
-    event.preventDefault();
+  mainWindow?.webContents.setWindowOpenHandler(() => {
+    return { action: 'deny' };
   });
 
   // Load the html of the app.
