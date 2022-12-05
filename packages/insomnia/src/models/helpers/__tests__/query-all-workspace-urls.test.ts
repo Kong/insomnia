@@ -11,8 +11,8 @@ describe('queryAllWorkspaceUrls', () => {
     const w = await models.workspace.create({
       name: 'Workspace',
     });
-    await expect(queryAllWorkspaceUrls(w, models.request.type)).resolves.toHaveLength(0);
-    await expect(queryAllWorkspaceUrls(w, models.grpcRequest.type)).resolves.toHaveLength(0);
+    await expect(queryAllWorkspaceUrls(w._id, models.request.type)).resolves.toHaveLength(0);
+    await expect(queryAllWorkspaceUrls(w._id, models.grpcRequest.type)).resolves.toHaveLength(0);
   });
 
   it('should return urls and exclude that of the selected request', async () => {
@@ -78,17 +78,17 @@ describe('queryAllWorkspaceUrls', () => {
       url: 'diff.url',
     });
     // All items
-    await expect(queryAllWorkspaceUrls(w, models.request.type)).resolves.toStrictEqual(
+    await expect(queryAllWorkspaceUrls(w._id, models.request.type)).resolves.toStrictEqual(
       expect.arrayContaining([r1.url, r2.url]),
     );
-    await expect(queryAllWorkspaceUrls(w, models.grpcRequest.type)).resolves.toStrictEqual(
+    await expect(queryAllWorkspaceUrls(w._id, models.grpcRequest.type)).resolves.toStrictEqual(
       expect.arrayContaining([gr1.url, gr2.url]),
     );
     // Ignore url of the selected request id
-    await expect(queryAllWorkspaceUrls(w, models.request.type, r1._id)).resolves.toStrictEqual(
+    await expect(queryAllWorkspaceUrls(w._id, models.request.type, r1._id)).resolves.toStrictEqual(
       expect.arrayContaining([r2.url]),
     );
-    await expect(queryAllWorkspaceUrls(w, models.grpcRequest.type, gr1._id)).resolves.toStrictEqual(
+    await expect(queryAllWorkspaceUrls(w._id, models.grpcRequest.type, gr1._id)).resolves.toStrictEqual(
       expect.arrayContaining([gr2.url]),
     );
   });

@@ -192,7 +192,7 @@ export const SidebarLayout: FC<Props> = ({
   renderPaneTwo,
   renderPageSidebar,
 }) => {
-  const settings = useSelector(selectSettings);
+  const { forceVerticalLayout } = useSelector(selectSettings);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const reduxPaneHeight = useSelector(selectPaneHeight);
   const reduxPaneWidth = useSelector(selectPaneWidth);
@@ -359,7 +359,7 @@ export const SidebarLayout: FC<Props> = ({
     <LayoutGrid
       key="wrapper"
       id="wrapper"
-      orientation={settings.forceVerticalLayout ? 'vertical' : 'horizontal'}
+      orientation={forceVerticalLayout ? 'vertical' : 'horizontal'}
       style={{
         gridTemplateColumns: gridColumns,
         gridTemplateRows: gridRows,

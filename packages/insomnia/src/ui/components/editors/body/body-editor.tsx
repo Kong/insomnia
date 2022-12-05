@@ -22,7 +22,6 @@ import {
   newBodyFormUrlEncoded,
   newBodyRaw,
 } from '../../../../models/request';
-import type { Settings } from '../../../../models/settings';
 import type { Workspace } from '../../../../models/workspace';
 import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
 import { AskModal } from '../../modals/ask-modal';
@@ -38,14 +37,12 @@ import { UrlEncodedEditor } from './url-encoded-editor';
 interface Props {
   request: Request;
   workspace: Workspace;
-  settings: Settings;
   environmentId: string;
 }
 
 export const BodyEditor: FC<Props> = ({
   request,
   workspace,
-  settings,
   environmentId,
 }) => {
   const handleRawChange = useCallback((rawValue: string) => {
@@ -118,7 +115,7 @@ export const BodyEditor: FC<Props> = ({
     } else if (mimeType === CONTENT_TYPE_FILE) {
       return <FileEditor key={uniqueKey} onChange={handleFileChange} path={fileName || ''} />;
     } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
-      return <GraphQLEditor key={uniqueKey} uniquenessKey={uniqueKey} request={request} settings={settings} workspaceId={workspace._id} environmentId={environmentId} onChange={handleGraphQLChange} />;
+      return <GraphQLEditor key={uniqueKey} uniquenessKey={uniqueKey} request={request} workspaceId={workspace._id} environmentId={environmentId} onChange={handleGraphQLChange} />;
     } else if (!isBodyEmpty) {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return <RawEditor uniquenessKey={uniqueKey} contentType={contentType || 'text/plain'} content={request.body.text || ''} onChange={handleRawChange} />;

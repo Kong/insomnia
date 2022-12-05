@@ -138,10 +138,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               defaultValue={activeRequest.url}
               placeholder="grpcb.in:9000"
               onChange={url => models.grpcRequest.update(activeRequest, { url })}
-              getAutocompleteConstants={async () => {
-                const workspace = await models.workspace.getById(workspaceId);
-                return queryAllWorkspaceUrls(workspace, models.grpcRequest.type, activeRequest._id);
-              }}
+              getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, activeRequest._id)}
             />
           </StyledUrlEditor>
           <StyledDropdown>

@@ -23,7 +23,7 @@ interface Props {
   className?: string;
   fallbackValue?: string;
   onEditStart?: () => void;
-  onSubmit: (value?: string) => void;
+  onSubmit: (value: string) => void;
   preventBlank?: boolean;
   renderReadView?: (value: string | undefined, props: any) => ReactElement<HighlightProps>;
   singleClick?: boolean;
@@ -63,7 +63,7 @@ export const Editable: FC<Props> = ({
   const handleEditEnd = useCallback(() => {
     if (shouldSave(value, inputRef.current?.value.trim(), preventBlank)) {
       // Don't run onSubmit for values that haven't been changed
-      onSubmit(inputRef.current?.value.trim());
+      onSubmit(inputRef.current?.value.trim() || '');
     }
 
     // This timeout prevents the UI from showing the old value after submit.

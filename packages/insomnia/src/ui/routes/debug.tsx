@@ -173,7 +173,7 @@ export const Debug: FC = () => {
         <div className="sidebar__menu">
           <EnvironmentsDropdown
             activeEnvironment={activeEnvironment}
-            workspace={activeWorkspace}
+            workspaceId={activeWorkspace._id}
           />
           <button className="btn btn--super-compact" onClick={showCookiesModal}>
             <div className="sidebar__menu__thing">

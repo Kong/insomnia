@@ -55,7 +55,7 @@ export const ErrorRoute: FC = () => {
         .
       </p>
       <h2>Message:</h2>
-      <pre>{errorMessage}</pre>
+      <code style={{ wordBreak: 'break-word' }}>{errorMessage}</code>
       <Button onClick={() => navigate(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`)}>
         Try to reload the app{' '}
         <span>{navigation.state === 'loading' ? <Spinner /> : null}</span>
