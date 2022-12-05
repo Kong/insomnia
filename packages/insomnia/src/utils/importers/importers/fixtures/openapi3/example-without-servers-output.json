@@ -21,14 +21,14 @@
       "parentId": "__WORKSPACE_ID__"
     },
     {
-      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_id": "env___BASE_ENVIRONMENT_ID___sub__9c17e047",
       "_type": "environment",
       "data": {
         "base_path": "",
         "host": "example.com",
         "scheme": "http"
       },
-      "name": "OpenAPI env",
+      "name": "OpenAPI env example.com",
       "parentId": "__BASE_ENVIRONMENT_ID__"
     },
     {

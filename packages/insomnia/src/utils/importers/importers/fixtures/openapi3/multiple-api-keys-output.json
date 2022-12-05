@@ -21,7 +21,7 @@
       "parentId": "__WORKSPACE_ID__"
     },
     {
-      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_id": "env___BASE_ENVIRONMENT_ID___sub__3d8ac28f",
       "_type": "environment",
       "data": {
         "base_path": "/v2",
@@ -31,7 +31,7 @@
         "xAppId": "xAppId",
         "xAppSecret": "xAppSecret"
       },
-      "name": "OpenAPI env",
+      "name": "OpenAPI env petstore.swagger.io",
       "parentId": "__BASE_ENVIRONMENT_ID__"
     },
     {

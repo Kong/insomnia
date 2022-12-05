@@ -21,14 +21,14 @@
       "parentId": "__WORKSPACE_ID__"
     },
     {
-      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_id": "env___BASE_ENVIRONMENT_ID___sub__5be46d1c",
       "_type": "environment",
       "data": {
         "base_path": "/v1",
         "host": "petstore.swagger.io",
         "scheme": "http"
       },
-      "name": "OpenAPI env",
+      "name": "OpenAPI env petstore.swagger.io",
       "parentId": "__BASE_ENVIRONMENT_ID__"
     },
     {

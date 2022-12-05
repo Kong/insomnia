@@ -22,6 +22,7 @@ node_modules/
 .yarn-integrity
 .env
 .idea
+*.iml
 .DS_Store
 *test-plugins
 graphql.config.json

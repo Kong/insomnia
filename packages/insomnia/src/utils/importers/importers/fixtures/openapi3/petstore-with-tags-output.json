@@ -21,7 +21,7 @@
       "parentId": "__WORKSPACE_ID__"
     },
     {
-      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_id": "env___BASE_ENVIRONMENT_ID___sub__33ebaa67",
       "_type": "environment",
       "data": {
         "apiKey": "apiKey",
@@ -31,7 +31,7 @@
         "oauth2RedirectUrl": "http://localhost/",
         "scheme": "http"
       },
-      "name": "OpenAPI env",
+      "name": "OpenAPI env petstore.swagger.io",
       "parentId": "__BASE_ENVIRONMENT_ID__"
     },
     {
