@@ -1,5 +1,5 @@
 import React, { FC, ReactNode } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import {
   AUTH_API_KEY,
@@ -14,7 +14,7 @@ import {
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
 } from '../../../../common/constants';
-import { selectActiveRequest } from '../../../redux/selectors';
+import { Request } from '../../../../models/request';
 import { ApiKeyAuth } from './api-key-auth';
 import { AsapAuth } from './asap-auth';
 import { AWSAuth } from './aws-auth';
@@ -28,37 +28,29 @@ import { OAuth1Auth } from './o-auth-1-auth';
 import { OAuth2Auth } from './o-auth-2-auth';
 
 export const AuthWrapper: FC<{ disabled?: boolean }> = ({ disabled = false }) => {
-  const request = useSelector(selectActiveRequest);
-
-  if (!request || !('authentication' in request)) {
-    return null;
-  }
-
-  const { authentication: { type } } = request;
-
+  const request = useRouteLoaderData('request/:requestId') as Request;
   let authBody: ReactNode = null;
-
-  if (type === AUTH_BASIC) {
+  if (request.authentication.type === AUTH_BASIC) {
     authBody = <BasicAuth disabled={disabled} />;
-  } else if (type === AUTH_API_KEY) {
+  } else if (request.authentication.type === AUTH_API_KEY) {
     authBody = <ApiKeyAuth disabled={disabled} />;
-  } else if (type === AUTH_OAUTH_2) {
+  } else if (request.authentication.type === AUTH_OAUTH_2) {
     authBody = <OAuth2Auth />;
-  } else if (type === AUTH_HAWK) {
+  } else if (request.authentication.type === AUTH_HAWK) {
     authBody = <HawkAuth />;
-  } else if (type === AUTH_OAUTH_1) {
+  } else if (request.authentication.type === AUTH_OAUTH_1) {
     authBody = <OAuth1Auth />;
-  } else if (type === AUTH_DIGEST) {
+  } else if (request.authentication.type === AUTH_DIGEST) {
     authBody = <DigestAuth disabled={disabled} />;
-  } else if (type === AUTH_NTLM) {
+  } else if (request.authentication.type === AUTH_NTLM) {
     authBody = <NTLMAuth />;
-  } else if (type === AUTH_BEARER) {
+  } else if (request.authentication.type === AUTH_BEARER) {
     authBody = <BearerAuth disabled={disabled} />;
-  } else if (type === AUTH_AWS_IAM) {
+  } else if (request.authentication.type === AUTH_AWS_IAM) {
     authBody = <AWSAuth />;
-  } else if (type === AUTH_NETRC) {
+  } else if (request.authentication.type === AUTH_NETRC) {
     authBody = <NetrcAuth />;
-  } else if (type === AUTH_ASAP) {
+  } else if (request.authentication.type === AUTH_ASAP) {
     authBody = <AsapAuth />;
   } else {
     authBody = (

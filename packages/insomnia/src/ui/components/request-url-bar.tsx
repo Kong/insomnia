@@ -33,7 +33,7 @@ import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;
-  onUrlChange: (r: Request, url: string) => Promise<Request>;
+  onUrlChange: (r: Request, url: string) => void;
   request: Request;
   uniquenessKey: string;
   setLoading: (l: boolean) => void;

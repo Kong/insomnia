@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_POST } from '../../../common/constants';
@@ -9,11 +10,10 @@ import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { update } from '../../../models/helpers/request-operations';
 import { Request, RequestBody } from '../../../models/request';
-import type { Settings } from '../../../models/settings';
-import { create, Workspace } from '../../../models/workspace';
+import { create } from '../../../models/workspace';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import { selectActiveEnvironment, selectActiveRequestMeta } from '../../redux/selectors';
+import { selectActiveEnvironment, selectActiveRequestMeta, selectSettings } from '../../redux/selectors';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
@@ -60,10 +60,6 @@ const TabPanelBody = styled.div({
 
 interface Props {
   environmentId: string;
-  request?: Request | null;
-  settings: Settings;
-  workspace: Workspace;
-  setLoading: (l: boolean) => void;
 }
 export function newBodyGraphQL(rawBody: string): RequestBody {
   try {
@@ -200,54 +196,23 @@ export function updateMimeType(
 }
 export const RequestPane: FC<Props> = ({
   environmentId,
-  request,
-  settings,
-  workspace,
-  setLoading,
 }) => {
-
-  const updateRequestUrl = (request: Request, url: string) => {
-    if (request.url === url) {
-      return Promise.resolve(request);
-    }
-    return update(request, { url });
-  };
-
-  const handleEditDescription = useCallback((forceEditMode: boolean) => {
-    request && showModal(RequestSettingsModal, { request, forceEditMode });
-  }, [request]);
-
-  const handleEditDescriptionAdd = useCallback(() => {
-    handleEditDescription(true);
-  }, [handleEditDescription]);
-
-  const handleUpdateSettingsUseBulkHeaderEditor = useCallback(() => {
-    models.settings.update(settings, { useBulkHeaderEditor: !settings.useBulkHeaderEditor });
-  }, [settings]);
-
-  const handleUpdateSettingsUseBulkParametersEditor = useCallback(() => {
-    models.settings.update(settings, { useBulkParametersEditor: !settings.useBulkParametersEditor });
-  }, [settings]);
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const request = useRouteLoaderData('request/:requestId') as Request;
+  const createRequestFetcher = useFetcher();
+  const settings = useSelector(selectSettings);
 
   const handleImportQueryFromUrl = useCallback(() => {
-    if (!request) {
-      console.warn('Tried to import query when no request active');
-      return;
-    }
-
     let query;
-
     try {
       query = extractQueryStringFromUrl(request.url);
     } catch (error) {
       console.warn('Failed to parse url to import querystring');
       return;
     }
-
     // Remove the search string (?foo=bar&...) from the Url
     const url = request.url.replace(`?${query}`, '');
     const parameters = [...request.parameters, ...deconstructQueryStringToParams(query)];
-
     // Only update if url changed
     if (url !== request.url) {
       database.update({
@@ -259,6 +224,7 @@ export const RequestPane: FC<Props> = ({
       }, true);
     }
   }, [request]);
+
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const activeEnvironment = useSelector(selectActiveEnvironment);
@@ -306,11 +272,16 @@ export const RequestPane: FC<Props> = ({
             key={request._id}
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
-            onUrlChange={updateRequestUrl}
-            handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspace._id, models.request.type, request?._id)}
+            onUrlChange={(_, url) => {
+              createRequestFetcher.submit({ url },
+                {
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+                  method: 'post',
+                });
+            }}
+            handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, request?._id)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             request={request}
-            setLoading={setLoading}
           />
         </ErrorBoundary>
       </PaneHeader>
@@ -318,8 +289,6 @@ export const RequestPane: FC<Props> = ({
         <TabItem key="content-type" title={<ContentTypeDropdown onChange={updateRequestMimeType} />}>
           <BodyEditor
             key={uniqueKey}
-            request={request}
-            workspace={workspace}
             environmentId={environmentId}
           />
         </TabItem>
@@ -363,7 +332,7 @@ export const RequestPane: FC<Props> = ({
               </button>
               <button
                 className="btn btn--compact"
-                onClick={handleUpdateSettingsUseBulkParametersEditor}
+                onClick={() => models.settings.update(settings, { useBulkParametersEditor: !settings.useBulkParametersEditor })}
               >
                 {settings.useBulkParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
@@ -384,7 +353,7 @@ export const RequestPane: FC<Props> = ({
             <TabPanelFooter>
               <button
                 className="btn btn--compact"
-                onClick={handleUpdateSettingsUseBulkHeaderEditor}
+                onClick={() => models.settings.update(settings, { useBulkHeaderEditor: !settings.useBulkHeaderEditor })}
               >
                 {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
@@ -408,8 +377,7 @@ export const RequestPane: FC<Props> = ({
             {request.description ? (
               <div>
                 <div className="pull-right pad bg-default">
-                  {/* @ts-expect-error -- TSCONVERSION the click handler expects a boolean prop... */}
-                  <button className="btn btn--clicky" onClick={handleEditDescription}>
+                  <button className="btn btn--clicky" onClick={() => showModal(RequestSettingsModal, { request })}>
                     Edit
                   </button>
                 </div>
@@ -438,7 +406,7 @@ export const RequestPane: FC<Props> = ({
                   <br />
                   <button
                     className="btn btn--clicky faint"
-                    onClick={handleEditDescriptionAdd}
+                    onClick={() => showModal(RequestSettingsModal, { request, forceEditMode: true })}
                   >
                     Add Description
                   </button>

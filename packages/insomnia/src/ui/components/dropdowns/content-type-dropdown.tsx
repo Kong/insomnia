@@ -1,5 +1,5 @@
 import React, { FC, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import {
   CONTENT_TYPE_EDN,
@@ -14,9 +14,9 @@ import {
   CONTENT_TYPE_YAML,
   getContentTypeName,
 } from '../../../common/constants';
+import { Request } from '../../../models/request';
 import { isWebSocketRequest } from '../../../models/websocket-request';
 import { SegmentEvent, trackSegmentEvent } from '../../analytics';
-import { selectActiveRequest } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -39,7 +39,7 @@ const MimeTypeItem: FC<{
   mimeType,
   onChange,
 }) => {
-  const request = useSelector(selectActiveRequest);
+  const request = useRouteLoaderData('request/:requestId') as Request;
   const activeRequest = request && !isWebSocketRequest(request) ? request : null;
 
   const handleChangeMimeType = useCallback(async (mimeType: string | null) => {
@@ -94,7 +94,8 @@ const MimeTypeItem: FC<{
 MimeTypeItem.displayName = DropdownItem.name;
 
 export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
-  const request = useSelector(selectActiveRequest);
+  const request = useRouteLoaderData('request/:requestId') as Request;
+
   const activeRequest = request && !isWebSocketRequest(request) ? request : null;
 
   if (!activeRequest) {

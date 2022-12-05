@@ -2,19 +2,18 @@ import classnames from 'classnames';
 import React, { FC, forwardRef, MouseEvent, ReactElement, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
 import { useSelector } from 'react-redux';
+import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
-import { stats, workspaceMeta } from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import { isRequest, Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
+import { invariant } from '../../../utils/invariant';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
-import { createRequest, updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
+import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
 import type { DropdownHandle } from '../base/dropdown/dropdown';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
@@ -70,25 +69,17 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   const { handleRender } = useNunjucks();
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
-  const activeWorkspaceId = activeWorkspace?._id;
+  const createRequestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const navigate = useNavigate();
   const [dragDirection, setDragDirection] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
-  const handleSetActiveRequest = useCallback(() => {
-    if (!request || isActive) {
-      return;
-    }
+  const handleSetActiveRequest = () => {
+    invariant(request, 'Request is required');
+    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}`);
+  };
 
-    if (activeWorkspaceMeta) {
-      workspaceMeta.update(activeWorkspaceMeta, {
-        activeRequestId: request._id,
-      });
-    }
-    updateRequestMetaByParentId(request._id, { lastActive: Date.now() });
-  }, [activeWorkspaceMeta, isActive, request]);
-
-  const handleDuplicateRequest = useCallback(() => {
+  const handleDuplicateRequest = () => {
     if (!request) {
       return;
     }
@@ -100,34 +91,20 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       label: 'New Name',
       selectText: true,
       onComplete: async (name: string) => {
-        const newRequest = await requestOperations.duplicate(request, {
-          name,
-        });
-        if (activeWorkspaceMeta) {
-          await workspaceMeta.update(activeWorkspaceMeta, {
-            activeRequestId: newRequest._id,
+        createRequestFetcher.submit({ name },
+          {
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request?._id}/duplicate`,
+            method: 'post',
           });
-        }
-        await updateRequestMetaByParentId(newRequest._id, { lastActive: Date.now() });
-        stats.incrementCreatedRequests();
       },
     });
-  }, [activeWorkspaceMeta, request]);
+  };
 
   const nodeRef = useRef<HTMLLIElement>(null);
   useImperativeHandle(ref, () => ({
     setDragDirection,
     node: nodeRef.current,
   }));
-
-  const startEditing = useCallback(() => {
-    setIsEditing(true);
-  }, []);
-
-  const stopEditing = useCallback(() => {
-    setIsEditing(false);
-  }, []);
-
   const [renderedUrl, setRenderedUrl] = useState('');
 
   const requestActionsDropdown = useRef<DropdownHandle>(null);
@@ -137,27 +114,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
 
     requestActionsDropdown.current?.show();
   }, [requestActionsDropdown]);
-
-  const handleRequestUpdateName = useCallback((name?: string) => {
-    if (!request) {
-      return;
-    }
-
-    requestOperations.update(request, { name }).then(() => {
-      stopEditing();
-    });
-  }, [request, stopEditing]);
-
-  const handleRequestCreateFromEmpty = useCallback(() => {
-    if (!requestGroup?._id || !activeWorkspaceId) {
-      return;
-    }
-    createRequest({
-      requestType: 'HTTP',
-      parentId: requestGroup?._id,
-      workspaceId: activeWorkspaceId,
-    });
-  }, [requestGroup?._id, activeWorkspaceId]);
 
   const handleShowRequestSettings = useCallback(() => {
     request && showModal(RequestSettingsModal, { request });
@@ -228,7 +184,14 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
     node = (
       <li ref={nodeRef} className={classes}>
         <div className="sidebar__item">
-          <button className="sidebar__clickable" onClick={handleRequestCreateFromEmpty}>
+          <button
+            className="sidebar__clickable"
+            onClick={() => createRequestFetcher.submit({ requestType: 'HTTP', parentId: requestGroup?._id || '' },
+              {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+                method: 'post',
+              })}
+          >
             <em className="faded">click to add first request...</em>
           </button>
         </div>
@@ -265,8 +228,15 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
                 fallbackValue={renderedUrl}
                 blankValue="Empty"
                 className="inline-block"
-                onEditStart={startEditing}
-                onSubmit={handleRequestUpdateName}
+                onEditStart={() => setIsEditing(true)}
+                onSubmit={name => {
+                  createRequestFetcher.submit({ name },
+                    {
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
+                      method: 'post',
+                    });
+                  setIsEditing(false);
+                }}
                 renderReadView={(value, props) => (
                   <Highlight
                     search={filter}

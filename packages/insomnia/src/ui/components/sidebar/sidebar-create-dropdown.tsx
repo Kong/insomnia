@@ -1,13 +1,15 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC } from 'react';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams } from 'react-router-dom';
 
-import { createRequest, CreateRequestType } from '../../hooks/create-request';
-import { createRequestGroup } from '../../hooks/create-request-group';
-import { selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
+import { CreateRequestType } from '../../hooks/create-request';
+import { selectHotKeyRegistry } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { showModal, showPrompt } from '../modals';
+import { ProtoFilesModal } from '../modals/proto-files-modal';
 
 interface Props {
   right?: boolean;
@@ -15,25 +17,29 @@ interface Props {
 
 export const SidebarCreateDropdown: FC<Props> = ({ right }) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceId = activeWorkspace?._id;
-  const create = useCallback((value: CreateRequestType) => {
-    if (activeWorkspaceId) {
-      createRequest({
-        requestType: value,
-        parentId: activeWorkspaceId,
-        workspaceId: activeWorkspaceId,
-      });
-    }
-  }, [activeWorkspaceId]);
+  const createRequestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
-  const createGroup = useCallback(() => {
-    if (!activeWorkspaceId) {
+  const create = (requestType: CreateRequestType) => {
+    if (requestType === 'gRPC') {
+      showModal(ProtoFilesModal, {
+        onSave: async (protoFileId: string) => {
+          createRequestFetcher.submit({ requestType, protoFileId },
+            {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+              method: 'post',
+            });
+        },
+      });
       return;
     }
+    createRequestFetcher.submit({ requestType },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+        method: 'post',
+      });
+  };
 
-    createRequestGroup(activeWorkspaceId);
-  }, [activeWorkspaceId]);
   const dataTestId = 'SidebarCreateDropdown';
   return (
     <Dropdown right={right} dataTestId={dataTestId}>
@@ -59,7 +65,24 @@ export const SidebarCreateDropdown: FC<Props> = ({ right }) => {
         <i className="fa fa-plus-circle" />WebSocket Request
       </DropdownItem>
 
-      <DropdownItem onClick={createGroup}>
+      <DropdownItem
+        onClick={() => {
+          showPrompt({
+            title: 'New Folder',
+            defaultValue: 'My Folder',
+            submitName: 'Create',
+            label: 'Name',
+            selectText: true,
+            onComplete: async name => {
+              createRequestFetcher.submit({ name },
+                {
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new-folder`,
+                  method: 'post',
+                });
+            },
+          });
+        }}
+      >
         <i className="fa fa-folder" />New Folder
         <DropdownHint keyBindings={hotKeyRegistry.request_showCreateFolder} />
       </DropdownItem>

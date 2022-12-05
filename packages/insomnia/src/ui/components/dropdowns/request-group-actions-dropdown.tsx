@@ -1,18 +1,17 @@
 import classnames from 'classnames';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import * as models from '../../../models';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
-import { createRequest, CreateRequestType } from '../../hooks/create-request';
-import { createRequestGroup } from '../../hooks/create-request-group';
-import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
+import { CreateRequestType } from '../../hooks/create-request';
+import { selectActiveEnvironment, selectActiveProject, selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, type DropdownProps, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -28,7 +27,7 @@ interface Props extends Partial<DropdownProps> {
 }
 
 export interface RequestGroupActionsDropdownHandle {
-    show: () => void;
+  show: () => void;
 }
 
 export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdownHandle, Props>(({
@@ -38,22 +37,13 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
 }, ref) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
-  const [loadingActions, setLoadingActions] = useState< Record<string, boolean>>({});
+  const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);
 
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceId = activeWorkspace?._id;
-
-  const create = useCallback((requestType: CreateRequestType) => {
-    if (activeWorkspaceId) {
-      createRequest({
-        parentId: requestGroup._id,
-        requestType, workspaceId: activeWorkspaceId,
-      });
-    }
-  }, [activeWorkspaceId, requestGroup._id]);
+  const createRequestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
   useImperativeHandle(ref, () => ({
     show: () => {
@@ -82,27 +72,37 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
     });
   }, [requestGroup]);
 
-  const createGroup = useCallback(() => {
-    createRequestGroup(requestGroup._id);
-  }, [requestGroup._id]);
+  const createGroup = () => {
+    showPrompt({
+      title: 'New Folder',
+      defaultValue: 'My Folder',
+      submitName: 'Create',
+      label: 'Name',
+      selectText: true,
+      onComplete: async name => {
+        createRequestFetcher.submit({ parentId: requestGroup._id, name },
+          {
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new-folder`,
+            method: 'post',
+          });
+      },
+    });
+  };
 
-  const handleRename = useCallback(() => {
+  const handleRename = () => {
     showPrompt({
       title: 'Rename Folder',
       defaultValue: requestGroup.name,
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: name => {
-        requestOperations.update(requestGroup, { name });
-      },
+      onComplete: name => createRequestFetcher.submit({ name },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestGroup._id}/update`,
+          method: 'post',
+        }),
     });
-  }, [requestGroup]);
-
-  const handleDeleteFolder = useCallback(async () => {
-    await models.stats.incrementDeletedRequestsForDescendents(requestGroup);
-    models.requestGroup.remove(requestGroup);
-  }, [requestGroup]);
+  };
 
   const handlePluginClick = useCallback(async ({ label, plugin, action }: RequestGroupAction) => {
     setLoadingActions({ ...loadingActions, [label]: true });
@@ -135,7 +135,14 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
 
     dropdownRef.current?.hide();
 
-  }, [dropdownRef, loadingActions,  activeEnvironment, requestGroup, activeProject]);
+  }, [dropdownRef, loadingActions, activeEnvironment, requestGroup, activeProject]);
+
+  const create = (requestType: CreateRequestType) =>
+    createRequestFetcher.submit({ requestType, parentId: requestGroup?._id || '' },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+        method: 'post',
+      });
 
   return (
     <Dropdown ref={dropdownRef} onOpen={onOpen} dataTestId={`Dropdown-${toKebabCase(requestGroup.name)}`} {...other}>
@@ -148,15 +155,15 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         <DropdownHint keyBindings={hotKeyRegistry.request_createHTTP} />
       </DropdownItem>
 
-      <DropdownItem  onClick={() => create('GraphQL')}>
+      <DropdownItem onClick={() => create('GraphQL')}>
         <i className="fa fa-plus-circle" />New GraphQL Request
       </DropdownItem>
 
-      <DropdownItem  onClick={() => create('gRPC')}>
+      <DropdownItem onClick={() => create('gRPC')}>
         <i className="fa fa-plus-circle" />New gRPC Request
       </DropdownItem>
 
-      <DropdownItem  onClick={() => create('WebSocket')}>
+      <DropdownItem onClick={() => create('WebSocket')}>
         <i className="fa fa-plus-circle" />WebSocket Request
       </DropdownItem>
 
@@ -179,7 +186,16 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         <i className="fa fa-edit" /> Rename
       </DropdownItem>
 
-      <DropdownItem buttonClass={PromptButton} onClick={handleDeleteFolder}>
+      <DropdownItem
+        buttonClass={PromptButton}
+        onClick={() => {
+          createRequestFetcher.submit({ id: requestGroup._id },
+            {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete-folder`,
+              method: 'post',
+            });
+        }}
+      >
         <i className="fa fa-trash-o" /> Delete
       </DropdownItem>
 

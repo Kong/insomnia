@@ -1,12 +1,12 @@
 import React, { FC, Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 
 import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { selectActiveRequest } from '../../redux/selectors';
 import { selectSidebarChildren } from '../../redux/sidebar-selectors';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarRequestGroupRow } from './sidebar-request-group-row';
@@ -81,8 +81,7 @@ const RecursiveSidebarRows = ({
   isInPinnedList,
   filter,
 }: RecursiveSidebarRowsProps) => {
-  const activeRequest = useSelector(selectActiveRequest);
-  const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
+  const { requestId } = useParams() as { requestId: string };
 
   return (
     <>
@@ -94,7 +93,7 @@ const RecursiveSidebarRows = ({
               <SidebarRequestGroupRow
                 key={row.doc._id}
                 filter={filter || ''}
-                isActive={hasActiveChild(row.children, activeRequestId)}
+                isActive={hasActiveChild(row.children, requestId)}
                 isCollapsed={row.collapsed}
                 requestGroup={row.doc}
               >
@@ -112,7 +111,7 @@ const RecursiveSidebarRows = ({
             <SidebarRequestRow
               key={row.doc._id}
               filter={isInPinnedList ? '' : filter || ''}
-              isActive={row.doc._id === activeRequestId}
+              isActive={row.doc._id === requestId}
               isPinned={row.pinned}
               disableDragAndDrop={isInPinnedList}
               request={row.doc}

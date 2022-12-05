@@ -43,7 +43,7 @@ import { initializeSentry } from './sentry';
 const Project = lazy(() => import('./routes/project'));
 const Workspace = lazy(() => import('./routes/workspace'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
-const Debug = lazy(() => import('./routes/debug'));
+const DebugSidebar = lazy(() => import('./routes/debug-sidebar'));
 const Design = lazy(() => import('./routes/design'));
 
 initializeSentry();
@@ -83,7 +83,6 @@ const router = createMemoryRouter(
                   children: [
                     {
                       path: ':projectId',
-                      id: '/project/:projectId',
                       loader: async (...args) =>
                         (await import('./routes/project')).loader(...args),
                       element: (
@@ -127,12 +126,47 @@ const router = createMemoryRouter(
                           element: <Suspense fallback={<AppLoadingIndicator />}><Workspace /></Suspense>,
                           children: [
                             {
-                              path: `${ACTIVITY_DEBUG}`,
+                              path: 'debug/*',
                               element: (
                                 <Suspense fallback={<AppLoadingIndicator />}>
-                                  <Debug />
+                                  <DebugSidebar />
                                 </Suspense>
                               ),
+                              children: [
+                                {
+                                  path: 'request/:requestId',
+                                  id: 'request/:requestId',
+                                  loader: async (...args) => (await import('./routes/request')).loader(...args),
+                                },
+                                {
+                                  path: 'request/new',
+                                  action: async (...args) =>
+                                    (await import('./routes/request')).createRequestAction(
+                                      ...args
+                                    ),
+                                },
+                                {
+                                  path: 'request/new-folder',
+                                  action: async (...args) =>
+                                    (await import('./routes/request')).createRequestGroupAction(
+                                      ...args
+                                    ),
+                                },
+                                {
+                                  path: 'request/delete',
+                                  action: async (...args) =>
+                                    (await import('./routes/request')).deleteRequestAction(
+                                      ...args
+                                    ),
+                                },
+                                {
+                                  path: 'request/delete-folder',
+                                  action: async (...args) =>
+                                    (await import('./routes/request')).deleteRequestGroupAction(
+                                      ...args
+                                    ),
+                                },
+                              ],
                             },
                             {
                               path: `${ACTIVITY_SPEC}`,

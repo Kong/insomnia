@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { ChangeBufferEvent, database } from '../../common/database';
 import { BaseModel } from '../../models';
+import { Request } from '../../models/request';
 import {
   selectActiveApiSpec,
-  selectActiveRequest,
   selectActiveWorkspaceMeta,
 } from '../redux/selectors';
 
@@ -13,12 +14,12 @@ import {
 // For example, by pulling a new version from the remote, switching branches, etc.
 export function useActiveRequestSyncVCSVersion() {
   const [version, setVersion] = useState(0);
-  const activeRequest = useSelector(selectActiveRequest);
+  const request = useRouteLoaderData('request/:requestId') as Request;
 
   useEffect(() => {
-    const isRequestUpdatedFromSync = (changes: ChangeBufferEvent<BaseModel>[]) => changes.find(([, doc, fromSync]) => activeRequest?._id === doc._id && fromSync);
+    const isRequestUpdatedFromSync = (changes: ChangeBufferEvent<BaseModel>[]) => changes.find(([, doc, fromSync]) => request?._id === doc._id && fromSync);
     database.onChange(changes => isRequestUpdatedFromSync(changes) && setVersion(v => v + 1));
-  }, [activeRequest?._id]);
+  }, [request?._id]);
 
   return version;
 }

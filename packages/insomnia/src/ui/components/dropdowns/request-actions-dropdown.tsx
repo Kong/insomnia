@@ -3,17 +3,16 @@ import { clipboard } from 'electron';
 import HTTPSnippet from 'httpsnippet';
 import React, { forwardRef, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import { Project } from '../../../models/project';
 import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
-import { incrementDeletedRequests } from '../../../models/stats';
 // Plugin action related imports
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
@@ -53,6 +52,8 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+  const createRequestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
   const onOpen = useCallback(async () => {
     const actionPlugins = await getRequestActions();
@@ -114,27 +115,9 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
     }
   }, [activeEnvironment, request._id]);
 
-  const handleRename = useCallback(() => {
-    showPrompt({
-      title: 'Rename Request',
-      defaultValue: request.name,
-      submitName: 'Rename',
-      selectText: true,
-      label: 'Name',
-      onComplete: name => {
-        requestOperations.update(request, { name });
-      },
-    });
-  }, [request]);
-
   const togglePin = useCallback(() => {
     updateRequestMetaByParentId(request._id, { pinned: !isPinned });
   }, [isPinned, request]);
-
-  const deleteRequest = useCallback(() => {
-    incrementDeletedRequests();
-    requestOperations.remove(request);
-  }, [request]);
 
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);
@@ -177,7 +160,18 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
       <DropdownItem
         dataTestId={`DropdownItemRename-${toKebabCase(request.name)}`}
-        onClick={handleRename}
+        onClick={() => showPrompt({
+          title: 'Rename Request',
+          defaultValue: request.name,
+          submitName: 'Rename',
+          selectText: true,
+          label: 'Name',
+          onComplete: name => createRequestFetcher.submit({ name },
+            {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
+              method: 'post',
+            }),
+        })}
       >
         <i className="fa fa-edit" /> Rename
       </DropdownItem>
@@ -185,7 +179,13 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       <DropdownItem
         dataTestId={`DropdownItemDelete-${toKebabCase(request.name)}`}
         buttonClass={PromptButton}
-        onClick={deleteRequest}
+        onClick={() => {
+          createRequestFetcher.submit({ id: request._id },
+            {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
+              method: 'post',
+            });
+        }}
       >
         <i className="fa fa-trash-o" /> Delete
         <DropdownHint keyBindings={hotKeyRegistry.request_showDelete} />
