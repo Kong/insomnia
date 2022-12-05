@@ -1,5 +1,7 @@
-import type { GrpcMethodDefinition, GrpcMethodType } from '../network/grpc/method';
-import { getMethodType } from '../network/grpc/method';
+import { MethodDefinition } from '@grpc/grpc-js';
+
+import { GrpcMethodType } from '../main/ipc/grpc';
+
 const PROTO_PATH_REGEX = /^\/(?:(?<package>[\w.]+)\.)?(?<service>\w+)\/(?<method>\w+)$/;
 
 interface GrpcPathSegments {
@@ -34,8 +36,20 @@ export interface GrpcMethodInfo {
   type: GrpcMethodType;
   fullPath: string;
 }
+export const getMethodType = ({ requestStream, responseStream }: MethodDefinition<any, any>): GrpcMethodType => {
+  if (requestStream && responseStream) {
+    return 'bidi';
+  }
+  if (requestStream) {
+    return 'client';
+  }
+  if (responseStream) {
+    return 'server';
+  }
+  return 'unary';
+};
 
-const getMethodInfo = (method: GrpcMethodDefinition): GrpcMethodInfo => ({
+export const getMethodInfo = (method: MethodDefinition<any, any>): GrpcMethodInfo => ({
   segments: getGrpcPathSegments(method.path),
   type: getMethodType(method),
   fullPath: method.path,
@@ -57,7 +71,6 @@ function groupBy(list: {}[], keyGetter: (item: any) => string):Record<string, an
   return Object.fromEntries(map);
 }
 
-export const groupGrpcMethodsByPackage = (grpcMethodDefinitions: GrpcMethodDefinition[]): Record<string, GrpcMethodInfo[]> => {
-  const methodInfoList = grpcMethodDefinitions.map(getMethodInfo);
+export const groupGrpcMethodsByPackage = (methodInfoList: GrpcMethodInfo[]): Record<string, GrpcMethodInfo[]> => {
   return groupBy(methodInfoList, ({ segments }) => segments.packageName || NO_PACKAGE_KEY);
 };

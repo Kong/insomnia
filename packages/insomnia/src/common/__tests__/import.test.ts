@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { apiSpec, request, requestGroup, workspace } from '../../models';
+import { apiSpec, environment, request, requestGroup, workspace } from '../../models';
 import { DEFAULT_PROJECT_ID } from '../../models/project';
 import * as importUtil from '../import';
 
@@ -197,5 +197,34 @@ describe('importRaw()', () => {
     const createdApiSpec = await apiSpec.getByParentId(existingWorkspace._id);
 
     expect(createdApiSpec?.contents).toContain('openapi: \'3.0.2\'');
+  });
+
+  it('should not leave dangling environments when reimporting a collection', async () => {
+    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'insomnia', 'insomnia-example-input.yaml');
+    const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
+
+    const existingWorkspace = await workspace.create({ scope: 'collection', _id: 'wrk_123' });
+
+    // Simulate pre-existing base and sub environment
+    await environment.create({ parentId: 'wrk_123', _id: 'env_123' });
+    await environment.create({ parentId: 'env_123', _id: 'env_sub123' });
+
+    const importConfig: importUtil.ImportRawConfig = {
+      getWorkspaceId: () => existingWorkspace._id,
+      getProjectId: async () => DEFAULT_PROJECT_ID,
+      getWorkspaceScope: () => 'collection',
+    };
+
+    await importUtil.importRaw(
+      rawFixture,
+      importConfig
+    );
+
+    const totalEnvironments = await environment.all();
+    const baseEnvironmentsFound = await environment.findByParentId('wrk_123');
+    const subEnvironmentsFound = await environment.findByParentId('env_123');
+    expect(totalEnvironments).toHaveLength(2);
+    expect(baseEnvironmentsFound).toHaveLength(1);
+    expect(subEnvironmentsFound).toHaveLength(1);
   });
 });

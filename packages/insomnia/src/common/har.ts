@@ -485,9 +485,8 @@ function getResponseContent(response: Response) {
   if (body === null) {
     body = Buffer.alloc(0);
   }
-
   const harContent: HarContent = {
-    size: body.byteLength,
+    size: Buffer.byteLength(body),
     mimeType: response.contentType,
     text: body.toString('utf8'),
   };

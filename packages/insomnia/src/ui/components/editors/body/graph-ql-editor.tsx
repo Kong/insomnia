@@ -10,6 +10,7 @@ import { Maybe } from 'graphql-language-service';
 import prettier from 'prettier';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
+import { useSelector } from 'react-redux';
 
 import { jarFromCookies } from '../../../../common/cookies';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
@@ -18,11 +19,11 @@ import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../../commo
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
-import type { Settings } from '../../../../models/settings';
 import { axiosRequest } from '../../../../network/axios-request';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { setDefaultProtocol } from '../../../../utils/url/protocol';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../../utils/url/querystring';
+import { selectSettings } from '../../../redux/selectors';
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
@@ -151,7 +152,6 @@ interface GraphQLBody {
 interface Props {
   onChange: (value: string) => void;
   request: Request;
-  settings: Settings;
   environmentId: string;
   className?: string;
   uniquenessKey?: string;
@@ -172,7 +172,6 @@ interface State {
 export const GraphQLEditor: FC<Props> = ({
   request,
   environmentId,
-  settings,
   onChange,
   className,
   uniquenessKey,
@@ -252,12 +251,13 @@ export const GraphQLEditor: FC<Props> = ({
     };
   }, [environmentId, request._id, request.url, workspaceId]);
 
+  const { editorIndentWithTabs, editorIndentSize } = useSelector(selectSettings);
   const beautifyRequestBody = () => {
     const { body } = state;
     const prettyQuery = prettier.format(body.query, {
       parser: 'graphql',
-      useTabs: settings.editorIndentWithTabs,
-      tabWidth: settings.editorIndentSize,
+      useTabs: editorIndentWithTabs,
+      tabWidth: editorIndentSize,
     });
     const prettyVariables = body.variables && JSON.parse(jsonPrettify(JSON.stringify(body.variables)));
     changeQuery(prettyQuery);

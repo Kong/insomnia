@@ -1,6 +1,5 @@
 import './rendererListeners';
 
-import { invariant } from '@remix-run/router';
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
@@ -28,6 +27,7 @@ import { DEFAULT_PROJECT_ID, isRemoteProject } from '../models/project';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
+import { invariant } from '../utils/invariant';
 import { AppLoadingIndicator } from './components/app-loading-indicator';
 import { init as initStore, RootState } from './redux/modules';
 import {
@@ -124,11 +124,22 @@ const router = createMemoryRouter(
                             },
                             {
                               path: `${ACTIVITY_SPEC}`,
+                              loader: async (...args) => (await import('./routes/design')).loader(...args),
                               element: (
                                 <Suspense fallback={<AppLoadingIndicator />}>
                                   <Design />
                                 </Suspense>
                               ),
+                              children: [
+                                {
+                                  path: 'update',
+                                  action: async (...args) => (await import('./routes/actions')).updateApiSpecAction(...args),
+                                },
+                                {
+                                  path: 'generate-request-collection',
+                                  action: async (...args) => (await import('./routes/actions')).generateCollectionFromApiSpecAction(...args),
+                                },
+                              ],
                             },
                             {
                               path: 'test/*',

@@ -1,13 +1,11 @@
+import type { IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 
-import { initializeSpectral, isLintError } from '../../../../common/spectral';
-
-const spectral = initializeSpectral();
-
 CodeMirror.registerHelper('lint', 'openapi', async function(text: string) {
-  const results = (await spectral.run(text)).filter(isLintError);
+  const isLintError = (result: IRuleResult) => result.severity === 0;
 
-  return results.map(result => ({
+  const run = await window.main.spectralRun(text);
+  return run.filter(isLintError).map(result => ({
     from: CodeMirror.Pos(result.range.start.line, result.range.start.character),
     to: CodeMirror.Pos(result.range.end.line, result.range.end.character),
     message: result.message,

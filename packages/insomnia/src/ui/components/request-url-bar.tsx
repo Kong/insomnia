@@ -1,6 +1,5 @@
 import type { SaveDialogOptions } from 'electron';
 import fs from 'fs';
-import * as importers from 'insomnia-importers';
 import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
@@ -13,6 +12,7 @@ import * as models from '../../models';
 import { update } from '../../models/helpers/request-operations';
 import { isRequest, Request } from '../../models/request';
 import * as network from '../../network/network';
+import { convert } from '../../utils/importers/convert';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
@@ -136,10 +136,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         }
 
         const to = fs.createWriteStream(filename);
-        // @ts-expect-error -- TSCONVERSION
         const readStream = models.response.getBodyStream(responsePatch);
 
-        if (!readStream) {
+        if (!readStream || typeof readStream === 'string') {
           return;
         }
 
@@ -293,7 +292,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
     try {
-      const { data } = await importers.convert(text);
+      const { data } = await convert(text);
       const { resources } = data;
       const r = resources[0];
       if (r && r._type === 'request' && activeRequest && isRequest(activeRequest)) {

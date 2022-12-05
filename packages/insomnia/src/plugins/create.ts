@@ -1,7 +1,6 @@
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
-import rimraf from 'rimraf';
 
 import { getDataDirectory } from '../common/electron-helpers';
 
@@ -16,7 +15,6 @@ export async function createPlugin(
     throw new Error(`Plugin already exists at "${pluginDir}"`);
   }
 
-  rimraf.sync(pluginDir);
   mkdirp.sync(pluginDir);
   // Write package.json
   fs.writeFileSync(

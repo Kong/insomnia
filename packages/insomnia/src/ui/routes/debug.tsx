@@ -1,4 +1,3 @@
-import { invariant } from '@remix-run/router';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -9,6 +8,7 @@ import * as requestOperations from '../../models/helpers/request-operations';
 import { isRequest } from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest } from '../../models/websocket-request';
+import { invariant } from '../../utils/invariant';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
@@ -54,7 +54,7 @@ export const Debug: FC = () => {
     invariant(activeRequest, 'No active request');
     setRunningRequests({
       ...runningRequests,
-      [activeRequest._id]: isLoading ? Date.now() : 0,
+      [activeRequest._id]: isLoading ? true : false,
     });
   };
 
@@ -163,6 +163,7 @@ export const Debug: FC = () => {
   useEffect(() => {
     return () => {
       window.main.webSocket.closeAll();
+      window.main.grpc.closeAll();
     };
   }, [activeEnvironment?._id]);
 
@@ -172,7 +173,7 @@ export const Debug: FC = () => {
         <div className="sidebar__menu">
           <EnvironmentsDropdown
             activeEnvironment={activeEnvironment}
-            workspace={activeWorkspace}
+            workspaceId={activeWorkspace._id}
           />
           <button className="btn btn--super-compact" onClick={showCookiesModal}>
             <div className="sidebar__menu__thing">
@@ -197,7 +198,6 @@ export const Debug: FC = () => {
             isGrpcRequest(activeRequest) ? (
               <GrpcRequestPane
                 activeRequest={activeRequest}
-                environmentId={activeEnvironment ? activeEnvironment._id : ''}
                 workspaceId={activeWorkspace._id}
                 settings={settings}
               />

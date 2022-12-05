@@ -17,6 +17,7 @@ test('can send requests', async ({ app, page }) => {
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   await page.click('button:has-text("Clipboard")');
+  await page.click('div[role="dialog"] button:has-text("New")');
   await page.click('text=CollectionSmoke testsjust now');
 
   await page.click('button:has-text("GETsend JSON request")');
@@ -69,6 +70,7 @@ test('can cancel requests', async ({ app, page }) => {
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   await page.click('button:has-text("Clipboard")');
+  await page.click('div[role="dialog"] button:has-text("New")');
   await page.click('text=CollectionSmoke testsjust now');
 
   await page.click('button:has-text("GETdelayed request")');

@@ -1,13 +1,13 @@
-import React, { Fragment, FunctionComponent, useMemo } from 'react';
+import React, { Fragment, FunctionComponent } from 'react';
 import styled from 'styled-components';
 
 import {
   getGrpcPathSegments,
   getShortGrpcPath,
   groupGrpcMethodsByPackage,
+  GrpcMethodInfo,
   NO_PACKAGE_KEY,
 } from '../../../../common/grpc-paths';
-import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
@@ -36,10 +36,10 @@ const DropdownMethodButtonLabel = styled.div({
 
 interface Props {
   disabled?: boolean;
-  methods: GrpcMethodDefinition[];
-  selectedMethod?: GrpcMethodDefinition;
-  handleChange: (arg0: string) => Promise<void>;
-  handleChangeProtoFile: () => Promise<void>;
+  methods: GrpcMethodInfo[];
+  selectedMethod?: GrpcMethodInfo;
+  handleChange: (arg0: string) => void;
+  handleChangeProtoFile: () => void;
 }
 
 const NormalCase = styled.span`
@@ -54,15 +54,8 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   handleChangeProtoFile,
 }) => {
   const groupedByPkg = groupGrpcMethodsByPackage(methods);
-  const useLabel = (fullPath?: string) =>
-    useMemo(() => {
-      if (fullPath) {
-        const segments = getGrpcPathSegments(fullPath);
-        return getShortGrpcPath(segments, fullPath);
-      }
+  const selectedPath = selectedMethod?.fullPath;
 
-      return 'Select Method';
-    }, [fullPath]);
   return (
     <Dropdown
       className="tall wide"
@@ -70,8 +63,8 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
       <DropdownButton
         buttonClass={DropdownMethodButton}
       >
-        <Tooltip message={selectedMethod?.path || 'Select Method'} position="bottom" delay={500}>
-          {useLabel(selectedMethod?.path)}
+        <Tooltip message={selectedPath || 'Select Method'} position="bottom" delay={500}>
+          {!selectedPath ? 'Select Method' : getShortGrpcPath(getGrpcPathSegments(selectedPath), selectedPath)}
           <i className="fa fa-caret-down pad-left-sm" />
         </Tooltip>
       </DropdownButton>
@@ -94,7 +87,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
               key={fullPath}
               onClick={() => handleChange(fullPath)}
               disabled={disabled}
-              selected={fullPath === selectedMethod?.path}
+              selected={fullPath === selectedPath}
             >
               <Tooltip message={fullPath} position="right" delay={500}>
                 <DropdownMethodButtonLabel><GrpcMethodTag methodType={type} /> {getShortGrpcPath(segments, fullPath)}</DropdownMethodButtonLabel>

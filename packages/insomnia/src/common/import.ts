@@ -1,5 +1,4 @@
 import fs from 'fs';
-import { convert, ConvertResultType } from 'insomnia-importers';
 
 import type { ApiSpec } from '../models/api-spec';
 import type { BaseModel } from '../models/index';
@@ -12,9 +11,11 @@ import { AlertModal } from '../ui/components/modals/alert-modal';
 import { AskModal } from '../ui/components/modals/ask-modal';
 import { showError, showModal } from '../ui/components/modals/index';
 import { showSelectModal } from '../ui/components/modals/select-modal';
+import { convert, ConvertResultType } from '../utils/importers/convert';
 import {
   BASE_ENVIRONMENT_ID_KEY,
   CONTENT_TYPE_GRAPHQL,
+  EXPORT_TYPE_ENVIRONMENT,
   EXPORT_TYPE_WORKSPACE,
   WORKSPACE_ID_KEY,
 } from './constants';
@@ -187,6 +188,15 @@ export async function importRaw(
     // Replace null parentIds with current workspace
     if (!resource.parentId && resource._type !== EXPORT_TYPE_WORKSPACE) {
       resource.parentId = WORKSPACE_ID_KEY;
+    }
+
+    // Always generate base environment id, ensuring to not create another one
+    if (resource._type === EXPORT_TYPE_ENVIRONMENT) {
+      if (resource.parentId === WORKSPACE_ID_KEY || resource.parentId.match(`${models.workspace.prefix}_\w*`)) {
+        resource._id = BASE_ENVIRONMENT_ID_KEY;
+      } else {
+        resource.parentId = BASE_ENVIRONMENT_ID_KEY;
+      }
     }
 
     // Replace ID placeholders (eg. __WORKSPACE_ID__) with generated values

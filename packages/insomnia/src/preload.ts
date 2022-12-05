@@ -1,11 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+import { gRPCBridgeAPI } from './main/ipc/grpc';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 
 const webSocket: WebSocketBridgeAPI = {
   open: options => ipcRenderer.invoke('webSocket.open', options),
-  close: options => ipcRenderer.invoke('webSocket.close', options),
-  closeAll: () => ipcRenderer.invoke('webSocket.closeAll'),
+  close: options => ipcRenderer.send('webSocket.close', options),
+  closeAll: () => ipcRenderer.send('webSocket.closeAll'),
   readyState: {
     getCurrent: options => ipcRenderer.invoke('webSocket.readyState', options),
   },
@@ -14,10 +15,19 @@ const webSocket: WebSocketBridgeAPI = {
     send: options => ipcRenderer.invoke('webSocket.event.send', options),
   },
 };
-
+const grpc: gRPCBridgeAPI = {
+  start: options => ipcRenderer.send('grpc.start', options),
+  sendMessage: options => ipcRenderer.send('grpc.sendMessage', options),
+  commit: options => ipcRenderer.send('grpc.commit', options),
+  cancel: options => ipcRenderer.send('grpc.cancel', options),
+  cancelMultiple: options => ipcRenderer.send('grpc.cancelMultiple', options),
+  closeAll: () => ipcRenderer.send('grpc.closeAll'),
+  loadMethods: options => ipcRenderer.invoke('grpc.loadMethods', options),
+};
 const main: Window['main'] = {
   restart: () => ipcRenderer.send('restart'),
   authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
+  spectralRun: options => ipcRenderer.invoke('spectralRun', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),
   installPlugin: options => ipcRenderer.invoke('installPlugin', options),
   curlRequest: options => ipcRenderer.invoke('curlRequest', options),
@@ -28,6 +38,7 @@ const main: Window['main'] = {
     return () => ipcRenderer.removeListener(channel, listener);
   },
   webSocket,
+  grpc,
 };
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),

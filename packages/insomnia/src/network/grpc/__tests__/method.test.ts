@@ -1,7 +1,8 @@
 import { describe, expect, it } from '@jest/globals';
 
-import type { GrpcMethodType } from '../method';
-import { canClientStream, getMethodType, GrpcMethodTypeEnum, GrpcMethodTypeName } from '../method';
+import { getMethodType } from '../../../common/grpc-paths';
+import { GrpcMethodType } from '../../../main/ipc/grpc';
+import { canClientStream } from '../../../ui/components/panes/grpc-request-pane';
 
 describe('getMethodType', () => {
   it('should return unary', () => {
@@ -10,7 +11,7 @@ describe('getMethodType', () => {
         requestStream: false,
         responseStream: false,
       }),
-    ).toBe(GrpcMethodTypeEnum.unary);
+    ).toBe('unary');
   });
 
   it('should return server', () => {
@@ -19,7 +20,7 @@ describe('getMethodType', () => {
         requestStream: false,
         responseStream: true,
       }),
-    ).toBe(GrpcMethodTypeEnum.server);
+    ).toBe('server');
   });
 
   it('should return client', () => {
@@ -28,7 +29,7 @@ describe('getMethodType', () => {
         requestStream: true,
         responseStream: false,
       }),
-    ).toBe(GrpcMethodTypeEnum.client);
+    ).toBe('client');
   });
 
   it('should return bidi', () => {
@@ -37,32 +38,21 @@ describe('getMethodType', () => {
         requestStream: true,
         responseStream: true,
       }),
-    ).toBe(GrpcMethodTypeEnum.bidi);
-  });
-});
-
-describe('GrpcMethodTypeName', () => {
-  it.each([
-    [GrpcMethodTypeEnum.unary, 'Unary'],
-    [GrpcMethodTypeEnum.server, 'Server Streaming'],
-    [GrpcMethodTypeEnum.client, 'Client Streaming'],
-    [GrpcMethodTypeEnum.bidi, 'Bi-directional Streaming'],
-  ])('should return expected result', (type: GrpcMethodType, expectedString: string) => {
-    expect(GrpcMethodTypeName[type]).toBe(expectedString);
+    ).toBe('bidi');
   });
 });
 
 describe('canClientStream', () => {
   it.each([
-    GrpcMethodTypeEnum.unary,
-    GrpcMethodTypeEnum.server,
+    'unary',
+    'server',
   ])('should not support client streaming with %o', (type: GrpcMethodType) =>
     expect(canClientStream(type)).toBe(false),
   );
 
   it.each([
-    GrpcMethodTypeEnum.client,
-    GrpcMethodTypeEnum.bidi,
+    'client',
+    'bidi',
   ])('should support client streaming with %o', (type: GrpcMethodType) =>
     expect(canClientStream(type)).toBe(true),
   );

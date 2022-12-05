@@ -1,9 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
 
 import * as session from '../../../account/session';
 import { getAppVersion, getProductName } from '../../../common/constants';
-import { selectSettings } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -18,16 +16,15 @@ import { showModal } from './index';
 
 export interface SettingsModalHandle {
   hide: () => void;
-  show: (options?: { tab?: number }) => void;
+  show: (options?: { tab?: string }) => void;
 }
 
-export const TAB_INDEX_EXPORT = 1;
-export const TAB_INDEX_SHORTCUTS = 3;
-export const TAB_INDEX_THEMES = 2;
-export const TAB_INDEX_PLUGINS = 5;
+export const TAB_INDEX_EXPORT = 'data';
+export const TAB_INDEX_SHORTCUTS = 'keyboard';
+export const TAB_INDEX_THEMES = 'themes';
+export const TAB_INDEX_PLUGINS = 'plugins';
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
-  const settings = useSelector(selectSettings);
-  const [, setCurrentTabIndex] = useState<number | null>(null);
+  const [defaultTabKey, setDefaultTabKey] = useState('general');
   const modalRef = useRef<ModalHandle>(null);
   const email = session.isLoggedIn() ? session.getFullName() : null;
 
@@ -36,8 +33,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
       modalRef.current?.hide();
     },
     show: options => {
-      const tabIndex = typeof options?.tab !== 'number' ? 0 : options.tab;
-      setCurrentTabIndex(tabIndex);
+      setDefaultTabKey(options?.tab || 'general');
       modalRef.current?.show();
     },
   }), []);
@@ -52,7 +48,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
         </span>
       </ModalHeader>
       <ModalBody noScroll>
-        <Tabs aria-label="Insomnia Settings">
+        <Tabs aria-label="Insomnia Settings"  defaultSelectedKey={defaultTabKey}>
           <TabItem key="general" title="General">
             <PanelContainer className="pad">
               <General />
@@ -80,7 +76,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           </TabItem>
           <TabItem key="plugins" title="Plugins">
             <PanelContainer className="pad">
-              <Plugins settings={settings} />
+              <Plugins />
             </PanelContainer>
           </TabItem>
         </Tabs>
