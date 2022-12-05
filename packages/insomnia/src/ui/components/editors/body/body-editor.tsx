@@ -46,24 +46,19 @@ export const BodyEditor: FC<Props> = ({
   environmentId,
 }) => {
   const handleRawChange = useCallback((rawValue: string) => {
-    const oldContentType = request.body.mimeType || '';
-    const body = newBodyRaw(rawValue, oldContentType);
-    models.request.update(request, { body });
+    models.request.update(request, { body: newBodyRaw(rawValue, request.body.mimeType || '') });
   }, [request]);
 
   const handleGraphQLChange = useCallback((content: string) => {
-    const body = newBodyRaw(content, CONTENT_TYPE_GRAPHQL);
-    models.request.update(request, { body });
+    models.request.update(request, { body: newBodyRaw(content, CONTENT_TYPE_GRAPHQL) });
   }, [request]);
 
   const handleFormUrlEncodedChange = useCallback((parameters: RequestBodyParameter[]) => {
-    const body = newBodyFormUrlEncoded(parameters);
-    models.request.update(request, { body });
+    models.request.update(request, { body: newBodyFormUrlEncoded(parameters) });
   }, [request]);
 
   const handleFormChange = useCallback((parameters: RequestBodyParameter[]) => {
-    const body = newBodyForm(parameters);
-    models.request.update(request, { body });
+    models.request.update(request, { body: newBodyForm(parameters) });
   }, [request]);
 
   const handleFileChange = async (path: string) => {
