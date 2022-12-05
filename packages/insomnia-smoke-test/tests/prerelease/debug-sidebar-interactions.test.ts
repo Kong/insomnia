@@ -84,8 +84,12 @@ test.describe('Debug-Sidebar', async () => {
       // TODO implement
     });
 
-    test.fixme('Pin a Request', async () => {
-      // TODO implement
+    test('Pin a Request', async ({ page }) => {
+      await page.locator('button:has-text("example http")').click();
+      await page.locator('[data-testid="Dropdown-example-http"] button').click();
+      await page.locator('button:has-text("Pin")').nth(3).click();
+      await page.locator('text=test folderOPENclick').click();
+
     });
 
     test('Delete Request', async ({ page }) => {
