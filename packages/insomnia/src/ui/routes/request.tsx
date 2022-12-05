@@ -1,21 +1,14 @@
-import React from 'react';
-import { useSelector } from 'react-redux';
-import { ActionFunction, LoaderFunction, redirect, useParams } from 'react-router-dom';
+import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
 import { CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import * as models from '../../models';
 import { GrpcRequest, GrpcRequestBody, GrpcRequestHeader, isGrpcRequestId } from '../../models/grpc-request';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { Request, RequestAuthentication, RequestBody, RequestHeader } from '../../models/request';
-import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
+import { WebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
-import { ErrorBoundary } from '../components/error-boundary';
-import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
-import { RequestPane } from '../components/panes/request-pane';
-import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { CreateRequestType } from '../hooks/create-request';
-import { selectActiveEnvironment } from '../redux/selectors';
 
 export const loader: LoaderFunction = async ({ params }): Promise<Request | WebSocketRequest | GrpcRequest> => {
   const { requestId, workspaceId } = params;
@@ -181,25 +174,25 @@ export const duplicateRequestAction: ActionFunction = async ({ request, params }
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${newRequest._id}`);
 };
 
-const RequestRoute = () => {
-  const { requestId } = useParams() as { requestId: string };
-  const activeEnvironment = useSelector(selectActiveEnvironment);
-  return (<>
-    <ErrorBoundary showAlert>
-      {isGrpcRequestId(requestId) ? (
-        <GrpcRequestPane />
-      ) : (
-        isWebSocketRequestId(requestId) ? (
-          <WebSocketRequestPane
-            environment={activeEnvironment}
-          />
-        ) : (
-          <RequestPane
-            environmentId={activeEnvironment ? activeEnvironment._id : ''}
-          />
-        )
-      )}
-    </ErrorBoundary>
-  </>);
-};
-export default RequestRoute;
+// const RequestRoute = () => {
+//   const { requestId } = useParams() as { requestId: string };
+//   const activeEnvironment = useSelector(selectActiveEnvironment);
+//   return (<>
+//     <ErrorBoundary showAlert>
+//       {isGrpcRequestId(requestId) ? (
+//         <GrpcRequestPane />
+//       ) : (
+//         isWebSocketRequestId(requestId) ? (
+//           <WebSocketRequestPane
+//             environment={activeEnvironment}
+//           />
+//         ) : (
+//           <RequestPane
+//             environmentId={activeEnvironment ? activeEnvironment._id : ''}
+//           />
+//         )
+//       )}
+//     </ErrorBoundary>
+//   </>);
+// };
+// export default RequestRoute;

@@ -60,6 +60,7 @@ const TabPanelBody = styled.div({
 
 interface Props {
   environmentId: string;
+  setLoading: (l: boolean) => void;
 }
 export function newBodyGraphQL(rawBody: string): RequestBody {
   try {
@@ -196,6 +197,7 @@ export function updateMimeType(
 }
 export const RequestPane: FC<Props> = ({
   environmentId,
+  setLoading,
 }) => {
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const request = useRouteLoaderData('request/:requestId') as Request;
@@ -264,6 +266,14 @@ export const RequestPane: FC<Props> = ({
   const numHeaders = request.headers.filter(h => !h.disabled).length;
   const urlHasQueryParameters = request.url.indexOf('?') >= 0;
   const contentType = getContentTypeFromHeaders(request.headers) || request.body.mimeType;
+
+  const onUrlChange = (url:string) => {
+    createRequestFetcher.submit({ url },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+        method: 'post',
+      });
+  };
   return (
     <Pane type="request">
       <PaneHeader>
@@ -272,16 +282,11 @@ export const RequestPane: FC<Props> = ({
             key={request._id}
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
-            onUrlChange={(_, url) => {
-              createRequestFetcher.submit({ url },
-                {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
-                  method: 'post',
-                });
-            }}
+            onUrlChange={onUrlChange}
             handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, request?._id)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             request={request}
+            setLoading={setLoading}
           />
         </ErrorBoundary>
       </PaneHeader>

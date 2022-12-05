@@ -43,7 +43,7 @@ import { initializeSentry } from './sentry';
 const Project = lazy(() => import('./routes/project'));
 const Workspace = lazy(() => import('./routes/workspace'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
-const DebugSidebar = lazy(() => import('./routes/debug-sidebar'));
+const Debug = lazy(() => import('./routes/debug'));
 const Design = lazy(() => import('./routes/design'));
 
 initializeSentry();
@@ -129,7 +129,7 @@ const router = createMemoryRouter(
                               path: 'debug/*',
                               element: (
                                 <Suspense fallback={<AppLoadingIndicator />}>
-                                  <DebugSidebar />
+                                  <Debug />
                                 </Suspense>
                               ),
                               children: [

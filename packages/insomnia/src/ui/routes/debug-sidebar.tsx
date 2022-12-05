@@ -12,12 +12,19 @@ import {
   selectActiveEnvironment,
 } from '../redux/selectors';
 import { selectSidebarFilter } from '../redux/sidebar-selectors';
-import RequestRoute from './request';
+// import RequestRoute from './request';
 
 export const DebugSidebar: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const sidebarFilter = useSelector(selectSidebarFilter);
-
+  // const [runningRequests, setRunningRequests] = useState({});
+  // const setLoading = (isLoading: boolean) => {
+  //   invariant(activeRequest, 'No active request');
+  //   setRunningRequests({
+  //     ...runningRequests,
+  //     [activeRequest._id]: isLoading ? true : false,
+  //   });
+  // };
   const { workspaceId } = useParams() as { workspaceId: string };
 
   return (
@@ -47,7 +54,7 @@ export const DebugSidebar: FC = () => {
         </>}
       renderPaneOne={
         <Routes>
-          <Route errorElement={<div>error</div>} path="request/:requestId/*" element={<RequestRoute />} />
+          {/* <Route errorElement={<div>error</div>} path="request/:requestId/*" element={<RequestRoute />} /> */}
         </Routes>}
       renderPaneTwo={
         <Routes>
