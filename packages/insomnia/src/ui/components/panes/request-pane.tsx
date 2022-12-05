@@ -88,10 +88,6 @@ export const RequestPane: FC<Props> = ({
     handleEditDescription(true);
   }, [handleEditDescription]);
 
-  const autocompleteUrls = useCallback(() => {
-    return queryAllWorkspaceUrls(workspace, models.request.type, request?._id);
-  }, [workspace, request]);
-
   const handleUpdateSettingsUseBulkHeaderEditor = useCallback(() => {
     models.settings.update(settings, { useBulkHeaderEditor:!settings.useBulkHeaderEditor });
   }, [settings]);
@@ -178,7 +174,7 @@ export const RequestPane: FC<Props> = ({
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
             onUrlChange={updateRequestUrl}
-            handleAutocompleteUrls={autocompleteUrls}
+            handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspace._id, models.request.type, request?._id)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             request={request}
             setLoading={setLoading}
@@ -192,7 +188,6 @@ export const RequestPane: FC<Props> = ({
             request={request}
             workspace={workspace}
             environmentId={environmentId}
-            settings={settings}
           />
         </TabItem>
         <TabItem key="auth" title={<AuthDropdown />}>

@@ -33,7 +33,12 @@ interface Props {
   isDisabled?: boolean;
   isWebSocketRequest?: boolean;
   namePlaceholder?: string;
-  onChange: Function;
+  onChange: (c: {
+    name: string;
+    value: string;
+    description?: string;
+    disabled?: boolean;
+  }[]) => void;
   pairs: Pair[];
   valuePlaceholder?: string;
 }

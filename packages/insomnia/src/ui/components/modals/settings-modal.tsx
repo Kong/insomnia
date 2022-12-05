@@ -1,9 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
 
 import * as session from '../../../account/session';
 import { getAppVersion, getProductName } from '../../../common/constants';
-import { selectSettings } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -26,7 +24,6 @@ export const TAB_INDEX_SHORTCUTS = 'keyboard';
 export const TAB_INDEX_THEMES = 'themes';
 export const TAB_INDEX_PLUGINS = 'plugins';
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
-  const settings = useSelector(selectSettings);
   const [defaultTabKey, setDefaultTabKey] = useState('general');
   const modalRef = useRef<ModalHandle>(null);
   const email = session.isLoggedIn() ? session.getFullName() : null;
@@ -79,7 +76,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           </TabItem>
           <TabItem key="plugins" title="Plugins">
             <PanelContainer className="pad">
-              <Plugins settings={settings} />
+              <Plugins />
             </PanelContainer>
           </TabItem>
         </Tabs>

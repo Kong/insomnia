@@ -3,7 +3,6 @@ import { useSelector } from 'react-redux';
 
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
-import type { Workspace } from '../../../models/workspace';
 import { selectActiveWorkspaceMeta, selectEnvironments, selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -17,12 +16,12 @@ import { Tooltip } from '../tooltip';
 
 interface Props {
   activeEnvironment?: Environment | null;
-  workspace: Workspace;
+  workspaceId: string;
 }
 
 export const EnvironmentsDropdown: FC<Props> = ({
   activeEnvironment,
-  workspace,
+  workspaceId,
 }) => {
   const environments = useSelector(selectEnvironments);
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
@@ -38,7 +37,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
   });
 
   // NOTE: Base environment might not exist if the users hasn't managed environments yet.
-  const baseEnvironment = environments.find(environment => environment.parentId === workspace._id);
+  const baseEnvironment = environments.find(environment => environment.parentId === workspaceId);
   const subEnvironments = environments
     .filter(environment => environment.parentId === (baseEnvironment && baseEnvironment._id))
     .sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);

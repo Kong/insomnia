@@ -44,8 +44,8 @@ export const ErrorRoute: FC = () => {
 
   return (
     <Container>
-      <h1>Application Error</h1>
-      <p>
+      <h1 style={{ color: 'var(--color-font)' }}>Application Error</h1>
+      <p style={{ color: 'var(--color-font)' }}>
         Failed to render. Please send the following error to{' '}
         <Mailto
           email="support@insomnia.rest"
@@ -54,8 +54,9 @@ export const ErrorRoute: FC = () => {
         />
         .
       </p>
-      <h2>Message:</h2>
-      <pre>{errorMessage}</pre>
+      <span style={{ color: 'var(--color-font)' }}>Message:
+        <code style={{ wordBreak: 'break-word', margin: 'var(--padding-sm)' }}>{errorMessage}</code>
+      </span>
       <Button onClick={() => navigate(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`)}>
         Try to reload the app{' '}
         <span>{navigation.state === 'loading' ? <Spinner /> : null}</span>

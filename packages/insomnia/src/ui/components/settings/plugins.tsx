@@ -1,5 +1,6 @@
 import * as path from 'path';
 import React, { FC, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import {
   NPM_PACKAGE_BASE,
@@ -8,20 +9,16 @@ import {
 import { docsPlugins } from '../../../common/documentation';
 import { clickLink, getDataDirectory } from '../../../common/electron-helpers';
 import * as models from '../../../models';
-import type { Settings } from '../../../models/settings';
 import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
+import { selectSettings } from '../../redux/selectors';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { showAlert, showPrompt } from '../modals';
 import { Button } from '../themed-button';
-
-interface Props {
-  settings: Settings;
-}
 
 interface State {
   plugins: Plugin[];
@@ -31,7 +28,7 @@ interface State {
   isInstallingFromNpm: boolean;
   isRefreshingPlugins: boolean;
 }
-export const Plugins: FC<Props> = ({ settings }) => {
+export const Plugins: FC = () => {
   const [state, setState] = useState<State>({
     plugins: [],
     npmPluginValue: '',
@@ -48,6 +45,7 @@ export const Plugins: FC<Props> = ({ settings }) => {
     isRefreshingPlugins,
     npmPluginValue,
   } = state;
+  const settings = useSelector(selectSettings);
 
   useEffect(() => {
     refreshPlugins();
