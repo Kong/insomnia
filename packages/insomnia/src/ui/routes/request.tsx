@@ -1,25 +1,14 @@
-import { ipcRenderer, SaveDialogOptions } from 'electron';
-import fs from 'fs';
-import { extension as mimeExtension } from 'mime-types';
-import path from 'path';
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { ActionFunction, LoaderFunction, redirect, useParams } from 'react-router-dom';
 
 import { CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
-import { GrpcRequestEventEnum } from '../../common/grpc-events';
-import { getContentDispositionHeader } from '../../common/misc';
-import { getRenderContext, getRenderedGrpcRequest, getRenderedGrpcRequestMessage, render, RENDER_PURPOSE_SEND } from '../../common/render';
 import * as models from '../../models';
 import { GrpcRequest, GrpcRequestBody, GrpcRequestHeader, isGrpcRequestId } from '../../models/grpc-request';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { Request, RequestAuthentication, RequestBody, RequestHeader } from '../../models/request';
 import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
-import { canClientStream, GrpcMethodType } from '../../network/grpc/method';
-import { loadMethods } from '../../network/grpc/proto-loader';
-import * as network from '../../network/network';
 import { invariant } from '../../utils/invariant';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { ErrorBoundary } from '../components/error-boundary';
 import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
@@ -190,41 +179,6 @@ export const duplicateRequestAction: ActionFunction = async ({ request, params }
   const newRequest = await requestOperations.duplicate(req, { name });
   invariant(newRequest, 'Failed to duplicate request');
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${newRequest._id}`);
-};
-
-export const protoLoader: LoaderFunction = async ({ params }) => {
-  const { requestId } = params;
-  invariant(requestId, 'Request ID is required');
-  const req = await models.grpcRequest.getById(requestId);
-  invariant(req, 'Request not found');
-  invariant(req.protoFileId, 'Proto file ID is required');
-  const protoFile = await models.protoFile.getById(req.protoFileId);
-  const methods = await loadMethods(protoFile);
-  return methods;
-};
-
-export const grpcStreamRequestAction: ActionFunction = async ({ params }) => {
-  const { organizationId, projectId, requestId, workspaceId } = params;
-  invariant(requestId, 'Request ID is required');
-  invariant(workspaceId, 'Workspace ID is required');
-  const activeWorkspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-  invariant(activeWorkspaceMeta, 'Active workspace meta not found');
-  // TODO: make sense of this fallback to undefined
-  const environmentId = activeWorkspaceMeta.activeEnvironmentId || undefined;
-  const req = await models.grpcRequest.getById(requestId);
-  const requestBody = await getRenderedGrpcRequestMessage({
-    // @ts-expect-error -- TSCONVERSION req can be null but should not try to render if it is null
-    request: req,
-    environmentId,
-    purpose: RENDER_PURPOSE_SEND,
-  },
-  );
-  ipcRenderer.send(GrpcRequestEventEnum.sendMessage, {
-    body: requestBody,
-    // @ts-expect-error -- TSCONVERSION req can be null
-    requestId: req._id,
-  });
-  // dispatch(grpcActions.requestMessage(reqId, preparedMessage.body.text));
 };
 
 const RequestRoute = () => {

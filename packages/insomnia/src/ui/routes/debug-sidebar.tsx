@@ -4,6 +4,7 @@ import { Route, Routes, useParams } from 'react-router-dom';
 
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
 import { showCookiesModal } from '../components/modals/cookies-modal';
+import { PlaceholderResponsePane } from '../components/panes/placeholder-response-pane';
 import { SidebarChildren } from '../components/sidebar/sidebar-children';
 import { SidebarFilter } from '../components/sidebar/sidebar-filter';
 import { SidebarLayout } from '../components/sidebar-layout';
@@ -12,7 +13,6 @@ import {
 } from '../redux/selectors';
 import { selectSidebarFilter } from '../redux/sidebar-selectors';
 import RequestRoute from './request';
-import ResponseRoute from './response';
 
 export const DebugSidebar: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
@@ -51,8 +51,8 @@ export const DebugSidebar: FC = () => {
         </Routes>}
       renderPaneTwo={
         <Routes>
-          {/* <Route errorElement={<div>error</div>} path="request/:requestId/response/*" element={<PlaceholderResponsePane />} /> */}
-          <Route errorElement={<div>error</div>} path="request/:requestId/response/:responseId" element={<ResponseRoute />} />
+          <Route errorElement={<div>error</div>} path="request/:requestId/response/*" element={<PlaceholderResponsePane />} />
+          {/* <Route errorElement={<div>error</div>} path="request/:requestId/response/:responseId" element={} /> */}
         </Routes>}
     />
   );

@@ -13,7 +13,6 @@ import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-reques
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveEnvironment } from '../../redux/selectors';
-import { GrpcRequestState } from '../../routes/debug';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
 import { OneLineEditor } from '../codemirror/one-line-editor';
@@ -69,7 +68,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   reloadRequests,
 }) => {
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
-  const { requestMessages, running, reloadMethods, methods } = grpcState;
   useAsync(async () => {
     // don't actually reload until the request has stopped running or if methods do not need to be reloaded
     if (!reloadMethods || running) {

@@ -137,6 +137,29 @@ const router = createMemoryRouter(
                                   path: 'request/:requestId',
                                   id: 'request/:requestId',
                                   loader: async (...args) => (await import('./routes/request')).loader(...args),
+                                  children: [
+                                    {
+                                      path: 'duplicate',
+                                      action: async (...args) =>
+                                        (await import('./routes/request')).duplicateRequestAction(
+                                          ...args
+                                        ),
+                                    },
+                                    {
+                                      path: 'update',
+                                      action: async (...args) =>
+                                        (await import('./routes/request')).updateRequestAction(
+                                          ...args
+                                        ),
+                                    },
+                                    {
+                                      path: 'update-hack',
+                                      action: async (...args) =>
+                                        (await import('./routes/request')).updateHackRequestAction(
+                                          ...args
+                                        ),
+                                    },
+                                  ],
                                 },
                                 {
                                   path: 'request/new',

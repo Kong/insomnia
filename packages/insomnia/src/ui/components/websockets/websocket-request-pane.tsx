@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
@@ -192,8 +193,6 @@ const WebSocketRequestForm: FC<FormProps> = ({
 };
 
 interface Props {
-  request: WebSocketRequest;
-  workspaceId: string;
   environment: Environment | null;
 }
 
@@ -201,7 +200,9 @@ interface Props {
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environment }) => {
+export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
+  const { workspaceId } = useParams() as { workspaceId: string };
+  const request = useRouteLoaderData('request/:requestId') as WebSocketRequest;
   const readyState = useWSReadyState(request._id);
   const { useBulkParametersEditor } = useSelector(selectSettings);
 
