@@ -70,8 +70,13 @@ test.describe('Debug-Sidebar', async () => {
       await page.locator('button:has-text("GETexample http")').click();
     });
 
-    test.fixme('Filter by a folder name', async () => {
-      // TODO implement
+    test('Filter by a folder name', async ({ page }) => {
+      await page.locator('[data-testid="SidebarFilter"] [data-testid="DropdownButton"] button').click();
+      await page.locator('button:has-text("Folders First")').click();
+      await page.locator('[placeholder="Filter"]').click();
+      await page.locator('[placeholder="Filter"]').fill('test folder');
+      await page.locator('[placeholder="Filter"]').press('Enter');
+
     });
 
     test.fixme('Open Generate code and copy as curl', async () => {
