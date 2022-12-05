@@ -83,7 +83,12 @@ test.describe('Debug-Sidebar', async () => {
       // TODO implement
     });
 
-    test.fixme('Delete Request', async () => {
+    test('Delete Request', async ({ page }) => {
+      await page.locator('button:has-text("example http")').click();
+      await page.locator('[data-testid="Dropdown-example-http"] button').click();
+      await page.locator('button:has-text("DeleteCtrl + Shift + Delete")').nth(3).click();
+      await page.locator('button:has-text("Click to confirm")').click();
+
       // TODO implement
     });
 
