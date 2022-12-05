@@ -87,8 +87,13 @@ test.describe('Debug-Sidebar', async () => {
       // TODO implement
     });
 
-    test.fixme('Rename a request', async () => {
-      // TODO implement
+    test('Rename a request', async ({ page }) => {
+      await page.locator('button:has-text("example http")').click();
+      await page.locator('[data-testid="Dropdown-example-http"]').click();
+      await page.locator('button:has-text("Rename")').nth(4).click();
+      await page.locator('text=Rename RequestName Rename >> input[type="text"]').fill('example http1');
+      await page.locator('div[role="dialog"] button:has-text("Rename")').click();
+      await page.locator('button:has-text("example http1")').click();
     });
 
     test('Create a new HTTP request', async ({ page }) => {
