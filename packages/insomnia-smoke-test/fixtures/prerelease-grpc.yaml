@@ -70,7 +70,7 @@ resources:
     modified: 1669986557908
     created: 1638200871429
     url: localhost:50052
-    name: Client Server
+    name: Client Stream
     description: ""
     protoFileId: pf_f11a2ad5afc3441ba963d94f353af020
     protoMethodName: /routeguide.RouteGuide/RecordRoute
