@@ -1,5 +1,5 @@
 import { RulesetDefinition, Spectral } from '@stoplight/spectral-core';
-import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
+const { bundleAndLoadRuleset } = require('@stoplight/spectral-ruleset-bundler/with-loader');
 import { oas } from '@stoplight/spectral-rulesets';
 import { DiagnosticSeverity } from '@stoplight/types';
 import fs from 'fs';
