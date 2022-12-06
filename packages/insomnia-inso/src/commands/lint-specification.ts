@@ -1,4 +1,5 @@
 import { RulesetDefinition, Spectral } from '@stoplight/spectral-core';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { bundleAndLoadRuleset } = require('@stoplight/spectral-ruleset-bundler/with-loader');
 import { oas } from '@stoplight/spectral-rulesets';
 import { DiagnosticSeverity } from '@stoplight/types';
@@ -44,8 +45,10 @@ export async function lintSpecification(
         const spectralConfigPath = path.join(path.dirname(fileName), '.spectral.yml');
         if (fs.existsSync(spectralConfigPath)) {
           logger.trace(`Using custom spectral config file \`${spectralConfigPath}\``);
-          const spectralConfig = bundleAndLoadRuleset(spectralConfigPath);
+          const spectralConfig = await bundleAndLoadRuleset(spectralConfigPath, { fs });
           ruleset = spectralConfig;
+        } else {
+          logger.info(`Using ruleset: oas, see ${oas.documentationUrl}`);
         }
 
       } catch (error) {
@@ -61,10 +64,7 @@ export async function lintSpecification(
   }
 
   const spectral = new Spectral();
-
   await spectral.setRuleset(ruleset as RulesetDefinition);
-  logger.info(`Using ruleset: oas, see ${oas.documentationUrl}`);
-
   const results = (await spectral.run(specContent));
 
   if (results.length) {
