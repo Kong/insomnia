@@ -184,9 +184,9 @@ const routeChat: HandleCall<any, any> = (call: any) => {
 };
 
 /**
- * Starts an RPC server that receives requests for the Greeter service at the given port
+ * Starts an RPC server that uses Route Guide example for PreRelease tests
  */
-export const startRouteGuideGRPCServer = (port: number) => {
+export const startPreReleaseGRPCServer = (port: number) => {
   return new Promise<void>((resolve, reject) => {
     const server = new grpc.Server();
     // @ts-expect-error generated from proto file
