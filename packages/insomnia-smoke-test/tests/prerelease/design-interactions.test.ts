@@ -4,7 +4,7 @@ import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test.describe('Design interactions', async () => {
-
+  test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   test.fixme('Requests are auto-generated when switching tabs', async ({ page }) => {
     // TODO(filipe) - this is currently not working
     await page.click('[data-testid="project"] >> text=Insomnia');

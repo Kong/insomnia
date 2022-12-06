@@ -158,24 +158,29 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
         </DropdownItem>
       )}
 
-      <DropdownItem onClick={togglePin}>
+      <DropdownItem dataTestId={`DropdownItemPinRequest-${toKebabCase(request.name)}`} onClick={togglePin}>
         <i className="fa fa-thumb-tack" /> {isPinned ? 'Unpin' : 'Pin'}
         <DropdownHint keyBindings={hotKeyRegistry.request_togglePin} />
       </DropdownItem>
 
       {canGenerateCode && (
-        <DropdownItem onClick={copyAsCurl}>
+        <DropdownItem
+          dataTestId={`DropdownItemCopyAsCurl-${toKebabCase(request.name)}`}
+          onClick={copyAsCurl}
+        >
           <i className="fa fa-copy" /> Copy as Curl
         </DropdownItem>
       )}
 
       <DropdownItem
+        dataTestId={`DropdownItemRename-${toKebabCase(request.name)}`}
         onClick={handleRename}
       >
         <i className="fa fa-edit" /> Rename
       </DropdownItem>
 
       <DropdownItem
+        dataTestId={`DropdownItemDelete-${toKebabCase(request.name)}`}
         buttonClass={PromptButton}
         onClick={deleteRequest}
       >

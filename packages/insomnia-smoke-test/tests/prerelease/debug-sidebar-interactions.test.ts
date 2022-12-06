@@ -4,7 +4,7 @@ import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test.describe('Debug-Sidebar', async () => {
-
+  test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   test.beforeEach(async ({ app, page }) => {
     await page.click('[data-testid="project"] >> text=Insomnia');
     await page.click('text=Create');
@@ -77,7 +77,7 @@ test.describe('Debug-Sidebar', async () => {
       await page.locator('[placeholder="Filter"]').click();
       await page.locator('[placeholder="Filter"]').fill('test folder');
       await page.locator('[placeholder="Filter"]').press('Enter');
-
+      await page.locator('button:has-text("test folderOPEN")').click();
     });
 
     test.fixme('Open Generate code and copy as curl', async () => {
@@ -87,24 +87,25 @@ test.describe('Debug-Sidebar', async () => {
     test('Pin a Request', async ({ page }) => {
       await page.locator('button:has-text("example http")').click();
       await page.locator('[data-testid="Dropdown-example-http"] button').click();
-      await page.locator('button:has-text("Pin")').nth(3).click();
-      await page.locator('text=test folderOPENclick').click();
-
+      await page.locator('[data-testid="DropdownItemPinRequest-example-http"]').click();
+      // Click pinned request on pinned request list
+      await page.locator('button:has-text("GETexample http")').first().click();
+      // Click pinned request on regular list
+      await page.locator('button:has-text("GETexample http")').nth(1).click();
     });
 
     test('Delete Request', async ({ page }) => {
       await page.locator('button:has-text("example http")').click();
       await page.locator('[data-testid="Dropdown-example-http"] button').click();
-      await page.locator('button:has-text("DeleteCtrl + Shift + Delete")').nth(3).click();
+      await page.locator('[data-testid="DropdownItemDelete-example-http"]').click();
       await page.locator('button:has-text("Click to confirm")').click();
-
-      // TODO implement
+      await expect(page.locator('.app')).not.toContainText('example http');
     });
 
     test('Rename a request', async ({ page }) => {
       await page.locator('button:has-text("example http")').click();
       await page.locator('[data-testid="Dropdown-example-http"]').click();
-      await page.locator('button:has-text("Rename")').nth(4).click();
+      await page.locator('[data-testid="DropdownItemRename-example-http"]').click();
       await page.locator('text=Rename RequestName Rename >> input[type="text"]').fill('example http1');
       await page.locator('div[role="dialog"] button:has-text("Rename")').click();
       await page.locator('button:has-text("example http1")').click();
