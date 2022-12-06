@@ -52,7 +52,17 @@ describe.each([npmPackageBinPath, ...binaries].filter(x => x))('inso with %s', b
       expect(failed).toBe(false);
     });
   });
+  describe.only('lint spec file', () => {
+    it('should not fail linting spec', () => {
+      const x = inso(
+        'lint',
+        'spec',
+        'fixtures/with-ruleset/path-plugin.yaml',
+      );
 
+      expect(x.stdout).toBe('');
+    });
+  });
   describe('lint spec', () => {
     it('should not fail linting spec', () => {
       const { failed } = inso(

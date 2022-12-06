@@ -1,4 +1,5 @@
 import { RulesetDefinition, Spectral } from '@stoplight/spectral-core';
+import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
 import { DiagnosticSeverity } from '@stoplight/types';
 import fs from 'fs';
@@ -25,7 +26,7 @@ export async function lintSpecification(
 
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
   let specContent = '';
-
+  let ruleset = oas;
   try {
     if (specFromDb?.contents) {
       logger.trace('Linting specification from database contents');
@@ -39,6 +40,14 @@ export async function lintSpecification(
 
       try {
         specContent = (await fs.promises.readFile(fileName)).toString();
+        // detect .spectral.yml
+        const spectralConfigPath = path.join(path.dirname(fileName), '.spectral.yml');
+        if (fs.existsSync(spectralConfigPath)) {
+          logger.trace(`Using custom spectral config file \`${spectralConfigPath}\``);
+          const spectralConfig = bundleAndLoadRuleset(spectralConfigPath);
+          ruleset = spectralConfig;
+        }
+
       } catch (error) {
         throw new InsoError(`Failed to read "${fileName}"`, error);
       }
@@ -52,7 +61,8 @@ export async function lintSpecification(
   }
 
   const spectral = new Spectral();
-  await spectral.setRuleset(oas as RulesetDefinition);
+
+  await spectral.setRuleset(ruleset as RulesetDefinition);
   logger.info(`Using ruleset: oas, see ${oas.documentationUrl}`);
 
   const results = (await spectral.run(specContent));
