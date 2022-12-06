@@ -41,12 +41,11 @@ export async function lintSpecification(
 
       try {
         specContent = (await fs.promises.readFile(fileName)).toString();
-        // detect .spectral.yml
-        const spectralConfigPath = path.join(path.dirname(fileName), '.spectral.yml');
-        if (fs.existsSync(spectralConfigPath)) {
-          logger.trace(`Using custom spectral config file \`${spectralConfigPath}\``);
-          const spectralConfig = await bundleAndLoadRuleset(spectralConfigPath, { fs });
-          ruleset = spectralConfig;
+        const filesInSpecFolder = await fs.promises.readdir(path.dirname(fileName));
+        const rulesetFileName = filesInSpecFolder.find(file => file.startsWith('.spectral'));
+        if (rulesetFileName) {
+          logger.trace(`Loading ruleset from \`${rulesetFileName}\``);
+          ruleset = await bundleAndLoadRuleset(path.join(path.dirname(fileName), rulesetFileName));
         } else {
           logger.info(`Using ruleset: oas, see ${oas.documentationUrl}`);
         }
