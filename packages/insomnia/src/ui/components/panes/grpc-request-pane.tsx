@@ -1,3 +1,7 @@
+import { credentials } from '@grpc/grpc-js';
+import { Client } from 'grpc-reflection-js';
+import * as protobuf from 'protobufjs';
+import { Service } from 'protobufjs';
 import React, { FunctionComponent } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
@@ -137,8 +141,26 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               type="text"
               defaultValue={activeRequest.url}
               placeholder="grpcb.in:9000"
-              onChange={url => models.grpcRequest.update(activeRequest, { url })}
-              getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, activeRequest._id)}
+              onChange={async url => {
+                models.grpcRequest.update(activeRequest, { url });
+                const client = new Client('grpcb.in:9000', credentials.createInsecure());
+                const services = (await client.listServices()) as string[];
+                console.log({ services });
+                const fileContainingSymbol = await client.fileContainingSymbol('addsvc.Add');
+                console.log({ fileContainingSymbol });
+                // const def = protoLoader.loadFileDescriptorSetFromObject(hello.toDescriptor('proto2'));
+                // const fromJSON = fileContainingSymbol.getOption();
+                // console.log('packages', Object.keys(fileContainingSymbol.nested));
+                // console.log('services', protobuf.Service.fromJSON('addsvc', fileContainingSymbol).toJSON());
+                console.log('methods', fileContainingSymbol.toDescriptor('proto2'));
+                const add = 'addsvc.Add/Sum';
+                const two = `${}.${}/${}`
+                console.log(add,two);
+              }}
+              getAutocompleteConstants={async () => {
+                const workspace = await models.workspace.getById(workspaceId);
+                return queryAllWorkspaceUrls(workspace, models.grpcRequest.type, activeRequest._id);
+              }}
             />
           </StyledUrlEditor>
           <StyledDropdown>
