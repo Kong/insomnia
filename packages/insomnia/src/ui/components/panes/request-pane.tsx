@@ -1,3 +1,5 @@
+import { getContentTypeFromHeaders } from '@insomnia/common/constants';
+import { database } from '@insomnia/common/database';
 import * as models from '@insomnia/models';
 import { queryAllWorkspaceUrls } from '@insomnia/models/helpers/query-all-workspace-urls';
 import { update } from '@insomnia/models/helpers/request-operations';
@@ -8,8 +10,6 @@ import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { getContentTypeFromHeaders } from '../../../common/constants';
-import { database } from '../../../common/database';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveEnvironment, selectActiveRequestMeta } from '../../redux/selectors';

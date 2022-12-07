@@ -8,7 +8,7 @@ import { LoaderFunction, Outlet, useNavigate, useParams, useRevalidator } from '
 import styled from 'styled-components';
 
 import { isLoggedIn, onLoginLogout } from '../../account/session';
-import { database } from '../../common/database';
+import { database } from '@insomnia/common/database';
 import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
 import { getVCS } from '../../sync/vcs/vcs';
 import { AccountToolbar } from '../components/account-toolbar';

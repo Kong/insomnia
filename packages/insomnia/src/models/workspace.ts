@@ -1,8 +1,8 @@
 import * as models from '@insomnia/models';
 import type { Merge } from 'type-fest';
 
-import { database as db } from '../common/database';
-import { strings } from '../common/strings';
+import { database as db } from '@insomnia/common/database';
+import { strings } from '@insomnia/common/strings';
 import type { BaseModel } from './index';
 import { DEFAULT_PROJECT_ID, isProjectId } from './project';
 

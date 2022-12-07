@@ -7,22 +7,22 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {
   STATUS_CODE_PLUGIN_ERROR,
-} from '../common/constants';
-import { cookiesFromJar, jarFromCookies } from '../common/cookies';
-import { database as db } from '../common/database';
-import { getDataDirectory } from '../common/electron-helpers';
+} from '@insomnia/common/constants';
+import { cookiesFromJar, jarFromCookies } from '@insomnia/common/cookies';
+import { database as db } from '@insomnia/common/database';
+import { getDataDirectory } from '@insomnia/common/electron-helpers';
 import {
   delay,
   getContentTypeHeader,
   getLocationHeader,
   getSetCookieHeaders,
-} from '../common/misc';
-import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
+} from '@insomnia/common/misc';
+import type { ExtraRenderInfo, RenderedRequest } from '@insomnia/common/render';
 import {
   getRenderedRequestAndContext,
   RENDER_PURPOSE_NO_RENDER,
   RENDER_PURPOSE_SEND,
-} from '../common/render';
+} from '@insomnia/common/render';
 import type { ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import { ClientCertificate } from '@insomnia/models/client-certificate';
 import { Cookie, CookieJar } from '@insomnia/models/cookie-jar';

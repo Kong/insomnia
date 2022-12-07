@@ -19,9 +19,9 @@ import {
   HAWK_ALGORITHM_SHA256,
   METHOD_GET,
   METHOD_POST,
-} from '../common/constants';
-import { database as db } from '../common/database';
-import { getContentTypeHeader } from '../common/misc';
+} from '@insomnia/common/constants';
+import { database as db } from '@insomnia/common/database';
+import { getContentTypeHeader } from '@insomnia/common/misc';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../network/o-auth-2/constants';
 import { deconstructQueryStringToParams } from '../utils/url/querystring';

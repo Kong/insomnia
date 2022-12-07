@@ -4,7 +4,7 @@ import allCharsets from '../../datasets/charsets';
 import allMimeTypes from '../../datasets/content-types';
 import allEncodings from '../../datasets/encodings';
 import allHeaderNames from '../../datasets/header-names';
-import { getCommonHeaderNames, getCommonHeaderValues } from '../common-headers';
+import { getCommonHeaderNames, getCommonHeaderValues } from '@insomnia/common-headers';
 
 describe('getCommonHeaderNames', () => {
   it('should return common header names', () => {

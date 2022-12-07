@@ -1,6 +1,6 @@
+import { HandleRender } from '@insomnia/common/render';
 import React, { FC, PureComponent } from 'react';
 
-import { HandleRender } from '../../common/render';
 import { useNunjucks } from '../context/nunjucks/use-nunjucks';
 
 interface Props {

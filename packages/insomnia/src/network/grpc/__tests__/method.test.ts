@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { getMethodType } from '../../../common/grpc-paths';
+import { getMethodType } from '@insomnia/common/grpc-paths';
 import { GrpcMethodType } from '../../../main/ipc/grpc';
 import { canClientStream } from '../../../ui/components/panes/grpc-request-pane';
 

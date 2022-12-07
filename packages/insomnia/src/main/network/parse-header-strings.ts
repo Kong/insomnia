@@ -1,13 +1,9 @@
-import aws4 from 'aws4';
-import clone from 'clone';
-import { parse as urlParse } from 'url';
-
 import {
   AUTH_AWS_IAM,
   AUTH_DIGEST,
   AUTH_NTLM,
   CONTENT_TYPE_FORM_DATA,
-} from '../../common/constants';
+} from '@insomnia/common/constants';
 import {
   getContentTypeHeader,
   getHostHeader,
@@ -15,7 +11,11 @@ import {
   hasAcceptHeader,
   hasAuthHeader,
   hasContentTypeHeader,
-} from '../../common/misc';
+} from '@insomnia/common/misc';
+import aws4 from 'aws4';
+import clone from 'clone';
+import { parse as urlParse } from 'url';
+
 import { DEFAULT_BOUNDARY } from './multipart';
 
 // Special header value that will prevent the header being sent

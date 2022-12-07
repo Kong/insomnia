@@ -1,6 +1,6 @@
+import { PlatformKeyCombinations } from '@insomnia/common/settings';
 import React, { PureComponent } from 'react';
 
-import { PlatformKeyCombinations } from '../../../../common/settings';
 import { Hotkey } from '../../hotkey';
 
 interface Props {

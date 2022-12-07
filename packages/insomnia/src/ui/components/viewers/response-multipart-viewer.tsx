@@ -1,3 +1,7 @@
+import {
+  getContentTypeFromHeaders,
+  PREVIEW_MODE_FRIENDLY,
+} from '@insomnia/common/constants';
 import type { ResponseHeader } from '@insomnia/models/response';
 import { format } from 'date-fns';
 import { SaveDialogOptions } from 'electron';
@@ -8,10 +12,6 @@ import path from 'path';
 import React, { FC, useCallback, useEffect, useState } from 'react';
 import { PassThrough } from 'stream';
 
-import {
-  getContentTypeFromHeaders,
-  PREVIEW_MODE_FRIENDLY,
-} from '../../../common/constants';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';

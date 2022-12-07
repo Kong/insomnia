@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'crypto';
 import { v4 as uuid } from 'uuid';
 
-import { getApiBaseURL } from '../../common/constants';
+import { getApiBaseURL } from '@insomnia/common/constants';
 import { axiosRequest } from '../../network/axios-request';
 
 const env = process['env'];

@@ -1,3 +1,5 @@
+import { PREVIEW_MODE_SOURCE } from '@insomnia/common/constants';
+import { getSetCookieHeaders } from '@insomnia/common/misc';
 import * as models from '@insomnia/models';
 import type { Request } from '@insomnia/models/request';
 import type { Response } from '@insomnia/models/response';
@@ -7,8 +9,6 @@ import { extension as mimeExtension } from 'mime-types';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
-import { getSetCookieHeaders } from '../../../common/misc';
 import { cancelRequestById } from '../../../network/network';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';

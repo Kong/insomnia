@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 
-import { database } from '../../common/database';
+import { database } from '@insomnia/common/database';
 import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
 import { VCS } from '../../sync/vcs/vcs';
 import { selectIsLoggedIn, selectSettings } from '../redux/selectors';

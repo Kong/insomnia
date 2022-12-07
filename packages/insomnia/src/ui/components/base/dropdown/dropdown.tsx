@@ -1,3 +1,4 @@
+import { fuzzyMatch } from '@insomnia/common/misc';
 import classnames from 'classnames';
 import React, {
   CSSProperties,
@@ -15,7 +16,6 @@ import React, {
 } from 'react';
 import ReactDOM from 'react-dom';
 
-import { fuzzyMatch } from '../../../../common/misc';
 import { createKeybindingsHandler } from '../../keydown-binder';
 import { DropdownButton } from './dropdown-button';
 import { DropdownDivider } from './dropdown-divider';

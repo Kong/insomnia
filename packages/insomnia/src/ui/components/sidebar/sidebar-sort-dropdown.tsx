@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
 
-import { SORT_ORDERS, SortOrder, sortOrderName } from '../../../common/constants';
+import { SORT_ORDERS, SortOrder, sortOrderName } from '@insomnia/common/constants';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';

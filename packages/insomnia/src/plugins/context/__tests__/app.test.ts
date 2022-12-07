@@ -4,7 +4,7 @@ import { mocked } from 'jest-mock';
 
 import appPackageJson from '../../../../package.json';
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import { RENDER_PURPOSE_SEND } from '../../../common/render';
+import { RENDER_PURPOSE_SEND } from '@insomnia/common/render';
 import * as modals from '../../../ui/components/modals';
 import * as plugin from '../app';
 

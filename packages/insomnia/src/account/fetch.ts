@@ -1,7 +1,7 @@
 import { parse as urlParse } from 'url';
 import zlib from 'zlib';
 
-import { delay } from '../common/misc';
+import { delay } from '@insomnia/common/misc';
 let _userAgent = '';
 let _baseUrl = '';
 const _commandListeners: Function[] = [];

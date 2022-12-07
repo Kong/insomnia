@@ -11,8 +11,8 @@ import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../../common/constants';
-import { database } from '../../../../common/database';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '@insomnia/common/constants';
+import { database } from '@insomnia/common/database';
 import { getAndClearShowPromptMockArgs } from '../../../../test-utils';
 import { SegmentEvent, trackSegmentEvent } from '../../../analytics';
 import { createWorkspace } from '../git';

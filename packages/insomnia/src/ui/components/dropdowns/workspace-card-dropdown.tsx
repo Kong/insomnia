@@ -1,3 +1,6 @@
+import { parseApiSpec } from '@insomnia/common/api-specs';
+import { getWorkspaceLabel } from '@insomnia/common/get-workspace-label';
+import { RENDER_PURPOSE_NO_RENDER } from '@insomnia/common/render';
 import type { ApiSpec } from '@insomnia/models/api-spec';
 import getWorkspaceName from '@insomnia/models/helpers/get-workspace-name';
 import { Project } from '@insomnia/models/project';
@@ -6,9 +9,6 @@ import { WorkspaceScopeKeys } from '@insomnia/models/workspace';
 import React, { FC, Fragment, useCallback, useState } from 'react';
 import { useFetcher, useParams } from 'react-router-dom';
 
-import { parseApiSpec } from '../../../common/api-specs';
-import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';

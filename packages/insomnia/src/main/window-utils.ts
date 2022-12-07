@@ -1,9 +1,3 @@
-import electron, { type BrowserWindow as ElectronBrowserWindow, type MenuItemConstructorOptions } from 'electron';
-import fs from 'fs';
-import * as os from 'os';
-import path from 'path';
-import { pathToFileURL } from 'url';
-
 import {
   changelogUrl,
   getAppBuildDate,
@@ -13,10 +7,16 @@ import {
   isLinux,
   isMac,
   MNEMONIC_SYM,
-} from '../common/constants';
-import { docsBase } from '../common/documentation';
-import { clickLink, getDataDirectory } from '../common/electron-helpers';
-import * as log from '../common/log';
+} from '@insomnia/common/constants';
+import { docsBase } from '@insomnia/common/documentation';
+import { clickLink, getDataDirectory } from '@insomnia/common/electron-helpers';
+import * as log from '@insomnia/common/log';
+import electron, { type BrowserWindow as ElectronBrowserWindow, type MenuItemConstructorOptions } from 'electron';
+import fs from 'fs';
+import * as os from 'os';
+import path from 'path';
+import { pathToFileURL } from 'url';
+
 import LocalStorage from './local-storage';
 
 const { app, Menu, shell, dialog, clipboard, BrowserWindow } = electron;

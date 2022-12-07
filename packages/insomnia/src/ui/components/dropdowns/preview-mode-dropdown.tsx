@@ -1,3 +1,5 @@
+import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '@insomnia/common/constants';
+import { exportHarCurrentRequest } from '@insomnia/common/har';
 import * as models from '@insomnia/models';
 import { isRequest } from '@insomnia/models/request';
 import { isResponse } from '@insomnia/models/response';
@@ -5,8 +7,6 @@ import fs from 'fs';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
-import { exportHarCurrentRequest } from '../../../common/har';
 import { selectActiveRequest, selectActiveResponse, selectResponsePreviewMode } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';

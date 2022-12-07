@@ -30,8 +30,8 @@ import { Workspace } from '@insomnia/models/workspace';
 import { WorkspaceMeta } from '@insomnia/models/workspace-meta';
 import clone from 'clone';
 
-import { type ChangeBufferEvent, database as db } from '../../../common/database';
-import { pluralize } from '../../../common/misc';
+import { type ChangeBufferEvent, database as db } from '@insomnia/common/database';
+import { pluralize } from '@insomnia/common/misc';
 
 const ENTITY_CHANGES = 'entities/changes';
 const ENTITY_INITIALIZE = 'entities/initialize';

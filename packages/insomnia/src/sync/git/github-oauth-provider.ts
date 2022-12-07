@@ -1,6 +1,6 @@
 import { v4 } from 'uuid';
 
-import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL } from '../../common/constants';
+import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL } from '@insomnia/common/constants';
 import { axiosRequest } from '../../network/axios-request';
 
 export const GITHUB_TOKEN_STORAGE_KEY = 'github-oauth-token';

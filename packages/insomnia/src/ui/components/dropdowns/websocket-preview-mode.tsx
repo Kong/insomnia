@@ -1,6 +1,6 @@
+import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '@insomnia/common/constants';
 import React, { FC } from 'react';
 
-import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '../../../common/constants';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';

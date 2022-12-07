@@ -1,8 +1,3 @@
-import * as models from '@insomnia/models';
-import { DEFAULT_PROJECT_ID, Project } from '@insomnia/models/project';
-import { Workspace, WorkspaceScope } from '@insomnia/models/workspace';
-import electron, { OpenDialogOptions } from 'electron';
-
 import {
   askToImportIntoProject,
   askToImportIntoWorkspace,
@@ -10,7 +5,12 @@ import {
   ForceToWorkspace,
   importRaw,
   importUri as _importUri,
-} from '../common/import';
+} from '@insomnia/common/import';
+import * as models from '@insomnia/models';
+import { DEFAULT_PROJECT_ID, Project } from '@insomnia/models/project';
+import { Workspace, WorkspaceScope } from '@insomnia/models/workspace';
+import electron, { OpenDialogOptions } from 'electron';
+
 import { showError, showModal } from './components/modals';
 import { AlertModal } from './components/modals/alert-modal';
 

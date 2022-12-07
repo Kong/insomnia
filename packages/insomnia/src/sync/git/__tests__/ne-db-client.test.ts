@@ -5,7 +5,7 @@ import path from 'path';
 import YAML from 'yaml';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import { database as db } from '../../../common/database';
+import { database as db } from '@insomnia/common/database';
 import { workspaceModelSchema } from '@insomnia/models/__schemas__/model-schemas';
 import { DEFAULT_PROJECT_ID } from '@insomnia/models/project';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';

@@ -13,10 +13,10 @@ import React, { FC, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useSelector } from 'react-redux';
 
-import { jarFromCookies } from '../../../../common/cookies';
-import { markdownToHTML } from '../../../../common/markdown-to-html';
-import { jsonParseOr } from '../../../../common/misc';
-import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../../common/render';
+import { jarFromCookies } from '@insomnia/common/cookies';
+import { markdownToHTML } from '@insomnia/common/markdown-to-html';
+import { jsonParseOr } from '@insomnia/common/misc';
+import { getRenderContext, render, RENDER_PURPOSE_SEND } from '@insomnia/common/render';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import type { Request } from '@insomnia/models/request';
 import { axiosRequest } from '../../../../network/axios-request';

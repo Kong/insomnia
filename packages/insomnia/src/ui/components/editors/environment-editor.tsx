@@ -2,7 +2,7 @@ import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '@insomnia/templating';
 import orderedJSON from 'json-order';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
-import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
+import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '@insomnia/common/constants';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
 // NeDB field names cannot begin with '$' or contain a period '.'

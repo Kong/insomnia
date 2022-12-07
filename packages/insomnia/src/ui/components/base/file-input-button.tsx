@@ -1,7 +1,6 @@
+import { selectFileOrFolder } from '@insomnia/common/select-file-or-folder';
 import { basename as pathBasename } from 'path';
 import React, { HTMLAttributes, useCallback } from 'react';
-
-import { selectFileOrFolder } from '../../../common/select-file-or-folder';
 
 interface Props extends Omit<HTMLAttributes<HTMLButtonElement>, 'onChange'> {
   onChange: (path: string) => void;

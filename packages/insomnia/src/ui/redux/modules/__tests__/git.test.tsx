@@ -13,7 +13,7 @@ import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
-import { ACTIVITY_SPEC } from '../../../../common/constants';
+import { ACTIVITY_SPEC } from '@insomnia/common/constants';
 import { GIT_INSOMNIA_DIR } from '../../../../sync/git/git-vcs';
 import { MemClient } from '../../../../sync/git/mem-client';
 import { shallowClone as _shallowClone } from '../../../../sync/git/shallow-clone';

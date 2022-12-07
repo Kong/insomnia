@@ -1,9 +1,9 @@
+import { clickLink } from '@insomnia/common/electron-helpers';
 import classNames from 'classnames';
 import React, { Fragment } from 'react';
 import styled from 'styled-components';
 
 import * as session from '../../account/session';
-import { clickLink } from '../../common/electron-helpers';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownItem } from './base/dropdown/dropdown-item';

@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { AUTH_AWS_IAM, CONTENT_TYPE_FORM_DATA } from '../../common/constants';
+import { AUTH_AWS_IAM, CONTENT_TYPE_FORM_DATA } from '@insomnia/common/constants';
 import { parseHeaderStrings } from '../../main/network/parse-header-strings';
 
 describe('parseHeaderStrings', () => {

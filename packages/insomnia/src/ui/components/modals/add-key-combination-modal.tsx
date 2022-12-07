@@ -1,10 +1,10 @@
+import { constructKeyCombinationDisplay, isModifierKeyCode } from '@insomnia/common/hotkeys';
+import { keyboardKeys } from '@insomnia/common/keyboard-keys';
+import { KeyCombination } from '@insomnia/common/settings';
+import { KeyboardShortcut } from '@insomnia/common/settings';
 import classnames from 'classnames';
 import React, { forwardRef, KeyboardEvent, useImperativeHandle, useRef, useState } from 'react';
 
-import { constructKeyCombinationDisplay, isModifierKeyCode } from '../../../common/hotkeys';
-import { keyboardKeys } from '../../../common/keyboard-keys';
-import { KeyCombination } from '../../../common/settings';
-import { KeyboardShortcut } from '../../../common/settings';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';

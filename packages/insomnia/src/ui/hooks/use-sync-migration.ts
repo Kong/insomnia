@@ -1,7 +1,7 @@
 import { useAsync } from 'react-use';
 
 import { onLoginLogout } from '../../account/session';
-import { getDataDirectory } from '../../common/electron-helpers';
+import { getDataDirectory } from '@insomnia/common/electron-helpers';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { migrateCollectionsIntoRemoteProject } from '../../sync/vcs/migrate-collections';
 import { VCS } from '../../sync/vcs/vcs';

@@ -1,3 +1,6 @@
+import { database as db } from '@insomnia/common/database';
+import { getWorkspaceLabel } from '@insomnia/common/get-workspace-label';
+import { RENDER_PURPOSE_NO_RENDER } from '@insomnia/common/render';
 import { isRequest } from '@insomnia/models/request';
 import { isRequestGroup } from '@insomnia/models/request-group';
 import { isDesign, Workspace } from '@insomnia/models/workspace';
@@ -5,9 +8,6 @@ import classnames from 'classnames';
 import React, { FC, useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { database as db } from '../../../common/database';
-import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';

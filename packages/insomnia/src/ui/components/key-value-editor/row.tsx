@@ -1,7 +1,7 @@
 import classnames from 'classnames';
 import React, { FC } from 'react';
 
-import { describeByteSize } from '../../../common/misc';
+import { describeByteSize } from '@insomnia/common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';

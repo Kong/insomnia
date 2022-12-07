@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import React, { FC, Fragment } from 'react';
 import styled from 'styled-components';
 
-import { generateId } from '../../../common/misc';
+import { generateId } from '@insomnia/common/misc';
 import { PromptButton } from '../base/prompt-button';
 import { AutocompleteHandler, Pair, Row } from './row';
 

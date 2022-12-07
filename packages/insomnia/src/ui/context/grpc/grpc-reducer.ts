@@ -1,6 +1,6 @@
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 
-import { GrpcMethodInfo } from '../../../common/grpc-paths';
+import { GrpcMethodInfo } from '@insomnia/common/grpc-paths';
 import type {
   GrpcAction,
   GrpcActionMany,

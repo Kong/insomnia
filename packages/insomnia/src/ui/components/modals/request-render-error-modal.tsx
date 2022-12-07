@@ -2,7 +2,7 @@ import { RenderError } from '@insomnia/templating';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import { docsTemplateTags } from '../../../common/documentation';
+import { docsTemplateTags } from '@insomnia/common/documentation';
 import { GrpcRequest } from '@insomnia/models/grpc-request';
 import { Request } from '@insomnia/models/request';
 import { isRequest } from '@insomnia/models/request';

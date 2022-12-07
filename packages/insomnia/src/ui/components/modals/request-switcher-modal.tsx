@@ -3,8 +3,8 @@ import classnames from 'classnames';
 import React, { forwardRef, Fragment, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { METHOD_GRPC } from '../../../common/constants';
-import { fuzzyMatchAll } from '../../../common/misc';
+import { METHOD_GRPC } from '@insomnia/common/constants';
+import { fuzzyMatchAll } from '@insomnia/common/misc';
 import { GrpcRequest, isGrpcRequest } from '@insomnia/models/grpc-request';
 import { isRequest, Request } from '@insomnia/models/request';
 import { isRequestGroup, RequestGroup } from '@insomnia/models/request-group';

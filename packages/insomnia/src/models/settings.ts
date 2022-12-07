@@ -2,10 +2,10 @@ import {
   getAppDefaultDarkTheme,
   getAppDefaultLightTheme,
   getAppDefaultTheme,
-} from '../common/constants';
-import { database as db } from '../common/database';
-import * as hotkeys from '../common/hotkeys';
-import { HttpVersions, KeyboardShortcut, Settings as BaseSettings, UpdateChannel } from '../common/settings';
+} from '@insomnia/common/constants';
+import { database as db } from '@insomnia/common/database';
+import * as hotkeys from '@insomnia/common/hotkeys';
+import { HttpVersions, KeyboardShortcut, Settings as BaseSettings, UpdateChannel } from '@insomnia/common/settings';
 import { getMonkeyPatchedControlledSettings, omitControlledSettings } from './helpers/settings';
 import type { BaseModel } from './index';
 

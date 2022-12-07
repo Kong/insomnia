@@ -1,1 +1,1 @@
-export { getSendRequestCallbackMemDb } from '../src/common/send-request';
+export { getSendRequestCallbackMemDb } from '@insomnia/common/send-request';

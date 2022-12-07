@@ -1,7 +1,7 @@
+import { docsBase } from '@insomnia/common/documentation';
 import React, { FC, memo } from 'react';
 import { useSelector } from 'react-redux';
 
-import { docsBase } from '../../../common/documentation';
 import { selectSettings } from '../../redux/selectors';
 import { Link } from '../base/link';
 import { showModal } from '../modals/index';

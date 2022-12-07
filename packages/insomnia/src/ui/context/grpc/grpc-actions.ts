@@ -1,7 +1,7 @@
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 
-import { GrpcMethodInfo } from '../../../common/grpc-paths';
-import { generateId } from '../../../common/misc';
+import { GrpcMethodInfo } from '@insomnia/common/grpc-paths';
+import { generateId } from '@insomnia/common/misc';
 
 export interface GrpcMessage {
   id: string;

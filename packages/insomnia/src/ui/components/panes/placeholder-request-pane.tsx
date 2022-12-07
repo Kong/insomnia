@@ -1,7 +1,7 @@
+import { ForceToWorkspace } from '@insomnia/common/import';
 import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { ForceToWorkspace } from '../../../common/import';
 import { createRequest } from '../../hooks/create-request';
 import { importFile } from '../../import';
 import { selectActiveWorkspace, selectSettings } from '../../redux/selectors';

@@ -14,10 +14,10 @@ import {
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   getAppVersion,
-} from '../../common/constants';
-import { filterHeaders } from '../../common/misc';
-import { getRenderedRequestAndContext } from '../../common/render';
-import { HttpVersions } from '../../common/settings';
+} from '@insomnia/common/constants';
+import { filterHeaders } from '@insomnia/common/misc';
+import { getRenderedRequestAndContext } from '@insomnia/common/render';
+import { HttpVersions } from '@insomnia/common/settings';
 import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
 import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
 import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';

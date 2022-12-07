@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
-import { ACTIVITY_HOME, getProductName } from '../../common/constants';
+import { ACTIVITY_HOME, getProductName } from '@insomnia/common/constants';
 import { selectActiveActivity, selectActiveEnvironment, selectActiveProject, selectActiveRequest, selectActiveWorkspace, selectActiveWorkspaceName } from '../redux/selectors';
 
 export const useDocumentTitle = () => {

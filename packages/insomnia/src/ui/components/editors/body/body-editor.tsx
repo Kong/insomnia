@@ -9,9 +9,9 @@ import {
   CONTENT_TYPE_FORM_URLENCODED,
   CONTENT_TYPE_GRAPHQL,
   getContentTypeFromHeaders,
-} from '../../../../common/constants';
-import { documentationLinks } from '../../../../common/documentation';
-import { getContentTypeHeader } from '../../../../common/misc';
+} from '@insomnia/common/constants';
+import { documentationLinks } from '@insomnia/common/documentation';
+import { getContentTypeHeader } from '@insomnia/common/misc';
 import type {
   Request,
   RequestBodyParameter,

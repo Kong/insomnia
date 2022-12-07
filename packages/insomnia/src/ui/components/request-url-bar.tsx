@@ -1,3 +1,5 @@
+import { database } from '@insomnia/common/database';
+import { getContentDispositionHeader } from '@insomnia/common/misc';
 import * as models from '@insomnia/models';
 import { update } from '@insomnia/models/helpers/request-operations';
 import { isRequest, Request } from '@insomnia/models/request';
@@ -9,8 +11,6 @@ import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState }
 import { useSelector } from 'react-redux';
 import { useInterval } from 'react-use';
 
-import { database } from '../../common/database';
-import { getContentDispositionHeader } from '../../common/misc';
 import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';

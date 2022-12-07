@@ -2,7 +2,7 @@ import React, { FC, Fragment, PropsWithChildren } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { Settings } from '../../../common/settings';
+import { Settings } from '@insomnia/common/settings';
 import { getControlledStatus } from '@insomnia/models/helpers/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';

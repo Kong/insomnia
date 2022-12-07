@@ -1,3 +1,10 @@
+import {
+  getApiBaseURL,
+  getAppPlatform,
+  getAppVersion,
+  getProductName,
+  getSegmentWriteKey,
+} from '@insomnia/common/constants';
 import * as models from '@insomnia/models';
 import Analytics from 'analytics-node';
 import { AxiosRequestConfig } from 'axios';
@@ -5,13 +12,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import * as session from '../account/session';
 import { getAccountId } from '../account/session';
-import {
-  getApiBaseURL,
-  getAppPlatform,
-  getAppVersion,
-  getProductName,
-  getSegmentWriteKey,
-} from '../common/constants';
 import { axiosRequest } from '../network/axios-request';
 
 const axiosConfig: AxiosRequestConfig = {

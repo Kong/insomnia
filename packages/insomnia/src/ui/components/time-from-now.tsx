@@ -1,8 +1,7 @@
+import { toTitleCase } from '@insomnia/common/misc';
 import { differenceInMinutes, formatDistanceToNowStrict } from 'date-fns';
 import React, { FC, useState } from 'react';
 import { useInterval } from 'react-use';
-
-import { toTitleCase } from '../../common/misc';
 
 interface Props {
   timestamp: number | Date | string;

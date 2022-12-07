@@ -10,7 +10,7 @@ import {
   CONTENT_TYPE_JSON,
   METHOD_GET,
   METHOD_POST,
-} from '../../common/constants';
+} from '@insomnia/common/constants';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { showModal } from '../components/modals';
 import { ProtoFilesModal } from '../components/modals/proto-files-modal';

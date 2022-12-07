@@ -1,8 +1,8 @@
+import { database as db } from '@insomnia/common/database';
 import classnames from 'classnames';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { database as db } from '../../../common/database';
 import { GitVCS } from '../../../sync/git/git-vcs';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../analytics';

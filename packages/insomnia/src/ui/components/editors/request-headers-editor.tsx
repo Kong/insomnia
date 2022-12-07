@@ -3,7 +3,7 @@ import type { Request, RequestHeader } from '@insomnia/models/request';
 import { isWebSocketRequest, WebSocketRequest } from '@insomnia/models/websocket-request';
 import React, { FC, useCallback } from 'react';
 
-import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
+import { getCommonHeaderNames, getCommonHeaderValues } from '@insomnia/common-headers';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 

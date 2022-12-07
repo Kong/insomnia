@@ -2,7 +2,7 @@ import * as models from '@insomnia/models';
 import * as requestOperations from '@insomnia/models/helpers/request-operations';
 import fs from 'fs';
 
-import { database as db, Query } from '../common/database';
+import { database as db, Query } from '@insomnia/common/database';
 import type { BaseModel } from './index';
 import { ResponseHeader } from './response';
 

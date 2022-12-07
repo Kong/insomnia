@@ -1,4 +1,4 @@
-import { database as db } from '../common/database';
+import { database as db } from '@insomnia/common/database';
 import { isGrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
 import { Project } from './project';

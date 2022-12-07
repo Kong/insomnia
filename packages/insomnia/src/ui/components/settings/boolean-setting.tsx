@@ -3,7 +3,7 @@ import React, { ChangeEventHandler, FC, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { SettingsOfType } from '../../../common/settings';
+import { SettingsOfType } from '@insomnia/common/settings';
 import { getControlledStatus } from '@insomnia/models/helpers/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';

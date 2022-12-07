@@ -1,6 +1,6 @@
 import * as models from '@insomnia/models';
 
-import { database as db } from '../common/database';
+import { database as db } from '@insomnia/common/database';
 import * as pluginContexts from '../plugins/context';
 import { PluginTemplateTag } from './extensions';
 import * as templating from './index';

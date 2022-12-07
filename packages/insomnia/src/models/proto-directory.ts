@@ -1,5 +1,5 @@
-import { database as db } from '../common/database';
-import { generateId } from '../common/misc';
+import { database as db } from '@insomnia/common/database';
+import { generateId } from '@insomnia/common/misc';
 import type { BaseModel } from './index';
 
 export const name = 'Proto Directory';

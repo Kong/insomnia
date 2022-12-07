@@ -1,9 +1,9 @@
 import { decodeBase64, encodeBase64 } from '@getinsomnia/api-client/base64';
 import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
+import { getAppWebsiteBaseURL } from '@insomnia/common/constants';
 import * as Sentry from '@sentry/electron';
 
 import * as session from '../account/session';
-import { getAppWebsiteBaseURL } from '../common/constants';
 import { invariant } from '../utils/invariant';
 
 interface AuthBox {

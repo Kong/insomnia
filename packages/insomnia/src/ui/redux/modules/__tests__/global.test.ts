@@ -7,7 +7,7 @@ import {
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   GlobalActivity,
-} from '../../../../common/constants';
+} from '@insomnia/common/constants';
 import {
   LOCALSTORAGE_PREFIX,
   SET_ACTIVE_ACTIVITY,

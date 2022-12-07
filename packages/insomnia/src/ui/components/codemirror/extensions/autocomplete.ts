@@ -1,10 +1,10 @@
 import 'codemirror/addon/mode/overlay';
 
+import { getPlatformKeyCombinations } from '@insomnia/common/hotkeys';
+import { escapeHTML, escapeRegex, isNotNullOrUndefined } from '@insomnia/common/misc';
 import { getDefaultFill, NunjucksParsedTag } from '@insomnia/templating/utils';
 import CodeMirror, { EnvironmentAutocompleteOptions, Hint, ShowHintOptions } from 'codemirror';
 
-import { getPlatformKeyCombinations } from '../../../../common/hotkeys';
-import { escapeHTML, escapeRegex, isNotNullOrUndefined } from '../../../../common/misc';
 import { isNunjucksMode } from '../modes/nunjucks';
 
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;

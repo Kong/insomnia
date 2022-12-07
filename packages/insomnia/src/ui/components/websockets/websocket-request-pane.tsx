@@ -5,8 +5,8 @@ import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
-import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
+import { AuthType, CONTENT_TYPE_JSON } from '@insomnia/common/constants';
+import { getRenderContext, render, RENDER_PURPOSE_SEND } from '@insomnia/common/render';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';

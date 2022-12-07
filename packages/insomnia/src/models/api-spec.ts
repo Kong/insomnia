@@ -1,5 +1,5 @@
-import { database as db } from '../common/database';
-import { strings } from '../common/strings';
+import { database as db } from '@insomnia/common/database';
+import { strings } from '@insomnia/common/strings';
 import type { BaseModel } from './index';
 
 export const name = 'ApiSpec';

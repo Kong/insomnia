@@ -1,3 +1,6 @@
+import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '@insomnia/common/constants';
+import { jarFromCookies } from '@insomnia/common/cookies';
+import { generateId, getSetCookieHeaders } from '@insomnia/common/misc';
 import * as models from '@insomnia/models';
 import { webSocketRequest } from '@insomnia/models';
 import { CookieJar } from '@insomnia/models/cookie-jar';
@@ -20,9 +23,6 @@ import {
   WebSocket,
 } from 'ws';
 
-import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
-import { jarFromCookies } from '../../common/cookies';
-import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';

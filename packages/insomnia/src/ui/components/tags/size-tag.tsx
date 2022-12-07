@@ -1,7 +1,7 @@
+import * as misc from '@insomnia/common/misc';
 import classnames from 'classnames';
 import React, { FC, memo } from 'react';
 
-import * as misc from '../../../common/misc';
 import { Tooltip } from '../tooltip';
 
 interface Props {

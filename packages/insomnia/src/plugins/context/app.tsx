@@ -3,13 +3,13 @@ import React from 'react';
 import type ReactDOM from 'react-dom';
 
 import { axiosRequest as axios } from '../../../src/network/axios-request';
-import { getAppPlatform, getAppVersion } from '../../common/constants';
-import type { RenderPurpose } from '../../common/render';
+import { getAppPlatform, getAppVersion } from '@insomnia/common/constants';
+import type { RenderPurpose } from '@insomnia/common/render';
 import {
   RENDER_PURPOSE_GENERAL,
   RENDER_PURPOSE_NO_RENDER,
   RENDER_PURPOSE_SEND,
-} from '../../common/render';
+} from '@insomnia/common/render';
 import * as analytics from '../../ui/analytics';
 import { HtmlElementWrapper } from '../../ui/components/html-element-wrapper';
 import { showAlert, showModal, showPrompt } from '../../ui/components/modals';

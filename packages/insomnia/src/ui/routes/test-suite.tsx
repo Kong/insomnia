@@ -12,8 +12,8 @@ import {
 } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { database } from '../../common/database';
-import { documentationLinks } from '../../common/documentation';
+import { database } from '@insomnia/common/database';
+import { documentationLinks } from '@insomnia/common/documentation';
 import { invariant } from '../../utils/invariant';
 import { Editable } from '../components/base/editable';
 import { CodeEditor, CodeEditorHandle } from '../components/codemirror/code-editor';

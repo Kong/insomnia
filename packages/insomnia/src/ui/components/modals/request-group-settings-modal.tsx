@@ -2,7 +2,7 @@ import * as models from '@insomnia/models';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { database as db } from '../../../common/database';
+import { database as db } from '@insomnia/common/database';
 import type { RequestGroup } from '@insomnia/models/request-group';
 import type { Workspace } from '@insomnia/models/workspace';
 import { invariant } from '../../../utils/invariant';

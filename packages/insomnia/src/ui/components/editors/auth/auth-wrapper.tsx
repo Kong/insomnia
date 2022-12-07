@@ -13,7 +13,7 @@ import {
   AUTH_NTLM,
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
-} from '../../../../common/constants';
+} from '@insomnia/common/constants';
 import { selectActiveRequest } from '../../../redux/selectors';
 import { ApiKeyAuth } from './api-key-auth';
 import { AsapAuth } from './asap-auth';

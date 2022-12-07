@@ -8,8 +8,8 @@ import {
   getPlatformKeyCombinations,
   keyboardShortcutDescriptions,
   newDefaultRegistry,
-} from '../../../common/hotkeys';
-import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '../../../common/settings';
+} from '@insomnia/common/hotkeys';
+import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '@insomnia/common/settings';
 import { selectHotKeyRegistry, selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';

@@ -8,8 +8,8 @@ import path from 'path';
 import React, { ReactNode } from 'react';
 import YAML from 'yaml';
 
-import { database as db } from '../../../common/database';
-import { strings } from '../../../common/strings';
+import { database as db } from '@insomnia/common/database';
+import { strings } from '@insomnia/common/strings';
 import { forceWorkspaceScopeToDesign } from '../../../sync/git/force-workspace-scope-to-design';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../../../sync/git/git-vcs';
 import { shallowClone } from '../../../sync/git/shallow-clone';

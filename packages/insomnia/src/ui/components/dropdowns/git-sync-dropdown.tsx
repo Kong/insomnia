@@ -1,3 +1,6 @@
+import { database as db } from '@insomnia/common/database';
+import { docsGitSync } from '@insomnia/common/documentation';
+import { isNotNullOrUndefined } from '@insomnia/common/misc';
 import * as models from '@insomnia/models';
 import type { Workspace } from '@insomnia/models/workspace';
 import classnames from 'classnames';
@@ -5,9 +8,6 @@ import React, { FC, Fragment, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useMount } from 'react-use';
 
-import { database as db } from '../../../common/database';
-import { docsGitSync } from '../../../common/documentation';
-import { isNotNullOrUndefined } from '../../../common/misc';
 import type { GitLogEntry, GitVCS } from '../../../sync/git/git-vcs';
 import { MemClient } from '../../../sync/git/mem-client';
 import { getOauth2FormatName } from '../../../sync/git/utils';

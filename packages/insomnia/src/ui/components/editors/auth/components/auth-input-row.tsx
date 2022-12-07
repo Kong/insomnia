@@ -2,7 +2,7 @@ import React, { ComponentProps, FC, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useToggle } from 'react-use';
 
-import { toKebabCase } from '../../../../../common/misc';
+import { toKebabCase } from '@insomnia/common/misc';
 import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { selectSettings } from '../../../../redux/selectors';
 import { OneLineEditor } from '../../../codemirror/one-line-editor';

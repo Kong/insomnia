@@ -1,9 +1,9 @@
+import { documentationLinks } from '@insomnia/common/documentation';
+import { selectFileOrFolder } from '@insomnia/common/select-file-or-folder';
 import fs from 'fs';
 import React, { FC, useCallback } from 'react';
 import styled from 'styled-components';
 
-import { documentationLinks } from '../../common/documentation';
-import { selectFileOrFolder } from '../../common/select-file-or-folder';
 import { faint } from '../css/css-in-js';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';

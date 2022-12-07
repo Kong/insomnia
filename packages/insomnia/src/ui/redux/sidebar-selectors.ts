@@ -5,8 +5,8 @@ import { isRequestGroup, RequestGroup } from '@insomnia/models/request-group';
 import { isWebSocketRequest } from '@insomnia/models/websocket-request';
 import { createSelector } from 'reselect';
 
-import { DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH } from '../../common/constants';
-import { fuzzyMatchAll } from '../../common/misc';
+import { DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH } from '@insomnia/common/constants';
+import { fuzzyMatchAll } from '@insomnia/common/misc';
 import {
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,

@@ -1,6 +1,6 @@
 import * as models from '@insomnia/models';
 
-import type { ExtraRenderInfo } from '../../common/render';
+import type { ExtraRenderInfo } from '@insomnia/common/render';
 import type { Request } from '@insomnia/models/request';
 import { send } from '../../network/network';
 

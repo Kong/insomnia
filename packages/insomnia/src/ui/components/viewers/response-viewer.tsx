@@ -1,3 +1,11 @@
+import {
+  HUGE_RESPONSE_MB,
+  LARGE_RESPONSE_MB,
+  PREVIEW_MODE_FRIENDLY,
+  PREVIEW_MODE_RAW,
+} from '@insomnia/common/constants';
+import { clickLink } from '@insomnia/common/electron-helpers';
+import { xmlDecode } from '@insomnia/common/misc';
 import iconv from 'iconv-lite';
 import React, {
   Fragment,
@@ -5,14 +13,6 @@ import React, {
   useState,
 } from 'react';
 
-import {
-  HUGE_RESPONSE_MB,
-  LARGE_RESPONSE_MB,
-  PREVIEW_MODE_FRIENDLY,
-  PREVIEW_MODE_RAW,
-} from '../../../common/constants';
-import { clickLink } from '../../../common/electron-helpers';
-import { xmlDecode } from '../../../common/misc';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { ResponseCSVViewer } from './response-csv-viewer';

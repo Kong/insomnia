@@ -1,7 +1,7 @@
+import { DASHBOARD_SORT_ORDERS, DashboardSortOrder, dashboardSortOrderName } from '@insomnia/common/constants';
 import React, { FC } from 'react';
 import styled from 'styled-components';
 
-import { DASHBOARD_SORT_ORDERS, DashboardSortOrder, dashboardSortOrderName } from '../../../common/constants';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';

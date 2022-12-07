@@ -1,3 +1,8 @@
+import { changelogUrl, getAppVersion, isDevelopment, isMac } from '@insomnia/common/constants';
+import { database } from '@insomnia/common/database';
+import { disableSpellcheckerDownload } from '@insomnia/common/electron-helpers';
+import log, { initializeLogging } from '@insomnia/common/log';
+import { validateInsomniaConfig } from '@insomnia/common/validate-insomnia-config';
 import * as models from '@insomnia/models';
 import electron, { app, ipcMain, session } from 'electron';
 import { BrowserWindow } from 'electron';
@@ -6,11 +11,6 @@ import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electro
 import path from 'path';
 
 import appConfig from '../config/config.json';
-import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
-import { database } from './common/database';
-import { disableSpellcheckerDownload } from './common/electron-helpers';
-import log, { initializeLogging } from './common/log';
-import { validateInsomniaConfig } from './common/validate-insomnia-config';
 import { registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';

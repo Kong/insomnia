@@ -1,7 +1,6 @@
+import { clickLink } from '@insomnia/common/electron-helpers';
 import classnames from 'classnames';
 import React, { FC, ReactNode, useCallback } from 'react';
-
-import { clickLink } from '../../../common/electron-helpers';
 
 interface Props {
   href: string;

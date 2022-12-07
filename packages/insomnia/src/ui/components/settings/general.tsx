@@ -11,10 +11,10 @@ import {
   MIN_EDITOR_FONT_SIZE,
   MIN_INTERFACE_FONT_SIZE,
   updatesSupported,
-} from '../../../common/constants';
-import { docsKeyMaps } from '../../../common/documentation';
-import { HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
-import { strings } from '../../../common/strings';
+} from '@insomnia/common/constants';
+import { docsKeyMaps } from '@insomnia/common/documentation';
+import { HttpVersion, HttpVersions, UpdateChannel } from '@insomnia/common/settings';
+import { strings } from '@insomnia/common/strings';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
 import { selectSettings, selectStats } from '../../redux/selectors';
 import { Link } from '../base/link';

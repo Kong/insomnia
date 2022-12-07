@@ -10,8 +10,8 @@ import {
 } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { ACTIVITY_SPEC } from '../../common/constants';
-import { debounce } from '../../common/misc';
+import { ACTIVITY_SPEC } from '@insomnia/common/constants';
+import { debounce } from '@insomnia/common/misc';
 import { invariant } from '../../utils/invariant';
 import {
   CodeEditor,

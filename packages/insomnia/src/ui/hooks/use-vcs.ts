@@ -1,7 +1,7 @@
 import  { useEffect, useRef, useState } from 'react';
 
-import { getDataDirectory } from '../../common/electron-helpers';
-import { generateId } from '../../common/misc';
+import { getDataDirectory } from '@insomnia/common/electron-helpers';
+import { generateId } from '@insomnia/common/misc';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { type MergeConflict } from '../../sync/types';
 import { getVCS, initVCS, VCS } from '../../sync/vcs/vcs';

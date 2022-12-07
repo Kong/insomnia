@@ -3,7 +3,7 @@ import { getKeys } from '@insomnia/templating/utils';
 import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render } from '../../../common/render';
+import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render } from '@insomnia/common/render';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace } from '../../redux/selectors';
 
 let getRenderContextPromiseCache: any = {};

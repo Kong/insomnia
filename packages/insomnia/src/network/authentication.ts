@@ -9,8 +9,8 @@ import {
   AUTH_HAWK,
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
-} from '../common/constants';
-import type { RenderedRequest } from '../common/render';
+} from '@insomnia/common/constants';
+import type { RenderedRequest } from '@insomnia/common/render';
 import { RequestParameter } from '@insomnia/models/request';
 import { COOKIE, HEADER, QUERY_PARAMS } from './api-key/constants';
 import { getBasicAuthHeader } from './basic-auth/get-header';

@@ -1,3 +1,10 @@
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_SPEC,
+  GlobalActivity,
+} from '@insomnia/common/constants';
+import { fuzzyMatchAll } from '@insomnia/common/misc';
+import { strings } from '@insomnia/common/strings';
 import { ApiSpec } from '@insomnia/models/api-spec';
 import { Project } from '@insomnia/models/project';
 import { isDesign, Workspace } from '@insomnia/models/workspace';
@@ -5,13 +12,6 @@ import React, { Fragment } from 'react';
 import { FC } from 'react';
 import styled from 'styled-components';
 
-import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_SPEC,
-  GlobalActivity,
-} from '../../common/constants';
-import { fuzzyMatchAll } from '../../common/misc';
-import { strings } from '../../common/strings';
 import { Highlight } from './base/highlight';
 import { Card } from './card';
 import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';

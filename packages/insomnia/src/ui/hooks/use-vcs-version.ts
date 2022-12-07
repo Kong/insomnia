@@ -2,7 +2,7 @@ import { BaseModel } from '@insomnia/models';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { ChangeBufferEvent, database } from '../../common/database';
+import { ChangeBufferEvent, database } from '@insomnia/common/database';
 import {
   selectActiveApiSpec,
   selectActiveRequest,

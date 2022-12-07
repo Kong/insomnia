@@ -2,12 +2,12 @@ import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useRevalidator } from 'react-router-dom';
 
-import { getProductName } from '../../../common/constants';
-import { docsImportExport } from '../../../common/documentation';
-import { exportAllToFile } from '../../../common/export';
-import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { ForceToWorkspace } from '../../../common/import';
-import { strings } from '../../../common/strings';
+import { getProductName } from '@insomnia/common/constants';
+import { docsImportExport } from '@insomnia/common/documentation';
+import { exportAllToFile } from '@insomnia/common/export';
+import { getWorkspaceLabel } from '@insomnia/common/get-workspace-label';
+import { ForceToWorkspace } from '@insomnia/common/import';
+import { strings } from '@insomnia/common/strings';
 import { isRequestGroup } from '@insomnia/models/request-group';
 import { importers } from '../../../utils/importers/importers';
 import { importClipBoard, importFile, importUri } from '../../import';

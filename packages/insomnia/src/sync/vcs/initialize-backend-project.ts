@@ -1,6 +1,6 @@
 import * as models from '@insomnia/models';
 
-import { database } from '../../common/database';
+import { database } from '@insomnia/common/database';
 import { getStatusCandidates } from '@insomnia/models/helpers/get-status-candidates';
 import { Project } from '@insomnia/models/project';
 import { isCollection, Workspace } from '@insomnia/models/workspace';

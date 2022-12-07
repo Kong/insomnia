@@ -7,9 +7,9 @@ import { useSelector } from 'react-redux';
 import {
   NPM_PACKAGE_BASE,
   PLUGIN_HUB_BASE,
-} from '../../../common/constants';
-import { docsPlugins } from '../../../common/documentation';
-import { clickLink, getDataDirectory } from '../../../common/electron-helpers';
+} from '@insomnia/common/constants';
+import { docsPlugins } from '@insomnia/common/documentation';
+import { clickLink, getDataDirectory } from '@insomnia/common/electron-helpers';
 import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';

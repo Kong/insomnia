@@ -5,7 +5,7 @@ import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
+import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE, PreviewMode } from '@insomnia/common/constants';
 import { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
 import { selectResponsePreviewMode } from '../../redux/selectors';
 import { CodeEditor } from '../codemirror/code-editor';

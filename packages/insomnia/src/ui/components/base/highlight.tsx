@@ -1,7 +1,6 @@
+import { fuzzyMatch } from '@insomnia/common/misc';
 import fuzzySort from 'fuzzysort';
 import React, { FC } from 'react';
-
-import { fuzzyMatch } from '../../../common/misc';
 
 export interface HighlightProps {
   search: string;

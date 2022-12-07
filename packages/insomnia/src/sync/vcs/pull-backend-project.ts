@@ -1,5 +1,5 @@
-import { DEFAULT_BRANCH_NAME } from '../../common/constants';
-import { database } from '../../common/database';
+import { DEFAULT_BRANCH_NAME } from '@insomnia/common/constants';
+import { database } from '@insomnia/common/database';
 import { RemoteProject } from '@insomnia/models/project';
 import { isWorkspace } from '@insomnia/models/workspace';
 import { initializeProjectFromTeam, initializeWorkspaceFromBackendProject } from './initialize-model-from';

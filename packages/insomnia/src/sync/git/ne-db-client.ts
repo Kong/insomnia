@@ -3,7 +3,7 @@ import { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
 import YAML from 'yaml';
 
-import { database as db } from '../../common/database';
+import { database as db } from '@insomnia/common/database';
 import { BaseModel } from '@insomnia/models';
 import { isWorkspace } from '@insomnia/models/workspace';
 import { resetKeys } from '../ignore-keys';

@@ -3,7 +3,7 @@ import * as requestOperations from '@insomnia/models/helpers/request-operations'
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { database as db } from '../../../common/database';
+import { database as db } from '@insomnia/common/database';
 import { GrpcRequest, isGrpcRequest } from '@insomnia/models/grpc-request';
 import { isRequest, Request } from '@insomnia/models/request';
 import { isWebSocketRequest, WebSocketRequest } from '@insomnia/models/websocket-request';

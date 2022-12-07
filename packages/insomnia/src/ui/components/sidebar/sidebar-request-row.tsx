@@ -4,8 +4,8 @@ import React, { FC, forwardRef, MouseEvent, ReactElement, useCallback, useEffect
 import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
 import { useSelector } from 'react-redux';
 
-import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
-import { getMethodOverrideHeader } from '../../../common/misc';
+import { CONTENT_TYPE_GRAPHQL } from '@insomnia/common/constants';
+import { getMethodOverrideHeader } from '@insomnia/common/misc';
 import { stats, workspaceMeta } from '@insomnia/models';
 import { GrpcRequest, isGrpcRequest } from '@insomnia/models/grpc-request';
 import { isRequest, Request } from '@insomnia/models/request';

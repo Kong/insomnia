@@ -3,7 +3,7 @@ import * as requestOperations from '@insomnia/models/helpers/request-operations'
 import { DragSourceConnector, DragSourceMonitor, DropTargetConnector, DropTargetMonitor, DropTargetSpec } from 'react-dnd';
 import ReactDOM from 'react-dom';
 
-import { database } from '../../../common/database';
+import { database } from '@insomnia/common/database';
 import { BaseModel } from '@insomnia/models';
 import { GrpcRequest } from '@insomnia/models/grpc-request';
 import { Request } from '@insomnia/models/request';

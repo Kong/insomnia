@@ -5,7 +5,7 @@ import path from 'path';
 import zlib from 'zlib';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { getDataDirectory } from '../../common/electron-helpers';
+import { getDataDirectory } from '@insomnia/common/electron-helpers';
 
 describe('migrate()', () => {
   beforeEach(globalBeforeEach);

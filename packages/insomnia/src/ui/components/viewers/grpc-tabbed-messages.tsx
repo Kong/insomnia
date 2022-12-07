@@ -1,7 +1,7 @@
+import { HandleGetRenderContext, HandleRender } from '@insomnia/common/render';
 import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
 
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { TabItem, Tabs } from '../base/tabs';
 import { GRPCEditor } from '../editors/grpc-editor';
 

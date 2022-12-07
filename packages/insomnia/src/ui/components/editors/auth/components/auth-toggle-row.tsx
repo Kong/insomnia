@@ -1,6 +1,6 @@
 import React, { FC, ReactNode, useCallback } from 'react';
 
-import { toKebabCase } from '../../../../../common/misc';
+import { toKebabCase } from '@insomnia/common/misc';
 import { useActiveRequest } from '../../../../hooks/use-active-request';
 import { AuthRow } from './auth-row';
 

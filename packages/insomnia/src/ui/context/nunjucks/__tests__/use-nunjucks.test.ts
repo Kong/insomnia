@@ -9,8 +9,8 @@ import type { PromiseValue } from 'type-fest';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 import { withReduxStore } from '../../../../__jest__/with-redux-store';
-import { ACTIVITY_DEBUG } from '../../../../common/constants';
-import { getRenderContext, getRenderContextAncestors, render } from '../../../../common/render';
+import { ACTIVITY_DEBUG } from '@insomnia/common/constants';
+import { getRenderContext, getRenderContextAncestors, render } from '@insomnia/common/render';
 import { RootState } from '../../../redux/modules';
 import { initializeNunjucksRenderPromiseCache, useNunjucks } from '../use-nunjucks';
 

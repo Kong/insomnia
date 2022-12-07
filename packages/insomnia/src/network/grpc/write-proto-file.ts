@@ -4,7 +4,7 @@ import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
 
-import { database as db } from '../../common/database';
+import { database as db } from '@insomnia/common/database';
 import type { BaseModel } from '@insomnia/models';
 import { isProtoDirectory, ProtoDirectory } from '@insomnia/models/proto-directory';
 import { isProtoFile, ProtoFile } from '@insomnia/models/proto-file';

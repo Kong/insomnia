@@ -4,10 +4,10 @@ import mkdirp from 'mkdirp';
 import path from 'path';
 
 import appConfig from '../../config/config.json';
-import { ParsedApiSpec } from '../common/api-specs';
-import { getDataDirectory } from '../common/electron-helpers';
-import { resolveHomePath } from '../common/misc';
-import type { PluginConfig, PluginConfigMap } from '../common/settings';
+import { ParsedApiSpec } from '@insomnia/common/api-specs';
+import { getDataDirectory } from '@insomnia/common/electron-helpers';
+import { resolveHomePath } from '@insomnia/common/misc';
+import type { PluginConfig, PluginConfigMap } from '@insomnia/common/settings';
 import { GrpcRequest } from '@insomnia/models/grpc-request';
 import type { Request } from '@insomnia/models/request';
 import type { RequestGroup } from '@insomnia/models/request-group';

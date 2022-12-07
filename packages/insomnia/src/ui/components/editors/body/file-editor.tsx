@@ -1,7 +1,7 @@
 import fs from 'fs';
 import React, { FC, useCallback } from 'react';
 
-import * as misc from '../../../../common/misc';
+import * as misc from '@insomnia/common/misc';
 import { FileInputButton } from '../../base/file-input-button';
 import { PromptButton } from '../../base/prompt-button';
 

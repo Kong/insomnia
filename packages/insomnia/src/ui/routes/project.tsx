@@ -19,16 +19,16 @@ import {
 } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
+import { parseApiSpec, ParsedApiSpec } from '@insomnia/common/api-specs';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
   DashboardSortOrder,
-} from '../../common/constants';
-import { ForceToWorkspace } from '../../common/import';
-import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
-import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
-import { strings } from '../../common/strings';
+} from '@insomnia/common/constants';
+import { ForceToWorkspace } from '@insomnia/common/import';
+import { fuzzyMatchAll, isNotNullOrUndefined } from '@insomnia/common/misc';
+import { descendingNumberSort, sortMethodMap } from '@insomnia/common/sorting';
+import { strings } from '@insomnia/common/strings';
 import { MemClient } from '../../sync/git/mem-client';
 import { invariant } from '../../utils/invariant';
 import { Dropdown } from '../components/base/dropdown/dropdown';

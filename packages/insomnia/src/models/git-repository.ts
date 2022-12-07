@@ -1,4 +1,4 @@
-import { database as db } from '../common/database';
+import { database as db } from '@insomnia/common/database';
 import type { GitCredentials } from '../sync/git/git-vcs';
 import type { BaseModel } from './index';
 

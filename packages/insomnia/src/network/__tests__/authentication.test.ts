@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { AUTH_API_KEY, AUTH_OAUTH_1 } from '../../common/constants';
+import { AUTH_API_KEY, AUTH_OAUTH_1 } from '@insomnia/common/constants';
 import {
   _buildBearerHeader,
   getAuthHeader,

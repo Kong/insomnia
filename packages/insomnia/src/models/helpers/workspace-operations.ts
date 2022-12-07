@@ -1,6 +1,6 @@
 import * as models from '@insomnia/models';
 
-import { database as db } from '../../common/database';
+import { database as db } from '@insomnia/common/database';
 import type { ApiSpec } from '../api-spec';
 import { isDesign, Workspace } from '../workspace';
 

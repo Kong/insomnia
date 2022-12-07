@@ -12,8 +12,8 @@ import {
   EXPORT_TYPE_WEBSOCKET_PAYLOAD,
   EXPORT_TYPE_WEBSOCKET_REQUEST,
   EXPORT_TYPE_WORKSPACE,
-} from '../common/constants';
-import { generateId, pluralize } from '../common/misc';
+} from '@insomnia/common/constants';
+import { generateId, pluralize } from '@insomnia/common/misc';
 import * as _apiSpec from './api-spec';
 import * as _clientCertificate from './client-certificate';
 import * as _cookieJar from './cookie-jar';

@@ -5,7 +5,7 @@ import { mocked } from 'jest-mock';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { isLoggedIn as _isLoggedIn } from '../../../account/session';
-import { database } from '../../../common/database';
+import { database } from '@insomnia/common/database';
 import { backendProjectWithTeamSchema, teamSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { initializeProjectFromTeam } from '../initialize-model-from';

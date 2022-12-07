@@ -2,8 +2,8 @@ import {
   DEFAULT_PANE_HEIGHT,
   DEFAULT_PANE_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
-} from '../common/constants';
-import { database as db } from '../common/database';
+} from '@insomnia/common/constants';
+import { database as db } from '@insomnia/common/database';
 import type { BaseModel } from './index';
 
 export const name = 'Workspace Meta';

@@ -1,8 +1,7 @@
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '@insomnia/common/constants';
 import React, { FC } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 
 const Nav = styled.nav({
   display: 'flex',

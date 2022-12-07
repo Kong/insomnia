@@ -2,7 +2,7 @@ import * as models from '@insomnia/models';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { exportRequestsToFile } from '../../../common/export';
+import { exportRequestsToFile } from '@insomnia/common/export';
 import { GrpcRequest, isGrpcRequest } from '@insomnia/models/grpc-request';
 import { isRequest, Request } from '@insomnia/models/request';
 import { isRequestGroup, RequestGroup } from '@insomnia/models/request-group';

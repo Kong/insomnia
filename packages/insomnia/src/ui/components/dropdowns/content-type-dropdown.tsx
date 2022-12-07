@@ -1,7 +1,3 @@
-import { isWebSocketRequest } from '@insomnia/models/websocket-request';
-import React, { FC, useCallback } from 'react';
-import { useSelector } from 'react-redux';
-
 import {
   CONTENT_TYPE_EDN,
   CONTENT_TYPE_FILE,
@@ -14,7 +10,11 @@ import {
   CONTENT_TYPE_XML,
   CONTENT_TYPE_YAML,
   getContentTypeName,
-} from '../../../common/constants';
+} from '@insomnia/common/constants';
+import { isWebSocketRequest } from '@insomnia/models/websocket-request';
+import React, { FC, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+
 import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import { selectActiveRequest } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';

@@ -1,5 +1,5 @@
-import * as misc from '../../common/misc';
-import type { RenderedRequest } from '../../common/render';
+import * as misc from '@insomnia/common/misc';
+import type { RenderedRequest } from '@insomnia/common/render';
 import type { RequestBody } from '@insomnia/models/request';
 
 export function init(

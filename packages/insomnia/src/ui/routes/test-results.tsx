@@ -3,7 +3,7 @@ import { UnitTestResult } from '@insomnia/models/unit-test-result';
 import React, { FC } from 'react';
 import { LoaderFunction, redirect, useRouteLoaderData } from 'react-router-dom';
 
-import { database } from '../../common/database';
+import { database } from '@insomnia/common/database';
 import { invariant } from '../../utils/invariant';
 import { ListGroup, UnitTestResultItem } from '../components/list-group';
 

@@ -4,7 +4,7 @@ import React, { forwardRef, memo, ReactNode } from 'react';
 import {
   COLLAPSE_SIDEBAR_REMS,
   SIDEBAR_SKINNY_REMS,
-} from '../../../common/constants';
+} from '@insomnia/common/constants';
 
 interface Props {
   children: ReactNode;

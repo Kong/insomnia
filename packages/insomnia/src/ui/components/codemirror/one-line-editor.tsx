@@ -1,5 +1,8 @@
 import './base-imports';
 
+import { DEBOUNCE_MILLIS } from '@insomnia/common/constants';
+import * as misc from '@insomnia/common/misc';
+import { KeyCombination } from '@insomnia/common/settings';
 import { getTagDefinitions } from '@insomnia/templating/index';
 import { NunjucksParsedTag } from '@insomnia/templating/utils';
 import classnames from 'classnames';
@@ -9,9 +12,6 @@ import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react
 import { useSelector } from 'react-redux';
 import { useMount, useUnmount } from 'react-use';
 
-import { DEBOUNCE_MILLIS } from '../../../common/constants';
-import * as misc from '../../../common/misc';
-import { KeyCombination } from '../../../common/settings';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { selectSettings } from '../../redux/selectors';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';

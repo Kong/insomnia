@@ -2,7 +2,7 @@ import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import { database as db } from '../../../common/database';
+import { database as db } from '@insomnia/common/database';
 
 describe('settings database', () => {
   beforeEach(globalBeforeEach);

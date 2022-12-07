@@ -3,7 +3,7 @@ import { isCollection, isDesign, Workspace } from '@insomnia/models/workspace';
 import { Dispatch } from 'redux';
 import type { RequireExactlyOne } from 'type-fest';
 
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC, GlobalActivity, isCollectionActivity, isDesignActivity } from '../../../common/constants';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC, GlobalActivity, isCollectionActivity, isDesignActivity } from '@insomnia/common/constants';
 import { selectActiveActivity, selectWorkspaces } from '../selectors';
 import { RootState } from '.';
 import { setActiveActivity, setActiveProject, setActiveWorkspace } from './global';

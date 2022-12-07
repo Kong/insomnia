@@ -1,10 +1,10 @@
+import highlight from '@insomnia/common';
+import { clickLink } from '@insomnia/common/electron-helpers';
+import { markdownToHTML } from '@insomnia/common/markdown-to-html';
+import { HandleRender } from '@insomnia/common/render';
 import classnames from 'classnames';
-import highlight from 'highlight.js/lib/common';
 import React, { FC, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { clickLink } from '../../common/electron-helpers';
-import { markdownToHTML } from '../../common/markdown-to-html';
-import { HandleRender } from '../../common/render';
 import { useGatedNunjucks } from '../context/nunjucks/use-gated-nunjucks';
 
 interface Props {

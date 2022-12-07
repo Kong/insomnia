@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 
-import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
+import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '@insomnia/common/constants';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';

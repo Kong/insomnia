@@ -1,3 +1,4 @@
+import { decompressObject } from '@insomnia/common/misc';
 import * as models from '@insomnia/models';
 import { Response } from '@insomnia/models/response';
 import { isWebSocketResponse, WebSocketResponse } from '@insomnia/models/websocket-response';
@@ -5,7 +6,6 @@ import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'dat
 import React, { Fragment, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
-import { decompressObject } from '../../../common/misc';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';

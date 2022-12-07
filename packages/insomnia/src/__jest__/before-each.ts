@@ -1,7 +1,7 @@
+import { database as db } from '@insomnia/common/database';
 import * as models from '@insomnia/models';
 
 import * as fetch from '../account/fetch';
-import { database as db } from '../common/database';
 
 export async function globalBeforeEach() {
   // Setup the local database in case it's used

@@ -1,7 +1,7 @@
+import { SENTRY_OPTIONS } from '@insomnia/common/sentry';
 import * as Sentry from '@sentry/electron';
 
 import { getAccountId, onLoginLogout } from '../account/session';
-import { SENTRY_OPTIONS } from '../common/sentry';
 
 /** Configures user info in Sentry scope. */
 function sentryConfigureUserInfo() {

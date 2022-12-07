@@ -1,6 +1,6 @@
+import { clickLink } from '@insomnia/common/electron-helpers';
 import React, { FC, useEffect, useRef } from 'react';
 
-import { clickLink } from '../../../common/electron-helpers';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 

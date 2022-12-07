@@ -1,3 +1,5 @@
+import { isDevelopment, isWindows } from '@insomnia/common/constants';
+import { getDataDirectory, getTempDir } from '@insomnia/common/electron-helpers';
 import childProcess from 'child_process';
 import * as electron from 'electron';
 import { app } from 'electron';
@@ -5,9 +7,6 @@ import fs from 'fs';
 import fsx from 'fs-extra';
 import mkdirp from 'mkdirp';
 import path from 'path';
-
-import { isDevelopment, isWindows } from '../common/constants';
-import { getDataDirectory, getTempDir } from '../common/electron-helpers';
 
 const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
 

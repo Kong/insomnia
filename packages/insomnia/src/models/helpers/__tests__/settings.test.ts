@@ -2,9 +2,9 @@ import * as models from '@insomnia/models';
 import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { mocked } from 'jest-mock';
 
-import * as _constants from '../../../common/constants';
-import * as electronHelpers from '../../../common/electron-helpers';
-import { Settings } from '../../../common/settings';
+import * as _constants from '@insomnia/common/constants';
+import * as electronHelpers from '@insomnia/common/electron-helpers';
+import { Settings } from '@insomnia/common/settings';
 import * as settingsHelpers from '../settings';
 import {
   getConfigFile,

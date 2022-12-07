@@ -4,7 +4,7 @@ import React, { FC, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { getSetCookieHeaders } from '../../../common/misc';
+import { getSetCookieHeaders } from '@insomnia/common/misc';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { WebSocketEvent } from '../../../main/network/websocket';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';

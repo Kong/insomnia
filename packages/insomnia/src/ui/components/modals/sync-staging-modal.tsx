@@ -2,7 +2,7 @@ import * as models from '@insomnia/models';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { strings } from '../../../common/strings';
+import { strings } from '@insomnia/common/strings';
 import { BaseModel } from '@insomnia/models';
 import type { DocumentKey, Stage, StageEntry, Status } from '../../../sync/types';
 import { describeChanges } from '../../../sync/vcs/util';

@@ -1,9 +1,8 @@
 import 'codemirror/addon/mode/overlay';
 
+import { FLEXIBLE_URL_REGEX } from '@insomnia/common/constants';
 import CodeMirror, { CodeMirrorLinkClickCallback } from 'codemirror';
 import { AllHtmlEntities } from 'html-entities';
-
-import { FLEXIBLE_URL_REGEX } from '../../../../common/constants';
 const entities = new AllHtmlEntities();
 
 CodeMirror.defineExtension('makeLinksClickable', function(this: CodeMirror.Editor, handleClick: CodeMirrorLinkClickCallback) {

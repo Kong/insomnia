@@ -1,3 +1,6 @@
+import { exportHarRequest } from '@insomnia/common/har';
+import { toKebabCase } from '@insomnia/common/misc';
+import { RENDER_PURPOSE_NO_RENDER } from '@insomnia/common/render';
 import type { Environment } from '@insomnia/models/environment';
 import { GrpcRequest } from '@insomnia/models/grpc-request';
 import * as requestOperations from '@insomnia/models/helpers/request-operations';
@@ -11,9 +14,6 @@ import HTTPSnippet from 'httpsnippet';
 import React, { forwardRef, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { exportHarRequest } from '../../../common/har';
-import { toKebabCase } from '../../../common/misc';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 // Plugin action related imports
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';

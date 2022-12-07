@@ -5,7 +5,7 @@
 import crypto from 'crypto';
 import OAuth1 from 'oauth-1.0a';
 
-import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
+import { CONTENT_TYPE_FORM_URLENCODED } from '@insomnia/common/constants';
 import type { RequestAuthentication, RequestBody } from '@insomnia/models/request';
 import type { OAuth1SignatureMethod } from './constants';
 import {

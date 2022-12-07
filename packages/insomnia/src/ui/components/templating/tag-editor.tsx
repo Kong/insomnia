@@ -1,3 +1,6 @@
+import { database as db } from '@insomnia/common/database';
+import { delay, fnOrString } from '@insomnia/common/misc';
+import { metaSortKeySort } from '@insomnia/common/sorting';
 import * as models from '@insomnia/models';
 import type { BaseModel } from '@insomnia/models/index';
 import { isRequest, Request } from '@insomnia/models/request';
@@ -14,9 +17,6 @@ import clone from 'clone';
 import React, { FC, useCallback, useEffect, useState } from 'react';
 import { useMount } from 'react-use';
 
-import { database as db } from '../../../common/database';
-import { delay, fnOrString } from '../../../common/misc';
-import { metaSortKeySort } from '../../../common/sorting';
 import { getTemplateTags } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';

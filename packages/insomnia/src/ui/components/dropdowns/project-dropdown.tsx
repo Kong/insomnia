@@ -1,3 +1,5 @@
+import { toKebabCase } from '@insomnia/common/misc';
+import { strings } from '@insomnia/common/strings';
 import {
   Project,
 } from '@insomnia/models/project';
@@ -5,8 +7,6 @@ import React, { FC, Fragment, useState } from 'react';
 import { useFetcher } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { toKebabCase } from '../../../common/misc';
-import { strings } from '../../../common/strings';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';

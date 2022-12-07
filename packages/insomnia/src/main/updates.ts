@@ -1,6 +1,3 @@
-import * as models from '@insomnia/models';
-import electron from 'electron';
-
 import {
   CHECK_FOR_UPDATES_INTERVAL,
   getAppId,
@@ -8,8 +5,11 @@ import {
   isDevelopment,
   updatesSupported,
   UpdateURL,
-} from '../common/constants';
-import { delay } from '../common/misc';
+} from '@insomnia/common/constants';
+import { delay } from '@insomnia/common/misc';
+import * as models from '@insomnia/models';
+import electron from 'electron';
+
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../utils/url/querystring';
 const { autoUpdater, BrowserWindow, ipcMain } = electron;
 

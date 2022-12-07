@@ -4,8 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import React from 'react';
 
-import { database as db } from '../../common/database';
-import { selectFileOrFolder } from '../../common/select-file-or-folder';
+import { database as db } from '@insomnia/common/database';
+import { selectFileOrFolder } from '@insomnia/common/select-file-or-folder';
 import type { ProtoDirectory } from '@insomnia/models/proto-directory';
 import { isProtoFile, ProtoFile } from '@insomnia/models/proto-file';
 import { showAlert, showError } from '../../ui/components/modals';

@@ -2,7 +2,7 @@ import React, { FC, useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useParams } from 'react-router-dom';
 
-import { strings } from '../../../common/strings';
+import { strings } from '@insomnia/common/strings';
 import { isRemoteProject, Project } from '@insomnia/models/project';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

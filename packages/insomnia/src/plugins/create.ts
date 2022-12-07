@@ -2,7 +2,7 @@ import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
-import { getDataDirectory } from '../common/electron-helpers';
+import { getDataDirectory } from '@insomnia/common/electron-helpers';
 
 export async function createPlugin(
   moduleName: string,

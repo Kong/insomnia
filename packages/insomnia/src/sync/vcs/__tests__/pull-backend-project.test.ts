@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 import { mocked } from 'jest-mock';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
+import { DEFAULT_BRANCH_NAME } from '@insomnia/common/constants';
 import { isRemoteProject } from '@insomnia/models/project';
 import { Workspace } from '@insomnia/models/workspace';
 import { backendProjectWithTeamSchema } from '../../__schemas__/type-schemas';

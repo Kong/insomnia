@@ -3,7 +3,7 @@ import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { getAppSynopsis, getProductName } from '../../../common/constants';
+import { getAppSynopsis, getProductName } from '@insomnia/common/constants';
 import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import chartSrc from '../../images/chart.svg';
 import coreLogo from '../../images/insomnia-logo.svg';

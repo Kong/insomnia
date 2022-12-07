@@ -14,7 +14,7 @@ import { isCollection } from '@insomnia/models/workspace';
 import { createSelector } from 'reselect';
 import type { ValueOf } from 'type-fest';
 
-import { isWorkspaceActivity, PREVIEW_MODE_SOURCE } from '../../common/constants';
+import { isWorkspaceActivity, PREVIEW_MODE_SOURCE } from '@insomnia/common/constants';
 import { RootState } from './modules';
 
 type EntitiesLists = {

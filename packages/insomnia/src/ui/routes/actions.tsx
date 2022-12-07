@@ -9,9 +9,9 @@ import { generate, runTests, Test } from 'insomnia-testing';
 import { ActionFunction, redirect } from 'react-router-dom';
 
 import * as session from '../../account/session';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
-import { database } from '../../common/database';
-import { importRaw } from '../../common/import';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '@insomnia/common/constants';
+import { database } from '@insomnia/common/database';
+import { importRaw } from '@insomnia/common/import';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';

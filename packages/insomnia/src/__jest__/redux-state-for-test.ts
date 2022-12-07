@@ -1,5 +1,5 @@
-import { ACTIVITY_HOME } from '../common/constants';
-import { database } from '../common/database';
+import { ACTIVITY_HOME } from '@insomnia/common/constants';
+import { database } from '@insomnia/common/database';
 import { DEFAULT_PROJECT_ID, type } from '@insomnia/models/project';
 import { RootState } from '../ui/redux/modules';
 import * as entities from '../ui/redux/modules/entities';

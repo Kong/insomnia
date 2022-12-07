@@ -1,7 +1,7 @@
 import Color from 'color';
 import { unreachableCase } from 'ts-assert-unreachable';
 
-import { getAppDefaultTheme } from '../common/constants';
+import { getAppDefaultTheme } from '@insomnia/common/constants';
 import { ThemeSettings } from '@insomnia/models/settings';
 import type { Theme } from './index';
 import { ColorScheme, getThemes } from './index';

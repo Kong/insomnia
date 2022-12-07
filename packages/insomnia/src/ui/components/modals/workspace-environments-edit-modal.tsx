@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import React, { FC, forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { docsTemplateTags } from '../../../common/documentation';
+import { docsTemplateTags } from '@insomnia/common/documentation';
 import type { Environment } from '@insomnia/models/environment';
 import { selectActiveWorkspace, selectActiveWorkspaceMeta, selectEnvironments } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';

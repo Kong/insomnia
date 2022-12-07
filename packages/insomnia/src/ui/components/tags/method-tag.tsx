@@ -1,6 +1,5 @@
+import * as util from '@insomnia/common/misc';
 import React, { FC, memo } from 'react';
-
-import * as util from '../../../common/misc';
 
 interface Props {
   method: string;

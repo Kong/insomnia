@@ -3,7 +3,7 @@ import React, { ChangeEvent, FC } from 'react';
 import { useSelector } from 'react-redux';
 import { useToggle } from 'react-use';
 
-import { SettingsOfType } from '../../../common/settings';
+import { SettingsOfType } from '@insomnia/common/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 

@@ -1,3 +1,7 @@
+import { DEFAULT_BRANCH_NAME } from '@insomnia/common/constants';
+import { database as db } from '@insomnia/common/database';
+import { docsVersionControl } from '@insomnia/common/documentation';
+import { strings } from '@insomnia/common/strings';
 import * as models from '@insomnia/models';
 import { isRemoteProject, Project } from '@insomnia/models/project';
 import type { Workspace } from '@insomnia/models/workspace';
@@ -7,10 +11,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useInterval, useMount } from 'react-use';
 
 import * as session from '../../../account/session';
-import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
-import { database as db } from '../../../common/database';
-import { docsVersionControl } from '../../../common/documentation';
-import { strings } from '../../../common/strings';
 import { Status } from '../../../sync/types';
 import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-backend-project';
 import { logCollectionMovedToProject } from '../../../sync/vcs/migrate-collections';

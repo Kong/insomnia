@@ -3,9 +3,9 @@ import React, { FC, forwardRef, ReactNode, useImperativeHandle, useRef, useState
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { ACTIVITY_HOME } from '../../../common/constants';
-import { database as db } from '../../../common/database';
-import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { ACTIVITY_HOME } from '@insomnia/common/constants';
+import { database as db } from '@insomnia/common/database';
+import { getWorkspaceLabel } from '@insomnia/common/get-workspace-label';
 import type { ClientCertificate } from '@insomnia/models/client-certificate';
 import * as workspaceOperations from '@insomnia/models/helpers/workspace-operations';
 import { isRequest } from '@insomnia/models/request';

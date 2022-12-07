@@ -1,6 +1,6 @@
 import { parse as urlParse } from 'url';
 
-import { escapeRegex } from '../common/misc';
+import { escapeRegex } from '@insomnia/common/misc';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import certificateUrlParse from './certificate-url-parse';
 

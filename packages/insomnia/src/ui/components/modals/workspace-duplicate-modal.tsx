@@ -2,8 +2,8 @@ import React, { FC, useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useParams } from 'react-router-dom';
 
-import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { strings } from '../../../common/strings';
+import { getWorkspaceLabel } from '@insomnia/common/get-workspace-label';
+import { strings } from '@insomnia/common/strings';
 import { isDefaultProject, isLocalProject, Project } from '@insomnia/models/project';
 import { Workspace } from '@insomnia/models/workspace';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';

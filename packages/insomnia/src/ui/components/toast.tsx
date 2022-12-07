@@ -1,3 +1,10 @@
+import {
+  getAppId,
+  getAppPlatform,
+  getAppVersion,
+  getProductName,
+  updatesSupported,
+} from '@insomnia/common/constants';
 import * as models from '@insomnia/models';
 import classnames from 'classnames';
 import type { IpcRendererEvent } from 'electron';
@@ -7,13 +14,6 @@ import styled from 'styled-components';
 
 import * as fetch from '../../account/fetch';
 import * as session from '../../account/session';
-import {
-  getAppId,
-  getAppPlatform,
-  getAppVersion,
-  getProductName,
-  updatesSupported,
-} from '../../common/constants';
 import imgSrcCore from '../images/insomnia-logo.svg';
 import { Link } from './base/link';
 

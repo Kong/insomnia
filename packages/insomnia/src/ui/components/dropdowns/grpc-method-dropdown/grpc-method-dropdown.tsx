@@ -1,13 +1,13 @@
-import React, { Fragment, FunctionComponent } from 'react';
-import styled from 'styled-components';
-
 import {
   getGrpcPathSegments,
   getShortGrpcPath,
   groupGrpcMethodsByPackage,
   GrpcMethodInfo,
   NO_PACKAGE_KEY,
-} from '../../../../common/grpc-paths';
+} from '@insomnia/common/grpc-paths';
+import React, { Fragment, FunctionComponent } from 'react';
+import styled from 'styled-components';
+
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../../base/dropdown/dropdown-divider';

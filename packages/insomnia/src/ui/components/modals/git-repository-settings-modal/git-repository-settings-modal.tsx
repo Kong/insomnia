@@ -1,6 +1,6 @@
 import React, { forwardRef, Key, useImperativeHandle, useRef, useState } from 'react';
 
-import { docsGitSync } from '../../../../common/documentation';
+import { docsGitSync } from '@insomnia/common/documentation';
 import type { GitRepository, OauthProviderName } from '@insomnia/models/git-repository';
 import { deleteGitRepository } from '@insomnia/models/helpers/git-repository-operations';
 import { Link } from '../../base/link';

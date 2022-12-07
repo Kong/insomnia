@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import { getTempDir } from '../../../common/electron-helpers';
+import { getTempDir } from '@insomnia/common/electron-helpers';
 import * as plugin from '../response';
 
 describe('init()', () => {

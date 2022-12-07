@@ -1,12 +1,12 @@
+import { cookieToString } from '@insomnia/common/cookies';
 import * as models from '@insomnia/models';
+import type { Cookie } from '@insomnia/models/cookie-jar';
 import clone from 'clone';
 import { isValid } from 'date-fns';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
-import { cookieToString } from '../../../common/cookies';
-import type { Cookie } from '@insomnia/models/cookie-jar';
 import { selectActiveCookieJar } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

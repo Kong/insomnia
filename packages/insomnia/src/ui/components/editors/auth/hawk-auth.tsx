@@ -3,7 +3,7 @@ import React, { FC } from 'react';
 import {
   HAWK_ALGORITHM_SHA1,
   HAWK_ALGORITHM_SHA256,
-} from '../../../../common/constants';
+} from '@insomnia/common/constants';
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthSelectRow } from './components/auth-select-row';
 import { AuthTableBody } from './components/auth-table-body';

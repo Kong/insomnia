@@ -1,5 +1,16 @@
 import './rendererListeners';
 
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_SPEC,
+  ACTIVITY_UNIT_TEST,
+  getProductName,
+  isDevelopment,
+} from '@insomnia/common/constants';
+import { database } from '@insomnia/common/database';
+import { initializeLogging } from '@insomnia/common/log';
+import { strings } from '@insomnia/common/strings';
 import * as models from '@insomnia/models';
 import { DEFAULT_ORGANIZATION_ID } from '@insomnia/models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '@insomnia/models/project';
@@ -13,17 +24,6 @@ import {
 } from 'react-router-dom';
 import { Store } from 'redux';
 
-import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_SPEC,
-  ACTIVITY_UNIT_TEST,
-  getProductName,
-  isDevelopment,
-} from '../common/constants';
-import { database } from '../common/database';
-import { initializeLogging } from '../common/log';
-import { strings } from '../common/strings';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';

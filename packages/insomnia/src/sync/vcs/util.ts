@@ -1,7 +1,7 @@
 import clone from 'clone';
 import crypto from 'crypto';
 
-import { strings } from '../../common/strings';
+import { strings } from '@insomnia/common/strings';
 import { BaseModel } from '@insomnia/models';
 import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
 import { deterministicStringify } from '../lib/deterministicStringify';

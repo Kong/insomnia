@@ -1,5 +1,8 @@
 import './base-imports';
 
+import { DEBOUNCE_MILLIS, isMac } from '@insomnia/common/constants';
+import * as misc from '@insomnia/common/misc';
+import { KeyCombination } from '@insomnia/common/settings';
 import { getTagDefinitions } from '@insomnia/templating/index';
 import { NunjucksParsedTag } from '@insomnia/templating/utils';
 import classnames from 'classnames';
@@ -14,9 +17,6 @@ import { useSelector } from 'react-redux';
 import { useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
-import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
-import * as misc from '../../../common/misc';
-import { KeyCombination } from '../../../common/settings';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';

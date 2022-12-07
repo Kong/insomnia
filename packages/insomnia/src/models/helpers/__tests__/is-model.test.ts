@@ -1,7 +1,7 @@
 import * as models from '@insomnia/models';
 import { describe, expect, it } from '@jest/globals';
 
-import { generateId } from '../../../common/misc';
+import { generateId } from '@insomnia/common/misc';
 import { isGrpcRequest, isGrpcRequestId } from '../../grpc-request';
 import { isProtoDirectory } from '../../proto-directory';
 import { isProtoFile } from '../../proto-file';
