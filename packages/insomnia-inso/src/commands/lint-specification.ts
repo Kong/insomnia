@@ -45,7 +45,7 @@ export async function lintSpecification(
         const rulesetFileName = filesInSpecFolder.find(file => file.startsWith('.spectral'));
         if (rulesetFileName) {
           logger.trace(`Loading ruleset from \`${rulesetFileName}\``);
-          ruleset = await bundleAndLoadRuleset(path.join(path.dirname(fileName), rulesetFileName));
+          ruleset = await bundleAndLoadRuleset(path.join(path.dirname(fileName), rulesetFileName), { fs });
         } else {
           logger.info(`Using ruleset: oas, see ${oas.documentationUrl}`);
         }
@@ -63,9 +63,8 @@ export async function lintSpecification(
   }
 
   const spectral = new Spectral();
-  await spectral.setRuleset(ruleset as RulesetDefinition);
-  const results = (await spectral.run(specContent));
-
+  spectral.setRuleset(ruleset as RulesetDefinition);
+  const results = await spectral.run(specContent);
   if (results.length) {
     // Print Summary
     if (results.some(r => r.severity === DiagnosticSeverity.Error)) {
