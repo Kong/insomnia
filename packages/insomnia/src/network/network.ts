@@ -58,7 +58,7 @@ export async function cancelRequestById(requestId: string) {
 
 export async function _actuallySend(
   renderedRequest: RenderedRequest,
-  clientCertificates: ClientCertificate[],
+  workspaceId: string,
   settings: Settings,
 ) {
   return new Promise<ResponsePatch>(async resolve => {
@@ -114,9 +114,10 @@ export async function _actuallySend(
       if (!renderedRequest.settingSendCookies) {
         timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
       }
-
+      const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
       const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
-
+      const caCert = await models.caCertificate.findByParentId(workspaceId);
+      const caCertficate = caCert?.disabled === false ? caCert.pem : null;
       const authHeader = await getAuthHeader(renderedRequest, finalUrl);
 
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
@@ -131,6 +132,7 @@ export async function _actuallySend(
         socketPath,
         settings,
         certificates,
+        caCertficate,
         authHeader,
       };
       const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
@@ -269,10 +271,9 @@ export async function sendWithSettings(
   const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
   const responseEnvironmentId = environment ? environment._id : null;
 
-  const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
   const response = await _actuallySend(
     renderResult.request,
-    clientCertificates,
+    workspace._id,
     { ...settings, validateSSL: settings.validateAuthSSL },
   );
   response.parentId = renderResult.request._id;
@@ -364,10 +365,9 @@ export async function send(
       url: renderedRequestBeforePlugins.url,
     } as ResponsePatch;
   }
-  const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
   const response = await _actuallySend(
     renderedRequest,
-    clientCertificates,
+    workspace._id,
     settings,
   );
   response.parentId = renderResult.request._id;

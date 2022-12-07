@@ -289,6 +289,21 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
             </TabItem>
             <TabItem key="client-certificates" title="Client Certificates">
               <PanelContainer className="pad">
+                <div className="form-control form-control--outlined">
+                  <label>
+                    CA Certificate
+                    <HelpTooltip position="right" className="space-left">
+                      One or more PEM format certificates to trust when making requests.
+                    </HelpTooltip>
+                    <FileInputButton
+                      className="btn btn--clicky"
+                      name="Select PEM file"
+                      onChange={keyPath => setState({ ...state, keyPath })}
+                      path={keyPath}
+                      showFileName
+                    />
+                  </label>
+                </div>
                 {!showAddCertificateForm ? (
                   <div>
                     {clientCertificates.length === 0 ? (
