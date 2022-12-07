@@ -37,7 +37,7 @@ describe('lint specification', () => {
     expect(result).toBe(true);
   });
 
-  it.only('should lint specification with custom ruleset', async () => {
+  it('should lint specification with custom ruleset', async () => {
     const directory = path.join(process.cwd(), 'src/commands/fixtures/with-ruleset');
     const result = await lintSpecification(path.join(directory, 'path-plugin.yaml'), {
       workingDir: 'src',
