@@ -18,10 +18,14 @@ test('can send gRPC requests', async ({ app, page }) => {
 
   await page.click('button:has-text("Clipboard")');
   await page.click('div[role="dialog"] button:has-text("New")');
-  await page.click('text=CollectionSmoke gRPCjust now');
-
-  await page.click('button:has-text("gRPCsay hi!")');
+  await page.click('text=CollectionPreRelease gRPCjust now');
+  await page.locator('button:has-text("Route Guide ExampleOPEN")').click();
+  await page.click('button:has-text("gRPCUnary")');
+  await page.locator('[data-testid="request-pane"] >> text=Unary').click();
   await page.click('text=Send');
+
+  // Check for the single Unary response
+  await page.click('text=Response 1');
   await expect(statusTag).toContainText('0 OK');
-  await expect(responseBody).toContainText('"reply": "hi"');
+  await expect(responseBody).toContainText('Berkshire Valley Management Area Trail');
 });

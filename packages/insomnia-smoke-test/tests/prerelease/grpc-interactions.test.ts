@@ -14,7 +14,7 @@ test.describe('gRPC interactions', () => {
     await page.click('[data-testid="project"]');
     await page.click('text=Create');
 
-    const text = await loadFixture('prerelease-grpc.yaml');
+    const text = await loadFixture('grpc.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
     await page.click('button:has-text("Clipboard")');
