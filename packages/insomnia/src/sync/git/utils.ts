@@ -1,6 +1,6 @@
 import { AuthCallback, AuthFailureCallback, AuthSuccessCallback, GitAuth, MessageCallback } from 'isomorphic-git';
 
-import { OauthProviderName } from '../../models/git-repository';
+import { OauthProviderName } from '@insomnia/models/git-repository';
 import type { GitCredentials } from './git-vcs';
 import { getAccessToken as getGitHubAccessToken } from './github-oauth-provider';
 import { getAccessToken as getGitlabAccessToken, refreshToken as refreshGitlabToken } from './gitlab-oauth-provider';

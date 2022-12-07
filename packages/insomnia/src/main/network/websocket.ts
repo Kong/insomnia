@@ -1,4 +1,10 @@
 import * as models from '@insomnia/models';
+import { webSocketRequest } from '@insomnia/models';
+import { CookieJar } from '@insomnia/models/cookie-jar';
+import { Environment } from '@insomnia/models/environment';
+import { RequestAuthentication, RequestHeader } from '@insomnia/models/request';
+import { BaseWebSocketRequest } from '@insomnia/models/websocket-request';
+import type { WebSocketResponse } from '@insomnia/models/websocket-response';
 import electron, { ipcMain } from 'electron';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
@@ -17,12 +23,6 @@ import {
 import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
-import { webSocketRequest } from '../../models';
-import { CookieJar } from '../../models/cookie-jar';
-import { Environment } from '../../models/environment';
-import { RequestAuthentication, RequestHeader } from '../../models/request';
-import { BaseWebSocketRequest } from '../../models/websocket-request';
-import type { WebSocketResponse } from '../../models/websocket-response';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';

@@ -1,13 +1,13 @@
 import * as models from '@insomnia/models';
+import { isGrpcRequest } from '@insomnia/models/grpc-request';
+import { getByParentId as getGrpcRequestMetaByParentId } from '@insomnia/models/grpc-request-meta';
+import * as requestOperations from '@insomnia/models/helpers/request-operations';
+import { isRequest } from '@insomnia/models/request';
+import { getByParentId as getRequestMetaByParentId } from '@insomnia/models/request-meta';
+import { isWebSocketRequest } from '@insomnia/models/websocket-request';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { isGrpcRequest } from '../../models/grpc-request';
-import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
-import * as requestOperations from '@insomnia/models/helpers/request-operations';
-import { isRequest } from '../../models/request';
-import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
-import { isWebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';

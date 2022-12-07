@@ -1,10 +1,10 @@
 import * as models from '@insomnia/models';
 
 import { database } from '../../common/database';
-import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
-import { Project } from '../../models/project';
-import { isCollection, Workspace } from '../../models/workspace';
-import { WorkspaceMeta } from '../../models/workspace-meta';
+import { getStatusCandidates } from '@insomnia/models/helpers/get-status-candidates';
+import { Project } from '@insomnia/models/project';
+import { isCollection, Workspace } from '@insomnia/models/workspace';
+import { WorkspaceMeta } from '@insomnia/models/workspace-meta';
 import { VCS } from './vcs';
 
 const blankStage = {};

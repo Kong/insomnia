@@ -15,14 +15,14 @@ import { getContentTypeHeader } from '../../../../common/misc';
 import type {
   Request,
   RequestBodyParameter,
-} from '../../../../models/request';
+} from '@insomnia/models/request';
 import {
   newBodyFile,
   newBodyForm,
   newBodyFormUrlEncoded,
   newBodyRaw,
-} from '../../../../models/request';
-import type { Workspace } from '../../../../models/workspace';
+} from '@insomnia/models/request';
+import type { Workspace } from '@insomnia/models/workspace';
 import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
 import { AskModal } from '../../modals/ask-modal';
 import { showModal } from '../../modals/index';

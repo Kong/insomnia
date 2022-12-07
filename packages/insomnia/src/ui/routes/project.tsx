@@ -1,4 +1,9 @@
 import * as models from '@insomnia/models';
+import { ApiSpec } from '@insomnia/models/api-spec';
+import { sortProjects } from '@insomnia/models/helpers/project';
+import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '@insomnia/models/organization';
+import { isDefaultProject, isRemoteProject, Project } from '@insomnia/models/project';
+import { isDesign, Workspace } from '@insomnia/models/workspace';
 import React, { FC, Fragment, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import {
@@ -24,11 +29,6 @@ import { ForceToWorkspace } from '../../common/import';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
-import { ApiSpec } from '../../models/api-spec';
-import { sortProjects } from '../../models/helpers/project';
-import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '../../models/organization';
-import { isDefaultProject, isRemoteProject, Project } from '../../models/project';
-import { isDesign, Workspace } from '../../models/workspace';
 import { MemClient } from '../../sync/git/mem-client';
 import { invariant } from '../../utils/invariant';
 import { Dropdown } from '../components/base/dropdown/dropdown';

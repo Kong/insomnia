@@ -1,6 +1,6 @@
 import * as models from '@insomnia/models';
 
-import type { GitRepository } from '../../models/git-repository';
+import type { GitRepository } from '@insomnia/models/git-repository';
 
 export const createGitRepository = async (workspaceId: string, repo: Partial<GitRepository>) => {
   const newRepo = await models.gitRepository.create(repo);

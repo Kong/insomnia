@@ -1,5 +1,5 @@
-import type { Request } from '../../models/request';
-import type { Response } from '../../models/response';
+import type { Request } from '@insomnia/models/request';
+import type { Response } from '@insomnia/models/response';
 import type { PluginStore } from '../../plugins/context';
 import type { NunjucksActionTag, NunjucksParsedTagArg } from '../utils';
 

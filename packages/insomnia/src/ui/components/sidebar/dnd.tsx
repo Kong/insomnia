@@ -4,11 +4,11 @@ import { DragSourceConnector, DragSourceMonitor, DropTargetConnector, DropTarget
 import ReactDOM from 'react-dom';
 
 import { database } from '../../../common/database';
-import { BaseModel } from '../../../models';
-import { GrpcRequest } from '../../../models/grpc-request';
-import { Request } from '../../../models/request';
-import { isRequestGroup, RequestGroup } from '../../../models/request-group';
-import { WebSocketRequest } from '../../../models/websocket-request';
+import { BaseModel } from '@insomnia/models';
+import { GrpcRequest } from '@insomnia/models/grpc-request';
+import { Request } from '@insomnia/models/request';
+import { isRequestGroup, RequestGroup } from '@insomnia/models/request-group';
+import { WebSocketRequest } from '@insomnia/models/websocket-request';
 
 export type DnDDragProps = ReturnType<typeof sourceCollect>;
 export type DnDDropProps = ReturnType<typeof targetCollect>;

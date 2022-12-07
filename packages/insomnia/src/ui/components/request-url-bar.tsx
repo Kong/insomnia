@@ -1,4 +1,6 @@
 import * as models from '@insomnia/models';
+import { update } from '@insomnia/models/helpers/request-operations';
+import { isRequest, Request } from '@insomnia/models/request';
 import type { SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
@@ -9,8 +11,6 @@ import { useInterval } from 'react-use';
 
 import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
-import { update } from '../../models/helpers/request-operations';
-import { isRequest, Request } from '../../models/request';
 import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';

@@ -1,3 +1,4 @@
+import type { ResponseHeader } from '@insomnia/models/response';
 import { format } from 'date-fns';
 import { SaveDialogOptions } from 'electron';
 import fs from 'fs';
@@ -11,7 +12,6 @@ import {
   getContentTypeFromHeaders,
   PREVIEW_MODE_FRIENDLY,
 } from '../../../common/constants';
-import type { ResponseHeader } from '../../../models/response';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';

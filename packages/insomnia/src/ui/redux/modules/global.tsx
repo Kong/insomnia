@@ -1,3 +1,4 @@
+import { DEFAULT_PROJECT_ID } from '@insomnia/models/project';
 import { combineReducers } from 'redux';
 
 import type { DashboardSortOrder, GlobalActivity } from '../../../common/constants';
@@ -5,7 +6,6 @@ import {
   ACTIVITY_HOME,
   isValidActivity,
 } from '../../../common/constants';
-import { DEFAULT_PROJECT_ID } from '../../../models/project';
 import { trackPageView } from '../../analytics';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';

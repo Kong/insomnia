@@ -1,7 +1,7 @@
 import * as models from '@insomnia/models';
 import { describe, expect, it } from '@jest/globals';
 
-import { WorkspaceScopeKeys } from '../../models/workspace';
+import { WorkspaceScopeKeys } from '@insomnia/models/workspace';
 import { getWorkspaceLabel } from '../get-workspace-label';
 import { strings } from '../strings';
 

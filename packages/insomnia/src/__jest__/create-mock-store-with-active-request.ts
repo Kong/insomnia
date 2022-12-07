@@ -3,8 +3,8 @@ import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
 import { ACTIVITY_DEBUG } from '../common/constants';
-import { Request } from '../models/request';
-import { RequestMeta } from '../models/request-meta';
+import { Request } from '@insomnia/models/request';
+import { RequestMeta } from '@insomnia/models/request-meta';
 import { RootState } from '../ui/redux/modules';
 import { reduxStateForTest } from './redux-state-for-test';
 

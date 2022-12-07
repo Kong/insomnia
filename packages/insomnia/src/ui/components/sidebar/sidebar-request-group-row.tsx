@@ -4,7 +4,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { PropsWithChildren } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetMonitor, DropTargetSpec } from 'react-dnd';
 
-import { RequestGroup } from '../../../models/request-group';
+import { RequestGroup } from '@insomnia/models/request-group';
 import { Highlight } from '../base/highlight';
 import { RequestGroupActionsDropdown, RequestGroupActionsDropdownHandle } from '../dropdowns/request-group-actions-dropdown';
 import { showModal } from '../modals';

@@ -3,8 +3,8 @@ import * as models from '@insomnia/models';
 import { exportWorkspacesData, exportWorkspacesHAR } from '../../common/export';
 import type { ImportRawConfig } from '../../common/import';
 import { importRaw, importUri } from '../../common/import';
-import { DEFAULT_PROJECT_ID } from '../../models/project';
-import type { Workspace, WorkspaceScope } from '../../models/workspace';
+import { DEFAULT_PROJECT_ID } from '@insomnia/models/project';
+import type { Workspace, WorkspaceScope } from '@insomnia/models/workspace';
 
 interface PluginImportOptions {
   workspaceId?: string;

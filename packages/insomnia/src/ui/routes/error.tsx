@@ -1,3 +1,5 @@
+import { DEFAULT_ORGANIZATION_ID } from '@insomnia/models/organization';
+import { DEFAULT_PROJECT_ID } from '@insomnia/models/project';
 import React from 'react';
 import { FC } from 'react';
 import {
@@ -8,8 +10,6 @@ import {
 } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
-import { DEFAULT_PROJECT_ID } from '../../models/project';
 import { Mailto } from '../components/base/mailto';
 import { Button } from '../components/themed-button';
 

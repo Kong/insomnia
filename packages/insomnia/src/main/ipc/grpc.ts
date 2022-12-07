@@ -2,12 +2,12 @@ import { Call, ClientDuplexStream, ClientReadableStream, MethodDefinition, Servi
 import { credentials, makeGenericClientConstructor, Metadata, status } from '@grpc/grpc-js';
 import { AnyDefinition, EnumTypeDefinition, load, MessageTypeDefinition } from '@grpc/proto-loader';
 import * as models from '@insomnia/models';
+import type { GrpcRequest, GrpcRequestHeader } from '@insomnia/models/grpc-request';
 import electron, { ipcMain } from 'electron';
 import { IpcMainEvent } from 'electron';
 
 import { getMethodInfo, getMethodType, GrpcMethodInfo } from '../../common/grpc-paths';
 import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
-import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
 import { writeProtoFile } from '../../network/grpc/write-proto-file';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';

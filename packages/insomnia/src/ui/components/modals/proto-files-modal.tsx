@@ -2,7 +2,7 @@ import * as models from '@insomnia/models';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import type { ProtoFile } from '../../../models/proto-file';
+import type { ProtoFile } from '@insomnia/models/proto-file';
 import * as protoManager from '../../../network/grpc/proto-manager';
 import type { GrpcDispatch } from '../../context/grpc';
 import { grpcActions } from '../../context/grpc';

@@ -1,7 +1,6 @@
+import { Request } from '@insomnia/models/request';
 import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
-
-import { Request } from '../../../models/request';
 
 export interface UnitTestRequestSelectorProps {
   onSetActiveRequest: React.ChangeEventHandler<HTMLSelectElement>;

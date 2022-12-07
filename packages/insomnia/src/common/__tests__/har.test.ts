@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 import path from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { Cookie } from '../../models/cookie-jar';
-import { Request } from '../../models/request';
-import { Response } from '../../models/response';
+import { Cookie } from '@insomnia/models/cookie-jar';
+import { Request } from '@insomnia/models/request';
+import { Response } from '@insomnia/models/response';
 import { AUTH_BASIC } from '../constants';
 import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
 import { getRenderedRequestAndContext } from '../render';

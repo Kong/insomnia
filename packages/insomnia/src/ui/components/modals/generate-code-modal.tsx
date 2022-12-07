@@ -2,7 +2,7 @@ import HTTPSnippet, { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
 import { exportHarRequest } from '../../../common/har';
-import { Request } from '../../../models/request';
+import { Request } from '@insomnia/models/request';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';

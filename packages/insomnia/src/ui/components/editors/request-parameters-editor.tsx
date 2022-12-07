@@ -1,8 +1,8 @@
+import { update } from '@insomnia/models/helpers/request-operations';
+import type { Request, RequestParameter } from '@insomnia/models/request';
+import { WebSocketRequest } from '@insomnia/models/websocket-request';
 import React, { FC, useCallback } from 'react';
 
-import { update } from '../../../models/helpers/request-operations';
-import type { Request, RequestParameter } from '../../../models/request';
-import { WebSocketRequest } from '../../../models/websocket-request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 

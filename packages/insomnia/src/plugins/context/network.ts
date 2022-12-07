@@ -1,7 +1,7 @@
 import * as models from '@insomnia/models';
 
 import type { ExtraRenderInfo } from '../../common/render';
-import type { Request } from '../../models/request';
+import type { Request } from '@insomnia/models/request';
 import { send } from '../../network/network';
 
 export function init(activeEnvironmentId: string | null) {

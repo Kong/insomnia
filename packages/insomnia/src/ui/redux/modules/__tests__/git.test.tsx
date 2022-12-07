@@ -1,5 +1,8 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import * as models from '@insomnia/models';
+import { gitRepositorySchema } from '@insomnia/models/__schemas__/model-schemas';
+import { DEFAULT_PROJECT_ID } from '@insomnia/models/project';
+import { Workspace, WorkspaceScopeKeys } from '@insomnia/models/workspace';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { PromiseFsClient } from 'isomorphic-git';
 import { mocked } from 'jest-mock';
@@ -11,9 +14,6 @@ import thunk from 'redux-thunk';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 import { ACTIVITY_SPEC } from '../../../../common/constants';
-import { gitRepositorySchema } from '../../../../models/__schemas__/model-schemas';
-import { DEFAULT_PROJECT_ID } from '../../../../models/project';
-import { Workspace, WorkspaceScopeKeys } from '../../../../models/workspace';
 import { GIT_INSOMNIA_DIR } from '../../../../sync/git/git-vcs';
 import { MemClient } from '../../../../sync/git/mem-client';
 import { shallowClone as _shallowClone } from '../../../../sync/git/shallow-clone';

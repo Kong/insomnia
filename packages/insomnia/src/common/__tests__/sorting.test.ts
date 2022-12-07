@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { grpcRequest, request, requestGroup } from '../../models';
+import { grpcRequest, request, requestGroup } from '@insomnia/models';
 import {
   METHOD_DELETE,
   METHOD_GET,

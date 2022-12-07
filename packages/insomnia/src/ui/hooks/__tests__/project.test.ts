@@ -1,5 +1,6 @@
 
 import * as models from '@insomnia/models';
+import { DEFAULT_PROJECT_ID } from '@insomnia/models/project';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { mocked } from 'jest-mock';
@@ -9,7 +10,6 @@ import thunk from 'redux-thunk';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import { withReduxStore } from '../../../__jest__/with-redux-store';
-import { DEFAULT_PROJECT_ID } from '../../../models/project';
 import MemoryDriver from '../../../sync/store/drivers/memory-driver';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';

@@ -1,12 +1,12 @@
+import type { BaseModel } from '@insomnia/models';
+import { GrpcRequest, isGrpcRequest } from '@insomnia/models/grpc-request';
+import { isRequest, Request } from '@insomnia/models/request';
+import { isRequestGroup, RequestGroup } from '@insomnia/models/request-group';
+import { isWebSocketRequest } from '@insomnia/models/websocket-request';
 import { createSelector } from 'reselect';
 
 import { DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH } from '../../common/constants';
 import { fuzzyMatchAll } from '../../common/misc';
-import type { BaseModel } from '../../models';
-import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
-import { isRequest, Request } from '../../models/request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { isWebSocketRequest } from '../../models/websocket-request';
 import {
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,

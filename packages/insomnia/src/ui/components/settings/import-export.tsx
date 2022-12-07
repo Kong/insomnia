@@ -8,7 +8,7 @@ import { exportAllToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { ForceToWorkspace } from '../../../common/import';
 import { strings } from '../../../common/strings';
-import { isRequestGroup } from '../../../models/request-group';
+import { isRequestGroup } from '@insomnia/models/request-group';
 import { importers } from '../../../utils/importers/importers';
 import { importClipBoard, importFile, importUri } from '../../import';
 import { selectActiveProject, selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName, selectProjects, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject, selectWorkspacesWithResolvedNameForActiveProject } from '../../redux/selectors';

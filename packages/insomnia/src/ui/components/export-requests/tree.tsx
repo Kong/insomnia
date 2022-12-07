@@ -1,8 +1,8 @@
+import { isGrpcRequest } from '@insomnia/models/grpc-request';
+import { isRequest } from '@insomnia/models/request';
+import { isWebSocketRequest } from '@insomnia/models/websocket-request';
 import React, { FC } from 'react';
 
-import { isGrpcRequest } from '../../../models/grpc-request';
-import { isRequest } from '../../../models/request';
-import { isWebSocketRequest } from '../../../models/websocket-request';
 import type { Node } from '../modals/export-requests-modal';
 import { RequestGroupRow } from './request-group-row';
 import { RequestRow } from './request-row';

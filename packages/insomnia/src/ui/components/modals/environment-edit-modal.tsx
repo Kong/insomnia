@@ -1,7 +1,7 @@
 import * as models from '@insomnia/models';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import { RequestGroup } from '../../../models/request-group';
+import { RequestGroup } from '@insomnia/models/request-group';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';

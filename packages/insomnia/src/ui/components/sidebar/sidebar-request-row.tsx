@@ -6,11 +6,11 @@ import { useSelector } from 'react-redux';
 
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
-import { stats, workspaceMeta } from '../../../models';
-import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isRequest, Request } from '../../../models/request';
-import { RequestGroup } from '../../../models/request-group';
-import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
+import { stats, workspaceMeta } from '@insomnia/models';
+import { GrpcRequest, isGrpcRequest } from '@insomnia/models/grpc-request';
+import { isRequest, Request } from '@insomnia/models/request';
+import { RequestGroup } from '@insomnia/models/request-group';
+import { isWebSocketRequest, WebSocketRequest } from '@insomnia/models/websocket-request';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { createRequest, updateRequestMetaByParentId } from '../../hooks/create-request';

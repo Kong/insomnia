@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useInterval, useLocalStorage } from 'react-use';
 import styled from 'styled-components';
 
-import { GitRepository } from '../../../../models/git-repository';
+import { GitRepository } from '@insomnia/models/git-repository';
 import { axiosRequest } from '../../../../network/axios-request';
 import {
   exchangeCodeForGitLabToken,

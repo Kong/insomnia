@@ -1,4 +1,4 @@
-import type { RequestHeader } from '../../models/request';
+import type { RequestHeader } from '@insomnia/models/request';
 
 export function getBasicAuthHeader(
   username?: string | null,

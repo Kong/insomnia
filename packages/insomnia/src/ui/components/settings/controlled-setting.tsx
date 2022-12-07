@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { Settings } from '../../../common/settings';
-import { getControlledStatus } from '../../../models/helpers/settings';
+import { getControlledStatus } from '@insomnia/models/helpers/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 

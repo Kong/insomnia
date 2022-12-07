@@ -1,7 +1,7 @@
+import { ProtoDirectory } from '@insomnia/models/proto-directory';
+import type { ProtoFile } from '@insomnia/models/proto-file';
 import React, { FunctionComponent } from 'react';
 
-import { ProtoDirectory } from '../../../models/proto-directory';
-import type { ProtoFile } from '../../../models/proto-file';
 import type { ExpandedProtoDirectory } from '../../redux/proto-selectors';
 import { ListGroup, ListGroupItem } from '../list-group';
 import { ProtoDirectoryListItem } from './proto-directory-list-item';

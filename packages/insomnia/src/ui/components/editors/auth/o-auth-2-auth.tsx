@@ -5,8 +5,8 @@ import { useSelector } from 'react-redux';
 import { convertEpochToMilliseconds, toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
-import type { OAuth2Token } from '../../../../models/o-auth-2-token';
-import type { Request } from '../../../../models/request';
+import type { OAuth2Token } from '@insomnia/models/o-auth-2-token';
+import type { Request } from '@insomnia/models/request';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,

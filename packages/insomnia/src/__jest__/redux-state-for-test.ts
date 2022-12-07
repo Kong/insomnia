@@ -1,6 +1,6 @@
 import { ACTIVITY_HOME } from '../common/constants';
 import { database } from '../common/database';
-import { DEFAULT_PROJECT_ID, type } from '../models/project';
+import { DEFAULT_PROJECT_ID, type } from '@insomnia/models/project';
 import { RootState } from '../ui/redux/modules';
 import * as entities from '../ui/redux/modules/entities';
 import { GlobalState } from '../ui/redux/modules/global';

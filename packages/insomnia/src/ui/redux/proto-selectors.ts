@@ -1,7 +1,7 @@
+import type { ProtoDirectory } from '@insomnia/models/proto-directory';
+import type { ProtoFile } from '@insomnia/models/proto-file';
 import { createSelector } from 'reselect';
 
-import type { ProtoDirectory } from '../../models/proto-directory';
-import type { ProtoFile } from '../../models/proto-file';
 import { selectActiveWorkspace, selectEntitiesLists } from './selectors';
 
 export interface ExpandedProtoDirectory {

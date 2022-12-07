@@ -1,7 +1,7 @@
 import React, { forwardRef, Key, useImperativeHandle, useRef, useState } from 'react';
 
 import { parseApiSpec } from '../../../common/api-specs';
-import type { ApiSpec } from '../../../models/api-spec';
+import type { ApiSpec } from '@insomnia/models/api-spec';
 import type { ConfigGenerator } from '../../../plugins';
 import * as plugins from '../../../plugins';
 import { CopyButton } from '../base/copy-button';

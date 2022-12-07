@@ -4,8 +4,8 @@ import path from 'path';
 import YAML from 'yaml';
 
 import { database as db } from '../../common/database';
-import { BaseModel } from '../../models';
-import { isWorkspace } from '../../models/workspace';
+import { BaseModel } from '@insomnia/models';
+import { isWorkspace } from '@insomnia/models/workspace';
 import { resetKeys } from '../ignore-keys';
 import { forceWorkspaceScopeToDesign } from './force-workspace-scope-to-design';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';

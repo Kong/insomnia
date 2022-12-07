@@ -1,4 +1,8 @@
 import * as models from '@insomnia/models';
+import { isGrpcRequestId } from '@insomnia/models/grpc-request';
+import { GrpcRequestMeta } from '@insomnia/models/grpc-request-meta';
+import { RequestMeta } from '@insomnia/models/request-meta';
+import { WorkspaceMeta } from '@insomnia/models/workspace-meta';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import {
@@ -7,10 +11,6 @@ import {
   METHOD_GET,
   METHOD_POST,
 } from '../../common/constants';
-import { isGrpcRequestId } from '../../models/grpc-request';
-import { GrpcRequestMeta } from '../../models/grpc-request-meta';
-import { RequestMeta } from '../../models/request-meta';
-import { WorkspaceMeta } from '../../models/workspace-meta';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { showModal } from '../components/modals';
 import { ProtoFilesModal } from '../components/modals/proto-files-modal';

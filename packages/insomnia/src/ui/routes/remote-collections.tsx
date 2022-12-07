@@ -1,9 +1,9 @@
 import * as models from '@insomnia/models';
+import { RemoteProject } from '@insomnia/models/project';
 import { ActionFunction, LoaderFunction } from 'react-router-dom';
 
 import { database } from '../../common/database';
 import { isNotNullOrUndefined } from '../../common/misc';
-import { RemoteProject } from '../../models/project';
 import { BackendProject } from '../../sync/types';
 import { pullBackendProject } from '../../sync/vcs/pull-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';

@@ -1,4 +1,5 @@
-import { isDesign, Workspace } from '../models/workspace';
+import { isDesign, Workspace } from '@insomnia/models/workspace';
+
 import { strings } from './strings';
 
 export const getWorkspaceLabel = (workspace: Workspace) =>

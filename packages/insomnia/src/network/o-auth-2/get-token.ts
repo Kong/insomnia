@@ -1,7 +1,7 @@
 import * as models from '@insomnia/models';
 
-import type { OAuth2Token } from '../../models/o-auth-2-token';
-import type { RequestAuthentication } from '../../models/request';
+import type { OAuth2Token } from '@insomnia/models/o-auth-2-token';
+import type { RequestAuthentication } from '@insomnia/models/request';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,

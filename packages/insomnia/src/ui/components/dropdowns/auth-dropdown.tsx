@@ -1,3 +1,5 @@
+import { update } from '@insomnia/models/helpers/request-operations';
+import { RequestAuthentication } from '@insomnia/models/request';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -6,8 +8,6 @@ import {
   getAuthTypeName,
   HAWK_ALGORITHM_SHA256,
 } from '../../../common/constants';
-import { update } from '../../../models/helpers/request-operations';
-import { RequestAuthentication } from '../../../models/request';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
 import { selectActiveRequest } from '../../redux/selectors';

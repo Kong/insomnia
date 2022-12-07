@@ -1,3 +1,6 @@
+import { ApiSpec } from '@insomnia/models/api-spec';
+import { Project } from '@insomnia/models/project';
+import { isDesign, Workspace } from '@insomnia/models/workspace';
 import React, { Fragment } from 'react';
 import { FC } from 'react';
 import styled from 'styled-components';
@@ -9,9 +12,6 @@ import {
 } from '../../common/constants';
 import { fuzzyMatchAll } from '../../common/misc';
 import { strings } from '../../common/strings';
-import { ApiSpec } from '../../models/api-spec';
-import { Project } from '../../models/project';
-import { isDesign, Workspace } from '../../models/workspace';
 import { Highlight } from './base/highlight';
 import { Card } from './card';
 import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';

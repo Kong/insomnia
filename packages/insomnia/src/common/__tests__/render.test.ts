@@ -3,9 +3,9 @@ import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { environmentModelSchema, requestGroupModelSchema } from '../../models/__schemas__/model-schemas';
-import { Environment } from '../../models/environment';
-import { Workspace } from '../../models/workspace';
+import { environmentModelSchema, requestGroupModelSchema } from '@insomnia/models/__schemas__/model-schemas';
+import { Environment } from '@insomnia/models/environment';
+import { Workspace } from '@insomnia/models/workspace';
 import * as renderUtils from '../render';
 
 jest.mock('electron');

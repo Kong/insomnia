@@ -4,10 +4,10 @@ import clone from 'clone';
 import fs from 'fs';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
-import type { Request } from '../models/request';
-import { newBodyRaw } from '../models/request';
-import type { Response } from '../models/response';
-import { isWorkspace } from '../models/workspace';
+import type { Request } from '@insomnia/models/request';
+import { newBodyRaw } from '@insomnia/models/request';
+import type { Response } from '@insomnia/models/response';
+import { isWorkspace } from '@insomnia/models/workspace';
 import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';
 import * as pluginContexts from '../plugins/context/index';

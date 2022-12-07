@@ -1,4 +1,10 @@
+import type { Environment } from '@insomnia/models/environment';
+import { GrpcRequest } from '@insomnia/models/grpc-request';
 import * as requestOperations from '@insomnia/models/helpers/request-operations';
+import { Project } from '@insomnia/models/project';
+import { isRequest, Request } from '@insomnia/models/request';
+import type { RequestGroup } from '@insomnia/models/request-group';
+import { incrementDeletedRequests } from '@insomnia/models/stats';
 import classnames from 'classnames';
 import { clipboard } from 'electron';
 import HTTPSnippet from 'httpsnippet';
@@ -8,12 +14,6 @@ import { useSelector } from 'react-redux';
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
-import type { Environment } from '../../../models/environment';
-import { GrpcRequest } from '../../../models/grpc-request';
-import { Project } from '../../../models/project';
-import { isRequest, Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
-import { incrementDeletedRequests } from '../../../models/stats';
 // Plugin action related imports
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';

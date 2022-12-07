@@ -1,4 +1,4 @@
-import { BaseModel } from '../models';
+import { BaseModel } from '@insomnia/models';
 
 export interface Team {
   id: string;

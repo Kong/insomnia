@@ -3,10 +3,10 @@ import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState }
 import { useSelector } from 'react-redux';
 
 import { exportRequestsToFile } from '../../../common/export';
-import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isRequest, Request } from '../../../models/request';
-import { isRequestGroup, RequestGroup } from '../../../models/request-group';
-import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
+import { GrpcRequest, isGrpcRequest } from '@insomnia/models/grpc-request';
+import { isRequest, Request } from '@insomnia/models/request';
+import { isRequestGroup, RequestGroup } from '@insomnia/models/request-group';
+import { isWebSocketRequest, WebSocketRequest } from '@insomnia/models/websocket-request';
 import { selectSidebarChildren } from '../../redux/sidebar-selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

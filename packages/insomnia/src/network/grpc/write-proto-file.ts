@@ -5,10 +5,10 @@ import os from 'os';
 import path from 'path';
 
 import { database as db } from '../../common/database';
-import type { BaseModel } from '../../models';
-import { isProtoDirectory, ProtoDirectory } from '../../models/proto-directory';
-import { isProtoFile, ProtoFile } from '../../models/proto-file';
-import { isWorkspace } from '../../models/workspace';
+import type { BaseModel } from '@insomnia/models';
+import { isProtoDirectory, ProtoDirectory } from '@insomnia/models/proto-directory';
+import { isProtoFile, ProtoFile } from '@insomnia/models/proto-file';
+import { isWorkspace } from '@insomnia/models/workspace';
 
 interface WriteResult {
   filePath: string;

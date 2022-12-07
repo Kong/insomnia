@@ -1,8 +1,8 @@
 import * as models from '@insomnia/models';
+import { GitRepository } from '@insomnia/models/git-repository';
 import path from 'path';
 import { useEffect, useRef, useState } from 'react';
 
-import { GitRepository } from '../../models/git-repository';
 import { fsClient } from '../../sync/git/fs-client';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR, GitVCS } from '../../sync/git/git-vcs';
 import { NeDBClient } from '../../sync/git/ne-db-client';

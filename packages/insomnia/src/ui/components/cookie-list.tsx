@@ -1,9 +1,9 @@
+import { Cookie } from '@insomnia/models/cookie-jar';
 import React, { FC, useCallback } from 'react';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
 import { cookieToString } from '../../common/cookies';
-import { Cookie } from '../../models/cookie-jar';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownItem } from './base/dropdown/dropdown-item';

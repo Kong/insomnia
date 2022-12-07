@@ -1,10 +1,10 @@
 import * as requestOperations from '@insomnia/models/helpers/request-operations';
+import { incrementDeletedRequests } from '@insomnia/models/stats';
+import { WebSocketRequest } from '@insomnia/models/websocket-request';
 import React, { forwardRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { toKebabCase } from '../../../common/misc';
-import { incrementDeletedRequests } from '../../../models/stats';
-import { WebSocketRequest } from '../../../models/websocket-request';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, type DropdownProps, Dropdown } from '../base/dropdown/dropdown';

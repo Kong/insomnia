@@ -1,8 +1,8 @@
 import * as models from '@insomnia/models';
 
-import { BaseModel, types as modelTypes } from '../models';
-import { getBodyBuffer } from '../models/response';
-import { Settings } from '../models/settings';
+import { BaseModel, types as modelTypes } from '@insomnia/models';
+import { getBodyBuffer } from '@insomnia/models/response';
+import { Settings } from '@insomnia/models/settings';
 import { send } from '../network/network';
 import * as plugins from '../plugins';
 import { database } from './database';

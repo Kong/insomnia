@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
 import { cookieToString } from '../../../common/cookies';
-import type { Cookie } from '../../../models/cookie-jar';
+import type { Cookie } from '@insomnia/models/cookie-jar';
 import { selectActiveCookieJar } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

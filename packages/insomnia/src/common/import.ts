@@ -1,11 +1,11 @@
 import * as models from '@insomnia/models';
 import fs from 'fs';
 
-import type { ApiSpec } from '../models/api-spec';
-import type { BaseModel } from '../models/index';
-import { Project } from '../models/project';
-import { isRequest } from '../models/request';
-import { isWorkspace, Workspace, WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
+import type { ApiSpec } from '@insomnia/models/api-spec';
+import type { BaseModel } from '@insomnia/models/index';
+import { Project } from '@insomnia/models/project';
+import { isRequest } from '@insomnia/models/request';
+import { isWorkspace, Workspace, WorkspaceScope, WorkspaceScopeKeys } from '@insomnia/models/workspace';
 import { SegmentEvent, trackSegmentEvent } from '../ui/analytics';
 import { AlertModal } from '../ui/components/modals/alert-modal';
 import { AskModal } from '../ui/components/modals/ask-modal';

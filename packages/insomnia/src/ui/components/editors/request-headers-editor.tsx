@@ -1,9 +1,9 @@
+import { update } from '@insomnia/models/helpers/request-operations';
+import type { Request, RequestHeader } from '@insomnia/models/request';
+import { isWebSocketRequest, WebSocketRequest } from '@insomnia/models/websocket-request';
 import React, { FC, useCallback } from 'react';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
-import { update } from '../../../models/helpers/request-operations';
-import type { Request, RequestHeader } from '../../../models/request';
-import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 

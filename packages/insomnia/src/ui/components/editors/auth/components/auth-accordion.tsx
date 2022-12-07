@@ -1,10 +1,10 @@
 import * as models from '@insomnia/models';
+import { isRequest } from '@insomnia/models/request';
+import { RequestAccordionKeys } from '@insomnia/models/request-meta';
 import classnames from 'classnames';
 import React, { FC, PropsWithChildren } from 'react';
 import { useSelector } from 'react-redux';
 
-import { isRequest } from '../../../../../models/request';
-import { RequestAccordionKeys } from '../../../../../models/request-meta';
 import { selectActiveRequest, selectActiveRequestMeta } from '../../../../redux/selectors';
 
 interface Props {

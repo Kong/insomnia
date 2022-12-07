@@ -7,7 +7,7 @@ import React, { FC, PropsWithChildren } from 'react';
 import { globalBeforeEach } from '../../../../../../__jest__/before-each';
 import { createMockStoreWithRequest } from '../../../../../../__jest__/create-mock-store-with-active-request';
 import { withReduxStore } from '../../../../../../__jest__/with-redux-store';
-import { RequestMeta } from '../../../../../../models/request-meta';
+import { RequestMeta } from '@insomnia/models/request-meta';
 import { AuthAccordion } from '../auth-accordion';
 
 const Table: FC<PropsWithChildren<{}>> = ({ children }) => <table><tbody>{children}</tbody></table>;

@@ -1,8 +1,8 @@
+import { Settings } from '@insomnia/models/settings';
 import { useEffect, useLayoutEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { usePrevious } from 'react-use';
 
-import { Settings } from '../../models/settings';
 import { selectSettings } from '../redux/selectors';
 
 const useRestartSetting = (setting: keyof Settings) => {

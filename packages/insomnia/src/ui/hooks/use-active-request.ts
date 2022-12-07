@@ -1,9 +1,9 @@
 import * as requestOperations from '@insomnia/models/helpers/request-operations';
+import { Request, RequestAuthentication } from '@insomnia/models/request';
+import { WebSocketRequest } from '@insomnia/models/websocket-request';
 import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import { Request, RequestAuthentication } from '../../models/request';
-import { WebSocketRequest } from '../../models/websocket-request';
 import { selectActiveRequest } from '../redux/selectors';
 
 export const useActiveRequest = () => {

@@ -1,9 +1,9 @@
+import type { ApiSpec } from '@insomnia/models/api-spec';
 import React, { FC } from 'react';
 import styled from 'styled-components';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
 
-import type { ApiSpec } from '../../../models/api-spec';
 import { Sidebar } from './sidebar';
 
 interface Props {

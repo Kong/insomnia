@@ -1,9 +1,9 @@
+import { isDefaultOrganization } from '@insomnia/models/organization';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import { Link, useLoaderData, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import * as session from '../../account/session';
-import { isDefaultOrganization } from '../../models/organization';
 import { RootLoaderData } from '../routes/root';
 import { Link as ExternalLink } from './base/link';
 import { Modal, ModalHandle } from './base/modal';

@@ -1,8 +1,8 @@
+import { GrpcRequest, isGrpcRequest } from '@insomnia/models/grpc-request';
+import { isRequest, Request } from '@insomnia/models/request';
+import { isWebSocketRequest, WebSocketRequest } from '@insomnia/models/websocket-request';
 import React, { FC, SyntheticEvent, useCallback } from 'react';
 
-import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isRequest, Request } from '../../../models/request';
-import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { WebSocketTag } from '../tags/websocket-tag';

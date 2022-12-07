@@ -1,6 +1,6 @@
-import { GrpcRequest, isGrpcRequest } from '../models/grpc-request';
-import { isRequest, Request } from '../models/request';
-import { isRequestGroup, RequestGroup } from '../models/request-group';
+import { GrpcRequest, isGrpcRequest } from '@insomnia/models/grpc-request';
+import { isRequest, Request } from '@insomnia/models/request';
+import { isRequestGroup, RequestGroup } from '@insomnia/models/request-group';
 import {
   HTTP_METHODS,
   SORT_CREATED_ASC,

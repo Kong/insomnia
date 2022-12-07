@@ -1,7 +1,6 @@
+import type { RequestGroup } from '@insomnia/models/request-group';
 import classnames from 'classnames';
 import React, { FC, ReactNode, useRef } from 'react';
-
-import type { RequestGroup } from '../../../models/request-group';
 
 interface Props {
   children?: ReactNode;

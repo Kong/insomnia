@@ -1,7 +1,7 @@
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
 import { database } from '../../common/database';
-import { RemoteProject } from '../../models/project';
-import { isWorkspace } from '../../models/workspace';
+import { RemoteProject } from '@insomnia/models/project';
+import { isWorkspace } from '@insomnia/models/workspace';
 import { initializeProjectFromTeam, initializeWorkspaceFromBackendProject } from './initialize-model-from';
 import { BackendProjectWithTeam } from './normalize-backend-project-team';
 import { interceptAccessError } from './util';

@@ -3,8 +3,8 @@ import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import { isRemoteProject, Project } from '../../../models/project';
-import { isCollection, Workspace, WorkspaceScopeKeys } from '../../../models/workspace';
+import { isRemoteProject, Project } from '@insomnia/models/project';
+import { isCollection, Workspace, WorkspaceScopeKeys } from '@insomnia/models/workspace';
 import { projectSchema, teamSchema } from '../../__schemas__/type-schemas';
 import { initializeProjectFromTeam, initializeWorkspaceFromBackendProject } from '../initialize-model-from';
 

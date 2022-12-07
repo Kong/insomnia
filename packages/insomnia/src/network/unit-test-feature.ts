@@ -1,5 +1,5 @@
-import { stats } from '../models';
-import { getBodyBuffer } from '../models/response';
+import { stats } from '@insomnia/models';
+import { getBodyBuffer } from '@insomnia/models/response';
 import * as plugins from '../plugins';
 import { send } from './network';
 

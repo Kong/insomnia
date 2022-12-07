@@ -4,8 +4,8 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
-import { isDefaultProject, isLocalProject, Project } from '../../../models/project';
-import { Workspace } from '../../../models/workspace';
+import { isDefaultProject, isLocalProject, Project } from '@insomnia/models/project';
+import { Workspace } from '@insomnia/models/workspace';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';

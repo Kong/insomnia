@@ -1,4 +1,7 @@
 import * as models from '@insomnia/models';
+import { isRequest, Request } from '@insomnia/models/request';
+import { isUnitTest, UnitTest } from '@insomnia/models/unit-test';
+import { UnitTestSuite } from '@insomnia/models/unit-test-suite';
 import React, { useRef } from 'react';
 import {
   LoaderFunction,
@@ -11,9 +14,6 @@ import styled from 'styled-components';
 
 import { database } from '../../common/database';
 import { documentationLinks } from '../../common/documentation';
-import { isRequest, Request } from '../../models/request';
-import { isUnitTest, UnitTest } from '../../models/unit-test';
-import { UnitTestSuite } from '../../models/unit-test-suite';
 import { invariant } from '../../utils/invariant';
 import { Editable } from '../components/base/editable';
 import { CodeEditor, CodeEditorHandle } from '../components/codemirror/code-editor';

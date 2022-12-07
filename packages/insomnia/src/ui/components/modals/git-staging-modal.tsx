@@ -6,9 +6,9 @@ import YAML from 'yaml';
 
 import { database as db } from '../../../common/database';
 import { strings } from '../../../common/strings';
-import { isApiSpec } from '../../../models/api-spec';
-import { GitRepository } from '../../../models/git-repository';
-import type { Workspace } from '../../../models/workspace';
+import { isApiSpec } from '@insomnia/models/api-spec';
+import { GitRepository } from '@insomnia/models/git-repository';
+import type { Workspace } from '@insomnia/models/workspace';
 import { gitRollback } from '../../../sync/git/git-rollback';
 import { GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GitVCS } from '../../../sync/git/git-vcs';
 import parseGitPath from '../../../sync/git/parse-git-path';

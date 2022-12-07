@@ -1,7 +1,7 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 
-import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
+import { baseModelSchema, workspaceModelSchema } from '@insomnia/models/__schemas__/model-schemas';
 import { branchSchema, mergeConflictSchema, statusCandidateSchema } from '../../__schemas__/type-schemas';
 import { StageEntry } from '../../types';
 import {

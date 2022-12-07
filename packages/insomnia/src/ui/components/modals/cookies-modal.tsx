@@ -3,7 +3,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { useSelector } from 'react-redux';
 
 import { fuzzyMatch } from '../../../common/misc';
-import type { Cookie } from '../../../models/cookie-jar';
+import type { Cookie } from '@insomnia/models/cookie-jar';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { selectActiveCookieJar } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';

@@ -3,10 +3,10 @@ import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { docsTemplateTags } from '../../../common/documentation';
-import { GrpcRequest } from '../../../models/grpc-request';
-import { Request } from '../../../models/request';
-import { isRequest } from '../../../models/request';
-import { WebSocketRequest } from '../../../models/websocket-request';
+import { GrpcRequest } from '@insomnia/models/grpc-request';
+import { Request } from '@insomnia/models/request';
+import { isRequest } from '@insomnia/models/request';
+import { WebSocketRequest } from '@insomnia/models/websocket-request';
 import { Link } from '../base/link';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

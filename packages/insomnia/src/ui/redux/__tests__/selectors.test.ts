@@ -1,11 +1,11 @@
 import * as models from '@insomnia/models';
+import { DEFAULT_PROJECT_ID, Project } from '@insomnia/models/project';
+import { WorkspaceScopeKeys } from '@insomnia/models/workspace';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import { ACTIVITY_DEBUG, ACTIVITY_HOME } from '../../../common/constants';
-import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
-import { WorkspaceScopeKeys } from '../../../models/workspace';
 import { selectActiveApiSpec, selectActiveProject, selectActiveWorkspaceName, selectWorkspacesWithResolvedNameForActiveProject } from '../selectors';
 
 describe('selectors', () => {

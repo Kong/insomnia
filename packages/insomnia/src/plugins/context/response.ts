@@ -1,7 +1,7 @@
 import * as models from '@insomnia/models';
 import fs from 'fs';
 
-import type { ResponseHeader } from '../../models/response';
+import type { ResponseHeader } from '@insomnia/models/response';
 
 interface MaybeResponse {
   parentId?: string;

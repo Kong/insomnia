@@ -1,4 +1,4 @@
-import type { RequestHeader } from '../../models/request';
+import type { RequestHeader } from '@insomnia/models/request';
 
 export function getBearerAuthHeader(token: string, prefix: string) {
   const name = 'Authorization';

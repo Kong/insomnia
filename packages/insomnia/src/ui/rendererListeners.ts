@@ -1,11 +1,11 @@
 
 import * as models from '@insomnia/models';
+import { isNotDefaultProject } from '@insomnia/models/project';
 import * as templating from '@insomnia/templating';
 import { ipcRenderer } from 'electron';
 
 import { isDevelopment } from '../common/constants';
 import { database } from '../common/database';
-import { isNotDefaultProject } from '../models/project';
 import * as plugins from '../plugins';
 import * as themes from '../plugins/misc';
 import { SegmentEvent, trackSegmentEvent } from './analytics';

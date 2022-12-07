@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { SortOrder } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { sortMethodMap } from '../../../common/sorting';
-import { isRequestGroup } from '../../../models/request-group';
+import { isRequestGroup } from '@insomnia/models/request-group';
 import { selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';

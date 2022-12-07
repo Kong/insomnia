@@ -18,7 +18,7 @@ import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../../common/render';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
-import type { Request } from '../../../../models/request';
+import type { Request } from '@insomnia/models/request';
 import { axiosRequest } from '../../../../network/axios-request';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { setDefaultProtocol } from '../../../../utils/url/protocol';

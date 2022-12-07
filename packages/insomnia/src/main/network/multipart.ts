@@ -2,12 +2,11 @@ if (process.type === 'renderer') {
   throw new Error('multipart.ts unavailable in renderer');
 }
 
+import type { RequestBodyParameter } from '@insomnia/models/request';
 import fs from 'fs';
 import { lookup } from 'mime-types';
 import os from 'os';
 import path from 'path';
-
-import type { RequestBodyParameter } from '../../models/request';
 
 export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
 

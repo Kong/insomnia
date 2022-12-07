@@ -1,3 +1,4 @@
+import { isWebSocketRequest } from '@insomnia/models/websocket-request';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -14,7 +15,6 @@ import {
   CONTENT_TYPE_YAML,
   getContentTypeName,
 } from '../../../common/constants';
-import { isWebSocketRequest } from '../../../models/websocket-request';
 import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import { selectActiveRequest } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';

@@ -7,7 +7,7 @@ import * as fetch from '../../account/fetch';
 import * as session from '../../account/session';
 import { chunkArray, generateId } from '../../common/misc';
 import { strings } from '../../common/strings';
-import { BaseModel } from '../../models';
+import { BaseModel } from '@insomnia/models';
 import Store from '../store';
 import type { BaseDriver } from '../store/drivers/base';
 import type FileSystemDriver from '../store/drivers/file-system-driver';

@@ -1,4 +1,4 @@
-import { getConfigSettings, isConfigError, isParseError } from '../models/helpers/settings';
+import { getConfigSettings, isConfigError, isParseError } from '@insomnia/models/helpers/settings';
 import { ErrorResult } from '../utils/config/validate';
 
 interface Result {

@@ -1,11 +1,11 @@
 import * as models from '@insomnia/models';
+import { Response } from '@insomnia/models/response';
+import { isWebSocketResponse, WebSocketResponse } from '@insomnia/models/websocket-response';
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { Fragment, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
 import { decompressObject } from '../../../common/misc';
-import { Response } from '../../../models/response';
-import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';

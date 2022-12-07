@@ -4,7 +4,7 @@ import React, { FC, forwardRef, Fragment, useImperativeHandle, useRef, useState 
 import { useSelector } from 'react-redux';
 
 import { docsTemplateTags } from '../../../common/documentation';
-import type { Environment } from '../../../models/environment';
+import type { Environment } from '@insomnia/models/environment';
 import { selectActiveWorkspace, selectActiveWorkspaceMeta, selectEnvironments } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';

@@ -5,6 +5,8 @@ if (process.type === 'renderer') {
 }
 
 import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc } from '@getinsomnia/node-libcurl';
+import { ClientCertificate } from '@insomnia/models/client-certificate';
+import { ResponseHeader } from '@insomnia/models/response';
 import electron from 'electron';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
@@ -17,8 +19,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { version } from '../../../package.json';
 import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { describeByteSize, hasAuthHeader, hasUserAgentHeader } from '../../common/misc';
-import { ClientCertificate } from '../../models/client-certificate';
-import { ResponseHeader } from '../../models/response';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
 

@@ -24,12 +24,12 @@ import {
   RENDER_PURPOSE_SEND,
 } from '../common/render';
 import type { ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
-import { ClientCertificate } from '../models/client-certificate';
-import { Cookie, CookieJar } from '../models/cookie-jar';
-import type { Environment } from '../models/environment';
-import type { Request } from '../models/request';
-import type { Settings } from '../models/settings';
-import { isWorkspace } from '../models/workspace';
+import { ClientCertificate } from '@insomnia/models/client-certificate';
+import { Cookie, CookieJar } from '@insomnia/models/cookie-jar';
+import type { Environment } from '@insomnia/models/environment';
+import type { Request } from '@insomnia/models/request';
+import type { Settings } from '@insomnia/models/settings';
+import { isWorkspace } from '@insomnia/models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { setDefaultProtocol } from '../utils/url/protocol';

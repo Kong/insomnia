@@ -1,4 +1,8 @@
 import * as models from '@insomnia/models';
+import type { BaseModel } from '@insomnia/models/index';
+import { isRequest, Request } from '@insomnia/models/request';
+import { isRequestGroup, RequestGroup } from '@insomnia/models/request-group';
+import type { Workspace } from '@insomnia/models/workspace';
 import * as templating from '@insomnia/templating';
 import type {
   NunjucksParsedTag,
@@ -13,10 +17,6 @@ import { useMount } from 'react-use';
 import { database as db } from '../../../common/database';
 import { delay, fnOrString } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
-import type { BaseModel } from '../../../models/index';
-import { isRequest, Request } from '../../../models/request';
-import { isRequestGroup, RequestGroup } from '../../../models/request-group';
-import type { Workspace } from '../../../models/workspace';
 import { getTemplateTags } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';

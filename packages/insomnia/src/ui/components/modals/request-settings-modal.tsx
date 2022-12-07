@@ -4,10 +4,10 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { useSelector } from 'react-redux';
 
 import { database as db } from '../../../common/database';
-import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isRequest, Request } from '../../../models/request';
-import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
-import { isWorkspace, Workspace } from '../../../models/workspace';
+import { GrpcRequest, isGrpcRequest } from '@insomnia/models/grpc-request';
+import { isRequest, Request } from '@insomnia/models/request';
+import { isWebSocketRequest, WebSocketRequest } from '@insomnia/models/websocket-request';
+import { isWorkspace, Workspace } from '@insomnia/models/workspace';
 import { invariant } from '../../../utils/invariant';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';

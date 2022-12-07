@@ -1,6 +1,6 @@
 import { createBuilder, Schema } from '@develohpanda/fluent-builder';
 
-import { baseModelSchema } from '../../models/__schemas__/model-schemas';
+import { baseModelSchema } from '@insomnia/models/__schemas__/model-schemas';
 import { BackendProject, Branch, MergeConflict, SnapshotStateEntry, StatusCandidate, Team } from '../types';
 import { BackendProjectWithTeam } from '../vcs/normalize-backend-project-team';
 

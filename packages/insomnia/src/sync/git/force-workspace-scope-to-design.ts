@@ -1,5 +1,5 @@
-import { BaseModel } from '../../models';
-import { isWorkspace, WorkspaceScopeKeys } from '../../models/workspace';
+import { BaseModel } from '@insomnia/models';
+import { isWorkspace, WorkspaceScopeKeys } from '@insomnia/models/workspace';
 
 /**
  * When a workspace comes from a git repository, the scope should always be a design document.

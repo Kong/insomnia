@@ -3,7 +3,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState }
 import { useSelector } from 'react-redux';
 
 import { strings } from '../../../common/strings';
-import { BaseModel } from '../../../models';
+import { BaseModel } from '@insomnia/models';
 import type { DocumentKey, Stage, StageEntry, Status } from '../../../sync/types';
 import { describeChanges } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';

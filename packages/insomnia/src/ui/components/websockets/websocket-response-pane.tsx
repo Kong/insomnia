@@ -1,3 +1,4 @@
+import { WebSocketResponse } from '@insomnia/models/websocket-response';
 import fs from 'fs';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -6,7 +7,6 @@ import styled from 'styled-components';
 import { getSetCookieHeaders } from '../../../common/misc';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { WebSocketEvent } from '../../../main/network/websocket';
-import { WebSocketResponse } from '../../../models/websocket-response';
 import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { selectActiveResponse } from '../../redux/selectors';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';

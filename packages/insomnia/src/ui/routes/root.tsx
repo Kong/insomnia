@@ -1,4 +1,7 @@
 import * as models from '@insomnia/models';
+import { defaultOrganization, Organization } from '@insomnia/models/organization';
+import { isRemoteProject } from '@insomnia/models/project';
+import { isCollection, isDesign } from '@insomnia/models/workspace';
 import React, { FC, Fragment, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { LoaderFunction, Outlet, useNavigate, useParams, useRevalidator } from 'react-router-dom';
@@ -6,9 +9,6 @@ import styled from 'styled-components';
 
 import { isLoggedIn, onLoginLogout } from '../../account/session';
 import { database } from '../../common/database';
-import { defaultOrganization, Organization } from '../../models/organization';
-import { isRemoteProject } from '../../models/project';
-import { isCollection, isDesign } from '../../models/workspace';
 import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
 import { getVCS } from '../../sync/vcs/vcs';
 import { AccountToolbar } from '../components/account-toolbar';

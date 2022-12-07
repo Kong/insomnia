@@ -1,7 +1,7 @@
+import type { GrpcRequest } from '@insomnia/models/grpc-request';
 import React, { FunctionComponent } from 'react';
 import { useSelector } from 'react-redux';
 
-import type { GrpcRequest } from '../../../models/grpc-request';
 import { useGrpcRequestState } from '../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveEnvironment } from '../../redux/selectors';

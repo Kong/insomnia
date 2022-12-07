@@ -6,8 +6,8 @@ import path from 'path';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getAppVersion } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
-import { WorkspaceScopeKeys } from '../../../models/workspace';
+import { DEFAULT_PROJECT_ID, Project } from '@insomnia/models/project';
+import { WorkspaceScopeKeys } from '@insomnia/models/workspace';
 import * as plugin from '../data';
 
 jest.mock('../../../ui/components/modals');

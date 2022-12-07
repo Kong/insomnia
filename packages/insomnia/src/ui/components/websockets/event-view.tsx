@@ -1,3 +1,4 @@
+import { requestMeta } from '@insomnia/models';
 import { clipboard } from 'electron';
 import fs from 'fs';
 import React, { FC, useCallback } from 'react';
@@ -6,7 +7,6 @@ import styled from 'styled-components';
 
 import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
 import { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
-import { requestMeta } from '../../../models';
 import { selectResponsePreviewMode } from '../../redux/selectors';
 import { CodeEditor } from '../codemirror/code-editor';
 import { showError } from '../modals';

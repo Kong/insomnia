@@ -1,8 +1,8 @@
 import * as models from '@insomnia/models';
 
-import { RemoteProject } from '../../models/project';
-import { Project } from '../../models/project';
-import { Workspace, WorkspaceScopeKeys } from '../../models/workspace';
+import { RemoteProject } from '@insomnia/models/project';
+import { Project } from '@insomnia/models/project';
+import { Workspace, WorkspaceScopeKeys } from '@insomnia/models/workspace';
 import { Team } from '../types';
 import { BackendProject } from '../types';
 

@@ -2,7 +2,7 @@ import * as models from '@insomnia/models';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
-import type { Response } from '../../../models/response';
+import type { Response } from '@insomnia/models/response';
 import { ResponseTimelineViewer } from '../../components/viewers/response-timeline-viewer';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

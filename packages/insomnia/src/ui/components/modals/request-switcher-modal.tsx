@@ -5,11 +5,11 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { METHOD_GRPC } from '../../../common/constants';
 import { fuzzyMatchAll } from '../../../common/misc';
-import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isRequest, Request } from '../../../models/request';
-import { isRequestGroup, RequestGroup } from '../../../models/request-group';
-import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
-import { Workspace } from '../../../models/workspace';
+import { GrpcRequest, isGrpcRequest } from '@insomnia/models/grpc-request';
+import { isRequest, Request } from '@insomnia/models/request';
+import { isRequestGroup, RequestGroup } from '@insomnia/models/request-group';
+import { isWebSocketRequest, WebSocketRequest } from '@insomnia/models/websocket-request';
+import { Workspace } from '@insomnia/models/workspace';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { activateWorkspace } from '../../redux/modules/workspace';

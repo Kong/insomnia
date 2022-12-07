@@ -5,8 +5,8 @@ import { mocked } from 'jest-mock';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
-import { isRemoteProject } from '../../../models/project';
-import { Workspace } from '../../../models/workspace';
+import { isRemoteProject } from '@insomnia/models/project';
+import { Workspace } from '@insomnia/models/workspace';
 import { backendProjectWithTeamSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { pullBackendProject } from '../pull-backend-project';

@@ -1,20 +1,20 @@
 import * as models from '@insomnia/models';
+import { BaseModel } from '@insomnia/models';
+import { GrpcRequest, isGrpcRequest } from '@insomnia/models/grpc-request';
+import { getStatusCandidates } from '@insomnia/models/helpers/get-status-candidates';
+import { sortProjects } from '@insomnia/models/helpers/project';
+import { DEFAULT_PROJECT_ID, isRemoteProject } from '@insomnia/models/project';
+import { isRequest, Request } from '@insomnia/models/request';
+import { isRequestGroup, RequestGroup } from '@insomnia/models/request-group';
+import { type Response } from '@insomnia/models/response';
+import { UnitTestResult } from '@insomnia/models/unit-test-result';
+import { isWebSocketRequest, WebSocketRequest } from '@insomnia/models/websocket-request';
+import { type WebSocketResponse } from '@insomnia/models/websocket-response';
+import { isCollection } from '@insomnia/models/workspace';
 import { createSelector } from 'reselect';
 import type { ValueOf } from 'type-fest';
 
 import { isWorkspaceActivity, PREVIEW_MODE_SOURCE } from '../../common/constants';
-import { BaseModel } from '../../models';
-import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
-import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
-import { sortProjects } from '../../models/helpers/project';
-import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
-import { isRequest, Request } from '../../models/request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { type Response } from '../../models/response';
-import { UnitTestResult } from '../../models/unit-test-result';
-import { isWebSocketRequest, WebSocketRequest } from '../../models/websocket-request';
-import { type WebSocketResponse } from '../../models/websocket-response';
-import { isCollection } from '../../models/workspace';
 import { RootState } from './modules';
 
 type EntitiesLists = {

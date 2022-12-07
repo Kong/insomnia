@@ -1,8 +1,8 @@
 import React, { forwardRef, Key, useImperativeHandle, useRef, useState } from 'react';
 
 import { docsGitSync } from '../../../../common/documentation';
-import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
-import { deleteGitRepository } from '../../../../models/helpers/git-repository-operations';
+import type { GitRepository, OauthProviderName } from '@insomnia/models/git-repository';
+import { deleteGitRepository } from '@insomnia/models/helpers/git-repository-operations';
 import { Link } from '../../base/link';
 import { type ModalHandle, Modal, ModalProps } from '../../base/modal';
 import { ModalBody } from '../../base/modal-body';

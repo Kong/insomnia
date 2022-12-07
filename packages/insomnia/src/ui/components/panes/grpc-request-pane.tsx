@@ -1,4 +1,7 @@
 import * as models from '@insomnia/models';
+import type { GrpcRequest, GrpcRequestHeader } from '@insomnia/models/grpc-request';
+import { queryAllWorkspaceUrls } from '@insomnia/models/helpers/query-all-workspace-urls';
+import type { Settings } from '@insomnia/models/settings';
 import React, { FunctionComponent } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
@@ -8,9 +11,6 @@ import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/com
 import { documentationLinks } from '../../../common/documentation';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../common/render';
 import { GrpcMethodType } from '../../../main/ipc/grpc';
-import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
-import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import type { Settings } from '../../../models/settings';
 import { grpcActions, useGrpc } from '../../context/grpc';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveEnvironment } from '../../redux/selectors';

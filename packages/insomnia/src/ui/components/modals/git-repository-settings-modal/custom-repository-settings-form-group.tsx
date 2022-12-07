@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 
 import { docsGitAccessToken } from '../../../../common/documentation';
-import { GitRepository } from '../../../../models/git-repository';
+import { GitRepository } from '@insomnia/models/git-repository';
 import { Link } from '../../base/link';
 import { HelpTooltip } from '../../help-tooltip';
 
