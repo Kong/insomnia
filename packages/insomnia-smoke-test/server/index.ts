@@ -59,25 +59,21 @@ app.use('/graphql', graphqlHTTP({
   graphiql: true,
 }));
 
-startGRPCServer(grpcPort).then(() => {
-  const server = app.listen(port, () => {
-    console.log(`Listening at http://localhost:${port}`);
-    console.log(`Listening at ws://localhost:${port}`);
-  });
+startWebSocketServer(app.listen(port, () => {
+  console.log(`Listening at http://localhost:${port}`);
+  console.log(`Listening at ws://localhost:${port}`);
+}));
 
-  const httpsServer = createServer({
-    cert: readFileSync(join(__dirname, '../fixtures/certificates/localhost.pem')),
-    ca: readFileSync(join(__dirname, '../fixtures/certificates/rootCA.pem')),
-    key: readFileSync(join(__dirname, '../fixtures/certificates/localhost-key.pem')),
-    // Only allow connections using valid client certificates
-    requestCert: true,
-    rejectUnauthorized: true,
-  }, app);
-  httpsServer.listen(httpsPort, () => {
-    console.log(`Listening at https://localhost:${httpsPort}`);
-    console.log(`Listening at wss://localhost:${httpsPort}`);
-  });
+startWebSocketServer(createServer({
+  cert: readFileSync(join(__dirname, '../fixtures/certificates/localhost.pem')),
+  ca: readFileSync(join(__dirname, '../fixtures/certificates/rootCA.pem')),
+  key: readFileSync(join(__dirname, '../fixtures/certificates/localhost-key.pem')),
+  // Only allow connections using valid client certificates
+  requestCert: true,
+  rejectUnauthorized: true,
+}, app).listen(httpsPort, () => {
+  console.log(`Listening at https://localhost:${httpsPort}`);
+  console.log(`Listening at wss://localhost:${httpsPort}`);
+}));
 
-  startWebSocketServer(server);
-  startWebSocketServer(httpsServer);
-});
+startGRPCServer(grpcPort);
