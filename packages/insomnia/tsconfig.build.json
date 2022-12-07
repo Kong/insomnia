@@ -1,6 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "paths": {
+      "@insomnia/*": ["./src/*"]
+    },
     "lib": ["DOM.Iterable", "DOM"],
     "isolatedModules": true,
     "jsx": "react",
