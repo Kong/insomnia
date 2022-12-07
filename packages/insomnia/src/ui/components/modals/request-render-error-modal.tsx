@@ -1,3 +1,4 @@
+import { RenderError } from '@insomnia/templating';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
@@ -6,7 +7,6 @@ import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
 import { isRequest } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { RenderError } from '../../../templating';
 import { Link } from '../base/link';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

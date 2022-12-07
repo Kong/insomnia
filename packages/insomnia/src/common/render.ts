@@ -1,4 +1,6 @@
 import * as models from '@insomnia/models';
+import * as templating from '@insomnia/templating';
+import * as templatingUtils from '@insomnia/templating/utils';
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
@@ -10,8 +12,6 @@ import type { Request } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
 import { WebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, Workspace } from '../models/workspace';
-import * as templating from '../templating';
-import * as templatingUtils from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';

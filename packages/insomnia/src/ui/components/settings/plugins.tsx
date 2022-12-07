@@ -1,4 +1,5 @@
 import * as models from '@insomnia/models';
+import { reload } from '@insomnia/templating/index';
 import * as path from 'path';
 import React, { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -12,7 +13,6 @@ import { clickLink, getDataDirectory } from '../../../common/electron-helpers';
 import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
-import { reload } from '../../../templating/index';
 import { selectSettings } from '../../redux/selectors';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';

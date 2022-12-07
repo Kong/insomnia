@@ -1,5 +1,7 @@
 import './base-imports';
 
+import { getTagDefinitions } from '@insomnia/templating/index';
+import { NunjucksParsedTag } from '@insomnia/templating/utils';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { EditorConfiguration } from 'codemirror';
@@ -10,8 +12,6 @@ import { useMount, useUnmount } from 'react-use';
 import { DEBOUNCE_MILLIS } from '../../../common/constants';
 import * as misc from '../../../common/misc';
 import { KeyCombination } from '../../../common/settings';
-import { getTagDefinitions } from '../../../templating/index';
-import { NunjucksParsedTag } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { selectSettings } from '../../redux/selectors';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';

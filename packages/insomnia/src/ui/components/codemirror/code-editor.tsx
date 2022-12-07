@@ -1,5 +1,7 @@
 import './base-imports';
 
+import { getTagDefinitions } from '@insomnia/templating/index';
+import { NunjucksParsedTag } from '@insomnia/templating/utils';
 import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintOptions } from 'codemirror';
@@ -15,8 +17,6 @@ import vkBeautify from 'vkbeautify';
 import { DEBOUNCE_MILLIS, isMac } from '../../../common/constants';
 import * as misc from '../../../common/misc';
 import { KeyCombination } from '../../../common/settings';
-import { getTagDefinitions } from '../../../templating/index';
-import { NunjucksParsedTag } from '../../../templating/utils';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';

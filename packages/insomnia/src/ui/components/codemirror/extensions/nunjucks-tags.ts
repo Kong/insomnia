@@ -1,9 +1,9 @@
+import { getTagDefinitions } from '@insomnia/templating/index';
+import { tokenizeTag } from '@insomnia/templating/utils';
 import CodeMirror, { Token } from 'codemirror';
 
 import * as misc from '../../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
-import { getTagDefinitions } from '../../../../templating/index';
-import { tokenizeTag } from '../../../../templating/utils';
 import { showModal } from '../../modals/index';
 import { NunjucksModal } from '../../modals/nunjucks-modal';
 

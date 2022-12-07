@@ -5,10 +5,9 @@
 
 import 'codemirror/addon/lint/json-lint';
 
+import { render } from '@insomnia/templating/index';
 import CodeMirror from 'codemirror';
 import * as jsonlint from 'jsonlint-mod-fixed';
-
-import { render } from '../../../../../../insomnia/src/templating/index';
 CodeMirror.registerHelper('lint', 'json', validator);
 
 interface ValidationError {

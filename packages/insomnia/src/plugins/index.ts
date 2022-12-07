@@ -12,7 +12,7 @@ import { GrpcRequest } from '../models/grpc-request';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
 import type { Workspace } from '../models/workspace';
-import type { PluginTemplateTag } from '../templating/extensions/index';
+import type { PluginTemplateTag } from '@insomnia/templating/extensions/index';
 import { showError } from '../ui/components/modals/index';
 import type { PluginTheme } from './misc';
 

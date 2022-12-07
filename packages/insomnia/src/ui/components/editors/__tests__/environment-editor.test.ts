@@ -1,6 +1,6 @@
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '@insomnia/templating';
 import { describe, expect, it } from '@jest/globals';
 
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../../templating';
 import { checkNestedKeys, ensureKeyIsValid } from '../environment-editor';
 
 describe('ensureKeyIsValid()', () => {

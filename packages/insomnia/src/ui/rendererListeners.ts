@@ -1,5 +1,6 @@
 
 import * as models from '@insomnia/models';
+import * as templating from '@insomnia/templating';
 import { ipcRenderer } from 'electron';
 
 import { isDevelopment } from '../common/constants';
@@ -7,7 +8,6 @@ import { database } from '../common/database';
 import { isNotDefaultProject } from '../models/project';
 import * as plugins from '../plugins';
 import * as themes from '../plugins/misc';
-import * as templating from '../templating';
 import { SegmentEvent, trackSegmentEvent } from './analytics';
 import { showModal } from './components/modals';
 import { AskModal } from './components/modals/ask-modal';

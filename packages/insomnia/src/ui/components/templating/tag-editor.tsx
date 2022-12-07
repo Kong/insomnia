@@ -1,4 +1,10 @@
 import * as models from '@insomnia/models';
+import * as templating from '@insomnia/templating';
+import type {
+  NunjucksParsedTag,
+  NunjucksParsedTagArg,
+} from '@insomnia/templating/utils';
+import * as templateUtils from '@insomnia/templating/utils';
 import classnames from 'classnames';
 import clone from 'clone';
 import React, { FC, useCallback, useEffect, useState } from 'react';
@@ -13,12 +19,6 @@ import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
 import { getTemplateTags } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
-import * as templating from '../../../templating';
-import type {
-  NunjucksParsedTag,
-  NunjucksParsedTagArg,
-} from '../../../templating/utils';
-import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';

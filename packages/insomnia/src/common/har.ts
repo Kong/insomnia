@@ -1,4 +1,5 @@
 import * as models from '@insomnia/models';
+import { RenderError } from '@insomnia/templating/index';
 import clone from 'clone';
 import fs from 'fs';
 import { Cookie as ToughCookie } from 'tough-cookie';
@@ -10,7 +11,6 @@ import { isWorkspace } from '../models/workspace';
 import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';
 import * as pluginContexts from '../plugins/context/index';
-import { RenderError } from '../templating/index';
 import { smartEncodeUrl } from '../utils/url/querystring';
 import { getAppVersion } from './constants';
 import { jarFromCookies } from './cookies';

@@ -1,9 +1,9 @@
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '@insomnia/templating';
+import { getKeys } from '@insomnia/templating/utils';
 import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render } from '../../../common/render';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
-import { getKeys } from '../../../templating/utils';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace } from '../../redux/selectors';
 
 let getRenderContextPromiseCache: any = {};
