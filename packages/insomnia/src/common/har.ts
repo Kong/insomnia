@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import clone from 'clone';
 import fs from 'fs';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
-import * as models from '../models';
 import type { Request } from '../models/request';
 import { newBodyRaw } from '../models/request';
 import type { Response } from '../models/response';

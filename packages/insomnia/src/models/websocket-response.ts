@@ -1,9 +1,9 @@
+import * as models from '@insomnia/models';
+import * as requestOperations from '@insomnia/models/helpers/request-operations';
 import fs from 'fs';
 
 import { database as db, Query } from '../common/database';
-import * as requestOperations from './helpers/request-operations';
 import type { BaseModel } from './index';
-import * as models from './index';
 import { ResponseHeader } from './response';
 
 export const name = 'WebSocket Response';

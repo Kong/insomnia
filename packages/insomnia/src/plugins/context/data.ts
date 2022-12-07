@@ -1,7 +1,8 @@
+import * as models from '@insomnia/models';
+
 import { exportWorkspacesData, exportWorkspacesHAR } from '../../common/export';
 import type { ImportRawConfig } from '../../common/import';
 import { importRaw, importUri } from '../../common/import';
-import * as models from '../../models';
 import { DEFAULT_PROJECT_ID } from '../../models/project';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
 

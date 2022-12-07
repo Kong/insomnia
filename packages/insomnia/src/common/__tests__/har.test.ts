@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import path from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
-import * as models from '../../models';
 import { Cookie } from '../../models/cookie-jar';
 import { Request } from '../../models/request';
 import { Response } from '../../models/response';

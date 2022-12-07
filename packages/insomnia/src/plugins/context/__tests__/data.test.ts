@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
@@ -5,7 +6,6 @@ import path from 'path';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getAppVersion } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import * as models from '../../../models/index';
 import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 import * as plugin from '../data';

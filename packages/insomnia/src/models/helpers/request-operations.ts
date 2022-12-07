@@ -1,5 +1,6 @@
+import * as models from '@insomnia/models';
+
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../grpc-request';
-import * as models from '../index';
 import { Request } from '../request';
 import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../websocket-request';
 

@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import classnames from 'classnames';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
@@ -5,7 +6,6 @@ import YAML from 'yaml';
 
 import { database as db } from '../../../common/database';
 import { strings } from '../../../common/strings';
-import * as models from '../../../models';
 import { isApiSpec } from '../../../models/api-spec';
 import { GitRepository } from '../../../models/git-repository';
 import type { Workspace } from '../../../models/workspace';

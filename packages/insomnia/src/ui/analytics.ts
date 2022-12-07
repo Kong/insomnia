@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import Analytics from 'analytics-node';
 import { AxiosRequestConfig } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
@@ -11,7 +12,6 @@ import {
   getProductName,
   getSegmentWriteKey,
 } from '../common/constants';
-import * as models from '../models/index';
 import { axiosRequest } from '../network/axios-request';
 
 const axiosConfig: AxiosRequestConfig = {

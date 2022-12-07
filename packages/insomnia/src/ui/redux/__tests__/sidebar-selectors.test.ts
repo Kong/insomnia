@@ -1,7 +1,7 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
+import * as models from '@insomnia/models';
 import { describe, expect, it } from '@jest/globals';
 
-import * as models from '../../../models';
 import { baseModelSchema, grpcRequestModelSchema, requestGroupModelSchema, requestModelSchema } from '../../../models/__schemas__/model-schemas';
 import {
   shouldIgnoreChildrenOf,

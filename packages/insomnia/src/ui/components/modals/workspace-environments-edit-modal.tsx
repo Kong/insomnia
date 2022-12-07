@@ -1,9 +1,9 @@
+import * as models from '@insomnia/models';
 import classnames from 'classnames';
 import React, { FC, forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { docsTemplateTags } from '../../../common/documentation';
-import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import { selectActiveWorkspace, selectActiveWorkspaceMeta, selectEnvironments } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';

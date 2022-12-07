@@ -1,3 +1,5 @@
+import * as models from '@insomnia/models';
+import * as requestOperations from '@insomnia/models/helpers/request-operations';
 import clone from 'clone';
 import { format } from 'date-fns';
 import fs from 'fs';
@@ -11,9 +13,7 @@ import { isApiSpec } from '../models/api-spec';
 import { isCookieJar } from '../models/cookie-jar';
 import { Environment, isEnvironment } from '../models/environment';
 import { isGrpcRequest } from '../models/grpc-request';
-import * as requestOperations from '../models/helpers/request-operations';
 import type { BaseModel } from '../models/index';
-import * as models from '../models/index';
 import { isProtoDirectory } from '../models/proto-directory';
 import { isProtoFile } from '../models/proto-file';
 import { isRequest } from '../models/request';

@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import { createSelector } from 'reselect';
 import type { ValueOf } from 'type-fest';
 
 import { isWorkspaceActivity, PREVIEW_MODE_SOURCE } from '../../common/constants';
-import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';

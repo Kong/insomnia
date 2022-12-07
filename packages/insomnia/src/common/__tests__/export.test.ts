@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import YAML from 'yaml';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
-import * as models from '../../models';
 import { getAppVersion } from '../constants';
 import { exportRequestsData, exportRequestsHAR, exportWorkspacesData, exportWorkspacesHAR } from '../export';
 

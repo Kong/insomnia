@@ -1,7 +1,8 @@
+import * as models from '@insomnia/models';
+
 import { isLoggedIn } from '../../account/session';
 import { asyncFilter } from '../../common/async-array-helpers';
 import { database } from '../../common/database';
-import * as models from '../../models';
 import { isRemoteProject, RemoteProject } from '../../models/project';
 import {  isCollection, Workspace } from '../../models/workspace';
 import { Team } from '../types';

@@ -1,7 +1,7 @@
+import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
-import * as models from '../index';
 
 describe('create()', () => {
   beforeEach(globalBeforeEach);

@@ -1,11 +1,11 @@
+import * as models from '@insomnia/models';
+import * as requestOperations from '@insomnia/models/helpers/request-operations';
 import classnames from 'classnames';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
-import * as models from '../../../models';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';

@@ -1,9 +1,9 @@
+import * as models from '@insomnia/models';
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { getAppSynopsis, getProductName } from '../../../common/constants';
-import * as models from '../../../models';
 import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import chartSrc from '../../images/chart.svg';
 import coreLogo from '../../images/insomnia-logo.svg';

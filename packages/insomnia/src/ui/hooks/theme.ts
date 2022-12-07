@@ -1,9 +1,9 @@
+import * as models from '@insomnia/models';
 import { ChangeEvent, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 import { unreachableCase } from 'ts-assert-unreachable';
 
-import * as models from '../../models';
 import { ThemeSettings } from '../../models/settings';
 import { ColorScheme, getThemes } from '../../plugins';
 import { applyColorScheme, PluginTheme } from '../../plugins/misc';

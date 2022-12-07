@@ -1,4 +1,5 @@
 /* eslint-disable prefer-rest-params -- don't want to change ...arguments usage for these sensitive functions without more testing */
+import * as models from '@insomnia/models';
 import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
@@ -10,7 +11,6 @@ import { Environment } from '../models/environment';
 import { GitRepository } from '../models/git-repository';
 import { getMonkeyPatchedControlledSettings } from '../models/helpers/settings';
 import type { BaseModel } from '../models/index';
-import * as models from '../models/index';
 import { isSettings } from '../models/settings';
 import type { Workspace } from '../models/workspace';
 import { DB_PERSIST_INTERVAL } from './constants';

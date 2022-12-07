@@ -1,10 +1,10 @@
+import * as models from '@insomnia/models';
 import React, { FC, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
 import { SortOrder } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { sortMethodMap } from '../../../common/sorting';
-import * as models from '../../../models';
 import { isRequestGroup } from '../../../models/request-group';
 import { selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';

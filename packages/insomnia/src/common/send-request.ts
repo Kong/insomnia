@@ -1,5 +1,6 @@
+import * as models from '@insomnia/models';
+
 import { BaseModel, types as modelTypes } from '../models';
-import * as models from '../models';
 import { getBodyBuffer } from '../models/response';
 import { Settings } from '../models/settings';
 import { send } from '../network/network';

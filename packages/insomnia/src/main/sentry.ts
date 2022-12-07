@@ -1,9 +1,9 @@
+import * as models from '@insomnia/models';
 import * as Sentry from '@sentry/electron/main';
 import type { SentryRequestType } from '@sentry/types';
 
 import { ChangeBufferEvent, database as db } from '../common/database';
 import { SENTRY_OPTIONS } from '../common/sentry';
-import * as models from '../models/index';
 import { isSettings } from '../models/settings';
 
 let enabled = false;

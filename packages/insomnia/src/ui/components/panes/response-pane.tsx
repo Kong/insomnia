@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import { clipboard } from 'electron';
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
@@ -6,7 +7,6 @@ import { useSelector } from 'react-redux';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
-import * as models from '../../../models';
 import type { Request } from '../../../models/request';
 import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/network';

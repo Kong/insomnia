@@ -1,11 +1,11 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
+import * as models from '@insomnia/models';
 import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import path from 'path';
 import YAML from 'yaml';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { database as db } from '../../../common/database';
-import * as models from '../../../models';
 import { workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
 import { DEFAULT_PROJECT_ID } from '../../../models/project';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';

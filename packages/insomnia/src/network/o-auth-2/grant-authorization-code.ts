@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import crypto from 'crypto';
 import { parse as urlParse } from 'url';
 
 import { escapeRegex } from '../../common/misc';
-import * as models from '../../models/index';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';

@@ -1,10 +1,10 @@
+import * as models from '@insomnia/models';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
-import * as requestOperations from '../../models/helpers/request-operations';
+import * as requestOperations from '@insomnia/models/helpers/request-operations';
 import { isRequest } from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest } from '../../models/websocket-request';

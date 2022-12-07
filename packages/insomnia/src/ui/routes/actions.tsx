@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import type { IRuleResult } from '@stoplight/spectral-core';
 import { generate, runTests, Test } from 'insomnia-testing';
 import { ActionFunction, redirect } from 'react-router-dom';
@@ -6,7 +7,6 @@ import * as session from '../../account/session';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
 import { importRaw } from '../../common/import';
-import * as models from '../../models';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';

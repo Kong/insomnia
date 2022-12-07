@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
 import { SpyInstance } from 'jest-mock';
@@ -6,7 +7,6 @@ import os from 'os';
 import path from 'path';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import * as models from '../../../models';
 import { writeProtoFile } from '../write-proto-file';
 
 describe('writeProtoFile', () => {

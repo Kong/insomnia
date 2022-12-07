@@ -1,11 +1,11 @@
+import * as models from '@insomnia/models';
+import * as requestOperations from '@insomnia/models/helpers/request-operations';
 import { DragSourceConnector, DragSourceMonitor, DropTargetConnector, DropTargetMonitor, DropTargetSpec } from 'react-dnd';
 import ReactDOM from 'react-dom';
 
 import { database } from '../../../common/database';
 import { BaseModel } from '../../../models';
-import * as models from '../../../models';
 import { GrpcRequest } from '../../../models/grpc-request';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import { Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { WebSocketRequest } from '../../../models/websocket-request';

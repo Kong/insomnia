@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import classnames from 'classnames';
 import React, { FC, Suspense } from 'react';
 import {
@@ -11,7 +12,6 @@ import {
   useParams,
 } from 'react-router-dom';
 
-import * as models from '../../models';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { invariant } from '../../utils/invariant';
 import { Dropdown } from '../components/base/dropdown/dropdown';

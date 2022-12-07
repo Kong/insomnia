@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import classnames from 'classnames';
 import { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
@@ -17,7 +18,6 @@ import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../../common/render';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
-import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
 import { axiosRequest } from '../../../../network/axios-request';
 import { jsonPrettify } from '../../../../utils/prettify/json';

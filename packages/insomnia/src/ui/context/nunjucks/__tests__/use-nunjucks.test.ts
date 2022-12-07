@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { renderHook } from '@testing-library/react';
 import { mocked } from 'jest-mock';
@@ -10,7 +11,6 @@ import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 import { withReduxStore } from '../../../../__jest__/with-redux-store';
 import { ACTIVITY_DEBUG } from '../../../../common/constants';
 import { getRenderContext, getRenderContextAncestors, render } from '../../../../common/render';
-import * as models from '../../../../models';
 import { RootState } from '../../../redux/modules';
 import { initializeNunjucksRenderPromiseCache, useNunjucks } from '../use-nunjucks';
 

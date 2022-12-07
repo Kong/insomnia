@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import React, { FC, forwardRef, ReactNode, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -7,7 +8,6 @@ import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { ClientCertificate } from '../../../models/client-certificate';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
 import { setActiveActivity } from '../../redux/modules/global';
 import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceName, selectProjects } from '../../redux/selectors';

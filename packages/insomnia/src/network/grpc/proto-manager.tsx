@@ -1,11 +1,11 @@
 import { load } from '@grpc/proto-loader';
+import * as models from '@insomnia/models';
 import fs from 'fs';
 import path from 'path';
 import React from 'react';
 
 import { database as db } from '../../common/database';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
-import * as models from '../../models';
 import type { ProtoDirectory } from '../../models/proto-directory';
 import { isProtoFile, ProtoFile } from '../../models/proto-file';
 import { showAlert, showError } from '../../ui/components/modals';

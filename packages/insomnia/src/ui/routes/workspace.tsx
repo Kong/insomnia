@@ -1,7 +1,7 @@
+import * as models from '@insomnia/models';
 import { LoaderFunction } from 'react-router-dom';
 
 import { database } from '../../common/database';
-import * as models from '../../models';
 import { invariant } from '../../utils/invariant';
 
 export const workspaceLoader: LoaderFunction = async ({

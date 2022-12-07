@@ -1,9 +1,9 @@
+import * as models from '@insomnia/models';
 import classnames from 'classnames';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { PropsWithChildren } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetMonitor, DropTargetSpec } from 'react-dnd';
 
-import * as models from '../../../models/index';
 import { RequestGroup } from '../../../models/request-group';
 import { Highlight } from '../base/highlight';
 import { RequestGroupActionsDropdown, RequestGroupActionsDropdownHandle } from '../dropdowns/request-group-actions-dropdown';

@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { CONTENT_TYPE_GRAPHQL } from '../../common/constants';
-import * as models from '../index';
 import { newBodyGraphQL } from '../request';
 
 describe('init()', () => {

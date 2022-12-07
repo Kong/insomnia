@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import { describe, expect, test } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
@@ -8,7 +9,6 @@ import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { getDropdownContainer } from '../../__jest__/dropdown-container';
-import * as models from '../../models';
 import { AppHeader } from './app-header';
 
 const middlewares = [thunk];

@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { database as db } from '../../../common/database';
-import * as models from '../../../models';
 import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
 import { invariant } from '../../../utils/invariant';

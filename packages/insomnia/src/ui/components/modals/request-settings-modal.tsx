@@ -1,10 +1,10 @@
+import * as models from '@insomnia/models';
+import * as requestOperations from '@insomnia/models/helpers/request-operations';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { database as db } from '../../../common/database';
-import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import { isRequest, Request } from '../../../models/request';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { isWorkspace, Workspace } from '../../../models/workspace';

@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
@@ -6,7 +7,6 @@ import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../../common/constants';
 import { database } from '../../../../common/database';
-import * as models from '../../../../models';
 import { ApiSpec } from '../../../../models/api-spec';
 import { CookieJar } from '../../../../models/cookie-jar';
 import { Environment } from '../../../../models/environment';

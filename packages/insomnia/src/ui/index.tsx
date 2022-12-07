@@ -1,5 +1,6 @@
 import './rendererListeners';
 
+import * as models from '@insomnia/models';
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
@@ -21,7 +22,6 @@ import {
 import { database } from '../common/database';
 import { initializeLogging } from '../common/log';
 import { strings } from '../common/strings';
-import * as models from '../models';
 import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../models/project';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';

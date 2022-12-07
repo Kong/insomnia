@@ -1,8 +1,8 @@
+import * as requestOperations from '@insomnia/models/helpers/request-operations';
 import React, { forwardRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { toKebabCase } from '../../../common/misc';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';

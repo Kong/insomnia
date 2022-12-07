@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import electron from 'electron';
 
 import {
@@ -9,7 +10,6 @@ import {
   UpdateURL,
 } from '../common/constants';
 import { delay } from '../common/misc';
-import * as models from '../models/index';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../utils/url/querystring';
 const { autoUpdater, BrowserWindow, ipcMain } = electron;
 

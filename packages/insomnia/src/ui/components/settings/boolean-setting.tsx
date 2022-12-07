@@ -1,10 +1,10 @@
+import * as models from '@insomnia/models';
 import React, { ChangeEventHandler, FC, ReactNode, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { SettingsOfType } from '../../../common/settings';
 import { getControlledStatus } from '../../../models/helpers/settings';
-import * as models from '../../../models/index';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 import { ControlledSetting } from './controlled-setting';

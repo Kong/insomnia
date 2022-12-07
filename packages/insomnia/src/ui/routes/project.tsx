@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import React, { FC, Fragment, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import {
@@ -23,7 +24,6 @@ import { ForceToWorkspace } from '../../common/import';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
-import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '../../models/organization';

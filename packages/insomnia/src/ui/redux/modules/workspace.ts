@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import { Dispatch } from 'redux';
 import type { RequireExactlyOne } from 'type-fest';
 
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, GlobalActivity, isCollectionActivity, isDesignActivity } from '../../../common/constants';
-import * as models from '../../../models';
 import { isCollection, isDesign, Workspace } from '../../../models/workspace';
 import { selectActiveActivity, selectWorkspaces } from '../selectors';
 import { RootState } from '.';

@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import electron, { app, ipcMain, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
@@ -18,7 +19,6 @@ import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
-import * as models from './models/index';
 import type { Stats } from './models/stats';
 import type { ToastNotification } from './ui/components/toast';
 

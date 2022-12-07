@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
@@ -5,7 +6,6 @@ import { database } from '../../common/database';
 import { ApiSpec } from '../api-spec';
 import { CookieJar } from '../cookie-jar';
 import { Environment } from '../environment';
-import * as models from '../index';
 import { WorkspaceScopeKeys } from '../workspace';
 import { WorkspaceMeta } from '../workspace-meta';
 

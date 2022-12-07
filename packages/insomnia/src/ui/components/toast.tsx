@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import classnames from 'classnames';
 import type { IpcRendererEvent } from 'electron';
 import { ipcRenderer } from 'electron';
@@ -13,7 +14,6 @@ import {
   getProductName,
   updatesSupported,
 } from '../../common/constants';
-import * as models from '../../models/index';
 import imgSrcCore from '../images/insomnia-logo.svg';
 import { Link } from './base/link';
 

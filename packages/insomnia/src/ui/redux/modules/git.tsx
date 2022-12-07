@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import * as git from 'isomorphic-git';
 import path from 'path';
 import React, { ReactNode } from 'react';
@@ -5,7 +6,6 @@ import YAML from 'yaml';
 
 import { database as db } from '../../../common/database';
 import { strings } from '../../../common/strings';
-import * as models from '../../../models';
 import { BaseModel } from '../../../models';
 import type { GitRepository } from '../../../models/git-repository';
 import { createGitRepository } from '../../../models/helpers/git-repository-operations';

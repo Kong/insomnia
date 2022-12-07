@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import electron, { OpenDialogOptions } from 'electron';
 
 import {
@@ -8,7 +9,6 @@ import {
   importRaw,
   importUri as _importUri,
 } from '../common/import';
-import * as models from '../models';
 import { DEFAULT_PROJECT_ID, Project } from '../models/project';
 import { Workspace, WorkspaceScope } from '../models/workspace';
 import { showError, showModal } from './components/modals';

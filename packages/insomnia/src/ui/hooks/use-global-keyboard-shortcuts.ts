@@ -1,6 +1,6 @@
+import * as models from '@insomnia/models';
 import { useSelector } from 'react-redux';
 
-import * as models from '../../models';
 import * as plugins from '../../plugins';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';

@@ -1,12 +1,12 @@
+import * as models from '@insomnia/models';
+import * as requestOperations from '@insomnia/models/helpers/request-operations';
 import fs from 'fs';
 import { Readable } from 'stream';
 import zlib from 'zlib';
 
 import { database as db, Query } from '../common/database';
 import type { ResponseTimelineEntry } from '../main/network/libcurl-promise';
-import * as requestOperations from '../models/helpers/request-operations';
 import type { BaseModel } from './index';
-import * as models from './index';
 
 export const name = 'Response';
 

@@ -1,4 +1,5 @@
-import * as models from '../../models';
+import * as models from '@insomnia/models';
+
 import { showPrompt } from '../components/modals';
 
 export const createRequestGroup = (parentId: string) => {

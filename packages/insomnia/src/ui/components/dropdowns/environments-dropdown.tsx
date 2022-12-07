@@ -1,7 +1,7 @@
+import * as models from '@insomnia/models';
 import React, { FC, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
-import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import { selectActiveWorkspaceMeta, selectEnvironments, selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';

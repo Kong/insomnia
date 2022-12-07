@@ -1,6 +1,6 @@
+import * as models from '@insomnia/models';
 import fs from 'fs';
 
-import * as models from '../../models/index';
 import type { ResponseHeader } from '../../models/response';
 
 interface MaybeResponse {

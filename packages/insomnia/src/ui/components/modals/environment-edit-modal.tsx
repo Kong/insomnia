@@ -1,6 +1,6 @@
+import * as models from '@insomnia/models';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import * as models from '../../../models/index';
 import { RequestGroup } from '../../../models/request-group';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';

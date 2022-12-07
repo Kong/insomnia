@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import clone from 'clone';
 
 import { type ChangeBufferEvent, database as db } from '../../../common/database';
 import { pluralize } from '../../../common/misc';
-import * as models from '../../../models';
 import { BaseModel } from '../../../models';
 import { ApiSpec } from '../../../models/api-spec';
 import { ClientCertificate } from '../../../models/client-certificate';

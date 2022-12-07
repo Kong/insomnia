@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import clone from 'clone';
 import { lookup } from 'mime-types';
 import React, { FC, useCallback } from 'react';
@@ -11,7 +12,6 @@ import {
 } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';
 import { getContentTypeHeader } from '../../../../common/misc';
-import * as models from '../../../../models';
 import type {
   Request,
   RequestBodyParameter,

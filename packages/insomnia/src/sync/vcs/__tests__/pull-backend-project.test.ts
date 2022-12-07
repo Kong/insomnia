@@ -1,10 +1,10 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
+import * as models from '@insomnia/models';
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { mocked } from 'jest-mock';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
-import * as models from '../../../models';
 import { isRemoteProject } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
 import { backendProjectWithTeamSchema } from '../../__schemas__/type-schemas';

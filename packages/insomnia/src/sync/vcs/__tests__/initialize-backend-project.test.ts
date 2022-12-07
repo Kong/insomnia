@@ -1,8 +1,8 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
+import * as models from '@insomnia/models';
 import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import * as models from '../../../models';
 import { snapshotStateEntrySchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { Snapshot } from '../../types';

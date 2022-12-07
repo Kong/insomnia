@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import { IpcRendererEvent } from 'electron/renderer';
 import { useEffect } from 'react';
 import React from 'react';
@@ -5,7 +6,6 @@ import { useSelector } from 'react-redux';
 
 import { isDevelopment } from '../../common/constants';
 import { askToImportIntoProject, askToImportIntoWorkspace, askToSetWorkspaceScope, importUri } from '../../common/import';
-import * as models from '../../models';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';

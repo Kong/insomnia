@@ -1,9 +1,9 @@
+import * as models from '@insomnia/models';
 import React, { ChangeEventHandler, FC, InputHTMLAttributes, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { snapNumberToLimits } from '../../../common/misc';
 import { SettingsOfType } from '../../../common/settings';
-import * as models from '../../../models/index';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 

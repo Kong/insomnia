@@ -1,7 +1,7 @@
+import * as models from '@insomnia/models';
 import clone from 'clone';
 import orderedJSON from 'json-order';
 
-import * as models from '../models';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';

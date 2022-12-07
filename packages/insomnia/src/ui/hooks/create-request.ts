@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import {
@@ -6,7 +7,6 @@ import {
   METHOD_GET,
   METHOD_POST,
 } from '../../common/constants';
-import * as models from '../../models';
 import { isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { RequestMeta } from '../../models/request-meta';

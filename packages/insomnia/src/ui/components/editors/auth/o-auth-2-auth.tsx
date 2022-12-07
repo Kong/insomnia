@@ -1,10 +1,10 @@
+import * as models from '@insomnia/models';
 import React, { ChangeEvent, FC, ReactNode, useCallback, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { convertEpochToMilliseconds, toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
-import * as models from '../../../../models';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Request } from '../../../../models/request';
 import {

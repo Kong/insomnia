@@ -1,9 +1,9 @@
 
+import * as models from '@insomnia/models';
 import { ipcRenderer } from 'electron';
 
 import { isDevelopment } from '../common/constants';
 import { database } from '../common/database';
-import * as models from '../models';
 import { isNotDefaultProject } from '../models/project';
 import * as plugins from '../plugins';
 import * as themes from '../plugins/misc';

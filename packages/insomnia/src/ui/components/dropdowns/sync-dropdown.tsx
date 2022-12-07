@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import classnames from 'classnames';
 import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,7 +9,6 @@ import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
-import * as models from '../../../models';
 import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { Status } from '../../../sync/types';

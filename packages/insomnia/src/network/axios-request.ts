@@ -1,9 +1,9 @@
+import * as models from '@insomnia/models';
 import axios, { AxiosRequestConfig } from 'axios';
 import * as https from 'https';
 import { parse as urlParse } from 'url';
 
 import { isDevelopment } from '../common/constants';
-import * as models from '../models';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { isUrlMatchedInNoProxyRule } from './is-url-matched-in-no-proxy-rule';
 

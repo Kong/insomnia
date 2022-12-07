@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import React, { FC } from 'react';
 import { LoaderFunction, redirect, useRouteLoaderData } from 'react-router-dom';
 
 import { database } from '../../common/database';
-import * as models from '../../models';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { invariant } from '../../utils/invariant';
 import { ListGroup, UnitTestResultItem } from '../components/list-group';

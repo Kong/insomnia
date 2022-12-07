@@ -1,9 +1,9 @@
+import * as models from '@insomnia/models';
 import { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
 import YAML from 'yaml';
 
 import { database as db } from '../../common/database';
-import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { isWorkspace } from '../../models/workspace';
 import { resetKeys } from '../ignore-keys';

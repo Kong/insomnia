@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
-import * as models from '../../../models';
 import * as plugin from '../request';
 
 const CONTEXT = {

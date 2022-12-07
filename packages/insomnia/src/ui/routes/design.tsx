@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import type { IRuleResult } from '@stoplight/spectral-core';
 import React, { createRef, FC, useCallback, useMemo } from 'react';
 import {
@@ -11,7 +12,6 @@ import styled from 'styled-components';
 import { ACTIVITY_SPEC } from '../../common/constants';
 import { debounce } from '../../common/misc';
 import { ApiSpec } from '../../models/api-spec';
-import * as models from '../../models/index';
 import { invariant } from '../../utils/invariant';
 import {
   CodeEditor,

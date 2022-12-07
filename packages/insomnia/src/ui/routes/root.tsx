@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import React, { FC, Fragment, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { LoaderFunction, Outlet, useNavigate, useParams, useRevalidator } from 'react-router-dom';
@@ -5,7 +6,6 @@ import styled from 'styled-components';
 
 import { isLoggedIn, onLoginLogout } from '../../account/session';
 import { database } from '../../common/database';
-import * as models from '../../models';
 import { defaultOrganization, Organization } from '../../models/organization';
 import { isRemoteProject } from '../../models/project';
 import { isCollection, isDesign } from '../../models/workspace';

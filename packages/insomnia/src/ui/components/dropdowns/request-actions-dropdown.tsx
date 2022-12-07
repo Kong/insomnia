@@ -1,3 +1,4 @@
+import * as requestOperations from '@insomnia/models/helpers/request-operations';
 import classnames from 'classnames';
 import { clipboard } from 'electron';
 import HTTPSnippet from 'httpsnippet';
@@ -9,7 +10,6 @@ import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import { Project } from '../../../models/project';
 import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';

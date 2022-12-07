@@ -1,8 +1,8 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
+import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
-import * as models from '../../models';
 import { environmentModelSchema, requestGroupModelSchema } from '../../models/__schemas__/model-schemas';
 import { Environment } from '../../models/environment';
 import { Workspace } from '../../models/workspace';

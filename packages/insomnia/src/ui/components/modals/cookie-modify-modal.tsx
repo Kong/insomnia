@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import clone from 'clone';
 import { isValid } from 'date-fns';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
@@ -5,7 +6,6 @@ import { useSelector } from 'react-redux';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
 import { cookieToString } from '../../../common/cookies';
-import * as models from '../../../models';
 import type { Cookie } from '../../../models/cookie-jar';
 import { selectActiveCookieJar } from '../../redux/selectors';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';

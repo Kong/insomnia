@@ -1,10 +1,10 @@
+import * as models from '@insomnia/models';
 import classnames from 'classnames';
 import React, { forwardRef, Fragment, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { METHOD_GRPC } from '../../../common/constants';
 import { fuzzyMatchAll } from '../../../common/misc';
-import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';

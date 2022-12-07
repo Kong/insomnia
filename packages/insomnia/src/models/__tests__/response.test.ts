@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
@@ -5,7 +6,6 @@ import zlib from 'zlib';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { getDataDirectory } from '../../common/electron-helpers';
-import * as models from '../../models';
 
 describe('migrate()', () => {
   beforeEach(globalBeforeEach);

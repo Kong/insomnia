@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { fuzzyMatch } from '../../../common/misc';
-import * as models from '../../../models';
 import type { Cookie } from '../../../models/cookie-jar';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { selectActiveCookieJar } from '../../redux/selectors';

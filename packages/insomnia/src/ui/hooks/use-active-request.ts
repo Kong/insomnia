@@ -1,7 +1,7 @@
+import * as requestOperations from '@insomnia/models/helpers/request-operations';
 import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
-import * as requestOperations from '../../models/helpers/request-operations';
 import { Request, RequestAuthentication } from '../../models/request';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { selectActiveRequest } from '../redux/selectors';

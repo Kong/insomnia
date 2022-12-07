@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import * as path from 'path';
 import React, { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -8,7 +9,6 @@ import {
 } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
 import { clickLink, getDataDirectory } from '../../../common/electron-helpers';
-import * as models from '../../../models';
 import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';

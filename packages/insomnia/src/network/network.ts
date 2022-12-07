@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import clone from 'clone';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
@@ -23,7 +24,6 @@ import {
   RENDER_PURPOSE_SEND,
 } from '../common/render';
 import type { ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
-import * as models from '../models';
 import { ClientCertificate } from '../models/client-certificate';
 import { Cookie, CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';

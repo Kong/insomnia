@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -6,7 +7,6 @@ import React, { FC, PropsWithChildren } from 'react';
 import { globalBeforeEach } from '../../../../../../__jest__/before-each';
 import { createMockStoreWithRequest } from '../../../../../../__jest__/create-mock-store-with-active-request';
 import { withReduxStore } from '../../../../../../__jest__/with-redux-store';
-import * as models from '../../../../../../models';
 import { RequestMeta } from '../../../../../../models/request-meta';
 import { AuthAccordion } from '../auth-accordion';
 

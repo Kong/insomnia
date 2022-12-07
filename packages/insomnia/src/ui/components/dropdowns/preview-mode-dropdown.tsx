@@ -1,10 +1,10 @@
+import * as models from '@insomnia/models';
 import fs from 'fs';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
-import * as models from '../../../models';
 import { isRequest } from '../../../models/request';
 import { isResponse } from '../../../models/response';
 import { selectActiveRequest, selectActiveResponse, selectResponsePreviewMode } from '../../redux/selectors';

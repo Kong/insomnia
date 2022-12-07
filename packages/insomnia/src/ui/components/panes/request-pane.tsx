@@ -1,10 +1,10 @@
+import * as models from '@insomnia/models';
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
 import { database } from '../../../common/database';
-import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { update } from '../../../models/helpers/request-operations';
 import type { Request } from '../../../models/request';

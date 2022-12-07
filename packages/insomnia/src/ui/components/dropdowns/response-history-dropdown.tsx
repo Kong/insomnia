@@ -1,9 +1,9 @@
+import * as models from '@insomnia/models';
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { Fragment, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
 import { decompressObject } from '../../../common/misc';
-import * as models from '../../../models/index';
 import { Response } from '../../../models/response';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';

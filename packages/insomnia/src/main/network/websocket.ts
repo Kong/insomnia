@@ -1,3 +1,4 @@
+import * as models from '@insomnia/models';
 import electron, { ipcMain } from 'electron';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
@@ -17,7 +18,6 @@ import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { webSocketRequest } from '../../models';
-import * as models from '../../models';
 import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';

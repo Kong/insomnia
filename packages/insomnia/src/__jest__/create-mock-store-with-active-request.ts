@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
 import { ACTIVITY_DEBUG } from '../common/constants';
-import * as models from '../models';
 import { Request } from '../models/request';
 import { RequestMeta } from '../models/request-meta';
 import { RootState } from '../ui/redux/modules';

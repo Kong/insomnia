@@ -1,4 +1,5 @@
-import * as models from '../../models';
+import * as models from '@insomnia/models';
+
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { RequestAuthentication } from '../../models/request';
 import {

@@ -1,8 +1,8 @@
+import * as models from '@insomnia/models';
 import fs from 'fs';
 
 import type { ApiSpec } from '../models/api-spec';
 import type { BaseModel } from '../models/index';
-import * as models from '../models/index';
 import { Project } from '../models/project';
 import { isRequest } from '../models/request';
 import { isWorkspace, Workspace, WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';

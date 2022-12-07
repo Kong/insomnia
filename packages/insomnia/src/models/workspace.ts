@@ -1,9 +1,9 @@
+import * as models from '@insomnia/models';
 import type { Merge } from 'type-fest';
 
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';
 import type { BaseModel } from './index';
-import * as models from './index';
 import { DEFAULT_PROJECT_ID, isProjectId } from './project';
 
 export const name = 'Workspace';

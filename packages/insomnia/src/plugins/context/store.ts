@@ -1,4 +1,5 @@
-import * as models from '../../models';
+import * as models from '@insomnia/models';
+
 import type { Plugin } from '../index';
 
 export interface PluginStore {
