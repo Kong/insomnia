@@ -80,8 +80,19 @@ test.describe('Debug-Sidebar', async () => {
       await page.locator('button:has-text("test folderOPEN")').click();
     });
 
-    test.fixme('Open Generate code and copy as curl', async () => {
-      // TODO implement
+    test('Open Generate code and copy as curl', async ({ page }) => {
+
+      await page.locator('button:has-text("GETexample http")').click({
+        button: 'right',
+      });
+
+      await page.locator('button:has-text("Generate Code")').nth(1).click();
+      await page.locator('text=Done').click();
+      await page.locator('button:has-text("GETexample http")').click({
+        button: 'right',
+      });
+
+      await page.locator('button:has-text("Copy as Curl")').nth(1).click();
     });
 
     test('Pin a Request', async ({ page }) => {
