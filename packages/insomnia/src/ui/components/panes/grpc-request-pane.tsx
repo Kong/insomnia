@@ -1,6 +1,6 @@
+import { getCommonHeaderNames, getCommonHeaderValues } from '@insomnia/common/common-headers';
 import { documentationLinks } from '@insomnia/common/documentation';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '@insomnia/common/render';
-import { getCommonHeaderNames, getCommonHeaderValues } from '@insomnia/common-headers';
 import * as models from '@insomnia/models';
 import type { GrpcRequest, GrpcRequestHeader } from '@insomnia/models/grpc-request';
 import { queryAllWorkspaceUrls } from '@insomnia/models/helpers/query-all-workspace-urls';

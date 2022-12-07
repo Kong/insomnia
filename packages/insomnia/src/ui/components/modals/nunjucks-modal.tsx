@@ -1,8 +1,8 @@
-import { TagEditor } from '@insomnia/templating/tag-editor';
-import { VariableEditor } from '@insomnia/templating/variable-editor';
+import { TagEditor } from '@insomnia/ui/components/templating/tag-editor';
+import { VariableEditor } from '@insomnia/ui/components/templating/variable-editor';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
-import { Workspace } from '@insomnia/models/workspace';
+import { Workspace } from '../../../models/workspace';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
