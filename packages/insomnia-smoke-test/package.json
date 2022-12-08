@@ -51,6 +51,7 @@
     "faker": "^5.1.0",
     "get-bin-path": "^5.1.0",
     "graphql": "^15.8.0",
+    "grpc-node-server-reflection": "1.0.2",
     "jest": "^28.1.0",
     "mkdirp": "^1.0.4",
     "oidc-provider": "^7.10.6",
