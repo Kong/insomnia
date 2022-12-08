@@ -2,7 +2,7 @@ import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import { database as db } from '../../common/database';
+import { ChangeBufferEvent, database as db } from '../../common/database';
 import { GrpcMethodInfo } from '../../common/grpc-paths';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
@@ -75,13 +75,21 @@ export const Debug: FC = () => {
   const activeRequest = useSelector(selectActiveRequest);
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>([]);
-
+  useEffect(() => {
+    db.onChange(async (changes: ChangeBufferEvent[]) => {
+      for (const change of changes) {
+        const [event, doc] = change;
+        if (isGrpcRequest(doc) && event === 'insert') {
+          setGrpcStates(grpcStates => ([...grpcStates, { requestId: doc._id, ...INITIAL_GRPC_REQUEST_STATE }]));
+        }
+      }
+    });
+  }, []);
   useEffect(() => {
     const fn = async () => {
       if (activeWorkspace) {
         const children = await db.withDescendants(activeWorkspace);
         const grpcRequests = children.filter(d => isGrpcRequest(d));
-        console.log('grpcRequests', grpcRequests);
         setGrpcStates(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
       }
     };

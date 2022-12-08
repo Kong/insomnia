@@ -62,10 +62,11 @@ export const createRequest: RequestCreator = async ({
 }) => {
   switch (requestType) {
     case 'gRPC': {
-      models.grpcRequest.create({
+      const request = await models.grpcRequest.create({
         parentId,
         name: 'New Request',
       });
+      setActiveRequest(request._id, workspaceId);
       break;
     }
 
