@@ -75,17 +75,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     if (!reloadMethods || running) {
       return;
     }
-    // setGrpcState({
-    //   ...grpcState,
-    //   requestMessages: [],
-    //   responseMessages: [],
-    //   status: undefined,
-    //   error: undefined,
-    // });
-    console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
+
     if (!activeRequest.protoFileId) {
       return;
     }
+    console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
     const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
     setGrpcState({ ...grpcState, methods, reloadMethods: false });
   }, [reloadMethods, running, setGrpcState, grpcState, activeRequest.protoFileId]);
