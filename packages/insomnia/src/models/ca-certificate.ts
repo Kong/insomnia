@@ -13,7 +13,7 @@ export const canSync = false;
 
 interface BaseCaCertificate {
   parentId: string;
-  pem: string | null;
+  path: string | null;
   disabled: boolean;
   // For sync control
   isPrivate: boolean;
@@ -25,7 +25,7 @@ export function init(): BaseCaCertificate {
   return {
     parentId: '',
     disabled: false,
-    pem: null,
+    path: null,
     isPrivate: false,
   };
 }
@@ -61,8 +61,8 @@ export function findByParentId(parentId: string) {
   return db.getWhere<CaCertificate>(type, { parentId });
 }
 
-export function remove(cert: CaCertificate) {
-  return db.remove(cert);
+export function removeWhere(parentId: string) {
+  return db.removeWhere(type, { parentId });
 }
 
 export function all() {

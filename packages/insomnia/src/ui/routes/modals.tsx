@@ -127,13 +127,11 @@ const Modals: FC = () => {
               workspace={activeWorkspace}
             />
 
-            {activeApiSpec ? (
-              <WorkspaceSettingsModal
-                ref={instance =>
-                  registerModal(instance, 'WorkspaceSettingsModal')
-                }
-              />
-            ) : null}
+            <WorkspaceSettingsModal
+              ref={instance =>
+                registerModal(instance, 'WorkspaceSettingsModal')
+              }
+            />
           </>
         ) : null}
 

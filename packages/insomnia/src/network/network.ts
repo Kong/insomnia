@@ -117,7 +117,7 @@ export async function _actuallySend(
       const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
       const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
       const caCert = await models.caCertificate.findByParentId(workspaceId);
-      const caCertficate = caCert?.disabled === false ? caCert.pem : null;
+      const caCertficate = caCert?.disabled === false ? caCert.path : null;
       const authHeader = await getAuthHeader(renderedRequest, finalUrl);
 
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly

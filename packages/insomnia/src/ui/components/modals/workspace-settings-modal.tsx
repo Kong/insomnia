@@ -1,10 +1,12 @@
-import React, { FC, forwardRef, ReactNode, useImperativeHandle, useRef, useState } from 'react';
+import fs from 'fs';
+import React, { FC, forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { ACTIVITY_HOME } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { CaCertificate } from '../../../models/ca-certificate';
 import type { ClientCertificate } from '../../../models/client-certificate';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import * as models from '../../../models/index';
@@ -91,6 +93,18 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
   const apiSpec = useSelector(selectActiveApiSpec);
   const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
   const clientCertificates = useSelector(selectActiveWorkspaceClientCertificates);
+  const [caCert, setCaCert] = useState<CaCertificate | null>(null);
+  useEffect(() => {
+    if (!workspace) {
+      return;
+    }
+    const fn = async () => {
+      const cert = await models.caCertificate.findByParentId(workspace._id);
+      cert && setCaCert(cert);
+    };
+    fn();
+  }, [workspace]);
+
   const dispatch = useDispatch();
   useImperativeHandle(ref, () => ({
     hide: () => {
@@ -201,7 +215,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
       </div>
     );
   };
-  const publicCertificates = clientCertificates.filter(c => !c.isPrivate);
+  const sharedCertificates = clientCertificates.filter(c => !c.isPrivate);
   const privateCertificates = clientCertificates.filter(c => c.isPrivate);
   const {
     pfxPath,
@@ -295,38 +309,81 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                     <HelpTooltip position="right" className="space-left">
                       One or more PEM format certificates to trust when making requests.
                     </HelpTooltip>
-                    <FileInputButton
-                      className="btn btn--clicky"
-                      name="Select PEM file"
-                      onChange={keyPath => setState({ ...state, keyPath })}
-                      path={keyPath}
-                      showFileName
-                    />
                   </label>
+                  <div className="row-spaced">
+                    <FileInputButton
+                      disabled={caCert !== null}
+                      className="btn btn--clicky"
+                      name="PEM file"
+                      onChange={async path => {
+                        const cert = await models.caCertificate.create({ parentId: workspace._id, path });
+                        setCaCert(cert);
+                      }}
+                      path={caCert?.path || ''}
+                      showFileName
+                      showFileIcon
+                    />
+                    {caCert && (<div className="no-wrap">
+                      <button
+                        className="btn btn--super-compact width-auto"
+                        title="Enable or disable certificate"
+                        onClick={async () => {
+                          const cert = await models.caCertificate.update(caCert, {
+                            disabled: !caCert.disabled,
+                          });
+                          setCaCert(cert);
+                        }}
+                      >
+                        {caCert.disabled ? (
+                          <i className="fa fa-square-o" />
+                        ) : (
+                          <i className="fa fa-check-square-o" />
+                        )}
+                      </button>
+                      <PromptButton
+                        className="btn btn--super-compact width-auto"
+                        confirmMessage=""
+                        onClick={() => {
+                          models.caCertificate.removeWhere(workspace._id);
+                          setCaCert(null);
+                        }}
+                      >
+                        <i className="fa fa-trash-o" />
+                      </PromptButton>
+                    </div>)}
+                  </div>
                 </div>
                 {!showAddCertificateForm ? (
                   <div>
                     {clientCertificates.length === 0 ? (
-                      <p className="notice surprise margin-top-sm">
-                        You have not yet added any certificates
+                      <p className="notice surprise margin-top">
+                        You have not yet added any client certificates
                       </p>
                     ) : null}
 
-                    {publicCertificates.length > 0
-                      ? publicCertificates.map(renderCertificate)
-                      : null}
+                    {sharedCertificates.length && (
+                      <div className="form-control form-control--outlined margin-top">
+                        <label>
+                          Shared Certificates
+                          <HelpTooltip position="right" className="space-left">
+                            Shared certificates will be synced.
+                          </HelpTooltip>
+                        </label>
+                        {sharedCertificates.map(renderCertificate)}
+                      </div>
+                    )}
 
-                    {privateCertificates.length > 0 ? (
-                      <div>
-                        <h2>
+                    {privateCertificates.length && (
+                      <div className="form-control form-control--outlined margin-top">
+                        <label>
                           Private Certificates
                           <HelpTooltip position="right" className="space-left">
-                            Private certificates will not by synced.
+                            Private certificates will not be synced.
                           </HelpTooltip>
-                        </h2>
+                        </label>
                         {privateCertificates.map(renderCertificate)}
                       </div>
-                    ) : null}
+                    )}
                     <hr className="hr--spaced" />
                     <div className="text-center">
                       <button

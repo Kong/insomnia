@@ -11,10 +11,11 @@ interface Props extends Omit<HTMLAttributes<HTMLButtonElement>, 'onChange'> {
   showFileName?: boolean;
   showFileIcon?: boolean;
   name?: string;
+  disabled?: boolean;
 }
 
 export const FileInputButton = (props: Props) => {
-  const { showFileName, showFileIcon, path, name, onChange, itemtypes, extensions, ...extraProps } = props;
+  const { showFileName, showFileIcon, path, name, onChange, itemtypes, extensions, disabled, ...extraProps } = props;
   // NOTE: Basename fails if path is not a string, so let's make sure it is
   const fileName = typeof path === 'string' ? pathBasename(path) : null;
   const _handleChooseFile =  useCallback(async () => {
@@ -35,6 +36,7 @@ export const FileInputButton = (props: Props) => {
       type="button"
       onClick={_handleChooseFile}
       title={path}
+      disabled={disabled}
       {...extraProps}
     >
       {showFileIcon && <i className="fa fa-file-o space-right" />}

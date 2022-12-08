@@ -110,6 +110,7 @@ export function all() {
     requestMeta,
     response,
     oAuth2Token,
+    caCertificate,
     clientCertificate,
     pluginData,
     unitTestSuite,

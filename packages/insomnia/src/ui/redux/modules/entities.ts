@@ -5,6 +5,7 @@ import { pluralize } from '../../../common/misc';
 import * as models from '../../../models';
 import { BaseModel } from '../../../models';
 import { ApiSpec } from '../../../models/api-spec';
+import { CaCertificate } from '../../../models/ca-certificate';
 import { ClientCertificate } from '../../../models/client-certificate';
 import { CookieJar } from '../../../models/cookie-jar';
 import { Environment } from '../../../models/environment';
@@ -64,6 +65,7 @@ export interface EntitiesState {
   requestMetas: EntityRecord<RequestMeta>;
   responses: EntityRecord<Response>;
   oAuth2Tokens: EntityRecord<OAuth2Token>;
+  caCertificate: EntityRecord<CaCertificate>;
   clientCertificates: EntityRecord<ClientCertificate>;
   pluginDatas: EntityRecord<PluginData>;
   unitTestSuites: EntityRecord<UnitTestSuite>;
@@ -95,6 +97,7 @@ export const initialEntitiesState: EntitiesState = {
   requestMetas: {},
   responses: {},
   oAuth2Tokens: {},
+  caCertificate: {},
   clientCertificates: {},
   pluginDatas: {},
   unitTestSuites: {},
@@ -197,6 +200,7 @@ export async function allDocs() {
     ...(await models.requestVersion.all()),
     ...(await models.response.all()),
     ...(await models.oAuth2Token.all()),
+    ...(await models.caCertificate.all()),
     ...(await models.clientCertificate.all()),
     ...(await models.apiSpec.all()),
     ...(await models.unitTestSuite.all()),
