@@ -36,14 +36,10 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onSave, reloadRequests }
 
   const handleUpdate = async (protoFile: ProtoFile) => protoManager.updateFile(protoFile, async updatedId => {
     const impacted = await models.grpcRequest.findByProtoFileId(updatedId);
-    // skip invalidation if no requests are linked to the proto file
-    if (!impacted?.length) {
-      return;
-    }
     const requestIds = impacted.map(g => g._id);
-    reloadRequests(requestIds);
     if (requestIds?.length) {
-      window.main.grpc.cancelMultiple(requestIds);
+      requestIds.forEach(requestId => window.main.grpc.cancel(requestId));
+      reloadRequests(requestIds);
     }
   });
 
