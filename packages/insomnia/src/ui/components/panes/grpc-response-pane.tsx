@@ -5,7 +5,6 @@ import type { GrpcRequest } from '../../../models/grpc-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveEnvironment } from '../../redux/selectors';
 import { GrpcRequestState } from '../../routes/debug';
-import { GrpcSpinner } from '../grpc-spinner';
 import { GrpcStatusTag } from '../tags/grpc-status-tag';
 import { GrpcTabbedMessages } from '../viewers/grpc-tabbed-messages';
 import { Pane, PaneBody, PaneHeader } from './pane';
@@ -27,7 +26,7 @@ export const GrpcResponsePane: FunctionComponent<Props> = ({ activeRequest, grpc
     <Pane type="response">
       <PaneHeader className="row-spaced">
         <div className="no-wrap scrollable scrollable--no-bars pad-left">
-          <GrpcSpinner requestId={activeRequest._id} className="margin-right-sm" />
+          {grpcState.running && <i className='fa fa-refresh fa-spin margin-right-sm' />}
           {status && <GrpcStatusTag statusCode={status.code} statusMessage={status.details} />}
           {!status && error && <GrpcStatusTag statusMessage={error.message} />}
         </div>
