@@ -24,7 +24,6 @@ import { StatusBar } from '../components/statusbar';
 import { Toast } from '../components/toast';
 import { AppHooks } from '../containers/app-hooks';
 import withDragDropContext from '../context/app/drag-drop-context';
-import { GrpcProvider } from '../context/grpc';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import { useGitVCS } from '../hooks/use-git-vcs';
 import { useVCS } from '../hooks/use-vcs';
@@ -132,29 +131,27 @@ const Root = () => {
   }, [revalidate]);
 
   return (
-    <GrpcProvider>
-      <NunjucksEnabledProvider>
-        <AppHooks />
-        <div className="app">
-          <ErrorBoundary showAlert>
-            <Modals />
-            <Layout>
-              <OrganizationsNav />
-              <AppHeader
-                gridCenter={<WorkspaceNavigation />}
-                gridRight={<AccountToolbar />}
-              />
-              <Outlet />
-              <StatusBar />
-            </Layout>
-          </ErrorBoundary>
+    <NunjucksEnabledProvider>
+      <AppHooks />
+      <div className="app">
+        <ErrorBoundary showAlert>
+          <Modals />
+          <Layout>
+            <OrganizationsNav />
+            <AppHeader
+              gridCenter={<WorkspaceNavigation />}
+              gridRight={<AccountToolbar />}
+            />
+            <Outlet />
+            <StatusBar />
+          </Layout>
+        </ErrorBoundary>
 
-          <ErrorBoundary showAlert>
-            <Toast />
-          </ErrorBoundary>
-        </div>
-      </NunjucksEnabledProvider>
-    </GrpcProvider>
+        <ErrorBoundary showAlert>
+          <Toast />
+        </ErrorBoundary>
+      </div>
+    </NunjucksEnabledProvider>
   );
 };
 
