@@ -1,4 +1,3 @@
-import fs from 'fs';
 import React, { FC, forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -361,7 +360,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                       </p>
                     ) : null}
 
-                    {sharedCertificates.length && (
+                    {!!sharedCertificates.length && (
                       <div className="form-control form-control--outlined margin-top">
                         <label>
                           Shared Certificates
@@ -373,7 +372,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                       </div>
                     )}
 
-                    {privateCertificates.length && (
+                    {!!privateCertificates.length && (
                       <div className="form-control form-control--outlined margin-top">
                         <label>
                           Private Certificates
