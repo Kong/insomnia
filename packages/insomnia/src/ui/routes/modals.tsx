@@ -223,14 +223,6 @@ const Modals: FC = () => {
           ref={instance => registerModal(instance, 'ExportRequestsModal')}
         />
 
-        <GrpcDispatchModalWrapper>
-          {dispatch => (
-            <ProtoFilesModal
-              ref={instance => registerModal(instance, 'ProtoFilesModal')}
-              grpcDispatch={dispatch}
-            />
-          )}
-        </GrpcDispatchModalWrapper>
       </ErrorBoundary>
     </div>
   );
