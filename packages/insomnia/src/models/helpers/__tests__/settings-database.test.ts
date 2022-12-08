@@ -26,7 +26,7 @@ describe('settings database', () => {
       const expectedSettings = await models.settings.getOrCreate();
 
       expect(changes[0]).toEqual([
-        [db.CHANGE_UPDATE, expectedSettings, false],
+        ['update', expectedSettings, false],
       ]);
 
       db.offChange(callback);
