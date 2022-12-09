@@ -1,6 +1,6 @@
 import clone from 'clone';
 
-import { type ChangeBufferEvent, database as db } from '../../../common/database';
+import { type ChangeBufferEvent } from '../../../common/database';
 import { pluralize } from '../../../common/misc';
 import * as models from '../../../models';
 import { BaseModel } from '../../../models';
@@ -131,17 +131,17 @@ export function reducer(state = initialEntitiesState, action: any) {
       const newState = { ...state };
       const { changes } = action;
 
-      for (const [event, doc] of changes) {
+      for (const [event, doc] of changes as ChangeBufferEvent[]) {
         const referenceName = getReducerName(doc.type);
 
         switch (event) {
-          case db.CHANGE_INSERT:
-          case db.CHANGE_UPDATE:
+          case 'insert':
+          case 'update':
             // @ts-expect-error -- mapping unsoundness
             newState[referenceName][doc._id] = doc;
             break;
 
-          case db.CHANGE_REMOVE:
+          case 'remove':
             // @ts-expect-error -- mapping unsoundness
             delete newState[referenceName][doc._id];
             break;

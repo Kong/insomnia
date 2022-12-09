@@ -12,8 +12,6 @@ import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
-import { showModal } from '../components/modals';
-import { ProtoFilesModal } from '../components/modals/proto-files-modal';
 
 export const updateActiveWorkspaceMeta = async (
   patch: Partial<WorkspaceMeta>,
@@ -64,17 +62,11 @@ export const createRequest: RequestCreator = async ({
 }) => {
   switch (requestType) {
     case 'gRPC': {
-      showModal(ProtoFilesModal, {
-        onSave: async (protoFileId: string) => {
-          const request = await models.grpcRequest.create({
-            parentId,
-            name: 'New Request',
-            protoFileId,
-          });
-          models.stats.incrementCreatedRequests();
-          setActiveRequest(request._id, workspaceId);
-        },
+      const request = await models.grpcRequest.create({
+        parentId,
+        name: 'New Request',
       });
+      setActiveRequest(request._id, workspaceId);
       break;
     }
 

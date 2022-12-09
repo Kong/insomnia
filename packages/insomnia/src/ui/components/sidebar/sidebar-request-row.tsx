@@ -20,7 +20,6 @@ import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
 import { RequestActionsDropdown } from '../dropdowns/request-actions-dropdown';
 import { WebSocketRequestActionsDropdown } from '../dropdowns/websocket-request-actions-dropdown';
-import { GrpcSpinner } from '../grpc-spinner';
 import { showModal, showPrompt } from '../modals/index';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { GrpcTag } from '../tags/grpc-tag';
@@ -277,11 +276,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
                   />
                 )}
               />
-              {isGrpcRequest(request) && (
-                <GrpcSpinner
-                  requestId={request._id}
-                  className="margin-right-sm"
-                />)}
               {isWebSocketRequest(request) && (
                 <WebSocketSpinner requestId={request._id} />
               )}

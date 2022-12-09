@@ -1,61 +1,45 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import * as models from '../../../models';
 import type { ProtoFile } from '../../../models/proto-file';
 import * as protoManager from '../../../network/grpc/proto-manager';
-import type { GrpcDispatch } from '../../context/grpc';
-import { grpcActions } from '../../context/grpc';
 import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
 import { selectActiveWorkspace } from '../../redux/selectors';
-import { type ModalHandle, Modal, ModalProps } from '../base/modal';
+import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { ProtoFileList } from '../proto-file/proto-file-list';
 import { AsyncButton } from '../themed-button';
 
-export interface ProtoFilesModalOptions {
-  selectedId?: string;
+export interface Props {
+  defaultId?: string;
   onSave?: (arg0: string) => Promise<void>;
+  reloadRequests: (requestIds: string[]) => void;
 }
-export interface ProtoFilesModalHandle {
-  show: (options: ProtoFilesModalOptions) => void;
-  hide: () => void;
-}
-type Props = ModalProps & { grpcDispatch: GrpcDispatch };
-export const ProtoFilesModal = forwardRef<ProtoFilesModalHandle, Props>(({ grpcDispatch }, ref) => {
-  const modalRef = useRef<ModalHandle>(null);
-  const [state, setState] = useState<ProtoFilesModalOptions>({
-    selectedId: '',
-  });
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: ({ onSave, selectedId }) => {
-      setState({ onSave, selectedId });
-      modalRef.current?.show();
-    },
-  }), []);
+export const ProtoFilesModal: FC<Props> = ({ defaultId, onSave, reloadRequests }) => {
+  const modalRef = useRef<ModalHandle>(null);
+
+  const [selectedId, setSelectedId] = useState(defaultId);
+
+  useEffect(() => {
+    modalRef.current?.show();
+  }, []);
 
   const workspace = useSelector(selectActiveWorkspace);
   const protoDirectories = useSelector(selectExpandedActiveProtoDirectories);
 
-  const selectFile = (selectedId: string) => setState({ selectedId, onSave: state.onSave });
-  const clearSelection = () => setState({ selectedId: '', onSave: state.onSave });
+  const selectFile = (selectedId: string) => setSelectedId(selectedId);
+  const clearSelection = () => setSelectedId('');
 
   const handleUpdate = async (protoFile: ProtoFile) => protoManager.updateFile(protoFile, async updatedId => {
     const impacted = await models.grpcRequest.findByProtoFileId(updatedId);
-    // skip invalidation if no requests are linked to the proto file
-    if (!impacted?.length) {
-      return;
-    }
     const requestIds = impacted.map(g => g._id);
-    grpcDispatch(grpcActions.invalidateMany(requestIds));
     if (requestIds?.length) {
-      window.main.grpc.cancelMultiple(requestIds);
+      requestIds.forEach(requestId => window.main.grpc.cancel(requestId));
+      reloadRequests(requestIds);
     }
   });
 
@@ -86,18 +70,18 @@ export const ProtoFilesModal = forwardRef<ProtoFilesModalHandle, Props>(({ grpcD
         </div>
         <ProtoFileList
           protoDirectories={protoDirectories}
-          selectedId={state.selectedId}
+          selectedId={selectedId}
           handleSelect={selectFile}
           handleUpdate={handleUpdate}
           handleRename={(protoFile: ProtoFile, name?: string) => protoManager.renameFile(protoFile, name)}
           handleDelete={protoFile => protoManager.deleteFile(protoFile, deletedId => {
-            if (state.selectedId === deletedId) {
+            if (selectedId === deletedId) {
               clearSelection();
             }
           })
           }
           handleDeleteDirectory={protoDirectory => protoManager.deleteDirectory(protoDirectory, deletedIds => {
-            if (state.selectedId && deletedIds.includes(state.selectedId)) {
+            if (selectedId && deletedIds.includes(selectedId)) {
               clearSelection();
             }
           })}
@@ -110,11 +94,11 @@ export const ProtoFilesModal = forwardRef<ProtoFilesModalHandle, Props>(({ grpcD
             onClick={event => {
               event.preventDefault();
               modalRef.current?.hide();
-              if (typeof state.onSave === 'function' && state.selectedId) {
-                state.onSave(state.selectedId);
+              if (typeof onSave === 'function' && selectedId) {
+                onSave(selectedId);
               }
             }}
-            disabled={!state.selectedId}
+            disabled={!selectedId}
           >
             Save
           </button>
@@ -122,5 +106,4 @@ export const ProtoFilesModal = forwardRef<ProtoFilesModalHandle, Props>(({ grpcD
       </ModalFooter>
     </Modal >
   );
-});
-ProtoFilesModal.displayName = 'ProtoFilesModal';
+};

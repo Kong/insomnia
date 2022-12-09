@@ -27,7 +27,6 @@ export interface gRPCBridgeAPI {
   sendMessage: (options: GrpcIpcMessageParams) => void;
   commit: typeof commit;
   cancel: typeof cancel;
-  cancelMultiple: typeof cancelMultiple;
   loadMethods: typeof loadMethods;
   closeAll: typeof closeAll;
 }
@@ -36,7 +35,6 @@ export function registergRPCHandlers() {
   ipcMain.on('grpc.sendMessage', sendMessage);
   ipcMain.on('grpc.commit', (_, requestId) => commit(requestId));
   ipcMain.on('grpc.cancel', (_, requestId) => cancel(requestId));
-  ipcMain.on('grpc.cancelMultiple', (_, requestIds) => cancelMultiple(requestIds));
   ipcMain.on('grpc.closeAll', closeAll);
   ipcMain.handle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
 }
@@ -189,7 +187,6 @@ export const sendMessage = (
 // @ts-expect-error -- TSCONVERSION only end if the call is ClientWritableStream | ClientDuplexStream
 export const commit = (requestId: string): void => grpcCalls.get(requestId)?.end();
 export const cancel = (requestId: string): void => grpcCalls.get(requestId)?.cancel();
-export const cancelMultiple = (requestIds: string[]): void => requestIds.forEach(cancel);
 
 const onStreamingResponse = (event: IpcMainEvent, call: ClientReadableStream<any> | ClientDuplexStream<any, any>, requestId: string) => {
   call.on('status', (status: StatusObject) => event.reply('grpc.status', requestId, status));

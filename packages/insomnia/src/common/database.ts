@@ -41,7 +41,7 @@ export interface SpecificQuery {
 }
 
 export type ModelQuery<T extends BaseModel> = Partial<Record<keyof T, SpecificQuery>>;
-
+export type ChangeType = 'insert' | 'update' | 'remove';
 export const database = {
   all: async function<T extends BaseModel>(type: string) {
     if (db._empty) {
@@ -81,12 +81,6 @@ export const database = {
     bufferingChanges = true;
     return ++bufferChangesId;
   },
-
-  CHANGE_INSERT: 'insert',
-
-  CHANGE_UPDATE: 'update',
-
-  CHANGE_REMOVE: 'remove',
 
   count: async function<T extends BaseModel>(type: string, query: Query = {}) {
     if (db._empty) {
@@ -380,7 +374,7 @@ export const database = {
           continue;
         }
 
-        if (type === database.CHANGE_REMOVE && typeof m.hookRemove === 'function') {
+        if (type === 'remove' && typeof m.hookRemove === 'function') {
           try {
             await m.hookRemove(doc, consoleLog);
           } catch (err) {
@@ -388,7 +382,7 @@ export const database = {
           }
         }
 
-        if (type === database.CHANGE_INSERT && typeof m.hookInsert === 'function') {
+        if (type === 'insert' && typeof m.hookInsert === 'function') {
           try {
             await m.hookInsert(doc, consoleLog);
           } catch (err) {
@@ -396,7 +390,7 @@ export const database = {
           }
         }
 
-        if (type === database.CHANGE_UPDATE && typeof m.hookUpdate === 'function') {
+        if (type === 'update' && typeof m.hookUpdate === 'function') {
           try {
             await m.hookUpdate(doc, consoleLog);
           } catch (err) {
@@ -448,7 +442,7 @@ export const database = {
 
         resolve(newDoc);
         // NOTE: This needs to be after we resolve
-        notifyOfChange(database.CHANGE_INSERT, newDoc, fromSync);
+        notifyOfChange('insert', newDoc, fromSync);
       });
     });
   },
@@ -486,7 +480,7 @@ export const database = {
       ),
     );
 
-    docs.map(d => notifyOfChange(database.CHANGE_REMOVE, d, fromSync));
+    docs.map(d => notifyOfChange('remove', d, fromSync));
     await database.flushChanges(flushId);
   },
 
@@ -514,7 +508,7 @@ export const database = {
           },
         ),
       );
-      docs.map(d => notifyOfChange(database.CHANGE_REMOVE, d, false));
+      docs.map(d => notifyOfChange('remove', d, false));
     }
 
     await database.flushChanges(flushId);
@@ -527,7 +521,7 @@ export const database = {
     }
 
     (db[doc.type] as NeDB<T>).remove({ _id: doc._id });
-    notifyOfChange(database.CHANGE_REMOVE, doc, fromSync);
+    notifyOfChange('remove', doc, fromSync);
   },
 
   update: async function<T extends BaseModel>(doc: T, fromSync = false) {
@@ -556,7 +550,7 @@ export const database = {
 
           resolve(docWithDefaults);
           // NOTE: This needs to be after we resolve
-          notifyOfChange(database.CHANGE_UPDATE, docWithDefaults, fromSync);
+          notifyOfChange('update', docWithDefaults, fromSync);
         },
       );
     });
@@ -685,7 +679,7 @@ let bufferingChanges = false;
 let bufferChangesId = 1;
 
 export type ChangeBufferEvent<T extends BaseModel = BaseModel> = [
-  event: string,
+  event: ChangeType,
   doc: T,
   fromSync: boolean
 ];
@@ -696,7 +690,7 @@ type ChangeListener = (changes: ChangeBufferEvent[]) => void;
 
 let changeListeners: ChangeListener[] = [];
 
-async function notifyOfChange<T extends BaseModel>(event: string, doc: T, fromSync: boolean) {
+async function notifyOfChange<T extends BaseModel>(event: ChangeType, doc: T, fromSync: boolean) {
   let updatedDoc = doc;
 
   // NOTE: this monkeypatching is temporary, and was determined to have the smallest blast radius if it exists here (rather than, say, a reducer or an action creator).

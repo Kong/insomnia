@@ -1,6 +1,10 @@
+import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
+import { ChangeBufferEvent, database as db } from '../../common/database';
+import { GrpcMethodInfo } from '../../common/grpc-paths';
+import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
@@ -41,11 +45,57 @@ import {
   selectSettings,
 } from '../redux/selectors';
 import { selectSidebarFilter } from '../redux/sidebar-selectors';
+export interface GrpcMessage {
+  id: string;
+  text: string;
+  created: number;
+}
 
+export interface GrpcRequestState {
+  requestId: string;
+  running: boolean;
+  requestMessages: GrpcMessage[];
+  responseMessages: GrpcMessage[];
+  status?: StatusObject;
+  error?: ServiceError;
+  methods: GrpcMethodInfo[];
+  reloadMethods: boolean;
+}
+const INITIAL_GRPC_REQUEST_STATE = {
+  running: false,
+  requestMessages: [],
+  responseMessages: [],
+  status: undefined,
+  error: undefined,
+  methods: [],
+  reloadMethods: true,
+};
 export const Debug: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
   const activeWorkspace = useSelector(selectActiveWorkspace);
+  const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>([]);
+  useEffect(() => {
+    db.onChange(async (changes: ChangeBufferEvent[]) => {
+      for (const change of changes) {
+        const [event, doc] = change;
+        if (isGrpcRequest(doc) && event === 'insert') {
+          setGrpcStates(grpcStates => ([...grpcStates, { requestId: doc._id, ...INITIAL_GRPC_REQUEST_STATE }]));
+        }
+      }
+    });
+  }, []);
+  useEffect(() => {
+    const fn = async () => {
+      if (activeWorkspace) {
+        const children = await db.withDescendants(activeWorkspace);
+        const grpcRequests = children.filter(d => isGrpcRequest(d));
+        setGrpcStates(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
+      }
+    };
+    fn();
+  }, [activeWorkspace]);
+
   const settings = useSelector(selectSettings);
   const sidebarFilter = useSelector(selectSidebarFilter);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
@@ -58,6 +108,30 @@ export const Debug: FC = () => {
     });
   };
 
+  const grpcState = grpcStates.find(s => s.requestId === activeRequest?._id);
+  const setGrpcState = (newState:GrpcRequestState) => setGrpcStates(state => state.map(s => s.requestId === activeRequest?._id ? newState : s));
+  const reloadRequests = (requestIds:string[]) => {
+    setGrpcStates(state => state.map(s => requestIds.includes(s.requestId) ? { ...s, reloadMethods: true } : s));
+  };
+  useEffect(() => window.main.on('grpc.start', (_, id) => {
+    setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, running: true } : s));
+  }), []);
+  useEffect(() => window.main.on('grpc.end', (_, id) => {
+    setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, running: false } : s));
+  }), []);
+  useEffect(() => window.main.on('grpc.data', (_, id, value) => {
+    setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, responseMessages: [...s.responseMessages, {
+      id: generateId(),
+      text: JSON.stringify(value),
+      created: Date.now(),
+    }] } : s));
+  }), []);
+  useEffect(() => window.main.on('grpc.error', (_, id, error) => {
+    setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, error } : s));
+  }), []);
+  useEffect(() => window.main.on('grpc.status', (_, id, status) => {
+    setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, status } : s));
+  }), []);
   useDocBodyKeyboardShortcuts({
     request_togglePin:
       async () => {
@@ -194,47 +268,38 @@ export const Debug: FC = () => {
         : null}
       renderPaneOne={activeWorkspace ?
         <ErrorBoundary showAlert>
-          {activeRequest && (
-            isGrpcRequest(activeRequest) ? (
-              <GrpcRequestPane
-                activeRequest={activeRequest}
-                workspaceId={activeWorkspace._id}
-                settings={settings}
-              />
-            ) : (
-              isWebSocketRequest(activeRequest) ? (
-                <WebSocketRequestPane
-                  request={activeRequest}
-                  workspaceId={activeWorkspace._id}
-                  environment={activeEnvironment}
-                />
-              ) : (
-                <RequestPane
-                  environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                  request={activeRequest}
-                  settings={settings}
-                  workspace={activeWorkspace}
-                  setLoading={setLoading}
-                />
-              )
-            )
-          )}
+          {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+            <GrpcRequestPane
+              activeRequest={activeRequest}
+              workspaceId={activeWorkspace._id}
+              grpcState={grpcState}
+              setGrpcState={setGrpcState}
+              reloadRequests={reloadRequests}
+            />)}
+          {activeRequest && isWebSocketRequest(activeRequest) && (
+            <WebSocketRequestPane
+              request={activeRequest}
+              workspaceId={activeWorkspace._id}
+              environment={activeEnvironment}
+            />)}
+          {activeRequest && isRequest(activeRequest) && (<RequestPane
+            environmentId={activeEnvironment ? activeEnvironment._id : ''}
+            request={activeRequest}
+            settings={settings}
+            workspace={activeWorkspace}
+            setLoading={setLoading}
+          />)}
           {!activeRequest && <PlaceholderRequestPane />}
         </ErrorBoundary>
         : null}
       renderPaneTwo={
         <ErrorBoundary showAlert>
-          {activeRequest && (
-            isGrpcRequest(activeRequest) ? (
-              <GrpcResponsePane activeRequest={activeRequest} />
-            ) : (
-              isWebSocketRequest(activeRequest) ? (
-                <WebSocketResponsePane requestId={activeRequest._id} />
-              ) : (
-                <ResponsePane request={activeRequest} runningRequests={runningRequests} />
-              )
-            )
-          )}
+          {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+            <GrpcResponsePane activeRequest={activeRequest} grpcState={grpcState} />)}
+          {activeRequest && isWebSocketRequest(activeRequest) && (
+            <WebSocketResponsePane requestId={activeRequest._id} />)}
+          {activeRequest && isRequest(activeRequest) && (
+            <ResponsePane request={activeRequest} runningRequests={runningRequests} />)}
         </ErrorBoundary>}
     />
   );
