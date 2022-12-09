@@ -24,7 +24,6 @@ import {
 } from '../common/render';
 import type { ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
-import { ClientCertificate } from '../models/client-certificate';
 import { Cookie, CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import type { Request } from '../models/request';
@@ -117,7 +116,7 @@ export async function _actuallySend(
       const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
       const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
       const caCert = await models.caCertificate.findByParentId(workspaceId);
-      const caCertficate = caCert?.disabled === false ? caCert.path : null;
+      const caCertficatePath = caCert?.disabled === false ? caCert.path : null;
       const authHeader = await getAuthHeader(renderedRequest, finalUrl);
 
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
@@ -132,7 +131,7 @@ export async function _actuallySend(
         socketPath,
         settings,
         certificates,
-        caCertficate,
+        caCertficatePath,
         authHeader,
       };
       const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
