@@ -28,6 +28,7 @@ interface CurlRequestOptions {
   finalUrl: string;
   settings: SettingsUsedHere;
   certificates: ClientCertificate[];
+  caCertficatePath: string | null;
   socketPath?: string;
   authHeader?: { name: string; value: string };
 }
@@ -101,7 +102,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
     const debugTimeline: ResponseTimelineEntry[] = [];
 
-    const { requestId, req, finalUrl, settings, certificates, socketPath, authHeader } = options;
+    const { requestId, req, finalUrl, settings, certificates, caCertficatePath, socketPath, authHeader } = options;
     const curl = new Curl();
 
     curl.setOpt(Curl.option.URL, finalUrl);
@@ -110,8 +111,9 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.setOpt(Curl.option.VERBOSE, true); // Set all the basic options
     curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
     curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
-
-    curl.setOpt(Curl.option.CAINFO_BLOB, tls.rootCertificates.join('\n'));
+    // attempt to read CA Certificate PEM from disk, fallback to root certificates
+    const caCert = caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString() || tls.rootCertificates.join('\n');
+    curl.setOpt(Curl.option.CAINFO_BLOB, caCert);
 
     certificates.forEach(validCert => {
       const { passphrase, cert, key, pfx } = validCert;

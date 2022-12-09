@@ -15,7 +15,7 @@ export const canSync = true;
 interface GenericWorkspace<Scope extends 'design' | 'collection'> {
   name: string;
   description: string;
-  certificates?: any;
+  certificates?: any; // deprecated
   scope: Scope;
 }
 

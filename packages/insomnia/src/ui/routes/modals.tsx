@@ -41,7 +41,6 @@ import { WrapperModal } from '../components/modals/wrapper-modal';
 import { useGitVCS } from '../hooks/use-git-vcs';
 import { useVCS } from '../hooks/use-vcs';
 import {
-  selectActiveApiSpec,
   selectActiveCookieJar,
   selectActiveEnvironment,
   selectActiveGitRepository,
@@ -51,7 +50,6 @@ import {
 
 const Modals: FC = () => {
   const activeCookieJar = useSelector(selectActiveCookieJar);
-  const activeApiSpec = useSelector(selectActiveApiSpec);
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const activeGitRepository = useSelector(selectActiveGitRepository);
   const activeEnvironment = useSelector(selectActiveEnvironment);
@@ -127,13 +125,11 @@ const Modals: FC = () => {
               workspace={activeWorkspace}
             />
 
-            {activeApiSpec ? (
-              <WorkspaceSettingsModal
-                ref={instance =>
-                  registerModal(instance, 'WorkspaceSettingsModal')
-                }
-              />
-            ) : null}
+            <WorkspaceSettingsModal
+              ref={instance =>
+                registerModal(instance, 'WorkspaceSettingsModal')
+              }
+            />
           </>
         ) : null}
 

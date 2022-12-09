@@ -15,6 +15,7 @@ import {
 } from '../common/constants';
 import { generateId, pluralize } from '../common/misc';
 import * as _apiSpec from './api-spec';
+import * as _caCertificate from './ca-certificate';
 import * as _clientCertificate from './client-certificate';
 import * as _cookieJar from './cookie-jar';
 import * as _environment from './environment';
@@ -59,6 +60,7 @@ export interface BaseModel {
 // Reference to each model
 export const apiSpec = _apiSpec;
 export const clientCertificate = _clientCertificate;
+export const caCertificate = _caCertificate;
 export const cookieJar = _cookieJar;
 export const environment = _environment;
 export const gitRepository = _gitRepository;
@@ -108,6 +110,7 @@ export function all() {
     requestMeta,
     response,
     oAuth2Token,
+    caCertificate,
     clientCertificate,
     pluginData,
     unitTestSuite,
