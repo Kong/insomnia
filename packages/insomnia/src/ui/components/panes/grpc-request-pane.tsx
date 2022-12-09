@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from 'react';
+import React, { FunctionComponent } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
@@ -163,7 +163,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   error: undefined,
                 });
               }}
-              handleChangeProtoFile={() => setIsProtoModalOpen(true)}
+              handleChangeProtoFile={() => {}}
             />
           </StyledDropdown>
 
