@@ -10,6 +10,7 @@ import type { ClientCertificate } from '../../../models/client-certificate';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
+import { invariant } from '../../../utils/invariant';
 import { setActiveActivity } from '../../redux/modules/global';
 import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceName, selectProjects } from '../../redux/selectors';
 import { FileInputButton } from '../base/file-input-button';
@@ -322,26 +323,30 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                       showFileName
                       showFileIcon
                     />
-                    {caCert && (<div className="no-wrap">
+                    <div className="no-wrap">
                       <button
+                        disabled={caCert === null}
                         className="btn btn--super-compact width-auto"
                         title="Enable or disable certificate"
                         onClick={async () => {
+                          invariant(caCert, 'CA cert should exist');
                           const cert = await models.caCertificate.update(caCert, {
                             disabled: !caCert.disabled,
                           });
                           setCaCert(cert);
                         }}
                       >
-                        {caCert.disabled ? (
+                        {caCert?.disabled !== false ? (
                           <i className="fa fa-square-o" />
                         ) : (
                           <i className="fa fa-check-square-o" />
                         )}
                       </button>
                       <PromptButton
+                        disabled={caCert === null}
                         className="btn btn--super-compact width-auto"
                         confirmMessage=""
+                        doneMessage=""
                         onClick={() => {
                           models.caCertificate.removeWhere(workspace._id);
                           setCaCert(null);
@@ -349,7 +354,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                       >
                         <i className="fa fa-trash-o" />
                       </PromptButton>
-                    </div>)}
+                    </div>
                   </div>
                 </div>
                 {!showAddCertificateForm ? (
