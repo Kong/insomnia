@@ -22,9 +22,9 @@ interface BaseGrpcRequest {
   name: string;
   url: string;
   description: string;
-  protoFilePath?: string;
+  protoFilePath: string;
   includeDirs: string[];
-  protoMethodName?: string;
+  protoMethodName: string;
   body: GrpcRequestBody;
   metadata: GrpcRequestHeader[];
   metaSortKey: number;
@@ -46,6 +46,7 @@ export function init(): BaseGrpcRequest {
     url: '',
     name: 'New gRPC Request',
     description: '',
+    protoFilePath: '',
     protoMethodName: '',
     includeDirs: [],
     metadata: [],

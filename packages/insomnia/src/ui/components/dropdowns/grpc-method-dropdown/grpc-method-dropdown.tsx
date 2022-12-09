@@ -39,7 +39,6 @@ interface Props {
   methods: GrpcMethodInfo[];
   selectedMethod?: GrpcMethodInfo;
   handleChange: (arg0: string) => void;
-  handleChangeProtoFile: () => void;
 }
 
 const NormalCase = styled.span`
@@ -51,7 +50,6 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   methods,
   selectedMethod,
   handleChange,
-  handleChangeProtoFile,
 }) => {
   const groupedByPkg = groupGrpcMethodsByPackage(methods);
   const selectedPath = selectedMethod?.fullPath;
@@ -68,9 +66,6 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
           <i className="fa fa-caret-down pad-left-sm" />
         </Tooltip>
       </DropdownButton>
-      <DropdownItem onClick={handleChangeProtoFile}>
-        <em>Click to change proto file</em>
-      </DropdownItem>
       {!methods.length && (
         <>
           <DropdownDivider />

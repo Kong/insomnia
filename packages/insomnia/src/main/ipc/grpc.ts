@@ -54,12 +54,6 @@ const loadMethods = async (requestId: string): Promise<GrpcMethodInfo[]> => {
     });
   } catch (e) {
     console.log(e);
-    // TODO: return errors from process.on('warning', (warning) => {
-    //   console.warn(warning.name);
-    //   console.warn(warning.message);
-    //   console.warn(warning.code);
-    //   console.warn(warning.stack);
-    // });
     return [];
   }
   const methods = Object.values(definition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format).flatMap(Object.values);
