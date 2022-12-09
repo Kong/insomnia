@@ -14,8 +14,6 @@ import { GrpcRequestMeta } from '../../../models/grpc-request-meta';
 import { OAuth2Token } from '../../../models/o-auth-2-token';
 import { PluginData } from '../../../models/plugin-data';
 import { Project } from '../../../models/project';
-import { ProtoDirectory } from '../../../models/proto-directory';
-import { ProtoFile } from '../../../models/proto-file';
 import { Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { RequestGroupMeta } from '../../../models/request-group-meta';
@@ -69,8 +67,6 @@ export interface EntitiesState {
   unitTestSuites: EntityRecord<UnitTestSuite>;
   unitTestResults: EntityRecord<UnitTestResult>;
   unitTests: EntityRecord<UnitTest>;
-  protoFiles: EntityRecord<ProtoFile>;
-  protoDirectories: EntityRecord<ProtoDirectory>;
   grpcRequests: EntityRecord<GrpcRequest>;
   grpcRequestMetas: EntityRecord<GrpcRequestMeta>;
   webSocketPayloads: EntityRecord<WebSocketPayload>;
@@ -100,8 +96,6 @@ export const initialEntitiesState: EntitiesState = {
   unitTestSuites: {},
   unitTestResults: {},
   unitTests: {},
-  protoFiles: {},
-  protoDirectories: {},
   grpcRequests: {},
   grpcRequestMetas: {},
   webSocketPayloads: {},
@@ -202,8 +196,6 @@ export async function allDocs() {
     ...(await models.unitTestSuite.all()),
     ...(await models.unitTest.all()),
     ...(await models.unitTestResult.all()),
-    ...(await models.protoFile.all()),
-    ...(await models.protoDirectory.all()),
     ...(await models.grpcRequest.all()),
     ...(await models.grpcRequestMeta.all()),
     ...(await models.webSocketPayload.all()),

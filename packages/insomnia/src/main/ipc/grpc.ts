@@ -9,7 +9,6 @@ import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/
 import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
-import { writeProtoFile } from '../../network/grpc/write-proto-file';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
 import { invariant } from '../../utils/invariant';
 
@@ -38,40 +37,52 @@ export function registergRPCHandlers() {
   ipcMain.on('grpc.closeAll', closeAll);
   ipcMain.handle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
 }
-const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
-  const protoFile = await models.protoFile.getById(protoFileId);
-  invariant(protoFile, `Proto file ${protoFileId} not found`);
-  const { filePath, dirs } = await writeProtoFile(protoFile);
-  const definition = await load(filePath, {
-    keepCase: true,
-    longs: String,
-    enums: String,
-    defaults: true,
-    oneofs: true,
-    includeDirs: dirs,
-  });
+const loadMethods = async (requestId: string): Promise<GrpcMethodInfo[]> => {
+  const request = await models.grpcRequest.getById(requestId);
+  invariant(request, `Request ${requestId} not found`);
+  const { protoFilePath, includeDirs } = request;
+  invariant(protoFilePath, `Proto file at ${protoFilePath} not found`);
+  let definition;
+  try {
+    definition = await load(protoFilePath, {
+      keepCase: true,
+      longs: String,
+      enums: String,
+      defaults: true,
+      oneofs: true,
+      includeDirs,
+    });
+  } catch (e) {
+    console.log(e);
+    // TODO: return errors from process.on('warning', (warning) => {
+    //   console.warn(warning.name);
+    //   console.warn(warning.message);
+    //   console.warn(warning.code);
+    //   console.warn(warning.stack);
+    // });
+    return [];
+  }
   const methods = Object.values(definition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format).flatMap(Object.values);
   return methods.map(getMethodInfo);
 };
 
-// TODO: instead of reloading the methods from the protoFile,
-//  just get it from what has already been loaded in the react component,
-//  or from the cache
-//  We can't send the method over IPC because of the following deprecation in Electron v9
-//  https://www.electronjs.org/docs/breaking-changes#behavior-changed-sending-non-js-objects-over-ipc-now-throws-an-exception
 export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDefinition<any, any> | undefined> => {
-  invariant(request.protoFileId, 'protoFileId is required');
-  const protoFile = await models.protoFile.getById(request.protoFileId);
-  invariant(protoFile?.protoText, `No proto file found for gRPC request ${request._id}`);
-  const { filePath, dirs } = await writeProtoFile(protoFile);
-  const definition = await load(filePath, {
-    keepCase: true,
-    longs: String,
-    enums: String,
-    defaults: true,
-    oneofs: true,
-    includeDirs: dirs,
-  });
+  const { protoFilePath, includeDirs } = request;
+  invariant(protoFilePath, `Proto file at ${protoFilePath} not found`);
+  let definition;
+  try {
+    definition = await load(protoFilePath, {
+      keepCase: true,
+      longs: String,
+      enums: String,
+      defaults: true,
+      oneofs: true,
+      includeDirs,
+    });
+  } catch (e) {
+    console.log(e);
+    throw e;
+  }
   return Object.values(definition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format).flatMap(Object.values).find(c => c.path === request.protoMethodName);
 };
 

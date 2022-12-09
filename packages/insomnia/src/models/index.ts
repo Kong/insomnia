@@ -3,8 +3,6 @@ import {
   EXPORT_TYPE_COOKIE_JAR,
   EXPORT_TYPE_ENVIRONMENT,
   EXPORT_TYPE_GRPC_REQUEST,
-  EXPORT_TYPE_PROTO_DIRECTORY,
-  EXPORT_TYPE_PROTO_FILE,
   EXPORT_TYPE_REQUEST,
   EXPORT_TYPE_REQUEST_GROUP,
   EXPORT_TYPE_UNIT_TEST,
@@ -24,8 +22,6 @@ import * as _grpcRequestMeta from './grpc-request-meta';
 import * as _oAuth2Token from './o-auth-2-token';
 import * as _pluginData from './plugin-data';
 import * as _project from './project';
-import * as _protoDirectory from './proto-directory';
-import * as _protoFile from './proto-file';
 import * as _request from './request';
 import * as _requestGroup from './request-group';
 import * as _requestGroupMeta from './request-group-meta';
@@ -76,8 +72,6 @@ export const stats = _stats;
 export const unitTest = _unitTest;
 export const unitTestSuite = _unitTestSuite;
 export const unitTestResult = _unitTestResult;
-export const protoFile = _protoFile;
-export const protoDirectory = _protoDirectory;
 export const grpcRequest = _grpcRequest;
 export const grpcRequestMeta = _grpcRequestMeta;
 export const webSocketPayload = _webSocketPayload;
@@ -113,8 +107,6 @@ export function all() {
     unitTestSuite,
     unitTestResult,
     unitTest,
-    protoFile,
-    protoDirectory,
     grpcRequest,
     grpcRequestMeta,
     webSocketPayload,
@@ -229,6 +221,4 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_COOKIE_JAR]: cookieJar,
   [EXPORT_TYPE_ENVIRONMENT]: environment,
   [EXPORT_TYPE_API_SPEC]: apiSpec,
-  [EXPORT_TYPE_PROTO_FILE]: protoFile,
-  [EXPORT_TYPE_PROTO_DIRECTORY]: protoDirectory,
 };

@@ -3,8 +3,6 @@ import { describe, expect, it } from '@jest/globals';
 import { generateId } from '../../../common/misc';
 import { isGrpcRequest, isGrpcRequestId } from '../../grpc-request';
 import * as models from '../../index';
-import { isProtoDirectory } from '../../proto-directory';
-import { isProtoFile } from '../../proto-file';
 import { isRequest } from '../../request';
 import { isRequestGroup } from '../../request-group';
 import { isDesign, isWorkspace, WorkspaceScopeKeys } from '../../workspace';
@@ -82,48 +80,6 @@ describe('isRequestGroup', () => {
   it.each(unsupported)('should return false: "%s"', type => {
     expect(
       isRequestGroup({
-        type,
-      }),
-    ).toBe(false);
-  });
-});
-
-describe('isProtoFile', () => {
-  const supported = [models.protoFile.type];
-  const unsupported = allTypes.filter(x => !supported.includes(x));
-
-  it.each(supported)('should return true: "%s"', type => {
-    expect(
-      isProtoFile({
-        type,
-      }),
-    ).toBe(true);
-  });
-
-  it.each(unsupported)('should return false: "%s"', type => {
-    expect(
-      isProtoFile({
-        type,
-      }),
-    ).toBe(false);
-  });
-});
-
-describe('isProtoDirectory', () => {
-  const supported = [models.protoDirectory.type];
-  const unsupported = allTypes.filter(x => !supported.includes(x));
-
-  it.each(supported)('should return true: "%s"', type => {
-    expect(
-      isProtoDirectory({
-        type,
-      }),
-    ).toBe(true);
-  });
-
-  it.each(unsupported)('should return false: "%s"', type => {
-    expect(
-      isProtoDirectory({
         type,
       }),
     ).toBe(false);

@@ -110,9 +110,6 @@ export const Debug: FC = () => {
 
   const grpcState = grpcStates.find(s => s.requestId === activeRequest?._id);
   const setGrpcState = (newState:GrpcRequestState) => setGrpcStates(state => state.map(s => s.requestId === activeRequest?._id ? newState : s));
-  const reloadRequests = (requestIds:string[]) => {
-    setGrpcStates(state => state.map(s => requestIds.includes(s.requestId) ? { ...s, reloadMethods: true } : s));
-  };
   useEffect(() => window.main.on('grpc.start', (_, id) => {
     setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, running: true } : s));
   }), []);
@@ -274,7 +271,6 @@ export const Debug: FC = () => {
               workspaceId={activeWorkspace._id}
               grpcState={grpcState}
               setGrpcState={setGrpcState}
-              reloadRequests={reloadRequests}
             />)}
           {activeRequest && isWebSocketRequest(activeRequest) && (
             <WebSocketRequestPane

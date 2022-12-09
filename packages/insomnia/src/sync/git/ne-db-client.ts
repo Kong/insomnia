@@ -146,8 +146,6 @@ export class NeDBClient {
         models.unitTestSuite.type,
         models.unitTest.type,
         models.grpcRequest.type,
-        models.protoFile.type,
-        models.protoDirectory.type,
         models.webSocketRequest.type,
         models.webSocketPayload.type,
       ];

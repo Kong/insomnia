@@ -22,7 +22,6 @@ import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
-import { ProtoFilesModal } from '../modals/proto-files-modal';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { SvgIcon } from '../svg-icon';
 import { GrpcTabbedMessages } from '../viewers/grpc-tabbed-messages';
@@ -33,7 +32,6 @@ interface Props {
   workspaceId: string;
   grpcState: GrpcRequestState;
   setGrpcState: (states: GrpcRequestState) => void;
-  reloadRequests: (requestIds: string[]) => void;
 }
 
 const StyledUrlBar = styled.div`
@@ -66,9 +64,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   workspaceId,
   grpcState,
   setGrpcState,
-  reloadRequests,
 }) => {
-  const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
   const { requestMessages, running, reloadMethods, methods } = grpcState;
   useAsync(async () => {
     // don't actually reload until the request has stopped running or if methods do not need to be reloaded
@@ -76,13 +72,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       return;
     }
 
-    if (!activeRequest.protoFileId) {
+    if (!activeRequest.protoFilePath) {
       return;
     }
-    console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
-    const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
+    console.log('[gRPC] loading proto file methods');
+    const methods = await window.main.grpc.loadMethods(activeRequest._id);
     setGrpcState({ ...grpcState, methods, reloadMethods: false });
-  }, [reloadMethods, running, setGrpcState, grpcState, activeRequest.protoFileId]);
+  }, [reloadMethods, running, activeRequest.protoFilePath, activeRequest._id, setGrpcState, grpcState]);
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
@@ -138,125 +134,128 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   });
 
   return (
-    <>
-      <Pane type="request">
-        <PaneHeader>
-          <StyledUrlBar>
-            <div className="method-grpc pad-right pad-left vertically-center">gRPC</div>
-            <StyledUrlEditor title={activeRequest.url}>
-              <OneLineEditor
-                key={uniquenessKey}
-                type="text"
-                defaultValue={activeRequest.url}
-                placeholder="grpcb.in:9000"
-                onChange={url => models.grpcRequest.update(activeRequest, { url })}
-                getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, activeRequest._id)}
-              />
-            </StyledUrlEditor>
-            <StyledDropdown>
-              <GrpcMethodDropdown
-                disabled={running}
-                methods={methods}
-                selectedMethod={method}
-                handleChange={protoMethodName => {
-                  models.grpcRequest.update(activeRequest, { protoMethodName });
-                  setGrpcState({
-                    ...grpcState,
-                    requestMessages: [],
-                    responseMessages: [],
-                    status: undefined,
-                    error: undefined,
+    <Pane type="request">
+      <PaneHeader>
+        <StyledUrlBar>
+          <div className="method-grpc pad-right pad-left vertically-center">gRPC</div>
+          <StyledUrlEditor title={activeRequest.url}>
+            <OneLineEditor
+              key={uniquenessKey}
+              type="text"
+              defaultValue={activeRequest.url}
+              placeholder="grpcb.in:9000"
+              onChange={url => models.grpcRequest.update(activeRequest, { url })}
+              getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, activeRequest._id)}
+            />
+          </StyledUrlEditor>
+          <StyledDropdown>
+            <GrpcMethodDropdown
+              disabled={running}
+              methods={methods}
+              selectedMethod={method}
+              handleChange={protoMethodName => {
+                models.grpcRequest.update(activeRequest, { protoMethodName });
+                setGrpcState({
+                  ...grpcState,
+                  requestMessages: [],
+                  responseMessages: [],
+                  status: undefined,
+                  error: undefined,
+                });
+              }}
+              handleChangeProtoFile={() => setIsProtoModalOpen(true)}
+            />
+          </StyledDropdown>
+
+          <GrpcSendButton
+            running={running}
+            methodType={methodType}
+            handleCancel={() => window.main.grpc.cancel(activeRequest._id)}
+            handleStart={handleRequestSend}
+          />
+        </StyledUrlBar>
+      </PaneHeader>
+      <PaneBody>
+        {methodType && (
+          <Tabs aria-label="Grpc request pane tabs">
+            <TabItem key="method-type" title={GrpcMethodTypeName[methodType]}>
+              <GrpcTabbedMessages
+                uniquenessKey={uniquenessKey}
+                tabNamePrefix="Stream"
+                messages={requestMessages}
+                bodyText={activeRequest.body.text}
+                handleBodyChange={value => models.grpcRequest.update(activeRequest, {
+                  body: { ...activeRequest.body, text: value },
+                })}
+                showActions={running && canClientStream(methodType)}
+                handleStream={async () => {
+                  const requestBody = await getRenderedGrpcRequestMessage({
+                    request: activeRequest,
+                    environmentId,
+                    purpose: RENDER_PURPOSE_SEND,
                   });
+                  const preparedMessage = {
+                    body: requestBody,
+                    requestId: activeRequest._id,
+                  };
+                  window.main.grpc.sendMessage(preparedMessage);
+                  setGrpcState({ ...grpcState,  requestMessages:[...requestMessages, {
+                    id: generateId(),
+                    text:preparedMessage.body.text || '',
+                    created: Date.now(),
+                  }] });
+
                 }}
-                handleChangeProtoFile={() => setIsProtoModalOpen(true)}
+                handleCommit={() => window.main.grpc.commit(activeRequest._id)}
               />
-            </StyledDropdown>
-
-            <GrpcSendButton
-              running={running}
-              methodType={methodType}
-              handleCancel={() => window.main.grpc.cancel(activeRequest._id)}
-              handleStart={handleRequestSend}
-            />
-          </StyledUrlBar>
-        </PaneHeader>
-        <PaneBody>
-          {methodType && (
-            <Tabs aria-label="Grpc request pane tabs">
-              <TabItem key="method-type" title={GrpcMethodTypeName[methodType]}>
-                <GrpcTabbedMessages
-                  uniquenessKey={uniquenessKey}
-                  tabNamePrefix="Stream"
-                  messages={requestMessages}
-                  bodyText={activeRequest.body.text}
-                  handleBodyChange={value => models.grpcRequest.update(activeRequest, {
-                    body: { ...activeRequest.body, text: value },
-                  })}
-                  showActions={running && canClientStream(methodType)}
-                  handleStream={async () => {
-                    const requestBody = await getRenderedGrpcRequestMessage({
-                      request: activeRequest,
-                      environmentId,
-                      purpose: RENDER_PURPOSE_SEND,
-                    });
-                    const preparedMessage = {
-                      body: requestBody,
-                      requestId: activeRequest._id,
-                    };
-                    window.main.grpc.sendMessage(preparedMessage);
-                    setGrpcState({ ...grpcState,  requestMessages:[...requestMessages, {
-                      id: generateId(),
-                      text:preparedMessage.body.text || '',
-                      created: Date.now(),
-                    }] });
-
-                  }}
-                  handleCommit={() => window.main.grpc.commit(activeRequest._id)}
-                />
-              </TabItem>
-              <TabItem key="headers" title="Headers">
-                <PanelContainer className="tall wide">
-                  <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
-                    <KeyValueEditor
-                      namePlaceholder="header"
-                      valuePlaceholder="value"
-                      descriptionPlaceholder="description"
-                      pairs={activeRequest.metadata}
-                      handleGetAutocompleteNameConstants={getCommonHeaderNames}
-                      handleGetAutocompleteValueConstants={getCommonHeaderValues}
-                      onChange={(metadata: GrpcRequestHeader[]) => models.grpcRequest.update(activeRequest, { metadata })}
-                    />
-                  </ErrorBoundary>
-                </PanelContainer>
-              </TabItem>
-            </Tabs>
-          )}
-          {!methodType && (
-            <EmptyStatePane
-              icon={<SvgIcon icon="bug" />}
-              documentationLinks={[documentationLinks.introductionToInsomnia]}
-              secondaryAction="Select a body type from above to send data in the body of a request"
-              title="Enter a URL and send to get a response"
-            />
-          )}
-        </PaneBody>
-      </Pane>
-      {isProtoModalOpen && <ProtoFilesModal
-        reloadRequests={reloadRequests}
-        defaultId={activeRequest.protoFileId}
-        onSave={async (protoFileId: string) => {
-          if (activeRequest.protoFileId !== protoFileId) {
-            await models.grpcRequest.update(activeRequest, {
-              protoFileId,
-              body: {
-                text: '{}',
-              },
-              protoMethodName: '',
-            });
-            setGrpcState({ ...grpcState, reloadMethods: true });
-          }
-        }}
-      />}
-    </>
+            </TabItem>
+            <TabItem key="headers" title="Headers">
+              <PanelContainer className="tall wide">
+                <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
+                  <KeyValueEditor
+                    namePlaceholder="header"
+                    valuePlaceholder="value"
+                    descriptionPlaceholder="description"
+                    pairs={activeRequest.metadata}
+                    handleGetAutocompleteNameConstants={getCommonHeaderNames}
+                    handleGetAutocompleteValueConstants={getCommonHeaderValues}
+                    onChange={(metadata: GrpcRequestHeader[]) => models.grpcRequest.update(activeRequest, { metadata })}
+                  />
+                </ErrorBoundary>
+              </PanelContainer>
+            </TabItem>
+            <TabItem key="service-defintion" title="Service Definition">
+              <PanelContainer className="tall wide">
+                <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
+                  a form goes here to manage protofilepath and includes
+                  <button
+                    onClick={async () => {
+                      const formData = new FormData();
+                      const protoFilePath = formData.get('protoFilePath') as string;
+                      await models.grpcRequest.update(activeRequest, {
+                        protoFilePath,
+                        body: {
+                          text: '{}',
+                        },
+                        protoMethodName: '',
+                      });
+                      setGrpcState({ ...grpcState, reloadMethods: true });
+                    }}
+                  >Save</button>
+                </ErrorBoundary>
+              </PanelContainer>
+            </TabItem>
+          </Tabs>
+        )}
+        {!methodType && (
+          <EmptyStatePane
+            icon={<SvgIcon icon="bug" />}
+            documentationLinks={[documentationLinks.introductionToInsomnia]}
+            secondaryAction="Select a body type from above to send data in the body of a request"
+            title="Enter a URL and send to get a response"
+          />
+        )}
+      </PaneBody>
+    </Pane>
   );
 };

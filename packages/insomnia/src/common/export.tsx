@@ -14,8 +14,6 @@ import { isGrpcRequest } from '../models/grpc-request';
 import * as requestOperations from '../models/helpers/request-operations';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
-import { isProtoDirectory } from '../models/proto-directory';
-import { isProtoFile } from '../models/proto-file';
 import { isRequest } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
 import { isUnitTest } from '../models/unit-test';
@@ -34,8 +32,6 @@ import {
   EXPORT_TYPE_COOKIE_JAR,
   EXPORT_TYPE_ENVIRONMENT,
   EXPORT_TYPE_GRPC_REQUEST,
-  EXPORT_TYPE_PROTO_DIRECTORY,
-  EXPORT_TYPE_PROTO_FILE,
   EXPORT_TYPE_REQUEST,
   EXPORT_TYPE_REQUEST_GROUP,
   EXPORT_TYPE_UNIT_TEST,
@@ -188,8 +184,6 @@ export async function exportRequestsData(
         isApiSpec(d) ||
         isUnitTestSuite(d) ||
         isUnitTest(d) ||
-        isProtoFile(d) ||
-        isProtoDirectory(d) ||
         isWebSocketPayload(d)
       );
     });
@@ -208,8 +202,6 @@ export async function exportRequestsData(
           isWebSocketRequest(d) ||
           isGrpcRequest(d) ||
           isRequestGroup(d) ||
-          isProtoFile(d) ||
-          isProtoDirectory(d) ||
           isWorkspace(d) ||
           isCookieJar(d) ||
           isEnvironment(d) ||
@@ -255,12 +247,6 @@ export async function exportRequestsData(
       } else if (isWebSocketRequest(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_WEBSOCKET_REQUEST;
-      } else if (isProtoFile(d)) {
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-        d._type = EXPORT_TYPE_PROTO_FILE;
-      } else if (isProtoDirectory(d)) {
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-        d._type = EXPORT_TYPE_PROTO_DIRECTORY;
       } else if (isApiSpec(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_API_SPEC;
