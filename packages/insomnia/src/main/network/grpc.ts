@@ -62,7 +62,7 @@ export interface GrpcPathSegments {
 }
 
 // Split a full gRPC path into it's segments
-const getGrpcPathSegments = (path: string) => ({
+export const getGrpcPathSegments = (path: string) => ({
   packageName: PROTO_PATH_REGEX.exec(path)?.groups?.package,
   serviceName: PROTO_PATH_REGEX.exec(path)?.groups?.service,
   methodName: PROTO_PATH_REGEX.exec(path)?.groups?.method,

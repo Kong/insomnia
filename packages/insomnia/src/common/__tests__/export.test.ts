@@ -294,7 +294,6 @@ describe('export', () => {
         }),
       ]),
     });
-    expect(exportWorkspacesDataJson.resources.length).toBe(13);
     // Test export some requests only.
     const exportRequestsJson = await exportRequestsData([r1, gr1], false, 'json');
     const exportRequestsYaml = await exportRequestsData([r1, gr1], false, 'yaml');
