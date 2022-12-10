@@ -65,7 +65,8 @@ resources:
     url: localhost:50051
     name: example grpc
     description: ""
-    protoFileId: pf_f5ad699127fc42c09832ac85f40e1c4e
+    protoFilePath: ''
+    includeDirs: []
     protoMethodName: /hello.HelloService/SayHello
     metadata: []
     body:
@@ -161,7 +162,6 @@ resources:
     contents: ""
     contentType: yaml
     _type: api_spec
-  - _id: pf_f5ad699127fc42c09832ac85f40e1c4e
     parentId: wrk_0702a57d75d44255a8cecd2c5fa87809
     modified: 1666867482366
     created: 1666867482366

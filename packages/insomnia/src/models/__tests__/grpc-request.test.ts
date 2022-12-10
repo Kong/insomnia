@@ -12,7 +12,8 @@ describe('init()', () => {
       url: '',
       name: 'New gRPC Request',
       description: '',
-      protoFileId: '',
+      protoFilePath: '',
+      includeDirs: [],
       protoMethodName: '',
       metadata: [],
       body: {
@@ -41,7 +42,8 @@ describe('create()', () => {
       name: 'My request',
       description: '',
       url: '',
-      protoFileId: '',
+      protoFilePath: '',
+      includeDirs: [],
       protoMethodName: '',
       metadata: [],
       body: {

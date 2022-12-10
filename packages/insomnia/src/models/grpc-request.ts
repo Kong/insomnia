@@ -82,10 +82,6 @@ export function getById(_id: string) {
   return db.getWhere<GrpcRequest>(type, { _id });
 }
 
-export function findByProtoFileId(protoFileId: string) {
-  return db.find<GrpcRequest>(type, { protoFileId });
-}
-
 export function findByParentId(parentId: string) {
   return db.find<GrpcRequest>(type, { parentId });
 }

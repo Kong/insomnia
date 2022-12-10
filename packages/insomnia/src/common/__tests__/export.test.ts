@@ -223,27 +223,13 @@ describe('export', () => {
       name: 'Request 1',
       parentId: w._id,
     });
-    const pf1 = await models.protoFile.create({
-      name: 'ProtoFile 1',
-      parentId: w._id,
-    });
     const gr1 = await models.grpcRequest.create({
       name: 'Grpc Request 1',
       parentId: w._id,
-      protoFileId: pf1._id,
-    });
-    const pd = await models.protoDirectory.create({
-      name: 'ProtoDirectory 1',
-      parentId: w._id,
-    });
-    const pf2 = await models.protoFile.create({
-      name: 'ProtoFile 2',
-      parentId: pd._id,
     });
     const gr2 = await models.grpcRequest.create({
       name: 'Grpc Request 2',
       parentId: w._id,
-      protoFileId: pf2._id,
     });
     const f2 = await models.requestGroup.create({
       name: 'Folder 2',
@@ -374,14 +360,6 @@ describe('export', () => {
       name: 'ProtoDirectory 1',
       parentId: w._id,
     });
-    const pf1 = await models.protoFile.create({
-      name: 'ProtoFile 1',
-      parentId: w._id,
-    });
-    const pf2 = await models.protoFile.create({
-      name: 'ProtoFile 2',
-      parentId: pd._id,
-    });
     const r1 = await models.request.create({
       name: 'Request 1',
       parentId: w._id,
@@ -389,7 +367,6 @@ describe('export', () => {
     const gr1 = await models.grpcRequest.create({
       name: 'Grpc Request 1',
       parentId: w._id,
-      protoFileId: pf1._id,
     });
     const f2 = await models.requestGroup.create({
       name: 'Folder 2',
@@ -402,7 +379,6 @@ describe('export', () => {
     const gr2 = await models.grpcRequest.create({
       name: 'Grpc Request 2',
       parentId: f2._id,
-      protoFileId: pf2._id,
     });
     const uts1 = await models.unitTestSuite.create({
       name: 'Unit Test Suite One',
