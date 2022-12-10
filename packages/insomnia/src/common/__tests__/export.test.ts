@@ -290,16 +290,7 @@ describe('export', () => {
           _id: gr1._id,
         }),
         expect.objectContaining({
-          _id: pd._id,
-        }),
-        expect.objectContaining({
-          _id: pf1._id,
-        }),
-        expect.objectContaining({
           _id: gr2._id,
-        }),
-        expect.objectContaining({
-          _id: pf2._id,
         }),
       ]),
     });
@@ -333,12 +324,6 @@ describe('export', () => {
         expect.objectContaining({
           _id: gr1._id,
         }),
-        expect.objectContaining({
-          _id: pf1._id,
-        }),
-        expect.objectContaining({
-          _id: pf2._id,
-        }),
       ]),
     });
     expect(exportRequestsDataJSON.resources.length).toBe(10);
@@ -356,10 +341,6 @@ describe('export', () => {
       contents: 'openapi: "3.0.0"',
     });
     const jar = await models.cookieJar.getOrCreateForParentId(w._id);
-    const pd = await models.protoDirectory.create({
-      name: 'ProtoDirectory 1',
-      parentId: w._id,
-    });
     const r1 = await models.request.create({
       name: 'Request 1',
       parentId: w._id,
@@ -413,15 +394,6 @@ describe('export', () => {
         }),
         expect.objectContaining({
           _id: jar._id,
-        }),
-        expect.objectContaining({
-          _id: pd._id,
-        }),
-        expect.objectContaining({
-          _id: pf1._id,
-        }),
-        expect.objectContaining({
-          _id: pf2._id,
         }),
         expect.objectContaining({
           _id: r1._id,
