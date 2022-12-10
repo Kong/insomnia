@@ -7,9 +7,9 @@ import { writeFile } from 'fs/promises';
 
 import { authorizeUserInWindow } from '../../network/o-auth-2/misc';
 import installPlugin from '../install-plugin';
+import { gRPCBridgeAPI } from '../network/grpc';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
-import { gRPCBridgeAPI } from './grpc';
 
 export interface MainBridgeAPI {
   restart: () => void;

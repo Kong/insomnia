@@ -447,7 +447,7 @@ const closeWebSocketConnection = (
   ws.close();
 };
 
-const closeAllWebSocketConnections = (): void => WebSocketConnections.forEach(ws => ws.close());
+export const closeAllWebSocketConnections = (): void => WebSocketConnections.forEach(ws => ws.close());
 
 const findMany = async (
   options: { responseId: string }
@@ -484,5 +484,3 @@ export const registerWebSocketHandlers = () => {
   ipcMain.handle('webSocket.readyState', (_, options: Parameters<typeof getWebSocketReadyState>[0]) => getWebSocketReadyState(options));
   ipcMain.handle('webSocket.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
 };
-
-electron.app.on('window-all-closed', closeAllWebSocketConnections);

@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { generateId } from '../../../common/misc';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../common/render';
-import type { GrpcMethodInfo, GrpcMethodType } from '../../../main/ipc/grpc';
+import type { GrpcMethodInfo, GrpcMethodType } from '../../../main/network/grpc';
 import * as models from '../../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';

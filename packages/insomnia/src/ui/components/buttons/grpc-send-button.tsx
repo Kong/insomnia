@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
 
-import { GrpcMethodType } from '../../../main/ipc/grpc';
+import { GrpcMethodType } from '../../../main/network/grpc';
 import { Button, ButtonProps } from '../themed-button';
 
 interface Props {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { getGrpcPathSegments } from '../../main/ipc/grpc';
+import { getGrpcPathSegments } from '../../main/network/grpc';
 import { getShortGrpcPath } from '../../ui/components/dropdowns/grpc-method-dropdown/grpc-method-dropdown';
 
 describe('getGrpcPathSegments', () => {

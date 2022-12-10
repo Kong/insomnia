@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
 
-import type { GrpcMethodType } from '../../../main/ipc/grpc';
+import type { GrpcMethodType } from '../../../main/network/grpc';
 import { GrpcMethodTypeName } from '../panes/grpc-request-pane';
 import { Tooltip } from '../tooltip';
 

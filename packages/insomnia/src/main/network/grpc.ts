@@ -1,7 +1,7 @@
 import { Call, ClientDuplexStream, ClientReadableStream, MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
 import { credentials, makeGenericClientConstructor, Metadata, status } from '@grpc/grpc-js';
 import { AnyDefinition, EnumTypeDefinition, load, MessageTypeDefinition, PackageDefinition } from '@grpc/proto-loader';
-import electron, { ipcMain, IpcMainInvokeEvent } from 'electron';
+import { ipcMain, IpcMainInvokeEvent } from 'electron';
 import { IpcMainEvent } from 'electron';
 
 import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
@@ -26,14 +26,14 @@ export interface gRPCBridgeAPI {
   commit: typeof commit;
   cancel: typeof cancel;
   loadMethods: typeof loadMethods;
-  closeAll: typeof closeAll;
+  closeAll: typeof closeAllGrpcs;
 }
 export function registergRPCHandlers() {
   ipcMain.handle('grpc.start', start);
   ipcMain.on('grpc.sendMessage', sendMessage);
   ipcMain.on('grpc.commit', (_, requestId) => commit(requestId));
   ipcMain.on('grpc.cancel', (_, requestId) => cancel(requestId));
-  ipcMain.on('grpc.closeAll', closeAll);
+  ipcMain.on('grpc.closeAll', closeAllGrpcs);
   ipcMain.handle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
 }
 const getDefinition = async (request: GrpcRequest): Promise<PackageDefinition> => {
@@ -269,6 +269,4 @@ const filterDisabledMetaData = (metadata: GrpcRequestHeader[],): Metadata => {
 };
 
 export type GrpcMethodType = 'unary' | 'server' | 'client' | 'bidi';
-const closeAll = (): void => grpcCalls.forEach(x => x.cancel());
-
-electron.app.on('window-all-closed', closeAll);
+export const closeAllGrpcs = (): void => grpcCalls.forEach(x => x.cancel());

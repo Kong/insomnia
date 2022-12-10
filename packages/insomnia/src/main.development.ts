@@ -11,9 +11,9 @@ import { disableSpellcheckerDownload } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
 import { validateInsomniaConfig } from './common/validate-insomnia-config';
 import { registerElectronHandlers } from './main/ipc/electron';
-import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
-import { registerWebSocketHandlers } from './main/network/websocket';
+import { closeAllGrpcs, registergRPCHandlers } from './main/network/grpc';
+import { closeAllWebSocketConnections, registerWebSocketHandlers } from './main/network/websocket';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
@@ -122,6 +122,8 @@ if (defaultProtocolSuccessful) {
 
 // Quit when all windows are closed (except on Mac).
 app.on('window-all-closed', () => {
+  closeAllWebSocketConnections();
+  closeAllGrpcs();
   if (!isMac()) {
     app.quit();
   }

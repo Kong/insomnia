@@ -1,7 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { getMethodType } from '../../../common/grpc-paths';
-import { GrpcMethodType } from '../../../main/ipc/grpc';
+import { getMethodType, GrpcMethodType } from '../../../main/network/grpc';
 import { canClientStream } from '../../../ui/components/panes/grpc-request-pane';
 
 describe('getMethodType', () => {

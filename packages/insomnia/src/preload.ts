@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import { gRPCBridgeAPI } from './main/ipc/grpc';
+import { gRPCBridgeAPI } from './main/network/grpc';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 
 const webSocket: WebSocketBridgeAPI = {

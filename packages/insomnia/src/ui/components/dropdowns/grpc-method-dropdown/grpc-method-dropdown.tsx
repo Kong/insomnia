@@ -1,7 +1,7 @@
 import React, { Fragment, FunctionComponent } from 'react';
 import styled from 'styled-components';
 
-import type { GrpcMethodInfo, GrpcPathSegments } from '../../../../main/ipc/grpc';
+import type { GrpcMethodInfo, GrpcPathSegments } from '../../../../main/network/grpc';
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
