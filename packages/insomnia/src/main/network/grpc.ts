@@ -11,7 +11,7 @@ import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
 import { SegmentEvent, trackSegmentEvent } from '../../ui/analytics';
 import { invariant } from '../../utils/invariant';
 
-const grpcCalls = new Map<string, Call>();
+const calls = new Map<string, Call>();
 export interface GrpcIpcRequestParams {
   request: RenderedGrpcRequest;
 }
@@ -102,7 +102,10 @@ export const start = async (
   { request }: GrpcIpcRequestParams,
 ) => {
   const definition = getDefinition(request);
-  invariant(definition, 'Proto file is invalid');
+  if (!definition) {
+    event.sender.send('grpc.error', request._id, new Error('The protofile is invalid'));
+    return;
+  }
   const method = Object.values(definition)
     .filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format)
     .flatMap(Object.values).find(c => c.path === request.protoMethodName);
@@ -139,7 +142,7 @@ export const start = async (
           onUnaryResponse(event, request._id),
         );
         unaryCall.on('status', (status: StatusObject) => event.sender.send('grpc.status', request._id, status));
-        grpcCalls.set(request._id, unaryCall);
+        calls.set(request._id, unaryCall);
         break;
       case 'client':
         const clientCall = client.makeClientStreamRequest(
@@ -149,7 +152,7 @@ export const start = async (
           filterDisabledMetaData(request.metadata),
           onUnaryResponse(event, request._id));
         clientCall.on('status', (status: StatusObject) => event.sender.send('grpc.status', request._id, status));
-        grpcCalls.set(request._id, clientCall);
+        calls.set(request._id, clientCall);
         break;
       case 'server':
         const serverCall = client.makeServerStreamRequest(
@@ -160,7 +163,7 @@ export const start = async (
           filterDisabledMetaData(request.metadata),
         );
         onStreamingResponse(event, serverCall, request._id);
-        grpcCalls.set(request._id, serverCall);
+        calls.set(request._id, serverCall);
         break;
       case 'bidi':
         const bidiCall = client.makeBidiStreamRequest(
@@ -169,7 +172,7 @@ export const start = async (
           method.responseDeserialize,
           filterDisabledMetaData(request.metadata));
         onStreamingResponse(event, bidiCall, request._id);
-        grpcCalls.set(request._id, bidiCall);
+        calls.set(request._id, bidiCall);
         break;
       default:
         return;
@@ -199,7 +202,7 @@ export const sendMessage = (
     // Try removing it and using a bidi RPC and notice messages don't send consistently
     process.nextTick(() => {
       // @ts-expect-error -- TSCONVERSION only write if the call is ClientWritableStream | ClientDuplexStream
-      grpcCalls.get(requestId)?.write(messageBody, err => {
+      calls.get(requestId)?.write(messageBody, err => {
         if (err) {
           console.error('[gRPC] Error when writing to stream', err);
         }
@@ -211,8 +214,8 @@ export const sendMessage = (
 };
 
 // @ts-expect-error -- TSCONVERSION only end if the call is ClientWritableStream | ClientDuplexStream
-export const commit = (requestId: string): void => grpcCalls.get(requestId)?.end();
-export const cancel = (requestId: string): void => grpcCalls.get(requestId)?.cancel();
+export const commit = (requestId: string): void => calls.get(requestId)?.end();
+export const cancel = (requestId: string): void => calls.get(requestId)?.cancel();
 
 const onStreamingResponse = (event: IpcMainInvokeEvent, call: ClientReadableStream<any> | ClientDuplexStream<any, any>, requestId: string) => {
   call.on('status', (status: StatusObject) => event.sender.send('grpc.status', requestId, status));
@@ -223,20 +226,20 @@ const onStreamingResponse = (event: IpcMainInvokeEvent, call: ClientReadableStre
       // Taken through inspiration from other implementation, needs validation
       if (error.code === status.UNKNOWN || error.code === status.UNAVAILABLE) {
         event.sender.send('grpc.end', requestId);
-        grpcCalls.delete(requestId);
+        calls.delete(requestId);
       }
     }
   });
   call.on('end', () => {
     event.sender.send('grpc.end', requestId);
     // @ts-expect-error -- TSCONVERSION channel not found in call
-    const channel = grpcCalls.get(requestId)?.call?.call.channel;
+    const channel = calls.get(requestId)?.call?.call.channel;
     if (channel) {
       channel.close();
     } else {
       console.log(`[gRPC] failed to close channel for req=${requestId} because it was not found`);
     }
-    grpcCalls.delete(requestId);
+    calls.delete(requestId);
   });
 };
 
@@ -249,13 +252,13 @@ const onUnaryResponse = (event: IpcMainInvokeEvent, requestId: string) => (err: 
   }
   event.sender.send('grpc.end', requestId);
   // @ts-expect-error -- TSCONVERSION channel not found in call
-  const channel = grpcCalls.get(requestId)?.call?.call.channel;
+  const channel = calls.get(requestId)?.call?.call.channel;
   if (channel) {
     channel.close();
   } else {
     console.log(`[gRPC] failed to close channel for req=${requestId} because it was not found`);
   }
-  grpcCalls.delete(requestId);
+  calls.delete(requestId);
 };
 
 const filterDisabledMetaData = (metadata: GrpcRequestHeader[],): Metadata => {
@@ -269,4 +272,4 @@ const filterDisabledMetaData = (metadata: GrpcRequestHeader[],): Metadata => {
 };
 
 export type GrpcMethodType = 'unary' | 'server' | 'client' | 'bidi';
-export const closeAllGrpcs = (): void => grpcCalls.forEach(x => x.cancel());
+export const closeAllGrpcs = (): void => calls.forEach(x => x.cancel());
