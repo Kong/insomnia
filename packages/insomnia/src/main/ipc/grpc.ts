@@ -1,4 +1,4 @@
-import { Call, ClientDuplexStream, ClientReadableStream, MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
+import { Call, ClientDuplexStream, ClientReadableStream, ServiceError, StatusObject } from '@grpc/grpc-js';
 import { credentials, makeGenericClientConstructor, Metadata, status } from '@grpc/grpc-js';
 import { AnyDefinition, EnumTypeDefinition, load, MessageTypeDefinition, PackageDefinition } from '@grpc/proto-loader';
 import electron, { ipcMain } from 'electron';
