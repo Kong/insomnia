@@ -79,7 +79,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         const methods = await window.main.grpc.loadMethods(activeRequest._id);
         setMethods(methods);
         setError('');
-        console.log('[gRPC] loading proto file methods', activeRequest._id, methods);
+        console.log('[gRPC] loading proto file methods', methods.map(m => m.fullPath));
 
       } catch (err) {
         console.error('[gRPC] error loading protofile', err);
