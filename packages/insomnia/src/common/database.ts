@@ -24,7 +24,6 @@ export interface Query {
   plugin?: string;
   key?: string;
   environmentId?: string | null;
-  protoFileId?: string;
 }
 
 type Sort = Record<string, any>;
