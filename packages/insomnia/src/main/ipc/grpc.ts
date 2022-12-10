@@ -1,7 +1,7 @@
 import { Call, ClientDuplexStream, ClientReadableStream, MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
 import { credentials, makeGenericClientConstructor, Metadata, status } from '@grpc/grpc-js';
 import { AnyDefinition, EnumTypeDefinition, load, MessageTypeDefinition, PackageDefinition } from '@grpc/proto-loader';
-import electron, { ipcMain } from 'electron';
+import electron, { ipcMain, IpcMainInvokeEvent } from 'electron';
 import { IpcMainEvent } from 'electron';
 
 import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
@@ -29,7 +29,7 @@ export interface gRPCBridgeAPI {
   closeAll: typeof closeAll;
 }
 export function registergRPCHandlers() {
-  ipcMain.on('grpc.start', start);
+  ipcMain.handle('grpc.start', start);
   ipcMain.on('grpc.sendMessage', sendMessage);
   ipcMain.on('grpc.commit', (_, requestId) => commit(requestId));
   ipcMain.on('grpc.cancel', (_, requestId) => cancel(requestId));
@@ -63,9 +63,9 @@ export interface GrpcPathSegments {
 
 // Split a full gRPC path into it's segments
 const getGrpcPathSegments = (path: string) => ({
-  packageName:PROTO_PATH_REGEX.exec(path)?.groups?.package,
-  serviceName:PROTO_PATH_REGEX.exec(path)?.groups?.service,
-  methodName:PROTO_PATH_REGEX.exec(path)?.groups?.method,
+  packageName: PROTO_PATH_REGEX.exec(path)?.groups?.package,
+  serviceName: PROTO_PATH_REGEX.exec(path)?.groups?.service,
+  methodName: PROTO_PATH_REGEX.exec(path)?.groups?.method,
 });
 export interface GrpcMethodInfo {
   segments: GrpcPathSegments;
@@ -97,95 +97,95 @@ const loadMethods = async (requestId: string): Promise<GrpcMethodInfo[]> => {
   return methods.map(getMethodInfo);
 };
 
-export const start = (
-  event: IpcMainEvent,
+export const start = async (
+  event: IpcMainInvokeEvent,
   { request }: GrpcIpcRequestParams,
 ) => {
-  getDefinition(request).catch(console.error).then(definition => {
-    const method = definition && Object.values(definition)
-      .filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format)
-      .flatMap(Object.values).find(c => c.path === request.protoMethodName);
+  const definition = getDefinition(request);
+  invariant(definition, 'Proto file is invalid');
+  const method = Object.values(definition)
+    .filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format)
+    .flatMap(Object.values).find(c => c.path === request.protoMethodName);
 
-    if (!method) {
-      event.reply('grpc.error', request._id, new Error(`The gRPC method ${request.protoMethodName} could not be found`));
-      return;
-    }
-    const methodType = getMethodType(method);
-    // Create client
-    const { url, enableTls } = parseGrpcUrl(request.url);
-    if (!url) {
-      event.reply('grpc.error', request._id, new Error('URL not specified'));
-      return undefined;
-    }
-    console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`);
-    // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
-    const Client = makeGenericClientConstructor({});
-    const client = new Client(url, enableTls ? credentials.createSsl() : credentials.createInsecure());
-    if (!client) {
-      return;
-    }
-
-    try {
-      const messageBody = JSON.parse(request.body.text || '');
-      switch (methodType) {
-        case 'unary':
-          const unaryCall = client.makeUnaryRequest(
-            method.path,
-            method.requestSerialize,
-            method.responseDeserialize,
-            messageBody,
-            filterDisabledMetaData(request.metadata),
-            onUnaryResponse(event, request._id),
-          );
-          unaryCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
-          grpcCalls.set(request._id, unaryCall);
-          break;
-        case 'client':
-          const clientCall = client.makeClientStreamRequest(
-            method.path,
-            method.requestSerialize,
-            method.responseDeserialize,
-            filterDisabledMetaData(request.metadata),
-            onUnaryResponse(event, request._id));
-          clientCall.on('status', (status: StatusObject) => event.reply('grpc.status', request._id, status));
-          grpcCalls.set(request._id, clientCall);
-          break;
-        case 'server':
-          const serverCall = client.makeServerStreamRequest(
-            method.path,
-            method.requestSerialize,
-            method.responseDeserialize,
-            messageBody,
-            filterDisabledMetaData(request.metadata),
-          );
-          onStreamingResponse(event, serverCall, request._id);
-          grpcCalls.set(request._id, serverCall);
-          break;
-        case 'bidi':
-          const bidiCall = client.makeBidiStreamRequest(
-            method.path,
-            method.requestSerialize,
-            method.responseDeserialize,
-            filterDisabledMetaData(request.metadata));
-          onStreamingResponse(event, bidiCall, request._id);
-          grpcCalls.set(request._id, bidiCall);
-          break;
-        default:
-          return;
-      }
-      // Update request stats
-      models.stats.incrementExecutedRequests();
-      trackSegmentEvent(SegmentEvent.requestExecute);
-
-      event.reply('grpc.start', request._id);
-
-    } catch (error) {
-      // TODO: How do we want to handle this case, where the message cannot be parsed?
-      //  Currently an error will be shown, but the stream will not be cancelled.
-      event.reply('grpc.error', request._id, error);
-    }
+  if (!method) {
+    event.sender.send('grpc.error', request._id, new Error(`The gRPC method ${request.protoMethodName} could not be found`));
     return;
-  });
+  }
+  const methodType = getMethodType(method);
+  // Create client
+  const { url, enableTls } = parseGrpcUrl(request.url);
+  if (!url) {
+    event.sender.send('grpc.error', request._id, new Error('URL not specified'));
+    return undefined;
+  }
+  console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`);
+  // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
+  const Client = makeGenericClientConstructor({});
+  const client = new Client(url, enableTls ? credentials.createSsl() : credentials.createInsecure());
+  if (!client) {
+    return;
+  }
+
+  try {
+    const messageBody = JSON.parse(request.body.text || '');
+    switch (methodType) {
+      case 'unary':
+        const unaryCall = client.makeUnaryRequest(
+          method.path,
+          method.requestSerialize,
+          method.responseDeserialize,
+          messageBody,
+          filterDisabledMetaData(request.metadata),
+          onUnaryResponse(event, request._id),
+        );
+        unaryCall.on('status', (status: StatusObject) => event.sender.send('grpc.status', request._id, status));
+        grpcCalls.set(request._id, unaryCall);
+        break;
+      case 'client':
+        const clientCall = client.makeClientStreamRequest(
+          method.path,
+          method.requestSerialize,
+          method.responseDeserialize,
+          filterDisabledMetaData(request.metadata),
+          onUnaryResponse(event, request._id));
+        clientCall.on('status', (status: StatusObject) => event.sender.send('grpc.status', request._id, status));
+        grpcCalls.set(request._id, clientCall);
+        break;
+      case 'server':
+        const serverCall = client.makeServerStreamRequest(
+          method.path,
+          method.requestSerialize,
+          method.responseDeserialize,
+          messageBody,
+          filterDisabledMetaData(request.metadata),
+        );
+        onStreamingResponse(event, serverCall, request._id);
+        grpcCalls.set(request._id, serverCall);
+        break;
+      case 'bidi':
+        const bidiCall = client.makeBidiStreamRequest(
+          method.path,
+          method.requestSerialize,
+          method.responseDeserialize,
+          filterDisabledMetaData(request.metadata));
+        onStreamingResponse(event, bidiCall, request._id);
+        grpcCalls.set(request._id, bidiCall);
+        break;
+      default:
+        return;
+    }
+    // Update request stats
+    models.stats.incrementExecutedRequests();
+    trackSegmentEvent(SegmentEvent.requestExecute);
+
+    event.sender.send('grpc.start', request._id);
+
+  } catch (error) {
+    // TODO: How do we want to handle this case, where the message cannot be parsed?
+    //  Currently an error will be shown, but the stream will not be cancelled.
+    event.sender.send('grpc.error', request._id, error);
+  }
+  return;
 };
 
 export const sendMessage = (
@@ -214,21 +214,21 @@ export const sendMessage = (
 export const commit = (requestId: string): void => grpcCalls.get(requestId)?.end();
 export const cancel = (requestId: string): void => grpcCalls.get(requestId)?.cancel();
 
-const onStreamingResponse = (event: IpcMainEvent, call: ClientReadableStream<any> | ClientDuplexStream<any, any>, requestId: string) => {
-  call.on('status', (status: StatusObject) => event.reply('grpc.status', requestId, status));
-  call.on('data', data => event.reply('grpc.data', requestId, data));
+const onStreamingResponse = (event: IpcMainInvokeEvent, call: ClientReadableStream<any> | ClientDuplexStream<any, any>, requestId: string) => {
+  call.on('status', (status: StatusObject) => event.sender.send('grpc.status', requestId, status));
+  call.on('data', data => event.sender.send('grpc.data', requestId, data));
   call.on('error', (error: ServiceError) => {
     if (error && error.code !== status.CANCELLED) {
-      event.reply('grpc.error', requestId, error);
+      event.sender.send('grpc.error', requestId, error);
       // Taken through inspiration from other implementation, needs validation
       if (error.code === status.UNKNOWN || error.code === status.UNAVAILABLE) {
-        event.reply('grpc.end', requestId);
+        event.sender.send('grpc.end', requestId);
         grpcCalls.delete(requestId);
       }
     }
   });
   call.on('end', () => {
-    event.reply('grpc.end', requestId);
+    event.sender.send('grpc.end', requestId);
     // @ts-expect-error -- TSCONVERSION channel not found in call
     const channel = grpcCalls.get(requestId)?.call?.call.channel;
     if (channel) {
@@ -240,14 +240,14 @@ const onStreamingResponse = (event: IpcMainEvent, call: ClientReadableStream<any
   });
 };
 
-const onUnaryResponse = (event: IpcMainEvent, requestId: string) => (err: ServiceError | null, value?: Record<string, any>) => {
+const onUnaryResponse = (event: IpcMainInvokeEvent, requestId: string) => (err: ServiceError | null, value?: Record<string, any>) => {
   if (!err) {
-    event.reply('grpc.data', requestId, value);
+    event.sender.send('grpc.data', requestId, value);
   }
   if (err && err.code !== status.CANCELLED) {
-    event.reply('grpc.error', requestId, err);
+    event.sender.send('grpc.error', requestId, err);
   }
-  event.reply('grpc.end', requestId);
+  event.sender.send('grpc.end', requestId);
   // @ts-expect-error -- TSCONVERSION channel not found in call
   const channel = grpcCalls.get(requestId)?.call?.call.channel;
   if (channel) {

@@ -16,7 +16,7 @@ const webSocket: WebSocketBridgeAPI = {
   },
 };
 const grpc: gRPCBridgeAPI = {
-  start: options => ipcRenderer.send('grpc.start', options),
+  start: options => ipcRenderer.invoke('grpc.start', options),
   sendMessage: options => ipcRenderer.send('grpc.sendMessage', options),
   commit: options => ipcRenderer.send('grpc.commit', options),
   cancel: options => ipcRenderer.send('grpc.cancel', options),
