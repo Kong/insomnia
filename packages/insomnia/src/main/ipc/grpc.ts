@@ -41,7 +41,7 @@ const getDefinition = async (request: GrpcRequest): Promise<PackageDefinition> =
   const { protoFilePath, includeDirs } = request;
   invariant(protoFilePath, `Proto file at ${protoFilePath} not found`);
   try {
-    return load(protoFilePath, {
+    return await load(protoFilePath, {
       keepCase: true,
       longs: String,
       enums: String,
@@ -57,7 +57,7 @@ const getDefinition = async (request: GrpcRequest): Promise<PackageDefinition> =
 const loadMethods = async (requestId: string): Promise<GrpcMethodInfo[]> => {
   const request = await models.grpcRequest.getById(requestId);
   invariant(request, `Request ${requestId} not found`);
-  const definition = getDefinition(request);
+  const definition = await getDefinition(request);
   const methods = Object.values(definition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format).flatMap(Object.values);
   return methods.map(getMethodInfo);
 };
@@ -66,8 +66,10 @@ export const start = (
   event: IpcMainEvent,
   { request }: GrpcIpcRequestParams,
 ) => {
-  getDefinition(request).then(definition => {
-    const method = Object.values(definition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format).flatMap(Object.values).find(c => c.path === request.protoMethodName);
+  getDefinition(request).catch(console.error).then(definition => {
+    const method = definition && Object.values(definition)
+      .filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format)
+      .flatMap(Object.values).find(c => c.path === request.protoMethodName);
 
     if (!method) {
       event.reply('grpc.error', request._id, new Error(`The gRPC method ${request.protoMethodName} could not be found`));

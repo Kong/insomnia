@@ -3,7 +3,6 @@ import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { ChangeBufferEvent, database as db } from '../../common/database';
-import { GrpcMethodInfo } from '../../common/grpc-paths';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
@@ -58,8 +57,6 @@ export interface GrpcRequestState {
   responseMessages: GrpcMessage[];
   status?: StatusObject;
   error?: ServiceError;
-  methods: GrpcMethodInfo[];
-  reloadMethods: boolean;
 }
 const INITIAL_GRPC_REQUEST_STATE = {
   running: false,
@@ -67,8 +64,6 @@ const INITIAL_GRPC_REQUEST_STATE = {
   responseMessages: [],
   status: undefined,
   error: undefined,
-  methods: [],
-  reloadMethods: true,
 };
 export const Debug: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);

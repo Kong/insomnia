@@ -60,18 +60,14 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
     >
       <DropdownButton
         buttonClass={DropdownMethodButton}
+        disabled={methods.length === 0 || disabled}
       >
-        <Tooltip message={selectedPath || 'Select Method'} position="bottom" delay={500}>
+        {methods.length ? <Tooltip message={selectedPath || 'Select Method'} position="bottom" delay={500}>
           {!selectedPath ? 'Select Method' : getShortGrpcPath(getGrpcPathSegments(selectedPath), selectedPath)}
           <i className="fa fa-caret-down pad-left-sm" />
-        </Tooltip>
+        </Tooltip> : 'Add Proto File'}
       </DropdownButton>
-      {!methods.length && (
-        <>
-          <DropdownDivider />
-          <DropdownItem disabled>No methods found</DropdownItem>
-        </>
-      )}
+
       {Object.entries(groupedByPkg).map(([name, pkg]) => (
         <Fragment key={name}>
           <DropdownDivider>

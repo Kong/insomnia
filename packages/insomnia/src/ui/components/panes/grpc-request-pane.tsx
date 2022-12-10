@@ -1,10 +1,10 @@
 import { dirname } from 'path';
-import React, { FunctionComponent } from 'react';
+import React, { FunctionComponent, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useAsync } from 'react-use';
 import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
+import { GrpcMethodInfo } from '../../../common/grpc-paths';
 import { generateId } from '../../../common/misc';
 import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../common/render';
 import { GrpcMethodType } from '../../../main/ipc/grpc';
@@ -31,7 +31,7 @@ interface Props {
   activeRequest: GrpcRequest;
   workspaceId: string;
   grpcState: GrpcRequestState;
-  setGrpcState: (states: GrpcRequestState) => void;
+  setGrpcState: (state: GrpcRequestState) => void;
 }
 
 const StyledUrlBar = styled.div`
@@ -65,27 +65,30 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   grpcState,
   setGrpcState,
 }) => {
-  const [error, setError] = React.useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [methods, setMethods] = useState<GrpcMethodInfo[]>([]);
+  const { requestMessages, running } = grpcState;
 
-  const { requestMessages, running, reloadMethods, methods } = grpcState;
-  useAsync(async () => {
-    // don't actually reload until the request has stopped running or if methods do not need to be reloaded
-    if (!reloadMethods || running) {
-      return;
-    }
-    if (!activeRequest.protoFilePath) {
-      return;
-    }
-    console.log('[gRPC] loading proto file methods');
-    try {
-      const methods = await window.main.grpc.loadMethods(activeRequest._id);
-      setGrpcState({ ...grpcState, methods, reloadMethods: false });
-      setError('');
-    } catch (err) {
-      console.error(err);
-      setError(err.message.slice(56));
-    }
-  }, [reloadMethods, running, activeRequest.protoFilePath, activeRequest._id, setGrpcState, grpcState]);
+  useEffect(() => {
+    const loadMethods = async () => {
+      if (!activeRequest.protoFilePath) {
+        setMethods([]);
+        return;
+      }
+      try {
+        const methods = await window.main.grpc.loadMethods(activeRequest._id);
+        setMethods(methods);
+        setError('');
+        console.log('[gRPC] loading proto file methods', activeRequest._id, methods);
+
+      } catch (err) {
+        console.error('[gRPC] error loading protofile', err);
+        setError('Proto file invalid: ' + err.message.slice(56));
+        setMethods([]);
+      }
+    };
+    loadMethods();
+  }, [activeRequest._id, activeRequest.protoFilePath, activeRequest.includeDirs]);
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
@@ -255,7 +258,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                           },
                           protoMethodName: '',
                         });
-                        setGrpcState({ ...grpcState, reloadMethods: true });
                       }}
                     />
                   </label>
@@ -278,7 +280,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                           },
                           protoMethodName: '',
                         });
-                        setGrpcState({ ...grpcState, reloadMethods: true });
                       }}
                     />
                   </label>
@@ -306,7 +307,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       <i className="fa fa-trash-o" />
                     </button>
                   </div>
-                ))}</div>
+                ))}
+                </div>
               </ErrorBoundary>
             </PanelContainer>
           </TabItem>
