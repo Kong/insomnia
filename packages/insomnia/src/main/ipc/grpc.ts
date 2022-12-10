@@ -1,10 +1,9 @@
-import { Call, ClientDuplexStream, ClientReadableStream, ServiceError, StatusObject } from '@grpc/grpc-js';
+import { Call, ClientDuplexStream, ClientReadableStream, MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
 import { credentials, makeGenericClientConstructor, Metadata, status } from '@grpc/grpc-js';
 import { AnyDefinition, EnumTypeDefinition, load, MessageTypeDefinition, PackageDefinition } from '@grpc/proto-loader';
 import electron, { ipcMain } from 'electron';
 import { IpcMainEvent } from 'electron';
 
-import { getMethodInfo, getMethodType, GrpcMethodInfo } from '../../common/grpc-paths';
 import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
@@ -54,6 +53,42 @@ const getDefinition = async (request: GrpcRequest): Promise<PackageDefinition> =
     throw e;
   }
 };
+const PROTO_PATH_REGEX = /^\/(?:(?<package>[\w.]+)\.)?(?<service>\w+)\/(?<method>\w+)$/;
+
+export interface GrpcPathSegments {
+  packageName?: string;
+  serviceName?: string;
+  methodName?: string;
+}
+
+// Split a full gRPC path into it's segments
+const getGrpcPathSegments = (path: string) => ({
+  packageName:PROTO_PATH_REGEX.exec(path)?.groups?.package,
+  serviceName:PROTO_PATH_REGEX.exec(path)?.groups?.service,
+  methodName:PROTO_PATH_REGEX.exec(path)?.groups?.method,
+});
+export interface GrpcMethodInfo {
+  segments: GrpcPathSegments;
+  type: GrpcMethodType;
+  fullPath: string;
+}
+export const getMethodType = ({ requestStream, responseStream }: MethodDefinition<any, any>): GrpcMethodType => {
+  if (requestStream && responseStream) {
+    return 'bidi';
+  }
+  if (requestStream) {
+    return 'client';
+  }
+  if (responseStream) {
+    return 'server';
+  }
+  return 'unary';
+};
+export const getMethodInfo = (method: MethodDefinition<any, any>): GrpcMethodInfo => ({
+  segments: getGrpcPathSegments(method.path),
+  type: getMethodType(method),
+  fullPath: method.path,
+});
 const loadMethods = async (requestId: string): Promise<GrpcMethodInfo[]> => {
   const request = await models.grpcRequest.getById(requestId);
   invariant(request, `Request ${requestId} not found`);
