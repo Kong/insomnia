@@ -54,7 +54,7 @@ const loadMethods = async (requestId: string): Promise<GrpcMethodInfo[]> => {
     });
   } catch (e) {
     console.log(e);
-    return [];
+    throw e;
   }
   const methods = Object.values(definition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format).flatMap(Object.values);
   return methods.map(getMethodInfo);

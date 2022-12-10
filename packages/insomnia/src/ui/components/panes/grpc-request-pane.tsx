@@ -65,6 +65,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   grpcState,
   setGrpcState,
 }) => {
+  const [error, setError] = React.useState<string>('');
+
   const { requestMessages, running, reloadMethods, methods } = grpcState;
   useAsync(async () => {
     // don't actually reload until the request has stopped running or if methods do not need to be reloaded
@@ -75,8 +77,14 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       return;
     }
     console.log('[gRPC] loading proto file methods');
-    const methods = await window.main.grpc.loadMethods(activeRequest._id);
-    setGrpcState({ ...grpcState, methods, reloadMethods: false });
+    try {
+      const methods = await window.main.grpc.loadMethods(activeRequest._id);
+      setGrpcState({ ...grpcState, methods, reloadMethods: false });
+      setError('');
+    } catch (err) {
+      console.error(err);
+      setError(err.message.slice(56));
+    }
   }, [reloadMethods, running, activeRequest.protoFilePath, activeRequest._id, setGrpcState, grpcState]);
 
   const gitVersion = useGitVCSVersion();
@@ -226,6 +234,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           <TabItem key="service-defintion" title="Service Definition">
             <PanelContainer className="tall wide pad">
               <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
+                {error && <p className="notice error margin-bottom-sm">{error}</p>}
                 <div className="form-control">
                   <label>
                     <small>Proto file</small>
