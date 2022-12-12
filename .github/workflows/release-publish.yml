@@ -50,7 +50,7 @@ jobs:
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
           totp_secret: ${{secrets.ES_TOTP_SECRET}}
           file_path: ./artifacts/windows-latest-artifacts/insomnia/artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}.exe
-          output_path: /artifacts/windows-latest-artifacts/insomnia/artifacts/
+          output_path: ./artifacts/windows-latest-artifacts/insomnia/artifacts/
 
       - name: Code-sign Windows portable .exe artifact
         uses: sslcom/actions-codesigner@develop
@@ -61,7 +61,7 @@ jobs:
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
           totp_secret: ${{secrets.ES_TOTP_SECRET}}
           file_path: ./artifacts/windows-latest-artifacts/insomnia/artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}-portable.exe
-          output_path: /artifacts/windows-latest-artifacts/insomnia/artifacts/
+          output_path: ./artifacts/windows-latest-artifacts/insomnia/artifacts/
 
       - name: Set Inso CLI version on Github Env
         run:
