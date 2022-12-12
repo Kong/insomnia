@@ -39,7 +39,7 @@ jobs:
           workflow: release-build.yml
           workflow_conclusion: success
           branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
-          path: ./artifacts/
+          path: ${GITHUB_WORKSPACE}/artifacts/
 
       - name: Code-sign Windows .exe artifact
         uses: sslcom/actions-codesigner@develop
@@ -87,7 +87,7 @@ jobs:
         with:
           release_id: ${{ steps.release_inso_cli.outputs.id }}
           tag_name: lib@${{ env.INSO_VERSION }}
-          file: "./artifacts/*-latest-artifacts/insomnia-inso/artifacts/**"
+          file: "${GITHUB_WORKSPACE}/artifacts/*-latest-artifacts/insomnia-inso/artifacts/**"
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
 
@@ -111,7 +111,7 @@ jobs:
         with:
           release_id: ${{ steps.core_tag_and_release.outputs.id }}
           tag_name: ${{ env.RELEASE_CORE_TAG }}
-          file: "./artifacts/*-latest-artifacts/insomnia/**"
+          file: "${GITHUB_WORKSPACE}/artifacts/*-latest-artifacts/insomnia/**"
           prerelease: ${{ env.IS_PRERELEASE }}
           draft: false
 
@@ -172,7 +172,7 @@ jobs:
       - name: Push Inso CLI docker image tags to Docker Hub
         run: |
           echo -n $DOCKER_REGISTRY_TOKEN | docker login -u "$DOCKER_REGISTRY_USER" --password-stdin $DOCKER_REGISTRY
-          docker load -i ./artifacts/ubuntu-latest-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
+          docker load -i ${GITHUB_WORKSPACE}/artifacts/ubuntu-latest-artifacts/insomnia-inso/artifacts/inso-docker-image.tar
           docker tag insomnia-inso:temp ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${{ env.INSO_VERSION }}
           docker tag insomnia-inso:temp ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_LATEST_TAG}
           docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${{ env.INSO_VERSION }}
@@ -196,7 +196,7 @@ jobs:
           sentry-cli releases new ${{ env.RELEASE_VERSION }}
           sentry-cli releases set-commits ${{ env.RELEASE_VERSION }} --commit 'Kong/insomnia@${{ env.RELEASE_BRANCH }}'
 
-          sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ./artifacts/*-latest-sentry
+          sentry-cli sourcemaps upload -r ${{ env.RELEASE_VERSION }} ${GITHUB_WORKSPACE}/artifacts/*-latest-sentry
 
       - name: Configure Git user
         uses: Homebrew/actions/git-user-config@master
