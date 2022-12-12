@@ -41,6 +41,12 @@ jobs:
           branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
           path: ./artifacts/
 
+      - name: Temporarily move Windows artifacts
+        shell: bash
+        run: |
+          mv ./artifacts/windows-latest-artifacts/insomnia/dist/squirrel-windows/Insomnia.Core-${{ env.RELEASE_VERSION }}.exe ./artifacts/
+          mv ./artifacts/windows-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}-portable.exe ./artifacts/
+
       - name: Code-sign Windows .exe artifact
         uses: sslcom/actions-codesigner@develop
         with:
@@ -49,8 +55,8 @@ jobs:
           password: ${{secrets.ES_PASSWORD}}
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
           totp_secret: ${{secrets.ES_TOTP_SECRET}}
-          file_path: ./artifacts/windows-latest-artifacts/insomnia/artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}.exe
-          output_path: ./artifacts/windows-latest-artifacts/insomnia/artifacts/
+          file_path: ${GITHUB_WORKSPACE}/artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}.exe
+          output_path: ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist/squirrel-windows
 
       - name: Code-sign Windows portable .exe artifact
         uses: sslcom/actions-codesigner@develop
@@ -60,8 +66,8 @@ jobs:
           password: ${{secrets.ES_PASSWORD}}
           credential_id: ${{secrets.ES_CREDENTIAL_ID}}
           totp_secret: ${{secrets.ES_TOTP_SECRET}}
-          file_path: ./artifacts/windows-latest-artifacts/insomnia/artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}-portable.exe
-          output_path: ./artifacts/windows-latest-artifacts/insomnia/artifacts/
+          file_path: ${GITHUB_WORKSPACE}/artifacts/Insomnia.Core-${{ env.RELEASE_VERSION }}-portable.exe
+          output_path: ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist
 
       - name: Set Inso CLI version on Github Env
         run:
