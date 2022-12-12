@@ -242,7 +242,7 @@ export class GitVCS {
    * @param gitCredentials
    * @returns {Promise<boolean>}
    */
-  async canPush(gitCredentials?: GitCredentials | null) {
+  async canPush(gitCredentials?: GitCredentials | null): Promise<boolean> {
     const branch = await this.getBranch();
     const remote = await this.getRemote('origin');
 
@@ -414,3 +414,7 @@ export class GitVCS {
     return newBranches;
   }
 }
+
+const gitVCSInstance = new GitVCS();
+
+export const getGitVCS = () => gitVCSInstance;

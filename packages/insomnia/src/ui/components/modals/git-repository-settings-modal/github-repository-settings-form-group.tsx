@@ -248,7 +248,8 @@ const GitHubRepositoryForm = ({
       id="github"
       className="form-group"
       style={{ height: '100%' }}
-      onSubmit={event =>
+      onSubmit={event => {
+        event.preventDefault();
         onSubmit({
           uri: (new FormData(event.currentTarget).get('uri') as string) ?? '',
           author: {
@@ -260,8 +261,8 @@ const GitHubRepositoryForm = ({
             token: token ?? '',
             oauth2format: 'github',
           },
-        })
-      }
+        });
+      }}
     >
       {token && (
         <div className="form-control form-control--outlined">

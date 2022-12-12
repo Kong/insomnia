@@ -185,7 +185,8 @@ const GitLabRepositoryForm = ({
       id="gitlab"
       className="form-group"
       style={{ height: '100%' }}
-      onSubmit={event =>
+      onSubmit={event => {
+        event.preventDefault();
         onSubmit({
           uri: (new FormData(event.currentTarget).get('uri') as string) ?? '',
           author: {
@@ -197,7 +198,8 @@ const GitLabRepositoryForm = ({
             token: token ?? '',
             oauth2format: 'gitlab',
           },
-        })
+        });
+      }
       }
     >
       {token && (

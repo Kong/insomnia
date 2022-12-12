@@ -1,141 +1,67 @@
 import classnames from 'classnames';
-import React, { FC, Fragment, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useMount } from 'react-use';
+import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
+import { useFetcher, useParams } from 'react-router-dom';
 
-import { database as db } from '../../../common/database';
 import { docsGitSync } from '../../../common/documentation';
-import { isNotNullOrUndefined } from '../../../common/misc';
-import * as models from '../../../models';
-import type { Workspace } from '../../../models/workspace';
-import type { GitLogEntry, GitVCS } from '../../../sync/git/git-vcs';
-import { MemClient } from '../../../sync/git/mem-client';
+import { GitRepository } from '../../../models/git-repository';
 import { getOauth2FormatName } from '../../../sync/git/utils';
-import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../../analytics';
-import { initialize as initializeEntities } from '../../redux/modules/entities';
-import * as gitActions from '../../redux/modules/git';
-import { selectActiveGitRepository } from '../../redux/selectors';
+import { GitRepoLoaderData, PushToGitRemoteActionData } from '../../routes/git-actions';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
-import { showAlert, showError, showModal } from '../modals';
+import { showAlert, showModal } from '../modals';
 import { GitBranchesModal } from '../modals/git-branches-modal';
 import { GitLogModal } from '../modals/git-log-modal';
-import { GitStagingModal } from '../modals/git-staging-modal';
+import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
+// import { GitStagingModal } from '../modals/git-staging-modal';
 import { Button } from '../themed-button';
 
 interface Props {
-  workspace: Workspace;
-  vcs: GitVCS;
+  gitRepository: GitRepository | null;
   className?: string;
 }
 
-interface State {
-  loadingPush: boolean;
-  loadingPull: boolean;
-  log: GitLogEntry[];
-  branch: string;
-  branches: string[];
-}
-export const GitSyncDropdown: FC<Props> = ({ workspace, vcs, className }) => {
-  const [state, setState] = useState<State>({
-    loadingPush: false,
-    loadingPull: false,
-    log: [],
-    branch: '',
-    branches: [],
-  });
-  const dispatch = useDispatch();
-  const gitRepository = useSelector(selectActiveGitRepository);
+export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string};
   const dropdownRef = useRef<DropdownHandle>(null);
+  const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
+  const gitPushFetcher = useFetcher<PushToGitRemoteActionData>();
+  const gitPullFetcher = useFetcher();
+  const gitCheckoutFetcher = useFetcher();
+  // const gitCommitFetcher = useFetcher();
+  const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
 
-  useMount(() => {
-    refreshState();
+  const loadingPush = gitPushFetcher.state === 'loading';
+  const loadingPull = gitPullFetcher.state === 'loading';
+
+  useEffect(() => {
+    if (gitRepository?._id && gitRepoDataFetcher.state === 'idle' && !gitRepoDataFetcher.data) {
+      gitRepoDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/repo`);
+    }
+  }, [gitRepoDataFetcher, gitRepository?._id, organizationId, projectId, workspaceId]);
+
+  useEffect(() => {
+    if (gitPushFetcher.data?.errors?.length) {
+      showAlert({
+        title: 'Push Failed',
+        message: gitPushFetcher.data.errors.join('\n'),
+      });
+    }
   });
 
-  async function refreshState() {
-    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-    // Clear cached items and return if no state
-    if (!vcs.isInitialized() || !workspaceMeta.gitRepositoryId) {
-      // Don't update unnecessarily
-      const needsUpdate = [
-        workspaceMeta.cachedGitRepositoryBranch,
-        workspaceMeta.cachedGitLastAuthor,
-        workspaceMeta.cachedGitLastCommitTime,
-      ].some(isNotNullOrUndefined);
-      if (needsUpdate) {
-        models.workspaceMeta.updateByParentId(workspace._id, {
-          cachedGitRepositoryBranch: null,
-          cachedGitLastAuthor: null,
-          cachedGitLastCommitTime: null,
-        });
-      }
-      return;
-    }
-    const branch = await vcs.getBranch();
-    const branches = await vcs.listBranches();
-    const log = (await vcs.log()) || [];
-    setState(state => ({ ...state, log, branch, branches }));
-    const author = log[0] ? log[0].commit.author : null;
-    // NOTE: We're converting timestamp to ms here
-    const cachedGitLastCommitTime = author ? author.timestamp * 1000 : null;
-    await models.workspaceMeta.updateByParentId(workspace._id, {
-      cachedGitRepositoryBranch: branch,
-      cachedGitLastAuthor: author?.name || null,
-      cachedGitLastCommitTime,
+  async function handlePush({ force }: { force: boolean }) {
+    gitPushFetcher.submit({
+      force: `${force}`,
+    }, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/push`,
+      method: 'post',
     });
   }
 
-  async function handlePush({ force }: { force: boolean }) {
-    if (!gitRepository) {
-      return;
-    }
-    setState(state => ({ ...state, loadingPush: true }));
-    // Check if there is anything to push
-    let canPush = false;
-    try {
-      canPush = await vcs.canPush(gitRepository.credentials);
-    } catch (err) {
-      showError({ title: 'Error Pushing Repository', error: err });
-      setState(state => ({ ...state, loadingPush: false }));
-      return;
-    }
-    // If nothing to push, display that to the user
-    if (!canPush) {
-      showAlert({ title: 'Push Skipped', message: 'Everything up-to-date. Nothing was pushed to the remote' });
-      setState(state => ({ ...state, loadingPush: false }));
-      return;
-    }
-    const bufferId = await db.bufferChanges();
-    const providerName = getOauth2FormatName(gitRepository.credentials);
-    try {
-      await vcs.push(gitRepository.credentials, force);
-      trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push'), providerName });
-    } catch (err) {
-      if (err.code === 'PushRejectedError') {
-        dropdownRef.current?.hide();
-        showAlert({
-          title: 'Push Rejected',
-          message: 'Do you want to force push?',
-          okLabel: 'Force Push',
-          addCancel: true,
-          onConfirm: () => {
-            handlePush({ force: true });
-          },
-        });
-      } else {
-        showError({ title: 'Error Pushing Repository', error: err });
-        trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push', err.message), providerName });
-      }
-    }
-    await db.flushChanges(bufferId);
-    setState(state => ({ ...state, loadingPush: false }));
-  }
-
-  const { log, branches, branch, loadingPull, loadingPush } = state;
+  const { log, branches, branch: currentBranch } = gitRepoDataFetcher.data || { log: [], branches: [], branch: '' };
   let iconClassName = '';
   const providerName = getOauth2FormatName(gitRepository?.credentials);
   if (providerName === 'github') {
@@ -144,33 +70,42 @@ export const GitSyncDropdown: FC<Props> = ({ workspace, vcs, className }) => {
   if (providerName === 'gitlab') {
     iconClassName = 'fa fa-gitlab';
   }
+
+  if (gitRepoDataFetcher.state === 'loading' && !gitRepoDataFetcher.data) {
+    return null;
+  }
+
+  if (!gitRepository) {
+    return (
+      <Fragment>
+        <Button
+          size="small"
+          className="btn--clicky-small btn-sync"
+          onClick={() => setIsGitRepoSettingsModalOpen(true)}
+        >
+          <i className="fa fa-code-fork space-right" />
+          Setup Git Sync
+        </Button>
+        {isGitRepoSettingsModalOpen && <GitRepositorySettingsModal onHide={() => setIsGitRepoSettingsModalOpen(false)} />}
+      </Fragment>
+    );
+  }
+
   return (
     <div className={className}>
       <Dropdown className="wide tall" ref={dropdownRef}>
-        {vcs.isInitialized() ? (
-          <DropdownButton
-            buttonClass={Button}
-            // @ts-expect-error -- TSCONVERSION
-            size="small"
-            className="btn--clicky-small btn-sync"
-          >
-            {iconClassName && (
-              <i className={classnames('space-right', iconClassName)} />
-            )}
-            <div className="ellipsis">{branch}</div>
-            <i className="fa fa-code-fork space-left" />
-          </DropdownButton>
-        ) : (
-          <DropdownButton
-            buttonClass={Button}
-            // @ts-expect-error -- TSCONVERSION
-            size="small"
-            className="btn--clicky-small btn-sync"
-          >
-            <i className="fa fa-code-fork space-right" />
-            Setup Git Sync
-          </DropdownButton>
-        )}
+        <DropdownButton
+          buttonClass={Button}
+          // @ts-expect-error -- TSCONVERSION
+          size="small"
+          className="btn--clicky-small btn-sync"
+        >
+          {iconClassName && (
+            <i className={classnames('space-right', iconClassName)} />
+          )}
+          <div className="ellipsis">{currentBranch}</div>
+          <i className="fa fa-code-fork space-left" />
+        </DropdownButton>
 
         <DropdownDivider>
           Git Sync
@@ -187,52 +122,37 @@ export const GitSyncDropdown: FC<Props> = ({ workspace, vcs, className }) => {
 
         <DropdownItem
           onClick={() => {
-            if (gitRepository) {
-              dispatch(gitActions.updateGitRepository({
-                gitRepository,
-              }));
-            } else {
-              dispatch(gitActions.setupGitRepository({
-                workspace,
-                createFsClient: MemClient.createClient,
-              }));
-            }
+            setIsGitRepoSettingsModalOpen(true);
           }}
         >
           <i className="fa fa-wrench" /> Repository Settings
         </DropdownItem>
 
-        {vcs.isInitialized() && (
+        {currentBranch && (
           <Fragment>
-            <DropdownItem onClick={() => showModal(GitBranchesModal, { onCheckout: refreshState })}>
+            <DropdownItem onClick={() => showModal(GitBranchesModal, { onCheckout: () => {} })}>
               <i className="fa fa-code-fork" /> Branches
             </DropdownItem>
           </Fragment>
         )}
 
-        {vcs.isInitialized() && (
+        {currentBranch && (
           <Fragment>
             <DropdownDivider>Branches</DropdownDivider>
             {branches.map(branch => {
-              const { branch: currentBranch } = state;
               const icon = branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
               const isCurrentBranch = branch === currentBranch;
               return (
                 <DropdownItem
                   key={branch}
+                  disabled={isCurrentBranch}
                   onClick={async () => {
-                    if (isCurrentBranch) {
-                      return;
-                    }
-                    const bufferId = await db.bufferChanges();
-                    try {
-                      await vcs.checkout(branch);
-                    } catch (error) {
-                      showError({ title: 'Checkout Error', error });
-                    }
-                    await db.flushChanges(bufferId, true);
-                    await dispatch(initializeEntities());
-                    refreshState();
+                    gitCheckoutFetcher.submit({
+                      branch,
+                    }, {
+                      action: `/project/${projectId}/workspace/${workspaceId}/git/checkout`,
+                      method: 'post',
+                    });
                   }}
                   className={classnames({ bold: isCurrentBranch })}
                   title={isCurrentBranch ? '' : `Switch to "${branch}"`}
@@ -243,12 +163,10 @@ export const GitSyncDropdown: FC<Props> = ({ workspace, vcs, className }) => {
               );
             })}
 
-            <DropdownDivider>{branch}</DropdownDivider>
+            <DropdownDivider>{currentBranch}</DropdownDivider>
 
             <DropdownItem
-              onClick={() => showModal(GitStagingModal, {
-                onCommit: refreshState,
-              })}
+              onClick={() => console.log('commit')}
             >
               <i className="fa fa-check" /> Commit
             </DropdownItem>
@@ -266,25 +184,10 @@ export const GitSyncDropdown: FC<Props> = ({ workspace, vcs, className }) => {
             )}
             <DropdownItem
               onClick={async () => {
-                setState(state => ({ ...state, loadingPull: true }));
-                if (!gitRepository) {
-                  // Should never happen
-                  throw new Error('Tried to pull without configuring git repo');
-                }
-                const bufferId = await db.bufferChanges();
-                const providerName = getOauth2FormatName(gitRepository.credentials);
-                try {
-                  await vcs.pull(gitRepository.credentials);
-                  trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'pull'), providerName });
-                } catch (err) {
-                  showError({
-                    title: 'Error Pulling Repository',
-                    error: err,
-                  });
-                  trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull', err.message));
-                }
-                await db.flushChanges(bufferId);
-                setState(state => ({ ...state, loadingPull: false }));
+                gitPullFetcher.submit({}, {
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/pull`,
+                  method: 'post',
+                });
               }}
               stayOpenAfterClick
             >
@@ -303,6 +206,7 @@ export const GitSyncDropdown: FC<Props> = ({ workspace, vcs, className }) => {
           </Fragment>
         )}
       </Dropdown>
+      {isGitRepoSettingsModalOpen && <GitRepositorySettingsModal gitRepository={gitRepository} onHide={() => setIsGitRepoSettingsModalOpen(false)} />}
     </div>
   );
 };

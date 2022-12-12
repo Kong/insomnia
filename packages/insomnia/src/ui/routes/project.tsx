@@ -1,5 +1,4 @@
-import React, { FC, Fragment, useCallback } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { FC, Fragment, useCallback, useState } from 'react';
 import {
   LoaderFunction,
   redirect,
@@ -29,7 +28,6 @@ import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '../../models/organization';
 import { isDefaultProject, isRemoteProject, Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
-import { MemClient } from '../../sync/git/mem-client';
 import { invariant } from '../../utils/invariant';
 import { Dropdown } from '../components/base/dropdown/dropdown';
 import { DropdownButton } from '../components/base/dropdown/dropdown-button';
@@ -40,6 +38,7 @@ import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { showAlert, showPrompt } from '../components/modals';
+import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button';
@@ -49,7 +48,6 @@ import {
   importFile,
   importUri,
 } from '../import';
-import { cloneGitRepository } from '../redux/modules/git';
 
 const CreateButton = styled(Button).attrs({
   variant: 'outlined',
@@ -557,7 +555,7 @@ const ProjectRoute: FC = () => {
   const { workspaces, activeProject, projects, organization } = useLoaderData() as LoaderData;
   const { organizationId } = useParams() as { organizationId: string };
   const [searchParams] = useSearchParams();
-  const dispatch = useDispatch();
+  const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] = useState(false);
 
   const fetcher = useFetcher();
   const { revalidate } = useRevalidator();
@@ -649,9 +647,9 @@ const ProjectRoute: FC = () => {
     });
   }, [activeProject, projects, revalidate, workspaces]);
 
-  const importFromGit = useCallback(() => {
-    dispatch(cloneGitRepository({ createFsClient: MemClient.createClient, onComplete: revalidate }));
-  }, [dispatch, revalidate]);
+  const importFromGit = () => {
+    setIsGitRepositoryCloneModalOpen(true);
+  };
 
   const hasWorkspaces = workspaces?.length > 0;
 
@@ -774,6 +772,9 @@ const ProjectRoute: FC = () => {
             </Pane>
           }
         />
+        {isGitRepositoryCloneModalOpen && (
+          <GitRepositoryCloneModal onHide={() => setIsGitRepositoryCloneModalOpen(false)} />
+        )}
       </Fragment>
     </ErrorBoundary>
   );

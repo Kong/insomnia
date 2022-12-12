@@ -6,7 +6,7 @@ import { Link } from '../../base/link';
 import { HelpTooltip } from '../../help-tooltip';
 
 export interface Props {
-  gitRepository: GitRepository | null;
+  gitRepository?: GitRepository | null;
   onSubmit: (args: Partial<GitRepository>) => void;
 }
 
