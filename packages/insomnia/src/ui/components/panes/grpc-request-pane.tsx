@@ -64,7 +64,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   grpcState,
   setGrpcState,
 }) => {
-  const [error, setError] = useState<string>('');
+  const [protoLoadError, setProtoLoadError] = useState<string>('');
   const [methods, setMethods] = useState<GrpcMethodInfo[]>([]);
   const { requestMessages, running } = grpcState;
   const includeDirs = activeRequest.includeDirs.join();
@@ -77,12 +77,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       try {
         const methods = await window.main.grpc.loadMethods(activeRequest._id);
         setMethods(methods);
-        setError('');
+        setProtoLoadError('');
         console.log('[gRPC] loading proto file methods', methods.map(m => m.fullPath));
 
       } catch (err) {
         console.error('[gRPC] error loading protofile', err);
-        setError('Proto file invalid: ' + err.message.slice(56));
+        setProtoLoadError('Proto file invalid: ' + err.message.slice(56));
         setMethods([]);
       }
     };
@@ -237,7 +237,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           <TabItem key="service-defintion" title="Service Definition">
             <PanelContainer className="tall wide pad">
               <ErrorBoundary key={uniquenessKey} errorClassName="font-error pad text-center">
-                {error && <p className="notice error margin-bottom-sm">{error}</p>}
+                {protoLoadError && <p className="notice error margin-bottom-sm">{protoLoadError}</p>}
                 <div className="form-control">
                   <label>
                     <small>Proto file</small>
