@@ -67,7 +67,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const [error, setError] = useState<string>('');
   const [methods, setMethods] = useState<GrpcMethodInfo[]>([]);
   const { requestMessages, running } = grpcState;
-
+  const includeDirs = activeRequest.includeDirs.join();
   useEffect(() => {
     const loadMethods = async () => {
       if (!activeRequest.protoFilePath) {
@@ -87,7 +87,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       }
     };
     loadMethods();
-  }, [activeRequest._id, activeRequest.protoFilePath, activeRequest.includeDirs]);
+
+  }, [activeRequest._id, activeRequest.protoFilePath, includeDirs]);
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
