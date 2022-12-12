@@ -262,6 +262,7 @@ export const Debug: FC = () => {
         <ErrorBoundary showAlert>
           {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
             <GrpcRequestPane
+              key={activeRequest._id}
               activeRequest={activeRequest}
               workspaceId={activeWorkspace._id}
               grpcState={grpcState}
