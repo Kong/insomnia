@@ -32,12 +32,6 @@ jobs:
       # - name: Bootstrap packages
       #   run: npm run bootstrap
 
-      - name: Build Artifacts Directory
-        shell: bash
-        run: |
-          mkdir -p ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist/squirrel-windows
-          mkdir -p ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist
-
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -45,11 +39,14 @@ jobs:
           workflow: release-build.yml
           workflow_conclusion: success
           branch: ${{ env.RELEASE_BRANCH }} # Branch workflow ran on != branch the workflow created
-          path: ${GITHUB_WORKSPACE}/artifacts/
+          path: ./artifacts/
 
       - name: Debug
         shell: bash
         run: |
+          ls -lah ./artifacts/
+          ls -lah ./artifacts/windows-latest-artifacts/insomnia/dist/squirrel-windows
+          ls -lah ./artifacts/windows-latest-artifacts/insomnia/dist/
           ls -lah ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist/squirrel-windows
           ls -lah ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist
           ls -lah ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/
