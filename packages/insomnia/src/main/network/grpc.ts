@@ -49,7 +49,6 @@ const getDefinition = async (request: GrpcRequest): Promise<PackageDefinition> =
       includeDirs,
     });
   } catch (e) {
-    console.log(e);
     throw e;
   }
 };
@@ -101,7 +100,7 @@ export const start = async (
   event: IpcMainInvokeEvent,
   { request }: GrpcIpcRequestParams,
 ) => {
-  const definition = getDefinition(request);
+  const definition = await getDefinition(request);
   if (!definition) {
     event.sender.send('grpc.error', request._id, new Error('The protofile is invalid'));
     return;
@@ -264,7 +263,7 @@ const onUnaryResponse = (event: IpcMainInvokeEvent, requestId: string) => (err: 
 const filterDisabledMetaData = (metadata: GrpcRequestHeader[],): Metadata => {
   const grpcMetadata = new Metadata();
   for (const entry of metadata) {
-    if (!entry.disabled) {
+    if (!entry.disabled && entry.name) {
       grpcMetadata.add(entry.name, entry.value);
     }
   }
