@@ -1,5 +1,5 @@
 {
-  "version": "3.6.1-beta.5",
+  "version": "3.7.0-alpha.0",
   "packages": [
     "packages/*",
     "plugins/*"
