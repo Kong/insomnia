@@ -3,7 +3,8 @@ import { expect, Locator } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
-test.describe('gRPC interactions', () => {
+// TODO: Switch this back on when we add reflection support
+test.describe.skip('gRPC interactions', () => {
 
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   let statusTag: Locator;
