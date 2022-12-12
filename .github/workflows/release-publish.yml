@@ -32,6 +32,13 @@ jobs:
       - name: Bootstrap packages
         run: npm run bootstrap
 
+      - name: Build Artifacts Directory
+        shell: bash
+        run: |
+          mkdir -p ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist/squirrel-windows
+          mkdir -p ${GITHUB_WORKSPACE}/artifacts/windows-latest-artifacts/insomnia/dist
+
+
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
         with:
