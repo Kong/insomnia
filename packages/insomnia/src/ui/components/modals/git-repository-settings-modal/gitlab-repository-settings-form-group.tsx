@@ -212,7 +212,6 @@ const GitLabRepositoryForm = ({
               type="url"
               name="uri"
               autoFocus
-              disabled={Boolean(uri)}
               required
               placeholder="https://gitlab.com/org/repo.git"
             />

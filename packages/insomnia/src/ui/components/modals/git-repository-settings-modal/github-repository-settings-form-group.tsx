@@ -271,7 +271,6 @@ const GitHubRepositoryForm = ({
             <input
               className="form-control"
               defaultValue={uri}
-              disabled={Boolean(uri)}
               type="url"
               name="uri"
               autoFocus

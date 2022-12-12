@@ -49,7 +49,6 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
             autoFocus
             name="uri"
             defaultValue={uri}
-            disabled={!!uri}
             placeholder="https://github.com/org/repo.git"
           />
         </label>
