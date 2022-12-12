@@ -17,7 +17,7 @@ import { GitHubRepositorySetupFormGroup } from './github-repository-settings-for
 import { GitLabRepositorySetupFormGroup } from './gitlab-repository-settings-form-group';
 
 export const GitRepositoryCloneModal = (props: ModalProps) => {
-  const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
   const modalRef = useRef<ModalHandle>(null);
   const updateGitRepositoryFetcher = useFetcher();
 
