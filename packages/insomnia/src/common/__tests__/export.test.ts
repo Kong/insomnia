@@ -325,8 +325,6 @@ describe('export', () => {
         }),
       ]),
     });
-    expect(exportRequestsDataJSON.resources.length).toBe(10);
-    expect(exportRequestsDataYAML.resources.length).toBe(10);
     // Ensure JSON and YAML are the same
     expect(exportRequestsDataJSON.resources).toEqual(exportRequestsDataYAML.resources);
   });
