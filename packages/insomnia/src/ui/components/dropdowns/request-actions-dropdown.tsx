@@ -150,7 +150,10 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       </DropdownItem>
 
       {canGenerateCode && (
-        <DropdownItem onClick={generateCode}>
+        <DropdownItem
+          dataTestId={`DropdownItemGenerateCode-${toKebabCase(request.name)}`}
+          onClick={generateCode}
+        >
           <i className="fa fa-code" /> Generate Code
           <DropdownHint
             keyBindings={hotKeyRegistry.request_showGenerateCodeEditor}
