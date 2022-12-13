@@ -1,4 +1,4 @@
-import { Call, ClientDuplexStream, ClientReadableStream, MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
+import { Call, ClientDuplexStream, ClientReadableStream, ServiceError, StatusObject } from '@grpc/grpc-js';
 import { credentials, makeGenericClientConstructor, Metadata, status } from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
 import { AnyDefinition, EnumTypeDefinition, MessageTypeDefinition, PackageDefinition } from '@grpc/proto-loader';
@@ -45,14 +45,20 @@ const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
   const protoFile = await models.protoFile.getById(protoFileId);
   invariant(protoFile, `Proto file ${protoFileId} not found`);
   const { filePath, dirs } = await writeProtoFile(protoFile);
-  const definition = await loadFromFilePath(filePath, dirs);
-  const methods = getMethodsFromPackageDefinition(definition);
+  const methods = await loadMethodsFromFilePath(filePath, dirs);
   return methods.map(method => ({
     type: getMethodType(method),
     fullPath: method.path,
   }));
 };
-const getMethodsFromReflection = async (url: string): Promise<GrpcMethodInfo[]> => {
+interface MethodDefs {
+  path: string;
+  requestStream: boolean;
+  responseStream: boolean;
+  requestSerialize: (value: any) => Buffer;
+  responseDeserialize: (value: Buffer) => any;
+}
+const getMethodsFromReflection = async (url: string): Promise<MethodDefs[]> => {
   try {
     const c = new grpcReflection.Client(
       url,
@@ -62,16 +68,13 @@ const getMethodsFromReflection = async (url: string): Promise<GrpcMethodInfo[]> 
     const methodsPromises = await Promise.all(services.map(async service => {
       const fileContainingSymbol = await c.fileContainingSymbol(service);
       const descriptorMessage = fileContainingSymbol.toDescriptor('proto3');
-      console.log('processing', service);
       const fn = () => {
         try {
+          console.log('[grpc] loading service from reflection:', service);
           const packageDefinition = protoLoader.loadFileDescriptorSetFromObject(descriptorMessage, {});
           console.log(packageDefinition);
           const withoutTypes = Object.values(packageDefinition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format);
-          return withoutTypes.flatMap(Object.values).map(method => ({
-            type: getMethodType(method),
-            fullPath: method.path,
-          }));
+          return withoutTypes.flatMap(Object.values);
         } catch (e) {
           console.error(e);
           return [];
@@ -86,13 +89,17 @@ const getMethodsFromReflection = async (url: string): Promise<GrpcMethodInfo[]> 
   }
 };
 const loadMethodsFromReflection = async (url: string): Promise<GrpcMethodInfo[]> => {
-  return getMethodsFromReflection(url);
+  const methods = await getMethodsFromReflection(url);
+  return methods.map(method => ({
+    type: getMethodType(method),
+    fullPath: method.path,
+  }));
 };
 export interface GrpcMethodInfo {
   type: GrpcMethodType;
   fullPath: string;
 }
-export const getMethodType = ({ requestStream, responseStream }: MethodDefinition<any, any>): GrpcMethodType => {
+export const getMethodType = ({ requestStream, responseStream }: any): GrpcMethodType => {
   if (requestStream && responseStream) {
     return 'bidi';
   }
@@ -104,7 +111,7 @@ export const getMethodType = ({ requestStream, responseStream }: MethodDefinitio
   }
   return 'unary';
 };
-const loadFromFilePath = async (filePath: string, includeDirs: string[]): Promise<PackageDefinition> => {
+const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]): Promise<MethodDefs[]> => {
   try {
     const definition = await protoLoader.load(filePath, {
       keepCase: true,
@@ -114,7 +121,7 @@ const loadFromFilePath = async (filePath: string, includeDirs: string[]): Promis
       oneofs: true,
       includeDirs,
     });
-    return definition;
+    return getMethodsFromPackageDefinition(definition);
   } catch (error) {
     throw error;
   }
@@ -124,14 +131,18 @@ const loadFromFilePath = async (filePath: string, includeDirs: string[]): Promis
 //  or from the cache
 //  We can't send the method over IPC because of the following deprecation in Electron v9
 //  https://www.electronjs.org/docs/breaking-changes#behavior-changed-sending-non-js-objects-over-ipc-now-throws-an-exception
-export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDefinition<any, any> | undefined> => {
-  invariant(request.protoFileId, 'protoFileId is required');
-  const protoFile = await models.protoFile.getById(request.protoFileId);
-  invariant(protoFile?.protoText, `No proto file found for gRPC request ${request._id}`);
-  const { filePath, dirs } = await writeProtoFile(protoFile);
-  const definition = await loadFromFilePath(filePath, dirs);
-  return getMethodsFromPackageDefinition(definition)
-    .find(c => c.path === request.protoMethodName);
+export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDefs | undefined> => {
+  if (request.protoFileId) {
+    const protoFile = await models.protoFile.getById(request.protoFileId);
+    invariant(protoFile?.protoText, `No proto file found for gRPC request ${request._id}`);
+    const { filePath, dirs } = await writeProtoFile(protoFile);
+    const methods = await loadMethodsFromFilePath(filePath, dirs);
+    invariant(methods, 'No methods found');
+    return methods.find(c => c.path === request.protoMethodName);
+  }
+  const methods = await getMethodsFromReflection(request.url);
+  invariant(methods, 'No reflection methods found');
+  return methods.find(c => c.path === request.protoMethodName);
 };
 export const getMethodsFromPackageDefinition = (packageDefinition: PackageDefinition) => {
   return Object.values(packageDefinition)
