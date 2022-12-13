@@ -230,6 +230,9 @@ export const GraphQLEditor: FC<Props> = ({
   const editorRef = useRef<CodeEditorHandle>(null);
 
   useEffect(() => {
+    if (!automaticFetch) {
+      return;
+    }
     let isMounted = true;
     const init = async () => {
       setSchemaIsFetching(true);
@@ -249,7 +252,7 @@ export const GraphQLEditor: FC<Props> = ({
     return () => {
       isMounted = false;
     };
-  }, [environmentId, request._id, request.url, workspaceId]);
+  }, [automaticFetch, environmentId, request._id, request.url, workspaceId]);
 
   const { editorIndentWithTabs, editorIndentSize } = useSelector(selectSettings);
   const beautifyRequestBody = () => {
