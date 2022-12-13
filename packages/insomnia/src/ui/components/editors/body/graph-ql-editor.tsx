@@ -11,6 +11,7 @@ import prettier from 'prettier';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useSelector } from 'react-redux';
+import { useLocalStorage } from 'react-use';
 
 import { jarFromCookies } from '../../../../common/cookies';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
@@ -163,7 +164,6 @@ interface State {
   operations: string[];
   hideSchemaFetchErrors: boolean;
   variablesSyntaxError: string;
-  automaticFetch: boolean;
   explorerVisible: boolean;
   activeReference: null | ActiveReference;
   documentAST: null | DocumentNode;
@@ -193,18 +193,6 @@ export const GraphQLEditor: FC<Props> = ({
     documentAST = null;
   }
 
-  let automaticFetch = true;
-
-  try {
-    const automaticFetchStringified = window.localStorage.getItem('graphql.automaticFetch');
-    if (automaticFetchStringified) {
-      automaticFetch = JSON.parse(automaticFetchStringified);
-    }
-  } catch (err) {
-    if (err instanceof Error) {
-      console.warn('Could not parse value of graphql.automaticFetch from localStorage:', err.message);
-    }
-  }
   const [state, setState] = useState<State>({
     body: {
       query: requestBody.query || '',
@@ -216,10 +204,14 @@ export const GraphQLEditor: FC<Props> = ({
     variablesSyntaxError: '',
     activeReference: null,
     explorerVisible: false,
-    automaticFetch,
     documentAST,
     disabledOperationMarkers: [],
   });
+
+  const [automaticFetch, setAutoFetch] = useLocalStorage<boolean>(
+    'graphql.automaticFetch',
+    true
+  );
   const [schema, setSchema] = useState<GraphQLSchema | null>(null);
   const [schemaFetchError, setSchemaFetchError] = useState<{
     message: string;
@@ -478,8 +470,7 @@ export const GraphQLEditor: FC<Props> = ({
           </DropdownItem>
           <DropdownItem
             onClick={() => {
-              setState(state => ({ ...state, automaticFetch: !state.automaticFetch }));
-              window.localStorage.setItem('graphql.automaticFetch', state.automaticFetch.toString());
+              setAutoFetch(!automaticFetch);
             }}
             stayOpenAfterClick
           >
