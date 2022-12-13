@@ -34,6 +34,7 @@ interface Props {
   selectedMethod?: GrpcMethodInfo;
   handleChange: (arg0: string) => void;
   handleChangeProtoFile: () => void;
+  handleServerReflection: () => void;
 }
 const PROTO_PATH_REGEX = /^\/(?:(?<package>[\w.]+)\.)?(?<service>\w+)\/(?<method>\w+)$/;
 
@@ -54,7 +55,7 @@ function groupBy(list: {}[], keyGetter: (item: any) => string):Record<string, an
 }
 
 export const groupGrpcMethodsByPackage = (methodInfoList: GrpcMethodInfo[]): Record<string, GrpcMethodInfo[]> => {
-  return groupBy(methodInfoList, ({ segments }) => segments.packageName || NO_PACKAGE_KEY);
+  return groupBy(methodInfoList, ({ fullPath }) => PROTO_PATH_REGEX.exec(fullPath)?.groups?.package || NO_PACKAGE_KEY);
 };
 
 // If all segments are found, return a shorter path, otherwise the original path
@@ -75,6 +76,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   selectedMethod,
   handleChange,
   handleChangeProtoFile,
+  handleServerReflection,
 }) => {
   const groupedByPkg = groupGrpcMethodsByPackage(methods);
   const selectedPath = selectedMethod?.fullPath;
@@ -91,6 +93,9 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
           <i className="fa fa-caret-down pad-left-sm" />
         </Tooltip>
       </DropdownButton>
+      <DropdownItem onClick={handleServerReflection}>
+        <em>Click to use server reflection</em>
+      </DropdownItem>
       <DropdownItem onClick={handleChangeProtoFile}>
         <em>Click to change proto file</em>
       </DropdownItem>

@@ -28,6 +28,7 @@ export interface gRPCBridgeAPI {
   commit: typeof commit;
   cancel: typeof cancel;
   loadMethods: typeof loadMethods;
+  loadMethodsFromReflection: typeof loadMethodsFromReflection;
   closeAll: typeof closeAll;
 }
 export function registergRPCHandlers() {
@@ -37,23 +38,25 @@ export function registergRPCHandlers() {
   ipcMain.on('grpc.cancel', (_, requestId) => cancel(requestId));
   ipcMain.on('grpc.closeAll', closeAll);
   ipcMain.handle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
+  ipcMain.handle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
 }
 const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
   const protoFile = await models.protoFile.getById(protoFileId);
   invariant(protoFile, `Proto file ${protoFileId} not found`);
   const { filePath, dirs } = await writeProtoFile(protoFile);
-  const definition = await protoLoader.load(filePath, {
-    keepCase: true,
-    longs: String,
-    enums: String,
-    defaults: true,
-    oneofs: true,
-    includeDirs: dirs,
-  });
+  const definition = await loadFromFilePath(filePath, dirs);
   const methods = getMethodsFromPackageDefinition(definition);
   return methods.map(method => ({
     type: getMethodType(method),
     fullPath: method.path,
+  }));
+};
+
+const loadMethodsFromReflection = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
+
+  return [1, 1, 1, 1, 1].map(method => ({
+    type: 'unary',
+    fullPath: '/grpcbin.GRPCBin/NoResponseUnary',
   }));
 };
 export interface GrpcMethodInfo {
@@ -72,7 +75,21 @@ export const getMethodType = ({ requestStream, responseStream }: MethodDefinitio
   }
   return 'unary';
 };
-
+const loadFromFilePath = async (filePath: string, includeDirs: string[]): Promise<PackageDefinition> => {
+  try {
+    const definition = await protoLoader.load(filePath, {
+      keepCase: true,
+      longs: String,
+      enums: String,
+      defaults: true,
+      oneofs: true,
+      includeDirs,
+    });
+    return definition;
+  } catch (error) {
+    throw error;
+  }
+};
 // TODO: instead of reloading the methods from the protoFile,
 //  just get it from what has already been loaded in the react component,
 //  or from the cache
@@ -83,14 +100,7 @@ export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDef
   const protoFile = await models.protoFile.getById(request.protoFileId);
   invariant(protoFile?.protoText, `No proto file found for gRPC request ${request._id}`);
   const { filePath, dirs } = await writeProtoFile(protoFile);
-  const definition = await protoLoader.load(filePath, {
-    keepCase: true,
-    longs: String,
-    enums: String,
-    defaults: true,
-    oneofs: true,
-    includeDirs: dirs,
-  });
+  const definition = await loadFromFilePath(filePath, dirs);
   return getMethodsFromPackageDefinition(definition)
     .find(c => c.path === request.protoMethodName);
 };
