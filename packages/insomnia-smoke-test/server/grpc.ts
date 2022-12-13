@@ -4,6 +4,7 @@
 import * as grpc from '@grpc/grpc-js';
 import { HandleCall } from '@grpc/grpc-js/build/src/server-call';
 import * as protoLoader from '@grpc/proto-loader';
+import { addReflection } from '@ravanallc/grpc-server-reflection';
 import fs from 'fs';
 import path from 'path';
 
@@ -189,6 +190,11 @@ const routeChat: HandleCall<any, any> = (call: any) => {
 export const startGRPCServer = (port: number) => {
   return new Promise<void>((resolve, reject) => {
     const server = new grpc.Server();
+
+    // Enable reflection
+    const descriptorSet = '../../packages/insomnia-smoke-test/fixtures/route_guide.bin';
+    addReflection(server, descriptorSet);
+
     // @ts-expect-error generated from proto file
     server.addService(routeguide.RouteGuide.service, {
       getFeature: getFeature,
