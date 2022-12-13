@@ -58,12 +58,10 @@ interface MethodDefs {
   requestSerialize: (value: any) => Buffer;
   responseDeserialize: (value: Buffer) => any;
 }
-const getMethodsFromReflection = async (url: string): Promise<MethodDefs[]> => {
+const getMethodsFromReflection = async (host: string): Promise<MethodDefs[]> => {
   try {
-    const c = new grpcReflection.Client(
-      url,
-      credentials.createInsecure()
-    );
+    const { url, enableTls } = parseGrpcUrl(host);
+    const c = new grpcReflection.Client(url, enableTls ? credentials.createSsl() : credentials.createInsecure());
     const services = await c.listServices() as string[];
     const methodsPromises = await Promise.all(services.map(async service => {
       const fileContainingSymbol = await c.fileContainingSymbol(service);
