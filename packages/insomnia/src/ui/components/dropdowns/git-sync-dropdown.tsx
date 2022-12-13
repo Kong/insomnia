@@ -28,6 +28,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string};
   const dropdownRef = useRef<DropdownHandle>(null);
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
+  const [isGitBranchesModalOpen, setIsGitBranchesModalOpen] = useState(false);
   const gitPushFetcher = useFetcher<PushToGitRemoteActionData>();
   const gitPullFetcher = useFetcher();
   const gitCheckoutFetcher = useFetcher();
@@ -72,6 +73,8 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
 
   const isButton = !gitRepository || (gitRepoDataFetcher.state === 'loading' && !gitRepoDataFetcher.data) || (gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data);
 
+  const { log, branches, branch: currentBranch, remoteBranches } = (gitRepoDataFetcher.data && 'log' in gitRepoDataFetcher.data) ? gitRepoDataFetcher.data : { log: [], branches: [], branch: '', remoteBranches: [] };
+
   let dropdown: React.ReactNode = null;
 
   if (isButton) {
@@ -85,8 +88,8 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
         Setup Git Sync
       </Button>
     );
-  } else if (gitRepoDataFetcher.data && 'log' in gitRepoDataFetcher.data) {
-    const { log, branches, branch: currentBranch } = gitRepoDataFetcher.data || { log: [], branches: [], branch: '' };
+  } else {
+
     dropdown = (
       <div className={className}>
         <Dropdown className="wide tall" ref={dropdownRef}>
@@ -126,7 +129,11 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
 
           {currentBranch && (
             <Fragment>
-              <DropdownItem onClick={() => showModal(GitBranchesModal, { onCheckout: () => {} })}>
+              <DropdownItem
+                onClick={() => {
+                  setIsGitBranchesModalOpen(true);
+                }}
+              >
                 <i className="fa fa-code-fork" /> Branches
               </DropdownItem>
             </Fragment>
@@ -213,6 +220,15 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
     <Fragment>
       {dropdown}
       {isGitRepoSettingsModalOpen && <GitRepositorySettingsModal gitRepository={gitRepository ?? undefined} onHide={() => setIsGitRepoSettingsModalOpen(false)} />}
+      {isGitBranchesModalOpen &&
+        <GitBranchesModal
+          gitRepository={gitRepository}
+          branches={branches}
+          remoteBranches={remoteBranches}
+          activeBranch={currentBranch}
+          onHide={() => setIsGitBranchesModalOpen(false)}
+        />
+      }
     </Fragment>
   );
 };

@@ -270,7 +270,7 @@ const router = createMemoryRouter(
                                 },
                                 {
                                   path: 'pull',
-                                  action: async (...args) => (await import('./routes/git-actions')).pullGitBranchAction(...args),
+                                  action: async (...args) => (await import('./routes/git-actions')).pullFromGitRemoteAction(...args),
                                 },
                                 {
                                   path: 'push',

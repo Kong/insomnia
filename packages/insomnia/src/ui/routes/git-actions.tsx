@@ -25,6 +25,7 @@ import {
   GIT_INTERNAL_DIR,
   GitLogEntry,
   GitVCS,
+  setGitVCS,
 } from '../../sync/git/git-vcs';
 import { MemClient } from '../../sync/git/mem-client';
 import { NeDBClient } from '../../sync/git/ne-db-client';
@@ -47,10 +48,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
   params,
 }): Promise<CloneGitActionResult>  => {
   const { organizationId, projectId } = params;
-  console.log({
-    organizationId,
-    projectId,
-  });
+
   invariant(typeof projectId === 'string', 'ProjectId is required.');
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
@@ -327,7 +325,6 @@ export const updateGitRepoAction: ActionFunction = async ({
   });
 };
 
-// [x] Done
 export const resetGitRepoAction: ActionFunction = async ({
   params,
 }) => {
@@ -361,7 +358,7 @@ export const resetGitRepoAction: ActionFunction = async ({
   await models.gitRepository.remove(repo);
   await database.flushChanges(flushId);
 };
-// [] TODO
+
 export const commitToGitRepoAction: ActionFunction = async () => {
   // const { workspaceId } = params;
 
@@ -406,9 +403,9 @@ export const commitToGitRepoAction: ActionFunction = async () => {
   //   onCommit();
   // }
 };
-// [] TODO
+
 export const createNewGitBranchAction: ActionFunction = async ({}) => {};
-// [] TODO
+
 export const checkoutGitBranchAction: ActionFunction = async ({
   request,
   params,
@@ -436,10 +433,56 @@ export const checkoutGitBranchAction: ActionFunction = async ({
 
   const vcs = getGitVCS();
 
-  await vcs.checkout(branch);
+  try {
+    await vcs.checkout(branch);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : err;
+    return {
+      errors: [errorMessage],
+    };
+  }
 };
-// [] TODO
-export const mergeGitBranchAction: ActionFunction = async ({}) => {};
+
+export const mergeGitBranchAction: ActionFunction = async ({ request, params }) => {
+  const { workspaceId } = params;
+  invariant(workspaceId, 'Workspace ID is required');
+
+  const workspace = await models.workspace.getById(workspaceId);
+
+  invariant(workspace, 'Workspace not found');
+
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+
+  const repoId = workspaceMeta?.gitRepositoryId;
+
+  invariant(repoId, 'Workspace is not linked to a git repository');
+
+  const repo = await models.gitRepository.getById(repoId);
+  invariant(repo, 'Git Repository not found');
+
+  const vcs = getGitVCS();
+
+  const formData = await request.formData();
+  const branch = formData.get('branch');
+  invariant(typeof branch === 'string', 'Branch name is required');
+
+  try {
+    const providerName = getOauth2FormatName(repo?.credentials);
+    await vcs.merge(branch);
+    // Apparently merge doesn't update the working dir so need to checkout too
+    const bufferId = await database.bufferChanges();
+
+    await vcs.checkout(branch);
+    trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'checkout_branch'), providerName });
+    await database.flushChanges(bufferId, true);
+    trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'merge_branch'), providerName });
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    return  { errors: [errorMessage] };
+  }
+
+  return {};
+};
 // [] TODO
 export const deleteGitBranchAction: ActionFunction = async ({}) => {};
 
@@ -512,9 +555,13 @@ export const pushToGitRemoteAction: ActionFunction = async ({
   return {};
 };
 
-export const pullGitBranchAction: ActionFunction = async ({
+export type PullFromGitRemoteActionData = {} | {
+  errors: string[];
+};
+
+export const pullFromGitRemoteAction: ActionFunction = async ({
   params,
-}) => {
+}): Promise<PullFromGitRemoteActionData> => {
   const { workspaceId } = params;
   invariant(workspaceId, 'Workspace ID is required');
   const workspace = await models.workspace.getById(workspaceId);
@@ -541,14 +588,22 @@ export const pullGitBranchAction: ActionFunction = async ({
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
     trackSegmentEvent(SegmentEvent.vcsAction, vcsSegmentEventProperties('git', 'pull', errorMessage));
+
+    return {
+      errors: [`${errorMessage}`],
+    };
   }
+
   await database.flushChanges(bufferId);
+
+  return {};
 };
 
 export type GitRepoLoaderData = {
   branch: string;
   log: GitLogEntry[];
   branches: string[];
+  remoteBranches: string[];
   gitRepository: GitRepository | null;
 } | {
   errors: string[];
@@ -592,9 +647,7 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
     [GIT_INTERNAL_DIR]: gitDataClient,
   });
 
-  let vcs = getGitVCS();
-
-  vcs = new GitVCS();
+  const vcs = new GitVCS();
 
   // Init VCS
   const { credentials, uri } = gitRepository;
@@ -623,10 +676,15 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
   await vcs.setAuthor(author.name, author.email);
   await vcs.addRemote(gitUri);
 
+  await vcs.fetch(false, 1, gitRepository?.credentials);
+
+  setGitVCS(vcs);
+
   return {
     branch: await vcs.getBranch(),
     log: await vcs.log() || [],
     branches: await vcs.listBranches(),
+    remoteBranches: await vcs.listRemoteBranches(),
     gitRepository: gitRepository,
   };
 };
