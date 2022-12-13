@@ -1,10 +1,10 @@
 import { Call, ClientDuplexStream, ClientReadableStream, MethodDefinition, ServiceError, StatusObject } from '@grpc/grpc-js';
 import { credentials, makeGenericClientConstructor, Metadata, status } from '@grpc/grpc-js';
-import { AnyDefinition, EnumTypeDefinition, load, MessageTypeDefinition } from '@grpc/proto-loader';
+import * as protoLoader from '@grpc/proto-loader';
+import { AnyDefinition, EnumTypeDefinition, MessageTypeDefinition, PackageDefinition } from '@grpc/proto-loader';
 import electron, { ipcMain } from 'electron';
 import { IpcMainEvent } from 'electron';
 
-import { getMethodInfo, getMethodType, GrpcMethodInfo } from '../../common/grpc-paths';
 import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
@@ -42,7 +42,7 @@ const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
   const protoFile = await models.protoFile.getById(protoFileId);
   invariant(protoFile, `Proto file ${protoFileId} not found`);
   const { filePath, dirs } = await writeProtoFile(protoFile);
-  const definition = await load(filePath, {
+  const definition = await protoLoader.load(filePath, {
     keepCase: true,
     longs: String,
     enums: String,
@@ -50,8 +50,27 @@ const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
     oneofs: true,
     includeDirs: dirs,
   });
-  const methods = Object.values(definition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format).flatMap(Object.values);
-  return methods.map(getMethodInfo);
+  const methods = getMethodsFromPackageDefinition(definition);
+  return methods.map(method => ({
+    type: getMethodType(method),
+    fullPath: method.path,
+  }));
+};
+export interface GrpcMethodInfo {
+  type: GrpcMethodType;
+  fullPath: string;
+}
+export const getMethodType = ({ requestStream, responseStream }: MethodDefinition<any, any>): GrpcMethodType => {
+  if (requestStream && responseStream) {
+    return 'bidi';
+  }
+  if (requestStream) {
+    return 'client';
+  }
+  if (responseStream) {
+    return 'server';
+  }
+  return 'unary';
 };
 
 // TODO: instead of reloading the methods from the protoFile,
@@ -64,7 +83,7 @@ export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDef
   const protoFile = await models.protoFile.getById(request.protoFileId);
   invariant(protoFile?.protoText, `No proto file found for gRPC request ${request._id}`);
   const { filePath, dirs } = await writeProtoFile(protoFile);
-  const definition = await load(filePath, {
+  const definition = await protoLoader.load(filePath, {
     keepCase: true,
     longs: String,
     enums: String,
@@ -72,7 +91,13 @@ export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDef
     oneofs: true,
     includeDirs: dirs,
   });
-  return Object.values(definition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format).flatMap(Object.values).find(c => c.path === request.protoMethodName);
+  return getMethodsFromPackageDefinition(definition)
+    .find(c => c.path === request.protoMethodName);
+};
+export const getMethodsFromPackageDefinition = (packageDefinition: PackageDefinition) => {
+  return Object.values(packageDefinition)
+    .filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format)
+    .flatMap(Object.values);
 };
 
 export const start = (
