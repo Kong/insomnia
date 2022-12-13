@@ -4,6 +4,7 @@ import * as protoLoader from '@grpc/proto-loader';
 import { AnyDefinition, EnumTypeDefinition, MessageTypeDefinition, PackageDefinition } from '@grpc/proto-loader';
 import electron, { ipcMain } from 'electron';
 import { IpcMainEvent } from 'electron';
+import * as grpcReflection from 'grpc-reflection-js';
 
 import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
 import * as models from '../../models';
@@ -38,7 +39,7 @@ export function registergRPCHandlers() {
   ipcMain.on('grpc.cancel', (_, requestId) => cancel(requestId));
   ipcMain.on('grpc.closeAll', closeAll);
   ipcMain.handle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
-  ipcMain.handle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
+  ipcMain.handle('grpc.loadMethodsFromReflection', (_, url) => loadMethodsFromReflection(url));
 }
 const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
   const protoFile = await models.protoFile.getById(protoFileId);
@@ -51,13 +52,41 @@ const loadMethods = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
     fullPath: method.path,
   }));
 };
-
-const loadMethodsFromReflection = async (protoFileId: string): Promise<GrpcMethodInfo[]> => {
-
-  return [1, 1, 1, 1, 1].map(method => ({
-    type: 'unary',
-    fullPath: '/grpcbin.GRPCBin/NoResponseUnary',
-  }));
+const getMethodsFromReflection = async (url: string): Promise<GrpcMethodInfo[]> => {
+  try {
+    const c = new grpcReflection.Client(
+      url,
+      credentials.createInsecure()
+    );
+    const services = await c.listServices() as string[];
+    const methodsPromises = await Promise.all(services.map(async service => {
+      const fileContainingSymbol = await c.fileContainingSymbol(service);
+      const descriptorMessage = fileContainingSymbol.toDescriptor('proto3');
+      console.log('processing', service);
+      const fn = () => {
+        try {
+          const packageDefinition = protoLoader.loadFileDescriptorSetFromObject(descriptorMessage, {});
+          console.log(packageDefinition);
+          const withoutTypes = Object.values(packageDefinition).filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format);
+          return withoutTypes.flatMap(Object.values).map(method => ({
+            type: getMethodType(method),
+            fullPath: method.path,
+          }));
+        } catch (e) {
+          console.error(e);
+          return [];
+        }
+      };
+      const methods = fn();
+      return methods;
+    }));
+    return methodsPromises.flat();
+  } catch (e) {
+    throw e;
+  }
+};
+const loadMethodsFromReflection = async (url: string): Promise<GrpcMethodInfo[]> => {
+  return getMethodsFromReflection(url);
 };
 export interface GrpcMethodInfo {
   type: GrpcMethodType;
