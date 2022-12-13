@@ -47,7 +47,7 @@
     "@apidevtools/swagger-parser": "10.1.0",
     "@getinsomnia/node-libcurl": "2.3.5-7",
     "@grpc/grpc-js": "^1.1.8",
-    "@grpc/proto-loader": "^0.5.5",
+    "@grpc/proto-loader": "^0.7.4",
     "@jest/globals": "^28.1.0",
     "@sentry/electron": "^3.0.7",
     "@stoplight/spectral-core": "^1.12.2",
@@ -66,6 +66,7 @@
     "electron-context-menu": "^3.1.1",
     "electron-log": "^4.4.3",
     "fs-extra": "^5.0.0",
+    "grpc-reflection-js": "0.1.2",
     "hawk": "9.0.1",
     "hkdf": "^0.0.2",
     "html-entities": "^1.2.0",
@@ -212,5 +213,8 @@
   },
   "dev": {
     "dev-server-port": 3334
+  },
+  "overrides": {
+    "protobufjs": "7.1.2"
   }
 }
