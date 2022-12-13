@@ -254,7 +254,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${ACTIVITY_SPEC}`);
 };
 
-export const syncGitRepoAction: ActionFunction = async ({
+export const updateGitRepoAction: ActionFunction = async ({
   request,
   params,
 }) => {
@@ -348,6 +348,7 @@ export const resetGitRepoAction: ActionFunction = async ({
 
   invariant(repo, 'Git Repository not found');
 
+  const flushId = await database.bufferChanges();
   if (workspaceMeta) {
     await models.workspaceMeta.update(workspaceMeta, {
       gitRepositoryId: null,
@@ -358,6 +359,7 @@ export const resetGitRepoAction: ActionFunction = async ({
   }
 
   await models.gitRepository.remove(repo);
+  await database.flushChanges(flushId);
 };
 // [] TODO
 export const commitToGitRepoAction: ActionFunction = async () => {
@@ -543,12 +545,14 @@ export const pullGitBranchAction: ActionFunction = async ({
   await database.flushChanges(bufferId);
 };
 
-export interface GitRepoLoaderData {
+export type GitRepoLoaderData = {
   branch: string;
   log: GitLogEntry[];
   branches: string[];
   gitRepository: GitRepository | null;
-}
+} | {
+  errors: string[];
+};
 
 export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepoLoaderData> => {
   const { workspaceId, projectId } = params;
@@ -558,7 +562,11 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-  invariant(workspaceMeta?.gitRepositoryId, 'Workspace is not linked to a git repository');
+  if (!workspaceMeta?.gitRepositoryId) {
+    return {
+      errors: ['Workspace is not linked to a git repository'],
+    };
+  }
 
   const gitRepository = await models.gitRepository.getById(workspaceMeta?.gitRepositoryId);
   invariant(gitRepository, 'Git Repository not found');

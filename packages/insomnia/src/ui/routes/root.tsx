@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { LoaderFunction, Outlet, useMatches, useRevalidator } from 'react-router-dom';
+import { LoaderFunction, Outlet, useRevalidator, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { isLoggedIn, onLoginLogout } from '../../account/session';
@@ -15,10 +15,12 @@ import { ErrorBoundary } from '../components/error-boundary';
 import { OrganizationsNav } from '../components/organizations-navbar';
 import { StatusBar } from '../components/statusbar';
 import { Toast } from '../components/toast';
+import { WorkspaceHeader } from '../components/workspace-header';
 import { AppHooks } from '../containers/app-hooks';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import Modals from './modals';
+import { WorkspaceLoaderData } from './workspace';
 
 export interface RootLoaderData {
   organizations: Organization[];
@@ -64,27 +66,15 @@ const Layout = styled.div({
 
 const Root = () => {
   const { revalidate } = useRevalidator();
-
+  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
+  console.log({
+    workspaceData,
+  });
   useEffect(() => {
     onLoginLogout(() => {
       revalidate();
     });
   }, [revalidate]);
-
-  const routeMatches = useMatches();
-
-  const Header = routeMatches.filter(match => Boolean(match.handle)).map(({
-    handle,
-    data,
-  }) => {
-    const { header } = handle || {};
-
-    if (header) {
-      return header(data);
-    }
-  })[0];
-
-  console.log('Header', Header);
 
   return (
     <NunjucksEnabledProvider>
@@ -95,7 +85,7 @@ const Root = () => {
           <Layout>
             <OrganizationsNav />
             <AppHeader
-              gridCenter={Header}
+              gridCenter={workspaceData ? <WorkspaceHeader {...workspaceData} /> : null}
               gridRight={<AccountToolbar />}
             />
             <Outlet />

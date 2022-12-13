@@ -29,7 +29,6 @@ import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
 import { invariant } from '../utils/invariant';
 import { AppLoadingIndicator } from './components/app-loading-indicator';
-import { WorkspaceHeader } from './components/workspace-header';
 import { init as initStore, RootState } from './redux/modules';
 import {
   setActiveActivity,
@@ -122,9 +121,7 @@ const router = createMemoryRouter(
                       children: [
                         {
                           path: ':workspaceId',
-                          handle: {
-                            header: props => <WorkspaceHeader {...props} />,
-                          },
+                          id: ':workspaceId',
                           loader: async (...args) => (await import('./routes/workspace')).workspaceLoader(...args),
                           children: [
                             {
@@ -264,8 +261,8 @@ const router = createMemoryRouter(
                                   loader: async (...args) => (await import('./routes/git-actions')).gitRepoLoader(...args),
                                 },
                                 {
-                                  path: 'clone',
-                                  action: async (...args) => (await import('./routes/git-actions')).syncGitRepoAction(...args),
+                                  path: 'update',
+                                  action: async (...args) => (await import('./routes/git-actions')).updateGitRepoAction(...args),
                                 },
                                 {
                                   path: 'reset',
