@@ -76,10 +76,10 @@ interface MethodDefs {
 const getMethodsFromReflection = async (host: string): Promise<MethodDefs[]> => {
   try {
     const { url, enableTls } = parseGrpcUrl(host);
-    const c = new grpcReflection.Client(url, enableTls ? credentials.createSsl() : credentials.createInsecure());
-    const services = await c.listServices() as string[];
-    const methodsPromises = await Promise.all(services.map(async service => {
-      const fileContainingSymbol = await c.fileContainingSymbol(service);
+    const client = new grpcReflection.Client(url, enableTls ? credentials.createSsl() : credentials.createInsecure());
+    const services = await client.listServices() as string[];
+    const methodsPromises = services.map(async service => {
+      const fileContainingSymbol = await client.fileContainingSymbol(service);
       const descriptorMessage = fileContainingSymbol.toDescriptor('proto3');
       const tryToGetMethods = () => {
         try {
@@ -93,8 +93,8 @@ const getMethodsFromReflection = async (host: string): Promise<MethodDefs[]> => 
       };
       const methods = tryToGetMethods();
       return methods;
-    }));
-    return methodsPromises.flat();
+    });
+    return (await Promise.all(methodsPromises)).flat();
   } catch (error) {
     throw error;
   }
