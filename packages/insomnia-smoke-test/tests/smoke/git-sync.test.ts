@@ -2,7 +2,6 @@ import { test } from '../../playwright/test';
 
 test('Sign in with GitHub', async ({ app, page }) => {
   await page.locator('text=Setup Git Sync').click();
-  await page.locator('button:has-text("Repository Settings")').click();
 
   await page.locator('div[role="tab"]:has-text("GitHub")').click();
 
