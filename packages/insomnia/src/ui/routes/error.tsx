@@ -26,7 +26,7 @@ const Spinner = () => <i className="fa fa-spin fa-refresh" />;
 
 export const ErrorRoute: FC = () => {
   const error = useRouteError();
-  const getErrorMessage = (err: unknown) => {
+  const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
       return err.data;
     }
@@ -34,7 +34,7 @@ export const ErrorRoute: FC = () => {
       return err.message;
     }
 
-    return 'Unknown error';
+    return err?.message || 'Unknown error';
   };
 
   const navigate = useNavigate();
@@ -54,8 +54,8 @@ export const ErrorRoute: FC = () => {
         />
         .
       </p>
-      <span style={{ color: 'var(--color-font)' }}>Message:
-        <code style={{ wordBreak: 'break-word', margin: 'var(--padding-sm)' }}>{errorMessage}</code>
+      <span style={{ color: 'var(--color-font)' }}>
+        <code className="selectable" style={{ wordBreak: 'break-word', margin: 'var(--padding-sm)' }}>{errorMessage}</code>
       </span>
       <Button onClick={() => navigate(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`)}>
         Try to reload the app{' '}
