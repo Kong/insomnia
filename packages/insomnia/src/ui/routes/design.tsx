@@ -1,5 +1,8 @@
 import type { IRuleResult } from '@stoplight/spectral-core';
-import React, { createRef, FC, useCallback, useMemo } from 'react';
+import CodeMirror from 'codemirror';
+import { stat } from 'fs/promises';
+import path from 'path';
+import React, { createRef, FC, Fragment, useCallback, useEffect, useMemo } from 'react';
 import {
   LoaderFunction,
   useFetcher,
@@ -22,13 +25,12 @@ import { ErrorBoundary } from '../components/error-boundary';
 import { Notice, NoticeTable } from '../components/notice-table';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { SpecEditorSidebar } from '../components/spec-editor/spec-editor-sidebar';
+import { Tooltip } from '../components/tooltip';
 import { superFaint } from '../css/css-in-js';
 import {
   useActiveApiSpecSyncVCSVersion,
   useGitVCSVersion,
 } from '../hooks/use-vcs-version';
-
-const isLintError = (result: IRuleResult) => result.severity === 0;
 
 const EmptySpaceHelper = styled.div({
   ...superFaint,
@@ -46,7 +48,7 @@ export const Toolbar = styled.div({
   zIndex: 1,
   backgroundColor: 'var(--color-bg)',
   display: 'flex',
-  justifyContent: 'flex-end',
+  justifyContent: 'space-between',
   flexDirection: 'row',
   borderTop: '1px solid var(--hl-md)',
   height: 'var(--line-height-sm)',
@@ -58,9 +60,20 @@ export const Toolbar = styled.div({
   },
 });
 
+const RulesetLabel = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  padding: 'var(--padding-md)',
+  height: '100%',
+  boxSizing: 'border-box',
+  gap: 'var(--padding-sm)',
+  color: 'var(--hl)',
+});
+
 interface LoaderData {
   lintMessages: LintMessage[];
   apiSpec: ApiSpec;
+  rulesetPath: string;
 }
 
 export const loader: LoaderFunction = async ({
@@ -70,23 +83,50 @@ export const loader: LoaderFunction = async ({
   invariant(workspaceId, 'Workspace ID is required');
   const apiSpec = await models.apiSpec.getByParentId(workspaceId);
   invariant(apiSpec, 'API spec not found');
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
 
   let lintMessages: LintMessage[] = [];
+
+  let rulesetPath = '';
+
+  try {
+    const spectralRulesetPath = path.join(
+      process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+      `version-control/git/${workspaceMeta?.gitRepositoryId}/other/.spectral.yaml`,
+    );
+
+    if ((await stat(spectralRulesetPath)).isFile()) {
+      rulesetPath = spectralRulesetPath;
+    }
+  } catch (err) {
+    // Ignore
+  }
+
   if (apiSpec.contents && apiSpec.contents.length !== 0) {
-    lintMessages = (await window.main.spectralRun(apiSpec.contents))
-      .filter(isLintError)
-      .map(({ severity, code, message, range }) => ({
-        type: severity === 0 ? 'error' : 'warning',
-        message: `${code} ${message}`,
-        line: range.start.line,
-        // Attach range that will be returned to our click handler
-        range,
-      }));
+    try {
+      lintMessages = (await window.main.spectralRun({
+        contents: apiSpec.contents,
+        rulesetPath,
+      }))
+        .map(({ severity, code, message, range }) => ({
+          type: (['error', 'warning'][severity] ?? 'info') as Notice['type'],
+          message: `${code} ${message}`,
+          line: range.start.line,
+          // Attach range that will be returned to our click handler
+          range,
+        }));
+    } catch (e) {
+      console.log('Error linting spec', e);
+    }
   }
 
   return {
     lintMessages,
     apiSpec,
+    rulesetPath,
   };
 };
 
@@ -100,11 +140,27 @@ const Design: FC = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { apiSpec, lintMessages } = useLoaderData() as LoaderData;
+  const { apiSpec, lintMessages, rulesetPath } = useLoaderData() as LoaderData;
   const editor = createRef<CodeEditorHandle>();
 
   const updateApiSpecFetcher = useFetcher();
   const generateRequestCollectionFetcher = useFetcher();
+
+  useEffect(() => {
+    CodeMirror.registerHelper('lint', 'openapi', async function(contents: string) {
+      const diagnostics = await window.main.spectralRun({
+        contents,
+        rulesetPath,
+      });
+
+      return diagnostics.map(result => ({
+        from: CodeMirror.Pos(result.range.start.line, result.range.start.character),
+        to: CodeMirror.Pos(result.range.end.line, result.range.end.character),
+        message: result.message,
+        severity: ['error', 'warning'][result.severity] ?? 'info',
+      }));
+    });
+  }, [rulesetPath]);
 
   const onCodeEditorChange = useMemo(() => {
     const handler = async (contents: string) => {
@@ -222,6 +278,44 @@ const Design: FC = () => {
             )}
             {apiSpec.contents ? (
               <Toolbar>
+                {
+                  <Tooltip
+                    message={
+                      rulesetPath ? (
+                        <Fragment>
+                          <p>
+                            Using ruleset from
+                          </p>
+                          <code
+                            style={{
+                              wordBreak: 'break-all',
+                            }}
+                          >{rulesetPath}</code>
+                        </Fragment>
+                      ) : (
+                        <Fragment>
+                          <p>Using default OAS ruleset.</p>
+                          <p>
+                            To use a custom ruleset add a{' '}
+                            <code>.spectral.yaml</code> file to the root of your
+                            git repository
+                          </p>
+                        </Fragment>
+                      )
+                    }
+                  >
+                    <RulesetLabel>
+                      <i
+                        className={
+                          rulesetPath
+                            ? 'fa fa-file-circle-check'
+                            : 'fa fa-file-circle-xmark'
+                        }
+                      />{' '}
+                      Ruleset
+                    </RulesetLabel>
+                  </Tooltip>
+                }
                 <button
                   disabled={lintMessages.length > 0 || generateRequestCollectionFetcher.state !== 'idle'}
                   className="btn btn--compact"
@@ -239,8 +333,7 @@ const Design: FC = () => {
                     <i className="fa fa-spin fa-spinner" />
                   ) : (
                     <i className="fa fa-file-import" />
-                  )} Generate Request
-                  Collection
+                  )} Generate Request Collection
                 </button>
               </Toolbar>
             ) : null}
