@@ -13,7 +13,7 @@ export const workspaceLoader: LoaderFunction = async ({
   const workspace = await models.workspace.getById(workspaceId);
 
   invariant(workspace, 'Workspace not found');
-
+  console.log(await models.environment.getById('env_e6550dab2a0066ebe81a1cac51bc9b2425e36de3'));
   const workspaceEnvironments = await models.environment.findByParentId(workspaceId);
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);

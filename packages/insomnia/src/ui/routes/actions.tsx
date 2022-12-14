@@ -486,7 +486,6 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({
   }
 
   await importRaw(apiSpec.contents, {
-    getWorkspaceId: () => Promise.resolve(workspaceId),
     enableDiffBasedPatching: true,
     enableDiffDeep: true,
     bypassDiffProps: {

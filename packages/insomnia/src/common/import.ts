@@ -12,6 +12,7 @@ import { AskModal } from '../ui/components/modals/ask-modal';
 import { showError, showModal } from '../ui/components/modals/index';
 import { showSelectModal } from '../ui/components/modals/select-modal';
 import { convert, ConvertResultType } from '../utils/importers/convert';
+import { invariant } from '../utils/invariant';
 import {
   BASE_ENVIRONMENT_ID_KEY,
   CONTENT_TYPE_GRAPHQL,
@@ -20,7 +21,7 @@ import {
   WORKSPACE_ID_KEY,
 } from './constants';
 import { database as db } from './database';
-import { diffPatchObj, fnOrString, generateId } from './misc';
+import { diffPatchObj, generateId } from './misc';
 import { strings } from './strings';
 
 export interface ImportResult {
@@ -37,7 +38,6 @@ interface ConvertResult {
 }
 
 export interface ImportRawConfig {
-  getWorkspaceId: ImportToWorkspacePrompt;
   getProjectId?: () => Promise<string>;
   getWorkspaceScope?: SetWorkspaceScopePrompt;
   enableDiffBasedPatching?: boolean;
@@ -109,7 +109,6 @@ const REPLACE_ID_REGEX = /__\w+_\d+__/g;
 export async function importRaw(
   rawContent: string,
   {
-    getWorkspaceId,
     getWorkspaceScope,
     getProjectId,
     enableDiffBasedPatching,
@@ -140,25 +139,11 @@ export async function importRaw(
     }
   }
 
-  // Contains the ID of the workspace to be used with the import
-  generatedIds[WORKSPACE_ID_KEY] = async () => {
-    const workspaceId = await getWorkspaceId();
-    // First try getting the workspace to overwrite
-    const workspace = await models.workspace.getById(workspaceId || 'n/a');
-    // Update this fn so it doesn't run again
-    const idToUse = workspace?._id || generateId(models.workspace.prefix);
-    generatedIds[WORKSPACE_ID_KEY] = idToUse;
-    return idToUse;
-  };
-
+  const newWorkspaceId = generateId(models.workspace.prefix);
+  const newEnv = await models.environment.getOrCreateForParentId(newWorkspaceId);
+  invariant(newEnv, 'Could not create environment');
+  const newEnvId = newEnv._id;
   // Contains the ID of the base environment to be used with the import
-  generatedIds[BASE_ENVIRONMENT_ID_KEY] = async () => {
-    const parentId = await fnOrString(generatedIds[WORKSPACE_ID_KEY]);
-    const baseEnvironment = await models.environment.getOrCreateForParentId(parentId);
-    // Update this fn so it doesn't run again
-    generatedIds[BASE_ENVIRONMENT_ID_KEY] = baseEnvironment._id;
-    return baseEnvironment._id;
-  };
 
   // NOTE: Although the order of the imported resources is not guaranteed,
   // all current importers will produce resources in this order:
@@ -200,16 +185,18 @@ export async function importRaw(
     }
 
     // Replace ID placeholders (eg. __WORKSPACE_ID__) with generated values
-    for (const key of Object.keys(generatedIds)) {
-      const { parentId, _id } = resource;
-
-      if (parentId?.includes(key)) {
-        resource.parentId = parentId.replace(key, await fnOrString(generatedIds[key]));
-      }
-
-      if (_id && _id.includes(key)) {
-        resource._id = _id.replace(key, await fnOrString(generatedIds[key]));
-      }
+    const { parentId, _id } = resource;
+    if (parentId?.includes(WORKSPACE_ID_KEY)) {
+      resource.parentId = parentId.replace(WORKSPACE_ID_KEY, newWorkspaceId);
+    }
+    if (_id && _id.includes(WORKSPACE_ID_KEY)) {
+      resource._id = _id.replace(WORKSPACE_ID_KEY, newWorkspaceId);
+    }
+    if (parentId?.includes(BASE_ENVIRONMENT_ID_KEY)) {
+      resource.parentId = parentId.replace(BASE_ENVIRONMENT_ID_KEY, newEnvId);
+    }
+    if (_id && _id.includes(BASE_ENVIRONMENT_ID_KEY)) {
+      resource._id = _id.replace(BASE_ENVIRONMENT_ID_KEY, newEnvId);
     }
 
     const model = models.MODELS_BY_EXPORT_TYPE[resource._type];
@@ -364,81 +351,6 @@ export const isApiSpecImport = ({ id }: Pick<ConvertResultType, 'id'>) => (
 export const isInsomniaV4Import = ({ id }: Pick<ConvertResultType, 'id'>) => (
   id === 'insomnia-4'
 );
-
-export enum ForceToWorkspace {
-  new = 'new',
-  current = 'current',
-  existing = 'existing'
-}
-
-export type SelectExistingWorkspacePrompt = Promise<string | null>;
-
-// Returning null instead of a string will create a new workspace
-export type ImportToWorkspacePrompt = () => null | string | Promise<null | string>;
-export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }: { workspaceId?: string; forceToWorkspace?: ForceToWorkspace; activeProjectWorkspaces?: Workspace[] }): ImportToWorkspacePrompt {
-  return function() {
-    switch (forceToWorkspace) {
-      case ForceToWorkspace.new: {
-        return null;
-      }
-
-      case ForceToWorkspace.current: {
-        if (!workspaceId) {
-          return null;
-        }
-
-        return workspaceId;
-      }
-
-      case ForceToWorkspace.existing: {
-        // Return null if there are no available workspaces to chose from.
-        if (activeProjectWorkspaces?.length) {
-          return new Promise(async resolve => {
-            showModal(AskModal, {
-              title: 'Import',
-              message: `Do you want to import into an existing ${strings.workspace.singular.toLowerCase()} or a new one?`,
-              yesText: 'Existing',
-              noText: 'New',
-              onDone: async (yes: boolean) => {
-                if (!yes) {
-                  return resolve(null);
-                }
-                const options = activeProjectWorkspaces.map(workspace => ({ name: workspace.name, value: workspace._id }));
-                showSelectModal({
-                  title: 'Import',
-                  message: `Select a ${strings.workspace.singular.toLowerCase()} to import into`,
-                  options,
-                  value: options[0]?.value,
-                  onDone: workspaceId => {
-                    resolve(workspaceId);
-                  },
-                });
-              },
-            });
-          });
-        }
-      }
-
-      default: {
-        if (!workspaceId) {
-          return null;
-        }
-
-        return new Promise(resolve => {
-          showModal(AskModal, {
-            title: 'Import',
-            message: 'Do you want to import into the current workspace or a new one?',
-            yesText: 'Current',
-            noText: 'New Workspace',
-            onDone: async (yes: boolean) => {
-              resolve(yes ? workspaceId : null);
-            },
-          });
-        });
-      }
-    }
-  };
-}
 
 export type SetWorkspaceScopePrompt = (name?: string) => WorkspaceScope | Promise<WorkspaceScope>;
 export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScopePrompt {

@@ -40,7 +40,6 @@ describe('importRaw()', () => {
     const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
 
     const importConfig: importUtil.ImportRawConfig = {
-      getWorkspaceId: () => null,
       getProjectId: async () => DEFAULT_PROJECT_ID,
       getWorkspaceScope: () => 'design',
     };
@@ -76,7 +75,6 @@ describe('importRaw()', () => {
     const existingWorkspace = await workspace.create();
 
     const importConfig: importUtil.ImportRawConfig = {
-      getWorkspaceId: () => existingWorkspace._id,
       getProjectId: async () => DEFAULT_PROJECT_ID,
       getWorkspaceScope: () => 'design',
     };
@@ -107,7 +105,6 @@ describe('importRaw()', () => {
     const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
 
     const importConfig: importUtil.ImportRawConfig = {
-      getWorkspaceId: () => null,
       getProjectId: async () => DEFAULT_PROJECT_ID,
       getWorkspaceScope: () => 'design',
     };
@@ -142,7 +139,6 @@ describe('importRaw()', () => {
     const existingWorkspace = await workspace.create();
 
     const importConfig: importUtil.ImportRawConfig = {
-      getWorkspaceId: () => existingWorkspace._id,
       getProjectId: async () => DEFAULT_PROJECT_ID,
       getWorkspaceScope: () => 'design',
     };
@@ -174,7 +170,6 @@ describe('importRaw()', () => {
     const existingWorkspace = await workspace.create({ scope: 'design' });
 
     const importConfig: importUtil.ImportRawConfig = {
-      getWorkspaceId: () => existingWorkspace._id,
       getProjectId: async () => DEFAULT_PROJECT_ID,
       getWorkspaceScope: () => 'design',
     };
@@ -203,14 +198,11 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'insomnia', 'insomnia-example-input.yaml');
     const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const existingWorkspace = await workspace.create({ scope: 'collection', _id: 'wrk_123' });
-
     // Simulate pre-existing base and sub environment
     await environment.create({ parentId: 'wrk_123', _id: 'env_123' });
     await environment.create({ parentId: 'env_123', _id: 'env_sub123' });
 
     const importConfig: importUtil.ImportRawConfig = {
-      getWorkspaceId: () => existingWorkspace._id,
       getProjectId: async () => DEFAULT_PROJECT_ID,
       getWorkspaceScope: () => 'collection',
     };

@@ -19,7 +19,6 @@ import {
   ACTIVITY_SPEC,
   DashboardSortOrder,
 } from '../../common/constants';
-import { ForceToWorkspace } from '../../common/import';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
@@ -622,7 +621,6 @@ const ProjectRoute: FC = () => {
           activeProjectWorkspaces: workspaces.map(w => w.workspace),
           activeProject,
           projects,
-          forceToWorkspace: ForceToWorkspace.existing,
           onComplete: revalidate,
         });
       },
@@ -634,7 +632,6 @@ const ProjectRoute: FC = () => {
       activeProjectWorkspaces: workspaces.map(w => w.workspace),
       activeProject,
       projects,
-      forceToWorkspace: ForceToWorkspace.existing,
       onComplete: revalidate,
     });
   }, [activeProject, projects, revalidate, workspaces]);
@@ -644,7 +641,6 @@ const ProjectRoute: FC = () => {
       activeProjectWorkspaces: workspaces.map(w => w.workspace),
       activeProject,
       projects,
-      forceToWorkspace: ForceToWorkspace.existing,
       onComplete: revalidate,
     });
   }, [activeProject, projects, revalidate, workspaces]);

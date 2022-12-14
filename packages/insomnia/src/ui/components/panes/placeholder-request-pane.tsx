@@ -1,7 +1,6 @@
 import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { ForceToWorkspace } from '../../../common/import';
 import { createRequest } from '../../hooks/create-request';
 import { importFile } from '../../import';
 import { selectActiveWorkspace, selectSettings } from '../../redux/selectors';
@@ -12,7 +11,7 @@ export const PlaceholderRequestPane: FC = () => {
   const dispatch = useDispatch();
   const { hotKeyRegistry } = useSelector(selectSettings);
   const workspaceId = useSelector(selectActiveWorkspace)?._id;
-  const handleImportFile = useCallback(() => dispatch(importFile({ workspaceId, forceToWorkspace: ForceToWorkspace.current })), [workspaceId, dispatch]);
+  const handleImportFile = useCallback(() => dispatch(importFile({ workspaceId })), [workspaceId, dispatch]);
 
   const createHttpRequest = useCallback(() => {
     if (workspaceId) {

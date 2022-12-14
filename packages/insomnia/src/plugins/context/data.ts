@@ -19,7 +19,6 @@ interface InsomniaExport {
 type HarExport = Omit<InsomniaExport, 'format'>;
 
 const buildImportRawConfig = (options: PluginImportOptions, activeProjectId: string): ImportRawConfig => ({
-  getWorkspaceId: () => Promise.resolve(options.workspaceId || null),
   getWorkspaceScope: options.scope && (() => (
     Promise.resolve<WorkspaceScope>(options.scope as WorkspaceScope))
   ),

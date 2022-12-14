@@ -4,7 +4,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 
 import { isDevelopment } from '../../common/constants';
-import { askToImportIntoProject, askToImportIntoWorkspace, askToSetWorkspaceScope, importUri } from '../../common/import';
+import { askToImportIntoProject, askToSetWorkspaceScope, importUri } from '../../common/import';
 import * as models from '../../models';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
@@ -63,10 +63,8 @@ export const useAppCommands = () => {
             ),
             addCancel: true,
             onConfirm: async () => {
-              const activeWorkspaceId = activeWorkspace?._id;
               importUri(params.uri, {
                 getWorkspaceScope: askToSetWorkspaceScope(),
-                getWorkspaceId: askToImportIntoWorkspace({ workspaceId: params.workspaceId || activeWorkspaceId, activeProjectWorkspaces }),
                 // Currently, just return the active project instead of prompting for which project to import into
                 getProjectId: askToImportIntoProject({ projects, activeProject }),
               });

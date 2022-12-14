@@ -2,9 +2,7 @@ import electron, { OpenDialogOptions } from 'electron';
 
 import {
   askToImportIntoProject,
-  askToImportIntoWorkspace,
   askToSetWorkspaceScope,
-  ForceToWorkspace,
   importRaw,
   importUri as _importUri,
 } from '../common/import';
@@ -15,9 +13,7 @@ import { showError, showModal } from './components/modals';
 import { AlertModal } from './components/modals/alert-modal';
 
 export interface ImportOptions {
-  workspaceId?: string;
   forceToProject?: 'active' | 'prompt';
-  forceToWorkspace?: ForceToWorkspace;
   forceToScope?: WorkspaceScope;
   onComplete?: () => void;
   activeProject?: Project;
@@ -28,11 +24,8 @@ export interface ImportOptions {
 export const importFile = async (
   {
     forceToScope,
-    forceToWorkspace,
-    workspaceId,
     forceToProject,
     activeProject,
-    activeProjectWorkspaces,
     projects,
     onComplete,
   }: ImportOptions = {},
@@ -72,7 +65,6 @@ export const importFile = async (
       const uri = `file://${filePath}`;
       const config = {
         getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-        getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }),
         // Currently, just return the active project instead of prompting for which project to import into
         getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject?._id || DEFAULT_PROJECT_ID),
       };
@@ -100,11 +92,8 @@ export const importFile = async (
 
 export const importClipBoard = async ({
   forceToScope,
-  forceToWorkspace,
-  workspaceId,
   forceToProject,
   activeProject,
-  activeProjectWorkspaces,
   projects,
   onComplete,
 }: ImportOptions = {},
@@ -124,7 +113,6 @@ export const importClipBoard = async ({
   try {
     const config = {
       getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-      getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }),
       // Currently, just return the active project instead of prompting for which project to import into
       getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject?._id || DEFAULT_PROJECT_ID),
     };
@@ -153,11 +141,8 @@ export const importUri = async (
   uri: string,
   {
     forceToScope,
-    forceToWorkspace,
-    workspaceId,
     forceToProject,
     activeProject,
-    activeProjectWorkspaces,
     projects,
     onComplete,
   }: ImportOptions = {},
@@ -166,7 +151,6 @@ export const importUri = async (
   try {
     const config = {
       getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-      getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }),
       // Currently, just return the active project instead of prompting for which project to import into
       getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject?._id || DEFAULT_PROJECT_ID),
     };

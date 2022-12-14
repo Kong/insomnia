@@ -6,7 +6,6 @@ import { getProductName } from '../../../common/constants';
 import { docsImportExport } from '../../../common/documentation';
 import { exportAllToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { ForceToWorkspace } from '../../../common/import';
 import { strings } from '../../../common/strings';
 import { isRequestGroup } from '../../../models/request-group';
 import { importers } from '../../../utils/importers/importers';
@@ -31,7 +30,6 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const activeProjectWorkspaces = useSelector(selectWorkspacesWithResolvedNameForActiveProject);
   const activeProject = useSelector(selectActiveProject);
   const projects = useSelector(selectProjects);
-  const forceToWorkspace = activeWorkspace?._id ? ForceToWorkspace.current : ForceToWorkspace.existing;
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   const workspaceRequestsAndRequestGroups = useSelector(selectWorkspaceRequestsAndRequestGroups);
   const { revalidate } = useRevalidator();
@@ -51,12 +49,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           activeProject,
           projects,
           workspaceId: activeWorkspace?._id,
-          forceToWorkspace, onComplete: revalidate });
+          onComplete: revalidate });
         hideSettingsModal();
       },
       ...defaultValue,
     });
-  }, [activeProjectWorkspaces, activeProject, projects, activeWorkspace?._id, forceToWorkspace, revalidate, hideSettingsModal]);
+  }, [activeProjectWorkspaces, activeProject, projects, activeWorkspace?._id, revalidate, hideSettingsModal]);
 
   const showExportRequestsModal = useCallback(() => {
     if (!workspaceRequestsAndRequestGroups.filter(r => !isRequestGroup(r)).length) {
@@ -81,9 +79,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       activeProject,
       projects,
       workspaceId: activeWorkspace?._id,
-      forceToWorkspace, onComplete: revalidate });
+      onComplete: revalidate });
     hideSettingsModal();
-  }, [activeProjectWorkspaces, activeProject, projects, activeWorkspace?._id, forceToWorkspace, revalidate, hideSettingsModal]);
+  }, [activeProjectWorkspaces, activeProject, projects, activeWorkspace?._id, revalidate, hideSettingsModal]);
 
   const handleImportClipBoard = useCallback(() => {
     importClipBoard({
@@ -91,9 +89,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       activeProject,
       projects,
       workspaceId: activeWorkspace?._id,
-      forceToWorkspace, onComplete: revalidate });
+      onComplete: revalidate });
     hideSettingsModal();
-  }, [activeProjectWorkspaces, activeProject, projects, activeWorkspace?._id, forceToWorkspace, revalidate, hideSettingsModal]);
+  }, [activeProjectWorkspaces, activeProject, projects, activeWorkspace?._id, revalidate, hideSettingsModal]);
 
   const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
 
