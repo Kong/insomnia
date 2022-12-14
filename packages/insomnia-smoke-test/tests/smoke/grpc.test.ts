@@ -17,7 +17,6 @@ test('can send gRPC requests with reflection', async ({ app, page }) => {
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   await page.click('button:has-text("Clipboard")');
-  await page.click('div[role="dialog"] button:has-text("New")');
   await page.click('text=CollectionPreRelease gRPCjust now');
   await page.locator('button:has-text("Route Guide ExampleOPEN")').click();
 

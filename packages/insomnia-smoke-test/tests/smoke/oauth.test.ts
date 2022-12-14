@@ -24,7 +24,6 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   await page.locator('button:has-text("Clipboard")').click();
-  await page.click('div[role="dialog"] button:has-text("New")');
   await page.locator('text=CollectionOauth Testingjust now').click();
 
   // Authorization code

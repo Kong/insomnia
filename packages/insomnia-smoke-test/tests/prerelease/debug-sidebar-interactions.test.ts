@@ -11,7 +11,6 @@ test.describe('Debug-Sidebar', async () => {
     const text = await loadFixture('simple.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
     await page.click('button:has-text("Clipboard")');
-    await page.click('div[role="dialog"] button:has-text("New")');
     await page.click('text=Collectionsimplejust now');
   });
 

@@ -393,29 +393,7 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, active
       case ForceToWorkspace.existing: {
         // Return null if there are no available workspaces to chose from.
         if (activeProjectWorkspaces?.length) {
-          return new Promise(async resolve => {
-            showModal(AskModal, {
-              title: 'Import',
-              message: `Do you want to import into an existing ${strings.workspace.singular.toLowerCase()} or a new one?`,
-              yesText: 'Existing',
-              noText: 'New',
-              onDone: async (yes: boolean) => {
-                if (!yes) {
-                  return resolve(null);
-                }
-                const options = activeProjectWorkspaces.map(workspace => ({ name: workspace.name, value: workspace._id }));
-                showSelectModal({
-                  title: 'Import',
-                  message: `Select a ${strings.workspace.singular.toLowerCase()} to import into`,
-                  options,
-                  value: options[0]?.value,
-                  onDone: workspaceId => {
-                    resolve(workspaceId);
-                  },
-                });
-              },
-            });
-          });
+          return null;
         }
       }
 
