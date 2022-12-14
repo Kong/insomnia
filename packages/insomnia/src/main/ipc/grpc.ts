@@ -136,7 +136,7 @@ export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDef
   invariant(methods, 'No reflection methods found');
   return methods.find(c => c.path === request.protoMethodName);
 };
-export const getMethodsFromPackageDefinition = (packageDefinition: PackageDefinition) => {
+export const getMethodsFromPackageDefinition = (packageDefinition: PackageDefinition): MethodDefs[] => {
   return Object.values(packageDefinition)
     .filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format)
     .flatMap(Object.values);
