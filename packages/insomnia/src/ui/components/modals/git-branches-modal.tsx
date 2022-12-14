@@ -4,11 +4,13 @@ import { OverlayContainer } from 'react-aria';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { GitRepository } from '../../../models/git-repository';
+import { CreateNewGitBranchResult } from '../../routes/git-actions';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
+import { showAlert } from '.';
 
 type Props = ModalProps & {
   branches: string[];
@@ -25,7 +27,6 @@ export const GitBranchesModal: FC<Props> = (({
   onHide,
   branches,
   activeBranch,
-  gitRepository,
   remoteBranches,
 }) => {
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string};
@@ -35,80 +36,30 @@ export const GitBranchesModal: FC<Props> = (({
     modalRef.current?.show();
   }, []);
 
-  const gitCheckoutFetcher = useFetcher();
+  const checkoutBranchFetcher = useFetcher();
+  const mergeBranchFetcher = useFetcher();
+  const newBranchFetcher = useFetcher<CreateNewGitBranchResult>();
+  const deleteBranchFetcher = useFetcher();
 
-  // const dispatch = useDispatch();
-
-  // const refreshState = useCallback(async () => {
-  //   const branch = await vcs.getBranch();
-  //   const branches = await vcs.listBranches();
-  //   const remoteBranches = await vcs.listRemoteBranches();
-  //   setState(state => ({
-  //     ...state,
-  //     branch,
-  //     branches,
-  //     remoteBranches,
-  //   }));
-  // }, [vcs]);
-
-  // useImperativeHandle(ref, () => ({
-  //   hide: () => {
-  //     modalRef.current?.hide();
-  //   },
-  //   show: async ({ onCheckout }) => {
-  //     setState(state => ({ ...state, newBranchName: '', onCheckout }));
-  //     await refreshState();
-  //     modalRef.current?.show({ onHide: onCheckout });
-  //     // Do a fetch of remotes and refresh again. NOTE: we're doing this
-  //     // last because it's super slow
-  //     await vcs.fetch(false, 1, gitRepository?.credentials);
-  //     await refreshState();
-  //   },
-  // }), [refreshState, vcs, gitRepository?.credentials]);
-
-  // const handleCheckout = async (branch: string) => {
-  //   try {
-  //     const bufferId = await db.bufferChanges();
-  //     const providerName = getOauth2FormatName(gitRepository?.credentials);
-  //     await vcs.checkout(branch);
-  //     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'checkout_branch'), providerName });
-  //     await db.flushChanges(bufferId, true);
-  //     await dispatch(initializeEntities());
-  //     await refreshState();
-  //     state.onCheckout?.();
-  //   } catch (err) {
-  //     setState(state => ({ ...state, error: err.message }));
-  //   }
-  // };
-  // const { branch: currentBranch, branches, remoteBranches, newBranchName, error, onCheckout } = state;
   const remoteOnlyBranches = remoteBranches.filter(b => !branches.includes(b));
+
+  useEffect(() => {
+    if (newBranchFetcher.data?.errors?.length) {
+      showAlert({
+        title: 'Push Failed',
+        message: newBranchFetcher.data.errors.join('\n'),
+      });
+    }
+  }, [newBranchFetcher.data?.errors]);
+
   return (
     <OverlayContainer>
       <Modal ref={modalRef} onHide={onHide}>
         <ModalHeader>Branches</ModalHeader>
         <ModalBody className="pad">
-          {/* {error && (
-            <p className="notice error margin-bottom-sm no-margin-top">
-              <button className="pull-right icon" onClick={() => setState({ ...state, error: '' })}>
-                <i className="fa fa-times" />
-              </button>
-              {error}
-            </p>
-          )} */}
-          <form
-            onSubmit={async event => {
-              event.preventDefault();
-              // try {
-              //   const providerName = getOauth2FormatName(gitRepository?.credentials);
-              //   await vcs.checkout(state.newBranchName);
-              //   trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'create_branch'), providerName });
-              //   setState({ ...state, newBranchName: '' });
-              //   refreshState();
-              //   onCheckout?.();
-              // } catch (err) {
-              //   setState(state => ({ ...state, error: err.message }));
-              // }
-            }}
+          <newBranchFetcher.Form
+            method="post"
+            action={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/new`}
           >
             <div className="form-row">
               <div className="form-control form-control--outlined">
@@ -117,21 +68,19 @@ export const GitBranchesModal: FC<Props> = (({
                   <input
                     type="text"
                     autoFocus
-                    // onChange={event => {
-
-                    // }}
+                    name="branch"
                     required
                     placeholder="testing-branch"
                   />
                 </label>
               </div>
               <div className="form-control form-control--no-label width-auto">
-                <button type="submit" className="btn btn--clicky">
-                  Create
+                <button disabled={newBranchFetcher.state === 'loading'} type="submit" className="btn btn--clicky">
+                  <i className='fa fa-plus space-right' /> Create
                 </button>
               </div>
             </div>
-          </form>
+          </newBranchFetcher.Form>
 
           <div className="pad-top">
             <table className="table--fancy table--outlined">
@@ -163,15 +112,12 @@ export const GitBranchesModal: FC<Props> = (({
                             className="btn btn--micro btn--outlined space-left"
                             doneMessage="Merged"
                             onClick={async () => {
-                              // try {
-                              //   const providerName = getOauth2FormatName(gitRepository?.credentials);
-                              //   await vcs.merge(branch);
-                              //   // Apparently merge doesn't update the working dir so need to checkout too
-                              //   await handleCheckout(branch);
-                              //   trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'merge_branch'), providerName });
-                              // } catch (err) {
-                              //   setState(state => ({ ...state, error: err.message }));
-                              // }
+                              mergeBranchFetcher.submit({
+                                branch,
+                              }, {
+                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/merge`,
+                                method: 'post',
+                              });
                             }}
                           >
                             Merge
@@ -180,21 +126,26 @@ export const GitBranchesModal: FC<Props> = (({
                             className="btn btn--micro btn--outlined space-left"
                             doneMessage="Deleted"
                             onClick={async () => {
-                              // try {
-                              //   const providerName = getOauth2FormatName(gitRepository?.credentials);
-                              //   await vcs.deleteBranch(branch);
-                              //   trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'delete_branch'), providerName });
-                              //   refreshState();
-                              // } catch (err) {
-                              //   setState(state => ({ ...state, error: err.message }));
-                              // }
+                              deleteBranchFetcher.submit({
+                                branch,
+                              }, {
+                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/delete`,
+                                method: 'post',
+                              });
                             }}
                           >
                             Delete
                           </PromptButton>
                           <button
                             className="btn btn--micro btn--outlined space-left"
-                            // onClick={() => handleCheckout(branch)}
+                            onClick={() => {
+                              checkoutBranchFetcher.submit({
+                                branch,
+                              }, {
+                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/checkout`,
+                                method: 'post',
+                              });
+                            }}
                           >
                             Checkout
                           </button>
@@ -223,10 +174,10 @@ export const GitBranchesModal: FC<Props> = (({
                         <button
                           className="btn btn--micro btn--outlined space-left"
                           onClick={async () => {
-                            gitCheckoutFetcher.submit({
+                            checkoutBranchFetcher.submit({
                               branch,
                             }, {
-                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/checkout`,
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/checkout`,
                               method: 'post',
                             });
                           }}

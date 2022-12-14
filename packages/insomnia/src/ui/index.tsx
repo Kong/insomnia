@@ -253,6 +253,27 @@ const router = createMemoryRouter(
                                   loader: async (...args) => (await import('./routes/git-actions')).gitChangesLoader(...args),
                                 },
                                 {
+                                  path: 'branch',
+                                  children: [
+                                    {
+                                      path: 'new',
+                                      action: async (...args) => (await import('./routes/git-actions')).createNewGitBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'delete',
+                                      action: async (...args) => (await import('./routes/git-actions')).deleteGitBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'checkout',
+                                      action: async (...args) => (await import('./routes/git-actions')).checkoutGitBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'merge',
+                                      action: async (...args) => (await import('./routes/git-actions')).mergeGitBranchAction(...args),
+                                    },
+                                  ],
+                                },
+                                {
                                   path: 'rollback',
                                   action: async (...args) => (await import('./routes/git-actions')).gitRollbackChangesAction(...args),
                                 },
@@ -275,10 +296,6 @@ const router = createMemoryRouter(
                                 {
                                   path: 'push',
                                   action: async (...args) => (await import('./routes/git-actions')).pushToGitRemoteAction(...args),
-                                },
-                                {
-                                  path: 'checkout',
-                                  action: async (...args) => (await import('./routes/git-actions')).checkoutGitBranchAction(...args),
                                 },
                               ],
                             },

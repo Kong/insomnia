@@ -404,12 +404,53 @@ export const commitToGitRepoAction: ActionFunction = async () => {
   // }
 };
 
-export const createNewGitBranchAction: ActionFunction = async ({}) => {};
+export interface CreateNewGitBranchResult {
+ errors?: string[];
+}
 
+export const createNewGitBranchAction: ActionFunction = async ({ request, params }): Promise<CreateNewGitBranchResult> => {
+  const { workspaceId } = params;
+  invariant(workspaceId, 'Workspace ID is required');
+
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+
+  const repoId = workspaceMeta?.gitRepositoryId;
+  invariant(repoId, 'Workspace is not linked to a git repository');
+
+  const repo = await models.gitRepository.getById(repoId);
+  invariant(repo, 'Git Repository not found');
+
+  const formData = await request.formData();
+
+  const branch = formData.get('branch');
+  invariant(typeof branch === 'string', 'Branch name is required');
+
+  const vcs = getGitVCS();
+
+  try {
+    const providerName = getOauth2FormatName(repo?.credentials);
+    await vcs.checkout(branch);
+    trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'create_branch'), providerName });
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Something went wrong while creating a new branch';
+    return {
+      errors: [errorMessage],
+    };
+  }
+
+  return {};
+};
+
+export interface CheckoutGitBranchResult {
+  errors?: string[];
+ }
 export const checkoutGitBranchAction: ActionFunction = async ({
   request,
   params,
-}) => {
+}): Promise<CheckoutGitBranchResult> => {
   const { workspaceId } = params;
   invariant(workspaceId, 'Workspace ID is required');
 
@@ -441,9 +482,15 @@ export const checkoutGitBranchAction: ActionFunction = async ({
       errors: [errorMessage],
     };
   }
+
+  return {};
 };
 
-export const mergeGitBranchAction: ActionFunction = async ({ request, params }) => {
+export interface MergeGitBranchResult {
+  errors?: string[];
+}
+
+export const mergeGitBranchAction: ActionFunction = async ({ request, params }): Promise<MergeGitBranchResult> => {
   const { workspaceId } = params;
   invariant(workspaceId, 'Workspace ID is required');
 
@@ -483,17 +530,55 @@ export const mergeGitBranchAction: ActionFunction = async ({ request, params }) 
 
   return {};
 };
-// [] TODO
-export const deleteGitBranchAction: ActionFunction = async ({}) => {};
 
-export interface PushToGitRemoteActionData {
+export interface DeleteGitBranchResult {
+  errors?: string[];
+}
+
+export const deleteGitBranchAction: ActionFunction = async ({ request, params }): Promise<DeleteGitBranchResult> => {
+  const { workspaceId } = params;
+  invariant(workspaceId, 'Workspace ID is required');
+
+  const workspace = await models.workspace.getById(workspaceId);
+
+  invariant(workspace, 'Workspace not found');
+
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+
+  const repoId = workspaceMeta?.gitRepositoryId;
+
+  invariant(repoId, 'Workspace is not linked to a git repository');
+
+  const repo = await models.gitRepository.getById(repoId);
+  invariant(repo, 'Git Repository not found');
+
+  const vcs = getGitVCS();
+
+  const formData = await request.formData();
+
+  const branch = formData.get('branch');
+  invariant(typeof branch === 'string', 'Branch name is required');
+
+  try {
+    const providerName = getOauth2FormatName(repo?.credentials);
+    await vcs.deleteBranch(branch);
+    trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'delete_branch'), providerName });
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    return  { errors: [errorMessage] };
+  }
+
+  return {};
+};
+
+export interface PushToGitRemoteResult {
   errors?: string[];
 }
 
 export const pushToGitRemoteAction: ActionFunction = async ({
   request,
   params,
-}): Promise<PushToGitRemoteActionData>  => {
+}): Promise<PushToGitRemoteResult>  => {
   const { workspaceId } = params;
   invariant(workspaceId, 'Workspace ID is required');
   const workspace = await models.workspace.getById(workspaceId);
@@ -555,13 +640,13 @@ export const pushToGitRemoteAction: ActionFunction = async ({
   return {};
 };
 
-export type PullFromGitRemoteActionData = {} | {
-  errors: string[];
-};
+export interface PullFromGitRemoteResult {
+ errors?: string[];
+}
 
 export const pullFromGitRemoteAction: ActionFunction = async ({
   params,
-}): Promise<PullFromGitRemoteActionData> => {
+}): Promise<PullFromGitRemoteResult> => {
   const { workspaceId } = params;
   invariant(workspaceId, 'Workspace ID is required');
   const workspace = await models.workspace.getById(workspaceId);
@@ -816,7 +901,11 @@ export const gitChangesLoader: LoaderFunction = async ({ params }): Promise<GitC
   };
 };
 
-export const gitRollbackChangesAction: ActionFunction = async ({ params, request }): Promise<void> => {
+export interface GitRollbackChangesResult {
+  errors?: string[];
+}
+
+export const gitRollbackChangesAction: ActionFunction = async ({ params, request }): Promise<GitRollbackChangesResult> => {
   const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
 
@@ -839,17 +928,26 @@ export const gitRollbackChangesAction: ActionFunction = async ({ params, request
 
   const paths = formData.getAll('gitPath');
 
-  const { changes } = await getGitChanges(vcs, workspace);
+  try {
+    const { changes } = await getGitChanges(vcs, workspace);
 
-  const files = changes
-    // only rollback if editable
-    .filter(i => i.editable)
-    // only rollback if in selected path or for all paths
-    .filter(i => paths.length === 0 || paths.includes(i.path))
-    .map(i => ({
-      filePath: i.path,
-      status: i.status,
-    }));
+    const files = changes
+      // only rollback if editable
+      .filter(i => i.editable)
+      // only rollback if in selected path or for all paths
+      .filter(i => paths.length === 0 || paths.includes(i.path))
+      .map(i => ({
+        filePath: i.path,
+        status: i.status,
+      }));
 
-  await gitRollback(vcs, files);
+    await gitRollback(vcs, files);
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Error while rolling back changes';
+    return {
+      errors: [errorMessage],
+    };
+  }
+
+  return {};
 };
