@@ -5,13 +5,7 @@ import thunk from 'redux-thunk';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../../common/constants';
-import { database } from '../../../../common/database';
 import * as models from '../../../../models';
-import { ApiSpec } from '../../../../models/api-spec';
-import { CookieJar } from '../../../../models/cookie-jar';
-import { Environment } from '../../../../models/environment';
-import { Workspace, WorkspaceScope } from '../../../../models/workspace';
-import { WorkspaceMeta } from '../../../../models/workspace-meta';
 import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT, SET_ACTIVE_WORKSPACE } from '../global';
 import { activateWorkspace } from '../workspace';
 
@@ -20,25 +14,6 @@ jest.mock('../../../../ui/analytics');
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
-
-const expectedModelsCreated = async (name: string, scope: WorkspaceScope, parentId: string) => {
-  const workspaces = await models.workspace.all();
-  expect(workspaces).toHaveLength(1);
-  const workspace = workspaces[0];
-
-  const descendents = await database.withDescendants(workspace);
-
-  expect(descendents).toHaveLength(5);
-  expect(descendents).toStrictEqual(expect.arrayContaining([
-    expect.objectContaining<Partial<Workspace>>({ name, scope, parentId, type: models.workspace.type }),
-    expect.objectContaining<Partial<ApiSpec>>({ parentId: workspace._id, type: models.apiSpec.type }),
-    expect.objectContaining<Partial<Environment>>({ parentId: workspace._id, type: models.environment.type }),
-    expect.objectContaining<Partial<CookieJar>>({ parentId: workspace._id, type: models.cookieJar.type }),
-    expect.objectContaining<Partial<WorkspaceMeta>>({ parentId: workspace._id, type: models.workspaceMeta.type }),
-  ]));
-
-  return workspace._id;
-};
 
 describe('workspace', () => {
   beforeEach(globalBeforeEach);
