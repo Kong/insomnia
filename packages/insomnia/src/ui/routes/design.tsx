@@ -32,8 +32,6 @@ import {
   useGitVCSVersion,
 } from '../hooks/use-vcs-version';
 
-const isLintError = (result: IRuleResult) => result.severity === 0;
-
 const EmptySpaceHelper = styled.div({
   ...superFaint,
   display: 'flex',
@@ -113,9 +111,8 @@ export const loader: LoaderFunction = async ({
         contents: apiSpec.contents,
         rulesetPath,
       }))
-        .filter(isLintError)
         .map(({ severity, code, message, range }) => ({
-          type: severity === 0 ? 'error' : 'warning',
+          type: (['error', 'warning'][severity] ?? 'info') as Notice['type'],
           message: `${code} ${message}`,
           line: range.start.line,
           // Attach range that will be returned to our click handler
@@ -151,17 +148,16 @@ const Design: FC = () => {
 
   useEffect(() => {
     CodeMirror.registerHelper('lint', 'openapi', async function(contents: string) {
-      const isLintError = (result: IRuleResult) => result.severity === 0;
-
       const diagnostics = await window.main.spectralRun({
         contents,
         rulesetPath,
       });
 
-      return diagnostics.filter(isLintError).map(result => ({
+      return diagnostics.map(result => ({
         from: CodeMirror.Pos(result.range.start.line, result.range.start.character),
         to: CodeMirror.Pos(result.range.end.line, result.range.end.character),
         message: result.message,
+        severity: ['error', 'warning'][result.severity] ?? 'info',
       }));
     });
   }, [rulesetPath]);
