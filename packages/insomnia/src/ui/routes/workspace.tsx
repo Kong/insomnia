@@ -30,10 +30,7 @@ export const workspaceLoader: LoaderFunction = async ({
   const apiSpec = await models.apiSpec.getByParentId(workspaceId);
   const activeProject = await models.project.getById(projectId);
   invariant(activeProject, 'Project not found');
-  console.log({
-    workspace,
-    workspaceMeta,
-  });
+
   const gitRepository = await models.gitRepository.getById(workspaceMeta.gitRepositoryId || '');
 
   const workspaceHasChildren = workspaceEnvironments.length && cookieJar && apiSpec && workspaceMeta;

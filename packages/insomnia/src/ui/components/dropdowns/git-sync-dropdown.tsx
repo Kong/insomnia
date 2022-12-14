@@ -12,11 +12,11 @@ import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
-import { showAlert, showModal } from '../modals';
+import { showAlert } from '../modals';
 import { GitBranchesModal } from '../modals/git-branches-modal';
 import { GitLogModal } from '../modals/git-log-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
-// import { GitStagingModal } from '../modals/git-staging-modal';
+import { GitStagingModal } from '../modals/git-staging-modal';
 import { Button } from '../themed-button';
 
 interface Props {
@@ -27,13 +27,15 @@ interface Props {
 export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string};
   const dropdownRef = useRef<DropdownHandle>(null);
+
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
   const [isGitBranchesModalOpen, setIsGitBranchesModalOpen] = useState(false);
   const [isGitLogModalOpen, setIsGitLogModalOpen] = useState(false);
+  const [isGitStagingModalOpen, setIsGitStagingModalOpen] = useState(false);
+
   const gitPushFetcher = useFetcher<PushToGitRemoteResult>();
   const gitPullFetcher = useFetcher();
   const gitCheckoutFetcher = useFetcher();
-  const gitCommitFetcher = useFetcher();
   const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
 
   const loadingPush = gitPushFetcher.state === 'loading';
@@ -46,13 +48,18 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
   }, [gitRepoDataFetcher, gitRepository, gitRepository?._id, organizationId, projectId, workspaceId]);
 
   useEffect(() => {
-    if (gitPushFetcher.data?.errors?.length) {
+    const errors = [
+      ...gitPushFetcher.data?.errors ?? [],
+      ...gitPullFetcher.data?.errors ?? [],
+      ...gitCheckoutFetcher.data?.errors ?? [],
+    ];
+    if (errors.length > 0) {
       showAlert({
         title: 'Push Failed',
-        message: gitPushFetcher.data.errors.join('\n'),
+        message: errors.join('\n'),
       });
     }
-  }, [gitPushFetcher.data?.errors]);
+  }, [gitCheckoutFetcher.data?.errors, gitPullFetcher.data?.errors, gitPushFetcher.data?.errors]);
 
   async function handlePush({ force }: { force: boolean }) {
     gitPushFetcher.submit({
@@ -75,7 +82,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
   const isLoading = gitRepoDataFetcher.state === 'loading';
   const isButton = !gitRepository || (isLoading && !gitRepoDataFetcher.data) || (gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data);
 
-  const { log, branches, branch: currentBranch, remoteBranches } = (gitRepoDataFetcher.data && 'log' in gitRepoDataFetcher.data) ? gitRepoDataFetcher.data : { log: [], branches: [], branch: '', remoteBranches: [] };
+  const { log, branches, branch: currentBranch, remoteBranches, changes, statusNames } = (gitRepoDataFetcher.data && 'log' in gitRepoDataFetcher.data) ? gitRepoDataFetcher.data : { log: [], branches: [], branch: '', remoteBranches: [], changes: [], statusNames: {} };
 
   let dropdown: React.ReactNode = null;
 
@@ -171,10 +178,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
               <DropdownDivider>{currentBranch}</DropdownDivider>
 
               <DropdownItem
-                onClick={() => gitCommitFetcher.submit({}, {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/commit`,
-                  method: 'post',
-                })}
+                onClick={() => setIsGitStagingModalOpen(true)}
               >
                 <i className="fa fa-check" /> Commit
               </DropdownItem>
@@ -232,6 +236,12 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
         />
       }
       {isGitLogModalOpen && <GitLogModal branch={currentBranch} logs={log} onHide={() => setIsGitLogModalOpen(false)} />}
+      {isGitStagingModalOpen && <GitStagingModal
+        changes={changes}
+        branch={currentBranch}
+        statusNames={statusNames}
+        onHide={() => setIsGitStagingModalOpen(false)}
+      />}
     </Fragment>
   );
 };

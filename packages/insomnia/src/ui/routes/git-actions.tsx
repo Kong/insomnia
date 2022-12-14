@@ -359,49 +359,58 @@ export const resetGitRepoAction: ActionFunction = async ({
   await database.flushChanges(flushId);
 };
 
-export const commitToGitRepoAction: ActionFunction = async () => {
-  // const { workspaceId } = params;
+export interface CommitToGitRepoResult {
+  errors?: string[];
+}
 
-  // invariant(workspaceId, 'Workspace ID is required');
+export const commitToGitRepoAction: ActionFunction = async ({
+  request,
+  params,
+}): Promise<CommitToGitRepoResult> => {
+  const { workspaceId } = params;
+  invariant(workspaceId, 'Workspace ID is required');
 
-  // const workspace = await models.workspace.getById(workspaceId);
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
 
-  // invariant(workspace, 'Workspace not found');
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
 
-  // const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const repoId = workspaceMeta?.gitRepositoryId;
+  invariant(repoId, 'Workspace is not linked to a git repository');
 
-  // const repoId = workspaceMeta?.gitRepositoryId;
+  const repo = await models.gitRepository.getById(repoId);
+  invariant(repo, 'Git Repository not found');
 
-  // invariant(repoId, 'Workspace is not linked to a git repository');
+  const formData = await request.formData();
 
-  // const repo = await models.gitRepository.getById(repoId);
+  const message = formData.get('message');
+  invariant(typeof message === 'string', 'Commit message is required');
 
-  // invariant(repo, 'Git Repository not found');
+  const stagedChangesPaths = [...formData.getAll('paths')] as string[];
 
-  // const formData = await request.formData();
+  const vcs = getGitVCS();
 
-  // const commitMessage = formData.get('commitMessage');
+  try {
+    const { changes } = await getGitChanges(vcs, workspace);
 
-  // invariant(typeof commitMessage === 'string', 'Commit message is required');
+    const changesToCommit = changes.filter(c => stagedChangesPaths.includes(c.path));
 
-  // const stagedChangesPaths = formData.get('staged');
+    for (const item of changesToCommit) {
+      if (item.staged) {
+        item.status.includes('deleted') ? await vcs.remove(item.path) : await vcs.add(item.path);
+      }
+    }
 
-  // const vcs = getGitVCS();
+    await vcs.commit(message);
 
-  // const {changes} = await getGitChanges(vcs, workspace);
+    const providerName = getOauth2FormatName(repo?.credentials);
+    trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'commit'), providerName });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Error while commiting changes';
+    return { errors: [message] };
+  }
 
-  // for (const item of Object.values(changes)) {
-  //   if (item.staged) {
-  //     item.status.includes('deleted') ? await vcs.remove(item.path) : await vcs.add(item.path);
-  //   }
-  // }
-  // await vcs.commit(message);
-  // const providerName = getOauth2FormatName(gitRepository?.credentials);
-  // trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'commit'), providerName });
-  // modalRef.current?.hide();
-  // if (typeof onCommit === 'function') {
-  //   onCommit();
-  // }
+  return {};
 };
 
 export interface CreateNewGitBranchResult {
@@ -690,91 +699,108 @@ export type GitRepoLoaderData = {
   branches: string[];
   remoteBranches: string[];
   gitRepository: GitRepository | null;
+  changes: GitChange[];
+  statusNames: Record<string, string>;
 } | {
   errors: string[];
 };
 
 export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepoLoaderData> => {
-  const { workspaceId, projectId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
-  invariant(typeof projectId === 'string', 'Project Id is required');
+  try {
+    const { workspaceId, projectId } = params;
+    invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+    invariant(typeof projectId === 'string', 'Project Id is required');
 
-  const workspace = await models.workspace.getById(workspaceId);
-  invariant(workspace, 'Workspace not found');
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-  if (!workspaceMeta?.gitRepositoryId) {
+    const workspace = await models.workspace.getById(workspaceId);
+    invariant(workspace, 'Workspace not found');
+    const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+    if (!workspaceMeta?.gitRepositoryId) {
+      return {
+        errors: ['Workspace is not linked to a git repository'],
+      };
+    }
+
+    const gitRepository = await models.gitRepository.getById(workspaceMeta?.gitRepositoryId);
+    invariant(gitRepository, 'Git Repository not found');
+
+    // Create FS client
+    const baseDir = path.join(
+      process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+      `version-control/git/${gitRepository._id}`,
+    );
+
+    // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
+    const neDbClient = NeDBClient.createClient(workspaceId, projectId);
+
+    // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
+    const gitDataClient = fsClient(baseDir);
+
+    // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
+    const otherDatClient = fsClient(path.join(baseDir, 'other'));
+
+    // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
+    const routableFS = routableFSClient(otherDatClient, {
+      [GIT_INSOMNIA_DIR]: neDbClient,
+      [GIT_INTERNAL_DIR]: gitDataClient,
+    });
+
+    const vcs = new GitVCS();
+
+    // Init VCS
+    const { credentials, uri } = gitRepository;
+    if (gitRepository.needsFullClone) {
+      await vcs.initFromClone({
+        url: uri,
+        gitCredentials: credentials,
+        directory: GIT_CLONE_DIR,
+        fs: routableFS,
+        gitDirectory: GIT_INTERNAL_DIR,
+      });
+
+      await models.gitRepository.update(gitRepository, {
+        needsFullClone: false,
+      });
+    } else {
+      await vcs.init({
+        directory: GIT_CLONE_DIR,
+        fs: routableFS,
+        gitDirectory: GIT_INTERNAL_DIR,
+      });
+    }
+
+    // Configure basic info
+    const { author, uri: gitUri } = gitRepository;
+    await vcs.setAuthor(author.name, author.email);
+    await vcs.addRemote(gitUri);
+
+    try {
+      await vcs.fetch(false, 1, gitRepository?.credentials);
+    } catch (e) {
+      console.warn('Error fetching from remote');
+    }
+
+    setGitVCS(vcs);
+
+    const { changes, statusNames } = await getGitChanges(vcs, workspace);
+
     return {
-      errors: ['Workspace is not linked to a git repository'],
+      branch: await vcs.getBranch(),
+      log: await vcs.log() || [],
+      branches: await vcs.listBranches(),
+      remoteBranches: await vcs.listRemoteBranches(),
+      gitRepository: gitRepository,
+      changes,
+      statusNames,
+    };
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Error while fetching git repository.';
+    return {
+      errors: [errorMessage],
     };
   }
-
-  const gitRepository = await models.gitRepository.getById(workspaceMeta?.gitRepositoryId);
-  invariant(gitRepository, 'Git Repository not found');
-
-  // Create FS client
-  const baseDir = path.join(
-    process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-    `version-control/git/${gitRepository._id}`,
-  );
-
-  // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
-  const neDbClient = NeDBClient.createClient(workspaceId, projectId);
-
-  // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
-  const gitDataClient = fsClient(baseDir);
-
-  // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
-  const otherDatClient = fsClient(path.join(baseDir, 'other'));
-
-  // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
-  const routableFS = routableFSClient(otherDatClient, {
-    [GIT_INSOMNIA_DIR]: neDbClient,
-    [GIT_INTERNAL_DIR]: gitDataClient,
-  });
-
-  const vcs = new GitVCS();
-
-  // Init VCS
-  const { credentials, uri } = gitRepository;
-  if (gitRepository.needsFullClone) {
-    await vcs.initFromClone({
-      url: uri,
-      gitCredentials: credentials,
-      directory: GIT_CLONE_DIR,
-      fs: routableFS,
-      gitDirectory: GIT_INTERNAL_DIR,
-    });
-
-    await models.gitRepository.update(gitRepository, {
-      needsFullClone: false,
-    });
-  } else {
-    await vcs.init({
-      directory: GIT_CLONE_DIR,
-      fs: routableFS,
-      gitDirectory: GIT_INTERNAL_DIR,
-    });
-  }
-
-  // Configure basic info
-  const { author, uri: gitUri } = gitRepository;
-  await vcs.setAuthor(author.name, author.email);
-  await vcs.addRemote(gitUri);
-
-  await vcs.fetch(false, 1, gitRepository?.credentials);
-
-  setGitVCS(vcs);
-
-  return {
-    branch: await vcs.getBranch(),
-    log: await vcs.log() || [],
-    branches: await vcs.listBranches(),
-    remoteBranches: await vcs.listRemoteBranches(),
-    gitRepository: gitRepository,
-  };
 };
 
-interface GitChange {
+export interface GitChange {
   path: string;
   type: string;
   status: string;
@@ -926,12 +952,13 @@ export const gitRollbackChangesAction: ActionFunction = async ({ params, request
 
   const formData = await request.formData();
 
-  const paths = formData.getAll('gitPath');
-
+  const paths = [...formData.getAll('paths')] as string[];
+  const changeType = formData.get('changeType') as string;
   try {
     const { changes } = await getGitChanges(vcs, workspace);
 
     const files = changes
+      .filter(i => changeType === 'modified' ? !i.status.includes('added') : i.status.includes('added'))
       // only rollback if editable
       .filter(i => i.editable)
       // only rollback if in selected path or for all paths
