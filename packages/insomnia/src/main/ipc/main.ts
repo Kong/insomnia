@@ -78,6 +78,8 @@ export function registerMainHandlers() {
         console.log('Error while parsing ruleset:', err);
         spectral.setRuleset(oas as RulesetDefinition);
       }
+    } else {
+      spectral.setRuleset(oas as RulesetDefinition);
     }
 
     const diagnostics = await spectral.run(contents);

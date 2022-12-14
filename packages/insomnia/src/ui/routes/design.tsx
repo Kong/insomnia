@@ -2,7 +2,7 @@ import type { IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import { stat } from 'fs/promises';
 import path from 'path';
-import React, { createRef, FC, useCallback, useEffect, useMemo } from 'react';
+import React, { createRef, FC, Fragment, useCallback, useEffect, useMemo } from 'react';
 import {
   LoaderFunction,
   useFetcher,
@@ -283,9 +283,40 @@ const Design: FC = () => {
             {apiSpec.contents ? (
               <Toolbar>
                 {
-                  <Tooltip message={rulesetPath ? `Using ruleset from ${rulesetPath}` : 'No ruleset found'}>
+                  <Tooltip
+                    message={
+                      rulesetPath ? (
+                        <Fragment>
+                          <p>
+                            Using ruleset from
+                          </p>
+                          <code
+                            style={{
+                              wordBreak: 'break-all',
+                            }}
+                          >{rulesetPath}</code>
+                        </Fragment>
+                      ) : (
+                        <Fragment>
+                          <p>Using default OAS ruleset.</p>
+                          <p>
+                            To use a custom ruleset add a{' '}
+                            <code>.spectral.yaml</code> file to the root of your
+                            git repository
+                          </p>
+                        </Fragment>
+                      )
+                    }
+                  >
                     <RulesetLabel>
-                      <i className={rulesetPath ? 'fa fa-file-circle-check' : 'fa fa-file-circle-xmark'} /> Ruleset
+                      <i
+                        className={
+                          rulesetPath
+                            ? 'fa fa-file-circle-check'
+                            : 'fa fa-file-circle-xmark'
+                        }
+                      />{' '}
+                      Ruleset
                     </RulesetLabel>
                   </Tooltip>
                 }
