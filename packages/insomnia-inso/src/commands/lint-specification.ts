@@ -1,4 +1,6 @@
 import { RulesetDefinition, Spectral } from '@stoplight/spectral-core';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { bundleAndLoadRuleset } = require('@stoplight/spectral-ruleset-bundler/with-loader');
 import { oas } from '@stoplight/spectral-rulesets';
 import { DiagnosticSeverity } from '@stoplight/types';
 import fs from 'fs';
@@ -25,7 +27,7 @@ export async function lintSpecification(
 
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
   let specContent = '';
-
+  let ruleset = oas;
   try {
     if (specFromDb?.contents) {
       logger.trace('Linting specification from database contents');
@@ -39,6 +41,15 @@ export async function lintSpecification(
 
       try {
         specContent = (await fs.promises.readFile(fileName)).toString();
+        const filesInSpecFolder = await fs.promises.readdir(path.dirname(fileName));
+        const rulesetFileName = filesInSpecFolder.find(file => file.startsWith('.spectral'));
+        if (rulesetFileName) {
+          logger.trace(`Loading ruleset from \`${rulesetFileName}\``);
+          ruleset = await bundleAndLoadRuleset(path.join(path.dirname(fileName), rulesetFileName), { fs });
+        } else {
+          logger.info(`Using ruleset: oas, see ${oas.documentationUrl}`);
+        }
+
       } catch (error) {
         throw new InsoError(`Failed to read "${fileName}"`, error);
       }
@@ -52,11 +63,8 @@ export async function lintSpecification(
   }
 
   const spectral = new Spectral();
-  await spectral.setRuleset(oas as RulesetDefinition);
-  logger.info(`Using ruleset: oas, see ${oas.documentationUrl}`);
-
-  const results = (await spectral.run(specContent));
-
+  spectral.setRuleset(ruleset as RulesetDefinition);
+  const results = await spectral.run(specContent);
   if (results.length) {
     // Print Summary
     if (results.some(r => r.severity === DiagnosticSeverity.Error)) {

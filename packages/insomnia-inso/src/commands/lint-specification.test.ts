@@ -37,6 +37,14 @@ describe('lint specification', () => {
     expect(result).toBe(true);
   });
 
+  it('should lint specification with custom ruleset', async () => {
+    const directory = path.join(process.cwd(), 'src/commands/fixtures/with-ruleset');
+    const result = await lintSpecification(path.join(directory, 'path-plugin.yaml'), {
+      workingDir: 'src',
+    });
+    expect(result).toBe(true);
+  });
+
   it('should lint specification from file with absolute path', async () => {
     const directory = path.join(process.cwd(), 'src/commands/fixtures');
     const result = await lintSpecification(path.join(directory, 'openapi-spec.yaml'), {

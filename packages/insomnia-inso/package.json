@@ -61,9 +61,10 @@
     "rimraf": "^3.0.2"
   },
   "dependencies": {
-    "@stoplight/spectral-core": "^1.12.2",
-    "@stoplight/spectral-formats": "^1.2.0",
-    "@stoplight/spectral-rulesets": "^1.9.0",
+    "@stoplight/spectral-core": "^1.16.0",
+    "@stoplight/spectral-formats": "^1.4.0",
+    "@stoplight/spectral-rulesets": "^1.14.1",
+    "@stoplight/spectral-ruleset-bundler": "^1.5.0",
     "@stoplight/types": "^13.8.0",
     "axios": "^0.21.2",
     "commander": "^5.1.0",
