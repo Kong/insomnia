@@ -22,6 +22,7 @@ const grpc: gRPCBridgeAPI = {
   cancel: options => ipcRenderer.send('grpc.cancel', options),
   closeAll: () => ipcRenderer.send('grpc.closeAll'),
   loadMethods: options => ipcRenderer.invoke('grpc.loadMethods', options),
+  loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
 };
 const main: Window['main'] = {
   restart: () => ipcRenderer.send('restart'),

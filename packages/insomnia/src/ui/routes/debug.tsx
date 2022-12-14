@@ -3,8 +3,8 @@ import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { ChangeBufferEvent, database as db } from '../../common/database';
-import { GrpcMethodInfo } from '../../common/grpc-paths';
 import { generateId } from '../../common/misc';
+import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';

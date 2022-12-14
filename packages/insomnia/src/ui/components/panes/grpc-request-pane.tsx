@@ -169,6 +169,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   });
                 }}
                 handleChangeProtoFile={() => setIsProtoModalOpen(true)}
+                handleServerReflection={async () => {
+                  models.grpcRequest.update(activeRequest, { protoMethodName: '', protoFileId: '' });
+                  const methods = await window.main.grpc.loadMethodsFromReflection(activeRequest.url);
+                  setGrpcState({ ...grpcState, methods, reloadMethods: false });
+                }}
               />
             </StyledDropdown>
 
@@ -204,11 +209,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       requestId: activeRequest._id,
                     };
                     window.main.grpc.sendMessage(preparedMessage);
-                    setGrpcState({ ...grpcState,  requestMessages:[...requestMessages, {
-                      id: generateId(),
-                      text:preparedMessage.body.text || '',
-                      created: Date.now(),
-                    }] });
+                    setGrpcState({
+                      ...grpcState, requestMessages: [...requestMessages, {
+                        id: generateId(),
+                        text: preparedMessage.body.text || '',
+                        created: Date.now(),
+                      }],
+                    });
 
                   }}
                   handleCommit={() => window.main.grpc.commit(activeRequest._id)}
