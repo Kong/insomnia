@@ -3,6 +3,25 @@ __export_format: 4
 __export_date: 2022-12-02T13:10:54.407Z
 __export_source: insomnia.desktop.app:v2022.7.0-beta.6
 resources:
+  - _id: greq_70ceba59d634442891ee523389458a9c
+    parentId: fld_9f284a1171b84055959343e151fc6ce2
+    modified: 1669986544274
+    created: 1638200268776
+    url: localhost:50051
+    name: UnaryWithOutProtoFile
+    description: ""
+    protoFileId: ""
+    protoMethodName: ""
+    metadata: []
+    body:
+      text: |-
+        {
+        	"latitude":"409146138",
+        	"longitude":"-746188906"
+        }
+    metaSortKey: -1638200268776
+    isPrivate: false
+    _type: grpc_request
   - _id: greq_70ceba59d634442891ee523389458a8c
     parentId: fld_9f284a1171b84055959343e151fc6ce2
     modified: 1669986544274
