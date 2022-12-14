@@ -1,13 +1,11 @@
 # Insomnia Default Headers
 
-[![Npm Version](https://img.shields.io/npm/v/insomnia-plugin-default-headers.svg)](https://www.npmjs.com/package/insomnia-plugin-default-headers)
-
 This is a plugin for [Insomnia](https://insomnia.rest) that allows users to set default
 headers for requests.
 
 ## Installation
 
-Install the `insomnia-plugin-default-headers` plugin from Preferences > Plugins.
+`insomnia-plugin-default-headers` is pre-installed into Insomnia since version `2022.7.0` onwards.
 
 ## Usage
 
