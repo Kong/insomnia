@@ -1,4 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
+import { OpenAPIV3 } from 'openapi-types';
 
 import { OA3Operation } from '../types';
 import { DCRoute, DCService } from '../types/declarative-config';
@@ -333,6 +334,138 @@ describe('services', () => {
           ],
         },
       ];
+      expect(await generateServices(spec, tags)).toEqual([specResult]);
+    });
+
+    it('generates service with securityDefinition-based openid-connect plugin', async () => {
+      const spec = getSpec();
+
+      const securityScheme = {
+        type: 'openIdConnect',
+        openIdConnectUrl: 'https://idp-endpoint.example.com/.well-kown',
+        'x-kong-security-openid-connect': {
+          config: {
+            'auth_methods': ['bearer'],
+          },
+          enabled: true,
+          protocols: ['http', 'https'],
+        },
+      } as OpenAPIV3.OpenIdSecurityScheme;
+
+      if (!spec.components) {
+        spec.components = {};
+      }
+
+      spec.components.securitySchemes = {
+        'common-aad-scheme': securityScheme,
+      };
+
+      spec.security = [
+        {
+          'common-aad-scheme': ['Api.Security.All'],
+        },
+      ];
+
+      spec.paths = {
+        '/dogs': {
+          summary: 'Dog stuff',
+          get: {},
+          post: {
+            security: [
+              {
+                'common-aad-scheme': ['Api.Security.Write'],
+              },
+            ],
+          },
+        },
+      };
+
+      const specResult = getSpecResult();
+      specResult.plugins = [
+        {
+          name: 'openid-connect',
+          config: {
+            'issuer': 'https://idp-endpoint.example.com/.well-kown',
+            'auth_methods': ['bearer'],
+            'scopes_required': ['Api.Security.All'],
+          },
+          tags: tags,
+        },
+      ];
+
+      specResult.routes = [
+        {
+          name: 'My_API-dogs-get',
+          strip_path: false,
+          methods: ['GET'],
+          paths: ['/dogs$'],
+          tags,
+        },
+        {
+          name: 'My_API-dogs-post',
+          strip_path: false,
+          methods: ['POST'],
+          paths: ['/dogs$'],
+          tags,
+          plugins: [
+            {
+              name: 'openid-connect',
+              config: {
+                'issuer': 'https://idp-endpoint.example.com/.well-kown',
+                'auth_methods': ['bearer'],
+                'scopes_required': ['Api.Security.Write'],
+              },
+              tags: tags,
+            },
+          ],
+        },
+      ];
+
+      expect(await generateServices(spec, tags)).toEqual([specResult]);
+    });
+
+    it('generates service and route (override) with securityDefinition-based openid-connect plugin', async () => {
+      const spec = getSpec();
+
+      const securityScheme = {
+        type: 'openIdConnect',
+        openIdConnectUrl: 'https://idp-endpoint.example.com/.well-kown',
+        'x-kong-security-openid-connect': {
+          config: {
+            'auth_methods': ['bearer'],
+          },
+          enabled: true,
+          protocols: ['http', 'https'],
+        },
+      } as OpenAPIV3.OpenIdSecurityScheme;
+
+      if (!spec.components) {
+        spec.components = {};
+      }
+
+      spec.components.securitySchemes = {
+        'common-aad-scheme': securityScheme,
+      };
+
+      spec.security = [
+        {
+          'common-aad-scheme': ['Api.Security.All'],
+        },
+      ];
+
+      const specResult = getSpecResult();
+      specResult.plugins = [
+        {
+          name: 'openid-connect',
+          config: {
+            'issuer': 'https://idp-endpoint.example.com/.well-kown',
+            'auth_methods': ['bearer'],
+            'scopes_required': ['Api.Security.All'],
+          },
+          tags: tags,
+        },
+      ];
+
       expect(await generateServices(spec, tags)).toEqual([specResult]);
     });
 
