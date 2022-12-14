@@ -10,12 +10,8 @@ import * as models from '../../../../models';
 import { ApiSpec } from '../../../../models/api-spec';
 import { CookieJar } from '../../../../models/cookie-jar';
 import { Environment } from '../../../../models/environment';
-import { DEFAULT_PROJECT_ID } from '../../../../models/project';
-import { Workspace, WorkspaceScope, WorkspaceScopeKeys } from '../../../../models/workspace';
+import { Workspace, WorkspaceScope } from '../../../../models/workspace';
 import { WorkspaceMeta } from '../../../../models/workspace-meta';
-import { getAndClearShowPromptMockArgs } from '../../../../test-utils';
-import { SegmentEvent, trackSegmentEvent } from '../../../analytics';
-import { createWorkspace } from '../git';
 import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT, SET_ACTIVE_WORKSPACE } from '../global';
 import { activateWorkspace } from '../workspace';
 
@@ -46,74 +42,6 @@ const expectedModelsCreated = async (name: string, scope: WorkspaceScope, parent
 
 describe('workspace', () => {
   beforeEach(globalBeforeEach);
-  describe('createWorkspace', () => {
-    it('should create document', async () => {
-      const projectId = DEFAULT_PROJECT_ID;
-      const store = mockStore(await reduxStateForTest({ activeProjectId: projectId }));
-
-      // @ts-expect-error redux-thunk types
-      store.dispatch(createWorkspace({ scope: WorkspaceScopeKeys.design }));
-
-      const { title, submitName, defaultValue, onComplete } = getAndClearShowPromptMockArgs();
-      expect(title).toBe('Create New Design Document');
-      expect(submitName).toBe('Create');
-      expect(defaultValue).toBe('my-spec.yaml');
-      const workspaceName = 'name';
-      await onComplete?.(workspaceName);
-
-      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.design, projectId);
-
-      expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.documentCreate);
-      expect(store.getActions()).toEqual([
-        {
-          type: SET_ACTIVE_PROJECT,
-          projectId: DEFAULT_PROJECT_ID,
-        },
-        {
-          type: SET_ACTIVE_WORKSPACE,
-          workspaceId: workspaceId,
-        },
-        {
-          type: SET_ACTIVE_ACTIVITY,
-          activity: ACTIVITY_SPEC,
-        },
-      ]);
-    });
-
-    it('should create collection', async () => {
-      const projectId = DEFAULT_PROJECT_ID;
-      const store = mockStore(await reduxStateForTest({ activeProjectId: projectId }));
-
-      // @ts-expect-error redux-thunk types
-      store.dispatch(createWorkspace({ scope: WorkspaceScopeKeys.collection }));
-
-      const { title, submitName, defaultValue, onComplete } = getAndClearShowPromptMockArgs();
-      expect(title).toBe('Create New Request Collection');
-      expect(submitName).toBe('Create');
-      expect(defaultValue).toBe('My Collection');
-      const workspaceName = 'name';
-      await onComplete?.(workspaceName);
-
-      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.collection, projectId);
-
-      expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.collectionCreate);
-      expect(store.getActions()).toEqual([
-        {
-          type: SET_ACTIVE_PROJECT,
-          projectId: DEFAULT_PROJECT_ID,
-        },
-        {
-          type: SET_ACTIVE_WORKSPACE,
-          workspaceId: workspaceId,
-        },
-        {
-          type: SET_ACTIVE_ACTIVITY,
-          activity: ACTIVITY_DEBUG,
-        },
-      ]);
-    });
-  });
-
   describe('activateWorkspace', () => {
     it('should do nothing if workspace cannot be found', async () => {
       const store = mockStore(await reduxStateForTest({ activeProjectId: 'abc', activeWorkspaceId: 'def' }));
