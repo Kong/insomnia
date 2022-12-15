@@ -6,7 +6,7 @@ import { Link } from '../../base/link';
 import { HelpTooltip } from '../../help-tooltip';
 
 export interface Props {
-  gitRepository: GitRepository | null;
+  gitRepository?: GitRepository | null;
   onSubmit: (args: Partial<GitRepository>) => void;
 }
 
@@ -49,7 +49,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
             autoFocus
             name="uri"
             defaultValue={uri}
-            disabled={!!uri}
+            disabled={Boolean(uri)}
             placeholder="https://github.com/org/repo.git"
           />
         </label>
@@ -63,6 +63,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               type="text"
               name="authorName"
               placeholder="Name"
+              disabled={Boolean(uri)}
               defaultValue={author.name}
             />
           </label>
@@ -75,6 +76,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               type="text"
               name="authorEmail"
               placeholder="Email"
+              disabled={Boolean(uri)}
               defaultValue={author.email}
             />
           </label>
@@ -89,6 +91,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               type="text"
               name="username"
               placeholder="MyUser"
+              disabled={Boolean(uri)}
               defaultValue={credentials?.username}
             />
           </label>
@@ -117,6 +120,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               required
               type="password"
               name="token"
+              disabled={Boolean(uri)}
               defaultValue={'token' in credentials ? credentials?.token : ''}
               placeholder="88e7ee63b254e4b0bf047559eafe86ba9dd49507"
             />
