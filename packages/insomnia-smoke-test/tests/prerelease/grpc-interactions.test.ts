@@ -28,7 +28,7 @@ test.describe('gRPC interactions', () => {
   });
 
   test('can send unidirectional requests', async ({ page }) => {
-    await page.click('button:has-text("gRPCUnary")');
+    await page.locator('button:has-text("gRPCUnary")').nth(1).click();
     await page.locator('[data-testid="request-pane"] >> text=Unary').click();
     await page.click('text=Send');
 
