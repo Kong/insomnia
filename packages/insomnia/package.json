@@ -65,7 +65,7 @@
     "electron-context-menu": "^3.1.1",
     "electron-log": "^4.4.3",
     "fs-extra": "^5.0.0",
-    "grpc-reflection-js": "github:jackkav/grpc-reflection-js",
+    "grpc-reflection-js": "0.1.2",
     "hawk": "9.0.1",
     "hkdf": "^0.0.2",
     "html-entities": "^1.2.0",
@@ -212,5 +212,8 @@
   },
   "dev": {
     "dev-server-port": 3334
+  },
+  "overrides": {
+    "protobufjs": "github:Kong/protobuf.js#master"
   }
 }
