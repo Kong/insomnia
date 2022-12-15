@@ -8,14 +8,14 @@ export interface ConvertResultType {
   description: string;
 }
 
-export interface ConvertResult<T = {}> {
+export interface ConvertResult {
   type: ConvertResultType;
   data: {
     _type: 'export';
     __export_format: 4;
     __export_date: string;
     __export_source: `insomnia.importers:v${string}`;
-    resources: ImportRequest<T>[];
+    resources: ImportRequest[];
   };
 }
 

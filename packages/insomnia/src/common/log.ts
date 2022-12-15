@@ -14,7 +14,6 @@ export const initializeLogging = () => {
     // When the log file exceeds this limit, it will be rotated to {file name}.old.log file.
     fileTransport.maxSize = 1024 * 1024 * 10;
     // Rotate the log file every time we start the app
-    // @ts-expect-error -- TSCONVERSION seems like something is wrong here but I don't want to convert to string until I can take a closer look
     fileTransport.archiveLog(logFile);
     logFile.clear();
   }

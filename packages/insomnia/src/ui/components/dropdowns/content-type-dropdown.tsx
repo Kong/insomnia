@@ -14,6 +14,7 @@ import {
   CONTENT_TYPE_YAML,
   getContentTypeName,
 } from '../../../common/constants';
+import { Request } from '../../../models/request';
 import { isWebSocketRequest } from '../../../models/websocket-request';
 import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import { selectActiveRequest } from '../../redux/selectors';
@@ -39,7 +40,7 @@ const MimeTypeItem: FC<{
   mimeType,
   onChange,
 }) => {
-  const request = useSelector(selectActiveRequest);
+  const request = useSelector(selectActiveRequest) as Request | null;
   const activeRequest = request && !isWebSocketRequest(request) ? request : null;
 
   const handleChangeMimeType = useCallback(async (mimeType: string | null) => {
@@ -94,7 +95,7 @@ const MimeTypeItem: FC<{
 MimeTypeItem.displayName = DropdownItem.name;
 
 export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
-  const request = useSelector(selectActiveRequest);
+  const request = useSelector(selectActiveRequest) as Request | null;
   const activeRequest = request && !isWebSocketRequest(request) ? request : null;
 
   if (!activeRequest) {

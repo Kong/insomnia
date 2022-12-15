@@ -68,7 +68,7 @@ export type ImportRequestType =
   | 'request_group'
   | 'workspace';
 
-export interface ImportRequest<T extends {} = {}> extends Comment {
+export interface ImportRequest extends Comment {
   _id?: string;
   _type?: ImportRequestType;
   authentication?: Authentication;
@@ -79,7 +79,7 @@ export interface ImportRequest<T extends {} = {}> extends Comment {
   httpVersion?: string;
   method?: string;
   name?: string;
-  data?: T;
+  data?: any;
   description?: string;
   parameters?: Parameter[];
   parentId?: string | null;
@@ -89,9 +89,9 @@ export interface ImportRequest<T extends {} = {}> extends Comment {
   url?: string;
 }
 
-export type Converter<T extends {} = {}> = (
+export type Converter = (
   rawData: string
-) => ImportRequest<T>[] | Promise<ImportRequest<T>[] | null> | null;
+) => ImportRequest[] | Promise<ImportRequest[] | null> | null;
 
 export interface Importer {
   id: string;
