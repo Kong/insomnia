@@ -45,7 +45,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
     if (gitRepository?.uri && gitRepository?._id && gitRepoDataFetcher.state === 'idle' && !gitRepoDataFetcher.data) {
       gitRepoDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/repo`);
     }
-  }, [gitRepoDataFetcher, gitRepository, gitRepository?._id, organizationId, projectId, workspaceId]);
+  }, [gitRepoDataFetcher, gitRepository?.uri, gitRepository?._id, organizationId, projectId, workspaceId]);
 
   useEffect(() => {
     const errors = [

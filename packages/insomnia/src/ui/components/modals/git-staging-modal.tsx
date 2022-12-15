@@ -121,6 +121,7 @@ export const GitStagingModal: FC<Props> = ({
                                   // @ts-expect-error -- TSCONVERSION
                                   type="checkbox"
                                   checked={checkAllModified}
+                                  name="allModified"
                                   onChange={() =>
                                     setCheckAllModified(!checkAllModified)
                                   }
@@ -224,9 +225,8 @@ export const GitStagingModal: FC<Props> = ({
                                   className="space-right"
                                   // @ts-expect-error -- TSCONVERSION
                                   type="checkbox"
-                                  {...(checkAllUnversioned
-                                    ? { checked: true }
-                                    : {})}
+                                  name="allUnversioned"
+                                  checked={checkAllUnversioned}
                                   onChange={() =>
                                     setCheckAllUnversioned(!checkAllUnversioned)
                                   }
@@ -252,6 +252,9 @@ export const GitStagingModal: FC<Props> = ({
                                   type="checkbox"
                                   value={item.path}
                                   name="paths"
+                                  {...(checkAllUnversioned
+                                    ? { checked: true }
+                                    : {})}
                                   defaultChecked={item.staged}
                                 />{' '}
                                 {statusNames?.[item.path] || 'n/a'}
