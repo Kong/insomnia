@@ -46,7 +46,7 @@
     "@apideck/better-ajv-errors": "^0.2.6",
     "@apidevtools/swagger-parser": "10.1.0",
     "@getinsomnia/node-libcurl": "2.3.5-7",
-    "@grpc/grpc-js": "^1.1.8",
+    "@grpc/grpc-js": "^1.8.0",
     "@grpc/proto-loader": "^0.7.4",
     "@jest/globals": "^28.1.0",
     "@sentry/electron": "^3.0.7",
@@ -215,6 +215,6 @@
     "dev-server-port": 3334
   },
   "overrides": {
-    "protobufjs": "7.1.2"
+    "protobufjs": "github:Kong/protobuf.js#master"
   }
 }
