@@ -861,7 +861,7 @@ async function getGitChanges(vcs: GitVCS, workspace: Workspace) {
     // We know that type is in the path; extract it. If the model is not found, set to Unknown.
     let { type } = parseGitPath(gitPath);
 
-    if (type && !(type in models)) {
+    if (type && !models.types().includes(type as any)) {
       type = 'Unknown';
     }
     const added = status.includes('added');
