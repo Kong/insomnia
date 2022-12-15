@@ -41,14 +41,17 @@ export function registergRPCHandlers() {
   ipcMain.handle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
   ipcMain.handle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
 }
+const grpcOptions = {
+  keepCase: true,
+  longs: String,
+  enums: String,
+  defaults: true,
+  oneofs: true,
+};
 const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]): Promise<MethodDefs[]> => {
   try {
     const definition = await protoLoader.load(filePath, {
-      keepCase: true,
-      longs: String,
-      enums: String,
-      defaults: true,
-      oneofs: true,
+      ...grpcOptions,
       includeDirs,
     });
     return getMethodsFromPackageDefinition(definition);
@@ -78,7 +81,7 @@ const getMethodsFromReflection = async (host: string, metadata: GrpcRequestHeade
     const { url, enableTls } = parseGrpcUrl(host);
     const client = new grpcReflection.Client(url,
       enableTls ? credentials.createSsl() : credentials.createInsecure(),
-      {},
+      grpcOptions,
       filterDisabledMetaData(metadata)
     );
     const services = await client.listServices() as string[];
