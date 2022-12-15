@@ -317,7 +317,7 @@ const Design: FC = () => {
                   </Tooltip>
                 }
                 <button
-                  disabled={lintMessages.length > 0 || generateRequestCollectionFetcher.state !== 'idle'}
+                  disabled={lintMessages.filter(message => message.type === 'error').length > 0 || generateRequestCollectionFetcher.state !== 'idle'}
                   className="btn btn--compact"
                   onClick={() => {
                     generateRequestCollectionFetcher.submit(
