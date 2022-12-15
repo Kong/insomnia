@@ -245,7 +245,7 @@ describe('fuzzyMatchAll()', () => {
         loose: true,
       }),
     ).toEqual({
-      score: -20,
+      score: -12.8,
       indexes: [0, 2, 3, 8, 9, 10, 11, 13, 14],
       target: 'testing this out',
     });
