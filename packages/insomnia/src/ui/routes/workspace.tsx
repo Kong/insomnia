@@ -20,11 +20,12 @@ export const workspaceLoader: LoaderFunction = async ({
   const apiSpec = await models.apiSpec.getByParentId(workspaceId);
 
   const workspaceHasChildren = workspaceEnvironments.length && cookieJar && apiSpec && workspaceMeta;
-  if (workspaceHasChildren) {
-    return;
+  if (!workspaceHasChildren) {
+    return workspace;
   }
 
   const flushId = await database.bufferChanges();
   await models.workspace.ensureChildren(workspace);
   await database.flushChanges(flushId);
+  return workspace;
 };
