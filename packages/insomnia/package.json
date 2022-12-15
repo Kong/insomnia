@@ -66,7 +66,7 @@
     "electron-context-menu": "^3.1.1",
     "electron-log": "^4.4.3",
     "fs-extra": "^5.0.0",
-    "grpc-reflection-js": "github:Kong/grpc-reflection-js#6658e40",
+    "grpc-reflection-js": "github:Kong/grpc-reflection-js#355c24c",
     "hawk": "9.0.1",
     "hkdf": "^0.0.2",
     "html-entities": "^1.2.0",
