@@ -171,7 +171,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 handleChangeProtoFile={() => setIsProtoModalOpen(true)}
                 handleServerReflection={async () => {
                   models.grpcRequest.update(activeRequest, { protoMethodName: '', protoFileId: '' });
-                  const methods = await window.main.grpc.loadMethodsFromReflection(activeRequest.url);
+                  const methods = await window.main.grpc.loadMethodsFromReflection(activeRequest._id);
                   setGrpcState({ ...grpcState, methods, reloadMethods: false });
                 }}
               />

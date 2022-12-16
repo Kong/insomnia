@@ -39,16 +39,19 @@ export function registergRPCHandlers() {
   ipcMain.on('grpc.cancel', (_, requestId) => cancel(requestId));
   ipcMain.on('grpc.closeAll', closeAll);
   ipcMain.handle('grpc.loadMethods', (_, requestId) => loadMethods(requestId));
-  ipcMain.handle('grpc.loadMethodsFromReflection', (_, url) => loadMethodsFromReflection(url));
+  ipcMain.handle('grpc.loadMethodsFromReflection', (_, requestId) => loadMethodsFromReflection(requestId));
 }
+const grpcOptions = {
+  keepCase: true,
+  longs: String,
+  enums: String,
+  defaults: true,
+  oneofs: true,
+};
 const loadMethodsFromFilePath = async (filePath: string, includeDirs: string[]): Promise<MethodDefs[]> => {
   try {
     const definition = await protoLoader.load(filePath, {
-      keepCase: true,
-      longs: String,
-      enums: String,
-      defaults: true,
-      oneofs: true,
+      ...grpcOptions,
       includeDirs,
     });
     return getMethodsFromPackageDefinition(definition);
@@ -73,10 +76,14 @@ interface MethodDefs {
   requestSerialize: (value: any) => Buffer;
   responseDeserialize: (value: Buffer) => any;
 }
-const getMethodsFromReflection = async (host: string): Promise<MethodDefs[]> => {
+const getMethodsFromReflection = async (host: string, metadata: GrpcRequestHeader[]): Promise<MethodDefs[]> => {
   try {
     const { url, enableTls } = parseGrpcUrl(host);
-    const client = new grpcReflection.Client(url, enableTls ? credentials.createSsl() : credentials.createInsecure());
+    const client = new grpcReflection.Client(url,
+      enableTls ? credentials.createSsl() : credentials.createInsecure(),
+      grpcOptions,
+      filterDisabledMetaData(metadata)
+    );
     const services = await client.listServices() as string[];
     const methodsPromises = services.map(async service => {
       const fileContainingSymbol = await client.fileContainingSymbol(service);
@@ -99,8 +106,10 @@ const getMethodsFromReflection = async (host: string): Promise<MethodDefs[]> => 
     throw error;
   }
 };
-const loadMethodsFromReflection = async (url: string): Promise<GrpcMethodInfo[]> => {
-  const methods = await getMethodsFromReflection(url);
+const loadMethodsFromReflection = async (requestId: string): Promise<GrpcMethodInfo[]> => {
+  const request = await models.grpcRequest.getById(requestId);
+  invariant(request, `Grpc request ${requestId} not found`);
+  const methods = await getMethodsFromReflection(request.url, request.metadata);
   return methods.map(method => ({
     type: getMethodType(method),
     fullPath: method.path,
@@ -132,7 +141,7 @@ export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDef
     invariant(methods, 'No methods found');
     return methods.find(c => c.path === request.protoMethodName);
   }
-  const methods = await getMethodsFromReflection(request.url);
+  const methods = await getMethodsFromReflection(request.url, request.metadata);
   invariant(methods, 'No reflection methods found');
   return methods.find(c => c.path === request.protoMethodName);
 };
