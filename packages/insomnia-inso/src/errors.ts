@@ -13,9 +13,9 @@ export class InsoError extends Error {
 export const handleError = (err?: Error) => {
   if (err instanceof InsoError) {
     logger.fatal(err.message);
-    err.cause && logger.error(err.cause);
+    err.cause && logger.fatal(err.cause);
   } else if (err) {
-    logger.error(err);
+    logger.fatal(err);
   }
 
   logger.info('To view tracing information, re-run `inso` with `--verbose`');

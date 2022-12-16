@@ -45,6 +45,11 @@ describe('lint specification', () => {
     expect(result).toBe(true);
   });
 
+  it('should lint specification with custom ruleset with relative path', async () => {
+    const result = await lintSpecification('src/commands/fixtures/with-ruleset/path-plugin.yaml', {});
+    expect(result).toBe(true);
+  });
+
   it('should lint specification from file with absolute path', async () => {
     const directory = path.join(process.cwd(), 'src/commands/fixtures');
     const result = await lintSpecification(path.join(directory, 'openapi-spec.yaml'), {
@@ -66,7 +71,7 @@ describe('lint specification', () => {
 
     const logs = logger.__getLogs();
 
-    expect(logs.fatal).toContain('Failed to read "not-found"');
+    expect(logs.fatal).toContain(`Failed to read "${path.join(process.cwd(), 'not-found')}"`);
   });
 
   it('should return false if spec was not specified', async () => {

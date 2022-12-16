@@ -36,7 +36,7 @@ export async function lintSpecification(
       // try load as a file
       const fileName = path.isAbsolute(identifier)
         ? identifier
-        : path.join(workingDir || '.', identifier);
+        : path.join(workingDir || process.cwd(), identifier);
       logger.trace(`Linting specification from file \`${fileName}\``);
 
       try {

@@ -85,7 +85,7 @@ export const generateConfig = async (
       // try load as a file
       const fileName = path.isAbsolute(identifier)
         ? identifier
-        : path.join(workingDir || '.', identifier);
+        : path.join(workingDir || process.cwd(), identifier);
       logger.trace(`Generating config from file \`${fileName}\``);
       result = await generate(fileName, conversionType, generationTags);
     }
