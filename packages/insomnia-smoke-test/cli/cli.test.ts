@@ -64,16 +64,6 @@ describe.each([npmPackageBinPath, ...binaries].filter(x => x))('inso with %s', b
 
       expect(failed).toBe(false);
     });
-
-    it('should not fail linting spec with custom ruleset', () => {
-      const { failed } = inso(
-        'run',
-        'test',
-        'fixtures/spec.yaml'
-      );
-
-      expect(failed).toBe(false);
-    });
   });
 
   describe('export spec', () => {
