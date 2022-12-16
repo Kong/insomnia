@@ -199,7 +199,7 @@ export const GraphQLEditor: FC<Props> = ({
       variables: requestBody.variables,
       operationName: requestBody.operationName,
     },
-    operations: [],
+    operations: documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '') || [],
     hideSchemaFetchErrors: false,
     variablesSyntaxError: '',
     activeReference: null,
