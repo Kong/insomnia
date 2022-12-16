@@ -71,7 +71,7 @@ describe('lint specification', () => {
 
     const logs = logger.__getLogs();
 
-    expect(logs.fatal).toContain(`Failed to read "${process.cwd()}/not-found"`);
+    expect(logs.fatal).toContain(`Failed to read "${path.join(process.cwd(), 'not-found')}`);
   });
 
   it('should return false if spec was not specified', async () => {
