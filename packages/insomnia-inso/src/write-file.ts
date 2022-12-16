@@ -9,7 +9,7 @@ export async function writeFileWithCliOptions(
   contents: string,
   workingDir?: string,
 ): Promise<string> {
-  const outputPath = path.isAbsolute(output) ? output : path.join(workingDir || '.', output);
+  const outputPath = path.isAbsolute(output) ? output : path.join(workingDir || process.cwd(), output);
 
   try {
     await mkdirp.sync(path.dirname(outputPath));
