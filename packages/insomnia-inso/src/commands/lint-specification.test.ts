@@ -46,10 +46,7 @@ describe('lint specification', () => {
   });
 
   it('should lint specification with custom ruleset with relative path', async () => {
-    const directory = path.join('src/commands/fixtures/with-ruleset');
-    const result = await lintSpecification(path.join(directory, 'path-plugin.yaml'), {
-      workingDir: 'src',
-    });
+    const result = await lintSpecification('src/commands/fixtures/with-ruleset/path-plugin.yaml', {});
     expect(result).toBe(true);
   });
 
@@ -74,7 +71,7 @@ describe('lint specification', () => {
 
     const logs = logger.__getLogs();
 
-    expect(logs.fatal).toContain('Failed to read');
+    expect(logs.fatal).toContain(`Failed to read "${process.cwd()}/not-found"`);
   });
 
   it('should return false if spec was not specified', async () => {
