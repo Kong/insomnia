@@ -34,8 +34,8 @@ describe('exit()', () => {
 
     const logs = logger.__getLogs();
 
-    expect(logs.fatal).toEqual([]);
-    expect(logs.error).toEqual([error]);
+    expect(logs.fatal).toEqual([error]);
+    expect(logs.error).toEqual([]);
     expect(logs.info).toEqual(['To view tracing information, re-run `inso` with `--verbose`']);
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
