@@ -1,0 +1,22 @@
+extends:
+  - "spectral:oas"
+rules:
+  info-version-semver:
+    severity: error
+    recommended: true
+    message: Specs should follow semantic versioning. {{value}} is not a valid version.
+    given: $.info.version
+    then:
+      function: pattern
+      functionOptions:
+        match: "^([0-9]+.[0-9]+.[0-9]+)$"
+  server-url-must-contain-version:
+    description: Global API version must be present in the path
+    severity: error
+    recommended: true
+    message: "Unversioned server URL detected: {{value}}"
+    given: "$.servers[*].url"
+    then:
+      function: pattern
+      functionOptions:
+        match: "\/v[1-9]+\/"

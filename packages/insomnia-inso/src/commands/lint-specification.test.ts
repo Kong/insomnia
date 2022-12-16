@@ -45,6 +45,17 @@ describe('lint specification', () => {
     expect(result).toBe(true);
   });
 
+  it('should lint specification with custom ruleset (INS-2219)', async () => {
+    const directory = path.join(process.cwd(), 'src/commands/fixtures/with-ruleset-ins-2219');
+    const result = await lintSpecification(path.join(directory, 'spec.yaml'), {
+      workingDir: 'src',
+    });
+    expect(result).toBe(true);
+
+    const logs = logger.__getLogs();
+    expect(logs.fatal).not.toContain('Failed to read "spec.yaml"');
+  });
+
   it('should lint specification from file with absolute path', async () => {
     const directory = path.join(process.cwd(), 'src/commands/fixtures');
     const result = await lintSpecification(path.join(directory, 'openapi-spec.yaml'), {

@@ -1,0 +1,39 @@
+openapi: 3.0.3
+info:
+  title: Hello API
+  description: |-
+    This is a sample OAS file
+  contact:
+    email: devrel@konghq.com
+  version: "1.2.3"
+servers:
+  - url: https://example.com/v1
+paths:
+  /hello:
+    post:
+      tags:
+        - communication
+      summary: Say Hello to someone
+      description: Accepts a name and returns a string that says "Hello <name>"
+      operationId: sayHello
+      requestBody:
+        description: The details of the person you want to say Hello to
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Ashley
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Hello Ashley"
+tags:
+  - name: communication
+    description: Say Hello to people
