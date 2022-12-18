@@ -87,24 +87,23 @@ export const getOAuth2Token = async (
       authentication.audience,
     );
   }
-  if (!newToken) {
-    return null;
+  if (newToken) {
+    const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+    return models.oAuth2Token.update(old, {
+      // Calculate expiry date
+      expiresAt: newToken[P_EXPIRES_IN] ? Date.now() + newToken[P_EXPIRES_IN] * 1000 : null,
+      refreshToken: newToken[P_REFRESH_TOKEN] || null,
+      accessToken: newToken[P_ACCESS_TOKEN] || null,
+      identityToken: newToken[P_ID_TOKEN] || null,
+      error: newToken[P_ERROR] || null,
+      errorDescription: newToken[P_ERROR_DESCRIPTION] || null,
+      errorUri: newToken[P_ERROR_URI] || null,
+      // Special Cases
+      xResponseId: newToken[X_RESPONSE_ID] || null,
+      xError: newToken[X_ERROR] || null,
+    });
   }
-
-  const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
-  return models.oAuth2Token.update(old, {
-    // Calculate expiry date
-    expiresAt: newToken[P_EXPIRES_IN] ? Date.now() + newToken[P_EXPIRES_IN] * 1000 : null,
-    refreshToken: newToken[P_REFRESH_TOKEN] || null,
-    accessToken: newToken[P_ACCESS_TOKEN] || null,
-    identityToken: newToken[P_ID_TOKEN] || null,
-    error: newToken[P_ERROR] || null,
-    errorDescription: newToken[P_ERROR_DESCRIPTION] || null,
-    errorUri: newToken[P_ERROR_URI] || null,
-    // Special Cases
-    xResponseId: newToken[X_RESPONSE_ID] || null,
-    xError: newToken[X_ERROR] || null,
-  });
+  return null;
 };
 
 async function _getExisingAccessTokenAndRefreshIfExpired(
