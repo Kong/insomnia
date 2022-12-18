@@ -206,10 +206,6 @@ export function newAuth(type: string, oldAuth: RequestAuthentication = {}): Requ
   }
 }
 
-export function newBodyNone(): RequestBody {
-  return {};
-}
-
 export function newBodyRaw(rawBody: string, contentType?: string): RequestBody {
   if (typeof contentType !== 'string') {
     return {
@@ -242,27 +238,6 @@ export function newBodyGraphQL(rawBody: string): RequestBody {
       throw error;
     }
   }
-}
-
-export function newBodyFormUrlEncoded(parameters: RequestBodyParameter[] | null): RequestBody {
-  return {
-    mimeType: CONTENT_TYPE_FORM_URLENCODED,
-    params: parameters || [],
-  };
-}
-
-export function newBodyFile(path: string): RequestBody {
-  return {
-    mimeType: CONTENT_TYPE_FILE,
-    fileName: path,
-  };
-}
-
-export function newBodyForm(parameters: RequestBodyParameter[]): RequestBody {
-  return {
-    mimeType: CONTENT_TYPE_FORM_DATA,
-    params: parameters || [],
-  };
 }
 
 export function migrate(doc: Request): Request {
@@ -348,18 +323,29 @@ export function updateMimeType(
   if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
     // Urlencoded
     body = oldBody.params
-      ? newBodyFormUrlEncoded(oldBody.params)
-      // @ts-expect-error -- TSCONVERSION
-      : newBodyFormUrlEncoded(deconstructQueryStringToParams(oldBody.text));
+      ? {
+        mimeType: CONTENT_TYPE_FORM_URLENCODED,
+        params: oldBody.params,
+      } : {
+        mimeType: CONTENT_TYPE_FORM_URLENCODED,
+        params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
+      };
   } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
     // Form Data
     body = oldBody.params
-      ? newBodyForm(oldBody.params)
-      // @ts-expect-error -- TSCONVERSION
-      : newBodyForm(deconstructQueryStringToParams(oldBody.text));
+      ? {
+        mimeType: CONTENT_TYPE_FORM_DATA,
+        params: oldBody.params || [],
+      } : {
+        mimeType: CONTENT_TYPE_FORM_DATA,
+        params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
+      };
   } else if (mimeType === CONTENT_TYPE_FILE) {
     // File
-    body = newBodyFile('');
+    body = {
+      mimeType: CONTENT_TYPE_FILE,
+      fileName: '',
+    };
   } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
     if (contentTypeHeader) {
       contentTypeHeader.value = CONTENT_TYPE_JSON;
@@ -368,7 +354,7 @@ export function updateMimeType(
     body = newBodyGraphQL(oldBody.text || '');
   } else if (typeof mimeType !== 'string') {
     // No body
-    body = newBodyNone();
+    body = {};
   } else {
     // Raw Content-Type (ex: application/json)
     body = newBodyRaw(oldBody.text || '', mimeType);
@@ -450,8 +436,10 @@ function migrateBody(request: Request) {
 
   if (wasFormUrlEncoded) {
     // Convert old-style form-encoded request bodies to new style
-    const body = typeof request.body === 'string' ? request.body : '';
-    request.body = newBodyFormUrlEncoded(deconstructQueryStringToParams(body, false));
+    request.body = {
+      mimeType: CONTENT_TYPE_FORM_URLENCODED,
+      params: deconstructQueryStringToParams(typeof request.body === 'string' ? request.body : '', false),
+    };
   } else if (!request.body && !contentType) {
     request.body = {};
   } else {

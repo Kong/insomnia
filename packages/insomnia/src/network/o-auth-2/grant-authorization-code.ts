@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { parse as urlParse } from 'url';
 
+import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models/index';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
@@ -232,7 +233,10 @@ async function _getToken(
     headers,
     url,
     method: 'POST',
-    body: models.request.newBodyFormUrlEncoded(params),
+    body: {
+      mimeType: CONTENT_TYPE_FORM_URLENCODED,
+      params,
+    },
   });
   const response = await models.response.create(responsePatch);
   // @ts-expect-error -- TSCONVERSION

@@ -1,3 +1,4 @@
+import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import * as models from '../../models/index';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
@@ -55,7 +56,10 @@ export const refreshAccessToken = async (
     headers,
     url,
     method: 'POST',
-    body: models.request.newBodyFormUrlEncoded(params),
+    body: {
+      mimeType: CONTENT_TYPE_FORM_URLENCODED,
+      params,
+    },
   });
   const statusCode = response.statusCode || 0;
   const bodyBuffer = models.response.getBodyBuffer(response);

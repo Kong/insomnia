@@ -1,3 +1,4 @@
+import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import * as models from '../../models/index';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
@@ -62,7 +63,10 @@ export const grantClientCreds = async (
     headers,
     url,
     method: 'POST',
-    body: models.request.newBodyFormUrlEncoded(params),
+    body: {
+      mimeType: CONTENT_TYPE_FORM_URLENCODED,
+      params,
+    },
   });
   const response = await models.response.create(responsePatch);
   // @ts-expect-error -- TSCONVERSION

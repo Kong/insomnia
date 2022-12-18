@@ -17,9 +17,6 @@ import type {
   RequestBodyParameter,
 } from '../../../../models/request';
 import {
-  newBodyFile,
-  newBodyForm,
-  newBodyFormUrlEncoded,
   newBodyRaw,
 } from '../../../../models/request';
 import type { Workspace } from '../../../../models/workspace';
@@ -53,17 +50,30 @@ export const BodyEditor: FC<Props> = ({
     models.request.update(request, { body: newBodyRaw(content, CONTENT_TYPE_GRAPHQL) });
   }, [request]);
 
-  const handleFormUrlEncodedChange = useCallback((parameters: RequestBodyParameter[]) => {
-    models.request.update(request, { body: newBodyFormUrlEncoded(parameters) });
+  const handleFormUrlEncodedChange = useCallback((params: RequestBodyParameter[]) => {
+    models.request.update(request, {
+      body: {
+        mimeType: CONTENT_TYPE_FORM_URLENCODED,
+        params,
+      },
+    });
   }, [request]);
 
   const handleFormChange = useCallback((parameters: RequestBodyParameter[]) => {
-    models.request.update(request, { body: newBodyForm(parameters) });
+    models.request.update(request, {
+      body: {
+        mimeType: CONTENT_TYPE_FORM_DATA,
+        params: parameters || [],
+      },
+    });
   }, [request]);
 
   const handleFileChange = async (path: string) => {
     const headers = clone(request.headers);
-    const body = newBodyFile(path);
+    const body = {
+      mimeType: CONTENT_TYPE_FILE,
+      fileName: path,
+    };
     const newRequest = await models.request.update(request, { body });
     let contentTypeHeader = getContentTypeHeader(headers);
 
