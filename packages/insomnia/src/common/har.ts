@@ -4,7 +4,6 @@ import { Cookie as ToughCookie } from 'tough-cookie';
 
 import * as models from '../models';
 import type { Request } from '../models/request';
-import { newBodyRaw } from '../models/request';
 import type { Response } from '../models/response';
 import { isWorkspace } from '../models/workspace';
 import { getAuthHeader } from '../network/authentication';
@@ -423,7 +422,7 @@ function getResponseCookies(response: Response) {
 
       try {
         cookie = ToughCookie.parse(harCookie.value || '');
-      } catch (error) {}
+      } catch (error) { }
 
       if (cookie === null || cookie === undefined) {
         return accumulator;
@@ -520,10 +519,11 @@ function getRequestQueryString(renderedRequest: RenderedRequest): HarQueryString
 
 function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | undefined {
   let body;
-
   if (renderedRequest.body.fileName) {
     try {
-      body = newBodyRaw(fs.readFileSync(renderedRequest.body.fileName, 'base64'));
+      body = {
+        text: fs.readFileSync(renderedRequest.body.fileName, 'base64'),
+      };
     } catch (error) {
       console.warn('[code gen] Failed to read file', error);
       return;
