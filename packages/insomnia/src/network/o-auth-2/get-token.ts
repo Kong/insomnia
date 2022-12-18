@@ -23,133 +23,91 @@ import getAccessTokenPassword from './grant-password';
 import refreshAccessToken from './refresh-token';
 /** Get an OAuth2Token object and also handle storing/saving/refreshing */
 
-export default async function(
+export default async function (
   requestId: string,
   authentication: RequestAuthentication,
   forceRefresh = false,
 ): Promise<OAuth2Token | null> {
-  switch (authentication.grantType) {
-    case GRANT_TYPE_AUTHORIZATION_CODE:
-      return _getOAuth2AuthorizationCodeHeader(requestId, authentication, forceRefresh);
 
-    case GRANT_TYPE_CLIENT_CREDENTIALS:
-      return _getOAuth2ClientCredentialsHeader(requestId, authentication, forceRefresh);
-
-    case GRANT_TYPE_IMPLICIT:
-      return _getOAuth2ImplicitHeader(requestId, authentication, forceRefresh);
-
-    case GRANT_TYPE_PASSWORD:
-      return _getOAuth2PasswordHeader(requestId, authentication, forceRefresh);
-
-    default:
-      return null;
-  }
-}
-
-async function _getOAuth2AuthorizationCodeHeader(
-  requestId: string,
-  authentication: RequestAuthentication,
-  forceRefresh: boolean,
-): Promise<OAuth2Token | null> {
-  const oAuth2Token = await _getAccessToken(requestId, authentication, forceRefresh);
+  const oAuth2Token = await _getExisingAccessTokenAndRefreshIfExpired(requestId, authentication, forceRefresh);
 
   if (oAuth2Token) {
     return oAuth2Token;
   }
-
-  const results = await getAccessTokenAuthorizationCode(
-    requestId,
-    authentication.authorizationUrl,
-    authentication.accessTokenUrl,
-    authentication.credentialsInBody,
-    authentication.clientId,
-    authentication.clientSecret,
-    authentication.redirectUrl,
-    authentication.scope,
-    authentication.state,
-    authentication.audience,
-    authentication.resource,
-    authentication.usePkce,
-    authentication.pkceMethod,
-    authentication.origin,
-  );
-  return _updateOAuth2Token(requestId, results);
-}
-
-async function _getOAuth2ClientCredentialsHeader(
-  requestId: string,
-  authentication: RequestAuthentication,
-  forceRefresh: boolean,
-): Promise<OAuth2Token | null> {
-  const oAuth2Token = await _getAccessToken(requestId, authentication, forceRefresh);
-
-  if (oAuth2Token) {
-    return oAuth2Token;
+  let newToken;
+  if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
+    newToken = await getAccessTokenAuthorizationCode(
+      requestId,
+      authentication.authorizationUrl,
+      authentication.accessTokenUrl,
+      authentication.credentialsInBody,
+      authentication.clientId,
+      authentication.clientSecret,
+      authentication.redirectUrl,
+      authentication.scope,
+      authentication.state,
+      authentication.audience,
+      authentication.resource,
+      authentication.usePkce,
+      authentication.pkceMethod,
+      authentication.origin,
+    );
+  } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
+    newToken = await getAccessTokenClientCredentials(
+      requestId,
+      authentication.accessTokenUrl,
+      authentication.credentialsInBody,
+      authentication.clientId,
+      authentication.clientSecret,
+      authentication.scope,
+      authentication.audience,
+      authentication.resource,
+    );
+  } else if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
+    newToken = await getAccessTokenImplicit(
+      requestId,
+      authentication.authorizationUrl,
+      authentication.clientId,
+      authentication.responseType,
+      authentication.redirectUrl,
+      authentication.scope,
+      authentication.state,
+      authentication.audience,
+    );
+  } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
+    newToken = await getAccessTokenPassword(
+      requestId,
+      authentication.accessTokenUrl,
+      authentication.credentialsInBody,
+      authentication.clientId,
+      authentication.clientSecret,
+      authentication.username,
+      authentication.password,
+      authentication.scope,
+      authentication.audience,
+    );
+  }
+  if (!newToken) {
+    return null;
   }
 
-  const results = await getAccessTokenClientCredentials(
-    requestId,
-    authentication.accessTokenUrl,
-    authentication.credentialsInBody,
-    authentication.clientId,
-    authentication.clientSecret,
-    authentication.scope,
-    authentication.audience,
-    authentication.resource,
-  );
-  return _updateOAuth2Token(requestId, results);
+  const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+  return models.oAuth2Token.update(old, {
+    // Calculate expiry date
+    expiresAt: newToken[P_EXPIRES_IN] ? Date.now() + newToken[P_EXPIRES_IN] * 1000 : null,
+    refreshToken: newToken[P_REFRESH_TOKEN] || null,
+    accessToken: newToken[P_ACCESS_TOKEN] || null,
+    identityToken: newToken[P_ID_TOKEN] || null,
+    error: newToken[P_ERROR] || null,
+    errorDescription: newToken[P_ERROR_DESCRIPTION] || null,
+    errorUri: newToken[P_ERROR_URI] || null,
+    // Special Cases
+    xResponseId: newToken[X_RESPONSE_ID] || null,
+    xError: newToken[X_ERROR] || null,
+  });
 }
 
-async function _getOAuth2ImplicitHeader(
-  requestId: string,
-  authentication: RequestAuthentication,
-  forceRefresh: boolean,
-): Promise<OAuth2Token | null> {
-  const oAuth2Token = await _getAccessToken(requestId, authentication, forceRefresh);
-
-  if (oAuth2Token) {
-    return oAuth2Token;
-  }
-
-  const results = await getAccessTokenImplicit(
-    requestId,
-    authentication.authorizationUrl,
-    authentication.clientId,
-    authentication.responseType,
-    authentication.redirectUrl,
-    authentication.scope,
-    authentication.state,
-    authentication.audience,
-  );
-  return _updateOAuth2Token(requestId, results);
-}
-
-async function _getOAuth2PasswordHeader(
-  requestId: string,
-  authentication: RequestAuthentication,
-  forceRefresh: boolean,
-): Promise<OAuth2Token | null> {
-  const oAuth2Token = await _getAccessToken(requestId, authentication, forceRefresh);
-
-  if (oAuth2Token) {
-    return oAuth2Token;
-  }
-
-  const results = await getAccessTokenPassword(
-    requestId,
-    authentication.accessTokenUrl,
-    authentication.credentialsInBody,
-    authentication.clientId,
-    authentication.clientSecret,
-    authentication.username,
-    authentication.password,
-    authentication.scope,
-    authentication.audience,
-  );
-  return _updateOAuth2Token(requestId, results);
-}
-
-async function _getAccessToken(
+async function _getExisingAccessTokenAndRefreshIfExpired(
   requestId: string,
   authentication: RequestAuthentication,
   forceRefresh: boolean,
@@ -183,7 +141,7 @@ async function _getAccessToken(
     return null;
   }
 
-  const refreshResults = await refreshAccessToken(
+  const newToken = await refreshAccessToken(
     requestId,
     authentication.accessTokenUrl,
     authentication.credentialsInBody,
@@ -196,34 +154,25 @@ async function _getAccessToken(
 
   // If we didn't receive an access token it means the refresh token didn't succeed,
   // so we tell caller to fetch brand new access and refresh tokens.
-  if (!refreshResults.access_token) {
+  if (!newToken.access_token) {
     return null;
   }
 
   // ~~~~~~~~~~~~~ //
   // Update the DB //
   // ~~~~~~~~~~~~~ //
-  return _updateOAuth2Token(requestId, refreshResults);
-}
-
-async function _updateOAuth2Token(
-  requestId: string,
-  authResults: Record<string, any>,
-): Promise<OAuth2Token> {
-  const oAuth2Token = await models.oAuth2Token.getOrCreateByParentId(requestId);
-  // Calculate expiry date
-  const expiresIn = authResults[P_EXPIRES_IN];
-  const expiresAt = expiresIn ? Date.now() + expiresIn * 1000 : null;
-  return models.oAuth2Token.update(oAuth2Token, {
-    expiresAt,
-    refreshToken: authResults[P_REFRESH_TOKEN] || null,
-    accessToken: authResults[P_ACCESS_TOKEN] || null,
-    identityToken: authResults[P_ID_TOKEN] || null,
-    error: authResults[P_ERROR] || null,
-    errorDescription: authResults[P_ERROR_DESCRIPTION] || null,
-    errorUri: authResults[P_ERROR_URI] || null,
+  const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+  return models.oAuth2Token.update(old, {
+    // Calculate expiry date
+    expiresAt: newToken[P_EXPIRES_IN] ? Date.now() + newToken[P_EXPIRES_IN] * 1000 : null,
+    refreshToken: newToken[P_REFRESH_TOKEN] || null,
+    accessToken: newToken[P_ACCESS_TOKEN] || null,
+    identityToken: newToken[P_ID_TOKEN] || null,
+    error: newToken[P_ERROR] || null,
+    errorDescription: newToken[P_ERROR_DESCRIPTION] || null,
+    errorUri: newToken[P_ERROR_URI] || null,
     // Special Cases
-    xResponseId: authResults[X_RESPONSE_ID] || null,
-    xError: authResults[X_ERROR] || null,
+    xResponseId: newToken[X_RESPONSE_ID] || null,
+    xError: newToken[X_ERROR] || null,
   });
 }
