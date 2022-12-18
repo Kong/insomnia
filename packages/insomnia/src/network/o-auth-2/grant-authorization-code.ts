@@ -8,7 +8,7 @@ import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
 import * as c from './constants';
 import { getOAuthSession, responseToObject } from './misc';
-export default async function(
+export const grantAuthCode = async (
   requestId: string,
   authorizeUrl: string,
   accessTokenUrl: string,
@@ -23,7 +23,7 @@ export default async function(
   usePkce = false,
   pkceMethod = c.PKCE_CHALLENGE_S256,
   origin = '',
-): Promise<Record<string, any>> {
+) => {
   if (!authorizeUrl) {
     throw new Error('Invalid authorization URL');
   }
@@ -83,7 +83,7 @@ export default async function(
     codeVerifier,
     origin,
   );
-}
+};
 
 async function _authorize(
   url: string,

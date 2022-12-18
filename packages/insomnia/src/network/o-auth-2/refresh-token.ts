@@ -5,7 +5,7 @@ import { sendWithSettings } from '../network';
 import * as c from './constants';
 import { responseToObject } from './misc';
 
-export default async function(
+export const refreshAccessToken = async (
   requestId: string,
   accessTokenUrl: string,
   credentialsInBody: boolean,
@@ -14,7 +14,7 @@ export default async function(
   refreshToken: string,
   scope: string,
   origin: string,
-): Promise<Record<string, any>> {
+) => {
   const params = [
     {
       name: c.P_GRANT_TYPE,
@@ -111,4 +111,4 @@ export default async function(
       [c.P_REFRESH_TOKEN]: refreshToken,
     },
   );
-}
+};

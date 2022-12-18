@@ -5,7 +5,7 @@ import { sendWithSettings } from '../network';
 import * as c from './constants';
 import { responseToObject } from './misc';
 
-export default async function(
+export const grantClientCreds = async (
   requestId: string,
   accessTokenUrl: string,
   credentialsInBody: boolean,
@@ -14,7 +14,7 @@ export default async function(
   scope = '',
   audience = '',
   resource = '',
-): Promise<Record<string, any>> {
+) => {
   const params = [
     {
       name: c.P_GRANT_TYPE,
@@ -104,4 +104,4 @@ export default async function(
   ]);
   results[c.X_RESPONSE_ID] = response._id;
   return results;
-}
+};

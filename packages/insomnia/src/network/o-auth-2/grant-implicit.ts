@@ -2,7 +2,7 @@ import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/u
 import * as c from './constants';
 import { getOAuthSession, responseToObject } from './misc';
 
-export default async function(
+export const grantImplicit = async (
   _requestId: string,
   authorizationUrl: string,
   clientId: string,
@@ -11,7 +11,7 @@ export default async function(
   scope = '',
   state = '',
   audience = '',
-): Promise<Record<string, any>> {
+) => {
   const params = [
     {
       name: c.P_RESPONSE_TYPE,
@@ -84,4 +84,4 @@ export default async function(
     // Bad redirect
     return {};
   }
-}
+};

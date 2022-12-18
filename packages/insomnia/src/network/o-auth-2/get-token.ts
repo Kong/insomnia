@@ -16,11 +16,11 @@ import {
   X_ERROR,
   X_RESPONSE_ID,
 } from './constants';
-import getAccessTokenAuthorizationCode from './grant-authorization-code';
-import getAccessTokenClientCredentials from './grant-client-credentials';
-import getAccessTokenImplicit from './grant-implicit';
-import getAccessTokenPassword from './grant-password';
-import refreshAccessToken from './refresh-token';
+import { grantAuthCode } from './grant-authorization-code';
+import { grantClientCreds } from './grant-client-credentials';
+import { grantImplicit } from './grant-implicit';
+import { grantPassword } from './grant-password';
+import { refreshAccessToken } from './refresh-token';
 /** Get an OAuth2Token object and also handle storing/saving/refreshing */
 
 export const getOAuth2Token = async (
@@ -36,7 +36,7 @@ export const getOAuth2Token = async (
   }
   let newToken;
   if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
-    newToken = await getAccessTokenAuthorizationCode(
+    newToken = await grantAuthCode(
       requestId,
       authentication.authorizationUrl,
       authentication.accessTokenUrl,
@@ -53,7 +53,7 @@ export const getOAuth2Token = async (
       authentication.origin,
     );
   } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
-    newToken = await getAccessTokenClientCredentials(
+    newToken = await grantClientCreds(
       requestId,
       authentication.accessTokenUrl,
       authentication.credentialsInBody,
@@ -64,7 +64,7 @@ export const getOAuth2Token = async (
       authentication.resource,
     );
   } else if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
-    newToken = await getAccessTokenImplicit(
+    newToken = await grantImplicit(
       requestId,
       authentication.authorizationUrl,
       authentication.clientId,
@@ -75,7 +75,7 @@ export const getOAuth2Token = async (
       authentication.audience,
     );
   } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
-    newToken = await getAccessTokenPassword(
+    newToken = await grantPassword(
       requestId,
       authentication.accessTokenUrl,
       authentication.credentialsInBody,
@@ -161,9 +161,10 @@ async function _getExisingAccessTokenAndRefreshIfExpired(
   // Update the DB //
   // ~~~~~~~~~~~~~ //
   const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+  const expiry = newToken[P_EXPIRES_IN] ? +newToken[P_EXPIRES_IN] : 0;
   return models.oAuth2Token.update(old, {
     // Calculate expiry date
-    expiresAt: newToken[P_EXPIRES_IN] ? Date.now() + newToken[P_EXPIRES_IN] * 1000 : null,
+    expiresAt: expiry ? Date.now() + expiry * 1000 : null,
     refreshToken: newToken[P_REFRESH_TOKEN] || null,
     accessToken: newToken[P_ACCESS_TOKEN] || null,
     identityToken: newToken[P_ID_TOKEN] || null,
