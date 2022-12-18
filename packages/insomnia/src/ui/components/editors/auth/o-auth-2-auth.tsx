@@ -18,7 +18,7 @@ import {
   RESPONSE_TYPE_ID_TOKEN_TOKEN,
   RESPONSE_TYPE_TOKEN,
 } from '../../../../network/o-auth-2/constants';
-import getAccessToken from '../../../../network/o-auth-2/get-token';
+import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
 import { useActiveRequest } from '../../../hooks/use-active-request';
@@ -105,12 +105,12 @@ const getFields = (authentication: Request['authentication']) => {
     options={pkceMethodOptions}
   />;
   const authorizationUrl = <AuthInputRow label='Authorization URL' property='authorizationUrl' key='authorizationUrl' getAutocompleteConstants={getAuthorizationUrls} />;
-  const accessTokenUrl = <AuthInputRow label='Access Token URL' property='accessTokenUrl' key='accessTokenUrl'  getAutocompleteConstants={getAccessTokenUrls} />;
+  const accessTokenUrl = <AuthInputRow label='Access Token URL' property='accessTokenUrl' key='accessTokenUrl' getAutocompleteConstants={getAccessTokenUrls} />;
   const redirectUri = <AuthInputRow label='Redirect URL' property='redirectUrl' key='redirectUrl' help='This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL.' />;
   const state = <AuthInputRow label='State' property='state' key='state' />;
   const scope = <AuthInputRow label='Scope' property='scope' key='scope' />;
   const username = <AuthInputRow label='Username' property='username' key='username' />;
-  const password = <AuthInputRow label='Password' property='password' key='password' mask/>;
+  const password = <AuthInputRow label='Password' property='password' key='password' mask />;
   const tokenPrefix = <AuthInputRow label='Header Prefix' property='tokenPrefix' key='tokenPrefix' help='Change Authorization header prefix from "Bearer" to something else. Use "NO_PREFIX" to send raw token without prefix.' />;
   const responseType = <AuthSelectRow
     label='Response Type'
@@ -266,7 +266,7 @@ export const OAuth2Auth: FC = () => {
           {advanced}
           {
             <tr>
-              <td/>
+              <td />
               <td className="wide">
                 <div className="pad-top text-right">
                   <button className="btn btn--clicky" onClick={initNewOAuthSession}>
@@ -334,7 +334,7 @@ const renderAccessTokenExpiry = (token?: Pick<OAuth2Token, 'accessToken' | 'expi
   );
 };
 
-const OAuth2TokenInput: FC<{label: string; property: keyof Pick<OAuth2Token, 'accessToken' | 'refreshToken' | 'identityToken'>}> = ({ label, property }) => {
+const OAuth2TokenInput: FC<{ label: string; property: keyof Pick<OAuth2Token, 'accessToken' | 'refreshToken' | 'identityToken'> }> = ({ label, property }) => {
   const { activeRequest } = useActiveRequest();
   const token = useSelector(selectActiveOAuth2Token);
 
@@ -440,7 +440,7 @@ const useActiveOAuth2Token = () => {
 
     try {
       const renderedAuthentication = await handleRender(authentication);
-      await getAccessToken(requestId, renderedAuthentication, true);
+      await getOAuth2Token(requestId, renderedAuthentication, true);
       setLoading(false);
     } catch (err) {
       // Clear existing tokens if there's an error

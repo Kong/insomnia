@@ -23,11 +23,11 @@ import getAccessTokenPassword from './grant-password';
 import refreshAccessToken from './refresh-token';
 /** Get an OAuth2Token object and also handle storing/saving/refreshing */
 
-export default async function (
+export const getOAuth2Token = async (
   requestId: string,
   authentication: RequestAuthentication,
   forceRefresh = false,
-): Promise<OAuth2Token | null> {
+): Promise<OAuth2Token | null> => {
 
   const oAuth2Token = await _getExisingAccessTokenAndRefreshIfExpired(requestId, authentication, forceRefresh);
 
@@ -105,7 +105,7 @@ export default async function (
     xResponseId: newToken[X_RESPONSE_ID] || null,
     xError: newToken[X_ERROR] || null,
   });
-}
+};
 
 async function _getExisingAccessTokenAndRefreshIfExpired(
   requestId: string,

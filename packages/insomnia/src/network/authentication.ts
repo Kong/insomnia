@@ -16,7 +16,7 @@ import { COOKIE, HEADER, QUERY_PARAMS } from './api-key/constants';
 import { getBasicAuthHeader } from './basic-auth/get-header';
 import { getBearerAuthHeader } from './bearer-auth/get-header';
 import getOAuth1Token from './o-auth-1/get-token';
-import getOAuth2Token from './o-auth-2/get-token';
+import { getOAuth2Token } from './o-auth-2/get-token';
 
 interface Header {
   name: string;
