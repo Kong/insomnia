@@ -105,44 +105,31 @@ async function _authorize(
       name: c.P_CLIENT_ID,
       value: clientId,
     },
-  ];
-  // Add optional params
-  redirectUri &&
-    params.push({
-      name: c.P_REDIRECT_URI,
-      value: redirectUri,
-    });
-  scope &&
-    params.push({
+    ...(scope ? [{
       name: c.P_SCOPE,
       value: scope,
-    });
-  state &&
-    params.push({
+    }] : []),
+    ...(state ? [{
       name: c.P_STATE,
       value: state,
-    });
-  audience &&
-    params.push({
+    }] : []),
+    ...(audience ? [{
       name: c.P_AUDIENCE,
       value: audience,
-    });
-  resource &&
-    params.push({
+    }] : []),
+    ...(resource ? [{
       name: c.P_RESOURCE,
       value: resource,
-    });
-
-  if (codeChallenge) {
-    params.push({
+    }] : []),
+    ...(codeChallenge ? [{
       name: c.P_CODE_CHALLENGE,
       value: codeChallenge,
-    });
-    params.push({
+    },
+    {
       name: c.P_CODE_CHALLENGE_METHOD,
       value: pkceMethod,
-    });
-  }
+    }] : []),
+  ];
 
   // Add query params to URL
   const qs = buildQueryStringFromParams(params);

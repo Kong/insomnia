@@ -12,6 +12,7 @@ export const grantImplicit = async (
   state = '',
   audience = '',
 ) => {
+  const hasNonce = responseType === c.RESPONSE_TYPE_ID_TOKEN_TOKEN || responseType === c.RESPONSE_TYPE_ID_TOKEN;
   const params = [
     {
       name: c.P_RESPONSE_TYPE,
@@ -21,41 +22,32 @@ export const grantImplicit = async (
       name: c.P_CLIENT_ID,
       value: clientId,
     },
-  ];
-
-  // Add optional params
-  if (
-    responseType === c.RESPONSE_TYPE_ID_TOKEN_TOKEN ||
-    responseType === c.RESPONSE_TYPE_ID_TOKEN
-  ) {
-    const nonce = Math.floor(Math.random() * 9999999999999) + 1;
-    params.push({
-      name: c.P_NONCE,
-      // @ts-expect-error -- TSCONVERSION
-      value: nonce,
-    });
-  }
-
-  redirectUri &&
-    params.push({
+    ...(redirectUri ? [{
       name: c.P_REDIRECT_URI,
       value: redirectUri,
-    });
-  scope &&
-    params.push({
+    }] : []),
+    ...(scope ? [{
       name: c.P_SCOPE,
       value: scope,
-    });
-  state &&
-    params.push({
+    }] : []),
+    ...(state ? [{
       name: c.P_STATE,
       value: state,
-    });
-  audience &&
-    params.push({
+    }] : []),
+    ...(audience ? [{
       name: c.P_AUDIENCE,
       value: audience,
-    });
+    }] : []),
+    ...(audience ? [{
+      name: c.P_AUDIENCE,
+      value: audience,
+    }] : []),
+    ...(hasNonce ? [{
+      name: c.P_NONCE,
+      value: Math.floor(Math.random() * 9999999999999) + 1,
+    }] : []),
+  ];
+
   // Add query params to URL
   const qs = buildQueryStringFromParams(params);
   const finalUrl = joinUrlAndQueryString(authorizationUrl, qs);

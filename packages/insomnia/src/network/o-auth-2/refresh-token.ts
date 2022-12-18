@@ -24,13 +24,20 @@ export const refreshAccessToken = async (
       name: c.P_REFRESH_TOKEN,
       value: refreshToken,
     },
-  ];
-  // Add optional params
-  scope &&
-    params.push({
+    ...(scope ? [{
       name: c.P_SCOPE,
       value: scope,
-    });
+    }] : []),
+    ...(credentialsInBody ? [{
+      name: c.P_CLIENT_ID,
+      value: clientId,
+    }, {
+      name: c.P_CLIENT_SECRET,
+      value: clientSecret,
+    }] : [getBasicAuthHeader(clientId, clientSecret)]),
+
+  ];
+
   const headers = [
     {
       name: 'Content-Type',
@@ -40,24 +47,8 @@ export const refreshAccessToken = async (
       name: 'Accept',
       value: 'application/x-www-form-urlencoded, application/json',
     },
+    ...(origin ? [{ name: 'Origin', value: origin }] : []),
   ];
-
-  if (credentialsInBody) {
-    params.push({
-      name: c.P_CLIENT_ID,
-      value: clientId,
-    });
-    params.push({
-      name: c.P_CLIENT_SECRET,
-      value: clientSecret,
-    });
-  } else {
-    headers.push(getBasicAuthHeader(clientId, clientSecret));
-  }
-
-  if (origin) {
-    headers.push({ name: 'Origin', value: origin });
-  }
 
   const url = setDefaultProtocol(accessTokenUrl);
   const response = await sendWithSettings(requestId, {

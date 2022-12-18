@@ -20,23 +20,19 @@ export const grantClientCreds = async (
       name: c.P_GRANT_TYPE,
       value: c.GRANT_TYPE_CLIENT_CREDENTIALS,
     },
-  ];
-  // Add optional params
-  scope &&
-    params.push({
+    ...(scope ? [{
       name: c.P_SCOPE,
       value: scope,
-    });
-  audience &&
-    params.push({
+    }] : []),
+    ...(audience ? [{
       name: c.P_AUDIENCE,
       value: audience,
-    });
-  resource &&
-    params.push({
+    }] : []),
+    ...(resource ? [{
       name: c.P_RESOURCE,
       value: resource,
-    });
+    }] : []),
+  ];
   const headers = [
     {
       name: 'Content-Type',

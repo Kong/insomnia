@@ -29,18 +29,22 @@ export const grantPassword = async (
       name: c.P_PASSWORD,
       value: password,
     },
-  ];
-  // Add optional params
-  scope &&
-    params.push({
+    ...(scope ? [{
       name: c.P_SCOPE,
       value: scope,
-    });
-  audience &&
-    params.push({
+    }] : []),
+    ...(audience ? [{
       name: c.P_AUDIENCE,
       value: audience,
-    });
+    }] : []),
+    ...(credentialsInBody ? [{
+      name: c.P_CLIENT_ID,
+      value: clientId,
+    }, {
+      name: c.P_CLIENT_SECRET,
+      value: clientSecret,
+    }] : [getBasicAuthHeader(clientId, clientSecret)]),
+  ];
   const headers = [
     {
       name: 'Content-Type',
@@ -51,19 +55,6 @@ export const grantPassword = async (
       value: 'application/x-www-form-urlencoded, application/json',
     },
   ];
-
-  if (credentialsInBody) {
-    params.push({
-      name: c.P_CLIENT_ID,
-      value: clientId,
-    });
-    params.push({
-      name: c.P_CLIENT_SECRET,
-      value: clientSecret,
-    });
-  } else {
-    headers.push(getBasicAuthHeader(clientId, clientSecret));
-  }
 
   const url = setDefaultProtocol(accessTokenUrl);
   const responsePatch = await network.sendWithSettings(requestId, {
