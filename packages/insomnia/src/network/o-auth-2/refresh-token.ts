@@ -87,8 +87,7 @@ export const refreshAccessToken = async (
   if (!bodyBuffer) {
     throw new Error(`[oauth2] No body returned from ${url}`);
   }
-
-  return responseToObject(
+  const obj = responseToObject(
     bodyBuffer.toString(),
     [
       c.P_ACCESS_TOKEN,
@@ -101,9 +100,9 @@ export const refreshAccessToken = async (
       c.P_ERROR_URI,
       c.P_ERROR_DESCRIPTION,
     ],
-    {
-      // Refresh token is optional, so we'll default it to the existing value
-      [c.P_REFRESH_TOKEN]: refreshToken,
-    },
   );
+  if (obj[c.P_REFRESH_TOKEN] !== undefined) {
+    obj[c.P_REFRESH_TOKEN] = refreshToken;
+  }
+  return obj;
 };

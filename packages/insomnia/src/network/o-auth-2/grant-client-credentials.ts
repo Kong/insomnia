@@ -16,50 +16,47 @@ export const grantClientCreds = async (
   audience = '',
   resource = '',
 ) => {
-  const params = [
-    {
-      name: c.P_GRANT_TYPE,
-      value: c.GRANT_TYPE_CLIENT_CREDENTIALS,
-    },
-    ...(scope ? [{
-      name: c.P_SCOPE,
-      value: scope,
-    }] : []),
-    ...(audience ? [{
-      name: c.P_AUDIENCE,
-      value: audience,
-    }] : []),
-    ...(resource ? [{
-      name: c.P_RESOURCE,
-      value: resource,
-    }] : []),
-    ...(credentialsInBody ? [{
-      name: c.P_CLIENT_ID,
-      value: clientId,
-    }, {
-      name: c.P_CLIENT_SECRET,
-      value: clientSecret,
-    }] : [getBasicAuthHeader(clientId, clientSecret)]),
-  ];
-  const headers = [
-    {
-      name: 'Content-Type',
-      value: 'application/x-www-form-urlencoded',
-    },
-    {
-      name: 'Accept',
-      value: 'application/x-www-form-urlencoded, application/json',
-    },
-  ];
-
   const url = setDefaultProtocol(accessTokenUrl);
   const responsePatch = await sendWithSettings(requestId, {
-    headers,
+    headers: [
+      {
+        name: 'Content-Type',
+        value: 'application/x-www-form-urlencoded',
+      },
+      {
+        name: 'Accept',
+        value: 'application/x-www-form-urlencoded, application/json',
+      },
+    ],
     url,
     method: 'POST',
     body: {
       mimeType: CONTENT_TYPE_FORM_URLENCODED,
-      params,
+      params: [
+        {
+          name: c.P_GRANT_TYPE,
+          value: c.GRANT_TYPE_CLIENT_CREDENTIALS,
+        },
+        ...(scope ? [{
+          name: c.P_SCOPE,
+          value: scope,
+        }] : []),
+        ...(audience ? [{
+          name: c.P_AUDIENCE,
+          value: audience,
+        }] : []),
+        ...(resource ? [{
+          name: c.P_RESOURCE,
+          value: resource,
+        }] : []),
+        ...(credentialsInBody ? [{
+          name: c.P_CLIENT_ID,
+          value: clientId,
+        }, {
+          name: c.P_CLIENT_SECRET,
+          value: clientSecret,
+        }] : [getBasicAuthHeader(clientId, clientSecret)]),
+      ],
     },
   });
   const response = await models.response.create(responsePatch);

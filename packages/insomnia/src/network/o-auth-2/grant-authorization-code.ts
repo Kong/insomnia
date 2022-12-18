@@ -136,8 +136,7 @@ async function _authorize(
     c.P_ERROR_URI,
   ]);
 }
-
-async function _getToken(
+const _getToken = async (
   requestId: string,
   url: string,
   credentialsInBody: boolean,
@@ -150,67 +149,60 @@ async function _getToken(
   resource = '',
   codeVerifier = '',
   origin = '',
-): Promise<Record<string, any>> {
-  const params = [
-    {
-      name: c.P_GRANT_TYPE,
-      value: c.GRANT_TYPE_AUTHORIZATION_CODE,
-    },
-    {
-      name: c.P_CODE,
-      value: code,
-    },
-    ...(redirectUri ? [{
-      name: c.P_REDIRECT_URI,
-      value: redirectUri,
-    }] : []),
-    ...(state ? [{
-      name: c.P_STATE,
-      value: state,
-    }] : []),
-    ...(audience ? [{
-      name: c.P_AUDIENCE,
-      value: audience,
-    }] : []),
-    ...(resource ? [{
-      name: c.P_RESOURCE,
-      value: resource,
-    }] : []),
-    ...(codeVerifier ? [{
-      name: c.P_CODE_VERIFIER,
-      value: codeVerifier,
-    }] : []),
-    ...(credentialsInBody ? [{
-      name: c.P_CLIENT_ID,
-      value: clientId,
-    }, {
-      name: c.P_CLIENT_SECRET,
-      value: clientSecret,
-    }] : [getBasicAuthHeader(clientId, clientSecret)]),
-    ...(origin ? [{
-      name: 'Origin',
-      value: origin,
-    }] : []),
-  ];
-
-  const headers = [
-    {
-      name: 'Content-Type',
-      value: 'application/x-www-form-urlencoded',
-    },
-    {
-      name: 'Accept',
-      value: 'application/x-www-form-urlencoded, application/json',
-    },
-  ];
-
+) => {
   const responsePatch = await sendWithSettings(requestId, {
-    headers,
+    headers: [
+      {
+        name: 'Content-Type',
+        value: 'application/x-www-form-urlencoded',
+      },
+      {
+        name: 'Accept',
+        value: 'application/x-www-form-urlencoded, application/json',
+      },
+      ...(origin ? [{ name: 'Origin', value: origin }] : []),
+    ],
     url,
     method: 'POST',
     body: {
       mimeType: CONTENT_TYPE_FORM_URLENCODED,
-      params,
+      params: [
+        {
+          name: c.P_GRANT_TYPE,
+          value: c.GRANT_TYPE_AUTHORIZATION_CODE,
+        },
+        {
+          name: c.P_CODE,
+          value: code,
+        },
+        ...(redirectUri ? [{
+          name: c.P_REDIRECT_URI,
+          value: redirectUri,
+        }] : []),
+        ...(state ? [{
+          name: c.P_STATE,
+          value: state,
+        }] : []),
+        ...(audience ? [{
+          name: c.P_AUDIENCE,
+          value: audience,
+        }] : []),
+        ...(resource ? [{
+          name: c.P_RESOURCE,
+          value: resource,
+        }] : []),
+        ...(codeVerifier ? [{
+          name: c.P_CODE_VERIFIER,
+          value: codeVerifier,
+        }] : []),
+        ...(credentialsInBody ? [{
+          name: c.P_CLIENT_ID,
+          value: clientId,
+        }, {
+          name: c.P_CLIENT_SECRET,
+          value: clientSecret,
+        }] : [getBasicAuthHeader(clientId, clientSecret)]),
+      ],
     },
   });
   const response = await models.response.create(responsePatch);
@@ -249,7 +241,7 @@ async function _getToken(
   ]);
   results[c.X_RESPONSE_ID] = response._id;
   return results;
-}
+};
 
 const encodePKCE = (buffer: Buffer) => {
   return buffer.toString('base64')

@@ -17,54 +17,52 @@ export const grantPassword = async (
   scope = '',
   audience = '',
 ) => {
-  const params = [
-    {
-      name: c.P_GRANT_TYPE,
-      value: c.GRANT_TYPE_PASSWORD,
-    },
-    {
-      name: c.P_USERNAME,
-      value: username,
-    },
-    {
-      name: c.P_PASSWORD,
-      value: password,
-    },
-    ...(scope ? [{
-      name: c.P_SCOPE,
-      value: scope,
-    }] : []),
-    ...(audience ? [{
-      name: c.P_AUDIENCE,
-      value: audience,
-    }] : []),
-    ...(credentialsInBody ? [{
-      name: c.P_CLIENT_ID,
-      value: clientId,
-    }, {
-      name: c.P_CLIENT_SECRET,
-      value: clientSecret,
-    }] : [getBasicAuthHeader(clientId, clientSecret)]),
-  ];
-  const headers = [
-    {
-      name: 'Content-Type',
-      value: 'application/x-www-form-urlencoded',
-    },
-    {
-      name: 'Accept',
-      value: 'application/x-www-form-urlencoded, application/json',
-    },
-  ];
 
   const url = setDefaultProtocol(accessTokenUrl);
   const responsePatch = await network.sendWithSettings(requestId, {
     url,
-    headers,
+    headers: [
+      {
+        name: 'Content-Type',
+        value: 'application/x-www-form-urlencoded',
+      },
+      {
+        name: 'Accept',
+        value: 'application/x-www-form-urlencoded, application/json',
+      },
+    ],
     method: 'POST',
     body: {
       mimeType: CONTENT_TYPE_FORM_URLENCODED,
-      params,
+      params: [
+        {
+          name: c.P_GRANT_TYPE,
+          value: c.GRANT_TYPE_PASSWORD,
+        },
+        {
+          name: c.P_USERNAME,
+          value: username,
+        },
+        {
+          name: c.P_PASSWORD,
+          value: password,
+        },
+        ...(scope ? [{
+          name: c.P_SCOPE,
+          value: scope,
+        }] : []),
+        ...(audience ? [{
+          name: c.P_AUDIENCE,
+          value: audience,
+        }] : []),
+        ...(credentialsInBody ? [{
+          name: c.P_CLIENT_ID,
+          value: clientId,
+        }, {
+          name: c.P_CLIENT_SECRET,
+          value: clientSecret,
+        }] : [getBasicAuthHeader(clientId, clientSecret)]),
+      ],
     },
   });
   const response = await models.response.create(responsePatch);

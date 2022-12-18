@@ -13,7 +13,8 @@ export const grantImplicit = async (
   audience = '',
 ) => {
   const hasNonce = responseType === c.RESPONSE_TYPE_ID_TOKEN_TOKEN || responseType === c.RESPONSE_TYPE_ID_TOKEN;
-  const params = [
+  // Add query params to URL
+  const qs = buildQueryStringFromParams([
     {
       name: c.P_RESPONSE_TYPE,
       value: responseType,
@@ -44,12 +45,9 @@ export const grantImplicit = async (
     }] : []),
     ...(hasNonce ? [{
       name: c.P_NONCE,
-      value: Math.floor(Math.random() * 9999999999999) + 1,
+      value: Math.floor(Math.random() * 9999999999999) + 1 + '',
     }] : []),
-  ];
-
-  // Add query params to URL
-  const qs = buildQueryStringFromParams(params);
+  ]);
   const finalUrl = joinUrlAndQueryString(authorizationUrl, qs);
   const urlSuccessRegex = /(access_token=|id_token=)/;
   const urlFailureRegex = /(error=)/;

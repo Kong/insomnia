@@ -22,14 +22,14 @@ export function initNewOAuthSession() {
   return authWindowSessionId;
 }
 
-export function responseToObject(body: string | null, keys: string[], defaults: Record<string, string | string[]> = {}) {
+export function responseToObject(body: string | null, keys: string[]) {
   let data: querystring.ParsedUrlQuery | null = null;
 
   try {
     // TODO: remove non-null assertion
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     data = JSON.parse(body!);
-  } catch (err) {}
+  } catch (err) { }
 
   if (!data) {
     try {
@@ -38,7 +38,7 @@ export function responseToObject(body: string | null, keys: string[], defaults: 
       // TODO: remove non-null assertion
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       data = querystring.parse(body!);
-    } catch (err) {}
+    } catch (err) { }
   }
 
   // Shouldn't happen but we'll check anyway
@@ -51,8 +51,6 @@ export function responseToObject(body: string | null, keys: string[], defaults: 
   for (const key of keys) {
     if (data[key] !== undefined) {
       results[key] = data[key];
-    } else if (defaults?.hasOwnProperty(key)) {
-      results[key] = defaults[key];
     } else {
       results[key] = null;
     }
