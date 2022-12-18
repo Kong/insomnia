@@ -33,22 +33,8 @@ export const grantAuthCode = async (
     throw new Error('Invalid access token URL');
   }
 
-  let codeVerifier = '';
-  let codeChallenge = '';
-
-  if (usePkce) {
-    // @ts-expect-error -- TSCONVERSION
-    codeVerifier = _base64UrlEncode(crypto.randomBytes(32));
-
-    if (pkceMethod === c.PKCE_CHALLENGE_S256) {
-      // @ts-expect-error -- TSCONVERSION
-      codeChallenge = _base64UrlEncode(crypto.createHash('sha256').update(codeVerifier).digest());
-    } else {
-      codeChallenge = codeVerifier;
-    }
-
-  }
-
+  const codeVerifier = usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
+  const codeChallenge = pkceMethod === c.PKCE_CHALLENGE_S256 ? encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest()) : codeVerifier;
   const authorizeResults = await _authorize(
     authorizeUrl,
     clientId,
@@ -58,7 +44,7 @@ export const grantAuthCode = async (
     audience,
     resource,
     codeChallenge,
-    pkceMethod
+    pkceMethod,
   );
 
   // Handle the error
@@ -174,33 +160,39 @@ async function _getToken(
       name: c.P_CODE,
       value: code,
     },
-  ];
-  // Add optional params
-  redirectUri &&
-    params.push({
+    ...(redirectUri ? [{
       name: c.P_REDIRECT_URI,
       value: redirectUri,
-    });
-  state &&
-    params.push({
+    }] : []),
+    ...(state ? [{
       name: c.P_STATE,
       value: state,
-    });
-  audience &&
-    params.push({
+    }] : []),
+    ...(audience ? [{
       name: c.P_AUDIENCE,
       value: audience,
-    });
-  resource &&
-    params.push({
+    }] : []),
+    ...(resource ? [{
       name: c.P_RESOURCE,
       value: resource,
-    });
-  codeVerifier &&
-    params.push({
+    }] : []),
+    ...(codeVerifier ? [{
       name: c.P_CODE_VERIFIER,
       value: codeVerifier,
-    });
+    }] : []),
+    ...(credentialsInBody ? [{
+      name: c.P_CLIENT_ID,
+      value: clientId,
+    }, {
+      name: c.P_CLIENT_SECRET,
+      value: clientSecret,
+    }] : [getBasicAuthHeader(clientId, clientSecret)]),
+    ...(origin ? [{
+      name: 'Origin',
+      value: origin,
+    }] : []),
+  ];
+
   const headers = [
     {
       name: 'Content-Type',
@@ -211,23 +203,6 @@ async function _getToken(
       value: 'application/x-www-form-urlencoded, application/json',
     },
   ];
-
-  if (credentialsInBody) {
-    params.push({
-      name: c.P_CLIENT_ID,
-      value: clientId,
-    });
-    params.push({
-      name: c.P_CLIENT_SECRET,
-      value: clientSecret,
-    });
-  } else {
-    headers.push(getBasicAuthHeader(clientId, clientSecret));
-  }
-
-  if (origin) {
-    headers.push({ name: 'Origin', value: origin });
-  }
 
   const responsePatch = await sendWithSettings(requestId, {
     headers,
@@ -276,13 +251,12 @@ async function _getToken(
   return results;
 }
 
-function _base64UrlEncode(str: string) {
-  // @ts-expect-error -- TSCONVERSION appears to be genuine
-  return str.toString('base64')
+const encodePKCE = (buffer: Buffer) => {
+  return buffer.toString('base64')
     // The characters + / = are reserved for PKCE as per the RFC,
     // so we replace them with unreserved characters
     // Docs: https://tools.ietf.org/html/rfc7636#section-4.2
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=/g, '');
-}
+};

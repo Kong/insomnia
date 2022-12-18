@@ -6,13 +6,6 @@ import {
   GRANT_TYPE_CLIENT_CREDENTIALS,
   GRANT_TYPE_IMPLICIT,
   GRANT_TYPE_PASSWORD,
-  P_ACCESS_TOKEN,
-  P_ERROR,
-  P_ERROR_DESCRIPTION,
-  P_ERROR_URI,
-  P_EXPIRES_IN,
-  P_ID_TOKEN,
-  P_REFRESH_TOKEN,
   X_ERROR,
   X_RESPONSE_ID,
 } from './constants';
@@ -91,13 +84,13 @@ export const getOAuth2Token = async (
     const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
     return models.oAuth2Token.update(old, {
       // Calculate expiry date
-      expiresAt: newToken[P_EXPIRES_IN] ? Date.now() + newToken[P_EXPIRES_IN] * 1000 : null,
-      refreshToken: newToken[P_REFRESH_TOKEN] || null,
-      accessToken: newToken[P_ACCESS_TOKEN] || null,
-      identityToken: newToken[P_ID_TOKEN] || null,
-      error: newToken[P_ERROR] || null,
-      errorDescription: newToken[P_ERROR_DESCRIPTION] || null,
-      errorUri: newToken[P_ERROR_URI] || null,
+      expiresAt: newToken.expires_in ? Date.now() + newToken.expires_in * 1000 : null,
+      refreshToken: newToken.refresh_token || null,
+      accessToken: newToken.access_token || null,
+      identityToken: newToken.id_token || null,
+      error: newToken.error || null,
+      errorDescription: newToken.error_description || null,
+      errorUri: newToken.error_uri || null,
       // Special Cases
       xResponseId: newToken[X_RESPONSE_ID] || null,
       xError: newToken[X_ERROR] || null,
@@ -161,16 +154,16 @@ async function _getExisingAccessTokenAndRefreshIfExpired(
   // Update the DB //
   // ~~~~~~~~~~~~~ //
   const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
-  const expiry = newToken[P_EXPIRES_IN] ? +newToken[P_EXPIRES_IN] : 0;
+  const expiry = newToken.expires_in ? +newToken.expires_in : 0;
   return models.oAuth2Token.update(old, {
     // Calculate expiry date
     expiresAt: expiry ? Date.now() + expiry * 1000 : null,
-    refreshToken: newToken[P_REFRESH_TOKEN] || null,
-    accessToken: newToken[P_ACCESS_TOKEN] || null,
-    identityToken: newToken[P_ID_TOKEN] || null,
-    error: newToken[P_ERROR] || null,
-    errorDescription: newToken[P_ERROR_DESCRIPTION] || null,
-    errorUri: newToken[P_ERROR_URI] || null,
+    refreshToken: newToken.refresh_token || null,
+    accessToken: newToken.access_token || null,
+    identityToken: newToken.id_token || null,
+    error: newToken.error || null,
+    errorDescription: newToken.error_description || null,
+    errorUri: newToken.error_uri || null,
     // Special Cases
     xResponseId: newToken[X_RESPONSE_ID] || null,
     xError: newToken[X_ERROR] || null,

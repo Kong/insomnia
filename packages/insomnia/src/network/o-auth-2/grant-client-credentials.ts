@@ -33,6 +33,13 @@ export const grantClientCreds = async (
       name: c.P_RESOURCE,
       value: resource,
     }] : []),
+    ...(credentialsInBody ? [{
+      name: c.P_CLIENT_ID,
+      value: clientId,
+    }, {
+      name: c.P_CLIENT_SECRET,
+      value: clientSecret,
+    }] : [getBasicAuthHeader(clientId, clientSecret)]),
   ];
   const headers = [
     {
@@ -44,19 +51,6 @@ export const grantClientCreds = async (
       value: 'application/x-www-form-urlencoded, application/json',
     },
   ];
-
-  if (credentialsInBody) {
-    params.push({
-      name: c.P_CLIENT_ID,
-      value: clientId,
-    });
-    params.push({
-      name: c.P_CLIENT_SECRET,
-      value: clientSecret,
-    });
-  } else {
-    headers.push(getBasicAuthHeader(clientId, clientSecret));
-  }
 
   const url = setDefaultProtocol(accessTokenUrl);
   const responsePatch = await sendWithSettings(requestId, {
