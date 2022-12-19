@@ -1,6 +1,6 @@
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import * as c from './constants';
-import { getOAuthSession, responseToObject } from './misc';
+import { AuthParam, getOAuthSession, responseToObject } from './misc';
 
 export const grantImplicit = async (
   _requestId: string,
@@ -14,40 +14,41 @@ export const grantImplicit = async (
 ) => {
   const hasNonce = responseType === c.RESPONSE_TYPE_ID_TOKEN_TOKEN || responseType === c.RESPONSE_TYPE_ID_TOKEN;
   // Add query params to URL
-  const qs = buildQueryStringFromParams([
+  const params: AuthParam[] = [
     {
-      name: c.P_RESPONSE_TYPE,
+      name: 'response_type',
       value: responseType,
     },
     {
-      name: c.P_CLIENT_ID,
+      name: 'client_id',
       value: clientId,
     },
     ...(redirectUri ? [{
-      name: c.P_REDIRECT_URI,
+      name: 'redirect_uri',
       value: redirectUri,
     }] : []),
     ...(scope ? [{
-      name: c.P_SCOPE,
+      name: 'scope',
       value: scope,
     }] : []),
     ...(state ? [{
-      name: c.P_STATE,
+      name: 'state',
       value: state,
     }] : []),
     ...(audience ? [{
-      name: c.P_AUDIENCE,
+      name: 'audience',
       value: audience,
     }] : []),
     ...(audience ? [{
-      name: c.P_AUDIENCE,
+      name: 'audience',
       value: audience,
     }] : []),
     ...(hasNonce ? [{
-      name: c.P_NONCE,
+      name: 'nonce',
       value: Math.floor(Math.random() * 9999999999999) + 1 + '',
     }] : []),
-  ]);
+  ];
+  const qs = buildQueryStringFromParams(params);
   const finalUrl = joinUrlAndQueryString(authorizationUrl, qs);
   const urlSuccessRegex = /(access_token=|id_token=)/;
   const urlFailureRegex = /(error=)/;

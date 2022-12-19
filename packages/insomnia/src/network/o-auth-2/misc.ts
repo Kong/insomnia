@@ -3,6 +3,7 @@ import querystring from 'querystring';
 import { v4 as uuidv4 } from 'uuid';
 
 import * as models from '../../models/index';
+import { AuthKeys } from './constants';
 
 export enum ChromiumVerificationResult {
   BLIND_TRUST = 0,
@@ -33,21 +34,11 @@ const tryToParse = (body: string): Record<string, any> | null => {
   } catch (err) { }
   return null;
 };
-type AuthKeys = 'access_token'
-  | 'id_token'
-  | 'code'
-  | 'error'
-  | 'error_description'
-  | 'error_uri'
-  | 'state'
-  | 'scope'
-  | 'resource'
-  | 'expires_in'
-  | 'refresh_token'
-  | 'audience'
-  | 'token_type'
-  | 'client_id';
 
+export interface AuthParam {
+  name: AuthKeys; value: string;
+}
+export const insertIf = (condition: boolean | string, ...elements: AuthParam[]) => condition ? elements : [];
 export function responseToObject(body: string | null, keys: AuthKeys[]) {
   if (body) {
     const data = tryToParse(body);

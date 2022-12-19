@@ -34,26 +34,26 @@ export const grantClientCreds = async (
       mimeType: CONTENT_TYPE_FORM_URLENCODED,
       params: [
         {
-          name: c.P_GRANT_TYPE,
+          name: 'grant_type',
           value: c.GRANT_TYPE_CLIENT_CREDENTIALS,
         },
         ...(scope ? [{
-          name: c.P_SCOPE,
+          name: 'scope',
           value: scope,
         }] : []),
         ...(audience ? [{
-          name: c.P_AUDIENCE,
+          name: 'audience',
           value: audience,
         }] : []),
         ...(resource ? [{
-          name: c.P_RESOURCE,
+          name: 'resource',
           value: resource,
         }] : []),
         ...(credentialsInBody ? [{
-          name: c.P_CLIENT_ID,
+          name: 'client_id',
           value: clientId,
         }, {
-          name: c.P_CLIENT_SECRET,
+          name: 'client_secret',
           value: clientSecret,
         }] : [getBasicAuthHeader(clientId, clientSecret)]),
       ],

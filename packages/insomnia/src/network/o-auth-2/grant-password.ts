@@ -1,4 +1,3 @@
-import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import * as models from '../../models/index';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
@@ -33,33 +32,33 @@ export const grantPassword = async (
     ],
     method: 'POST',
     body: {
-      mimeType: CONTENT_TYPE_FORM_URLENCODED,
+      mimeType: 'application/x-www-form-urlencoded',
       params: [
         {
-          name: c.P_GRANT_TYPE,
-          value: c.GRANT_TYPE_PASSWORD,
+          name: 'grant_type',
+          value: 'password',
         },
         {
-          name: c.P_USERNAME,
+          name: 'username',
           value: username,
         },
         {
-          name: c.P_PASSWORD,
+          name: 'password',
           value: password,
         },
         ...(scope ? [{
-          name: c.P_SCOPE,
+          name: 'scope',
           value: scope,
         }] : []),
         ...(audience ? [{
-          name: c.P_AUDIENCE,
+          name: 'audience',
           value: audience,
         }] : []),
         ...(credentialsInBody ? [{
-          name: c.P_CLIENT_ID,
+          name: 'client_id',
           value: clientId,
         }, {
-          name: c.P_CLIENT_SECRET,
+          name: 'client_secret',
           value: clientSecret,
         }] : [getBasicAuthHeader(clientId, clientSecret)]),
       ],

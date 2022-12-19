@@ -1,10 +1,9 @@
-import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
+import { AuthType, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import * as models from '../../models/index';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
-import * as c from './constants';
-import { responseToObject } from './misc';
+import { AuthParam, responseToObject } from './misc';
 
 export const refreshAccessToken = async (
   requestId: string,
@@ -16,24 +15,24 @@ export const refreshAccessToken = async (
   scope: string,
   origin: string,
 ) => {
-  const params = [
+  const params: AuthParam[] = [
     {
-      name: c.P_GRANT_TYPE,
-      value: c.GRANT_TYPE_REFRESH,
+      name: 'grant_type',
+      value: 'refresh_token',
     },
     {
-      name: c.P_REFRESH_TOKEN,
+      name: 'refresh_token',
       value: refreshToken,
     },
     ...(scope ? [{
-      name: c.P_SCOPE,
+      name: 'scope',
       value: scope,
     }] : []),
     ...(credentialsInBody ? [{
-      name: c.P_CLIENT_ID,
+      name: 'client_id',
       value: clientId,
     }, {
-      name: c.P_CLIENT_SECRET,
+      name: 'client_secret',
       value: clientSecret,
     }] : [getBasicAuthHeader(clientId, clientSecret)]),
 
@@ -76,7 +75,7 @@ export const refreshAccessToken = async (
       // If the refresh token was rejected due an oauth2 invalid_grant error, we will
       // return a null access_token to trigger an authentication request to fetch
       // brand new refresh and access tokens.
-      if (response[c.P_ERROR] === 'invalid_grant') {
+      if (response.error === 'invalid_grant') {
         return { access_token: null };
       }
     }
@@ -101,8 +100,8 @@ export const refreshAccessToken = async (
       'error_description',
     ],
   );
-  if (obj[c.P_REFRESH_TOKEN] !== undefined) {
-    obj[c.P_REFRESH_TOKEN] = refreshToken;
+  if (obj.refresh_token !== undefined) {
+    obj.refresh_token = refreshToken;
   }
   return obj;
 };

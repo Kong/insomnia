@@ -8,7 +8,7 @@ import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/u
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
 import * as c from './constants';
-import { getOAuthSession, responseToObject } from './misc';
+import { AuthParam, getOAuthSession, responseToObject } from './misc';
 export const grantAuthCode = async (
   requestId: string,
   authorizeUrl: string,
@@ -48,10 +48,10 @@ export const grantAuthCode = async (
   );
 
   // Handle the error
-  if (authorizeResults[c.P_ERROR]) {
-    const code = authorizeResults[c.P_ERROR];
-    const msg = authorizeResults[c.P_ERROR_DESCRIPTION];
-    const uri = authorizeResults[c.P_ERROR_URI];
+  if (authorizeResults.error) {
+    const code = authorizeResults.error;
+    const msg = authorizeResults.error_description;
+    const uri = authorizeResults.error_uri;
     throw new Error(`OAuth 2.0 Error ${code}\n\n${msg}\n\n${uri}`);
   }
 
@@ -82,37 +82,38 @@ async function _authorize(
   codeChallenge = '',
   pkceMethod = '',
 ) {
-  const params = [
+
+  const params: AuthParam[] = [
     {
-      name: c.P_RESPONSE_TYPE,
+      name: 'response_type',
       value: c.RESPONSE_TYPE_CODE,
     },
     {
-      name: c.P_CLIENT_ID,
+      name: 'client_id',
       value: clientId,
     },
     ...(scope ? [{
-      name: c.P_SCOPE,
+      name: 'scope',
       value: scope,
     }] : []),
     ...(state ? [{
-      name: c.P_STATE,
+      name: 'state',
       value: state,
     }] : []),
     ...(audience ? [{
-      name: c.P_AUDIENCE,
+      name: 'audience',
       value: audience,
     }] : []),
     ...(resource ? [{
-      name: c.P_RESOURCE,
+      name: 'resource',
       value: resource,
     }] : []),
     ...(codeChallenge ? [{
-      name: c.P_CODE_CHALLENGE,
+      name: 'code_challenge',
       value: codeChallenge,
     },
     {
-      name: c.P_CODE_CHALLENGE_METHOD,
+      name: 'code_challenge_method',
       value: pkceMethod,
     }] : []),
   ];
@@ -167,38 +168,38 @@ const _getToken = async (
       mimeType: CONTENT_TYPE_FORM_URLENCODED,
       params: [
         {
-          name: c.P_GRANT_TYPE,
+          name: 'grant_type',
           value: c.GRANT_TYPE_AUTHORIZATION_CODE,
         },
         {
-          name: c.P_CODE,
+          name: 'code',
           value: code,
         },
         ...(redirectUri ? [{
-          name: c.P_REDIRECT_URI,
+          name: 'redirect_uri',
           value: redirectUri,
         }] : []),
         ...(state ? [{
-          name: c.P_STATE,
+          name: 'state',
           value: state,
         }] : []),
         ...(audience ? [{
-          name: c.P_AUDIENCE,
+          name: 'audience',
           value: audience,
         }] : []),
         ...(resource ? [{
-          name: c.P_RESOURCE,
+          name: 'resource',
           value: resource,
         }] : []),
         ...(codeVerifier ? [{
-          name: c.P_CODE_VERIFIER,
+          name: 'code_verifier',
           value: codeVerifier,
         }] : []),
         ...(credentialsInBody ? [{
-          name: c.P_CLIENT_ID,
+          name: 'client_id',
           value: clientId,
         }, {
-          name: c.P_CLIENT_SECRET,
+          name: 'client_secret',
           value: clientSecret,
         }] : [getBasicAuthHeader(clientId, clientSecret)]),
       ],
