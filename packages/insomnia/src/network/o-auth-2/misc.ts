@@ -21,42 +21,25 @@ export function initNewOAuthSession() {
   window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
   return authWindowSessionId;
 }
-
-export function responseToObject(body: string | null, keys: string[]) {
-  let data: querystring.ParsedUrlQuery | null = null;
-
+const tryToParse = (body: string): Record<string, any> | null => {
   try {
-    // TODO: remove non-null assertion
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    data = JSON.parse(body!);
+    return JSON.parse(body);
   } catch (err) { }
 
-  if (!data) {
-    try {
-      // NOTE: parse does not return a JS Object, so
-      //   we cannot use hasOwnProperty on it
-      // TODO: remove non-null assertion
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      data = querystring.parse(body!);
-    } catch (err) { }
+  try {
+    // NOTE: parse does not return a JS Object, so
+    //   we cannot use hasOwnProperty on it
+    return querystring.parse(body);
+  } catch (err) { }
+  return null;
+};
+export function responseToObject(body: string | null, keys: string[]) {
+  if (body) {
+    const data = tryToParse(body);
+    return Object.fromEntries(keys.map(key => [key, data?.[key] !== undefined ? data[key] : null]));
   }
-
   // Shouldn't happen but we'll check anyway
-  if (!data) {
-    data = {};
-  }
-
-  const results: Record<string, string | string[] | null | undefined> = {};
-
-  for (const key of keys) {
-    if (data[key] !== undefined) {
-      results[key] = data[key];
-    } else {
-      results[key] = null;
-    }
-  }
-
-  return results;
+  return Object.fromEntries(keys.map(key => [key, null]));
 }
 
 export function authorizeUserInWindow({
