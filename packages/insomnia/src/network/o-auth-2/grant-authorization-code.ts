@@ -61,8 +61,7 @@ export const grantAuthCode = async (
     credentialsInBody,
     clientId,
     clientSecret,
-    // @ts-expect-error -- unsound typing
-    authorizeResults[c.P_CODE],
+    authorizeResults.code,
     redirectUri,
     state,
     audience,
@@ -129,11 +128,11 @@ async function _authorize(
   console.log('[oauth2] Detected redirect ' + redirectedTo);
   const { query } = urlParse(redirectedTo);
   return responseToObject(query, [
-    c.P_CODE,
-    c.P_STATE,
-    c.P_ERROR,
-    c.P_ERROR_DESCRIPTION,
-    c.P_ERROR_URI,
+    'code',
+    'state',
+    'error',
+    'error_description',
+    'error_uri',
   ]);
 }
 const _getToken = async (
@@ -227,17 +226,17 @@ const _getToken = async (
   }
 
   const results = responseToObject(bodyBuffer.toString('utf8'), [
-    c.P_ACCESS_TOKEN,
-    c.P_ID_TOKEN,
-    c.P_REFRESH_TOKEN,
-    c.P_EXPIRES_IN,
-    c.P_TOKEN_TYPE,
-    c.P_SCOPE,
-    c.P_AUDIENCE,
-    c.P_RESOURCE,
-    c.P_ERROR,
-    c.P_ERROR_URI,
-    c.P_ERROR_DESCRIPTION,
+    'access_token',
+    'id_token',
+    'refresh_token',
+    'expires_in',
+    'token_type',
+    'scope',
+    'audience',
+    'resource',
+    'error',
+    'error_uri',
+    'error_description',
   ]);
   results[c.X_RESPONSE_ID] = response._id;
   return results;

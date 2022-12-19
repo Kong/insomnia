@@ -81,17 +81,17 @@ export const grantClientCreds = async (
   }
 
   const results = responseToObject(bodyBuffer.toString('utf8'), [
-    c.P_ACCESS_TOKEN,
-    c.P_ID_TOKEN,
-    c.P_REFRESH_TOKEN,
-    c.P_TOKEN_TYPE,
-    c.P_EXPIRES_IN,
-    c.P_SCOPE,
-    c.P_AUDIENCE,
-    c.P_RESOURCE,
-    c.P_ERROR,
-    c.P_ERROR_URI,
-    c.P_ERROR_DESCRIPTION,
+    'access_token',
+    'id_token',
+    'refresh_token',
+    'token_type',
+    'expires_in',
+    'scope',
+    'audience',
+    'resource',
+    'error',
+    'error_uri',
+    'error_description',
   ]);
   results[c.X_RESPONSE_ID] = response._id;
   return results;

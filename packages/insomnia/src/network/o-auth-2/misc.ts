@@ -33,7 +33,22 @@ const tryToParse = (body: string): Record<string, any> | null => {
   } catch (err) { }
   return null;
 };
-export function responseToObject(body: string | null, keys: string[]) {
+type AuthKeys = 'access_token'
+  | 'id_token'
+  | 'code'
+  | 'error'
+  | 'error_description'
+  | 'error_uri'
+  | 'state'
+  | 'scope'
+  | 'resource'
+  | 'expires_in'
+  | 'refresh_token'
+  | 'audience'
+  | 'token_type'
+  | 'client_id';
+
+export function responseToObject(body: string | null, keys: AuthKeys[]) {
   if (body) {
     const data = tryToParse(body);
     return Object.fromEntries(keys.map(key => [key, data?.[key] !== undefined ? data[key] : null]));

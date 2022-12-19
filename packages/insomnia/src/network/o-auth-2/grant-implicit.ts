@@ -58,17 +58,17 @@ export const grantImplicit = async (
 
   if (fragment) {
     const results = responseToObject(fragment, [
-      c.P_ACCESS_TOKEN,
-      c.P_ID_TOKEN,
-      c.P_TOKEN_TYPE,
-      c.P_EXPIRES_IN,
-      c.P_SCOPE,
-      c.P_STATE,
-      c.P_ERROR,
-      c.P_ERROR_DESCRIPTION,
-      c.P_ERROR_URI,
+      'access_token',
+      'id_token',
+      'token_type',
+      'expires_in',
+      'scope',
+      'state',
+      'error',
+      'error_description',
+      'error_uri',
     ]);
-    results[c.P_ACCESS_TOKEN] = results[c.P_ACCESS_TOKEN] || results[c.P_ID_TOKEN];
+    results.access_token = results.access_token || results.id_token;
     return results;
   } else {
     // Bad redirect

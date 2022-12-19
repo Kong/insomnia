@@ -37,25 +37,9 @@ describe('responseToObject()', () => {
 
   it('works with things not found', () => {
     const body = JSON.stringify({});
-    const keys = ['str'];
+    const keys = ['expires_in'];
     expect(responseToObject(body, keys)).toEqual({
-      str: null,
-    });
-  });
-
-  it('works with default values', () => {
-    const body = JSON.stringify({
-      str: 'hi',
-      num: 10,
-    });
-    const keys = ['str', 'missing'];
-    const defaults = {
-      missing: 'found it!',
-      str: 'should not see this',
-    };
-    expect(responseToObject(body, keys, defaults)).toEqual({
-      str: 'hi',
-      missing: 'found it!',
+      expires_in: null,
     });
   });
 });

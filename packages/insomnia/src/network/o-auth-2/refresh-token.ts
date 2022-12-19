@@ -68,16 +68,16 @@ export const refreshAccessToken = async (
     // If the refresh token was rejected due an unauthorized request, we will
     // return a null access_token to trigger an authentication request to fetch
     // brand new refresh and access tokens.
-    return responseToObject(null, [c.P_ACCESS_TOKEN]);
+    return { access_token: null };
   } else if (statusCode < 200 || statusCode >= 300) {
     if (bodyBuffer && statusCode === 400) {
-      const response = responseToObject(bodyBuffer.toString(), [c.P_ERROR, c.P_ERROR_DESCRIPTION]);
+      const response = responseToObject(bodyBuffer.toString(), ['error', 'error_description']);
 
       // If the refresh token was rejected due an oauth2 invalid_grant error, we will
       // return a null access_token to trigger an authentication request to fetch
       // brand new refresh and access tokens.
       if (response[c.P_ERROR] === 'invalid_grant') {
-        return responseToObject(null, [c.P_ACCESS_TOKEN]);
+        return { access_token: null };
       }
     }
 
@@ -90,15 +90,15 @@ export const refreshAccessToken = async (
   const obj = responseToObject(
     bodyBuffer.toString(),
     [
-      c.P_ACCESS_TOKEN,
-      c.P_ID_TOKEN,
-      c.P_REFRESH_TOKEN,
-      c.P_EXPIRES_IN,
-      c.P_TOKEN_TYPE,
-      c.P_SCOPE,
-      c.P_ERROR,
-      c.P_ERROR_URI,
-      c.P_ERROR_DESCRIPTION,
+      'access_token',
+      'id_token',
+      'refresh_token',
+      'expires_in',
+      'token_type',
+      'scope',
+      'error',
+      'error_uri',
+      'error_description',
     ],
   );
   if (obj[c.P_REFRESH_TOKEN] !== undefined) {
