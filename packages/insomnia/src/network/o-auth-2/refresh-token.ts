@@ -1,21 +1,25 @@
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import * as models from '../../models/index';
+import { RequestAuthentication } from '../../models/request';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
-import { insertAuthKeyIf, parseAndFilter } from './misc';
+import { insertAuthKeyIf, tryToParse } from './misc';
 
 export const refreshAccessToken = async (
   requestId: string,
-  accessTokenUrl: string,
-  credentialsInBody: boolean,
-  clientId: string,
-  clientSecret: string,
   refreshToken: string,
-  scope: string,
-  origin: string,
+  authentication: Partial<RequestAuthentication>,
 ) => {
+  const {
+    accessTokenUrl,
+    credentialsInBody,
+    clientId,
+    clientSecret,
+    scope,
+    origin,
+  } = authentication;
   const response = await sendWithSettings(requestId, {
     headers: [
       {
@@ -63,12 +67,12 @@ export const refreshAccessToken = async (
   }
   if (statusCode < 200 || statusCode >= 300) {
     if (bodyBuffer && statusCode === 400) {
-      const response = parseAndFilter(bodyBuffer.toString(), ['error', 'error_description']);
-
+      const body = tryToParse(bodyBuffer.toString());
       // If the refresh token was rejected due an oauth2 invalid_grant error, we will
       // return a null access_token to trigger an authentication request to fetch
       // brand new refresh and access tokens.
-      if (response.error === 'invalid_grant') {
+      if (body?.error === 'invalid_grant') {
+        console.log(`[oauth2] Refresh token rejected due to invalid_grant error: ${body.error_description}`);
         return { access_token: null };
       }
     }
@@ -77,8 +81,8 @@ export const refreshAccessToken = async (
   }
 
   invariant(bodyBuffer, `[oauth2] No body returned from ${accessTokenUrl}`);
-  const obj = parseAndFilter(
-    bodyBuffer.toString(),
+  const data = tryToParse(bodyBuffer.toString());
+  const keys =
     [
       'access_token',
       'id_token',
@@ -89,10 +93,12 @@ export const refreshAccessToken = async (
       'error',
       'error_uri',
       'error_description',
-    ],
-  );
-  if (obj.refresh_token !== undefined) {
-    obj.refresh_token = refreshToken;
+    ];
+
+  const results = Object.fromEntries(keys.map(key => [key, data?.[key] !== undefined ? data[key] : null]));
+
+  if (results.refresh_token !== undefined) {
+    results.refresh_token = refreshToken;
   }
-  return obj;
+  return results;
 };

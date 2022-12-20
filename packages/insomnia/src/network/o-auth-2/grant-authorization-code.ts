@@ -11,7 +11,7 @@ import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/u
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
 import * as c from './constants';
-import { getOAuthSession, insertAuthKeyIf, parseAndFilter, tryToParse } from './misc';
+import { getOAuthSession, insertAuthKeyIf, tryToParse } from './misc';
 export const grantAuthCodeUrl = (codeVerifier: string, {
   pkceMethod,
   clientId,
@@ -64,21 +64,23 @@ export const grantAuthCode = async (
     urlFailureRegex,
     sessionId,
   });
+
   console.log('[oauth2] Detected redirect ' + redirectedTo);
-  const { query } = urlParse(redirectedTo);
-  const authorizeResults = parseAndFilter(query, [
+  const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
+  const keys = [
     'code',
     'state',
     'error',
     'error_description',
     'error_uri',
-  ]);
+  ];
+  // const authorizeResults = Object.fromEntries(keys.map(key => [key, data?.[key] !== undefined ? data[key] : null]));
 
   // Handle the error
-  if (authorizeResults.error) {
-    const code = authorizeResults.error;
-    const msg = authorizeResults.error_description;
-    const uri = authorizeResults.error_uri;
+  if (redirectParams.error) {
+    const code = redirectParams.error;
+    const msg = redirectParams.error_description;
+    const uri = redirectParams.error_uri;
     throw new Error(`OAuth 2.0 Error ${code}\n\n${msg}\n\n${uri}`);
   }
   const { accessTokenUrl,
@@ -112,7 +114,7 @@ export const grantAuthCode = async (
         },
         {
           name: 'code',
-          value: authorizeResults.code,
+          value: redirectParams.code,
         },
         ...insertAuthKeyIf(redirectUri, 'redirect_uri'),
         ...insertAuthKeyIf(state, 'state'),

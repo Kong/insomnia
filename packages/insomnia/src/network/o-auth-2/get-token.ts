@@ -105,13 +105,8 @@ async function _getExisingAccessTokenAndRefreshIfExpired(
 
   const newToken = await refreshAccessToken(
     requestId,
-    authentication.accessTokenUrl,
-    authentication.credentialsInBody,
-    authentication.clientId,
-    authentication.clientSecret,
     token.refreshToken,
-    authentication.scope,
-    authentication.origin,
+    authentication
   );
 
   // If we didn't receive an access token it means the refresh token didn't succeed,

@@ -1,7 +1,7 @@
 import { RequestAuthentication } from '../../models/request';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import * as c from './constants';
-import { getOAuthSession, insertAuthKeyIf, parseAndFilter } from './misc';
+import { getOAuthSession, insertAuthKeyIf, parseAndFilter, tryToParse } from './misc';
 export const grantImplicitUrl = ({
   authorizationUrl,
   responseType,
@@ -41,11 +41,12 @@ export const grantImplicit = async (
     urlFailureRegex: /(error=)/,
     sessionId: getOAuthSession(),
   });
-  const fragment = redirectedTo.split('#')[1];
-  if (!fragment) {
+  const hash = new URL(redirectedTo).hash.slice(1);
+  if (!hash) {
     return {};
   }
-  const results = parseAndFilter(fragment, [
+  const data = Object.fromEntries(new URLSearchParams(hash));
+  const keys = [
     'access_token',
     'id_token',
     'token_type',
@@ -55,7 +56,8 @@ export const grantImplicit = async (
     'error',
     'error_description',
     'error_uri',
-  ]);
+  ];
+  const results = Object.fromEntries(keys.map(key => [key, data?.[key] !== undefined ? data[key] : null]));
   results.access_token = results.access_token || results.id_token;
   return results;
 
