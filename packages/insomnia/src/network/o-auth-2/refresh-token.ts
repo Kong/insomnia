@@ -1,5 +1,6 @@
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import * as models from '../../models/index';
+import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
@@ -15,46 +16,40 @@ export const refreshAccessToken = async (
   scope: string,
   origin: string,
 ) => {
-  const params = [
-    {
-      name: 'grant_type',
-      value: 'refresh_token',
-    },
-    {
-      name: 'refresh_token',
-      value: refreshToken,
-    },
-    ...insertAuthKeyIf(scope, 'scope'),
-    ...(credentialsInBody ? [{
-      name: 'client_id',
-      value: clientId,
-    }, {
-      name: 'client_secret',
-      value: clientSecret,
-    }] : [getBasicAuthHeader(clientId, clientSecret)]),
-
-  ];
-
-  const headers = [
-    {
-      name: 'Content-Type',
-      value: 'application/x-www-form-urlencoded',
-    },
-    {
-      name: 'Accept',
-      value: 'application/x-www-form-urlencoded, application/json',
-    },
-    ...(origin ? [{ name: 'Origin', value: origin }] : []),
-  ];
-
-  const url = setDefaultProtocol(accessTokenUrl);
   const response = await sendWithSettings(requestId, {
-    headers,
-    url,
+    headers: [
+      {
+        name: 'Content-Type',
+        value: 'application/x-www-form-urlencoded',
+      },
+      {
+        name: 'Accept',
+        value: 'application/x-www-form-urlencoded, application/json',
+      },
+      ...(origin ? [{ name: 'Origin', value: origin }] : []),
+    ],
+    url: setDefaultProtocol(accessTokenUrl),
     method: 'POST',
     body: {
       mimeType: CONTENT_TYPE_FORM_URLENCODED,
-      params,
+      params: [
+        {
+          name: 'grant_type',
+          value: 'refresh_token',
+        },
+        {
+          name: 'refresh_token',
+          value: refreshToken,
+        },
+        ...insertAuthKeyIf(scope, 'scope'),
+        ...(credentialsInBody ? [{
+          name: 'client_id',
+          value: clientId,
+        }, {
+          name: 'client_secret',
+          value: clientSecret,
+        }] : [getBasicAuthHeader(clientId, clientSecret)]),
+      ],
     },
   });
   const statusCode = response.statusCode || 0;
@@ -65,7 +60,8 @@ export const refreshAccessToken = async (
     // return a null access_token to trigger an authentication request to fetch
     // brand new refresh and access tokens.
     return { access_token: null };
-  } else if (statusCode < 200 || statusCode >= 300) {
+  }
+  if (statusCode < 200 || statusCode >= 300) {
     if (bodyBuffer && statusCode === 400) {
       const response = parseAndFilter(bodyBuffer.toString(), ['error', 'error_description']);
 
@@ -77,12 +73,10 @@ export const refreshAccessToken = async (
       }
     }
 
-    throw new Error(`[oauth2] Failed to refresh token url=${url} status=${statusCode}`);
+    throw new Error(`[oauth2] Failed to refresh token url=${accessTokenUrl} status=${statusCode}`);
   }
 
-  if (!bodyBuffer) {
-    throw new Error(`[oauth2] No body returned from ${url}`);
-  }
+  invariant(bodyBuffer, `[oauth2] No body returned from ${accessTokenUrl}`);
   const obj = parseAndFilter(
     bodyBuffer.toString(),
     [

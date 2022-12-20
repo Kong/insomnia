@@ -1,4 +1,5 @@
 import * as models from '../../models/index';
+import { RequestAuthentication } from '../../models/request';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import * as network from '../network';
@@ -7,18 +8,20 @@ import { insertAuthKeyIf, parseAndFilter } from './misc';
 
 export const grantPassword = async (
   requestId: string,
-  accessTokenUrl: string,
-  credentialsInBody: boolean,
-  clientId: string,
-  clientSecret: string,
-  username: string,
-  password: string,
-  scope = '',
-  audience = '',
+  authentication: Partial<RequestAuthentication>,
 ) => {
-  const url = setDefaultProtocol(accessTokenUrl);
+  const {
+    accessTokenUrl,
+    credentialsInBody,
+    clientId,
+    clientSecret,
+    username,
+    password,
+    scope,
+    audience,
+  } = authentication;
   const responsePatch = await network.sendWithSettings(requestId, {
-    url,
+    url: setDefaultProtocol(accessTokenUrl),
     headers: [
       {
         name: 'Content-Type',
@@ -58,22 +61,18 @@ export const grantPassword = async (
     },
   });
   const response = await models.response.create(responsePatch);
-  // @ts-expect-error -- TSCONVERSION
   const bodyBuffer = models.response.getBodyBuffer(response);
 
   if (!bodyBuffer) {
     return {
-      [c.X_ERROR]: `No body returned from ${url}`,
+      [c.X_ERROR]: `No body returned from ${setDefaultProtocol(accessTokenUrl)}`,
       [c.X_RESPONSE_ID]: response._id,
     };
   }
 
-  // @ts-expect-error -- TSCONVERSION
-  const statusCode = response.statusCode || 0;
-
-  if (statusCode < 200 || statusCode >= 300) {
+  if (response.statusCode < 200 || response.statusCode >= 300) {
     return {
-      [c.X_ERROR]: `Failed to fetch token url=${url} status=${statusCode}`,
+      [c.X_ERROR]: `Failed to fetch token url=${setDefaultProtocol(accessTokenUrl)} status=${response.statusCode}`,
       [c.X_RESPONSE_ID]: response._id,
     };
   }

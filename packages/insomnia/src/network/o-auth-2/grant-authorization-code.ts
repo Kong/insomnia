@@ -129,7 +129,6 @@ export const grantAuthCode = async (
     },
   });
   const response = await models.response.create(responsePatch);
-  // @ts-expect-error -- TSCONVERSION
   const bodyBuffer = models.response.getBodyBuffer(response);
 
   if (!bodyBuffer) {
@@ -139,12 +138,9 @@ export const grantAuthCode = async (
     };
   }
 
-  // @ts-expect-error -- TSCONVERSION
-  const statusCode = response.statusCode || 0;
-
-  if (statusCode < 200 || statusCode >= 300) {
+  if (response.statusCode < 200 || response.statusCode >= 300) {
     return {
-      [c.X_ERROR]: `Failed to fetch token url=${accessTokenUrl} status=${statusCode}`,
+      [c.X_ERROR]: `Failed to fetch token url=${accessTokenUrl} status=${response.statusCode}`,
       [c.X_RESPONSE_ID]: response._id,
     };
   }

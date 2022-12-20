@@ -1,5 +1,6 @@
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import * as models from '../../models/index';
+import { RequestAuthentication } from '../../models/request';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
@@ -8,15 +9,17 @@ import { insertAuthKeyIf, parseAndFilter } from './misc';
 
 export const grantClientCreds = async (
   requestId: string,
-  accessTokenUrl: string,
-  credentialsInBody: boolean,
-  clientId: string,
-  clientSecret: string,
-  scope = '',
-  audience = '',
-  resource = '',
+  authentication: Partial<RequestAuthentication>,
 ) => {
-  const url = setDefaultProtocol(accessTokenUrl);
+  const {
+    accessTokenUrl,
+    credentialsInBody,
+    clientId,
+    clientSecret,
+    scope,
+    audience,
+    resource,
+  } = authentication;
   const responsePatch = await sendWithSettings(requestId, {
     headers: [
       {
@@ -28,7 +31,7 @@ export const grantClientCreds = async (
         value: 'application/x-www-form-urlencoded, application/json',
       },
     ],
-    url,
+    url: setDefaultProtocol(accessTokenUrl),
     method: 'POST',
     body: {
       mimeType: CONTENT_TYPE_FORM_URLENCODED,
@@ -51,22 +54,18 @@ export const grantClientCreds = async (
     },
   });
   const response = await models.response.create(responsePatch);
-  // @ts-expect-error -- TSCONVERSION
   const bodyBuffer = models.response.getBodyBuffer(response);
 
   if (!bodyBuffer) {
     return {
-      [c.X_ERROR]: `No body returned from ${url}`,
+      [c.X_ERROR]: `No body returned from ${accessTokenUrl}`,
       [c.X_RESPONSE_ID]: response._id,
     };
   }
 
-  // @ts-expect-error -- TSCONVERSION
-  const statusCode = response.statusCode || 0;
-
-  if (statusCode < 200 || statusCode >= 300) {
+  if (response.statusCode < 200 || response.statusCode >= 300) {
     return {
-      [c.X_ERROR]: `Failed to fetch token url=${url} status=${statusCode}`,
+      [c.X_ERROR]: `Failed to fetch token url=${accessTokenUrl} status=${response.statusCode}`,
       [c.X_RESPONSE_ID]: response._id,
     };
   }

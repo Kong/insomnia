@@ -36,13 +36,7 @@ export const getOAuth2Token = async (
   } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
     newToken = await grantClientCreds(
       requestId,
-      authentication.accessTokenUrl,
-      authentication.credentialsInBody,
-      authentication.clientId,
-      authentication.clientSecret,
-      authentication.scope,
-      authentication.audience,
-      authentication.resource,
+      authentication
     );
   } else if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
     const url = grantImplicitUrl(authentication);
@@ -53,14 +47,7 @@ export const getOAuth2Token = async (
   } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
     newToken = await grantPassword(
       requestId,
-      authentication.accessTokenUrl,
-      authentication.credentialsInBody,
-      authentication.clientId,
-      authentication.clientSecret,
-      authentication.username,
-      authentication.password,
-      authentication.scope,
-      authentication.audience,
+      authentication
     );
   }
   if (newToken) {
