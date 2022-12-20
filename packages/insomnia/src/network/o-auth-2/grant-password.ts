@@ -3,8 +3,8 @@ import { RequestAuthentication } from '../../models/request';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import * as network from '../network';
-import * as c from './constants';
-import { insertAuthKeyIf, parseAndFilter } from './misc';
+import { oauthResponseToAccessToken } from './grant-authorization-code';
+import { insertAuthKeyIf } from './misc';
 
 export const grantPassword = async (
   requestId: string,
@@ -61,34 +61,6 @@ export const grantPassword = async (
     },
   });
   const response = await models.response.create(responsePatch);
-  const bodyBuffer = models.response.getBodyBuffer(response);
 
-  if (!bodyBuffer) {
-    return {
-      [c.X_ERROR]: `No body returned from ${setDefaultProtocol(accessTokenUrl)}`,
-      [c.X_RESPONSE_ID]: response._id,
-    };
-  }
-
-  if (response.statusCode < 200 || response.statusCode >= 300) {
-    return {
-      [c.X_ERROR]: `Failed to fetch token url=${setDefaultProtocol(accessTokenUrl)} status=${response.statusCode}`,
-      [c.X_RESPONSE_ID]: response._id,
-    };
-  }
-
-  const results = parseAndFilter(bodyBuffer.toString(), [
-    'access_token',
-    'id_token',
-    'token_type',
-    'expires_in',
-    'refresh_token',
-    'scope',
-    'audience',
-    'error',
-    'error_uri',
-    'error_description',
-  ]);
-  results[c.X_RESPONSE_ID] = response._id;
-  return results;
+  return oauthResponseToAccessToken(accessTokenUrl, response);
 };

@@ -5,7 +5,7 @@ import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
 import * as c from './constants';
-import { insertAuthKeyIf, parseAndFilter } from './misc';
+import { insertAuthKeyIf, tryToParse } from './misc';
 
 export const grantClientCreds = async (
   requestId: string,
@@ -70,7 +70,9 @@ export const grantClientCreds = async (
     };
   }
 
-  const results = parseAndFilter(bodyBuffer.toString('utf8'), [
+  const body = bodyBuffer.toString('utf8');
+  const data = tryToParse(body);
+  const keys = [
     'access_token',
     'id_token',
     'refresh_token',
@@ -82,7 +84,8 @@ export const grantClientCreds = async (
     'error',
     'error_uri',
     'error_description',
-  ]);
-  results[c.X_RESPONSE_ID] = response._id;
-  return results;
+  ];
+  const token = Object.fromEntries(keys.map(key => [key, data?.[key] !== undefined ? data[key] : null]));
+  token[c.X_RESPONSE_ID] = response._id;
+  return token;
 };

@@ -5,12 +5,13 @@ import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models/index';
 import { RequestAuthentication } from '../../models/request';
+import { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
 import * as c from './constants';
-import { getOAuthSession, insertAuthKeyIf, parseAndFilter } from './misc';
+import { getOAuthSession, insertAuthKeyIf, parseAndFilter, tryToParse } from './misc';
 export const grantAuthCodeUrl = (codeVerifier: string, {
   pkceMethod,
   clientId,
@@ -129,6 +130,10 @@ export const grantAuthCode = async (
     },
   });
   const response = await models.response.create(responsePatch);
+  return oauthResponseToAccessToken(accessTokenUrl, response);
+};
+
+export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Response) => {
   const bodyBuffer = models.response.getBodyBuffer(response);
 
   if (!bodyBuffer) {
@@ -145,21 +150,24 @@ export const grantAuthCode = async (
     };
   }
 
-  const results = parseAndFilter(bodyBuffer.toString('utf8'), [
+  const body = bodyBuffer.toString('utf8');
+  const data = tryToParse(body);
+  const keys = [
     'access_token',
     'id_token',
     'refresh_token',
-    'expires_in',
     'token_type',
+    'expires_in',
     'scope',
     'audience',
     'resource',
     'error',
     'error_uri',
     'error_description',
-  ]);
-  results[c.X_RESPONSE_ID] = response._id;
-  return results;
+  ];
+  const token = Object.fromEntries(keys.map(key => [key, data?.[key] !== undefined ? data[key] : null]));
+  token[c.X_RESPONSE_ID] = response._id;
+  return token;
 };
 
 const encodePKCE = (buffer: Buffer) => {

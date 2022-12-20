@@ -58,4 +58,5 @@ export const grantImplicit = async (
   ]);
   results.access_token = results.access_token || results.id_token;
   return results;
+
 };
