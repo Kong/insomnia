@@ -1,9 +1,9 @@
-import { AuthType, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
+import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import * as models from '../../models/index';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
-import { AuthParam, responseToObject } from './misc';
+import { insertAuthKeyIf, parseAndFilter } from './misc';
 
 export const refreshAccessToken = async (
   requestId: string,
@@ -15,7 +15,7 @@ export const refreshAccessToken = async (
   scope: string,
   origin: string,
 ) => {
-  const params: AuthParam[] = [
+  const params = [
     {
       name: 'grant_type',
       value: 'refresh_token',
@@ -24,10 +24,7 @@ export const refreshAccessToken = async (
       name: 'refresh_token',
       value: refreshToken,
     },
-    ...(scope ? [{
-      name: 'scope',
-      value: scope,
-    }] : []),
+    ...insertAuthKeyIf(scope, 'scope'),
     ...(credentialsInBody ? [{
       name: 'client_id',
       value: clientId,
@@ -70,7 +67,7 @@ export const refreshAccessToken = async (
     return { access_token: null };
   } else if (statusCode < 200 || statusCode >= 300) {
     if (bodyBuffer && statusCode === 400) {
-      const response = responseToObject(bodyBuffer.toString(), ['error', 'error_description']);
+      const response = parseAndFilter(bodyBuffer.toString(), ['error', 'error_description']);
 
       // If the refresh token was rejected due an oauth2 invalid_grant error, we will
       // return a null access_token to trigger an authentication request to fetch
@@ -86,7 +83,7 @@ export const refreshAccessToken = async (
   if (!bodyBuffer) {
     throw new Error(`[oauth2] No body returned from ${url}`);
   }
-  const obj = responseToObject(
+  const obj = parseAndFilter(
     bodyBuffer.toString(),
     [
       'access_token',

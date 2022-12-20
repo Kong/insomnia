@@ -3,7 +3,7 @@ import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import * as network from '../network';
 import * as c from './constants';
-import { responseToObject } from './misc';
+import { insertAuthKeyIf, parseAndFilter } from './misc';
 
 export const grantPassword = async (
   requestId: string,
@@ -16,7 +16,6 @@ export const grantPassword = async (
   scope = '',
   audience = '',
 ) => {
-
   const url = setDefaultProtocol(accessTokenUrl);
   const responsePatch = await network.sendWithSettings(requestId, {
     url,
@@ -46,14 +45,8 @@ export const grantPassword = async (
           name: 'password',
           value: password,
         },
-        ...(scope ? [{
-          name: 'scope',
-          value: scope,
-        }] : []),
-        ...(audience ? [{
-          name: 'audience',
-          value: audience,
-        }] : []),
+        ...insertAuthKeyIf(scope, 'scope'),
+        ...insertAuthKeyIf(audience, 'audience'),
         ...(credentialsInBody ? [{
           name: 'client_id',
           value: clientId,
@@ -85,7 +78,7 @@ export const grantPassword = async (
     };
   }
 
-  const results = responseToObject(bodyBuffer.toString(), [
+  const results = parseAndFilter(bodyBuffer.toString(), [
     'access_token',
     'id_token',
     'token_type',

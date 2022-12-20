@@ -3,12 +3,12 @@ import { mocked } from 'jest-mock';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
-import { authorizeUserInWindow, ChromiumVerificationResult, responseToObject } from '../misc';
+import { authorizeUserInWindow, ChromiumVerificationResult, parseAndFilter } from '../misc';
 import { createBWRedirectMock } from './helpers';
 
 const MOCK_AUTHORIZATION_URL = 'https://foo.com';
 
-describe('responseToObject()', () => {
+describe('parseAndFilter()', () => {
   beforeEach(globalBeforeEach);
 
   it('works in the general case', () => {
@@ -17,7 +17,7 @@ describe('responseToObject()', () => {
       num: 10,
     });
     const keys = ['str', 'num'];
-    expect(responseToObject(body, keys)).toEqual({
+    expect(parseAndFilter(body, keys)).toEqual({
       str: 'hi',
       num: 10,
     });
@@ -30,7 +30,7 @@ describe('responseToObject()', () => {
       other: 'thing',
     });
     const keys = ['str'];
-    expect(responseToObject(body, keys)).toEqual({
+    expect(parseAndFilter(body, keys)).toEqual({
       str: 'hi',
     });
   });
@@ -38,7 +38,7 @@ describe('responseToObject()', () => {
   it('works with things not found', () => {
     const body = JSON.stringify({});
     const keys = ['expires_in'];
-    expect(responseToObject(body, keys)).toEqual({
+    expect(parseAndFilter(body, keys)).toEqual({
       expires_in: null,
     });
   });

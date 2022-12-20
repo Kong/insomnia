@@ -4,7 +4,7 @@ import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
 import * as c from './constants';
-import { responseToObject } from './misc';
+import { insertAuthKeyIf, parseAndFilter } from './misc';
 
 export const grantClientCreds = async (
   requestId: string,
@@ -37,18 +37,9 @@ export const grantClientCreds = async (
           name: 'grant_type',
           value: c.GRANT_TYPE_CLIENT_CREDENTIALS,
         },
-        ...(scope ? [{
-          name: 'scope',
-          value: scope,
-        }] : []),
-        ...(audience ? [{
-          name: 'audience',
-          value: audience,
-        }] : []),
-        ...(resource ? [{
-          name: 'resource',
-          value: resource,
-        }] : []),
+        ...insertAuthKeyIf(scope, 'scope'),
+        ...insertAuthKeyIf(audience, 'audience'),
+        ...insertAuthKeyIf(resource, 'resource'),
         ...(credentialsInBody ? [{
           name: 'client_id',
           value: clientId,
@@ -80,7 +71,7 @@ export const grantClientCreds = async (
     };
   }
 
-  const results = responseToObject(bodyBuffer.toString('utf8'), [
+  const results = parseAndFilter(bodyBuffer.toString('utf8'), [
     'access_token',
     'id_token',
     'refresh_token',

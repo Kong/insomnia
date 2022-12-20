@@ -22,7 +22,7 @@ export function initNewOAuthSession() {
   window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
   return authWindowSessionId;
 }
-const tryToParse = (body: string): Record<string, any> | null => {
+export const tryToParse = (body: string): Record<string, any> | null => {
   try {
     return JSON.parse(body);
   } catch (err) { }
@@ -39,7 +39,9 @@ export interface AuthParam {
   name: AuthKeys; value: string;
 }
 export const insertIf = (condition: boolean | string, ...elements: AuthParam[]) => condition ? elements : [];
-export function responseToObject(body: string | null, keys: AuthKeys[]) {
+export const insertAuthKeyIf = (value: string, name: AuthKeys) => value ? [{ name, value }] : [];
+
+export function parseAndFilter(body: string | null, keys: AuthKeys[]) {
   if (body) {
     const data = tryToParse(body);
     return Object.fromEntries(keys.map(key => [key, data?.[key] !== undefined ? data[key] : null]));

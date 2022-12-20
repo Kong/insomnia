@@ -11,7 +11,7 @@ import {
 } from './constants';
 import { grantAuthCode } from './grant-authorization-code';
 import { grantClientCreds } from './grant-client-credentials';
-import { grantImplicit } from './grant-implicit';
+import { grantImplicit, grantImplicitUrl } from './grant-implicit';
 import { grantPassword } from './grant-password';
 import { refreshAccessToken } from './refresh-token';
 /** Get an OAuth2Token object and also handle storing/saving/refreshing */
@@ -31,19 +31,7 @@ export const getOAuth2Token = async (
   if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
     newToken = await grantAuthCode(
       requestId,
-      authentication.authorizationUrl,
-      authentication.accessTokenUrl,
-      authentication.credentialsInBody,
-      authentication.clientId,
-      authentication.clientSecret,
-      authentication.redirectUrl,
-      authentication.scope,
-      authentication.state,
-      authentication.audience,
-      authentication.resource,
-      authentication.usePkce,
-      authentication.pkceMethod,
-      authentication.origin,
+      authentication
     );
   } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
     newToken = await grantClientCreds(
@@ -57,15 +45,10 @@ export const getOAuth2Token = async (
       authentication.resource,
     );
   } else if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
+    const url = grantImplicitUrl(authentication);
     newToken = await grantImplicit(
       requestId,
-      authentication.authorizationUrl,
-      authentication.clientId,
-      authentication.responseType,
-      authentication.redirectUrl,
-      authentication.scope,
-      authentication.state,
-      authentication.audience,
+      url
     );
   } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
     newToken = await grantPassword(
