@@ -8,12 +8,11 @@ import { cookiesFromJar, jarFromCookies } from '../common/cookies';
 import { database as db } from '../common/database';
 import { getDataDirectory } from '../common/electron-helpers';
 import {
-  delay,
   getContentTypeHeader,
   getLocationHeader,
   getSetCookieHeaders,
 } from '../common/misc';
-import type { ExtraRenderInfo, RenderedRequest, RenderPurpose } from '../common/render';
+import type { ExtraRenderInfo, RenderedRequest, RenderPurpose, RequestAndContext } from '../common/render';
 import {
   getRenderedRequestAndContext,
   RENDER_PURPOSE_NO_RENDER,
@@ -40,11 +39,8 @@ import { getAuthHeader, getAuthQueryParams } from './authentication';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 // Time since user's last keypress to wait before making the request
-const MAX_DELAY_TIME = 1000;
 
 const cancelRequestFunctionMap: Record<string, () => void> = {};
-
-let lastUserInteraction = Date.now();
 
 export async function cancelRequestById(requestId: string) {
   const hasCancelFunction = cancelRequestFunctionMap.hasOwnProperty(requestId) && typeof cancelRequestFunctionMap[requestId] === 'function';
@@ -78,6 +74,7 @@ export async function _actuallySend(
 
         nodejsCancelCurlRequest(renderedRequest._id);
         return resolve({
+          parentId: renderedRequest._id,
           elapsedTime: 0,
           bytesRead: 0,
           url: renderedRequest.url,
@@ -169,6 +166,7 @@ export async function _actuallySend(
         delete cancelRequestFunctionMap[renderedRequest._id];
       }
       return resolve({
+        parentId: renderedRequest._id,
         timelinePath,
         bodyPath: responseBodyPath,
         ...responsePatch,
@@ -181,6 +179,7 @@ export async function _actuallySend(
         delete cancelRequestFunctionMap[renderedRequest._id];
       }
       return resolve({
+        parentId: renderedRequest._id,
         url: renderedRequest.url,
         error: err.message || 'Something went wrong',
         elapsedTime: 0, // 0 because this path is hit during plugin calls
@@ -259,7 +258,7 @@ const tryToInterpolateRequest = async (request: Request, environmentId: string, 
     throw new Error(`Failed to render request: ${request._id}`);
   }
 };
-const tryToTransformRequestWithPlugins = async renderResult => {
+const tryToTransformRequestWithPlugins = async (renderResult: RequestAndContext) => {
   const { request, context } = renderResult;
   try {
     return await _applyRequestPluginHooks(request, context);
@@ -284,6 +283,7 @@ export async function sendWithSettings(
   });
 
   const renderResult = await tryToInterpolateRequest(newRequest, environment._id);
+  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
   const response = await _actuallySend(
     renderResult.request,
@@ -291,19 +291,7 @@ export async function sendWithSettings(
     caCert,
     { ...settings, validateSSL: settings.validateAuthSSL },
   );
-  response.parentId = renderResult.request._id;
-  response.environmentId = environment?._id || null;
-  response.bodyCompression = null;
-  response.settingSendCookies = renderResult.request.settingSendCookies;
-  response.settingStoreCookies = renderResult.request.settingStoreCookies;
-  if (response.error) {
-    return response;
-  }
-  return _applyResponsePluginHooks(
-    response,
-    renderResult.request,
-    renderResult.context,
-  );
+  return responseTransform(response, renderedRequest, renderResult.context);
 }
 
 export async function send(
@@ -320,7 +308,7 @@ export async function send(
     clientCertificates,
     caCert } = await fetchRequestData(requestId);
 
-  const renderResult = await tryToInterpolateRequest(request, environment?._id, RENDER_PURPOSE_SEND, extraInfo);
+  const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND, extraInfo);
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
   const response = await _actuallySend(
     renderedRequest,
@@ -328,26 +316,29 @@ export async function send(
     caCert,
     settings,
   );
-  response.parentId = renderResult.request._id;
-  response.environmentId = environment?._id || null;
-  response.bodyCompression = null;
-  response.settingSendCookies = renderedRequest.settingSendCookies;
-  response.settingStoreCookies = renderedRequest.settingStoreCookies;
+  return responseTransform(response, renderedRequest, renderResult.context);
+}
 
-  console.log(
-    response.error
-      ? `[network] Response failed req=${requestId} err=${response.error || 'n/a'}`
-      : `[network] Response succeeded req=${requestId} status=${response.statusCode || '?'}`,
-  );
+const responseTransform = (patch: ResponsePatch, renderedRequest: RenderedRequest, context: Record<string, any>) => {
+  const response = {
+    ...patch,
+    environmentId: patch.environmentId,
+    bodyCompression: null,
+    settingSendCookies: renderedRequest.settingSendCookies,
+    settingStoreCookies: renderedRequest.settingStoreCookies,
+  };
+
   if (response.error) {
+    console.log(`[network] Response failed req=${patch.parentId} err=${response.error || 'n/a'}`);
     return response;
   }
+  console.log(`[network] Response succeeded req=${patch.parentId} status=${response.statusCode || '?'}`,);
   return _applyResponsePluginHooks(
     response,
     renderedRequest,
-    renderResult.context,
+    context,
   );
-}
+};
 
 async function _applyRequestPluginHooks(
   renderedRequest: RenderedRequest,
@@ -432,18 +423,5 @@ export function storeTimeline(timeline: ResponseTimelineEntry[]): Promise<string
       }
       resolve(timelinePath);
     });
-  });
-}
-
-if (global.document) {
-  document.addEventListener('keydown', (event: KeyboardEvent) => {
-    if (event.ctrlKey || event.metaKey || event.altKey) {
-      return;
-    }
-
-    lastUserInteraction = Date.now();
-  });
-  document.addEventListener('paste', () => {
-    lastUserInteraction = Date.now();
   });
 }
