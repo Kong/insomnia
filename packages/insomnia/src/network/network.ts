@@ -49,7 +49,19 @@ export async function cancelRequestById(requestId: string) {
   }
   console.log(`[network] Failed to cancel req=${requestId} because cancel function not found`);
 }
-
+export const transformUrl = (url: string, shouldEncode: boolean) => {
+  const isUnixSocket = url.match(/https?:\/\/unix:\//);
+  if (!isUnixSocket) {
+    return { finalUrl: smartEncodeUrl(url, shouldEncode) };
+  } else {
+    // URL prep will convert "unix:/path" hostname to "unix/path"
+    const match = smartEncodeUrl(url, shouldEncode).match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
+    const protocol = (match && match[1]) || '';
+    const socketPath = (match && match[2]) || '';
+    const socketUrl = (match && match[3]) || '';
+    return { finalUrl: `${protocol}//${socketUrl}`, socketPath };
+  }
+};
 export async function _actuallySend(
   renderedRequest: RenderedRequest,
   clientCertificates: ClientCertificate[],
@@ -91,18 +103,8 @@ export async function _actuallySend(
           : renderedRequest.parameters
       );
       const url = joinUrlAndQueryString(renderedRequest.url, qs);
-      const isUnixSocket = url.match(/https?:\/\/unix:\//);
-      let finalUrl, socketPath;
-      if (!isUnixSocket) {
-        finalUrl = smartEncodeUrl(url, renderedRequest.settingEncodeUrl);
-      } else {
-        // URL prep will convert "unix:/path" hostname to "unix/path"
-        const match = smartEncodeUrl(url, renderedRequest.settingEncodeUrl).match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
-        const protocol = (match && match[1]) || '';
-        socketPath = (match && match[2]) || '';
-        const socketUrl = (match && match[3]) || '';
-        finalUrl = `${protocol}//${socketUrl}`;
-      }
+      const { finalUrl, socketPath } = transformUrl(url, renderedRequest.settingEncodeUrl);
+
       timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
       timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
       timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() });
