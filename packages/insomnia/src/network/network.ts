@@ -28,9 +28,8 @@ import { ClientCertificate } from '../models/client-certificate';
 import { Cookie, CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import type { Request } from '../models/request';
-import type { Response } from '../models/response';
 import type { Settings } from '../models/settings';
-import { isWorkspace, Workspace } from '../models/workspace';
+import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
 import { invariant } from '../utils/invariant';
@@ -193,6 +192,28 @@ export async function _actuallySend(
     }
   });
 }
+const fetchRequestData = async (requestId: string) => {
+  const request = await models.request.getById(requestId);
+  invariant(request, 'failed to find request');
+  const ancestors = await db.withAncestors(request, [
+    models.request.type,
+    models.requestGroup.type,
+    models.workspace.type,
+  ]);
+  const workspaceDoc = ancestors.find(isWorkspace);
+  const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'failed to find workspace');
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  const environment: Environment | null = await models.environment.getById(workspaceMeta.activeEnvironmentId || 'n/a');
+
+  const settings = await models.settings.getOrCreate();
+  invariant(settings, 'failed to create settings');
+  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const caCert = await models.caCertificate.findByParentId(workspaceId);
+
+  return { request, environment, settings, clientCertificates, caCert };
+};
 
 export const getSetCookiesFromResponseHeaders = (headers: any[]) => getSetCookieHeaders(headers).map(h => h.value);
 
@@ -233,25 +254,12 @@ export async function sendWithSettings(
   requestPatch: Record<string, any>,
 ) {
   console.log(`[network] Sending with settings req=${requestId}`);
-  const request = await models.request.getById(requestId);
+  const { request,
+    environment,
+    settings,
+    clientCertificates,
+    caCert } = await fetchRequestData(requestId);
 
-  invariant(request, 'failed to find request');
-  const settings = await models.settings.getOrCreate();
-  const ancestors = await db.withAncestors(request, [
-    models.request.type,
-    models.requestGroup.type,
-    models.workspace.type,
-  ]);
-  const workspaceDoc = ancestors.find(isWorkspace);
-  const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
-  const workspace = await models.workspace.getById(workspaceId);
-
-  if (!workspace) {
-    throw new Error(`Failed to find workspace for: ${requestId}`);
-  }
-
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-  const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
   const newRequest: Request = await models.initModel(models.request.type, requestPatch, {
     _id: request._id + '.other',
     parentId: request._id,
@@ -266,11 +274,7 @@ export async function sendWithSettings(
     throw new Error(`Failed to render request: ${requestId}`);
   }
 
-  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
-  const responseEnvironmentId = environment ? environment._id : null;
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
-  const caCert = await models.caCertificate.findByParentId(workspaceId);
   const caCertficatePath = caCert?.disabled === false ? caCert.path : null;
   const response = await _actuallySend(
     renderResult.request,
@@ -279,7 +283,7 @@ export async function sendWithSettings(
     { ...settings, validateSSL: settings.validateAuthSSL },
   );
   response.parentId = renderResult.request._id;
-  response.environmentId = responseEnvironmentId;
+  response.environmentId = environment?._id || null;
   response.bodyCompression = null;
   response.settingSendCookies = renderResult.request.settingSendCookies;
   response.settingStoreCookies = renderResult.request.settingStoreCookies;
@@ -315,15 +319,11 @@ export async function send(
   }
 
   // Fetch some things
-
-  const request = await models.request.getById(requestId);
-  const settings = await models.settings.getOrCreate();
-  const ancestors = await db.withAncestors(request, [
-    models.request.type,
-    models.requestGroup.type,
-    models.workspace.type,
-  ]);
-  invariant(request, 'Failed to find request');
+  const { request,
+    environment,
+    settings,
+    clientCertificates,
+    caCert } = await fetchRequestData(requestId);
 
   const renderResult = await getRenderedRequestAndContext(
     {
@@ -336,12 +336,6 @@ export async function send(
 
   const renderedRequestBeforePlugins = renderResult.request;
   const renderedContextBeforePlugins = renderResult.context;
-  const workspaceDoc = ancestors.find(isWorkspace);
-  const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
-  invariant(workspace, 'Failed to find workspace');
-
-  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
-  const responseEnvironmentId = environment ? environment._id : null;
 
   let renderedRequest: RenderedRequest;
 
@@ -352,7 +346,7 @@ export async function send(
     );
   } catch (err) {
     return {
-      environmentId: responseEnvironmentId,
+      environmentId: environment?._id || null,
       error: err.message || 'Something went wrong',
       parentId: renderedRequestBeforePlugins._id,
       settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
@@ -362,9 +356,7 @@ export async function send(
       url: renderedRequestBeforePlugins.url,
     } as ResponsePatch;
   }
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
-  const caCert = await models.caCertificate.findByParentId(workspaceId);
   const caCertficatePath = caCert?.disabled === false ? caCert.path : null;
   const response = await _actuallySend(
     renderedRequest,
@@ -373,7 +365,7 @@ export async function send(
     settings,
   );
   response.parentId = renderResult.request._id;
-  response.environmentId = responseEnvironmentId;
+  response.environmentId = environment?._id || null;
   response.bodyCompression = null;
   response.settingSendCookies = renderedRequest.settingSendCookies;
   response.settingStoreCookies = renderedRequest.settingStoreCookies;
