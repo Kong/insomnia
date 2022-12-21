@@ -16,7 +16,7 @@ import {
   getLocationHeader,
   getSetCookieHeaders,
 } from '../common/misc';
-import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
+import type { ExtraRenderInfo, RenderedRequest, RenderPurpose } from '../common/render';
 import {
   getRenderedRequestAndContext,
   RENDER_PURPOSE_NO_RENDER,
@@ -26,7 +26,6 @@ import type { ResponsePatch, ResponseTimelineEntry } from '../main/network/libcu
 import * as models from '../models';
 import { ClientCertificate } from '../models/client-certificate';
 import { Cookie, CookieJar } from '../models/cookie-jar';
-import type { Environment } from '../models/environment';
 import type { Request } from '../models/request';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
@@ -205,8 +204,9 @@ const fetchRequestData = async (requestId: string) => {
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-  const environment: Environment | null = await models.environment.getById(workspaceMeta.activeEnvironmentId || 'n/a');
-
+  invariant(workspaceMeta.activeEnvironmentId, 'failed to find active environment');
+  const environment = await models.environment.getById(workspaceMeta.activeEnvironmentId);
+  invariant(environment, 'failed to find environment');
   const settings = await models.settings.getOrCreate();
   invariant(settings, 'failed to create settings');
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
@@ -248,7 +248,18 @@ export const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentU
   const cookies = (await cookiesFromJar(jar)) as Cookie[];
   return { cookies, rejectedCookies };
 };
-
+const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
+  try {
+    return await getRenderedRequestAndContext({
+      request: request,
+      environmentId,
+      purpose,
+      extraInfo,
+    });
+  } catch (err) {
+    throw new Error(`Failed to render request: ${request._id}`);
+  }
+};
 export async function sendWithSettings(
   requestId: string,
   requestPatch: Record<string, any>,
@@ -264,16 +275,26 @@ export async function sendWithSettings(
     _id: request._id + '.other',
     parentId: request._id,
   });
-  let renderResult: {
-    request: RenderedRequest;
-    context: Record<string, any>;
-  };
-  try {
-    renderResult = await getRenderedRequestAndContext({ request: newRequest, environmentId });
-  } catch (err) {
-    throw new Error(`Failed to render request: ${requestId}`);
-  }
 
+  const renderResult = await tryToInterpolateRequest(newRequest, environment._id);
+  let renderedRequest: RenderedRequest;
+  try {
+    renderedRequest = await _applyRequestPluginHooks(
+      renderResult.request,
+      renderResult.context,
+    );
+  } catch (err) {
+    return {
+      environmentId: environment?._id || null,
+      error: err.message || 'Something went wrong',
+      parentId: renderResult.request._id,
+      settingSendCookies: renderResult.request.settingSendCookies,
+      settingStoreCookies: renderResult.request.settingStoreCookies,
+      statusCode: STATUS_CODE_PLUGIN_ERROR,
+      statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
+      url: renderResult.request.url,
+    } as ResponsePatch;
+  }
   const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
   const caCertficatePath = caCert?.disabled === false ? caCert.path : null;
   const response = await _actuallySend(
@@ -325,35 +346,25 @@ export async function send(
     clientCertificates,
     caCert } = await fetchRequestData(requestId);
 
-  const renderResult = await getRenderedRequestAndContext(
-    {
-      request,
-      environmentId,
-      purpose: RENDER_PURPOSE_SEND,
-      extraInfo,
-    },
-  );
-
-  const renderedRequestBeforePlugins = renderResult.request;
-  const renderedContextBeforePlugins = renderResult.context;
+  const renderResult = await tryToInterpolateRequest(request, environment?._id, RENDER_PURPOSE_SEND, extraInfo);
 
   let renderedRequest: RenderedRequest;
 
   try {
     renderedRequest = await _applyRequestPluginHooks(
-      renderedRequestBeforePlugins,
-      renderedContextBeforePlugins,
+      renderResult.request,
+      renderResult.context,
     );
   } catch (err) {
     return {
       environmentId: environment?._id || null,
       error: err.message || 'Something went wrong',
-      parentId: renderedRequestBeforePlugins._id,
-      settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
-      settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies,
+      parentId: renderResult.request._id,
+      settingSendCookies: renderResult.request.settingSendCookies,
+      settingStoreCookies: renderResult.request.settingStoreCookies,
       statusCode: STATUS_CODE_PLUGIN_ERROR,
       statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
-      url: renderedRequestBeforePlugins.url,
+      url: renderResult.request.url,
     } as ResponsePatch;
   }
   const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
@@ -381,7 +392,7 @@ export async function send(
   return _applyResponsePluginHooks(
     response,
     renderedRequest,
-    renderedContextBeforePlugins,
+    renderResult.context,
   );
 }
 
