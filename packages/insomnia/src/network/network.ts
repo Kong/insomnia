@@ -312,20 +312,6 @@ export async function send(
   extraInfo?: ExtraRenderInfo,
 ) {
   console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
-  // HACK: wait for all debounces to finish
-
-  /*
-   * TODO: Do this in a more robust way
-   * The following block adds a "long" delay to let potential debounces and
-   * database updates finish before making the request. This is done by tracking
-   * the time of the user's last keypress and making sure the request is sent a
-   * significant time after the last press.
-   */
-  const timeSinceLastInteraction = Date.now() - lastUserInteraction;
-  const delayMillis = Math.max(0, MAX_DELAY_TIME - timeSinceLastInteraction);
-  if (delayMillis > 0) {
-    await delay(delayMillis);
-  }
 
   // Fetch some things
   const { request,
