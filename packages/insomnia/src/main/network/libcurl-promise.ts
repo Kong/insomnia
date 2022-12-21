@@ -338,7 +338,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     });
     // NOTE: legacy write end callback
     curl.on('error', () => responseBodyWriteStream.end());
-    curl.on('error', async function(err, code) {
+    curl.on('error', async (err, code) => {
       const elapsedTime = curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000;
       curl.close();
       await waitForStreamToFinish(responseBodyWriteStream);
@@ -380,7 +380,7 @@ const closeReadFunction = (fd: number, isMultipart: boolean, path?: string) => {
   }
 };
 
-interface HeaderResult {
+export interface HeaderResult {
   headers: ResponseHeader[];
   version: string;
   code: number;

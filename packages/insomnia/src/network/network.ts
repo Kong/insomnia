@@ -18,7 +18,7 @@ import {
   RENDER_PURPOSE_NO_RENDER,
   RENDER_PURPOSE_SEND,
 } from '../common/render';
-import type { ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
+import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
@@ -132,27 +132,12 @@ export async function _actuallySend(
         authHeader,
       };
       const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
-      const { cookieJar, settingStoreCookies } = renderedRequest;
-
-      // add set-cookie headers to file(cookiejar) and database
-      if (settingStoreCookies) {
-        // supports many set-cookies over many redirects
-        const redirects: string[][] = headerResults.map(({ headers }: any) => getSetCookiesFromResponseHeaders(headers));
-        const setCookieStrings: string[] = redirects.flat();
-        const totalSetCookies = setCookieStrings.length;
-        if (totalSetCookies) {
-          const currentUrl = getCurrentUrl({ headerResults, finalUrl });
-          const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar });
-          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
-          const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
-          if (hasCookiesToPersist) {
-            const patch: Partial<CookieJar> = { cookies };
-            await models.cookieJar.update(cookieJar, patch);
-            timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
-          }
-        }
+      const { cookies, rejectedCookies, totalSetCookies } = await extractCookies(headerResults, renderedRequest.cookieJar, finalUrl, renderedRequest.settingStoreCookies);
+      rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
+      if (cookies) {
+        await models.cookieJar.update(renderedRequest.cookieJar, { cookies });
+        timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
       }
-
       const lastRedirect = headerResults[headerResults.length - 1];
       const responsePatch: ResponsePatch = {
         contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
@@ -191,6 +176,24 @@ export async function _actuallySend(
     }
   });
 }
+const extractCookies = async (headerResults: HeaderResult[], cookieJar: any, finalUrl: string, settingStoreCookies: boolean) => {
+  // add set-cookie headers to file(cookiejar) and database
+  if (settingStoreCookies) {
+    // supports many set-cookies over many redirects
+    const redirects: string[][] = headerResults.map(({ headers }: any) => getSetCookiesFromResponseHeaders(headers));
+    const setCookieStrings: string[] = redirects.flat();
+    const totalSetCookies = setCookieStrings.length;
+    if (totalSetCookies) {
+      const currentUrl = getCurrentUrl({ headerResults, finalUrl });
+      const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar });
+      const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
+      if (hasCookiesToPersist) {
+        return { cookies, rejectedCookies, totalSetCookies };
+      }
+    }
+  }
+  return { cookies: [], rejectedCookies: [], totalSetCookies: 0 };
+};
 const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request');
