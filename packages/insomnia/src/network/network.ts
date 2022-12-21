@@ -4,9 +4,6 @@ import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import {
-  STATUS_CODE_PLUGIN_ERROR,
-} from '../common/constants';
 import { cookiesFromJar, jarFromCookies } from '../common/cookies';
 import { database as db } from '../common/database';
 import { getDataDirectory } from '../common/electron-helpers';
@@ -24,6 +21,7 @@ import {
 } from '../common/render';
 import type { ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
+import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
 import { Cookie, CookieJar } from '../models/cookie-jar';
 import type { Request } from '../models/request';
@@ -58,8 +56,8 @@ export async function cancelRequestById(requestId: string) {
 
 export async function _actuallySend(
   renderedRequest: RenderedRequest,
-  certificates: ClientCertificate[],
-  caCertficatePath: string | null,
+  clientCertificates: ClientCertificate[],
+  caCert: CaCertificate | null,
   settings: Settings,
 ) {
   return new Promise<ResponsePatch>(async resolve => {
@@ -122,7 +120,8 @@ export async function _actuallySend(
       const nodejsCurlRequest = process.type === 'renderer'
         ? window.main.curlRequest
         : (await import('../main/network/libcurl-promise')).curlRequest;
-
+      const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
+      const caCertficatePath = caCert?.disabled === false ? caCert.path : null;
       const requestOptions = {
         requestId: renderedRequest._id,
         req: renderedRequest,
@@ -260,6 +259,14 @@ const tryToInterpolateRequest = async (request: Request, environmentId: string, 
     throw new Error(`Failed to render request: ${request._id}`);
   }
 };
+const tryToTransformRequestWithPlugins = async renderResult => {
+  const { request, context } = renderResult;
+  try {
+    return await _applyRequestPluginHooks(request, context);
+  } catch (err) {
+    throw new Error(`Failed to transform request with plugins: ${request._id}`);
+  }
+};
 export async function sendWithSettings(
   requestId: string,
   requestPatch: Record<string, any>,
@@ -277,30 +284,11 @@ export async function sendWithSettings(
   });
 
   const renderResult = await tryToInterpolateRequest(newRequest, environment._id);
-  let renderedRequest: RenderedRequest;
-  try {
-    renderedRequest = await _applyRequestPluginHooks(
-      renderResult.request,
-      renderResult.context,
-    );
-  } catch (err) {
-    return {
-      environmentId: environment?._id || null,
-      error: err.message || 'Something went wrong',
-      parentId: renderResult.request._id,
-      settingSendCookies: renderResult.request.settingSendCookies,
-      settingStoreCookies: renderResult.request.settingStoreCookies,
-      statusCode: STATUS_CODE_PLUGIN_ERROR,
-      statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
-      url: renderResult.request.url,
-    } as ResponsePatch;
-  }
-  const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
-  const caCertficatePath = caCert?.disabled === false ? caCert.path : null;
+
   const response = await _actuallySend(
     renderResult.request,
-    certificates,
-    caCertficatePath,
+    clientCertificates,
+    caCert,
     { ...settings, validateSSL: settings.validateAuthSSL },
   );
   response.parentId = renderResult.request._id;
@@ -347,32 +335,11 @@ export async function send(
     caCert } = await fetchRequestData(requestId);
 
   const renderResult = await tryToInterpolateRequest(request, environment?._id, RENDER_PURPOSE_SEND, extraInfo);
-
-  let renderedRequest: RenderedRequest;
-
-  try {
-    renderedRequest = await _applyRequestPluginHooks(
-      renderResult.request,
-      renderResult.context,
-    );
-  } catch (err) {
-    return {
-      environmentId: environment?._id || null,
-      error: err.message || 'Something went wrong',
-      parentId: renderResult.request._id,
-      settingSendCookies: renderResult.request.settingSendCookies,
-      settingStoreCookies: renderResult.request.settingStoreCookies,
-      statusCode: STATUS_CODE_PLUGIN_ERROR,
-      statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
-      url: renderResult.request.url,
-    } as ResponsePatch;
-  }
-  const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
-  const caCertficatePath = caCert?.disabled === false ? caCert.path : null;
+  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
   const response = await _actuallySend(
     renderedRequest,
-    certificates,
-    caCertficatePath,
+    clientCertificates,
+    caCert,
     settings,
   );
   response.parentId = renderResult.request._id;
