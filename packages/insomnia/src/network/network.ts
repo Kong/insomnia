@@ -39,23 +39,102 @@ import { getAuthHeader, getAuthQueryParams } from './authentication';
 import { cancellableCurlRequest } from './cancellations';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
-// Time since user's last keypress to wait before making the request
+export async function sendWithSettings(
+  requestId: string,
+  requestPatch: Record<string, any>,
+) {
+  console.log(`[network] Sending with settings req=${requestId}`);
+  const { request,
+    environment,
+    settings,
+    clientCertificates,
+    caCert } = await fetchRequestData(requestId);
 
-export const transformUrl = (url: string, params: RequestParameter[], authentication: RequestAuthentication, shouldEncode: boolean) => {
-  const authQueryParam = getAuthQueryParams(authentication);
-  const customUrl = joinUrlAndQueryString(url, buildQueryStringFromParams(authQueryParam ? params.concat([authQueryParam]) : params));
-  const isUnixSocket = customUrl.match(/https?:\/\/unix:\//);
-  if (!isUnixSocket) {
-    return { finalUrl: smartEncodeUrl(customUrl, shouldEncode) };
-  }
-  // URL prep will convert "unix:/path" hostname to "unix/path"
-  const match = smartEncodeUrl(customUrl, shouldEncode).match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
-  const protocol = (match && match[1]) || '';
-  const socketPath = (match && match[2]) || '';
-  const socketUrl = (match && match[3]) || '';
-  return { finalUrl: `${protocol}//${socketUrl}`, socketPath };
+  const newRequest: Request = await models.initModel(models.request.type, requestPatch, {
+    _id: request._id + '.other',
+    parentId: request._id,
+  });
+
+  const renderResult = await tryToInterpolateRequest(newRequest, environment._id);
+  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+
+  const response = await sendCurlAndWriteTimeline(
+    renderResult.request,
+    clientCertificates,
+    caCert,
+    { ...settings, validateSSL: settings.validateAuthSSL },
+  );
+  return responseTransform(response, renderedRequest, renderResult.context);
+}
+
+export async function send(
+  requestId: string,
+  environmentId?: string,
+  extraInfo?: ExtraRenderInfo,
+) {
+  console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
+
+  // Fetch some things
+  const { request,
+    environment,
+    settings,
+    clientCertificates,
+    caCert } = await fetchRequestData(requestId);
+
+  const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND, extraInfo);
+  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+  const response = await sendCurlAndWriteTimeline(
+    renderedRequest,
+    clientCertificates,
+    caCert,
+    settings,
+  );
+  return responseTransform(response, renderedRequest, renderResult.context);
+}
+
+const fetchRequestData = async (requestId: string) => {
+  const request = await models.request.getById(requestId);
+  invariant(request, 'failed to find request');
+  const ancestors = await db.withAncestors(request, [
+    models.request.type,
+    models.requestGroup.type,
+    models.workspace.type,
+  ]);
+  const workspaceDoc = ancestors.find(isWorkspace);
+  const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'failed to find workspace');
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  invariant(workspaceMeta.activeEnvironmentId, 'failed to find active environment');
+  const environment = await models.environment.getById(workspaceMeta.activeEnvironmentId);
+  invariant(environment, 'failed to find environment');
+  const settings = await models.settings.getOrCreate();
+  invariant(settings, 'failed to create settings');
+  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const caCert = await models.caCertificate.findByParentId(workspaceId);
+
+  return { request, environment, settings, clientCertificates, caCert };
 };
-
+const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
+  try {
+    return await getRenderedRequestAndContext({
+      request: request,
+      environmentId,
+      purpose,
+      extraInfo,
+    });
+  } catch (err) {
+    throw new Error(`Failed to render request: ${request._id}`);
+  }
+};
+const tryToTransformRequestWithPlugins = async (renderResult: RequestAndContext) => {
+  const { request, context } = renderResult;
+  try {
+    return await _applyRequestPluginHooks(request, context);
+  } catch (err) {
+    throw new Error(`Failed to transform request with plugins: ${request._id}`);
+  }
+};
 export async function sendCurlAndWriteTimeline(
   renderedRequest: RenderedRequest,
   clientCertificates: ClientCertificate[],
@@ -129,6 +208,41 @@ export async function sendCurlAndWriteTimeline(
     ...patch,
   };
 }
+const responseTransform = (patch: ResponsePatch, renderedRequest: RenderedRequest, context: Record<string, any>) => {
+  const response = {
+    ...patch,
+    environmentId: patch.environmentId,
+    bodyCompression: null,
+    settingSendCookies: renderedRequest.settingSendCookies,
+    settingStoreCookies: renderedRequest.settingStoreCookies,
+  };
+
+  if (response.error) {
+    console.log(`[network] Response failed req=${patch.parentId} err=${response.error || 'n/a'}`);
+    return response;
+  }
+  console.log(`[network] Response succeeded req=${patch.parentId} status=${response.statusCode || '?'}`,);
+  return _applyResponsePluginHooks(
+    response,
+    renderedRequest,
+    context,
+  );
+};
+export const transformUrl = (url: string, params: RequestParameter[], authentication: RequestAuthentication, shouldEncode: boolean) => {
+  const authQueryParam = getAuthQueryParams(authentication);
+  const customUrl = joinUrlAndQueryString(url, buildQueryStringFromParams(authQueryParam ? params.concat([authQueryParam]) : params));
+  const isUnixSocket = customUrl.match(/https?:\/\/unix:\//);
+  if (!isUnixSocket) {
+    return { finalUrl: smartEncodeUrl(customUrl, shouldEncode) };
+  }
+  // URL prep will convert "unix:/path" hostname to "unix/path"
+  const match = smartEncodeUrl(customUrl, shouldEncode).match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
+  const protocol = (match && match[1]) || '';
+  const socketPath = (match && match[2]) || '';
+  const socketUrl = (match && match[3]) || '';
+  return { finalUrl: `${protocol}//${socketUrl}`, socketPath };
+};
+
 const extractCookies = async (headerResults: HeaderResult[], cookieJar: any, finalUrl: string, settingStoreCookies: boolean) => {
   // add set-cookie headers to file(cookiejar) and database
   if (settingStoreCookies) {
@@ -146,29 +260,6 @@ const extractCookies = async (headerResults: HeaderResult[], cookieJar: any, fin
     }
   }
   return { cookies: [], rejectedCookies: [], totalSetCookies: 0 };
-};
-const fetchRequestData = async (requestId: string) => {
-  const request = await models.request.getById(requestId);
-  invariant(request, 'failed to find request');
-  const ancestors = await db.withAncestors(request, [
-    models.request.type,
-    models.requestGroup.type,
-    models.workspace.type,
-  ]);
-  const workspaceDoc = ancestors.find(isWorkspace);
-  const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
-  const workspace = await models.workspace.getById(workspaceId);
-  invariant(workspace, 'failed to find workspace');
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-  invariant(workspaceMeta.activeEnvironmentId, 'failed to find active environment');
-  const environment = await models.environment.getById(workspaceMeta.activeEnvironmentId);
-  invariant(environment, 'failed to find environment');
-  const settings = await models.settings.getOrCreate();
-  invariant(settings, 'failed to create settings');
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-  const caCert = await models.caCertificate.findByParentId(workspaceId);
-
-  return { request, environment, settings, clientCertificates, caCert };
 };
 
 export const getSetCookiesFromResponseHeaders = (headers: any[]) => getSetCookieHeaders(headers).map(h => h.value);
@@ -203,98 +294,6 @@ export const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentU
   }
   const cookies = (await cookiesFromJar(jar)) as Cookie[];
   return { cookies, rejectedCookies };
-};
-const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
-  try {
-    return await getRenderedRequestAndContext({
-      request: request,
-      environmentId,
-      purpose,
-      extraInfo,
-    });
-  } catch (err) {
-    throw new Error(`Failed to render request: ${request._id}`);
-  }
-};
-const tryToTransformRequestWithPlugins = async (renderResult: RequestAndContext) => {
-  const { request, context } = renderResult;
-  try {
-    return await _applyRequestPluginHooks(request, context);
-  } catch (err) {
-    throw new Error(`Failed to transform request with plugins: ${request._id}`);
-  }
-};
-export async function sendWithSettings(
-  requestId: string,
-  requestPatch: Record<string, any>,
-) {
-  console.log(`[network] Sending with settings req=${requestId}`);
-  const { request,
-    environment,
-    settings,
-    clientCertificates,
-    caCert } = await fetchRequestData(requestId);
-
-  const newRequest: Request = await models.initModel(models.request.type, requestPatch, {
-    _id: request._id + '.other',
-    parentId: request._id,
-  });
-
-  const renderResult = await tryToInterpolateRequest(newRequest, environment._id);
-  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-
-  const response = await sendCurlAndWriteTimeline(
-    renderResult.request,
-    clientCertificates,
-    caCert,
-    { ...settings, validateSSL: settings.validateAuthSSL },
-  );
-  return responseTransform(response, renderedRequest, renderResult.context);
-}
-
-export async function send(
-  requestId: string,
-  environmentId?: string,
-  extraInfo?: ExtraRenderInfo,
-) {
-  console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
-
-  // Fetch some things
-  const { request,
-    environment,
-    settings,
-    clientCertificates,
-    caCert } = await fetchRequestData(requestId);
-
-  const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND, extraInfo);
-  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-  const response = await sendCurlAndWriteTimeline(
-    renderedRequest,
-    clientCertificates,
-    caCert,
-    settings,
-  );
-  return responseTransform(response, renderedRequest, renderResult.context);
-}
-const responseTransform = (patch: ResponsePatch, renderedRequest: RenderedRequest, context: Record<string, any>) => {
-  const response = {
-    ...patch,
-    environmentId: patch.environmentId,
-    bodyCompression: null,
-    settingSendCookies: renderedRequest.settingSendCookies,
-    settingStoreCookies: renderedRequest.settingStoreCookies,
-  };
-
-  if (response.error) {
-    console.log(`[network] Response failed req=${patch.parentId} err=${response.error || 'n/a'}`);
-    return response;
-  }
-  console.log(`[network] Response succeeded req=${patch.parentId} status=${response.statusCode || '?'}`,);
-  return _applyResponsePluginHooks(
-    response,
-    renderedRequest,
-    context,
-  );
 };
 
 async function _applyRequestPluginHooks(
