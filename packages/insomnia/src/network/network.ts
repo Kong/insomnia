@@ -18,7 +18,7 @@ import {
   RENDER_PURPOSE_NO_RENDER,
   RENDER_PURPOSE_SEND,
 } from '../common/render';
-import type { CurlRequestOptions, CurlRequestOutput, HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
+import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
@@ -36,19 +36,11 @@ import {
   smartEncodeUrl,
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthQueryParams } from './authentication';
+import { cancellableCurlRequest } from './cancellations';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 // Time since user's last keypress to wait before making the request
 
-const cancelRequestFunctionMap: Record<string, () => void> = {};
-
-export async function cancelRequestById(requestId: string) {
-  const hasCancelFunction = cancelRequestFunctionMap.hasOwnProperty(requestId) && typeof cancelRequestFunctionMap[requestId] === 'function';
-  if (hasCancelFunction) {
-    return cancelRequestFunctionMap[requestId]();
-  }
-  console.log(`[network] Failed to cancel req=${requestId} because cancel function not found`);
-}
 export const transformUrl = (url: string, params: RequestParameter[], authentication: RequestAuthentication, shouldEncode: boolean) => {
   const authQueryParam = getAuthQueryParams(authentication);
   const customUrl = joinUrlAndQueryString(url, buildQueryStringFromParams(authQueryParam ? params.concat([authQueryParam]) : params));
@@ -63,38 +55,8 @@ export const transformUrl = (url: string, params: RequestParameter[], authentica
   const socketUrl = (match && match[3]) || '';
   return { finalUrl: `${protocol}//${socketUrl}`, socketPath };
 };
-const cancellableCurlRequest = (requestOptions: CurlRequestOptions) => {
-  const requestId = requestOptions.requestId;
-  return new Promise<CurlRequestOutput | { statusMessage: string; error: string }>(async resolve => {
-    try {
-      cancelRequestFunctionMap[requestId] = async () => {
-        if (cancelRequestFunctionMap.hasOwnProperty(requestId)) {
-          delete cancelRequestFunctionMap[requestId];
-        }
-        // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
-        const nodejsCancelCurlRequest = process.type === 'renderer'
-          ? window.main.cancelCurlRequest
-          : (await import('../main/network/libcurl-promise')).cancelCurlRequest;
 
-        nodejsCancelCurlRequest(requestId);
-        return resolve({ statusMessage: 'Cancelled', error: 'Request was cancelled' });
-      };
-      // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
-      const nodejsCurlRequest = process.type === 'renderer'
-        ? window.main.curlRequest
-        : (await import('../main/network/libcurl-promise')).curlRequest;
-      return await nodejsCurlRequest(requestOptions);
-
-    } catch (err) {
-      console.log('[network] Error', err);
-      if (cancelRequestFunctionMap.hasOwnProperty(requestId)) {
-        delete cancelRequestFunctionMap[requestId];
-      }
-      return resolve({ statusMessage: 'Error', error: err.message || 'Something went wrong' });
-    }
-  });
-};
-export async function _actuallySend(
+export async function sendCurlAndWriteTimeline(
   renderedRequest: RenderedRequest,
   clientCertificates: ClientCertificate[],
   caCert: CaCertificate | null,
@@ -114,19 +76,22 @@ export async function _actuallySend(
   }
 
   const authHeader = await getAuthHeader(renderedRequest, finalUrl);
-  const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
-  const caCertficatePath = caCert?.disabled === false ? caCert.path : null;
   const requestOptions = {
     requestId,
     req: renderedRequest,
     finalUrl,
     socketPath,
     settings,
-    certificates,
-    caCertficatePath,
+    certificates: clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url)),
+    caCertficatePath: caCert?.disabled === false ? caCert.path : null,
     authHeader,
   };
-  const output = await cancellableCurlRequest(requestOptions);
+
+  // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
+  const nodejsCurlRequest = process.type === 'renderer'
+    ? cancellableCurlRequest
+    : (await import('../main/network/libcurl-promise')).curlRequest;
+  const output = await nodejsCurlRequest(requestOptions);
 
   if ('error' in output) {
     const timelinePath = await storeTimeline(timeline);
@@ -278,7 +243,7 @@ export async function sendWithSettings(
   const renderResult = await tryToInterpolateRequest(newRequest, environment._id);
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
-  const response = await _actuallySend(
+  const response = await sendCurlAndWriteTimeline(
     renderResult.request,
     clientCertificates,
     caCert,
@@ -303,7 +268,7 @@ export async function send(
 
   const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND, extraInfo);
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-  const response = await _actuallySend(
+  const response = await sendCurlAndWriteTimeline(
     renderedRequest,
     clientCertificates,
     caCert,
@@ -311,7 +276,6 @@ export async function send(
   );
   return responseTransform(response, renderedRequest, renderResult.context);
 }
-
 const responseTransform = (patch: ResponsePatch, renderedRequest: RenderedRequest, context: Record<string, any>) => {
   const response = {
     ...patch,
