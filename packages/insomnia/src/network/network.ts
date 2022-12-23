@@ -22,8 +22,8 @@ import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main
 import * as models from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
-import { Cookie, CookieJar } from '../models/cookie-jar';
-import type { Request } from '../models/request';
+import { Cookie } from '../models/cookie-jar';
+import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
@@ -49,18 +49,19 @@ export async function cancelRequestById(requestId: string) {
   }
   console.log(`[network] Failed to cancel req=${requestId} because cancel function not found`);
 }
-export const transformUrl = (url: string, shouldEncode: boolean) => {
-  const isUnixSocket = url.match(/https?:\/\/unix:\//);
+export const transformUrl = (url: string, params: RequestParameter[], authentication: RequestAuthentication, shouldEncode: boolean) => {
+  const authQueryParam = getAuthQueryParams(authentication);
+  const customUrl = joinUrlAndQueryString(url, buildQueryStringFromParams(authQueryParam ? params.concat([authQueryParam]) : params));
+  const isUnixSocket = customUrl.match(/https?:\/\/unix:\//);
   if (!isUnixSocket) {
-    return { finalUrl: smartEncodeUrl(url, shouldEncode) };
-  } else {
-    // URL prep will convert "unix:/path" hostname to "unix/path"
-    const match = smartEncodeUrl(url, shouldEncode).match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
-    const protocol = (match && match[1]) || '';
-    const socketPath = (match && match[2]) || '';
-    const socketUrl = (match && match[3]) || '';
-    return { finalUrl: `${protocol}//${socketUrl}`, socketPath };
+    return { finalUrl: smartEncodeUrl(customUrl, shouldEncode) };
   }
+  // URL prep will convert "unix:/path" hostname to "unix/path"
+  const match = smartEncodeUrl(customUrl, shouldEncode).match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
+  const protocol = (match && match[1]) || '';
+  const socketPath = (match && match[2]) || '';
+  const socketUrl = (match && match[3]) || '';
+  return { finalUrl: `${protocol}//${socketUrl}`, socketPath };
 };
 export async function _actuallySend(
   renderedRequest: RenderedRequest,
@@ -95,15 +96,8 @@ export async function _actuallySend(
           timelinePath,
         });
       };
-      const authQueryParam = await getAuthQueryParams(renderedRequest);
-      // Set the URL, including the query parameters
-      const qs = buildQueryStringFromParams(
-        authQueryParam
-          ? renderedRequest.parameters.concat([authQueryParam])
-          : renderedRequest.parameters
-      );
-      const url = joinUrlAndQueryString(renderedRequest.url, qs);
-      const { finalUrl, socketPath } = transformUrl(url, renderedRequest.settingEncodeUrl);
+
+      const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, renderedRequest.authentication, renderedRequest.settingEncodeUrl);
 
       timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
       timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
@@ -139,14 +133,7 @@ export async function _actuallySend(
         timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
       }
       const lastRedirect = headerResults[headerResults.length - 1];
-      const responsePatch: ResponsePatch = {
-        contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
-        headers: lastRedirect.headers,
-        httpVersion: lastRedirect.version,
-        statusCode: lastRedirect.code,
-        statusMessage: lastRedirect.reason,
-        ...patch,
-      };
+
       const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
       // Tear Down the cancellation logic
       if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
@@ -156,7 +143,12 @@ export async function _actuallySend(
         parentId: renderedRequest._id,
         timelinePath,
         bodyPath: responseBodyPath,
-        ...responsePatch,
+        contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
+        headers: lastRedirect.headers,
+        httpVersion: lastRedirect.version,
+        statusCode: lastRedirect.code,
+        statusMessage: lastRedirect.reason,
+        ...patch,
       });
     } catch (err) {
       console.log('[network] Error', err);
