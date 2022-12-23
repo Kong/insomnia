@@ -136,6 +136,7 @@ export async function _actuallySend(
       url: requestOptions.finalUrl,
       error: output.error,
       elapsedTime: 0, // 0 because this path is hit during plugin calls
+      bytesRead: 0,
       statusMessage: output.statusMessage,
       timelinePath,
     };
