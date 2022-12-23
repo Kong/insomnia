@@ -39,6 +39,12 @@ import { getAuthHeader, getAuthQueryParams } from './authentication';
 import { cancellableCurlRequest } from './cancellations';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
+// used for oauth grant types
+// creates a new request with the patch args
+// and uses env and settings from workspace
+// not cancellable but currently is
+// used indirectly by send and getAuthHeader to fetch tokens
+// @TODO unpack oauth into regular timeline and remove oauth timeine dialog
 export async function sendWithSettings(
   requestId: string,
   requestPatch: Record<string, any>,
@@ -67,6 +73,8 @@ export async function sendWithSettings(
   return responseTransform(response, renderedRequest, renderResult.context);
 }
 
+// used by test feature, inso, and plugin api
+// not all need to be cancellable or to use curl
 export async function send(
   requestId: string,
   environmentId?: string,
