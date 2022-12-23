@@ -22,7 +22,7 @@ import { ResponseHeader } from '../../models/response';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
 
-interface CurlRequestOptions {
+export interface CurlRequestOptions {
   requestId: string; // for cancellation
   req: RequestUsedHere;
   finalUrl: string;
@@ -63,7 +63,7 @@ export interface ResponseTimelineEntry {
   value: string;
 }
 
-interface CurlRequestOutput {
+export interface CurlRequestOutput {
   patch: ResponsePatch;
   debugTimeline: ResponseTimelineEntry[];
   headerResults: HeaderResult[];

@@ -18,7 +18,7 @@ import {
   RENDER_PURPOSE_NO_RENDER,
   RENDER_PURPOSE_SEND,
 } from '../common/render';
-import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
+import type { CurlRequestOptions, CurlRequestOutput, HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
@@ -63,110 +63,105 @@ export const transformUrl = (url: string, params: RequestParameter[], authentica
   const socketUrl = (match && match[3]) || '';
   return { finalUrl: `${protocol}//${socketUrl}`, socketPath };
 };
-export async function _actuallySend(
-  renderedRequest: RenderedRequest,
-  clientCertificates: ClientCertificate[],
-  caCert: CaCertificate | null,
-  settings: Settings,
-) {
-  return new Promise<ResponsePatch>(async resolve => {
-    const timeline: ResponseTimelineEntry[] = [];
-
+const cancellableCurlRequest = (requestOptions: CurlRequestOptions) => {
+  const requestId = requestOptions.requestId;
+  return new Promise<CurlRequestOutput | { statusMessage: string; error: string }>(async resolve => {
     try {
-      // Setup the cancellation logic
-      cancelRequestFunctionMap[renderedRequest._id] = async () => {
-        const timelinePath = await storeTimeline(timeline);
-        // Tear Down the cancellation logic
-        if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
-          delete cancelRequestFunctionMap[renderedRequest._id];
+      cancelRequestFunctionMap[requestId] = async () => {
+        if (cancelRequestFunctionMap.hasOwnProperty(requestId)) {
+          delete cancelRequestFunctionMap[requestId];
         }
         // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
         const nodejsCancelCurlRequest = process.type === 'renderer'
           ? window.main.cancelCurlRequest
           : (await import('../main/network/libcurl-promise')).cancelCurlRequest;
 
-        nodejsCancelCurlRequest(renderedRequest._id);
-        return resolve({
-          parentId: renderedRequest._id,
-          elapsedTime: 0,
-          bytesRead: 0,
-          url: renderedRequest.url,
-          statusMessage: 'Cancelled',
-          error: 'Request was cancelled',
-          timelinePath,
-        });
+        nodejsCancelCurlRequest(requestId);
+        return resolve({ statusMessage: 'Cancelled', error: 'Request was cancelled' });
       };
-
-      const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, renderedRequest.authentication, renderedRequest.settingEncodeUrl);
-
-      timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
-      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
-      timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() });
-
-      if (!renderedRequest.settingSendCookies) {
-        timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
-      }
-
-      const authHeader = await getAuthHeader(renderedRequest, finalUrl);
-
       // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
       const nodejsCurlRequest = process.type === 'renderer'
         ? window.main.curlRequest
         : (await import('../main/network/libcurl-promise')).curlRequest;
-      const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
-      const caCertficatePath = caCert?.disabled === false ? caCert.path : null;
-      const requestOptions = {
-        requestId: renderedRequest._id,
-        req: renderedRequest,
-        finalUrl,
-        socketPath,
-        settings,
-        certificates,
-        caCertficatePath,
-        authHeader,
-      };
-      const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
-      const { cookies, rejectedCookies, totalSetCookies } = await extractCookies(headerResults, renderedRequest.cookieJar, finalUrl, renderedRequest.settingStoreCookies);
-      rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
-      if (cookies) {
-        await models.cookieJar.update(renderedRequest.cookieJar, { cookies });
-        timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
-      }
-      const lastRedirect = headerResults[headerResults.length - 1];
+      return await nodejsCurlRequest(requestOptions);
 
-      const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
-      // Tear Down the cancellation logic
-      if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
-        delete cancelRequestFunctionMap[renderedRequest._id];
-      }
-      return resolve({
-        parentId: renderedRequest._id,
-        timelinePath,
-        bodyPath: responseBodyPath,
-        contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
-        headers: lastRedirect.headers,
-        httpVersion: lastRedirect.version,
-        statusCode: lastRedirect.code,
-        statusMessage: lastRedirect.reason,
-        ...patch,
-      });
     } catch (err) {
       console.log('[network] Error', err);
-      const timelinePath = await storeTimeline(timeline);
-      // Tear Down the cancellation logic
-      if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
-        delete cancelRequestFunctionMap[renderedRequest._id];
+      if (cancelRequestFunctionMap.hasOwnProperty(requestId)) {
+        delete cancelRequestFunctionMap[requestId];
       }
-      return resolve({
-        parentId: renderedRequest._id,
-        url: renderedRequest.url,
-        error: err.message || 'Something went wrong',
-        elapsedTime: 0, // 0 because this path is hit during plugin calls
-        statusMessage: 'Error',
-        timelinePath,
-      });
+      return resolve({ statusMessage: 'Error', error: err.message || 'Something went wrong' });
     }
   });
+};
+export async function _actuallySend(
+  renderedRequest: RenderedRequest,
+  clientCertificates: ClientCertificate[],
+  caCert: CaCertificate | null,
+  settings: Settings,
+) {
+  const requestId = renderedRequest._id;
+  const timeline: ResponseTimelineEntry[] = [];
+
+  const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, renderedRequest.authentication, renderedRequest.settingEncodeUrl);
+
+  timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
+  timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
+  timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() });
+
+  if (!renderedRequest.settingSendCookies) {
+    timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
+  }
+
+  const authHeader = await getAuthHeader(renderedRequest, finalUrl);
+  const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
+  const caCertficatePath = caCert?.disabled === false ? caCert.path : null;
+  const requestOptions = {
+    requestId,
+    req: renderedRequest,
+    finalUrl,
+    socketPath,
+    settings,
+    certificates,
+    caCertficatePath,
+    authHeader,
+  };
+  const output = await cancellableCurlRequest(requestOptions);
+
+  if ('error' in output) {
+    const timelinePath = await storeTimeline(timeline);
+
+    return {
+      parentId: requestId,
+      url: requestOptions.finalUrl,
+      error: output.error,
+      elapsedTime: 0, // 0 because this path is hit during plugin calls
+      statusMessage: output.statusMessage,
+      timelinePath,
+    };
+  }
+  const { patch, debugTimeline, headerResults, responseBodyPath } = output;
+  const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
+  // transform output
+  const { cookies, rejectedCookies, totalSetCookies } = await extractCookies(headerResults, renderedRequest.cookieJar, finalUrl, renderedRequest.settingStoreCookies);
+  rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
+  if (cookies) {
+    await models.cookieJar.update(renderedRequest.cookieJar, { cookies });
+    timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
+  }
+  const lastRedirect = headerResults[headerResults.length - 1];
+
+  return {
+    parentId: renderedRequest._id,
+    timelinePath,
+    bodyPath: responseBodyPath,
+    contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
+    headers: lastRedirect.headers,
+    httpVersion: lastRedirect.version,
+    statusCode: lastRedirect.code,
+    statusMessage: lastRedirect.reason,
+    ...patch,
+  };
 }
 const extractCookies = async (headerResults: HeaderResult[], cookieJar: any, finalUrl: string, settingStoreCookies: boolean) => {
   // add set-cookie headers to file(cookiejar) and database
