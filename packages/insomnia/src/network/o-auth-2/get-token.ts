@@ -19,7 +19,6 @@ import { grantClientCreds } from './grant-client-credentials';
 import { grantImplicitUrl } from './grant-implicit';
 import { grantPassword } from './grant-password';
 import { getOAuthSession, insertAuthKeyIf, tryToParse } from './misc';
-import { refreshAccessToken } from './refresh-token';
 
 export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Response) => {
   const bodyBuffer = models.response.getBodyBuffer(response);
@@ -191,7 +190,9 @@ async function _getExisingAccessTokenAndRefreshIfExpired(
     // If the refresh token was rejected due an unauthorized request, we will
     // return a null access_token to trigger an authentication request to fetch
     // brand new refresh and access tokens.
-    newToken = { access_token: null };
+    const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+    models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
+    return null;
   } else if (statusCode < 200 || statusCode >= 300) {
     if (bodyBuffer && statusCode === 400) {
       const body = tryToParse(bodyBuffer.toString());
@@ -200,7 +201,9 @@ async function _getExisingAccessTokenAndRefreshIfExpired(
       // brand new refresh and access tokens.
       if (body?.error === 'invalid_grant') {
         console.log(`[oauth2] Refresh token rejected due to invalid_grant error: ${body.error_description}`);
-        newToken = { access_token: null };
+        const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+        models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
+        return null;
       }
     }
 
@@ -226,17 +229,8 @@ async function _getExisingAccessTokenAndRefreshIfExpired(
     if (results.refresh_token !== undefined) {
       results.refresh_token = token.refreshToken;
     }
-    newToken = results;
-  }
-  // If we didn't receive an access token it means the refresh token didn't succeed,
-  // so we tell caller to fetch brand new access and refresh tokens.
-  if (!newToken.access_token) {
-    return null;
+    const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+    return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(results));
   }
 
-  // ~~~~~~~~~~~~~ //
-  // Update the DB //
-  // ~~~~~~~~~~~~~ //
-  const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
-  return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(newToken));
 }
