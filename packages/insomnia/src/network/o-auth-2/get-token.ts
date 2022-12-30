@@ -1,6 +1,7 @@
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { RequestAuthentication, RequestHeader } from '../../models/request';
+import { setDefaultProtocol } from '../../utils/url/protocol';
 import { sendWithSettings } from '../network';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
@@ -14,7 +15,7 @@ import { grantAuthCode, grantAuthCodeParams, oauthResponseToAccessToken } from '
 import { grantClientCreds } from './grant-client-credentials';
 import { grantImplicit, grantImplicitUrl } from './grant-implicit';
 import { grantPassword } from './grant-password';
-import { getOAuthSession } from './misc';
+import { getOAuthSession, tryToParse } from './misc';
 import { refreshAccessToken } from './refresh-token';
 /** Get an OAuth2Token object and also handle storing/saving/refreshing */
 const sendOauthRequest = async (requestId: string, url: string, params: RequestHeader[], origin?: string) => {
@@ -24,7 +25,7 @@ const sendOauthRequest = async (requestId: string, url: string, params: RequestH
       { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
       ...(origin ? [{ name: 'Origin', value: origin }] : []),
     ],
-    url,
+    url: setDefaultProtocol(url),
     method: 'POST',
     body: {
       mimeType: 'application/x-www-form-urlencoded',
@@ -54,10 +55,9 @@ export const getOAuth2Token = async (
     const response = await sendOauthRequest(requestId, authentication.accessTokenUrl, params, authentication.origin);
     newToken = oauthResponseToAccessToken(authentication.accessTokenUrl, response);
   } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
-    newToken = await grantClientCreds(
-      requestId,
-      authentication
-    );
+    const params = await grantClientCreds(authentication);
+    const response = await sendOauthRequest(requestId, authentication.accessTokenUrl, params, authentication.origin);
+    newToken = oauthResponseToAccessToken(authentication.accessTokenUrl, response);
   } else if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
     newToken = {};
     const implicitUrl = grantImplicitUrl(authentication);
