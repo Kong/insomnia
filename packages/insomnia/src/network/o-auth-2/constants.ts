@@ -31,8 +31,8 @@ export type AuthKeys =
     'scope' |
     'state' |
     'token_type' |
-    'username';
-export const X_RESPONSE_ID = 'xResponseId';
-export const X_ERROR = 'xError';
+    'username' |
+    'xError' |
+    'xResponseId';
 export const PKCE_CHALLENGE_S256 = 'S256';
 export const PKCE_CHALLENGE_PLAIN = 'plain';
