@@ -1,5 +1,4 @@
 import crypto from 'crypto';
-import { parse as urlParse } from 'url';
 
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { escapeRegex } from '../../common/misc';
@@ -67,14 +66,6 @@ export const grantAuthCode = async (
 
   console.log('[oauth2] Detected redirect ' + redirectedTo);
   const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
-  const keys = [
-    'code',
-    'state',
-    'error',
-    'error_description',
-    'error_uri',
-  ];
-  // const authorizeResults = Object.fromEntries(keys.map(key => [key, data?.[key] !== undefined ? data[key] : null]));
 
   // Handle the error
   if (redirectParams.error) {
