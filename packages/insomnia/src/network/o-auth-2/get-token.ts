@@ -48,6 +48,10 @@ export const getOAuth2Token = async (
     const params = await grantAuthCodeParams(authentication);
     const response = await sendOauthRequest(requestId, authentication.accessTokenUrl, params, authentication.origin);
     newToken = oauthResponseToAccessToken(authentication.accessTokenUrl, response);
+  } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
+    const params = await grantPassword(authentication);
+    const response = await sendOauthRequest(requestId, authentication.accessTokenUrl, params, authentication.origin);
+    newToken = oauthResponseToAccessToken(authentication.accessTokenUrl, response);
   } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
     newToken = await grantClientCreds(
       requestId,
@@ -55,15 +59,7 @@ export const getOAuth2Token = async (
     );
   } else if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
     const url = grantImplicitUrl(authentication);
-    newToken = await grantImplicit(
-      requestId,
-      url
-    );
-  } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
-    newToken = await grantPassword(
-      requestId,
-      authentication
-    );
+    newToken = await grantImplicit(requestId, url);
   }
   if (newToken) {
     const old = await models.oAuth2Token.getOrCreateByParentId(requestId);

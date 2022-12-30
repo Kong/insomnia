@@ -46,19 +46,10 @@ export const grantImplicit = async (
     return {};
   }
   const data = Object.fromEntries(new URLSearchParams(hash));
-  const keys = [
-    'access_token',
-    'id_token',
-    'token_type',
-    'expires_in',
-    'scope',
-    'state',
-    'error',
-    'error_description',
-    'error_uri',
-  ];
-  const results = Object.fromEntries(keys.map(key => [key, data?.[key] !== undefined ? data[key] : null]));
-  results.access_token = results.access_token || results.id_token;
-  return results;
+
+  return {
+    ...data,
+    access_token: data.access_token || data._id_token,
+  };
 
 };
