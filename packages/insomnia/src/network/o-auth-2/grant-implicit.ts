@@ -1,7 +1,7 @@
 import { RequestAuthentication } from '../../models/request';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import * as c from './constants';
-import { getOAuthSession, insertAuthKeyIf, parseAndFilter, tryToParse } from './misc';
+import { getOAuthSession, insertAuthKeyIf } from './misc';
 export const grantImplicitUrl = ({
   authorizationUrl,
   responseType,
