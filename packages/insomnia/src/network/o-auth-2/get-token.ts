@@ -1,6 +1,7 @@
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
-import type { RequestAuthentication } from '../../models/request';
+import type { RequestAuthentication, RequestHeader } from '../../models/request';
+import { sendWithSettings } from '../network';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,
@@ -9,13 +10,28 @@ import {
   X_ERROR,
   X_RESPONSE_ID,
 } from './constants';
-import { grantAuthCode } from './grant-authorization-code';
+import { grantAuthCode, grantAuthCodeParams, oauthResponseToAccessToken } from './grant-authorization-code';
 import { grantClientCreds } from './grant-client-credentials';
 import { grantImplicit, grantImplicitUrl } from './grant-implicit';
 import { grantPassword } from './grant-password';
 import { refreshAccessToken } from './refresh-token';
 /** Get an OAuth2Token object and also handle storing/saving/refreshing */
-
+const sendOauthRequest = async (requestId: string, url: string, params: RequestHeader[], origin?: string) => {
+  const responsePatch = await sendWithSettings(requestId, {
+    headers: [
+      { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
+      { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
+      ...(origin ? [{ name: 'Origin', value: origin }] : []),
+    ],
+    url,
+    method: 'POST',
+    body: {
+      mimeType: 'application/x-www-form-urlencoded',
+      params,
+    },
+  });
+  return await models.response.create(responsePatch);
+};
 export const getOAuth2Token = async (
   requestId: string,
   authentication: RequestAuthentication,
@@ -29,10 +45,9 @@ export const getOAuth2Token = async (
   }
   let newToken;
   if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
-    newToken = await grantAuthCode(
-      requestId,
-      authentication
-    );
+    const params = await grantAuthCodeParams(authentication);
+    const response = await sendOauthRequest(requestId, authentication.accessTokenUrl, params, authentication.origin);
+    newToken = oauthResponseToAccessToken(authentication.accessTokenUrl, response);
   } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
     newToken = await grantClientCreds(
       requestId,

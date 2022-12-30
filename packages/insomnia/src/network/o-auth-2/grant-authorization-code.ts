@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 
-import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models/index';
 import { RequestAuthentication } from '../../models/request';
@@ -8,7 +7,6 @@ import { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
-import { sendWithSettings } from '../network';
 import * as c from './constants';
 import { getOAuthSession, insertAuthKeyIf, tryToParse } from './misc';
 export const grantAuthCodeUrl = (codeVerifier: string, {
@@ -46,8 +44,7 @@ export const grantAuthCodeUrl = (codeVerifier: string, {
     }] : []),
   ]));
 };
-export const grantAuthCode = async (
-  requestId: string,
+export const grantAuthCodeParams = async (
   authentication: Partial<RequestAuthentication>,
 ) => {
   const { redirectUri, usePkce } = authentication;
@@ -74,7 +71,7 @@ export const grantAuthCode = async (
     const uri = redirectParams.error_uri;
     throw new Error(`OAuth 2.0 Error ${code}\n\n${msg}\n\n${uri}`);
   }
-  const { accessTokenUrl,
+  const {
     state,
     audience,
     resource,
@@ -82,48 +79,29 @@ export const grantAuthCode = async (
     clientId,
     clientSecret } = authentication;
 
-  const responsePatch = await sendWithSettings(requestId, {
-    headers: [
-      {
-        name: 'Content-Type',
-        value: 'application/x-www-form-urlencoded',
-      },
-      {
-        name: 'Accept',
-        value: 'application/x-www-form-urlencoded, application/json',
-      },
-      ...(origin ? [{ name: 'Origin', value: origin }] : []),
-    ],
-    url: accessTokenUrl,
-    method: 'POST',
-    body: {
-      mimeType: CONTENT_TYPE_FORM_URLENCODED,
-      params: [
-        {
-          name: 'grant_type',
-          value: c.GRANT_TYPE_AUTHORIZATION_CODE,
-        },
-        {
-          name: 'code',
-          value: redirectParams.code,
-        },
-        ...insertAuthKeyIf(redirectUri, 'redirect_uri'),
-        ...insertAuthKeyIf(state, 'state'),
-        ...insertAuthKeyIf(audience, 'audience'),
-        ...insertAuthKeyIf(resource, 'resource'),
-        ...insertAuthKeyIf(codeVerifier, 'code_verifier'),
-        ...(credentialsInBody ? [{
-          name: 'client_id',
-          value: clientId,
-        }, {
-          name: 'client_secret',
-          value: clientSecret,
-        }] : [getBasicAuthHeader(clientId, clientSecret)]),
-      ],
+  return [
+    {
+      name: 'grant_type',
+      value: c.GRANT_TYPE_AUTHORIZATION_CODE,
     },
-  });
-  const response = await models.response.create(responsePatch);
-  return oauthResponseToAccessToken(accessTokenUrl, response);
+    {
+      name: 'code',
+      value: redirectParams.code,
+    },
+    ...insertAuthKeyIf(redirectUri, 'redirect_uri'),
+    ...insertAuthKeyIf(state, 'state'),
+    ...insertAuthKeyIf(audience, 'audience'),
+    ...insertAuthKeyIf(resource, 'resource'),
+    ...insertAuthKeyIf(codeVerifier, 'code_verifier'),
+    ...(credentialsInBody ? [{
+      name: 'client_id',
+      value: clientId,
+    }, {
+      name: 'client_secret',
+      value: clientSecret,
+    }] : [getBasicAuthHeader(clientId, clientSecret)]),
+  ];
+
 };
 
 export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Response) => {
