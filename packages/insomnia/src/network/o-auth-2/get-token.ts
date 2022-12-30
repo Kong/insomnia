@@ -85,6 +85,8 @@ export const getOAuth2Token = async (
         ...data,
         access_token: data.access_token || data._id_token,
       };
+      const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+      return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModal(newToken));
     }
   } else {
     let params: RequestHeader[] = [];
@@ -97,25 +99,26 @@ export const getOAuth2Token = async (
     }
     const response = await sendAccessTokenRequest(requestId, authentication.accessTokenUrl, params, authentication.origin);
     newToken = oauthResponseToAccessToken(authentication.accessTokenUrl, response);
-  }
-
-  if (newToken) {
     const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
-    return models.oAuth2Token.update(old, {
-      // Calculate expiry date
-      expiresAt: newToken.expires_in ? Date.now() + newToken.expires_in * 1000 : null,
-      refreshToken: newToken.refresh_token || null,
-      accessToken: newToken.access_token || null,
-      identityToken: newToken.id_token || null,
-      error: newToken.error || null,
-      errorDescription: newToken.error_description || null,
-      errorUri: newToken.error_uri || null,
-      // Special Cases
-      xResponseId: newToken[X_RESPONSE_ID] || null,
-      xError: newToken[X_ERROR] || null,
-    });
+    return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModal(newToken));
   }
   return null;
+};
+
+const transformNewAccessTokenToOauthModal = (accessToken: Record<string, string>): OAuth2Token => {
+  return {
+    // Calculate expiry date
+    expiresAt: accessToken.expires_in ? Date.now() + +accessToken.expires_in * 1000 : null,
+    refreshToken: accessToken.refresh_token || null,
+    accessToken: accessToken.access_token || null,
+    identityToken: accessToken.id_token || null,
+    error: accessToken.error || null,
+    errorDescription: accessToken.error_description || null,
+    errorUri: accessToken.error_uri || null,
+    // Special Cases
+    xResponseId: accessToken[X_RESPONSE_ID] || null,
+    xError: accessToken[X_ERROR] || null,
+  };
 };
 
 async function _getExisingAccessTokenAndRefreshIfExpired(
