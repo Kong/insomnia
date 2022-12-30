@@ -1,14 +1,12 @@
 import crypto from 'crypto';
 
 import { escapeRegex } from '../../common/misc';
-import * as models from '../../models/index';
 import { RequestAuthentication } from '../../models/request';
-import { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import * as c from './constants';
-import { getOAuthSession, insertAuthKeyIf, tryToParse } from './misc';
+import { getOAuthSession, insertAuthKeyIf } from './misc';
 export const grantAuthCodeUrl = (codeVerifier: string, {
   pkceMethod,
   clientId,
@@ -102,43 +100,6 @@ export const grantAuthCodeParams = async (
     }] : [getBasicAuthHeader(clientId, clientSecret)]),
   ];
 
-};
-
-export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Response) => {
-  const bodyBuffer = models.response.getBodyBuffer(response);
-
-  if (!bodyBuffer) {
-    return {
-      [c.X_ERROR]: `No body returned from ${accessTokenUrl}`,
-      [c.X_RESPONSE_ID]: response._id,
-    };
-  }
-
-  if (response.statusCode < 200 || response.statusCode >= 300) {
-    return {
-      [c.X_ERROR]: `Failed to fetch token url=${accessTokenUrl} status=${response.statusCode}`,
-      [c.X_RESPONSE_ID]: response._id,
-    };
-  }
-
-  const body = bodyBuffer.toString('utf8');
-  const data = tryToParse(body);
-  const keys = [
-    'access_token',
-    'id_token',
-    'refresh_token',
-    'token_type',
-    'expires_in',
-    'scope',
-    'audience',
-    'resource',
-    'error',
-    'error_uri',
-    'error_description',
-  ];
-  const token = Object.fromEntries(keys.map(key => [key, data?.[key] !== undefined ? data[key] : null]));
-  token[c.X_RESPONSE_ID] = response._id;
-  return token;
 };
 
 const encodePKCE = (buffer: Buffer) => {

@@ -3,9 +3,7 @@ import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { insertAuthKeyIf } from './misc';
 
 export const grantPassword = async (
-  authentication: Partial<RequestAuthentication>,
-) => {
-  const {
+  {
     credentialsInBody,
     clientId,
     clientSecret,
@@ -13,7 +11,8 @@ export const grantPassword = async (
     password,
     scope,
     audience,
-  } = authentication;
+  }: Partial<RequestAuthentication>,
+) => {
   return [
     {
       name: 'grant_type',

@@ -1,23 +1,16 @@
-import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
-import * as models from '../../models/index';
 import { RequestAuthentication } from '../../models/request';
-import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
-import { sendWithSettings } from '../network';
 import * as c from './constants';
-import { insertAuthKeyIf, tryToParse } from './misc';
+import { insertAuthKeyIf } from './misc';
 
-export const grantClientCreds = async (
-  authentication: Partial<RequestAuthentication>,
-) => {
-  const {
-    credentialsInBody,
-    clientId,
-    clientSecret,
-    scope,
-    audience,
-    resource,
-  } = authentication;
+export const grantClientCreds = async ({
+  credentialsInBody,
+  clientId,
+  clientSecret,
+  scope,
+  audience,
+  resource,
+}: Partial<RequestAuthentication>) => {
   return [
     {
       name: 'grant_type',
@@ -34,5 +27,4 @@ export const grantClientCreds = async (
       value: clientSecret,
     }] : [getBasicAuthHeader(clientId, clientSecret)]),
   ];
-
 };

@@ -1,6 +1,7 @@
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { RequestAuthentication, RequestHeader } from '../../models/request';
+import type { Response } from '../../models/response';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { sendWithSettings } from '../network';
 import {
@@ -11,14 +12,36 @@ import {
   X_ERROR,
   X_RESPONSE_ID,
 } from './constants';
-import { grantAuthCode, grantAuthCodeParams, oauthResponseToAccessToken } from './grant-authorization-code';
+import { grantAuthCodeParams } from './grant-authorization-code';
 import { grantClientCreds } from './grant-client-credentials';
-import { grantImplicit, grantImplicitUrl } from './grant-implicit';
+import { grantImplicitUrl } from './grant-implicit';
 import { grantPassword } from './grant-password';
 import { getOAuthSession, tryToParse } from './misc';
 import { refreshAccessToken } from './refresh-token';
-/** Get an OAuth2Token object and also handle storing/saving/refreshing */
-const sendOauthRequest = async (requestId: string, url: string, params: RequestHeader[], origin?: string) => {
+
+export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Response) => {
+  const bodyBuffer = models.response.getBodyBuffer(response);
+  if (!bodyBuffer) {
+    return {
+      [X_ERROR]: `No body returned from ${accessTokenUrl}`,
+      [X_RESPONSE_ID]: response._id,
+    };
+  }
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    return {
+      [X_ERROR]: `Failed to fetch token url=${accessTokenUrl} status=${response.statusCode}`,
+      [X_RESPONSE_ID]: response._id,
+    };
+  }
+  const body = bodyBuffer.toString('utf8');
+  const data = tryToParse(body);
+  return {
+    ...data,
+    [X_RESPONSE_ID]: response._id,
+  };
+};
+
+const sendAccessTokenRequest = async (requestId: string, url: string, params: RequestHeader[], origin?: string) => {
   const responsePatch = await sendWithSettings(requestId, {
     headers: [
       { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
@@ -46,19 +69,7 @@ export const getOAuth2Token = async (
     return oAuth2Token;
   }
   let newToken;
-  if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
-    const params = await grantAuthCodeParams(authentication);
-    const response = await sendOauthRequest(requestId, authentication.accessTokenUrl, params, authentication.origin);
-    newToken = oauthResponseToAccessToken(authentication.accessTokenUrl, response);
-  } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
-    const params = await grantPassword(authentication);
-    const response = await sendOauthRequest(requestId, authentication.accessTokenUrl, params, authentication.origin);
-    newToken = oauthResponseToAccessToken(authentication.accessTokenUrl, response);
-  } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
-    const params = await grantClientCreds(authentication);
-    const response = await sendOauthRequest(requestId, authentication.accessTokenUrl, params, authentication.origin);
-    newToken = oauthResponseToAccessToken(authentication.accessTokenUrl, response);
-  } else if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
+  if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
     newToken = {};
     const implicitUrl = grantImplicitUrl(authentication);
     const redirectedTo = await window.main.authorizeUserInWindow({
@@ -75,7 +86,19 @@ export const getOAuth2Token = async (
         access_token: data.access_token || data._id_token,
       };
     }
+  } else {
+    let params: RequestHeader[] = [];
+    if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
+      params = await grantAuthCodeParams(authentication);
+    } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
+      params = await grantPassword(authentication);
+    } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
+      params = await grantClientCreds(authentication);
+    }
+    const response = await sendAccessTokenRequest(requestId, authentication.accessTokenUrl, params, authentication.origin);
+    newToken = oauthResponseToAccessToken(authentication.accessTokenUrl, response);
   }
+
   if (newToken) {
     const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
     return models.oAuth2Token.update(old, {
