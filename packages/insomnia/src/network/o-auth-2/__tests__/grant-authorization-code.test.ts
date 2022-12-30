@@ -5,7 +5,7 @@ import path from 'path';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getTempDir } from '../../../common/electron-helpers';
 import * as network from '../../network';
-import getToken from '../grant-authorization-code';
+import { grantAuthCode } from '../grant-authorization-code';
 
 // Mock some test things
 const AUTHORIZE_URL = 'https://foo.com/authorizeAuthCode';
@@ -46,18 +46,20 @@ describe('authorization_code', () => {
         },
       ],
     }));
-    const result = await getToken(
+    const result = await grantAuthCode(
       'req_1',
-      AUTHORIZE_URL,
-      ACCESS_TOKEN_URL,
-      false,
-      CLIENT_ID,
-      CLIENT_SECRET,
-      REDIRECT_URI,
-      SCOPE,
-      STATE,
-      AUDIENCE,
-      RESOURCE,
+      {
+        authorizeUrl: AUTHORIZE_URL,
+        accessTokenUrl: ACCESS_TOKEN_URL,
+        credentialsInBody: false,
+        clientId: CLIENT_ID,
+        clientSecret: CLIENT_SECRET,
+        redirectUri: REDIRECT_URI,
+        scope: SCOPE,
+        state: STATE,
+        audience: AUDIENCE,
+        resource: RESOURCE,
+      }
     );
     // Check the request to fetch the token
     expect(network.sendWithSettings.mock.calls).toEqual([
@@ -154,18 +156,20 @@ describe('authorization_code', () => {
         },
       ],
     }));
-    const result = await getToken(
+    const result = await grantAuthCode(
       'req_1',
-      AUTHORIZE_URL,
-      ACCESS_TOKEN_URL,
-      true,
-      CLIENT_ID,
-      CLIENT_SECRET,
-      REDIRECT_URI,
-      SCOPE,
-      STATE,
-      AUDIENCE,
-      RESOURCE,
+      {
+        authorizeUrl: AUTHORIZE_URL,
+        accessTokenUrl: ACCESS_TOKEN_URL,
+        credentialsInBody: true,
+        clientId: CLIENT_ID,
+        clientSecret: CLIENT_SECRET,
+        redirectUri: REDIRECT_URI,
+        scope: SCOPE,
+        state: STATE,
+        audience: AUDIENCE,
+        resource: RESOURCE,
+      }
     );
     // Check the request to fetch the token
     expect(network.sendWithSettings.mock.calls).toEqual([
@@ -266,19 +270,21 @@ describe('authorization_code', () => {
         },
       ],
     }));
-    const result = await getToken(
+    const result = await grantAuthCode(
       'req_1',
-      AUTHORIZE_URL,
-      ACCESS_TOKEN_URL,
-      false,
-      CLIENT_ID,
-      CLIENT_SECRET,
-      REDIRECT_URI,
-      SCOPE,
-      STATE,
-      AUDIENCE,
-      RESOURCE,
-      true,
+      {
+        authorizeUrl: AUTHORIZE_URL,
+        accessTokenUrl: ACCESS_TOKEN_URL,
+        credentialsInBody: false,
+        clientId: CLIENT_ID,
+        clientSecret: CLIENT_SECRET,
+        redirectUri: REDIRECT_URI,
+        scope: SCOPE,
+        state: STATE,
+        audience: AUDIENCE,
+        resource: RESOURCE,
+        usePKCE: true,
+      }
     );
     // Check the request to fetch the token
     expect(network.sendWithSettings.mock.calls[0][1].body.params).toEqual(

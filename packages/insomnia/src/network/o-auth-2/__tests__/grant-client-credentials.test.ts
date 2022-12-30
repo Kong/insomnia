@@ -5,7 +5,7 @@ import path from 'path';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getTempDir } from '../../../common/electron-helpers';
 import * as network from '../../network';
-import getToken from '../grant-client-credentials';
+import { grantClientCreds } from '../grant-client-credentials';
 
 // Mock some test things
 const ACCESS_TOKEN_URL = 'https://foo.com/access_token';
@@ -43,15 +43,17 @@ describe('client_credentials', () => {
         },
       ],
     }));
-    const result = await getToken(
+    const result = await grantClientCreds(
       'req_1',
-      ACCESS_TOKEN_URL,
-      false,
-      CLIENT_ID,
-      CLIENT_SECRET,
-      SCOPE,
-      AUDIENCE,
-      RESOURCE,
+      {
+        accessTokenUrl: ACCESS_TOKEN_URL,
+        credentialsInBody: false,
+        clientId: CLIENT_ID,
+        clientSecret: CLIENT_SECRET,
+        scope: SCOPE,
+        audience: AUDIENCE,
+        resource: RESOURCE,
+      }
     );
     // Check the request to fetch the token
     expect(network.sendWithSettings.mock.calls).toEqual([
@@ -140,15 +142,17 @@ describe('client_credentials', () => {
         },
       ],
     }));
-    const result = await getToken(
+    const result = await grantClientCreds(
       'req_1',
-      ACCESS_TOKEN_URL,
-      true,
-      CLIENT_ID,
-      CLIENT_SECRET,
-      SCOPE,
-      AUDIENCE,
-      RESOURCE,
+      {
+        accessTokenUrl: ACCESS_TOKEN_URL,
+        credentialsInBody: true,
+        clientId: CLIENT_ID,
+        clientSecret: CLIENT_SECRET,
+        scope: SCOPE,
+        audience: AUDIENCE,
+        resource: RESOURCE,
+      }
     );
     // Check the request to fetch the token
     expect(network.sendWithSettings.mock.calls).toEqual([
