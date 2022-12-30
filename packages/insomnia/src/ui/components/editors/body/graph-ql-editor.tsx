@@ -15,8 +15,8 @@ import { useLocalStorage } from 'react-use';
 
 import { jarFromCookies } from '../../../../common/cookies';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
-import { jsonParseOr } from '../../../../common/misc';
-import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../../common/render';
+import { hasAuthHeader, jsonParseOr } from '../../../../common/misc';
+import { getRenderedRequestAndContext, render, RENDER_PURPOSE_SEND } from '../../../../common/render';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
@@ -36,6 +36,7 @@ import { HelpTooltip } from '../../help-tooltip';
 import { Toolbar } from '../../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
+import { getAuthHeader } from '../../../../network/authentication';
 const explorerContainer = document.querySelector('#graphql-explorer-container');
 
 if (!explorerContainer) {
@@ -66,7 +67,7 @@ const fetchGraphQLSchemaForRequest = async ({
   }
 
   try {
-    const renderContext = await getRenderContext({
+    const { context: renderContext, request: renderedRequest } = await getRenderedRequestAndContext({
       request,
       environmentId,
       purpose: RENDER_PURPOSE_SEND,
@@ -96,6 +97,15 @@ const fetchGraphQLSchemaForRequest = async ({
         ) => ({ ...acc, [name.toLowerCase() || '']: value || '' }),
         {}
       );
+
+    // Set auth header if we have it
+    if (!hasAuthHeader(renderedRequest.headers)) {
+      const header = await getAuthHeader(renderedRequest, rendered.url);
+
+      if (header) {
+        enabledHeaders[header.name] = header.value;
+      }
+    }
 
     if (request.settingSendCookies && workspaceCookieJar.cookies.length) {
       const jar = jarFromCookies(workspaceCookieJar.cookies);
