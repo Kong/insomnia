@@ -14,6 +14,7 @@ import { grantAuthCode, grantAuthCodeParams, oauthResponseToAccessToken } from '
 import { grantClientCreds } from './grant-client-credentials';
 import { grantImplicit, grantImplicitUrl } from './grant-implicit';
 import { grantPassword } from './grant-password';
+import { getOAuthSession } from './misc';
 import { refreshAccessToken } from './refresh-token';
 /** Get an OAuth2Token object and also handle storing/saving/refreshing */
 const sendOauthRequest = async (requestId: string, url: string, params: RequestHeader[], origin?: string) => {
@@ -58,8 +59,22 @@ export const getOAuth2Token = async (
       authentication
     );
   } else if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
-    const url = grantImplicitUrl(authentication);
-    newToken = await grantImplicit(requestId, url);
+    newToken = {};
+    const implicitUrl = grantImplicitUrl(authentication);
+    const redirectedTo = await window.main.authorizeUserInWindow({
+      url: implicitUrl,
+      urlSuccessRegex: /(access_token=|id_token=)/,
+      urlFailureRegex: /(error=)/,
+      sessionId: getOAuthSession(),
+    });
+    const hash = new URL(redirectedTo).hash.slice(1);
+    if (hash) {
+      const data = Object.fromEntries(new URLSearchParams(hash));
+      newToken = {
+        ...data,
+        access_token: data.access_token || data._id_token,
+      };
+    }
   }
   if (newToken) {
     const old = await models.oAuth2Token.getOrCreateByParentId(requestId);

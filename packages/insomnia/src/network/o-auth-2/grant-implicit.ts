@@ -1,7 +1,7 @@
 import { RequestAuthentication } from '../../models/request';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import * as c from './constants';
-import { getOAuthSession, insertAuthKeyIf } from './misc';
+import { insertAuthKeyIf } from './misc';
 export const grantImplicitUrl = ({
   authorizationUrl,
   responseType,
@@ -30,26 +30,4 @@ export const grantImplicitUrl = ({
       value: Math.floor(Math.random() * 9999999999999) + 1 + '',
     }] : []),
   ]));
-};
-export const grantImplicit = async (
-  _requestId: string,
-  implicitUrl: string,
-) => {
-  const redirectedTo = await window.main.authorizeUserInWindow({
-    url: implicitUrl,
-    urlSuccessRegex: /(access_token=|id_token=)/,
-    urlFailureRegex: /(error=)/,
-    sessionId: getOAuthSession(),
-  });
-  const hash = new URL(redirectedTo).hash.slice(1);
-  if (!hash) {
-    return {};
-  }
-  const data = Object.fromEntries(new URLSearchParams(hash));
-
-  return {
-    ...data,
-    access_token: data.access_token || data._id_token,
-  };
-
 };
