@@ -21,6 +21,7 @@ import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
 import * as network from '../../../../network/network';
+import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { selectSettings } from '../../../redux/selectors';
 import { Dropdown } from '../../base/dropdown/dropdown';
@@ -34,11 +35,6 @@ import { HelpTooltip } from '../../help-tooltip';
 import { Toolbar } from '../../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
-const explorerContainer = document.querySelector('#graphql-explorer-container');
-
-if (!explorerContainer) {
-  throw new Error('Failed to find #graphql-explorer-container');
-}
 
 const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
 
@@ -361,6 +357,8 @@ export const GraphQLEditor: FC<Props> = ({
 
   // Create portal for GraphQL Explorer
   let graphQLExplorerPortal: React.ReactPortal | null = null;
+  const explorerContainer = document.querySelector('#graphql-explorer-container');
+  invariant(explorerContainer, 'Failed to find #graphql-explorer-container');
   if (explorerContainer) {
     graphQLExplorerPortal = ReactDOM.createPortal(
       <GraphQLExplorer
