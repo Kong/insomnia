@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { CONTENT_TYPE_GRAPHQL } from '../../common/constants';
-import { updateMimeType } from '../../ui/components/panes/request-pane';
+import { newBodyGraphQL, updateMimeType } from '../../ui/components/panes/request-pane';
 import * as models from '../index';
 
 describe('init()', () => {
