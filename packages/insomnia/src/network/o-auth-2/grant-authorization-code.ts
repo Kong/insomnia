@@ -14,12 +14,12 @@ export const grantAuthCodeUrl = (codeVerifier: string, {
   state,
   audience,
   resource,
-  authorizeUrl,
+  authorizationUrl,
   accessTokenUrl }: Partial<RequestAuthentication>) => {
-  invariant(authorizeUrl, 'Invalid authorization URL');
+  invariant(authorizationUrl, 'Invalid authorization URL');
   invariant(accessTokenUrl, 'Invalid access token URL');
   const codeChallenge = pkceMethod !== c.PKCE_CHALLENGE_S256 ? codeVerifier : encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest());
-  return joinUrlAndQueryString(authorizeUrl, buildQueryStringFromParams([
+  return joinUrlAndQueryString(authorizationUrl, buildQueryStringFromParams([
     {
       name: 'response_type',
       value: c.RESPONSE_TYPE_CODE,
@@ -45,10 +45,10 @@ export const grantAuthCodeUrl = (codeVerifier: string, {
 export const grantAuthCodeParams = async (
   authentication: Partial<RequestAuthentication>,
 ) => {
-  const { redirectUri, usePkce } = authentication;
-
-  const urlSuccessRegex = new RegExp(`${escapeRegex(redirectUri)}.*(code=)`, 'i');
-  const urlFailureRegex = new RegExp(`${escapeRegex(redirectUri)}.*(error=)`, 'i');
+  const { redirectUrl, usePkce } = authentication;
+  console.log('auth', authentication);
+  const urlSuccessRegex = new RegExp(`${escapeRegex(redirectUrl)}.*(code=)`, 'i');
+  const urlFailureRegex = new RegExp(`${escapeRegex(redirectUrl)}.*(error=)`, 'i');
   const sessionId = getOAuthSession();
   const codeVerifier = usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
 
@@ -86,7 +86,7 @@ export const grantAuthCodeParams = async (
       name: 'code',
       value: redirectParams.code,
     },
-    ...insertAuthKeyIf(redirectUri, 'redirect_uri'),
+    ...insertAuthKeyIf(redirectUrl, 'redirect_uri'),
     ...insertAuthKeyIf(state, 'state'),
     ...insertAuthKeyIf(audience, 'audience'),
     ...insertAuthKeyIf(resource, 'resource'),
