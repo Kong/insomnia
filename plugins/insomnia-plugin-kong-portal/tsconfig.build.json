@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "emitDeclarationOnly": true,
     "isolatedModules": false,
     "jsx": "react",
     "outDir": "dist",

@@ -17,7 +17,7 @@
   "scripts": {
     "prebuild": "npm run clean",
     "build": "esr esbuild.ts",
-    "type-check": "tsc --build tsconfig.build.json --noEmit",
+    "type-check": "tsc --noEmit --project tsconfig.build.json",
     "clean": "rimraf dist",
     "bootstrap": "npm run build"
   },
