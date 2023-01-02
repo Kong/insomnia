@@ -43,7 +43,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     upsert: docs,
     remove: [],
   });
-  const fetchInsoRequestData = async (requestId: string, environmentId: string) => {
+  const fetchInsoRequestData = async (requestId: string) => {
     const request = await models.request.getById(requestId);
     invariant(request, 'failed to find request');
     const ancestors = await database.withAncestors(request, [
@@ -60,10 +60,8 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     invariant(settings, 'failed to create settings');
     const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
     const caCert = await models.caCertificate.findByParentId(workspaceId);
-    // NOTE: inso must name environment
-    const environment = await models.environment.getById(environmentId);
 
-    return { request, environment: environment || {}, settings, clientCertificates, caCert };
+    return { request, settings, clientCertificates, caCert };
   };
   // Return callback helper to send requests
   return async function sendRequest(requestId: string) {
@@ -73,12 +71,12 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
       plugins.ignorePlugin('insomnia-plugin-kong-portal');
       const {
         request,
-        environment,
         settings,
         clientCertificates,
         caCert,
-      } = await fetchInsoRequestData(requestId, environmentId);
-      const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
+      } = await fetchInsoRequestData(requestId);
+      // NOTE: inso ignores active environment, using the one passed in
+      const renderResult = await tryToInterpolateRequest(request, environmentId, RENDER_PURPOSE_SEND);
       const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
       const response = await sendCurlAndWriteTimeline(
         renderedRequest,
