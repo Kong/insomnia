@@ -160,7 +160,7 @@ export const OrganizationsNav: FC = () => {
             );
           })}
           <li>
-            <Tooltip position='right' message="Create new project">
+            <Tooltip position='right' message="Create new organization">
               <CreateButton
                 type="button"
                 onClick={() => {
