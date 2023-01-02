@@ -74,7 +74,6 @@ export async function send(
 ) {
   console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
 
-  // Fetch some things
   const { request,
     environment,
     settings,
@@ -115,7 +114,8 @@ const fetchRequestData = async (requestId: string) => {
 
   return { request, environment, settings, clientCertificates, caCert };
 };
-const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
+
+export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
   try {
     return await getRenderedRequestAndContext({
       request: request,
@@ -127,7 +127,7 @@ const tryToInterpolateRequest = async (request: Request, environmentId: string, 
     throw new Error(`Failed to render request: ${request._id}`);
   }
 };
-const tryToTransformRequestWithPlugins = async (renderResult: RequestAndContext) => {
+export const tryToTransformRequestWithPlugins = async (renderResult: RequestAndContext) => {
   const { request, context } = renderResult;
   try {
     return await _applyRequestPluginHooks(request, context);
@@ -208,7 +208,7 @@ export async function sendCurlAndWriteTimeline(
     ...patch,
   };
 }
-const responseTransform = (patch: ResponsePatch, renderedRequest: RenderedRequest, context: Record<string, any>) => {
+export const responseTransform = (patch: ResponsePatch, renderedRequest: RenderedRequest, context: Record<string, any>) => {
   const response = {
     ...patch,
     environmentId: patch.environmentId,
