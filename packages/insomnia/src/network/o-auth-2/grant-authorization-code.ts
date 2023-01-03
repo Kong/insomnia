@@ -70,36 +70,8 @@ export const grantAuthCodeParams = async (
     const uri = redirectParams.error_uri;
     throw new Error(`OAuth 2.0 Error ${code}\n\n${msg}\n\n${uri}`);
   }
-  const {
-    state,
-    audience,
-    resource,
-    credentialsInBody,
-    clientId,
-    clientSecret } = authentication;
 
-  return [
-    {
-      name: 'grant_type',
-      value: c.GRANT_TYPE_AUTHORIZATION_CODE,
-    },
-    {
-      name: 'code',
-      value: redirectParams.code,
-    },
-    ...insertAuthKeyIf(redirectUrl, 'redirect_uri'),
-    ...insertAuthKeyIf(state, 'state'),
-    ...insertAuthKeyIf(audience, 'audience'),
-    ...insertAuthKeyIf(resource, 'resource'),
-    ...insertAuthKeyIf(codeVerifier, 'code_verifier'),
-    ...(credentialsInBody ? [{
-      name: 'client_id',
-      value: clientId,
-    }, {
-      name: 'client_secret',
-      value: clientSecret,
-    }] : []),
-  ];
+  return redirectParams.code;
 };
 
 const encodePKCE = (buffer: Buffer) => {

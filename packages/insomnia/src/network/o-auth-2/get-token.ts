@@ -1,6 +1,6 @@
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
-import type { RequestAuthentication, RequestHeader } from '../../models/request';
+import type { RequestAuthentication, RequestHeader, RequestParameter } from '../../models/request';
 import type { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
@@ -14,9 +14,7 @@ import {
   GRANT_TYPE_PASSWORD,
 } from './constants';
 import { grantAuthCodeParams } from './grant-authorization-code';
-import { grantClientCreds } from './grant-client-credentials';
 import { grantImplicitUrl } from './grant-implicit';
-import { grantPassword } from './grant-password';
 import { getOAuthSession, insertAuthKeyIf, tryToParse } from './misc';
 
 export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Response) => {
@@ -58,15 +56,12 @@ const transformNewAccessTokenToOauthModel = (accessToken: Partial<Record<AuthKey
   };
 };
 
-const sendAccessTokenRequest = async (requestId: string, authentication: RequestAuthentication, params: RequestHeader[]) => {
-  const isGrantTypeCodeOrCreds = authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE || authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS;
-  const shouldAddAuthHeader = isGrantTypeCodeOrCreds && authentication.credentialsInBody !== true;
+const sendAccessTokenRequest = async (requestId: string, authentication: RequestAuthentication, params: RequestParameter[], headers: RequestHeader[]) => {
   const responsePatch = await sendWithSettings(requestId, {
     headers: [
       { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
       { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
-      ...(authentication.origin ? [{ name: 'Origin', value: authentication.origin }] : []),
-      ...(shouldAddAuthHeader ? [getBasicAuthHeader(authentication.clientId, authentication.clientSecret)] : []),
+      ...headers,
     ],
     url: setDefaultProtocol(authentication.accessTokenUrl),
     method: 'POST',
@@ -113,15 +108,44 @@ export const getOAuth2Token = async (
   } else {
     let params: RequestHeader[] = [];
     if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
-      params = await grantAuthCodeParams(authentication);
+      const redirectCode = await grantAuthCodeParams(authentication);
+      params = [
+        { name: 'grant_type', value: GRANT_TYPE_AUTHORIZATION_CODE },
+        { name: 'code', value: redirectCode },
+        ...insertAuthKeyIf(authentication.redirectUrl, 'redirect_uri'),
+        ...insertAuthKeyIf(authentication.state, 'state'),
+        ...insertAuthKeyIf(authentication.audience, 'audience'),
+        ...insertAuthKeyIf(authentication.resource, 'resource'),
+        ...insertAuthKeyIf(authentication.codeVerifier, 'code_verifier'),
+      ];
     } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
-      params = await grantPassword(authentication);
+      params = [
+        { name: 'grant_type', value: 'password' },
+        { name: 'username', value: authentication.username },
+        { name: 'password', value: authentication.password },
+        ...insertAuthKeyIf(authentication.scope, 'scope'),
+        ...insertAuthKeyIf(authentication.audience, 'audience'),
+      ];
     } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
-      params = await grantClientCreds(authentication);
+      params = [
+        { name: 'grant_type', value: 'client_credentials' },
+        ...insertAuthKeyIf(authentication.scope, 'scope'),
+        ...insertAuthKeyIf(authentication.audience, 'audience'),
+        ...insertAuthKeyIf(authentication.resource, 'resource'),
+      ];
     }
-    console.log('params', params);
-    const response = await sendAccessTokenRequest(requestId, authentication, params);
-    console.log('response', response);
+    const headers = authentication.origin ? [{ name: 'Origin', value: authentication.origin }] : [];
+    if (authentication.credentialsInBody) {
+      params.push({ name: 'client_id', value: authentication.clientId });
+      params.push({ name: 'client_secret', value: authentication.clientSecret });
+    } else {
+      headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
+    }
+    console.log('params', authentication.credentialsInBody, params);
+    console.log('headers', headers);
+
+    const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
+    // console.log('response', response);
     const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
     return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(
       oauthResponseToAccessToken(authentication.accessTokenUrl, response)
@@ -188,7 +212,7 @@ async function _getExisingAccessTokenAndRefreshIfExpired(
       value: clientSecret,
     }] : [getBasicAuthHeader(clientId, clientSecret)]),
   ];
-  const response = await sendAccessTokenRequest(requestId, authentication, params);
+  const response = await sendAccessTokenRequest(requestId, authentication, params, []);
 
   const statusCode = response.statusCode || 0;
   const bodyBuffer = models.response.getBodyBuffer(response);
