@@ -45,13 +45,12 @@ export const grantAuthCodeUrl = (codeVerifier: string, {
 };
 export const grantAuthCodeParams = async (
   authentication: Partial<RequestAuthentication>,
+  codeVerifier: string,
 ) => {
-  const { redirectUrl, usePkce } = authentication;
-  console.log('auth', authentication);
+  const { redirectUrl } = authentication;
   const urlSuccessRegex = new RegExp(`${escapeRegex(redirectUrl)}.*(code=)`, 'i');
   const urlFailureRegex = new RegExp(`${escapeRegex(redirectUrl)}.*(error=)`, 'i');
   const sessionId = getOAuthSession();
-  const codeVerifier = usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
   const authCodeUrl = grantAuthCodeUrl(codeVerifier, authentication);
   const redirectedTo = await window.main.authorizeUserInWindow({
     url: authCodeUrl,
@@ -74,7 +73,7 @@ export const grantAuthCodeParams = async (
   return redirectParams.code;
 };
 
-const encodePKCE = (buffer: Buffer) => {
+export const encodePKCE = (buffer: Buffer) => {
   return buffer.toString('base64')
     // The characters + / = are reserved for PKCE as per the RFC,
     // so we replace them with unreserved characters

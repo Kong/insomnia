@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { RequestAuthentication, RequestHeader, RequestParameter } from '../../models/request';
@@ -13,7 +15,7 @@ import {
   GRANT_TYPE_IMPLICIT,
   GRANT_TYPE_PASSWORD,
 } from './constants';
-import { grantAuthCodeParams } from './grant-authorization-code';
+import { encodePKCE, grantAuthCodeParams } from './grant-authorization-code';
 import { grantImplicitUrl } from './grant-implicit';
 import { getOAuthSession, insertAuthKeyIf, tryToParse } from './misc';
 
@@ -108,7 +110,8 @@ export const getOAuth2Token = async (
   } else {
     let params: RequestHeader[] = [];
     if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
-      const redirectCode = await grantAuthCodeParams(authentication);
+      const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
+      const redirectCode = await grantAuthCodeParams(authentication, codeVerifier);
       params = [
         { name: 'grant_type', value: GRANT_TYPE_AUTHORIZATION_CODE },
         { name: 'code', value: redirectCode },
@@ -116,7 +119,7 @@ export const getOAuth2Token = async (
         ...insertAuthKeyIf(authentication.state, 'state'),
         ...insertAuthKeyIf(authentication.audience, 'audience'),
         ...insertAuthKeyIf(authentication.resource, 'resource'),
-        ...insertAuthKeyIf(authentication.codeVerifier, 'code_verifier'),
+        ...insertAuthKeyIf(codeVerifier, 'code_verifier'),
       ];
     } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
       params = [
@@ -141,11 +144,8 @@ export const getOAuth2Token = async (
     } else {
       headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
     }
-    console.log('params', authentication.credentialsInBody, params);
-    console.log('headers', headers);
 
     const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
-    // console.log('response', response);
     const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
     return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(
       oauthResponseToAccessToken(authentication.accessTokenUrl, response)
