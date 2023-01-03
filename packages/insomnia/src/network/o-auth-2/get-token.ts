@@ -188,7 +188,7 @@ async function _getExisingAccessTokenAndRefreshIfExpired(
       value: clientSecret,
     }] : [getBasicAuthHeader(clientId, clientSecret)]),
   ];
-  const response = await sendAccessTokenRequest(requestId, authentication.accessTokenUrl, params, authentication.origin);
+  const response = await sendAccessTokenRequest(requestId, authentication, params);
 
   const statusCode = response.statusCode || 0;
   const bodyBuffer = models.response.getBodyBuffer(response);

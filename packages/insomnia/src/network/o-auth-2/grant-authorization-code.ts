@@ -4,7 +4,6 @@ import { escapeRegex } from '../../common/misc';
 import { RequestAuthentication } from '../../models/request';
 import { invariant } from '../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
-import { getBasicAuthHeader } from '../basic-auth/get-header';
 import * as c from './constants';
 import { getOAuthSession, insertAuthKeyIf } from './misc';
 export const grantAuthCodeUrl = (codeVerifier: string, {
