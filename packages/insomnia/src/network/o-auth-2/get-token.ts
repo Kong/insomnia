@@ -6,7 +6,6 @@ import type { RequestAuthentication, RequestHeader, RequestParameter } from '../
 import type { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
 import {
@@ -103,9 +102,10 @@ export const getOAuth2Token = async (
       ...(!authentication.responseType || authentication.responseType === RESPONSE_TYPE_ID_TOKEN_TOKEN || authentication.responseType === RESPONSE_TYPE_ID_TOKEN ? [{
         name: 'nonce', value: Math.floor(Math.random() * 9999999999999) + 1 + '',
       }] : [])];
-    const implicitUrl = joinUrlAndQueryString(authentication.authorizationUrl, buildQueryStringFromParams(params));
+    const implicitUrl = new URL(authentication.authorizationUrl);
+    params.forEach(p => implicitUrl.searchParams.append(p.name, p.value));
     const redirectedTo = await window.main.authorizeUserInWindow({
-      url: implicitUrl,
+      url: implicitUrl.toString(),
       urlSuccessRegex: /(access_token=|id_token=)/,
       urlFailureRegex: /(error=)/,
       sessionId: getOAuthSession(),
@@ -199,31 +199,19 @@ async function _getExisingAccessTokenAndRefreshIfExpired(
   if (!token.refreshToken) {
     return null;
   }
-  const {
-    accessTokenUrl,
-    credentialsInBody,
-    clientId,
-    clientSecret,
-    scope,
-  } = authentication;
+
   const params = [
-    {
-      name: 'grant_type',
-      value: 'refresh_token',
-    },
-    {
-      name: 'refresh_token',
-      value: token.refreshToken,
-    },
-    ...insertAuthKeyIf(scope, 'scope'),
-    ...(credentialsInBody ? [{
-      name: 'client_id',
-      value: clientId,
-    }, {
-      name: 'client_secret',
-      value: clientSecret,
-    }] : [getBasicAuthHeader(clientId, clientSecret)]),
+    { name: 'grant_type', value: 'refresh_token' },
+    { name: 'refresh_token', value: token.refreshToken },
+    ...insertAuthKeyIf(authentication.scope, 'scope'),
   ];
+  const headers = [];
+  if (authentication.credentialsInBody) {
+    params.push({ name: 'client_id', value: authentication.clientId });
+    params.push({ name: 'client_secret', value: authentication.clientSecret });
+  } else {
+    headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
+  }
   const response = await sendAccessTokenRequest(requestId, authentication, params, []);
 
   const statusCode = response.statusCode || 0;
@@ -251,9 +239,9 @@ async function _getExisingAccessTokenAndRefreshIfExpired(
       }
     }
 
-    throw new Error(`[oauth2] Failed to refresh token url=${accessTokenUrl} status=${statusCode}`);
+    throw new Error(`[oauth2] Failed to refresh token url=${authentication.accessTokenUrl} status=${statusCode}`);
   }
-  invariant(bodyBuffer, `[oauth2] No body returned from ${accessTokenUrl}`);
+  invariant(bodyBuffer, `[oauth2] No body returned from ${authentication.accessTokenUrl}`);
   const data = tryToParse(bodyBuffer.toString());
   if (!data) {
     return null;
