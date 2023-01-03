@@ -116,7 +116,7 @@ export const getOAuth2Token = async (
       const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
       return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({
         ...data,
-        access_token: data.access_token || data._id_token,
+        access_token: data.access_token || data.id_token,
       }));
     }
   } else {
