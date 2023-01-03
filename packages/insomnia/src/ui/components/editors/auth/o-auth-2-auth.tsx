@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FC, ReactNode, useCallback, useMemo, useState } from 'react';
+import React, { ChangeEvent, FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { convertEpochToMilliseconds, toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
@@ -415,44 +415,19 @@ const OAuth2Error: FC<{ token: OAuth2Token | null }> = ({ token }) => {
   return debugButton;
 };
 
-const useActiveOAuth2Token = () => {
+const OAuth2Tokens: FC = () => {
   const { activeRequest: { authentication, _id: requestId } } = useActiveRequest();
-
   const [token, setToken] = useState<OAuth2Token | null>(null);
-  models.oAuth2Token.getByParentId(requestId).then(token => token && setToken(token));
+  useEffect(() => {
+    const fn = async () => {
+      const token = await models.oAuth2Token.getByParentId(requestId);
+      token && setToken(token);
+    };
+    fn();
+  }, [requestId]);
   const { handleRender } = useNunjucks();
-
-  const clearToken = useCallback(async () => {
-    if (token) {
-      await models.oAuth2Token.remove(token);
-      setToken(null);
-    }
-  }, [token]);
-
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const refreshToken = useCallback(async () => {
-    setError('');
-    setLoading(true);
-
-    try {
-      const renderedAuthentication = await handleRender(authentication);
-      await getOAuth2Token(requestId, renderedAuthentication, true);
-      setLoading(false);
-    } catch (err) {
-      // Clear existing tokens if there's an error
-      await clearToken();
-      setError(err.message);
-      setLoading(false);
-    }
-  }, [authentication, clearToken, handleRender, requestId]);
-
-  return { error, loading, token, clearToken, refreshToken };
-};
-
-const OAuth2Tokens: FC = () => {
-  const { token, clearToken, refreshToken, loading, error } = useActiveOAuth2Token();
 
   return (
     <div className='notice subtle text-left'>
@@ -467,14 +442,41 @@ const OAuth2Tokens: FC = () => {
       <OAuth2TokenInput token={token} label='Access Token' property='accessToken' />
       <div className='pad-top text-right'>
         {token ? (
-          <button className="btn btn--clicky" onClick={clearToken}>
+          <button
+            className="btn btn--clicky"
+            disabled={!token}
+            onClick={() => {
+              if (token) {
+                setToken(null);
+                models.oAuth2Token.remove(token);
+              }
+            }}
+          >
             Clear
           </button>
         ) : null}
         &nbsp;&nbsp;
         <button
           className="btn btn--clicky"
-          onClick={refreshToken}
+          onClick={async () => {
+            setError('');
+            setLoading(true);
+
+            try {
+              const renderedAuthentication = await handleRender(authentication);
+              const t = await getOAuth2Token(requestId, renderedAuthentication, true);
+              setToken(t);
+              setLoading(false);
+            } catch (err) {
+              // Clear existing tokens if there's an error
+              if (token) {
+                setToken(null);
+                models.oAuth2Token.remove(token);
+              }
+              setError(err.message);
+              setLoading(false);
+            }
+          }}
           disabled={loading}
         >
           {loading
