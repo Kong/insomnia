@@ -105,6 +105,15 @@ const router = createMemoryRouter(
                               ...args
                             ),
                         },
+                        {
+                          path: 'git',
+                          children: [
+                            {
+                              path: 'clone',
+                              action: async (...args) => (await import('./routes/git-actions')).cloneGitRepoAction(...args),
+                            },
+                          ],
+                        },
                       ],
                     },
                     {
@@ -112,6 +121,7 @@ const router = createMemoryRouter(
                       children: [
                         {
                           path: ':workspaceId',
+                          id: ':workspaceId',
                           loader: async (...args) => (await import('./routes/workspace')).workspaceLoader(...args),
                           children: [
                             {
@@ -234,6 +244,64 @@ const router = createMemoryRouter(
                                 (
                                   await import('./routes/actions')
                                 ).duplicateWorkspaceAction(...args),
+                            },
+                            {
+                              path: 'git',
+                              children: [
+                                {
+                                  path: 'changes',
+                                  loader: async (...args) => (await import('./routes/git-actions')).gitChangesLoader(...args),
+                                },
+                                {
+                                  path: 'commit',
+                                  action: async (...args) => (await import('./routes/git-actions')).commitToGitRepoAction(...args),
+                                },
+                                {
+                                  path: 'branch',
+                                  children: [
+                                    {
+                                      path: 'new',
+                                      action: async (...args) => (await import('./routes/git-actions')).createNewGitBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'delete',
+                                      action: async (...args) => (await import('./routes/git-actions')).deleteGitBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'checkout',
+                                      action: async (...args) => (await import('./routes/git-actions')).checkoutGitBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'merge',
+                                      action: async (...args) => (await import('./routes/git-actions')).mergeGitBranchAction(...args),
+                                    },
+                                  ],
+                                },
+                                {
+                                  path: 'rollback',
+                                  action: async (...args) => (await import('./routes/git-actions')).gitRollbackChangesAction(...args),
+                                },
+                                {
+                                  path: 'repo',
+                                  loader: async (...args) => (await import('./routes/git-actions')).gitRepoLoader(...args),
+                                },
+                                {
+                                  path: 'update',
+                                  action: async (...args) => (await import('./routes/git-actions')).updateGitRepoAction(...args),
+                                },
+                                {
+                                  path: 'reset',
+                                  action: async (...args) => (await import('./routes/git-actions')).resetGitRepoAction(...args),
+                                },
+                                {
+                                  path: 'pull',
+                                  action: async (...args) => (await import('./routes/git-actions')).pullFromGitRemoteAction(...args),
+                                },
+                                {
+                                  path: 'push',
+                                  action: async (...args) => (await import('./routes/git-actions')).pushToGitRemoteAction(...args),
+                                },
+                              ],
                             },
                           ],
                         },

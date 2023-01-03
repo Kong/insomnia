@@ -28,7 +28,7 @@ describe('writeFileWithCliOptions', () => {
     const contents = 'contents';
     const workingDir = undefined;
     const promise = writeFileWithCliOptions(output, contents, workingDir);
-    await expect(promise).resolves.toBe('file.yaml');
+    await expect(promise).resolves.toBe(path.join(process.cwd(), 'file.yaml'));
   });
   it('should write to absolute output file', async () => {
     const absolutePath = path.join(os.tmpdir(), 'dev', 'file.yaml');
@@ -69,12 +69,12 @@ describe('writeFileWithCliOptions', () => {
     const error = new Error('mkdir sync error');
     (mkdirp.sync as Mock).mockRejectedValue(error);
     const promise = writeFileWithCliOptions('file.yaml', 'contents');
-    await expect(promise).rejects.toThrow(new InsoError('Failed to write to "file.yaml"', error));
+    await expect(promise).rejects.toThrow(new InsoError(`Failed to write to "${path.join(process.cwd(), 'file.yaml')}"`, error));
   });
   it('should return an error if write file fails', async () => {
     const error = new Error('fs promises writeFile error');
     (fs.promises.writeFile as Mock).mockRejectedValue(error);
     const promise = writeFileWithCliOptions('file.yaml', 'contents');
-    await expect(promise).rejects.toThrow(new InsoError('Failed to write to "file.yaml"', error));
+    await expect(promise).rejects.toThrow(new InsoError(`Failed to write to "${path.join(process.cwd(), 'file.yaml')}"`, error));
   });
 });

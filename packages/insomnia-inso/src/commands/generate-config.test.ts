@@ -69,7 +69,7 @@ describe('generateConfig()', () => {
 
     await generateConfig(filePath, { type: 'kubernetes', tags: 'tag' });
 
-    expect(generate).toHaveBeenCalledWith(filePath, conversionTypeMap.kubernetes, ['tag']);
+    expect(generate).toHaveBeenCalledWith(`${path.join(process.cwd(), filePath)}`, conversionTypeMap.kubernetes, ['tag']);
     expect(logger.__getLogs().log).toEqual(['a\n---\nb\n']);
   });
 

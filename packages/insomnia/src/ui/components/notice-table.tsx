@@ -5,7 +5,7 @@ import { IconEnum, SvgIcon } from './svg-icon';
 import { Button } from './themed-button';
 
 export interface Notice {
-  type: 'warning' | 'error';
+  type: 'warning' | 'error' | 'info';
   line: number;
   message: string;
 }

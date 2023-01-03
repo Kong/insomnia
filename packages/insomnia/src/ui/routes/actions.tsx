@@ -1,5 +1,6 @@
 import type { IRuleResult } from '@stoplight/spectral-core';
 import { generate, runTests, Test } from 'insomnia-testing';
+import path from 'path';
 import { ActionFunction, redirect } from 'react-router-dom';
 
 import * as session from '../../account/session';
@@ -466,8 +467,20 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({
   if (!apiSpec) {
     throw new Error('No API Specification was found');
   }
+
+  const workspace = await models.workspace.getById(workspaceId);
+
+  invariant(workspace, 'Workspace not found');
+
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+
   const isLintError = (result: IRuleResult) => result.severity === 0;
-  const results = (await window.main.spectralRun(apiSpec.contents)).filter(isLintError);
+  const rulesetPath = path.join(
+    process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+    `version-control/git/${workspaceMeta?.gitRepositoryId}/other/.spectral.yaml`,
+  );
+
+  const results = (await window.main.spectralRun({ contents: apiSpec.contents, rulesetPath })).filter(isLintError);
   if (apiSpec.contents && results && results.length) {
     throw new Error('Error Generating Configuration');
   }

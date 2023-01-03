@@ -49,6 +49,9 @@ export async function generateService(server: OA3Server, api: OpenApi3Spec, tags
     throw new Error(`expected '${xKongServiceDefaults}' to be an object`);
   }
 
+  // Generate generic and security-related service-level plugin objects
+  const serviceSecurityPlugins = generateSecurityPlugins(null, api, tags);
+
   const service: DCService = {
     ...serviceDefaults,
     name,
@@ -58,7 +61,7 @@ export async function generateService(server: OA3Server, api: OpenApi3Spec, tags
     // not a hostname, but the Upstream name
     port: Number(parsedUrl.port || '80'),
     path: parsedUrl.pathname,
-    plugins: globalPlugins.plugins,
+    plugins: [...globalPlugins.plugins, ...serviceSecurityPlugins],
     routes: [],
     tags,
   };

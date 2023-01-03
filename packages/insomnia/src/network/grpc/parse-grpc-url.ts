@@ -1,12 +1,13 @@
-import { parse as urlParse } from 'url';
-
-export const parseGrpcUrl = (grpcUrl: string) => {
-  const { protocol, host, href } = urlParse(grpcUrl?.toLowerCase() || '');
-  if (protocol === 'grpcs:') {
-    return { url: host, enableTls: true };
+export const parseGrpcUrl = (grpcUrl: string): { url: string; enableTls: boolean } => {
+  if (!grpcUrl) {
+    return { url: '', enableTls: false };
   }
-  if (protocol === 'grpc:') {
-    return { url: host, enableTls: false };
+  const lower = grpcUrl.toLowerCase();
+  if (lower.startsWith('grpc://')) {
+    return { url: lower.slice(7), enableTls: false };
   }
-  return { url: href, enableTls: false };
+  if (lower.startsWith('grpcs://')) {
+    return { url: lower.slice(8), enableTls: true };
+  }
+  return { url: lower, enableTls: false };
 };

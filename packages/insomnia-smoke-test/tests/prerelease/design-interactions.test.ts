@@ -18,7 +18,6 @@ test.describe('Design interactions', async () => {
     const text = await loadFixture('openapi3.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
     await page.click('button:has-text("Clipboard")');
-    await page.click('div[role="dialog"] button:has-text("New")');
     await page.click('div[role="dialog"] >> text=Design Document');
     await page.click('text=DocumentSmoke Test API server 1.0.0v1.0.0OpenAPI 3.0.0just now');
 
@@ -57,7 +56,6 @@ test.describe('Design interactions', async () => {
     const text = await loadFixture('unit-test.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
     await page.click('button:has-text("Clipboard")');
-    await page.click('div[role="dialog"] button:has-text("New")');
     await page.click('text=unit-test.yamljust now');
 
     // Switch to Test tab

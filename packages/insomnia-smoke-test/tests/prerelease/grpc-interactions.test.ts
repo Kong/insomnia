@@ -18,7 +18,6 @@ test.describe('gRPC interactions', () => {
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
     await page.click('button:has-text("Clipboard")');
-    await page.click('div[role="dialog"] button:has-text("New")');
     await page.click('text=CollectionPreRelease gRPCjust now');
     statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
@@ -29,7 +28,7 @@ test.describe('gRPC interactions', () => {
   });
 
   test('can send unidirectional requests', async ({ page }) => {
-    await page.click('button:has-text("gRPCUnary")');
+    await page.locator('button:has-text("gRPCUnary")').nth(1).click();
     await page.locator('[data-testid="request-pane"] >> text=Unary').click();
     await page.click('text=Send');
 
