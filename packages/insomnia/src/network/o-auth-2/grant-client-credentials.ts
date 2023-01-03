@@ -1,6 +1,4 @@
 import { RequestAuthentication } from '../../models/request';
-import { getBasicAuthHeader } from '../basic-auth/get-header';
-import * as c from './constants';
 import { insertAuthKeyIf } from './misc';
 
 export const grantClientCreds = async ({
@@ -12,10 +10,7 @@ export const grantClientCreds = async ({
   resource,
 }: Partial<RequestAuthentication>) => {
   return [
-    {
-      name: 'grant_type',
-      value: c.GRANT_TYPE_CLIENT_CREDENTIALS,
-    },
+    { name: 'grant_type', value: 'client_credentials' },
     ...insertAuthKeyIf(scope, 'scope'),
     ...insertAuthKeyIf(audience, 'audience'),
     ...insertAuthKeyIf(resource, 'resource'),
@@ -25,6 +20,6 @@ export const grantClientCreds = async ({
     }, {
       name: 'client_secret',
       value: clientSecret,
-    }] : [getBasicAuthHeader(clientId, clientSecret)]),
+    }] : []),
   ];
 };

@@ -99,9 +99,8 @@ export const grantAuthCodeParams = async (
     }, {
       name: 'client_secret',
       value: clientSecret,
-    }] : [getBasicAuthHeader(clientId, clientSecret)]),
+    }] : []),
   ];
-
 };
 
 const encodePKCE = (buffer: Buffer) => {
