@@ -15,7 +15,8 @@ export const grantAuthCodeUrl = (codeVerifier: string, {
   audience,
   resource,
   authorizationUrl,
-  accessTokenUrl }: Partial<RequestAuthentication>) => {
+  accessTokenUrl,
+  redirectUrl }: Partial<RequestAuthentication>) => {
   invariant(authorizationUrl, 'Invalid authorization URL');
   invariant(accessTokenUrl, 'Invalid access token URL');
   const codeChallenge = pkceMethod !== c.PKCE_CHALLENGE_S256 ? codeVerifier : encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest());
@@ -28,6 +29,7 @@ export const grantAuthCodeUrl = (codeVerifier: string, {
       name: 'client_id',
       value: clientId,
     },
+    ...insertAuthKeyIf(redirectUrl, 'redirect_uri'),
     ...insertAuthKeyIf(scope, 'scope'),
     ...insertAuthKeyIf(state, 'state'),
     ...insertAuthKeyIf(audience, 'audience'),
@@ -51,9 +53,9 @@ export const grantAuthCodeParams = async (
   const urlFailureRegex = new RegExp(`${escapeRegex(redirectUrl)}.*(error=)`, 'i');
   const sessionId = getOAuthSession();
   const codeVerifier = usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
-
+  const authCodeUrl = grantAuthCodeUrl(codeVerifier, authentication);
   const redirectedTo = await window.main.authorizeUserInWindow({
-    url: grantAuthCodeUrl(codeVerifier, authentication),
+    url: authCodeUrl,
     urlSuccessRegex,
     urlFailureRegex,
     sessionId,
