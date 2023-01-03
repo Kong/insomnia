@@ -422,9 +422,10 @@ const useActiveOAuth2Token = () => {
   models.oAuth2Token.getByParentId(requestId).then(token => token && setToken(token));
   const { handleRender } = useNunjucks();
 
-  const clearTokens = useCallback(async () => {
+  const clearToken = useCallback(async () => {
     if (token) {
       await models.oAuth2Token.remove(token);
+      setToken(null);
     }
   }, [token]);
 
@@ -441,17 +442,17 @@ const useActiveOAuth2Token = () => {
       setLoading(false);
     } catch (err) {
       // Clear existing tokens if there's an error
-      await clearTokens();
+      await clearToken();
       setError(err.message);
       setLoading(false);
     }
-  }, [authentication, clearTokens, handleRender, requestId]);
+  }, [authentication, clearToken, handleRender, requestId]);
 
-  return { error, loading, token, clearTokens, refreshToken };
+  return { error, loading, token, clearToken, refreshToken };
 };
 
 const OAuth2Tokens: FC = () => {
-  const { token, clearTokens, refreshToken, loading, error } = useActiveOAuth2Token();
+  const { token, clearToken, refreshToken, loading, error } = useActiveOAuth2Token();
 
   return (
     <div className='notice subtle text-left'>
@@ -466,7 +467,7 @@ const OAuth2Tokens: FC = () => {
       <OAuth2TokenInput token={token} label='Access Token' property='accessToken' />
       <div className='pad-top text-right'>
         {token ? (
-          <button className="btn btn--clicky" onClick={clearTokens}>
+          <button className="btn btn--clicky" onClick={clearToken}>
             Clear
           </button>
         ) : null}
