@@ -6,6 +6,7 @@ import type { RequestAuthentication, RequestHeader, RequestParameter } from '../
 import type { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
 import { sendWithSettings } from '../network';
 import {
@@ -14,9 +15,10 @@ import {
   GRANT_TYPE_CLIENT_CREDENTIALS,
   GRANT_TYPE_IMPLICIT,
   GRANT_TYPE_PASSWORD,
+  RESPONSE_TYPE_ID_TOKEN,
+  RESPONSE_TYPE_ID_TOKEN_TOKEN,
 } from './constants';
 import { encodePKCE, grantAuthCodeParams } from './grant-authorization-code';
-import { grantImplicitUrl } from './grant-implicit';
 import { getOAuthSession, insertAuthKeyIf, tryToParse } from './misc';
 
 export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Response) => {
@@ -91,7 +93,17 @@ export const getOAuth2Token = async (
     return oAuth2Token;
   }
   if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
-    const implicitUrl = grantImplicitUrl(authentication);
+    const params = [
+      { name: 'response_type', value: authentication.responseType },
+      { name: 'client_id', value: authentication.clientId },
+      ...insertAuthKeyIf(authentication.redirectUrl, 'redirect_uri'),
+      ...insertAuthKeyIf(authentication.scope, 'scope'),
+      ...insertAuthKeyIf(authentication.state, 'state'),
+      ...insertAuthKeyIf(authentication.audience, 'audience'),
+      ...(!authentication.responseType || authentication.responseType === RESPONSE_TYPE_ID_TOKEN_TOKEN || authentication.responseType === RESPONSE_TYPE_ID_TOKEN ? [{
+        name: 'nonce', value: Math.floor(Math.random() * 9999999999999) + 1 + '',
+      }] : [])];
+    const implicitUrl = joinUrlAndQueryString(authentication.authorizationUrl, buildQueryStringFromParams(params));
     const redirectedTo = await window.main.authorizeUserInWindow({
       url: implicitUrl,
       urlSuccessRegex: /(access_token=|id_token=)/,
