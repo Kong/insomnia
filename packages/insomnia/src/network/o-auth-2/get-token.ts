@@ -60,7 +60,7 @@ const transformNewAccessTokenToOauthModel = (accessToken: Partial<Record<AuthKey
 
 const sendAccessTokenRequest = async (requestId: string, authentication: RequestAuthentication, params: RequestHeader[]) => {
   const isGrantTypeCodeOrCreds = authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE || authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS;
-  const shouldAddAuthHeader = isGrantTypeCodeOrCreds && authentication.credentialsInBody === false;
+  const shouldAddAuthHeader = isGrantTypeCodeOrCreds && authentication.credentialsInBody !== true;
   const responsePatch = await sendWithSettings(requestId, {
     headers: [
       { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },

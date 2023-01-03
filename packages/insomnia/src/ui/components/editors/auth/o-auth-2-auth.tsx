@@ -421,7 +421,7 @@ const OAuth2Tokens: FC = () => {
   useEffect(() => {
     const fn = async () => {
       const token = await models.oAuth2Token.getByParentId(requestId);
-      token && setToken(token);
+      setToken(token);
     };
     fn();
   }, [requestId]);
