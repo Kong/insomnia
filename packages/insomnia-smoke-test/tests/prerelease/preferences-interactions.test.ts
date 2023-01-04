@@ -5,7 +5,7 @@ import { test } from '../../playwright/test';
 test('Preferences through click', async ({ page }) => {
 
   await page.locator('[data-testid="settings-button"]').click();
-  await page.locator('text=Insomnia Preferences ').first().click();
+  await page.locator('text=Insomnia Preferences').first().click();
 
   expect(true).toBeTruthy();
 });
