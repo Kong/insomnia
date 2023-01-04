@@ -166,8 +166,8 @@
     "date-fns": "^2.28.0",
     "deep-equal": "^1.0.1",
     "electron": "22.0.0",
-    "electron-builder": "23.0.7",
-    "electron-builder-squirrel-windows": "23.0.7",
+    "electron-builder": "23.6.0",
+    "electron-builder-squirrel-windows": "23.6.0",
     "electron-devtools-installer": "^3.2.0",
     "electron-notarize": "^1.1.1",
     "esbuild": "^0.15.13",
@@ -215,6 +215,7 @@
     "dev-server-port": 3334
   },
   "overrides": {
-    "protobufjs": "github:Kong/protobuf.js#eca9f0f"
+    "protobufjs": "github:Kong/protobuf.js#eca9f0f",
+    "app-builder-lib": "24.0.0-alpha.8"
   }
 }
