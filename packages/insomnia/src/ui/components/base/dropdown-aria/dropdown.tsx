@@ -27,16 +27,17 @@ interface Props extends AriaMenuProps<any>, MenuTriggerProps {
 }
 
 const Dropdown = (props: Props) => {
+  const { placement, actionButton, className, label, selectionMode = 'multiple', onOpen, closeOnSelect = false } = props;
+
   const state: MenuTriggerState = useMenuTriggerState({
     ...props,
-    onOpenChange: isOpen => isOpen && props.onOpen?.(),
+    closeOnSelect: selectionMode === 'multiple' || closeOnSelect,
+    onOpenChange: isOpen => isOpen && onOpen?.(),
   });
 
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   const { menuTriggerProps, menuProps } = useMenuTrigger({}, state, triggerRef);
-
-  const { placement, actionButton, className, label } = props;
 
   return (
     <Container className={className}>
@@ -53,6 +54,7 @@ const Dropdown = (props: Props) => {
           <Menu
             {...menuProps}
             {...props}
+            selectionMode={selectionMode}
             autoFocus={state.focusStrategy || true}
             onClose={() => state.close()}
           />
