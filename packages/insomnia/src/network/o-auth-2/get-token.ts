@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 
+import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { RequestAuthentication, RequestHeader, RequestParameter } from '../../models/request';
@@ -14,10 +15,11 @@ import {
   GRANT_TYPE_CLIENT_CREDENTIALS,
   GRANT_TYPE_IMPLICIT,
   GRANT_TYPE_PASSWORD,
+  PKCE_CHALLENGE_S256,
+  RESPONSE_TYPE_CODE,
   RESPONSE_TYPE_ID_TOKEN,
   RESPONSE_TYPE_ID_TOKEN_TOKEN,
 } from './constants';
-import { encodePKCE, grantAuthCodeParams } from './grant-authorization-code';
 import { getOAuthSession, insertAuthKeyIf, tryToParse } from './misc';
 
 export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Response) => {
@@ -85,25 +87,26 @@ export const getOAuth2Token = async (
   authentication: RequestAuthentication,
   forceRefresh = false,
 ): Promise<OAuth2Token | null> => {
-
-  const oAuth2Token = await _getExisingAccessTokenAndRefreshIfExpired(requestId, authentication, forceRefresh);
-
+  const oAuth2Token = await getExisingAccessTokenAndRefreshIfExpired(requestId, authentication, forceRefresh);
   if (oAuth2Token) {
     return oAuth2Token;
   }
+  const validGrantTYpe = ['implicit', 'authorization_code', 'password', 'client_credentials'].includes(authentication.grantType);
+  invariant(validGrantTYpe, `Invalid grant type ${authentication.grantType}`);
   if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
-    const params = [
+    const hasNonce = !authentication.responseType || authentication.responseType === RESPONSE_TYPE_ID_TOKEN_TOKEN || authentication.responseType === RESPONSE_TYPE_ID_TOKEN;
+    const implicitUrl = new URL(authentication.authorizationUrl);
+    [
       { name: 'response_type', value: authentication.responseType },
       { name: 'client_id', value: authentication.clientId },
       ...insertAuthKeyIf(authentication.redirectUrl, 'redirect_uri'),
       ...insertAuthKeyIf(authentication.scope, 'scope'),
       ...insertAuthKeyIf(authentication.state, 'state'),
       ...insertAuthKeyIf(authentication.audience, 'audience'),
-      ...(!authentication.responseType || authentication.responseType === RESPONSE_TYPE_ID_TOKEN_TOKEN || authentication.responseType === RESPONSE_TYPE_ID_TOKEN ? [{
+      ...(hasNonce ? [{
         name: 'nonce', value: Math.floor(Math.random() * 9999999999999) + 1 + '',
-      }] : [])];
-    const implicitUrl = new URL(authentication.authorizationUrl);
-    params.forEach(p => implicitUrl.searchParams.append(p.name, p.value));
+      }] : []),
+    ].forEach(p => p.value && implicitUrl.searchParams.append(p.name, p.value));
     const redirectedTo = await window.main.authorizeUserInWindow({
       url: implicitUrl.toString(),
       urlSuccessRegex: /(access_token=|id_token=)/,
@@ -111,91 +114,108 @@ export const getOAuth2Token = async (
       sessionId: getOAuthSession(),
     });
     const hash = new URL(redirectedTo).hash.slice(1);
-    if (hash) {
-      const data = Object.fromEntries(new URLSearchParams(hash));
-      const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
-      return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({
-        ...data,
-        access_token: data.access_token || data.id_token,
-      }));
-    }
-  } else {
-    let params: RequestHeader[] = [];
-    if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
-      const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
-      const redirectCode = await grantAuthCodeParams(authentication, codeVerifier);
-      params = [
-        { name: 'grant_type', value: GRANT_TYPE_AUTHORIZATION_CODE },
-        { name: 'code', value: redirectCode },
-        ...insertAuthKeyIf(authentication.redirectUrl, 'redirect_uri'),
-        ...insertAuthKeyIf(authentication.state, 'state'),
-        ...insertAuthKeyIf(authentication.audience, 'audience'),
-        ...insertAuthKeyIf(authentication.resource, 'resource'),
-        ...insertAuthKeyIf(codeVerifier, 'code_verifier'),
-      ];
-    } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
-      params = [
-        { name: 'grant_type', value: 'password' },
-        { name: 'username', value: authentication.username },
-        { name: 'password', value: authentication.password },
-        ...insertAuthKeyIf(authentication.scope, 'scope'),
-        ...insertAuthKeyIf(authentication.audience, 'audience'),
-      ];
-    } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
-      params = [
-        { name: 'grant_type', value: 'client_credentials' },
-        ...insertAuthKeyIf(authentication.scope, 'scope'),
-        ...insertAuthKeyIf(authentication.audience, 'audience'),
-        ...insertAuthKeyIf(authentication.resource, 'resource'),
-      ];
-    }
-    const headers = authentication.origin ? [{ name: 'Origin', value: authentication.origin }] : [];
-    if (authentication.credentialsInBody) {
-      params.push({ name: 'client_id', value: authentication.clientId });
-      params.push({ name: 'client_secret', value: authentication.clientSecret });
-    } else {
-      headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
-    }
-
-    const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
+    invariant(hash, 'No hash found in redirect URL');
+    const data = Object.fromEntries(new URLSearchParams(hash));
     const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
-    return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(
-      oauthResponseToAccessToken(authentication.accessTokenUrl, response)
-    ));
+    return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({
+      ...data,
+      access_token: data.access_token || data.id_token,
+    }));
   }
-  return null;
-};
+  let params: RequestHeader[] = [];
+  if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
+    const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
+    const urlSuccessRegex = new RegExp(`${escapeRegex(authentication.redirectUrl)}.*(code=)`, 'i');
+    const urlFailureRegex = new RegExp(`${escapeRegex(authentication.redirectUrl)}.*(error=)`, 'i');
+    const sessionId = getOAuthSession();
+    invariant(authentication.authorizationUrl, 'Invalid authorization URL');
+    invariant(authentication.accessTokenUrl, 'Invalid access token URL');
+    const codeChallenge = authentication.pkceMethod !== PKCE_CHALLENGE_S256 ? codeVerifier : encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest());
+    const authCodeUrl = new URL(authentication.authorizationUrl);
+    [
+      { name: 'response_type', value: RESPONSE_TYPE_CODE },
+      { name: 'client_id', value: authentication.clientId },
+      ...insertAuthKeyIf(authentication.redirectUrl, 'redirect_uri'),
+      ...insertAuthKeyIf(authentication.scope, 'scope'),
+      ...insertAuthKeyIf(authentication.state, 'state'),
+      ...insertAuthKeyIf(authentication.audience, 'audience'),
+      ...insertAuthKeyIf(authentication.resource, 'resource'),
+      ...(codeChallenge ? [
+        { name: 'code_challenge', value: codeChallenge },
+        { name: 'code_challenge_method', value: authentication.pkceMethod },
+      ] : []),
+    ].forEach(p => p.value && authCodeUrl.searchParams.append(p.name, p.value));
+    const redirectedTo = await window.main.authorizeUserInWindow({
+      url: authCodeUrl.toString(),
+      urlSuccessRegex,
+      urlFailureRegex,
+      sessionId,
+    });
+    console.log('[oauth2] Detected redirect ' + redirectedTo);
+    const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
+    if (redirectParams.error) {
+      const code = redirectParams.error;
+      const msg = redirectParams.error_description;
+      const uri = redirectParams.error_uri;
+      throw new Error(`OAuth 2.0 Error ${code}\n\n${msg}\n\n${uri}`);
+    }
+    params = [
+      { name: 'grant_type', value: GRANT_TYPE_AUTHORIZATION_CODE },
+      { name: 'code', value: redirectParams.code },
+      ...insertAuthKeyIf(authentication.redirectUrl, 'redirect_uri'),
+      ...insertAuthKeyIf(authentication.state, 'state'),
+      ...insertAuthKeyIf(authentication.audience, 'audience'),
+      ...insertAuthKeyIf(authentication.resource, 'resource'),
+      ...insertAuthKeyIf(codeVerifier, 'code_verifier'),
+    ];
+  } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
+    params = [
+      { name: 'grant_type', value: 'password' },
+      { name: 'username', value: authentication.username },
+      { name: 'password', value: authentication.password },
+      ...insertAuthKeyIf(authentication.scope, 'scope'),
+      ...insertAuthKeyIf(authentication.audience, 'audience'),
+    ];
+  } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
+    params = [
+      { name: 'grant_type', value: 'client_credentials' },
+      ...insertAuthKeyIf(authentication.scope, 'scope'),
+      ...insertAuthKeyIf(authentication.audience, 'audience'),
+      ...insertAuthKeyIf(authentication.resource, 'resource'),
+    ];
+  }
+  const headers = authentication.origin ? [{ name: 'Origin', value: authentication.origin }] : [];
+  if (authentication.credentialsInBody) {
+    params.push({ name: 'client_id', value: authentication.clientId });
+    params.push({ name: 'client_secret', value: authentication.clientSecret });
+  } else {
+    headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
+  }
 
-async function _getExisingAccessTokenAndRefreshIfExpired(
+  const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
+  const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+  return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(
+    oauthResponseToAccessToken(authentication.accessTokenUrl, response)
+  ));
+};
+// 1. get token from db and return if valid
+// 2. if expired, and no refresh token return null
+// 3. run refresh token query and return new token or null if it fails
+
+async function getExisingAccessTokenAndRefreshIfExpired(
   requestId: string,
   authentication: RequestAuthentication,
   forceRefresh: boolean,
 ): Promise<OAuth2Token | null> {
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // See if we have a token already //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   const token: OAuth2Token | null = await models.oAuth2Token.getByParentId(requestId);
-
   if (!token) {
     return null;
   }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // Check if the token needs refreshing //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // Refresh tokens are part of Auth Code, Password
   const expiresAt = token.expiresAt || Infinity;
   const isExpired = Date.now() > expiresAt;
-
   if (!isExpired && !forceRefresh) {
     return token;
   }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // Refresh the token if necessary //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // We've expired, but don't have a refresh token, so tell caller to fetch new
-  // access token
   if (!token.refreshToken) {
     return null;
   }
@@ -225,8 +245,10 @@ async function _getExisingAccessTokenAndRefreshIfExpired(
     models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
     return null;
   }
-  if (statusCode < 200 || statusCode >= 300) {
-    if (bodyBuffer && statusCode === 400) {
+  const isSuccessful = statusCode >= 200 && statusCode < 300;
+  const hasBodyAndIsError = bodyBuffer && statusCode === 400;
+  if (isSuccessful) {
+    if (hasBodyAndIsError) {
       const body = tryToParse(bodyBuffer.toString());
       // If the refresh token was rejected due an oauth2 invalid_grant error, we will
       // return a null access_token to trigger an authentication request to fetch
@@ -252,3 +274,13 @@ async function _getExisingAccessTokenAndRefreshIfExpired(
     refresh_token: data.refresh_token || token.refreshToken,
   }));
 }
+
+export const encodePKCE = (buffer: Buffer) => {
+  return buffer.toString('base64')
+    // The characters + / = are reserved for PKCE as per the RFC,
+    // so we replace them with unreserved characters
+    // Docs: https://tools.ietf.org/html/rfc7636#section-4.2
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+};
