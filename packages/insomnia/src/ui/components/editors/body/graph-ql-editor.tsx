@@ -13,17 +13,15 @@ import ReactDOM from 'react-dom';
 import { useSelector } from 'react-redux';
 import { useLocalStorage } from 'react-use';
 
-import { jarFromCookies } from '../../../../common/cookies';
+import { CONTENT_TYPE_JSON } from '../../../../common/constants';
+import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
-import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../../common/render';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
-import { axiosRequest } from '../../../../network/axios-request';
+import * as network from '../../../../network/network';
 import { jsonPrettify } from '../../../../utils/prettify/json';
-import { setDefaultProtocol } from '../../../../utils/url/protocol';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../../utils/url/querystring';
 import { selectSettings } from '../../../redux/selectors';
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
@@ -47,12 +45,10 @@ const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionN
 const fetchGraphQLSchemaForRequest = async ({
   requestId,
   environmentId,
-  workspaceId,
   url,
 }: {
   requestId: string;
   environmentId: string;
-  workspaceId: string;
   url: string;
 }) => {
   if (!url) {
@@ -66,54 +62,26 @@ const fetchGraphQLSchemaForRequest = async ({
   }
 
   try {
-    const renderContext = await getRenderContext({
-      request,
-      environmentId,
-      purpose: RENDER_PURPOSE_SEND,
+
+    const bodyJson = JSON.stringify({
+      query: getIntrospectionQuery(),
+      operationName: 'IntrospectionQuery',
     });
-    const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(
-      workspaceId
+    const introspectionRequest = await db.upsert(
+      Object.assign({}, request, {
+        _id: request._id + '.graphql',
+        settingMaxTimelineDataSize: 5000,
+        parentId: request._id,
+        isPrivate: true,
+        // So it doesn't get synced or exported
+        body: {
+          mimeType: CONTENT_TYPE_JSON,
+          text: bodyJson,
+        },
+      }),
     );
-
-    const rendered = await render(
-      {
-        url: request.url,
-        headers: request.headers,
-        authentication: request.authentication,
-        parameters: request.parameters,
-        workspaceCookieJar,
-      },
-      renderContext
-    );
-    const queryString = buildQueryStringFromParams(rendered.parameters);
-
-    const enabledHeaders: Record<string, string> = rendered.headers
-      .filter(({ name, disabled }) => Boolean(name) && !disabled)
-      .reduce(
-        (
-          acc: { [key: string]: string },
-          { name, value }: Request['headers'][0]
-        ) => ({ ...acc, [name.toLowerCase() || '']: value || '' }),
-        {}
-      );
-
-    if (request.settingSendCookies && workspaceCookieJar.cookies.length) {
-      const jar = jarFromCookies(workspaceCookieJar.cookies);
-      const cookieHeader = jar.getCookieStringSync(url);
-
-      if (cookieHeader) {
-        enabledHeaders['cookie'] = cookieHeader;
-      }
-    }
-    const response = await axiosRequest({
-      url: setDefaultProtocol(joinUrlAndQueryString(rendered.url, queryString)),
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...enabledHeaders },
-      data: {
-        query: getIntrospectionQuery(),
-      },
-    });
-
+    const response = await network.send(introspectionRequest._id, environmentId);
+    const statusCode = response.statusCode || 0;
     if (!response) {
       return {
         schemaFetchError: {
@@ -121,21 +89,22 @@ const fetchGraphQLSchemaForRequest = async ({
         },
       };
     }
-    if (response.status < 200 || response.status >= 300) {
-      const renderedURL = response.request.res.responseUrl || url;
+    if (statusCode < 200 || statusCode >= 300) {
+      const renderedURL = response.url || request.url;
       return {
         schemaFetchError: {
-          message: `Got status ${response.status} fetching schema from "${renderedURL}"`,
+          message: `Got status ${statusCode} fetching schema from "${renderedURL}"`,
         },
       };
     }
-    if (response.data.data) {
-      return { schema: buildClientSchema(response.data.data) };
+    const bodyBuffer = models.response.getBodyBuffer(response);
+    if (bodyBuffer) {
+      const { data } = JSON.parse(bodyBuffer.toString());
+      return { schema: buildClientSchema(data) };
     }
     return {
       schemaFetchError: {
-        message:
-          'Something went wrong, no data was received from introspection query',
+        message: 'Something went wrong, no data was received from introspection query',
       },
     };
   } catch (err) {
@@ -232,7 +201,6 @@ export const GraphQLEditor: FC<Props> = ({
         requestId: request._id,
         environmentId,
         url: request.url,
-        workspaceId,
       });
 
       isMounted && setSchemaFetchError(newState?.schemaFetchError);
@@ -460,7 +428,6 @@ export const GraphQLEditor: FC<Props> = ({
                 requestId: request._id,
                 environmentId,
                 url: request.url,
-                workspaceId,
               });
               setSchemaIsFetching(false);
             }}
