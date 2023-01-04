@@ -91,8 +91,8 @@ export const getOAuth2Token = async (
   if (oAuth2Token) {
     return oAuth2Token;
   }
-  const validGrantTYpe = ['implicit', 'authorization_code', 'password', 'client_credentials'].includes(authentication.grantType);
-  invariant(validGrantTYpe, `Invalid grant type ${authentication.grantType}`);
+  const validGrantType = ['implicit', 'authorization_code', 'password', 'client_credentials'].includes(authentication.grantType);
+  invariant(validGrantType, `Invalid grant type ${authentication.grantType}`);
   if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
     const hasNonce = !authentication.responseType || authentication.responseType === RESPONSE_TYPE_ID_TOKEN_TOKEN || authentication.responseType === RESPONSE_TYPE_ID_TOKEN;
     const implicitUrl = new URL(authentication.authorizationUrl);
