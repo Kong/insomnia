@@ -20,6 +20,7 @@ import { getRenderedRequestAndContext, render, RENDER_PURPOSE_SEND } from '../..
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
+import { getAuthHeader } from '../../../../network/authentication';
 import { axiosRequest } from '../../../../network/axios-request';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { setDefaultProtocol } from '../../../../utils/url/protocol';
@@ -36,7 +37,6 @@ import { HelpTooltip } from '../../help-tooltip';
 import { Toolbar } from '../../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
-import { getAuthHeader } from '../../../../network/authentication';
 const explorerContainer = document.querySelector('#graphql-explorer-container');
 
 if (!explorerContainer) {
