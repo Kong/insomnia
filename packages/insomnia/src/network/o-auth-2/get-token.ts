@@ -77,7 +77,6 @@ export const getOAuth2Token = async (
     const urlFailureRegex = new RegExp(`${escapeRegex(authentication.redirectUrl)}.*(error=)`, 'i');
     const sessionId = getOAuthSession();
     invariant(authentication.authorizationUrl, 'Invalid authorization URL');
-    invariant(authentication.accessTokenUrl, 'Invalid access token URL');
     const codeChallenge = authentication.pkceMethod !== PKCE_CHALLENGE_S256 ? codeVerifier : encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest());
     const authCodeUrl = new URL(authentication.authorizationUrl);
     [
