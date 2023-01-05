@@ -13,9 +13,6 @@ import { sendWithSettings } from '../network';
 import {
   AuthKeys,
   GRANT_TYPE_AUTHORIZATION_CODE,
-  GRANT_TYPE_CLIENT_CREDENTIALS,
-  GRANT_TYPE_IMPLICIT,
-  GRANT_TYPE_PASSWORD,
   PKCE_CHALLENGE_S256,
   RESPONSE_TYPE_CODE,
   RESPONSE_TYPE_ID_TOKEN,
@@ -38,7 +35,7 @@ export const getOAuth2Token = async (
   }
   const validGrantType = ['implicit', 'authorization_code', 'password', 'client_credentials'].includes(authentication.grantType);
   invariant(validGrantType, `Invalid grant type ${authentication.grantType}`);
-  if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
+  if (authentication.grantType === 'implicit') {
     invariant(authentication.authorizationUrl, 'Missing authorization URL');
     const hasNonce = !authentication.responseType || authentication.responseType === RESPONSE_TYPE_ID_TOKEN_TOKEN || authentication.responseType === RESPONSE_TYPE_ID_TOKEN;
     const implicitUrl = new URL(authentication.authorizationUrl);
@@ -72,7 +69,7 @@ export const getOAuth2Token = async (
   }
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
   let params: RequestHeader[] = [];
-  if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
+  if (authentication.grantType === 'authorization_code') {
     invariant(authentication.redirectUrl, 'Missing redirect URL');
     invariant(authentication.authorizationUrl, 'Invalid authorization URL');
 
@@ -115,7 +112,7 @@ export const getOAuth2Token = async (
       ...insertAuthKeyIf('resource', authentication.resource),
       ...insertAuthKeyIf('code_verifier', codeVerifier),
     ];
-  } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
+  } else if (authentication.grantType === 'password') {
     params = [
       { name: 'grant_type', value: 'password' },
       ...insertAuthKeyIf('username', authentication.username),
@@ -123,7 +120,7 @@ export const getOAuth2Token = async (
       ...insertAuthKeyIf('scope', authentication.scope),
       ...insertAuthKeyIf('audience', authentication.audience),
     ];
-  } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
+  } else if (authentication.grantType === 'client_credentials') {
     params = [
       { name: 'grant_type', value: 'client_credentials' },
       ...insertAuthKeyIf('scope', authentication.scope),
