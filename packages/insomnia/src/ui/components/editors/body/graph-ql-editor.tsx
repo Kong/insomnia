@@ -16,12 +16,11 @@ import { useLocalStorage } from 'react-use';
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
-import { jsonParseOr } from '../../../../common/misc';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
 import * as network from '../../../../network/network';
-import { jsonPrettify } from '../../../../utils/prettify/json';
+import { invariant } from '../../../../utils/invariant';
 import { selectSettings } from '../../../redux/selectors';
 import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
@@ -54,15 +53,9 @@ const fetchGraphQLSchemaForRequest = async ({
   if (!url) {
     return;
   }
-
   const request = await models.request.getById(requestId);
-
-  if (!request) {
-    return;
-  }
-
+  invariant(request, 'Request not found');
   try {
-
     const bodyJson = JSON.stringify({
       query: getIntrospectionQuery(),
       operationName: 'IntrospectionQuery',
@@ -115,8 +108,8 @@ const fetchGraphQLSchemaForRequest = async ({
 
 interface GraphQLBody {
   query: string;
-  variables?: string;
-  operationName?: string;
+  variables: string;
+  operationName: string;
 }
 
 interface Props {
@@ -146,28 +139,25 @@ export const GraphQLEditor: FC<Props> = ({
   uniquenessKey,
   workspaceId,
 }) => {
-  let requestBody: GraphQLBody;
+  let initial: GraphQLBody = {
+    query: '',
+    variables: '',
+    operationName: '',
+  };
+  let documentAST = null;
+
   try {
-    requestBody = JSON.parse(request.body.text || '');
-  } catch (err) {
-    requestBody = { query: '' };
-  }
-  if (typeof requestBody.variables === 'string') {
-    requestBody.variables = jsonParseOr(requestBody.variables, '');
-  }
-  let documentAST;
-  try {
-    documentAST = parse(requestBody.query || '');
+    initial = JSON.parse(request.body.text || '');
+    initial.query = initial.query || '';
+    initial.variables = JSON.stringify(initial.variables || '', null, 2);
+    initial.operationName = initial.operationName || '';
+    documentAST = parse(initial.query);
   } catch (error) {
-    documentAST = null;
+    console.error('[graphql] Failed to parse body from database', error);
   }
 
   const [state, setState] = useState<State>({
-    body: {
-      query: requestBody.query || '',
-      variables: requestBody.variables,
-      operationName: requestBody.operationName,
-    },
+    body: initial,
     operations: documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '') || [],
     hideSchemaFetchErrors: false,
     variablesSyntaxError: '',
@@ -188,7 +178,8 @@ export const GraphQLEditor: FC<Props> = ({
   } | undefined>();
   const [schemaIsFetching, setSchemaIsFetching] = useState<boolean | null>(null);
   const [schemaLastFetchTime, setSchemaLastFetchTime] = useState<number>(0);
-  const editorRef = useRef<CodeEditorHandle>(null);
+  const queryEditorRef = useRef<CodeEditorHandle>(null);
+  const variablesEditorRef = useRef<CodeEditorHandle>(null);
 
   useEffect(() => {
     if (!automaticFetch) {
@@ -222,13 +213,12 @@ export const GraphQLEditor: FC<Props> = ({
       useTabs: editorIndentWithTabs,
       tabWidth: editorIndentSize,
     });
-    const prettyVariables = body.variables && JSON.parse(jsonPrettify(JSON.stringify(body.variables)));
     changeQuery(prettyQuery);
+    queryEditorRef.current?.setValue(prettyQuery);
+
+    const prettyVariables = JSON.stringify(JSON.parse(body.variables || ''), null, 2);
     changeVariables(prettyVariables);
-    // Update editor contents
-    if (editorRef.current) {
-      editorRef.current?.setValue(prettyQuery);
-    }
+    variablesEditorRef.current?.setValue(prettyVariables);
   };
 
   useDocBodyKeyboardShortcuts({
@@ -240,14 +230,15 @@ export const GraphQLEditor: FC<Props> = ({
   };
   const changeVariables = (variablesInput: string) => {
     try {
-      const variables = JSON.parse(variablesInput || 'null');
+      const variables = JSON.parse(variablesInput);
       onChange(JSON.stringify({ ...state.body, variables }));
       setState(state => ({
         ...state,
-        body: { ...state.body, variables },
+        body: { ...state.body, variables: variablesInput },
         variablesSyntaxError: '',
       }));
     } catch (err) {
+      onChange(JSON.stringify({ ...state.body, variables: variablesInput }));
       setState(state => ({ ...state, variablesSyntaxError: err.message }));
     }
   };
@@ -463,11 +454,11 @@ export const GraphQLEditor: FC<Props> = ({
 
       <div className="graphql-editor__query">
         <CodeEditor
-          ref={editorRef}
+          ref={queryEditorRef}
           dynamicHeight
           showPrettifyButton
           uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
-          defaultValue={requestBody.query || ''}
+          defaultValue={initial.query}
           className={className}
           onChange={changeQuery}
           mode="graphql"
@@ -509,11 +500,12 @@ export const GraphQLEditor: FC<Props> = ({
       </h2>
       <div className="graphql-editor__variables">
         <CodeEditor
+          ref={variablesEditorRef}
           dynamicHeight
           enableNunjucks
           uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
           showPrettifyButton={false}
-          defaultValue={jsonPrettify(JSON.stringify(requestBody.variables))}
+          defaultValue={initial.variables}
           className={className}
           getAutocompleteConstants={() => Object.keys(variableTypes)}
           lintOptions={{
