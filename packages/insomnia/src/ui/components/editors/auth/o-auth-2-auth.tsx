@@ -5,7 +5,7 @@ import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import * as models from '../../../../models';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
-import type { Request } from '../../../../models/request';
+import type { AuthTypeOAuth2, Request } from '../../../../models/request';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,
@@ -463,7 +463,7 @@ const OAuth2Tokens: FC = () => {
             setLoading(true);
 
             try {
-              const renderedAuthentication = await handleRender(authentication);
+              const renderedAuthentication = await handleRender(authentication) as AuthTypeOAuth2;
               const t = await getOAuth2Token(requestId, renderedAuthentication, true);
               setToken(t);
               setLoading(false);

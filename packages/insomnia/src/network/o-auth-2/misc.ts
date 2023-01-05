@@ -39,7 +39,7 @@ export interface AuthParam {
   name: AuthKeys; value: string;
 }
 export const insertIf = (condition: boolean | string, ...elements: AuthParam[]) => condition ? elements : [];
-export const insertAuthKeyIf = (value: string, name: AuthKeys) => value ? [{ name, value }] : [];
+export const insertAuthKeyIf = (value?: string, name?: AuthKeys) => (value && name) ? [{ name, value }] : [];
 
 export function parseAndFilter(body: string | null, keys: AuthKeys[]) {
   if (body) {

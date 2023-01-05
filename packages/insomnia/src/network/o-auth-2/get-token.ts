@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
-import type { RequestAuthentication, RequestHeader, RequestParameter } from '../../models/request';
+import type { AuthTypeOAuth2, RequestHeader, RequestParameter } from '../../models/request';
 import type { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
@@ -61,7 +61,8 @@ const transformNewAccessTokenToOauthModel = (accessToken: Partial<Record<AuthKey
   };
 };
 
-const sendAccessTokenRequest = async (requestId: string, authentication: RequestAuthentication, params: RequestParameter[], headers: RequestHeader[]) => {
+const sendAccessTokenRequest = async (requestId: string, authentication: AuthTypeOAuth2, params: RequestParameter[], headers: RequestHeader[]) => {
+  invariant(authentication.accessTokenUrl, 'Missing access token URL');
   const responsePatch = await sendWithSettings(requestId, {
     headers: [
       { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
@@ -84,7 +85,7 @@ const sendAccessTokenRequest = async (requestId: string, authentication: Request
 // 3. run a given grant type and save and return valid access token
 export const getOAuth2Token = async (
   requestId: string,
-  authentication: RequestAuthentication,
+  authentication: AuthTypeOAuth2,
   forceRefresh = false,
 ): Promise<OAuth2Token | null> => {
   const oAuth2Token = await getExisingAccessTokenAndRefreshIfExpired(requestId, authentication, forceRefresh);
@@ -94,6 +95,7 @@ export const getOAuth2Token = async (
   const validGrantType = ['implicit', 'authorization_code', 'password', 'client_credentials'].includes(authentication.grantType);
   invariant(validGrantType, `Invalid grant type ${authentication.grantType}`);
   if (authentication.grantType === GRANT_TYPE_IMPLICIT) {
+    invariant(authentication.authorizationUrl, 'Missing authorization URL');
     const hasNonce = !authentication.responseType || authentication.responseType === RESPONSE_TYPE_ID_TOKEN_TOKEN || authentication.responseType === RESPONSE_TYPE_ID_TOKEN;
     const implicitUrl = new URL(authentication.authorizationUrl);
     [
@@ -106,7 +108,7 @@ export const getOAuth2Token = async (
       ...(hasNonce ? [{
         name: 'nonce', value: Math.floor(Math.random() * 9999999999999) + 1 + '',
       }] : []),
-    ].forEach(p => p.value && implicitUrl.searchParams.append(p.name, p.value));
+    ].forEach(p => p.name && p.value && implicitUrl.searchParams.append(p.name, p.value));
     const redirectedTo = await window.main.authorizeUserInWindow({
       url: implicitUrl.toString(),
       urlSuccessRegex: /(access_token=|id_token=)/,
@@ -122,9 +124,11 @@ export const getOAuth2Token = async (
       access_token: data.access_token || data.id_token,
     }));
   }
+  invariant(authentication.accessTokenUrl, 'Missing access token URL');
   let params: RequestHeader[] = [];
   if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
     const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
+    invariant(authentication.redirectUrl, 'Missing redirect URL');
     const urlSuccessRegex = new RegExp(`${escapeRegex(authentication.redirectUrl)}.*(code=)`, 'i');
     const urlFailureRegex = new RegExp(`${escapeRegex(authentication.redirectUrl)}.*(error=)`, 'i');
     const sessionId = getOAuthSession();
@@ -144,7 +148,7 @@ export const getOAuth2Token = async (
         { name: 'code_challenge', value: codeChallenge },
         { name: 'code_challenge_method', value: authentication.pkceMethod },
       ] : []),
-    ].forEach(p => p.value && authCodeUrl.searchParams.append(p.name, p.value));
+    ].forEach(p => p.name && p.value && authCodeUrl.searchParams.append(p.name, p.value));
     const redirectedTo = await window.main.authorizeUserInWindow({
       url: authCodeUrl.toString(),
       urlSuccessRegex,
@@ -171,8 +175,8 @@ export const getOAuth2Token = async (
   } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
     params = [
       { name: 'grant_type', value: 'password' },
-      { name: 'username', value: authentication.username },
-      { name: 'password', value: authentication.password },
+      ...insertAuthKeyIf(authentication.username, 'username'),
+      ...insertAuthKeyIf(authentication.password, 'password'),
       ...insertAuthKeyIf(authentication.scope, 'scope'),
       ...insertAuthKeyIf(authentication.audience, 'audience'),
     ];
@@ -186,8 +190,11 @@ export const getOAuth2Token = async (
   }
   const headers = authentication.origin ? [{ name: 'Origin', value: authentication.origin }] : [];
   if (authentication.credentialsInBody) {
-    params.push({ name: 'client_id', value: authentication.clientId });
-    params.push({ name: 'client_secret', value: authentication.clientSecret });
+    params = [
+      ...params,
+      ...insertAuthKeyIf(authentication.clientId, 'client_id'),
+      ...insertAuthKeyIf(authentication.clientSecret, 'client_secret'),
+    ];
   } else {
     headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
   }
@@ -204,7 +211,7 @@ export const getOAuth2Token = async (
 
 async function getExisingAccessTokenAndRefreshIfExpired(
   requestId: string,
-  authentication: RequestAuthentication,
+  authentication: AuthTypeOAuth2,
   forceRefresh: boolean,
 ): Promise<OAuth2Token | null> {
   const token: OAuth2Token | null = await models.oAuth2Token.getByParentId(requestId);
@@ -220,15 +227,18 @@ async function getExisingAccessTokenAndRefreshIfExpired(
     return null;
   }
 
-  const params = [
+  let params = [
     { name: 'grant_type', value: 'refresh_token' },
     { name: 'refresh_token', value: token.refreshToken },
     ...insertAuthKeyIf(authentication.scope, 'scope'),
   ];
   const headers = [];
   if (authentication.credentialsInBody) {
-    params.push({ name: 'client_id', value: authentication.clientId });
-    params.push({ name: 'client_secret', value: authentication.clientSecret });
+    params = [
+      ...params,
+      ...insertAuthKeyIf(authentication.clientId, 'client_id'),
+      ...insertAuthKeyIf(authentication.clientSecret, 'client_secret'),
+    ];
   } else {
     headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
   }

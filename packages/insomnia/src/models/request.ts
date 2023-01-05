@@ -31,7 +31,30 @@ export const canDuplicate = true;
 export const canSync = true;
 
 export type RequestAuthentication = Record<string, any>;
-
+export interface AuthTypeOAuth2 {
+  type: 'oauth2';
+  grantType: 'authorization_code' | 'client_credentials' | 'password' | 'implicit' | 'refresh_token';
+  accessTokenUrl?: string;
+  authorizationUrl?: string;
+  clientId?: string;
+  clientSecret?: string;
+  audience?: string;
+  scope?: string;
+  resource?: string;
+  username?: string;
+  password?: string;
+  redirectUrl?: string;
+  credentialsInBody?: boolean;
+  state?: string;
+  code?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tokenPrefix?: string;
+  usePkce?: boolean;
+  pkceMethod?: string;
+  responseType?: string;
+  origin?: string;
+}
 export interface RequestHeader {
   name: string;
   value: string;
