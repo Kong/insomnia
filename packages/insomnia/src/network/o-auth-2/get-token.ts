@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import querystring from 'querystring';
 
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
@@ -21,63 +22,6 @@ import {
   RESPONSE_TYPE_ID_TOKEN_TOKEN,
 } from './constants';
 import { getOAuthSession } from './misc';
-
-export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Response) => {
-  const bodyBuffer = models.response.getBodyBuffer(response);
-  if (!bodyBuffer) {
-    return {
-      xError: `No body returned from ${accessTokenUrl}`,
-      xResponseId: response._id,
-    };
-  }
-  if (response.statusCode < 200 || response.statusCode >= 300) {
-    return {
-      xError: `Failed to fetch token url=${accessTokenUrl} status=${response.statusCode}`,
-      xResponseId: response._id,
-    };
-  }
-  const body = bodyBuffer.toString('utf8');
-  const data = tryToParse(body);
-  return {
-    ...data,
-    xResponseId: response._id,
-  };
-};
-
-const transformNewAccessTokenToOauthModel = (accessToken: Partial<Record<AuthKeys, string | null>>): Partial<OAuth2Token> => {
-  const expiry = accessToken.expires_in ? +accessToken.expires_in : 0;
-  return {
-    // Calculate expiry date
-    expiresAt: accessToken.expires_in ? Date.now() + expiry * 1000 : null,
-    refreshToken: accessToken.refresh_token || undefined,
-    accessToken: accessToken.access_token || undefined,
-    identityToken: accessToken.id_token || undefined,
-    error: accessToken.error || undefined,
-    errorDescription: accessToken.error_description || undefined,
-    errorUri: accessToken.error_uri || undefined,
-    // Special Cases
-    xResponseId: accessToken.xResponseId || null,
-    xError: accessToken.xError || null,
-  };
-};
-
-const sendAccessTokenRequest = async (requestId: string, authentication: AuthTypeOAuth2, params: RequestParameter[], headers: RequestHeader[]) => {
-  invariant(authentication.accessTokenUrl, 'Missing access token URL');
-  const responsePatch = await sendWithSettings(requestId, {
-    headers: [
-      { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
-      { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
-      ...headers,
-    ],
-    url: setDefaultProtocol(authentication.accessTokenUrl),
-    method: 'POST',
-    body: {
-      mimeType: 'application/x-www-form-urlencoded',
-      params,
-    },
-  });
-  return await models.response.create(responsePatch);
-};
 
 // NOTE
 // 1. return valid access token from insomnia db
@@ -285,6 +229,62 @@ async function getExisingAccessTokenAndRefreshIfExpired(
   }));
 }
 
+export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Response) => {
+  const bodyBuffer = models.response.getBodyBuffer(response);
+  if (!bodyBuffer) {
+    return {
+      xError: `No body returned from ${accessTokenUrl}`,
+      xResponseId: response._id,
+    };
+  }
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    return {
+      xError: `Failed to fetch token url=${accessTokenUrl} status=${response.statusCode}`,
+      xResponseId: response._id,
+    };
+  }
+  const body = bodyBuffer.toString('utf8');
+  const data = tryToParse(body);
+  return {
+    ...data,
+    xResponseId: response._id,
+  };
+};
+
+const transformNewAccessTokenToOauthModel = (accessToken: Partial<Record<AuthKeys, string | null>>): Partial<OAuth2Token> => {
+  const expiry = accessToken.expires_in ? +accessToken.expires_in : 0;
+  return {
+    // Calculate expiry date
+    expiresAt: accessToken.expires_in ? Date.now() + expiry * 1000 : null,
+    refreshToken: accessToken.refresh_token || undefined,
+    accessToken: accessToken.access_token || undefined,
+    identityToken: accessToken.id_token || undefined,
+    error: accessToken.error || undefined,
+    errorDescription: accessToken.error_description || undefined,
+    errorUri: accessToken.error_uri || undefined,
+    // Special Cases
+    xResponseId: accessToken.xResponseId || null,
+    xError: accessToken.xError || null,
+  };
+};
+
+const sendAccessTokenRequest = async (requestId: string, authentication: AuthTypeOAuth2, params: RequestParameter[], headers: RequestHeader[]) => {
+  invariant(authentication.accessTokenUrl, 'Missing access token URL');
+  const responsePatch = await sendWithSettings(requestId, {
+    headers: [
+      { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
+      { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
+      ...headers,
+    ],
+    url: setDefaultProtocol(authentication.accessTokenUrl),
+    method: 'POST',
+    body: {
+      mimeType: 'application/x-www-form-urlencoded',
+      params,
+    },
+  });
+  return await models.response.create(responsePatch);
+};
 export const encodePKCE = (buffer: Buffer) => {
   return buffer.toString('base64')
     // The characters + / = are reserved for PKCE as per the RFC,
