@@ -20,7 +20,7 @@ import {
   RESPONSE_TYPE_ID_TOKEN,
   RESPONSE_TYPE_ID_TOKEN_TOKEN,
 } from './constants';
-import { getOAuthSession, insertAuthKeyIf, tryToParse } from './misc';
+import { getOAuthSession } from './misc';
 
 export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Response) => {
   const bodyBuffer = models.response.getBodyBuffer(response);
@@ -101,10 +101,10 @@ export const getOAuth2Token = async (
     [
       { name: 'response_type', value: authentication.responseType },
       { name: 'client_id', value: authentication.clientId },
-      ...insertAuthKeyIf(authentication.redirectUrl, 'redirect_uri'),
-      ...insertAuthKeyIf(authentication.scope, 'scope'),
-      ...insertAuthKeyIf(authentication.state, 'state'),
-      ...insertAuthKeyIf(authentication.audience, 'audience'),
+      ...insertAuthKeyIf('redirect_uri', authentication.redirectUrl),
+      ...insertAuthKeyIf('scope', authentication.scope),
+      ...insertAuthKeyIf('state', authentication.state),
+      ...insertAuthKeyIf('audience', authentication.audience),
       ...(hasNonce ? [{
         name: 'nonce', value: Math.floor(Math.random() * 9999999999999) + 1 + '',
       }] : []),
@@ -139,11 +139,11 @@ export const getOAuth2Token = async (
     [
       { name: 'response_type', value: RESPONSE_TYPE_CODE },
       { name: 'client_id', value: authentication.clientId },
-      ...insertAuthKeyIf(authentication.redirectUrl, 'redirect_uri'),
-      ...insertAuthKeyIf(authentication.scope, 'scope'),
-      ...insertAuthKeyIf(authentication.state, 'state'),
-      ...insertAuthKeyIf(authentication.audience, 'audience'),
-      ...insertAuthKeyIf(authentication.resource, 'resource'),
+      ...insertAuthKeyIf('redirect_uri', authentication.redirectUrl),
+      ...insertAuthKeyIf('scope', authentication.scope),
+      ...insertAuthKeyIf('state', authentication.state),
+      ...insertAuthKeyIf('audience', authentication.audience),
+      ...insertAuthKeyIf('resource', authentication.resource),
       ...(codeChallenge ? [
         { name: 'code_challenge', value: codeChallenge },
         { name: 'code_challenge_method', value: authentication.pkceMethod },
@@ -166,34 +166,34 @@ export const getOAuth2Token = async (
     params = [
       { name: 'grant_type', value: GRANT_TYPE_AUTHORIZATION_CODE },
       { name: 'code', value: redirectParams.code },
-      ...insertAuthKeyIf(authentication.redirectUrl, 'redirect_uri'),
-      ...insertAuthKeyIf(authentication.state, 'state'),
-      ...insertAuthKeyIf(authentication.audience, 'audience'),
-      ...insertAuthKeyIf(authentication.resource, 'resource'),
-      ...insertAuthKeyIf(codeVerifier, 'code_verifier'),
+      ...insertAuthKeyIf('redirect_uri', authentication.redirectUrl),
+      ...insertAuthKeyIf('state', authentication.state),
+      ...insertAuthKeyIf('audience', authentication.audience),
+      ...insertAuthKeyIf('resource', authentication.resource),
+      ...insertAuthKeyIf('code_verifier', codeVerifier),
     ];
   } else if (authentication.grantType === GRANT_TYPE_PASSWORD) {
     params = [
       { name: 'grant_type', value: 'password' },
-      ...insertAuthKeyIf(authentication.username, 'username'),
-      ...insertAuthKeyIf(authentication.password, 'password'),
-      ...insertAuthKeyIf(authentication.scope, 'scope'),
-      ...insertAuthKeyIf(authentication.audience, 'audience'),
+      ...insertAuthKeyIf('username', authentication.username),
+      ...insertAuthKeyIf('password', authentication.password),
+      ...insertAuthKeyIf('scope', authentication.scope),
+      ...insertAuthKeyIf('audience', authentication.audience),
     ];
   } else if (authentication.grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
     params = [
       { name: 'grant_type', value: 'client_credentials' },
-      ...insertAuthKeyIf(authentication.scope, 'scope'),
-      ...insertAuthKeyIf(authentication.audience, 'audience'),
-      ...insertAuthKeyIf(authentication.resource, 'resource'),
+      ...insertAuthKeyIf('scope', authentication.scope),
+      ...insertAuthKeyIf('audience', authentication.audience),
+      ...insertAuthKeyIf('resource', authentication.resource),
     ];
   }
   const headers = authentication.origin ? [{ name: 'Origin', value: authentication.origin }] : [];
   if (authentication.credentialsInBody) {
     params = [
       ...params,
-      ...insertAuthKeyIf(authentication.clientId, 'client_id'),
-      ...insertAuthKeyIf(authentication.clientSecret, 'client_secret'),
+      ...insertAuthKeyIf('client_id', authentication.clientId),
+      ...insertAuthKeyIf('client_secret', authentication.clientSecret),
     ];
   } else {
     headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
@@ -230,14 +230,14 @@ async function getExisingAccessTokenAndRefreshIfExpired(
   let params = [
     { name: 'grant_type', value: 'refresh_token' },
     { name: 'refresh_token', value: token.refreshToken },
-    ...insertAuthKeyIf(authentication.scope, 'scope'),
+    ...insertAuthKeyIf('scope', authentication.scope),
   ];
   const headers = [];
   if (authentication.credentialsInBody) {
     params = [
       ...params,
-      ...insertAuthKeyIf(authentication.clientId, 'client_id'),
-      ...insertAuthKeyIf(authentication.clientSecret, 'client_secret'),
+      ...insertAuthKeyIf('client_id', authentication.clientId),
+      ...insertAuthKeyIf('client_secret', authentication.clientSecret),
     ];
   } else {
     headers.push(getBasicAuthHeader(authentication.clientId, authentication.clientSecret));
@@ -294,3 +294,17 @@ export const encodePKCE = (buffer: Buffer) => {
     .replace(/\//g, '_')
     .replace(/=/g, '');
 };
+const tryToParse = (body: string): Record<string, any> | null => {
+  try {
+    return JSON.parse(body);
+  } catch (err) { }
+
+  try {
+    // NOTE: parse does not return a JS Object, so
+    //   we cannot use hasOwnProperty on it
+    return querystring.parse(body);
+  } catch (err) { }
+  return null;
+};
+
+const insertAuthKeyIf = (name: AuthKeys, value?: string) => value ? [{ name, value }] : [];

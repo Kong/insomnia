@@ -3,46 +3,10 @@ import { mocked } from 'jest-mock';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
-import { authorizeUserInWindow, ChromiumVerificationResult, parseAndFilter } from '../misc';
+import { authorizeUserInWindow, ChromiumVerificationResult } from '../misc';
 import { createBWRedirectMock } from './helpers';
 
 const MOCK_AUTHORIZATION_URL = 'https://foo.com';
-
-describe('parseAndFilter()', () => {
-  beforeEach(globalBeforeEach);
-
-  it('works in the general case', () => {
-    const body = JSON.stringify({
-      str: 'hi',
-      num: 10,
-    });
-    const keys = ['str', 'num'];
-    expect(parseAndFilter(body, keys)).toEqual({
-      str: 'hi',
-      num: 10,
-    });
-  });
-
-  it('skips things not in keys', () => {
-    const body = JSON.stringify({
-      str: 'hi',
-      num: 10,
-      other: 'thing',
-    });
-    const keys = ['str'];
-    expect(parseAndFilter(body, keys)).toEqual({
-      str: 'hi',
-    });
-  });
-
-  it('works with things not found', () => {
-    const body = JSON.stringify({});
-    const keys = ['expires_in'];
-    expect(parseAndFilter(body, keys)).toEqual({
-      expires_in: null,
-    });
-  });
-});
 
 describe('authorizeUserInWindow()', () => {
   beforeEach(globalBeforeEach);

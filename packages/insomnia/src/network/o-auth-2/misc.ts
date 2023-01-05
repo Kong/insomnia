@@ -1,9 +1,7 @@
 import electron from 'electron';
-import querystring from 'querystring';
 import { v4 as uuidv4 } from 'uuid';
 
 import * as models from '../../models/index';
-import { AuthKeys } from './constants';
 
 export enum ChromiumVerificationResult {
   BLIND_TRUST = 0,
@@ -21,33 +19,6 @@ export function initNewOAuthSession() {
   const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
   window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
   return authWindowSessionId;
-}
-export const tryToParse = (body: string): Record<string, any> | null => {
-  try {
-    return JSON.parse(body);
-  } catch (err) { }
-
-  try {
-    // NOTE: parse does not return a JS Object, so
-    //   we cannot use hasOwnProperty on it
-    return querystring.parse(body);
-  } catch (err) { }
-  return null;
-};
-
-export interface AuthParam {
-  name: AuthKeys; value: string;
-}
-export const insertIf = (condition: boolean | string, ...elements: AuthParam[]) => condition ? elements : [];
-export const insertAuthKeyIf = (value?: string, name?: AuthKeys) => (value && name) ? [{ name, value }] : [];
-
-export function parseAndFilter(body: string | null, keys: AuthKeys[]) {
-  if (body) {
-    const data = tryToParse(body);
-    return Object.fromEntries(keys.map(key => [key, data?.[key] !== undefined ? data[key] : null]));
-  }
-  // Shouldn't happen but we'll check anyway
-  return Object.fromEntries(keys.map(key => [key, null]));
 }
 
 export function authorizeUserInWindow({
