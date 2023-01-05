@@ -59,6 +59,8 @@ export const getOAuth2Token = async (
       urlFailureRegex: /(error=)/,
       sessionId: getOAuthSession(),
     });
+    console.log('[oauth2] Detected redirect ' + redirectedTo);
+
     const hash = new URL(redirectedTo).hash.slice(1);
     invariant(hash, 'No hash found in redirect URL');
     const data = Object.fromEntries(new URLSearchParams(hash));
@@ -75,9 +77,6 @@ export const getOAuth2Token = async (
     invariant(authentication.authorizationUrl, 'Invalid authorization URL');
 
     const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
-    const urlSuccessRegex = new RegExp(`${escapeRegex(authentication.redirectUrl)}.*(code=)`, 'i');
-    const urlFailureRegex = new RegExp(`${escapeRegex(authentication.redirectUrl)}.*(error=)`, 'i');
-    const sessionId = getOAuthSession();
     const codeChallenge = authentication.pkceMethod !== PKCE_CHALLENGE_S256 ? codeVerifier : encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest());
     const authCodeUrl = new URL(authentication.authorizationUrl);
     [
@@ -95,9 +94,9 @@ export const getOAuth2Token = async (
     ].forEach(p => p.value && authCodeUrl.searchParams.append(p.name, p.value));
     const redirectedTo = await window.main.authorizeUserInWindow({
       url: authCodeUrl.toString(),
-      urlSuccessRegex,
-      urlFailureRegex,
-      sessionId,
+      urlSuccessRegex: new RegExp(`${escapeRegex(authentication.redirectUrl)}.*(code=)`, 'i'),
+      urlFailureRegex: new RegExp(`${escapeRegex(authentication.redirectUrl)}.*(error=)`, 'i'),
+      sessionId: getOAuthSession(),
     });
     console.log('[oauth2] Detected redirect ' + redirectedTo);
     const redirectParams = Object.fromEntries(new URL(redirectedTo).searchParams);
@@ -233,14 +232,14 @@ export const oauthResponseToAccessToken = (accessTokenUrl: string, response: Res
   const bodyBuffer = models.response.getBodyBuffer(response);
   if (!bodyBuffer) {
     return {
-      xError: `No body returned from ${accessTokenUrl}`,
       xResponseId: response._id,
+      xError: `No body returned from ${accessTokenUrl}`,
     };
   }
   if (response.statusCode < 200 || response.statusCode >= 300) {
     return {
-      xError: `Failed to fetch token url=${accessTokenUrl} status=${response.statusCode}`,
       xResponseId: response._id,
+      xError: `Failed to fetch token url=${accessTokenUrl} status=${response.statusCode}`,
     };
   }
   const body = bodyBuffer.toString('utf8');
