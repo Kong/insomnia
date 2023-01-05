@@ -44,6 +44,8 @@ const config = {
   },
   fileAssociations: [],
   mac: {
+    // disabling notarize on electron-builder, we use afterSignHook.js
+    notarize: false,
     hardenedRuntime: true,
     category: 'public.app-category.developer-tools',
     entitlements: './build/static/entitlements.mac.inherit.plist',
