@@ -10,12 +10,16 @@
     "url": "https://github.com/kong/insomnia/issues"
   },
   "homepage": "https://github.com/kong/insomnia#readme",
+  "engines":{
+    "node": ">=16.17 <17",
+    "npm": ">=8.15.0"
+  },
   "scripts": {
     "build": "lerna run build --parallel",
     "lint": "lerna run lint --stream --no-bail",
     "lint:markdown": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
     "lint:fix": "lerna run lint:fix --stream --no-bail",
-    "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
+    "bootstrap": " npx -y check-engine && npm install && lerna bootstrap && lerna run --stream bootstrap",
     "version": "lerna version",
     "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules **/*.tsbuildinfo",
     "test": "lerna run --stream --parallel test",
@@ -28,7 +32,6 @@
     "app-build": "npm run build --prefix packages/insomnia",
     "app-package": "npm run build --prefix packages/insomnia && npm run package --prefix packages/insomnia",
     "app-bump-version": "npm run bump-version --prefix packages/insomnia",
-    "preinstall": "node ./scripts/check-version.js",
     "test:smoke:dev": "npm run test:dev --prefix packages/insomnia-smoke-test -- --project=Smoke",
     "test:smoke:build": "npm run test:build --prefix packages/insomnia-smoke-test -- --project=Smoke",
     "test:smoke:package": "npm run test:package --prefix packages/insomnia-smoke-test -- --project=Smoke",
