@@ -52,7 +52,7 @@ export const getOAuth2Token = async (
       ...(hasNonce ? [{
         name: 'nonce', value: Math.floor(Math.random() * 9999999999999) + 1 + '',
       }] : []),
-    ].forEach(p => p.name && p.value && implicitUrl.searchParams.append(p.name, p.value));
+    ].forEach(p => p.value && implicitUrl.searchParams.append(p.name, p.value));
     const redirectedTo = await window.main.authorizeUserInWindow({
       url: implicitUrl.toString(),
       urlSuccessRegex: /(access_token=|id_token=)/,
@@ -71,12 +71,13 @@ export const getOAuth2Token = async (
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
   let params: RequestHeader[] = [];
   if (authentication.grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
-    const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
     invariant(authentication.redirectUrl, 'Missing redirect URL');
+    invariant(authentication.authorizationUrl, 'Invalid authorization URL');
+
+    const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
     const urlSuccessRegex = new RegExp(`${escapeRegex(authentication.redirectUrl)}.*(code=)`, 'i');
     const urlFailureRegex = new RegExp(`${escapeRegex(authentication.redirectUrl)}.*(error=)`, 'i');
     const sessionId = getOAuthSession();
-    invariant(authentication.authorizationUrl, 'Invalid authorization URL');
     const codeChallenge = authentication.pkceMethod !== PKCE_CHALLENGE_S256 ? codeVerifier : encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest());
     const authCodeUrl = new URL(authentication.authorizationUrl);
     [
@@ -91,7 +92,7 @@ export const getOAuth2Token = async (
         { name: 'code_challenge', value: codeChallenge },
         { name: 'code_challenge_method', value: authentication.pkceMethod },
       ] : []),
-    ].forEach(p => p.name && p.value && authCodeUrl.searchParams.append(p.name, p.value));
+    ].forEach(p => p.value && authCodeUrl.searchParams.append(p.name, p.value));
     const redirectedTo = await window.main.authorizeUserInWindow({
       url: authCodeUrl.toString(),
       urlSuccessRegex,
