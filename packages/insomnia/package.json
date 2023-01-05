@@ -216,6 +216,6 @@
   },
   "overrides": {
     "protobufjs": "github:Kong/protobuf.js#eca9f0f",
-    "app-builder-lib": "github:filfreire/electron-builder#fix/issue7317"
+    "app-builder-lib": "github:filfreire/electron-builder#42a213e"
   }
 }
