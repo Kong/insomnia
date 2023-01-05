@@ -18,7 +18,7 @@ exports.default = async function patchSign(context) {
       console.warn('[afterpack] Applying signOptions hack for signing identity.');
       signOptions.identity = signOptions.identity.name;
     }
-    if (signOptions['identity-validation'] != undefined) {
+    if (signOptions['identity-validation'] !== undefined) {
       console.warn('[afterpack] Applying identity validation hack.');
       signOptions.identityValidation = signOptions['identity-validation'];
       delete signOptions['identity-validation'];
