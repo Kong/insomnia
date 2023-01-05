@@ -26,6 +26,7 @@ const config = {
   ],
   publish: null,
   afterSign: './scripts/afterSignHook.js',
+  afterPack: './scripts/afterPack.js',
   extraResources: [
     {
       from: './bin',
