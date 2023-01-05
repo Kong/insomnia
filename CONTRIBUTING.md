@@ -8,8 +8,6 @@ Please take a moment to review this document in order to make the contribution p
 
 Please respect the following restrictions:
 
-- Please **do not** use the issue tracker for personal support requests (email [support@insomnia.rest](mailto:support@insomnia.rest)).
-
 - Please **do not** derail or troll issues. Keep the discussion on topic and respect the opinions of others.
 
 ## Bug Reports
