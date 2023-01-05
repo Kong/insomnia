@@ -37,7 +37,8 @@
     "type-check": "lerna run type-check",
     "changelog-image": "esr ./scripts/changelog-image/changelog-image.ts",
     "download-all-npm-plugins": "esr ./scripts/download-all-npm-plugins.ts",
-    "dev": "npm start --prefix packages/insomnia"
+    "dev": "npm start --prefix packages/insomnia",
+    "afterPack": "scripts/patch-macos-sign.js"
   },
   "devDependencies": {
     "@jest/globals": "^28.1.0",
