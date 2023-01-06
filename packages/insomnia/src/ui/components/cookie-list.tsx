@@ -1,16 +1,29 @@
 import React, { FC, useCallback } from 'react';
+import styled from 'styled-components';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
 import { cookieToString } from '../../common/cookies';
 import { Cookie } from '../../models/cookie-jar';
-import { Dropdown } from './base/dropdown/dropdown';
-import { DropdownButton } from './base/dropdown/dropdown-button';
-import { DropdownItem } from './base/dropdown/dropdown-item';
+import { Dropdown, DropdownItem, ItemContent } from './base/dropdown-aria/dropdown';
 import { PromptButton } from './base/prompt-button';
 import { showModal } from './modals';
 import { CookieModifyModal } from './modals/cookie-modify-modal';
 import { RenderedText } from './rendered-text';
+
+const DropdownTrigger = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  height: 'var(--line-height-xs)',
+  textAlign: 'center',
+  fontSize: 'var(--font-size-md)',
+  padding: '0 var(--padding-sm)',
+  margin: 0,
+  borderRadius: 'var(--radius-md)',
+  border: '1px solid var(--hl-lg)',
+  cursor: 'pointer',
+  background: 'var(--color-bg)',
+});
 
 export interface CookieListProps {
   handleCookieAdd: (cookie: Cookie) => void;
@@ -101,15 +114,20 @@ export const CookieList: FC<CookieListProps> = ({
             }}
             className="text-right"
           >
-            <Dropdown right>
-              <DropdownButton title="Add cookie" className="btn btn--super-duper-compact btn--outlined txt-md">
-                Actions <i className="fa fa-caret-down" />
-              </DropdownButton>
-              <DropdownItem onClick={addCookie}>
-                <i className="fa fa-plus-circle" /> Add Cookie
+            <Dropdown
+              actionButton={
+                <DropdownTrigger>
+                  Actions <i className="fa fa-caret-down" />
+                </DropdownTrigger>
+              }
+            >
+              <DropdownItem key="add-cookie">
+                <ItemContent icon="plus-circle" label="Add Cookie" onClick={addCookie} />
               </DropdownItem>
-              <DropdownItem onClick={handleDeleteAll} buttonClass={PromptButton}>
-                <i className="fa fa-trash-o" /> Delete All
+              <DropdownItem key="delete-all">
+                <PromptButton fullWidth onClick={handleDeleteAll}>
+                  <ItemContent icon="trash-o" label="Delete All" />
+                </PromptButton>
               </DropdownItem>
             </Dropdown>
           </th>
