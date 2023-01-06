@@ -5,23 +5,6 @@ import { useMenuItem } from 'react-aria';
 import { TreeState } from 'react-stately';
 import styled from 'styled-components';
 
-import { SvgIcon } from '../../svg-icon';
-
-export const svgPlacementHack = {
-  // This is a bit of a hack/workaround to avoid some larger changes that we'd need to do with dropdown item icons and tooltips.
-  // Without this, the icon is too high with respect to the text because of Tooltip introducing some changes to the placement of the icon.
-  marginTop: 1,
-};
-
-const Checkmark = styled(SvgIcon)({
-  '&&': {
-    ...svgPlacementHack,
-    '& svg': {
-      fill: 'var(--color-surprise)',
-    },
-  },
-});
-
 interface StyledListItemProps {
   isFocused?: boolean;
   isDisabled?: boolean;
@@ -66,7 +49,6 @@ export const MenuItem = <T extends object>({
   const {
     menuItemProps,
     isFocused,
-    isSelected,
     isDisabled,
   } = useMenuItem({ key, onAction, onClose }, state, ref);
 
@@ -78,7 +60,6 @@ export const MenuItem = <T extends object>({
       isDisabled={isDisabled}
     >
       {rendered}
-      {isSelected && <Checkmark icon="checkmark" />}
     </StyledListItem>
   );
 };
