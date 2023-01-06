@@ -1,14 +1,17 @@
-import { LoaderFunction } from 'react-router-dom';
+import React from 'react';
+import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
 import { database } from '../../common/database';
 import * as models from '../../models';
 import { GitRepository } from '../../models/git-repository';
 import { Project } from '../../models/project';
 import { Workspace } from '../../models/workspace';
+import { WorkspaceMeta } from '../../models/workspace-meta';
 import { invariant } from '../../utils/invariant';
 
 export interface WorkspaceLoaderData {
   activeWorkspace: Workspace;
+  activeWorkspaceMeta?: WorkspaceMeta;
   activeProject: Project;
   gitRepository: GitRepository | null;
 }
@@ -44,5 +47,14 @@ export const workspaceLoader: LoaderFunction = async ({
     activeWorkspace: workspace,
     activeProject,
     gitRepository,
+    activeWorkspaceMeta: workspaceMeta,
   };
 };
+
+const WorkspaceRoute = () => {
+  const workspaceData = useLoaderData() as WorkspaceLoaderData;
+  const branch = workspaceData.activeWorkspaceMeta?.cachedGitRepositoryBranch;
+  return <Outlet key={branch} />;
+};
+
+export default WorkspaceRoute;

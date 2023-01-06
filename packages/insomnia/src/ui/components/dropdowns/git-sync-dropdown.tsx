@@ -5,7 +5,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 import { docsGitSync } from '../../../common/documentation';
 import { GitRepository } from '../../../models/git-repository';
 import { getOauth2FormatName } from '../../../sync/git/utils';
-import { GitRepoLoaderData, PushToGitRemoteResult } from '../../routes/git-actions';
+import { GitRepoLoaderData, PullFromGitRemoteResult, PushToGitRemoteResult } from '../../routes/git-actions';
 import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -34,7 +34,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
   const [isGitStagingModalOpen, setIsGitStagingModalOpen] = useState(false);
 
   const gitPushFetcher = useFetcher<PushToGitRemoteResult>();
-  const gitPullFetcher = useFetcher();
+  const gitPullFetcher = useFetcher<PullFromGitRemoteResult>();
   const gitCheckoutFetcher = useFetcher();
   const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
 
@@ -50,8 +50,6 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
   useEffect(() => {
     const errors = [
       ...gitPushFetcher.data?.errors ?? [],
-      ...gitPullFetcher.data?.errors ?? [],
-      ...gitCheckoutFetcher.data?.errors ?? [],
     ];
     if (errors.length > 0) {
       showAlert({
@@ -59,7 +57,31 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
         message: errors.join('\n'),
       });
     }
-  }, [gitCheckoutFetcher.data?.errors, gitPullFetcher.data?.errors, gitPushFetcher.data?.errors]);
+  }, [gitPushFetcher.data?.errors]);
+
+  useEffect(() => {
+    const errors = [
+      ...gitPullFetcher.data?.errors ?? [],
+    ];
+    if (errors.length > 0) {
+      showAlert({
+        title: 'Pull Failed',
+        message: errors.join('\n'),
+      });
+    }
+  }, [gitPullFetcher.data?.errors]);
+
+  useEffect(() => {
+    const errors = [
+      ...gitCheckoutFetcher.data?.errors ?? [],
+    ];
+    if (errors.length > 0) {
+      showAlert({
+        title: 'Checkout Failed',
+        message: errors.join('\n'),
+      });
+    }
+  }, [gitCheckoutFetcher.data?.errors]);
 
   async function handlePush({ force }: { force: boolean }) {
     gitPushFetcher.submit({
@@ -82,7 +104,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
   const isLoading = gitRepoDataFetcher.state === 'loading';
   const isButton = !gitRepository || (isLoading && !gitRepoDataFetcher.data) || (gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data);
 
-  const { log, branches, branch: currentBranch, remoteBranches, changes, statusNames } = (gitRepoDataFetcher.data && 'log' in gitRepoDataFetcher.data) ? gitRepoDataFetcher.data : { log: [], branches: [], branch: '', remoteBranches: [], changes: [], statusNames: {} };
+  const { log, branches, branch: currentBranch, remoteBranches } = (gitRepoDataFetcher.data && 'log' in gitRepoDataFetcher.data) ? gitRepoDataFetcher.data : { log: [], branches: [], branch: '', remoteBranches: [] };
 
   let dropdown: React.ReactNode = null;
 
@@ -236,12 +258,11 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
         />
       }
       {isGitLogModalOpen && <GitLogModal branch={currentBranch} logs={log} onHide={() => setIsGitLogModalOpen(false)} />}
-      {isGitStagingModalOpen && <GitStagingModal
-        changes={changes}
-        branch={currentBranch}
-        statusNames={statusNames}
-        onHide={() => setIsGitStagingModalOpen(false)}
-      />}
+      {isGitStagingModalOpen &&
+        <GitStagingModal
+          onHide={() => setIsGitStagingModalOpen(false)}
+        />
+      }
     </Fragment>
   );
 };
