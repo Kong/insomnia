@@ -312,7 +312,7 @@ export class GitVCS {
 
   async fetch(
     singleBranch: boolean,
-    depth: number,
+    depth?: number,
     gitCredentials?: GitCredentials | null,
   ) {
     console.log('[git] Fetch remote=origin');
@@ -352,13 +352,20 @@ export class GitVCS {
     console.log('[git] Checkout', {
       branch,
     });
-    const branches = await this.listBranches();
+    const localBranches = await this.listBranches();
+    const remoteBranches = await this.listRemoteBranches();
+    const branches = [...localBranches, ...remoteBranches];
 
     if (branches.includes(branch)) {
-      await git.checkout({ ...this._baseOpts, ref: branch, remote: 'origin' });
+      await git.checkout({
+        ...this._baseOpts,
+        ref: branch,
+        remote: 'origin',
+      });
     } else {
       await this.branch(branch, true);
     }
+
   }
 
   async undoPendingChanges(fileFilter?: string[]) {

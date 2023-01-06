@@ -636,13 +636,36 @@ export const checkoutGitBranchAction: ActionFunction = async ({
   const vcs = getGitVCS();
 
   try {
+    await vcs.fetch(false, 1, repo?.credentials);
+  } catch (e) {
+    console.warn('Error fetching from remote');
+  }
+  const bufferId = await database.bufferChanges();
+  try {
     await vcs.checkout(branch);
+    // Fetch the last 20 commits for the branch
+    await vcs.fetch(true, 20, repo?.credentials);
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : err;
     return {
       errors: [errorMessage],
     };
   }
+
+  if (workspaceMeta) {
+    const log = (await vcs.log()) || [];
+
+    const author = log[0] ? log[0].commit.author : null;
+    const cachedGitLastCommitTime = author ? author.timestamp * 1000 : null;
+
+    await models.workspaceMeta.update(workspaceMeta, {
+      cachedGitLastCommitTime,
+      cachedGitRepositoryBranch: branch,
+      cachedGitLastAuthor: author?.name || null,
+    });
+  }
+
+  await database.flushChanges(bufferId);
 
   return {};
 };
@@ -828,6 +851,13 @@ export const pullFromGitRemoteAction: ActionFunction = async ({
   const bufferId = await database.bufferChanges();
 
   const providerName = getOauth2FormatName(gitRepository.credentials);
+
+  try {
+    await vcs.fetch(false, 1, gitRepository?.credentials);
+  } catch (e) {
+    console.warn('Error fetching from remote');
+  }
+
   try {
     await vcs.pull(gitRepository.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'pull'), providerName });
