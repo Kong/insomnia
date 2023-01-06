@@ -3,7 +3,7 @@ import type { AriaMenuProps, MenuTriggerProps } from '@react-types/menu';
 import type { Placement } from '@react-types/overlays';
 import classNames from 'classnames';
 import { PlatformKeyCombinations } from 'insomnia-common';
-import React, { PropsWithChildren, ReactNode, useRef } from 'react';
+import React, { CSSProperties, PropsWithChildren, ReactNode, useRef } from 'react';
 import { useMenuTrigger } from 'react-aria';
 import { MenuTriggerState, useMenuTriggerState } from 'react-stately';
 import styled from 'styled-components';
@@ -23,11 +23,21 @@ interface Props extends AriaMenuProps<any>, MenuTriggerProps {
   actionButton?: ReactNode;
   placement?: Placement;
   className?: string;
+  style?: CSSProperties;
   onOpen?: () => void;
 }
 
 const Dropdown = (props: Props) => {
-  const { placement, actionButton, className, label, selectionMode = 'multiple', onOpen, closeOnSelect = false } = props;
+  const {
+    placement,
+    actionButton,
+    className,
+    label,
+    selectionMode = 'multiple',
+    closeOnSelect = false,
+    style,
+    onOpen,
+  } = props;
 
   const state: MenuTriggerState = useMenuTriggerState({
     ...props,
@@ -40,7 +50,7 @@ const Dropdown = (props: Props) => {
   const { menuTriggerProps, menuProps } = useMenuTrigger({}, state, triggerRef);
 
   return (
-    <Container className={className}>
+    <Container className={className} style={style}>
       <Button {...menuTriggerProps} isPressed={state.isOpen} ref={triggerRef}>
         {actionButton || <>{label} <span aria-hidden="true" style={{ paddingLeft: 5 }}>?</span></>}
       </Button>
@@ -63,7 +73,6 @@ const Dropdown = (props: Props) => {
     </Container>
   );
 };
-
 interface StyledIconProps {
   icon: string;
 }
