@@ -41,6 +41,7 @@ import Root from './routes/root';
 import { initializeSentry } from './sentry';
 
 const Project = lazy(() => import('./routes/project'));
+const Workspace = lazy(() => import('./routes/workspace'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
 const Debug = lazy(() => import('./routes/debug'));
 const Design = lazy(() => import('./routes/design'));
@@ -123,6 +124,7 @@ const router = createMemoryRouter(
                           path: ':workspaceId',
                           id: ':workspaceId',
                           loader: async (...args) => (await import('./routes/workspace')).workspaceLoader(...args),
+                          element: <Suspense fallback={<AppLoadingIndicator />}><Workspace /></Suspense>,
                           children: [
                             {
                               path: `${ACTIVITY_DEBUG}`,
