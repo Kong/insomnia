@@ -1,4 +1,3 @@
-import { ReactNode } from 'react';
 import { DragSourceConnector, DragSourceMonitor, DropTargetConnector, DropTargetMonitor, DropTargetSpec } from 'react-dnd';
 import ReactDOM from 'react-dom';
 
