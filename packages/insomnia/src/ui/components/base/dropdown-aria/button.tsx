@@ -3,19 +3,23 @@ import React, { CSSProperties, forwardRef } from 'react';
 import { mergeProps, useButton, useFocusRing } from 'react-aria';
 import styled from 'styled-components';
 
-interface StyledButtonProps {
+import { Button as ThemedButton, ButtonProps } from '../../themed-button';
+
+interface StyledButtonProps extends ButtonProps {
   isDisabled?: boolean;
   isPressed?: boolean;
 }
 
-const StyledButton = styled.button<StyledButtonProps>(({ isDisabled }) => ({
+const StyledButton = styled(ThemedButton)<StyledButtonProps>(({ isDisabled }) => ({
+  display: 'flex',
+  alignItems: 'center',
   backgroundColor: isDisabled ? '#f9f9f9' : 'transparent',
   outline: 'none',
   height: '100%',
 }));
 
 interface Props extends AriaButtonProps {
-  isPressed: boolean;
+  isPressed?: boolean;
   style?: CSSProperties;
 }
 
