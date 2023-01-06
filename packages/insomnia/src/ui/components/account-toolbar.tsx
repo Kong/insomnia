@@ -28,6 +28,14 @@ const SignUpButton = styled(Button)({
   },
 });
 
+const DropdownTrigger = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 'var(--padding-xs)',
+  cursor: 'pointer',
+  padding: 'var(--padding-sm)',
+});
+
 export const AccountToolbar = () => {
   const isLoggedIn = session.isLoggedIn();
 
@@ -37,9 +45,9 @@ export const AccountToolbar = () => {
         <Dropdown
           aria-label="Account"
           actionButton={
-            <Button size='small' style={{ gap: 'var(--padding-xs)' }} variant='text'>
+            <DropdownTrigger>
               <SvgIcon icon='user' />{session.getFirstName()} {session.getLastName()}<i className="fa fa-caret-down" />
-            </Button>
+            </DropdownTrigger>
           }
         >
           <DropdownItem
