@@ -5,7 +5,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { CommitToGitRepoResult, GitChange, GitRollbackChangesResult } from '../../routes/git-actions';
+import { CommitToGitRepoResult, GitChangesLoaderData, GitRollbackChangesResult } from '../../routes/git-actions';
 import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -24,16 +24,7 @@ interface Item {
   editable: boolean;
 }
 
-type Props = ModalProps & {
-  changes: GitChange[];
-  branch: string;
-  statusNames: Record<string, string>;
-};
-
-export const GitStagingModal: FC<Props> = ({
-  changes,
-  branch,
-  statusNames,
+export const GitStagingModal: FC<ModalProps> = ({
   onHide,
 }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
@@ -45,13 +36,29 @@ export const GitStagingModal: FC<Props> = ({
   const formRef = useRef<HTMLFormElement>(null);
   const [checkAllModified, setCheckAllModified] = React.useState(false);
   const [checkAllUnversioned, setCheckAllUnversioned] = React.useState(false);
-
+  const gitChangesFetcher = useFetcher<GitChangesLoaderData>();
   const gitCommitFetcher = useFetcher<CommitToGitRepoResult>();
   const rollbackFetcher = useFetcher<GitRollbackChangesResult>();
 
   useEffect(() => {
     modalRef.current?.show();
   }, []);
+
+  useEffect(() => {
+    if (gitChangesFetcher.state === 'idle' && !gitChangesFetcher.data) {
+      gitChangesFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/changes`);
+    }
+  }, [organizationId, projectId, workspaceId, gitChangesFetcher]);
+
+  const {
+    changes,
+    branch,
+    statusNames,
+  } = gitChangesFetcher.data || {
+    changes: [],
+    branch: '',
+    statusNames: {},
+  };
 
   const hasChanges = Boolean(changes.length);
 

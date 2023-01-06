@@ -104,7 +104,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
   const isLoading = gitRepoDataFetcher.state === 'loading';
   const isButton = !gitRepository || (isLoading && !gitRepoDataFetcher.data) || (gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data);
 
-  const { log, branches, branch: currentBranch, remoteBranches, changes, statusNames } = (gitRepoDataFetcher.data && 'log' in gitRepoDataFetcher.data) ? gitRepoDataFetcher.data : { log: [], branches: [], branch: '', remoteBranches: [], changes: [], statusNames: {} };
+  const { log, branches, branch: currentBranch, remoteBranches } = (gitRepoDataFetcher.data && 'log' in gitRepoDataFetcher.data) ? gitRepoDataFetcher.data : { log: [], branches: [], branch: '', remoteBranches: [] };
 
   let dropdown: React.ReactNode = null;
 
@@ -258,12 +258,11 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
         />
       }
       {isGitLogModalOpen && <GitLogModal branch={currentBranch} logs={log} onHide={() => setIsGitLogModalOpen(false)} />}
-      {isGitStagingModalOpen && <GitStagingModal
-        changes={changes}
-        branch={currentBranch}
-        statusNames={statusNames}
-        onHide={() => setIsGitStagingModalOpen(false)}
-      />}
+      {isGitStagingModalOpen &&
+        <GitStagingModal
+          onHide={() => setIsGitStagingModalOpen(false)}
+        />
+      }
     </Fragment>
   );
 };

@@ -46,8 +46,6 @@ export type GitRepoLoaderData = {
   branches: string[];
   remoteBranches: string[];
   gitRepository: GitRepository | null;
-  changes: GitChange[];
-  statusNames: Record<string, string>;
 } | {
   errors: string[];
 };
@@ -128,16 +126,12 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
 
     setGitVCS(vcs);
 
-    const { changes, statusNames } = await getGitChanges(vcs, workspace);
-
     return {
       branch: await vcs.getBranch(),
       log: await vcs.log() || [],
       branches: await vcs.listBranches(),
       remoteBranches: await vcs.listRemoteBranches(),
       gitRepository: gitRepository,
-      changes,
-      statusNames,
     };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while fetching git repository.';
