@@ -12,7 +12,7 @@ import { WebSocketRequest } from '../../../models/websocket-request';
 
 export type DnDDragProps = ReturnType<typeof sourceCollect>;
 export type DnDDropProps = ReturnType<typeof targetCollect>;
-export type DnDProps =  DnDDragProps & DnDDropProps;
+export type DnDProps = DnDDragProps & DnDDropProps;
 
 export interface DragObject {
   item?: GrpcRequest | Request | WebSocketRequest | RequestGroup;
@@ -37,9 +37,12 @@ export const isAbove = (monitor: DropTargetMonitor, component: any) => {
     // Try to find the component if it's a function component
     hoveredNode = component.node;
   }
-  const hoveredTop = hoveredNode.getBoundingClientRect().top;
-  const draggedTop = monitor.getSourceClientOffset()?.y;
-  return draggedTop && hoveredTop > draggedTop;
+  if (hoveredNode?.getBoundingClientRect === 'function') {
+    const hoveredTop = hoveredNode.getBoundingClientRect().top;
+    const draggedTop = monitor.getSourceClientOffset()?.y;
+    return draggedTop && hoveredTop > draggedTop;
+  }
+  return false;
 };
 
 export const dropHandleCreator = <Props extends Object>(
@@ -52,7 +55,7 @@ export const dropHandleCreator = <Props extends Object>(
   }
 ): Required<DropTargetSpec<Props>>['drop'] =>
     (props, monitor, component) => {
-      // the item comes from the dragSource
+    // the item comes from the dragSource
       const movingDoc = (monitor.getItem() as DragObject).item;
       const parentId = getParentId(props);
       const targetId = getTargetId(props);
