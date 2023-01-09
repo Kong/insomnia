@@ -233,6 +233,14 @@ export function resolveHomePath(p: string) {
   }
 }
 
+export function jsonParseOr(str: string, fallback: any): any {
+  try {
+    return JSON.parse(str);
+  } catch (err) {
+    return fallback;
+  }
+}
+
 export function escapeHTML(unsafeText: string) {
   const div = document.createElement('div');
   div.innerText = unsafeText;

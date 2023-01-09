@@ -26,7 +26,6 @@ const config = {
   ],
   publish: null,
   afterSign: './scripts/afterSignHook.js',
-  afterPack: './scripts/afterPack.js',
   extraResources: [
     {
       from: './bin',
@@ -44,8 +43,6 @@ const config = {
   },
   fileAssociations: [],
   mac: {
-    // disabling notarize on electron-builder, we use afterSignHook.js
-    notarize: false,
     hardenedRuntime: true,
     category: 'public.app-category.developer-tools',
     entitlements: './build/static/entitlements.mac.inherit.plist',
@@ -129,10 +126,6 @@ const config = {
       },
     ],
   },
-  snap: {
-    base: 'core22',
-  },
-  npmRebuild: false,
 };
 
 const { env: { BUILD_TARGETS }, platform } = process;
