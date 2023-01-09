@@ -1,6 +1,5 @@
 import React, { PureComponent, ReactNode } from 'react';
 
-import { Mailto } from './base/mailto';
 import { showError } from './modals/index';
 
 interface Props {
@@ -65,8 +64,7 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
           // @ts-expect-error -- TSCONVERSION
           message: (
             <p>
-              Failed to render {componentName}. Please send the following error to{' '}
-              <Mailto email="support@insomnia.rest" subject="Error Report" body={error.stack} />.
+              Failed to render {componentName}. Please report the error to <a href="https://github.com/Kong/insomnia/issues">our Github Issues</a>
             </p>
           ),
         });

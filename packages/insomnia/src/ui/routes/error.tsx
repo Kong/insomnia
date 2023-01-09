@@ -10,7 +10,6 @@ import styled from 'styled-components';
 
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { DEFAULT_PROJECT_ID } from '../../models/project';
-import { Mailto } from '../components/base/mailto';
 import { Button } from '../components/themed-button';
 
 const Container = styled.div({
@@ -46,13 +45,7 @@ export const ErrorRoute: FC = () => {
     <Container>
       <h1 style={{ color: 'var(--color-font)' }}>Application Error</h1>
       <p style={{ color: 'var(--color-font)' }}>
-        Failed to render. Please send the following error to{' '}
-        <Mailto
-          email="support@insomnia.rest"
-          subject="Error Report"
-          body={errorMessage}
-        />
-        .
+        Failed to render. Please report to <a href="https://github.com/Kong/insomnia/issues">our Github Issues</a>
       </p>
       <span style={{ color: 'var(--color-font)' }}>
         <code className="selectable" style={{ wordBreak: 'break-word', margin: 'var(--padding-sm)' }}>{errorMessage}</code>

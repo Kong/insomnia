@@ -19,7 +19,7 @@ from the website.
 Have a bug or a feature request? First, read the
 [issue guidelines](CONTRIBUTING.md#using-the-issue-tracker) and search for existing and closed issues. If your problem or idea is not addressed yet, [please open a new issue](https://github.com/Kong/insomnia/issues).
 
-For more generic product questions and feedback, join the [Slack Team](https://chat.insomnia.rest) or email [support@insomnia.rest](mailto:support@insomnia.rest)
+For more generic product questions and feedback, join the [Slack Team](https://chat.insomnia.rest).
 
 ## Contributing
 
