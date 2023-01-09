@@ -42,6 +42,7 @@ jobs:
         shell: bash
         run: npm run app-package
         env:
+          DEBUG: electron-builder
           NODE_OPTIONS: '--max_old_space_size=6144'
           APPLE_ID: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID || '' }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.os == 'macos-latest' && secrets.DESIGNER_APPLE_ID_PASSWORD || '' }}
