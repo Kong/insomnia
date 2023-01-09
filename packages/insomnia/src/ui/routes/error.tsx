@@ -45,7 +45,7 @@ export const ErrorRoute: FC = () => {
     <Container>
       <h1 style={{ color: 'var(--color-font)' }}>Application Error</h1>
       <p style={{ color: 'var(--color-font)' }}>
-        Failed to render. Please report to Github Issues: https://github.com/Kong/insomnia/issues
+        Failed to render. Please report to <a href="https://github.com/Kong/insomnia/issues">our Github Issues</a>
       </p>
       <span style={{ color: 'var(--color-font)' }}>
         <code className="selectable" style={{ wordBreak: 'break-word', margin: 'var(--padding-sm)' }}>{errorMessage}</code>
