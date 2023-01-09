@@ -46,6 +46,7 @@ const config = {
     hardenedRuntime: true,
     category: 'public.app-category.developer-tools',
     entitlements: './build/static/entitlements.mac.inherit.plist',
+    entitlementsInherit: './build/static/entitlements.mac.inherit.plist',
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
     target: [
       {
@@ -63,6 +64,9 @@ const config = {
     notarize: {
       appBundleId: 'com.insomnia.app',
     },
+    asarUnpack: [
+      'node_modules/@getinsomnia/node-libcurl',
+    ],
   },
   dmg: {
     window: {
