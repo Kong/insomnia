@@ -25,7 +25,6 @@ const config = {
     './package.json',
   ],
   publish: null,
-  afterSign: './scripts/afterSignHook.js',
   extraResources: [
     {
       from: './bin',
@@ -59,6 +58,9 @@ const config = {
     ],
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
+    },
+    notarize: {
+      appBundleId: 'com.insomnia.app',
     },
   },
   dmg: {
