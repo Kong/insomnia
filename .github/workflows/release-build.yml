@@ -37,6 +37,11 @@ jobs:
       - name: Bootstrap packages
         run: npm run bootstrap
 
+      - name: debug try spctl
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: spctl --help
+
       - name: Package app (MacOS only)
         if: matrix.os == 'macos-latest'
         shell: bash
