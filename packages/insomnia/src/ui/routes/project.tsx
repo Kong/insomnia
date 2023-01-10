@@ -295,7 +295,8 @@ const OrganizationProjectsSidebar: FC<{
               <div
                 className={`sidebar__item sidebar__item--request ${activeProject._id === proj._id
                   ? 'sidebar__item--active'
-                  : ''}`}
+                  : ''
+                }`}
               >
                 <button
                   style={{
