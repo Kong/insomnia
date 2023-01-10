@@ -222,9 +222,7 @@ export const GraphQLEditor: FC<Props> = ({
       useTabs: editorIndentWithTabs,
       tabWidth: editorIndentSize,
     });
-    const prettyVariables = body.variables && JSON.parse(jsonPrettify(JSON.stringify(body.variables)));
     changeQuery(prettyQuery);
-    changeVariables(prettyVariables);
     // Update editor contents
     if (editorRef.current) {
       editorRef.current?.setValue(prettyQuery);
@@ -240,7 +238,7 @@ export const GraphQLEditor: FC<Props> = ({
   };
   const changeVariables = (variablesInput: string) => {
     try {
-      const variables = JSON.parse(variablesInput || 'null');
+      const variables = JSON.parse(variablesInput || '{}');
       onChange(JSON.stringify({ ...state.body, variables }));
       setState(state => ({
         ...state,
