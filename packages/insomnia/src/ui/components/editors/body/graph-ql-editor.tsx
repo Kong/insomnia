@@ -274,7 +274,12 @@ export const GraphQLEditor: FC<Props> = ({
       }));
     } catch (error) {
       console.warn('failed to parse', error);
-      setState(state => ({ ...state, documentAST: null, body: { ...state.body, query } }));
+      setState(state => ({
+        ...state,
+        documentAST: null,
+        body: { ...state.body, query },
+        operations: query ? state.operations : [],
+      }));
     }
   };
 
