@@ -46,7 +46,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         shell: bash
         run: npm run app-package
-        working-directory: ~/
+        working-directory: ${{ github.workspace }}
         env:
           DEBUG: electron-builder
           NODE_OPTIONS: '--max_old_space_size=6144'
