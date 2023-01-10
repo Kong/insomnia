@@ -5,6 +5,7 @@ import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useInterval } from 'react-use';
+import styled from 'styled-components';
 
 import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
@@ -17,11 +18,9 @@ import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { selectActiveEnvironment, selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
-import { type DropdownHandle, Dropdown } from './base/dropdown/dropdown';
-import { DropdownButton } from './base/dropdown/dropdown-button';
-import { DropdownDivider } from './base/dropdown/dropdown-divider';
-import { DropdownHint } from './base/dropdown/dropdown-hint';
-import { DropdownItem } from './base/dropdown/dropdown-item';
+import { type DropdownHandle } from './base/dropdown/dropdown';
+import { Button } from './base/dropdown-aria/button';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from './base/dropdown-aria/dropdown';
 import { PromptButton } from './base/prompt-button';
 import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
@@ -29,6 +28,30 @@ import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
 import { RequestRenderErrorModal } from './modals/request-render-error-modal';
+
+const DropdownButton = styled(Button)({
+  height: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingRight: 'var(--padding-xs)',
+  paddingLeft: 'var(--padding-xs)',
+  textAlign: 'center',
+  background: 'var(--color-surprise)',
+  color: 'var(--color-font-surprise)',
+  borderRadius: 'unset',
+  borderLeft: '1px solid var(--hl-md)',
+
+  '&:hover:not(:disabled)': {
+    filter: 'brightness(0.8)',
+    backgroundColor: 'var(--color-surprise)',
+  },
+
+  '&:focus:not(:disabled)': {
+    filter: 'brightness(0.8)',
+    backgroundColor: 'var(--color-surprise)',
+  },
+});
 
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
@@ -56,9 +79,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const activeRequest = useSelector(selectActiveRequest);
   const settings = useSelector(selectSettings);
   const methodDropdownRef = useRef<DropdownHandle>(null);
-  const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditorHandle>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleGenerateCode = () => {
     showModal(GenerateCodeModal, { request });
@@ -282,9 +303,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     request_toggleHttpMethodMenu: () => {
       methodDropdownRef.current?.toggle();
     },
-    request_showOptions: () => {
-      dropdownRef.current?.toggle(true);
-    },
   });
 
   const lastPastedTextRef = useRef('');
@@ -307,8 +325,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           authentication: r.authentication,
           parameters: r.parameters,
         },
-        // Pass true to indicate that this is an import
-        true
+          // Pass true to indicate that this is an import
+          true
         );
       }
     } catch (error) {
@@ -341,10 +359,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }, []);
 
   const onMethodChange = useCallback((method: string) => update(request, { method }), [request]);
-
-  const handleSendDropdownHide = useCallback(() => {
-    buttonRef.current?.blur();
-  }, []);
 
   const { url, method } = request;
   const isCancellable = currentInterval || currentTimeout;
@@ -388,49 +402,40 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               {downloadPath ? 'Download' : 'Send'}
             </button>
             <Dropdown
-              key="dropdown"
-              className="tall"
-              right
-              ref={dropdownRef}
-              onHide={handleSendDropdownHide}
+              triggerButton={
+                <DropdownButton variant='text'>
+                  <i className="fa fa-caret-down" />
+                </DropdownButton>
+              }
             >
-              <DropdownButton
-                className="urlbar__send-context"
-                onClick={() => dropdownRef.current?.show()}
-              >
-                <i className="fa fa-caret-down" />
-              </DropdownButton>
-              <DropdownDivider>Basic</DropdownDivider>
-              <DropdownItem onClick={send}>
-                <i className="fa fa-arrow-circle-o-right" /> Send Now
-                <DropdownHint keyBindings={hotKeyRegistry.request_send} />
-              </DropdownItem>
-              <DropdownItem onClick={handleGenerateCode}>
-                <i className="fa fa-code" /> Generate Client Code
-              </DropdownItem>
-              <DropdownDivider>Advanced</DropdownDivider>
-              <DropdownItem onClick={handleSendAfterDelay}>
-                <i className="fa fa-clock-o" /> Send After Delay
-              </DropdownItem>
-              <DropdownItem onClick={handleSendOnInterval}>
-                <i className="fa fa-repeat" /> Repeat on Interval
-              </DropdownItem>
-              {downloadPath ? (
-                <DropdownItem
-                  stayOpenAfterClick
-                  buttonClass={PromptButton}
-                  onClick={handleClearDownloadLocation}
-                >
-                  <i className="fa fa-stop-circle" /> Stop Auto-Download
+              <DropdownSection title="Basic">
+                <DropdownItem key="send-now">
+                  <ItemContent icon="arrow-circle-o-right" label="Send Now" hint={hotKeyRegistry.request_send} onClick={send} />
                 </DropdownItem>
-              ) : (
-                <DropdownItem onClick={downloadAfterSend}>
-                  <i className="fa fa-download" /> Download After Send
+                <DropdownItem>
+                  <ItemContent icon="code" label="Generate Client Code" onClick={handleGenerateCode} />
                 </DropdownItem>
-              )}
-              <DropdownItem onClick={() => sendThenSetFilePath()}>
-                <i className="fa fa-download" /> Send And Download
-              </DropdownItem>
+              </DropdownSection>
+              <DropdownSection title="Advanced">
+                <DropdownItem>
+                  <ItemContent icon="clock-o" label="Send After Delay" onClick={handleSendAfterDelay} />
+                </DropdownItem>
+                <DropdownItem>
+                  <ItemContent icon="repeat" label="Repeat on Interval" onClick={handleSendOnInterval} />
+                </DropdownItem>
+                {downloadPath ? (<DropdownItem>
+                  <PromptButton fullWidth onClick={handleClearDownloadLocation}>
+                    <ItemContent icon="stop-circle" label="Stop Auto-Download" />
+                  </PromptButton>
+                </DropdownItem>) : (
+                  <DropdownItem>
+                    <ItemContent icon="download" label="Download After Send" onClick={downloadAfterSend} />
+                  </DropdownItem>
+                )}
+                <DropdownItem>
+                  <ItemContent icon="download" label="Send And Download" onClick={sendThenSetFilePath} />
+                </DropdownItem>
+              </DropdownSection>
             </Dropdown>
           </>
         )}

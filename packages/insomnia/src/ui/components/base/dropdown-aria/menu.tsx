@@ -24,7 +24,7 @@ const List = styled.ul({
   },
 });
 
-interface Props<T extends object> extends AriaMenuProps<T> {}
+interface Props<T extends object> extends AriaMenuProps<T> { }
 
 export const Menu = <T extends object>(props: Props<T>) => {
   // Create menu state based on the incoming props
@@ -38,7 +38,7 @@ export const Menu = <T extends object>(props: Props<T>) => {
 
   return (
     <List {...menuProps} ref={ref}>
-      {[...state.collection].map((item: Node<T>) => (
+      {[...state.collection].filter((item: Node<T>) => item.rendered).map((item: Node<T>) => (
         item.type === 'section' ?
           (
             <MenuSection

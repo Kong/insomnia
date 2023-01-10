@@ -20,10 +20,8 @@ import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveWorkspaceMeta, selectRemoteProjects, selectSyncItems } from '../../redux/selectors';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Button } from '../base/dropdown-aria/button';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
@@ -33,7 +31,6 @@ import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncDeleteModal } from '../modals/sync-delete-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
 import { SyncStagingModal } from '../modals/sync-staging-modal';
-import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
 
 // TODO: handle refetching logic in one place not here in a component
@@ -299,20 +296,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   const canCreateSnapshot =
     Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
   const visibleBranches = localBranches.filter(b => !b.match(/\.hidden$/));
-  const syncMenuHeader = (
-    <DropdownDivider>
-      Insomnia Sync{' '}
-      <HelpTooltip>
-        Sync and collaborate on workspaces{' '}
-        <Link href={docsVersionControl}>
-          <span className="no-wrap">
-            <br />
-            Documentation <i className="fa fa-external-link" />
-          </span>
-        </Link>
-      </HelpTooltip>
-    </DropdownDivider>
-  );
 
   if (loadingProjectPull) {
     return (
@@ -328,45 +311,64 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     return (
       <div>
         <Dropdown
-          style={{
-            marginLeft: 'var(--padding-md)',
-          }}
+          style={{ marginLeft: 'var(--padding-md)' }}
           className="wide tall"
           onOpen={() => refreshVCSAndRefetchRemote()}
-        >
-          <DropdownButton
-            buttonClass={Button}
-            // @ts-expect-error -- TSCONVERSION
-            size="small"
-            className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
-          >
-            <i className="fa fa-code-fork " /> Setup Sync
-          </DropdownButton>
-
-          {syncMenuHeader}
-          {remoteBackendProjects.length === 0 && (
-            <DropdownItem
-              onClick={async () => {
-                setState(state => ({
-                  ...state,
-                  loadingProjectPull: true,
-                }));
-                await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
-                await refreshVCSAndRefetchRemote();
-                setState(state => ({
-                  ...state,
-                  loadingProjectPull: false,
-                }));
-              }}
+          triggerButton={
+            <Button
+              size="small"
+              className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
             >
-              <i className="fa fa-plus-circle" /> Create Locally
-            </DropdownItem>
-          )}
-          {remoteBackendProjects.map(p => (
-            <DropdownItem key={p.id} onClick={() => handleSetProject(p)}>
-              <i className="fa fa-cloud-download" /> Pull <strong>{p.name}</strong>
-            </DropdownItem>
-          ))}
+              <i className="fa fa-code-fork " /> Setup Sync
+            </Button>
+          }
+        >
+          <DropdownSection
+            title={
+              <>
+                Insomnia Sync{' '}
+                <HelpTooltip>
+                  Sync and collaborate on workspaces{' '}
+                  <Link href={docsVersionControl}>
+                    <span className="no-wrap">
+                      <br />
+                      Documentation <i className="fa fa-external-link" />
+                    </span>
+                  </Link>
+                </HelpTooltip>
+              </>
+            }
+          >
+            {remoteBackendProjects.length === 0 && (
+              <DropdownItem>
+                <ItemContent
+                  icon="plus-circle"
+                  label="Create Locally"
+                  onClick={async () => {
+                    setState(state => ({
+                      ...state,
+                      loadingProjectPull: true,
+                    }));
+                    await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
+                    await refreshVCSAndRefetchRemote();
+                    setState(state => ({
+                      ...state,
+                      loadingProjectPull: false,
+                    }));
+                  }}
+                />
+              </DropdownItem>
+            )}
+            {remoteBackendProjects.map(p => (
+              <DropdownItem key={p.id}>
+                <ItemContent
+                  icon="cloud-download"
+                  label={<>Pull <strong>{p.name}</strong></>}
+                  onClick={() => handleSetProject(p)}
+                />
+              </DropdownItem>
+            ))}
+          </DropdownSection>
         </Dropdown>
       </div>
     );
@@ -385,155 +387,164 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   return (
     <div>
       <Dropdown
-        style={{
-          marginLeft: 'var(--padding-md)',
-        }}
+        style={{ marginLeft: 'var(--padding-md)' }}
         className="wide tall"
         onOpen={() => refreshVCSAndRefetchRemote()}
+        triggerButton={
+          currentBranch === null ?
+            <Fragment>Sync</Fragment> :
+            <Button
+              size="small"
+              className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
+              disabled={initializing}
+            >
+              <div className="ellipsis">
+                <i className="fa fa-code-fork space-right" />{' '}
+                {initializing ? 'Initializing...' : currentBranch}
+              </div>
+              <div className="flex space-left">
+                <Tooltip message={snapshotToolTipMsg} delay={800} position="bottom">
+                  <i
+                    className={classnames('fa fa-cube fa--fixed-width', {
+                      'super-duper-faint': !canCreateSnapshot,
+                    })}
+                  />
+                </Tooltip>
+
+                {/* Only show cloud icons if logged in */}
+                {session.isLoggedIn() && (
+                  <Fragment>
+                    {loadingPull ? (
+                      loadIcon
+                    ) : (
+                      <Tooltip message={pullToolTipMsg} delay={800} position="bottom">
+                        <i
+                          className={classnames('fa fa-cloud-download fa--fixed-width', {
+                            'super-duper-faint': !canPull,
+                          })}
+                        />
+                      </Tooltip>
+                    )}
+
+                    {loadingPush ? (
+                      loadIcon
+                    ) : (
+                      <Tooltip message={pushToolTipMsg} delay={800} position="bottom">
+                        <i
+                          className={classnames('fa fa-cloud-upload fa--fixed-width', {
+                            'super-duper-faint': !canPush,
+                          })}
+                        />
+                      </Tooltip>
+                    )}
+                  </Fragment>
+                )}
+              </div>
+            </Button>
+        }
       >
-        {currentBranch === null ?
-          <Fragment>Sync</Fragment> :
-          <DropdownButton
-            buttonClass={Button}
-            // @ts-expect-error -- TSCONVERSION
-            size="small"
-            className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
-            disabled={initializing}
-          >
-            <div className="ellipsis">
-              <i className="fa fa-code-fork space-right" />{' '}
-              {initializing ? 'Initializing...' : currentBranch}
-            </div>
-            <div className="flex space-left">
-              <Tooltip message={snapshotToolTipMsg} delay={800} position="bottom">
-                <i
-                  className={classnames('fa fa-cube fa--fixed-width', {
-                    'super-duper-faint': !canCreateSnapshot,
-                  })}
-                />
-              </Tooltip>
-
-              {/* Only show cloud icons if logged in */}
-              {session.isLoggedIn() && (
-                <Fragment>
-                  {loadingPull ? (
-                    loadIcon
-                  ) : (
-                    <Tooltip message={pullToolTipMsg} delay={800} position="bottom">
-                      <i
-                        className={classnames('fa fa-cloud-download fa--fixed-width', {
-                          'super-duper-faint': !canPull,
-                        })}
-                      />
-                    </Tooltip>
-                  )}
-
-                  {loadingPush ? (
-                    loadIcon
-                  ) : (
-                    <Tooltip message={pushToolTipMsg} delay={800} position="bottom">
-                      <i
-                        className={classnames('fa fa-cloud-upload fa--fixed-width', {
-                          'super-duper-faint': !canPush,
-                        })}
-                      />
-                    </Tooltip>
-                  )}
-                </Fragment>
-              )}
-            </div>
-          </DropdownButton>}
-
-        {syncMenuHeader}
-
-        {!session.isLoggedIn() && (
-          <DropdownItem onClick={() => showModal(LoginModal)}>
-            <i className="fa fa-sign-in" /> Log In
-          </DropdownItem>
-        )}
-
-        <DropdownItem onClick={() => showModal(SyncBranchesModal, { onHide: refreshVCSAndRefetchRemote })}>
-          <i className="fa fa-code-fork" />
-          Branches
-        </DropdownItem>
-
-        <DropdownItem onClick={() => showModal(SyncDeleteModal, { onHide: refreshVCSAndRefetchRemote })} disabled={historyCount === 0}>
-          <i className="fa fa-remove" />
-          Delete {strings.collection.singular}
-        </DropdownItem>
-
-        <DropdownDivider>Local Branches</DropdownDivider>
-        {visibleBranches.map(branch => {
-          const icon = branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
-          const isCurrentBranch = branch === currentBranch;
-          return <DropdownItem
-            key={branch}
-            onClick={isCurrentBranch ? undefined : () => handleSwitchBranch(branch)}
-            className={classnames({
-              bold: isCurrentBranch,
-            })}
-            title={isCurrentBranch ? '' : `Switch to "${branch}"`}
-          >
-            {icon}
-            {branch}
-          </DropdownItem>;
-        })}
-
-        <DropdownDivider>{currentBranch}</DropdownDivider>
-
-        <DropdownItem onClick={() => showModal(SyncHistoryModal)} disabled={historyCount === 0}>
-          <i className="fa fa-clock-o" />
-          History
-        </DropdownItem>
-
-        <DropdownItem
-          onClick={handleRevert}
-          buttonClass={PromptButton}
-          stayOpenAfterClick
-          disabled={!canCreateSnapshot || historyCount === 0}
-        >
-          <i className="fa fa-undo" />
-          Revert Changes
-        </DropdownItem>
-
-        <DropdownItem
-          onClick={() =>
-            showModal(SyncStagingModal, {
-              onSnapshot: refreshVCSAndRefetchRemote,
-              handlePush,
-            })
+        <DropdownSection
+          title={
+            <>
+              Insomnia Sync{' '}
+              <HelpTooltip>
+                Sync and collaborate on workspaces{' '}
+                <Link href={docsVersionControl}>
+                  <span className="no-wrap">
+                    <br />
+                    Documentation <i className="fa fa-external-link" />
+                  </span>
+                </Link>
+              </HelpTooltip>
+            </>
           }
-          disabled={!canCreateSnapshot}
         >
-          <i className="fa fa-cube" />
-          Create Snapshot
-        </DropdownItem>
-
-        <DropdownItem onClick={handlePull} disabled={behind === 0 || loadingPull}>
-          {loadingPull ? (
-            <Fragment>
-              <i className="fa fa-spin fa-refresh" /> Pulling Snapshots...
-            </Fragment>
-          ) : (
-            <Fragment>
-              <i className="fa fa-cloud-download" /> Pull {behind || ''} Snapshot
-              {behind === 1 ? '' : 's'}
-            </Fragment>
+          {!session.isLoggedIn() && (
+            <DropdownItem>
+              <ItemContent icon="sign-in" label="Log In" onClick={() => showModal(LoginModal)} />
+            </DropdownItem>
           )}
-        </DropdownItem>
 
-        <DropdownItem onClick={handlePush} disabled={ahead === 0 || loadingPush}>
-          {loadingPush ? (
-            <Fragment>
-              <i className="fa fa-spin fa-refresh" /> Pushing Snapshots...
-            </Fragment>
-          ) : (
-            <Fragment>
-              <i className="fa fa-cloud-upload" /> Push {ahead || ''} Snapshot
-              {ahead === 1 ? '' : 's'}
-            </Fragment>
-          )}
-        </DropdownItem>
+          <DropdownItem>
+            <ItemContent icon="code-fork" label="Branches" onClick={() => showModal(SyncBranchesModal, { onHide: refreshVCSAndRefetchRemote })} />
+          </DropdownItem>
+
+          <DropdownItem>
+            <ItemContent
+              icon="remove"
+              label={<>Delete {strings.collection.singular}</>}
+              onClick={() => showModal(SyncDeleteModal, { onHide: refreshVCSAndRefetchRemote })}
+            // disabled={historyCount === 0}
+            />
+          </DropdownItem>
+        </DropdownSection>
+
+        <DropdownSection title="Local Branches">
+          {visibleBranches.map(branch => {
+            const isCurrentBranch = branch === currentBranch;
+            return (
+              <DropdownItem
+                key={branch}
+                // className={classnames({
+                //   bold: isCurrentBranch,
+                // })}
+                title={isCurrentBranch ? '' : `Switch to "${branch}"`}
+              >
+                <ItemContent
+                  icon={currentBranch ? 'tag' : 'empty'}
+                  label={branch}
+                  onClick={isCurrentBranch ? undefined : () => handleSwitchBranch(branch)}
+                />
+              </DropdownItem>
+            );
+          })}
+        </DropdownSection>
+
+        <DropdownSection title={currentBranch}>
+          <DropdownItem>
+            <ItemContent
+              icon="clock-o"
+              label="History"
+              onClick={() => showModal(SyncHistoryModal)}
+            // disabled={historyCount === 0}
+            />
+          </DropdownItem>
+
+          <DropdownItem> {/* disabled={!canCreateSnapshot || historyCount === 0} */}
+            <PromptButton onClick={handleRevert}>
+              <ItemContent icon="undo" label="Revert Changes" />
+            </PromptButton>
+          </DropdownItem>
+
+          <DropdownItem> {/* disabled={!canCreateSnapshot} */}
+            <ItemContent
+              icon="cube"
+              label="Create Snapshot"
+              onClick={() =>
+                showModal(SyncStagingModal, {
+                  onSnapshot: refreshVCSAndRefetchRemote,
+                  handlePush,
+                })
+              }
+            />
+          </DropdownItem>
+
+          <DropdownItem> {/* disabled={behind === 0 || loadingPull}> */}
+            <ItemContent
+              icon={loadingPull ? 'spin fa-refresh' : 'cloud-download'}
+              label={loadingPull ? 'Pulling Snapshots...' : `Pull ${behind || ''} Snapshot ${behind === 1 ? '' : 's'}`}
+              onClick={handlePull}
+            />
+          </DropdownItem>
+          <DropdownItem>
+            <ItemContent
+              icon={loadingPush ? 'spin fa-refresh' : 'cloud-upload'}
+              label={loadingPush ? 'Pushing Snapshots...' : `Push ${ahead || ''} Snapshot ${ahead === 1 ? '' : 's'}`}
+              onClick={handlePush}
+            // disabled={ahead === 0 || loadingPush}
+            />
+          </DropdownItem>
+        </DropdownSection>
       </Dropdown>
     </div>
   );

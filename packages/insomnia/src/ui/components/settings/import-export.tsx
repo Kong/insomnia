@@ -12,10 +12,8 @@ import { isRequestGroup } from '../../../models/request-group';
 import { importers } from '../../../utils/importers/importers';
 import { importClipBoard, importFile, importUri } from '../../import';
 import { selectActiveProject, selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName, selectProjects, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject, selectWorkspacesWithResolvedNameForActiveProject } from '../../redux/selectors';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Button } from '../base/dropdown-aria/button';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { Link } from '../base/link';
 import { AlertModal } from '../modals/alert-modal';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
@@ -51,7 +49,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           activeProject,
           projects,
           workspaceId: activeWorkspace?._id,
-          forceToWorkspace, onComplete: revalidate });
+          forceToWorkspace, onComplete: revalidate,
+        });
         hideSettingsModal();
       },
       ...defaultValue,
@@ -81,7 +80,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       activeProject,
       projects,
       workspaceId: activeWorkspace?._id,
-      forceToWorkspace, onComplete: revalidate });
+      forceToWorkspace, onComplete: revalidate,
+    });
     hideSettingsModal();
   }, [activeProjectWorkspaces, activeProject, projects, activeWorkspace?._id, forceToWorkspace, revalidate, hideSettingsModal]);
 
@@ -91,7 +91,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       activeProject,
       projects,
       workspaceId: activeWorkspace?._id,
-      forceToWorkspace, onComplete: revalidate });
+      forceToWorkspace, onComplete: revalidate,
+    });
     hideSettingsModal();
   }, [activeProjectWorkspaces, activeProject, projects, activeWorkspace?._id, forceToWorkspace, revalidate, hideSettingsModal]);
 
@@ -106,40 +107,50 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         Your format isn't supported? <Link href={docsImportExport}>Add Your Own</Link>.
       </p>
       <div className="pad-top">
-        <Dropdown outline>
-          <DropdownButton className="btn btn--clicky">
-            Export Data <i className="fa fa-caret-down" />
-          </DropdownButton>
-          <DropdownDivider>Choose Export Type</DropdownDivider>
-          {activeWorkspace && <DropdownItem onClick={showExportRequestsModal}>
-            <i className="fa fa-home" />
-            Export the "{activeWorkspaceName}" {getWorkspaceLabel(activeWorkspace).singular}
-          </DropdownItem>}
-          <DropdownItem onClick={handleExportAllToFile}>
-            <i className="fa fa-empty" />
-            All {strings.document.plural} and {strings.collection.plural} from the "{projectName}" {strings.project.singular}
-          </DropdownItem>
+        <Dropdown
+          triggerButton={
+            <Button className="btn btn--clicky">
+              Export Data <i className="fa fa-caret-down" />
+            </Button>
+          }
+        >
+          <DropdownSection title="Choose Export Type">
+            {activeWorkspace &&
+              <DropdownItem onClick={showExportRequestsModal}>
+                <ItemContent icon="home" label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`} />
+              </DropdownItem>
+            }
+            <DropdownItem>
+              <ItemContent
+                icon="empty"
+                label={`All ${strings.document.plural} and ${strings.collection.plural} from the "${projectName}" ${strings.project.singular}`}
+                onClick={handleExportAllToFile}
+              />
+            </DropdownItem>
+          </DropdownSection>
         </Dropdown>
-          &nbsp;&nbsp;
-        <Dropdown outline>
-          <DropdownButton className="btn btn--clicky">
-            Import Data <i className="fa fa-caret-down" />
-          </DropdownButton>
-          <DropdownDivider>Choose Import Type</DropdownDivider>
-          <DropdownItem onClick={handleImportFile}>
-            <i className="fa fa-file-o" />
-            From File
-          </DropdownItem>
-          <DropdownItem onClick={handleImportUri}>
-            <i className="fa fa-link" />
-            From URL
-          </DropdownItem>
-          <DropdownItem onClick={handleImportClipBoard}>
-            <i className="fa fa-clipboard" />
-            From Clipboard
-          </DropdownItem>
+        &nbsp;&nbsp;
+        <Dropdown
+          triggerButton={
+            <Button className="btn btn--clicky">
+              Import Data <i className="fa fa-caret-down" />
+            </Button>
+          }
+        >
+          <DropdownSection title="Choose Import Type">
+            <DropdownItem>
+              <ItemContent icon="file-o" label="From File" onClick={handleImportFile} />
+            </DropdownItem>
+            <DropdownItem>
+              <ItemContent icon="link" label="From URL" onClick={handleImportUri} />
+            </DropdownItem>
+            <DropdownItem >
+              <ItemContent icon="clipboard" label="From Clipboard" onClick={handleImportClipBoard} />
+            </DropdownItem>
+          </DropdownSection>
+
         </Dropdown>
-          &nbsp;&nbsp;
+        &nbsp;&nbsp;
         <Link href="https://insomnia.rest/create-run-button" className="btn btn--compact" button>
           Create Run Button
         </Link>

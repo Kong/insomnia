@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { toKebabCase } from '../../../common/misc';
@@ -7,28 +7,24 @@ import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectHotKeyRegistry } from '../../redux/selectors';
-import { type DropdownHandle, type DropdownProps, Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownHint } from '../base/dropdown/dropdown-hint';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Button } from '../base/dropdown-aria/button';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { showPrompt } from '../modals';
 
-interface Props extends Pick<DropdownProps, 'right'> {
+interface Props {
   handleDuplicateRequest: Function;
   isPinned: Boolean;
   request: WebSocketRequest;
   handleShowSettings: () => void;
 }
 
-export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
+export const WebSocketRequestActionsDropdown = ({
   handleDuplicateRequest,
   isPinned,
   handleShowSettings,
   request,
-  right,
-}, ref) => {
+}: Props) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
 
   const duplicate = useCallback(() => {
@@ -58,43 +54,35 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
   }, [request]);
 
   return (
-    <Dropdown right={right} ref={ref} dataTestId={`Dropdown-${toKebabCase(request.name)}`}>
-      <DropdownButton>
-        <i className="fa fa-caret-down" />
-      </DropdownButton>
-
-      <DropdownItem onClick={duplicate}>
-        <i className="fa fa-copy" /> Duplicate
-        <DropdownHint keyBindings={hotKeyRegistry.request_showDuplicate} />
+    <Dropdown
+      dataTestId={`Dropdown-${toKebabCase(request.name)}`}
+      triggerButton={
+        <Button variant='text' style={{ padding: 0, borderRadius: 'unset' }}>
+          <i className="fa fa-caret-down" />
+        </Button>
+      }
+    >
+      <DropdownItem>
+        <ItemContent icon="copy" label="Duplicate" hint={hotKeyRegistry.request_showDuplicate} onClick={duplicate} />
       </DropdownItem>
-
-      <DropdownItem onClick={togglePin}>
-        <i className="fa fa-thumb-tack" /> {isPinned ? 'Unpin' : 'Pin'}
-        <DropdownHint keyBindings={hotKeyRegistry.request_togglePin} />
+      <DropdownItem>
+        <ItemContent icon="thumb-tack" label={isPinned ? 'Unpin' : 'Pin'} hint={hotKeyRegistry.request_togglePin} onClick={togglePin} />
       </DropdownItem>
-
-      <DropdownItem
-        onClick={handleRename}
-      >
-        <i className="fa fa-edit" /> Rename
+      <DropdownItem>
+        <ItemContent icon="edit" label="Rename" onClick={handleRename} />
       </DropdownItem>
-
-      <DropdownItem
-        buttonClass={PromptButton}
-        onClick={deleteRequest}
-      >
-        <i className="fa fa-trash-o" /> Delete
-        <DropdownHint keyBindings={hotKeyRegistry.request_showDelete} />
+      <DropdownItem>
+        <PromptButton fullWidth onClick={deleteRequest}>
+          <ItemContent icon="trash-o" label="Delete" hint={hotKeyRegistry.request_showDelete} />
+        </PromptButton>
       </DropdownItem>
-
-      <DropdownDivider />
-
-      <DropdownItem onClick={handleShowSettings} dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`}>
-        <i className="fa fa-wrench" /> Settings
-        <DropdownHint keyBindings={hotKeyRegistry.request_showSettings} />
-      </DropdownItem>
+      <DropdownSection>
+        <DropdownItem> {/* dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`} */}
+          <ItemContent icon="wrench" label="Settings" hint={hotKeyRegistry.request_showSettings} onClick={handleShowSettings} />
+        </DropdownItem>
+      </DropdownSection>
     </Dropdown>
   );
-});
+};
 
 WebSocketRequestActionsDropdown.displayName = 'WebSocketRequestActionsDropdown';

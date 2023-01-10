@@ -12,9 +12,8 @@ import {
   PREVIEW_MODE_FRIENDLY,
 } from '../../../common/constants';
 import type { ResponseHeader } from '../../../models/response';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Button } from '../base/dropdown-aria/button';
+import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
 import { showModal } from '../modals/index';
 import { WrapperModal } from '../modals/wrapper-modal';
 import { ResponseHeadersViewer } from './response-headers-viewer';
@@ -163,35 +162,40 @@ export const ResponseMultipartViewer: FC<Props> = ({
         }}
       >
         <div>
-          <Dropdown wide>
-            <DropdownButton className="btn btn--clicky">
-              <div
-                style={{
-                  minWidth: '200px',
-                  display: 'inline-block',
-                }}
-              >
-                {selectedPart.title}
-              </div>
-              <i className="fa fa-caret-down fa--skinny space-left" />
-            </DropdownButton>
+          <Dropdown
+            triggerButton={
+              <Button className="btn btn--clicky">
+                <div
+                  style={{
+                    minWidth: '200px',
+                    display: 'inline-block',
+                  }}
+                >
+                  {selectedPart.title}
+                </div>
+                <i className="fa fa-caret-down fa--skinny space-left" />
+              </Button>
+            }
+          >
             {parts.map(part => (
-              <DropdownItem key={part.id} onClick={() => selectPart(part)}>
-                {selectedPart?.id === part.id ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}
-                {part.title}
+              <DropdownItem key={part.id}>
+                <ItemContent icon={selectedPart?.id === part.id ? 'check' : 'empty'} label={part.title} onClick={() => selectPart(part)} />
               </DropdownItem>
             ))}
           </Dropdown>
         </div>
-        <Dropdown right>
-          <DropdownButton className="btn btn--clicky">
-            <i className="fa fa-bars" />
-          </DropdownButton>
-          <DropdownItem onClick={viewHeaders}>
-            <i className="fa fa-list" /> View Headers
+        <Dropdown
+          triggerButton={
+            <Button className="btn btn--clicky">
+              <i className="fa fa-bars" />
+            </Button>
+          }
+        >
+          <DropdownItem>
+            <ItemContent icon="list" label="View Headers" onClick={viewHeaders} />
           </DropdownItem>
-          <DropdownItem onClick={saveAsFile}>
-            <i className="fa fa-save" /> Save as File
+          <DropdownItem>
+            <ItemContent icon="save" label="Save as File" onClick={saveAsFile} />
           </DropdownItem>
         </Dropdown>
       </div>

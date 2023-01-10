@@ -2,18 +2,15 @@ import React, { Fragment, FunctionComponent } from 'react';
 import styled from 'styled-components';
 
 import type { GrpcMethodInfo } from '../../../../main/ipc/grpc';
-import { Dropdown } from '../../base/dropdown/dropdown';
-import { DropdownButton } from '../../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../../base/dropdown/dropdown-item';
+import { Button } from '../../base/dropdown-aria/button';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown-aria/dropdown';
 import { GrpcMethodTag } from '../../tags/grpc-method-tag';
-import { Button } from '../../themed-button';
 import { Tooltip } from '../../tooltip';
 
-const DropdownMethodButton = styled(Button).attrs({
+const DropdownButton = styled(Button).attrs({
   variant: 'text',
-  size:'medium',
-  radius:'0',
+  size: 'medium',
+  radius: '0',
   className: 'tall wide',
 })({
   height: '100%',
@@ -40,7 +37,7 @@ const PROTO_PATH_REGEX = /^\/(?:(?<package>[\w.]+)\.)?(?<service>\w+)\/(?<method
 
 export const NO_PACKAGE_KEY = 'no-package';
 
-function groupBy(list: {}[], keyGetter: (item: any) => string):Record<string, any[]> {
+function groupBy(list: {}[], keyGetter: (item: any) => string): Record<string, any[]> {
   const map = new Map();
   list.forEach(item => {
     const key = keyGetter(item);
@@ -71,7 +68,7 @@ const NormalCase = styled.span`
 `;
 
 export const GrpcMethodDropdown: FunctionComponent<Props> = ({
-  disabled,
+  // disabled,
   methods,
   selectedMethod,
   handleChange,
@@ -84,44 +81,49 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   return (
     <Dropdown
       className="tall wide"
+      control={
+        <DropdownButton>
+          <Tooltip message={selectedPath || 'Select Method'} position="bottom" delay={500}>
+            {!selectedPath ? 'Select Method' : getShortGrpcPath(selectedPath)}
+            <i className="fa fa-caret-down pad-left-sm" />
+          </Tooltip>
+        </DropdownButton>
+      }
     >
-      <DropdownButton
-        buttonClass={DropdownMethodButton}
-      >
-        <Tooltip message={selectedPath || 'Select Method'} position="bottom" delay={500}>
-          {!selectedPath ? 'Select Method' : getShortGrpcPath(selectedPath)}
-          <i className="fa fa-caret-down pad-left-sm" />
-        </Tooltip>
-      </DropdownButton>
-      <DropdownItem onClick={handleServerReflection}>
-        <em>Click to use server reflection</em>
+      <DropdownItem>
+        <ItemContent
+          label={<em>Click to use server reflection</em>}
+          onClick={handleServerReflection}
+        />
       </DropdownItem>
-      <DropdownItem onClick={handleChangeProtoFile}>
-        <em>Click to change proto file</em>
+      <DropdownItem>
+        <ItemContent
+          label={<em>Click to change proto file</em>}
+          onClick={handleChangeProtoFile}
+        />
       </DropdownItem>
       {!methods.length && (
-        <>
-          <DropdownDivider />
-          <DropdownItem disabled>No methods found</DropdownItem>
-        </>
+        <DropdownSection>
+          <DropdownItem>No methods found</DropdownItem> {/* disabled */}
+        </DropdownSection>
       )}
       {Object.entries(groupedByPkg).map(([name, pkg]) => (
         <Fragment key={name}>
-          <DropdownDivider>
-            {name !== NO_PACKAGE_KEY && <NormalCase>pkg: {name}</NormalCase>}
-          </DropdownDivider>
-          {pkg.map(({ type, fullPath }) => (
-            <DropdownItem
-              key={fullPath}
-              onClick={() => handleChange(fullPath)}
-              disabled={disabled}
-              selected={fullPath === selectedPath}
-            >
-              <Tooltip message={fullPath} position="right" delay={500}>
-                <DropdownMethodButtonLabel><GrpcMethodTag methodType={type} /> {getShortGrpcPath(fullPath)}</DropdownMethodButtonLabel>
-              </Tooltip>
-            </DropdownItem>
-          ))}
+          <DropdownSection title={name !== NO_PACKAGE_KEY && <NormalCase>pkg: {name}</NormalCase>}>
+            {pkg.map(({ type, fullPath }) => (
+              <DropdownItem
+                key={fullPath}
+              // disabled={disabled}
+              // selected={fullPath === selectedPath}
+              >
+                <ItemContent onClick={() => handleChange(fullPath)}>
+                  <Tooltip message={fullPath} position="right" delay={500}>
+                    <DropdownMethodButtonLabel><GrpcMethodTag methodType={type} /> {getShortGrpcPath(fullPath)}</DropdownMethodButtonLabel>
+                  </Tooltip>
+                </ItemContent>
+              </DropdownItem>
+            ))}
+          </DropdownSection>
         </Fragment>
       ))}
     </Dropdown>

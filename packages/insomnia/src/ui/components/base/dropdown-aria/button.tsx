@@ -1,41 +1,29 @@
 import { AriaButtonProps } from '@react-types/button';
-import React, { CSSProperties, forwardRef } from 'react';
+import React, { CSSProperties, forwardRef, useRef } from 'react';
 import { mergeProps, useButton, useFocusRing } from 'react-aria';
-import styled from 'styled-components';
 
 import { Button as ThemedButton, ButtonProps } from '../../themed-button';
 
-interface StyledButtonProps extends ButtonProps {
-  isDisabled?: boolean;
-  isPressed?: boolean;
-}
-
-const StyledButton = styled(ThemedButton)<StyledButtonProps>(({ isDisabled }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  backgroundColor: isDisabled ? '#f9f9f9' : 'transparent',
-  outline: 'none',
-  height: '100%',
-}));
-
-interface Props extends AriaButtonProps {
+type Props = {
+  className?: string;
   isPressed?: boolean;
   style?: CSSProperties;
-}
+} & ButtonProps & AriaButtonProps;
 
 export const Button = forwardRef<{}, Props>((props: Props, ref: any) => {
-  const { buttonProps, isPressed } = useButton(props, ref);
+  const buttonRef = useRef(ref);
+  const { buttonProps, isPressed } = useButton(props, buttonRef);
   const { focusProps } = useFocusRing();
 
   return (
-    <StyledButton
-      ref={ref}
+    <ThemedButton
+      ref={buttonRef}
       style={props.style}
       isPressed={isPressed || props.isPressed}
-      {...mergeProps(buttonProps, focusProps)}
+      {...mergeProps(buttonProps, focusProps, props)}
     >
       {props.children}
-    </StyledButton>
+    </ThemedButton>
   );
 });
 

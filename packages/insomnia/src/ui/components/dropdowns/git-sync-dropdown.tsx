@@ -6,10 +6,8 @@ import { docsGitSync } from '../../../common/documentation';
 import { GitRepository } from '../../../models/git-repository';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import { GitRepoLoaderData, PullFromGitRemoteResult, PushToGitRemoteResult } from '../../routes/git-actions';
-import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { type DropdownHandle } from '../base/dropdown/dropdown';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { showAlert } from '../modals';
@@ -25,7 +23,7 @@ interface Props {
 }
 
 export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
-  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string};
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const dropdownRef = useRef<DropdownHandle>(null);
 
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
@@ -123,122 +121,133 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
   } else {
     dropdown = (
       <div className={className}>
-        <Dropdown className="wide tall" ref={dropdownRef}>
-          <DropdownButton
-            buttonClass={Button}
-            // @ts-expect-error -- TSCONVERSION
-            size="small"
-            className="btn--clicky-small btn-sync"
+        <Dropdown
+          className="wide tall"
+          ref={dropdownRef}
+          triggerButton={
+            <Button size="small" className="btn--clicky-small btn-sync">
+              {iconClassName && (
+                <i className={classnames('space-right', iconClassName)} />
+              )}
+              <div className="ellipsis">{currentBranch}</div>
+              <i className={`fa fa-code-fork space-left ${isLoading ? 'fa-fade' : ''}`} />
+            </Button>
+          }
+        >
+          <DropdownSection
+            title={
+              <span>
+                Git Sync
+                <HelpTooltip>
+                  Sync and collaborate with Git{' '}
+                  <Link href={docsGitSync}>
+                    <span className="no-wrap">
+                      <br />
+                      Documentation <i className="fa fa-external-link" />
+                    </span>
+                  </Link>
+                </HelpTooltip>
+
+              </span>
+            }
           >
-            {iconClassName && (
-              <i className={classnames('space-right', iconClassName)} />
-            )}
-            <div className="ellipsis">{currentBranch}</div>
-            <i className={`fa fa-code-fork space-left ${isLoading ? 'fa-fade' : ''}`} />
-          </DropdownButton>
+            <DropdownItem>
+              <ItemContent
+                icon="wrench"
+                label="Repository Settings"
+                onClick={() => {
+                  setIsGitRepoSettingsModalOpen(true);
+                }}
+              />
+              <i className="fa fa-wrench" /> Repository Settings
+            </DropdownItem>
 
-          <DropdownDivider>
-            Git Sync
-            <HelpTooltip>
-              Sync and collaborate with Git{' '}
-              <Link href={docsGitSync}>
-                <span className="no-wrap">
-                  <br />
-                  Documentation <i className="fa fa-external-link" />
-                </span>
-              </Link>
-            </HelpTooltip>
-          </DropdownDivider>
-
-          <DropdownItem
-            onClick={() => {
-              setIsGitRepoSettingsModalOpen(true);
-            }}
-          >
-            <i className="fa fa-wrench" /> Repository Settings
-          </DropdownItem>
-
-          {currentBranch && (
-            <Fragment>
+            {currentBranch && (
               <DropdownItem
                 onClick={() => {
                   setIsGitBranchesModalOpen(true);
                 }}
               >
-                <i className="fa fa-code-fork" /> Branches
+                <ItemContent icon="code-fork" label="Branches" />
               </DropdownItem>
-            </Fragment>
-          )}
+            )}
+          </DropdownSection>
 
-          {currentBranch && (
-            <Fragment>
-              <DropdownDivider>Branches</DropdownDivider>
-              {branches.map(branch => {
-                const icon = branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
-                const isCurrentBranch = branch === currentBranch;
-                return (
+          {currentBranch &&
+            <>
+              <DropdownSection title="Branches">
+                {branches.map(branch => {
+                  const icon = branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
+                  const isCurrentBranch = branch === currentBranch;
+                  return (
+                    <DropdownItem
+                      key={branch}
+                      // disabled={isCurrentBranch}
+                      title={isCurrentBranch ? '' : `Switch to "${branch}"`}
+                    >
+                      <ItemContent
+                        className={classnames({ bold: isCurrentBranch })}
+                        icon={branch === currentBranch ? 'tag' : 'empty'}
+                        label={branch}
+                        onClick={async () => {
+                          gitCheckoutFetcher.submit({
+                            branch,
+                          }, {
+                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/checkout`,
+                            method: 'post',
+                          });
+                        }}
+                      />
+                    </DropdownItem>
+                  );
+                })}
+              </DropdownSection>
+
+              <DropdownSection title={currentBranch}>
+                <DropdownItem>
+                  <ItemContent
+                    icon="check"
+                    label="Commit"
+                    onClick={() => setIsGitStagingModalOpen(true)}
+                  />
+                </DropdownItem>
+                {log.length > 0 && (
                   <DropdownItem
-                    key={branch}
-                    disabled={isCurrentBranch}
+                  // stayOpenAfterClick
+                  >
+                    <ItemContent
+                      icon={loadingPush ? 'refresh fa-spin' : 'cloud-upload'}
+                      label="Push"
+                      onClick={() => handlePush({ force: false })}
+                    />
+                  </DropdownItem>
+                )}
+                <DropdownItem
+                // stayOpenAfterClick
+                >
+                  <ItemContent
+                    icon={loadingPull ? 'refresh fa-spin' : 'cloud-download'}
+                    label="Pull"
                     onClick={async () => {
-                      gitCheckoutFetcher.submit({
-                        branch,
-                      }, {
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/checkout`,
+                      gitPullFetcher.submit({}, {
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/pull`,
                         method: 'post',
                       });
                     }}
-                    className={classnames({ bold: isCurrentBranch })}
-                    title={isCurrentBranch ? '' : `Switch to "${branch}"`}
-                  >
-                    {icon}
-                    {branch}
-                  </DropdownItem>
-                );
-              })}
-
-              <DropdownDivider>{currentBranch}</DropdownDivider>
-
-              <DropdownItem
-                onClick={() => setIsGitStagingModalOpen(true)}
-              >
-                <i className="fa fa-check" /> Commit
-              </DropdownItem>
-              {log.length > 0 && (
-                <DropdownItem onClick={() => handlePush({ force: false })} stayOpenAfterClick>
-                  <i
-                    className={classnames({
-                      fa: true,
-                      'fa-spin fa-refresh': loadingPush,
-                      'fa-cloud-upload': !loadingPush,
-                    })}
-                  />{' '}
-                  Push
+                  />
                 </DropdownItem>
-              )}
-              <DropdownItem
-                onClick={async () => {
-                  gitPullFetcher.submit({}, {
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/pull`,
-                    method: 'post',
-                  });
-                }}
-                stayOpenAfterClick
-              >
-                <i
-                  className={classnames({
-                    fa: true,
-                    'fa-spin fa-refresh': loadingPull,
-                    'fa-cloud-download': !loadingPull,
-                  })}
-                />{' '}
-                Pull
-              </DropdownItem>
-              <DropdownItem onClick={() => setIsGitLogModalOpen(true)} disabled={log.length === 0}>
-                <i className="fa fa-clock-o" /> History ({log.length})
-              </DropdownItem>
-            </Fragment>
-          )}
+                <DropdownItem
+                // disabled={log.length === 0}
+                >
+                  <ItemContent
+                    icon="clock-o"
+                    label={<span>History ({log.length})</span>}
+                    onClick={() => setIsGitLogModalOpen(true)}
+                  />
+                </DropdownItem>
+              </DropdownSection>
+            </>
+          }
         </Dropdown>
       </div>
     );

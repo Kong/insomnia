@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 import * as session from '../../account/session';
 import { clickLink } from '../../common/electron-helpers';
+import { Button as DropdownButton } from './base/dropdown-aria/button';
 import { Dropdown, DropdownItem, ItemContent } from './base/dropdown-aria/dropdown';
 import { Link as ExternalLink } from './base/link';
 import { PromptButton } from './base/prompt-button';
@@ -28,14 +29,6 @@ const SignUpButton = styled(Button)({
   },
 });
 
-const DropdownTrigger = styled.div({
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--padding-xs)',
-  cursor: 'pointer',
-  padding: 'var(--padding-sm)',
-});
-
 export const AccountToolbar = () => {
   const isLoggedIn = session.isLoggedIn();
 
@@ -44,10 +37,10 @@ export const AccountToolbar = () => {
       {isLoggedIn ? (
         <Dropdown
           aria-label="Account"
-          actionButton={
-            <DropdownTrigger>
+          triggerButton={
+            <DropdownButton size='small' style={{ gap: 'var(--padding-xs)' }} variant='text'>
               <SvgIcon icon='user' />{session.getFirstName()} {session.getLastName()}<i className="fa fa-caret-down" />
-            </DropdownTrigger>
+            </DropdownButton>
           }
         >
           <DropdownItem

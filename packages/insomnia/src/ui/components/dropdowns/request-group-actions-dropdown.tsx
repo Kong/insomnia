@@ -1,5 +1,4 @@
-import classnames from 'classnames';
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { toKebabCase } from '../../../common/misc';
@@ -13,14 +12,13 @@ import * as pluginContexts from '../../../plugins/context/index';
 import { createRequest, CreateRequestType } from '../../hooks/create-request';
 import { createRequestGroup } from '../../hooks/create-request-group';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
-import { type DropdownHandle, type DropdownProps, Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownHint } from '../base/dropdown/dropdown-hint';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { type DropdownProps } from '../base/dropdown/dropdown';
+import { DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown } from '../base/dropdown-aria/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { showError, showModal, showPrompt } from '../modals';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
+import { Button } from '../base/dropdown-aria/button';
 
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
@@ -28,18 +26,17 @@ interface Props extends Partial<DropdownProps> {
 }
 
 export interface RequestGroupActionsDropdownHandle {
-    show: () => void;
+  show: () => void;
 }
 
 export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdownHandle, Props>(({
   requestGroup,
   handleShowSettings,
   ...other
-}, ref) => {
+}) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
-  const [loadingActions, setLoadingActions] = useState< Record<string, boolean>>({});
-  const dropdownRef = useRef<DropdownHandle>(null);
+  const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
 
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
@@ -54,12 +51,6 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
       });
     }
   }, [activeWorkspaceId, requestGroup._id]);
-
-  useImperativeHandle(ref, () => ({
-    show: () => {
-      dropdownRef.current?.show();
-    },
-  }));
 
   const onOpen = useCallback(async () => {
     const actionPlugins = await getRequestGroupActions();
@@ -133,71 +124,82 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
       [label]: false,
     });
 
-    dropdownRef.current?.hide();
-
-  }, [dropdownRef, loadingActions,  activeEnvironment, requestGroup, activeProject]);
+  }, [loadingActions, activeEnvironment, requestGroup, activeProject]);
 
   return (
-    <Dropdown ref={dropdownRef} onOpen={onOpen} dataTestId={`Dropdown-${toKebabCase(requestGroup.name)}`} {...other}>
-      <DropdownButton>
-        <i className="fa fa-caret-down" />
-      </DropdownButton>
-
-      <DropdownItem onClick={() => create('HTTP')}>
-        <i className="fa fa-plus-circle" />New HTTP Request
-        <DropdownHint keyBindings={hotKeyRegistry.request_createHTTP} />
+    <Dropdown
+      {...other}
+      onOpen={onOpen}
+      dataTestId={`Dropdown-${toKebabCase(requestGroup.name)}`}
+      triggerButton={
+        <Button>
+          <i className="fa fa-caret-down" />
+        </Button>
+      }
+    >
+      <DropdownItem>
+        <ItemContent icon="plus-circle" label="New HTTP Request" hint={hotKeyRegistry.request_createHTTP} onClick={() => create('HTTP')} />
       </DropdownItem>
 
-      <DropdownItem  onClick={() => create('GraphQL')}>
-        <i className="fa fa-plus-circle" />New GraphQL Request
+      <DropdownItem>
+        <ItemContent icon="plus-circle" label="New GraphQL Request" onClick={() => create('GraphQL')} />
       </DropdownItem>
 
-      <DropdownItem  onClick={() => create('gRPC')}>
-        <i className="fa fa-plus-circle" />New gRPC Request
+      <DropdownItem>
+        <ItemContent icon="plus-circle" label="New gRPC Request" onClick={() => create('gRPC')} />
       </DropdownItem>
 
-      <DropdownItem  onClick={() => create('WebSocket')}>
-        <i className="fa fa-plus-circle" />WebSocket Request
+      <DropdownItem>
+        <ItemContent icon="plus-circle" label="WebSocket Request" onClick={() => create('WebSocket')} />
       </DropdownItem>
 
-      <DropdownItem onClick={createGroup}>
-        <i className="fa fa-folder" /> New Folder
-        <DropdownHint keyBindings={hotKeyRegistry.request_showCreateFolder} />
+      <DropdownItem>
+        <ItemContent icon="folder" label="New Folder" hint={hotKeyRegistry.request_showCreateFolder} onClick={createGroup} />
       </DropdownItem>
 
-      <DropdownDivider />
-
-      <DropdownItem onClick={handleRequestGroupDuplicate}>
-        <i className="fa fa-copy" /> Duplicate
-      </DropdownItem>
-
-      <DropdownItem onClick={() => showModal(EnvironmentEditModal, { requestGroup })}>
-        <i className="fa fa-code" /> Environment
-      </DropdownItem>
-
-      <DropdownItem onClick={handleRename}>
-        <i className="fa fa-edit" /> Rename
-      </DropdownItem>
-
-      <DropdownItem buttonClass={PromptButton} onClick={handleDeleteFolder}>
-        <i className="fa fa-trash-o" /> Delete
-      </DropdownItem>
-
-      {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
-      {actionPlugins.map((requestGroupAction: RequestGroupAction) => (
-        <DropdownItem key={requestGroupAction.label} onClick={() => handlePluginClick(requestGroupAction)} stayOpenAfterClick>
-          {loadingActions[requestGroupAction.label] ? (
-            <i className="fa fa-refresh fa-spin" />
-          ) : (
-            <i className={classnames('fa', requestGroupAction.icon || 'fa-code')} />
-          )}
-          {requestGroupAction.label}
+      <DropdownSection>
+        <DropdownItem>
+          <ItemContent icon="copy" label="Duplicate" onClick={handleRequestGroupDuplicate} />
         </DropdownItem>
-      ))}
-      <DropdownDivider />
-      <DropdownItem onClick={() => handleShowSettings(requestGroup)} dataTestId={`DropdownItemSettings-${toKebabCase(requestGroup.name)}`}>
-        <i className="fa fa-wrench" /> Settings
-      </DropdownItem>
+
+        <DropdownItem>
+          <ItemContent icon="code" label="Environment" onClick={() => showModal(EnvironmentEditModal, { requestGroup })} />
+        </DropdownItem>
+
+        <DropdownItem>
+          <ItemContent icon="edit" label="Rename" onClick={handleRename} />
+        </DropdownItem>
+
+        <DropdownItem>
+          <PromptButton onClick={handleDeleteFolder}>
+            <ItemContent icon="trash-o" label="Delete" />
+          </PromptButton>
+        </DropdownItem>
+      </DropdownSection>
+      {actionPlugins.length > 0 &&
+        <DropdownSection title="Plugins">
+          {actionPlugins.map((requestGroupAction: RequestGroupAction) => (
+            <DropdownItem key={requestGroupAction.label}>
+              <ItemContent
+                icon={loadingActions[requestGroupAction.label] ? 'refresh fa-spin' : requestGroupAction.icon || 'fa-code'}
+                label={requestGroupAction.label}
+                onClick={() => handlePluginClick(requestGroupAction)}
+              />
+            </DropdownItem>
+          ))}
+        </DropdownSection>
+      }
+
+      <DropdownSection>
+        <DropdownItem>
+          <ItemContent
+            icon="wrench"
+            label="Settings"
+            onClick={() => handleShowSettings(requestGroup)}
+          // dataTestId={`DropdownItemSettings-${toKebabCase(requestGroup.name)}`}
+          />
+        </DropdownItem>
+      </DropdownSection>
     </Dropdown>
   );
 });

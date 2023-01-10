@@ -1,5 +1,4 @@
-import classnames from 'classnames';
-import React, { FC, useCallback, useRef, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { database as db } from '../../../common/database';
@@ -12,11 +11,8 @@ import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
-import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownHint } from '../base/dropdown/dropdown-hint';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Button } from '../base/dropdown-aria/button';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { showError, showModal } from '../modals';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
@@ -33,7 +29,6 @@ export const WorkspaceDropdown: FC = () => {
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [configGeneratorPlugins, setConfigGeneratorPlugins] = useState<ConfigGenerator[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
-  const dropdownRef = useRef<DropdownHandle>(null);
 
   const handlePluginClick = useCallback(async ({ action, plugin, label }: WorkspaceAction, workspace: Workspace) => {
     setLoadingActions({ ...loadingActions, [label]: true });
@@ -64,7 +59,6 @@ export const WorkspaceDropdown: FC = () => {
       });
     }
     setLoadingActions({ ...loadingActions, [label]: false });
-    dropdownRef.current?.hide();
   }, [activeEnvironment, activeProject._id, loadingActions]);
 
   const handleDropdownOpen = useCallback(async () => {
@@ -99,60 +93,65 @@ export const WorkspaceDropdown: FC = () => {
 
   return (
     <Dropdown
-      beside
-      ref={dropdownRef}
       className="wide workspace-dropdown"
       onOpen={handleDropdownOpen}
+      triggerButton={
+        <Button className="row">
+          <div
+            className="ellipsis"
+            style={{
+              maxWidth: '400px',
+            }}
+            title={activeWorkspaceName}
+          >
+            {activeWorkspaceName}
+          </div>
+          <i className="fa fa-caret-down space-left" />
+        </Button>
+      }
     >
-      <DropdownButton className="row">
-        <div
-          className="ellipsis"
-          style={{
-            maxWidth: '400px',
-          }}
-          title={activeWorkspaceName}
-        >
-          {activeWorkspaceName}
-        </div>
-        <i className="fa fa-caret-down space-left" />
-      </DropdownButton>
-      <DropdownItem onClick={handleShowWorkspaceSettings}>
-        <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings
-        <DropdownHint keyBindings={hotKeyRegistry.workspace_showSettings} />
+      <DropdownItem>
+        <ItemContent
+          icon="wrench"
+          label={<>{getWorkspaceLabel(activeWorkspace).singular} Settings</>}
+          hint={hotKeyRegistry.workspace_showSettings}
+          onClick={handleShowWorkspaceSettings}
+        />
       </DropdownItem>
 
-      <DropdownItem onClick={handleShowExport}>
-        <i className="fa fa-share" /> Import/Export
+      <DropdownItem>
+        <ItemContent icon="share" label="Import/Export" onClick={handleShowExport} />
       </DropdownItem>
-      {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
-      {actionPlugins.map((p: WorkspaceAction) => (
-        <DropdownItem
-          key={p.label}
-          onClick={() => handlePluginClick(p, activeWorkspace)}
-          stayOpenAfterClick
-        >
-          {loadingActions[p.label] ? (
-            <i className="fa fa-refresh fa-spin" />
-          ) : (
-            <i className={classnames('fa', p.icon || 'fa-code')} />
-          )}
-          {p.label}
-        </DropdownItem>
-      ))}
+
+      {actionPlugins.length > 0 &&
+        <DropdownSection title="Plugins">
+          {actionPlugins.map((p: WorkspaceAction) => (
+            <DropdownItem key={p.label}>
+              <ItemContent
+                icon={loadingActions[p.label] ? 'refresh fa-spin' : p.icon || 'code'}
+                label={p.label}
+                onClick={() => handlePluginClick(p, activeWorkspace)}
+              />
+            </DropdownItem>
+          ))}
+        </DropdownSection>
+      }
+
       {isDesign(activeWorkspace) && (
         <>
           {configGeneratorPlugins.length > 0 && (
-            <DropdownDivider>Config Generators</DropdownDivider>
+            <DropdownSection title="Config Generators">
+              {configGeneratorPlugins.map((p: ConfigGenerator) => (
+                <DropdownItem key="generateConfig">
+                  <ItemContent
+                    icon="code"
+                    label={p.label}
+                    onClick={() => handleGenerateConfig(p.label)}
+                  />
+                </DropdownItem>
+              ))}
+            </DropdownSection>
           )}
-          {configGeneratorPlugins.map((p: ConfigGenerator) => (
-            <DropdownItem
-              key="generateConfig"
-              onClick={() => handleGenerateConfig(p.label)}
-            >
-              <i className="fa fa-code" />
-              {p.label}
-            </DropdownItem>
-          ))}
         </>
       )}
     </Dropdown>

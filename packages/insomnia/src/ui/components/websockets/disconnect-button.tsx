@@ -1,9 +1,9 @@
-import React, { FC, useRef } from 'react';
+import React, { FC } from 'react';
 import styled from 'styled-components';
 
-import { Dropdown as OriginalDropdown, DropdownHandle } from '../base/dropdown/dropdown';
-import { DROPDOWN_BUTTON_DISPLAY_NAME, DropdownButton as OriginalDropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Button } from '../base/dropdown-aria/button';
+import { Dropdown as OriginalDropdown, ItemContent } from '../base/dropdown-aria/dropdown';
 
 const SplitButton = styled.div({
   display: 'flex',
@@ -18,11 +18,6 @@ const Dropdown = styled(OriginalDropdown)({
     opacity: 0.9,
   },
 });
-const DropdownButton = styled(OriginalDropdownButton)({
-  paddingRight: 'var(--padding-xs)',
-  paddingLeft: 'var(--padding-xs)',
-});
-DropdownButton.displayName = DROPDOWN_BUTTON_DISPLAY_NAME;
 const ActionButton = styled.button({
   paddingRight: 'var(--padding-md)',
   paddingLeft: 'var(--padding-md)',
@@ -49,7 +44,6 @@ const TextWrapper = styled.div({
 });
 
 export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
-  const dropdownRef = useRef<DropdownHandle>();
   const handleCloseThisRequest = () => {
     window.main.webSocket.close({ requestId });
   };
@@ -67,32 +61,37 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
       <Dropdown
         key="dropdown"
         className="tall"
-        right
         data-testid="DisconnectDropdown__Dropdown"
+        triggerButton={
+          <Button
+            name="DisconnectDropdown__DropdownButton"
+            style={{ paddingRight: 'var(--padding-xs)', paddingLeft: 'var(--padding-xs)' }}
+          >
+            <i className="fa fa-caret-down" />
+          </Button>
+        }
       >
-        <DropdownButton
-          name="DisconnectDropdown__DropdownButton"
-          onClick={() => dropdownRef.current?.show()}
-        >
-          <i className="fa fa-caret-down" />
-        </DropdownButton>
-        <DropdownItem unsetStyles onClick={handleCloseThisRequest}>
-          <Connections>
-            <Connection />
-          </Connections>
-          <TextWrapper>
-            Disconnect this request
-          </TextWrapper>
+        <DropdownItem>
+          <ItemContent onClick={handleCloseThisRequest}>
+            <Connections>
+              <Connection />
+            </Connections>
+            <TextWrapper>
+              Disconnect this request
+            </TextWrapper>
+          </ItemContent>
         </DropdownItem>
-        <DropdownItem unsetStyles onClick={handleCloseAllRequests}>
-          <Connections>
-            <Connection size={5} />
-            <Connection size={5} />
-            <Connection size={5} />
-          </Connections>
-          <TextWrapper>
-            Disconnect all requests
-          </TextWrapper>
+        <DropdownItem>
+          <ItemContent onClick={handleCloseAllRequests}>
+            <Connections>
+              <Connection size={5} />
+              <Connection size={5} />
+              <Connection size={5} />
+            </Connections>
+            <TextWrapper>
+              Disconnect all requests
+            </TextWrapper>
+          </ItemContent>
         </DropdownItem>
       </Dropdown>
     </SplitButton>

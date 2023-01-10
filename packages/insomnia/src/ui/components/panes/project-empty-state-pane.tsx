@@ -1,9 +1,8 @@
 import React, { FC } from 'react';
 import styled from 'styled-components';
 
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Button as DropdownButton } from '../base/dropdown-aria/button';
+import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
 import { Button } from '../themed-button';
 
 const Wrapper = styled.div({
@@ -74,32 +73,24 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
           </Button>
         </div>
         <Divider>or</Divider>
-        <Dropdown >
-          <DropdownButton buttonClass={Button} style={{ width: '100%', alignSelf: 'stretch' }}>
-            Import From <i className="fa fa-caret-down pad-left-sm" />
-          </DropdownButton>
-          <DropdownItem
-            onClick={importFromFile}
-          ><i className="fa fa-plus" />
-            File
+        <Dropdown
+          triggerButton={
+            <DropdownButton style={{ width: '100%', alignSelf: 'stretch' }}>
+              Import From <i className="fa fa-caret-down pad-left-sm" />
+            </DropdownButton>
+          }
+        >
+          <DropdownItem>
+            <ItemContent icon="plus" label="File" onClick={importFromFile} />
           </DropdownItem>
-          <DropdownItem
-            onClick={importFromURL}
-          >
-            <i className="fa fa-link" />
-            URL
+          <DropdownItem>
+            <ItemContent icon="link" label="URL" onClick={importFromURL} />
           </DropdownItem>
-          <DropdownItem
-            onClick={importFromClipboard}
-          >
-            <i className="fa fa-clipboard" />
-            Clipboard
+          <DropdownItem>
+            <ItemContent icon="clipboard" label="Clipboard" onClick={importFromClipboard} />
           </DropdownItem>
-          <DropdownItem
-            onClick={importFromGit}
-          >
-            <i className="fa fa-code-fork" />
-            Git Clone
+          <DropdownItem>
+            <ItemContent icon="code-fork" label="Git Clone" onClick={importFromGit} />
           </DropdownItem>
         </Dropdown>
       </div>

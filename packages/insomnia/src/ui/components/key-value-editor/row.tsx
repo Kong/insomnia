@@ -3,9 +3,8 @@ import React, { FC } from 'react';
 
 import { describeByteSize } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Button } from '../base/dropdown-aria/button';
+import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
 import { FileInputButton } from '../base/file-input-button';
 import { PromptButton } from '../base/prompt-button';
 import { OneLineEditor } from '../codemirror/one-line-editor';
@@ -154,27 +153,24 @@ export const Row: FC<Props> = ({
         ) : null}
 
         {hideButtons ? hiddenButtons : isFileOrMultiline ? (
-          <Dropdown right>
-            <DropdownButton className="tall">
-              <i className="fa fa-caret-down" />
-            </DropdownButton>
-            <DropdownItem
-              onClick={() => onChange({ ...pair, type: 'text', multiline: false })}
-            >
-              Text
+          <Dropdown
+            triggerButton={
+              <Button className="tall">
+                <i className="fa fa-caret-down" />
+              </Button>
+            }
+          >
+            <DropdownItem>
+              <ItemContent label="Text" onClick={() => onChange({ ...pair, type: 'text', multiline: false })} />
             </DropdownItem>
             {allowMultiline && (
-              <DropdownItem
-                onClick={() => onChange({ ...pair, type: 'text', multiline: true })}
-              >
-                Text (Multi-line)
+              <DropdownItem>
+                <ItemContent label="Text (Multi-line)" onClick={() => onChange({ ...pair, type: 'text', multiline: true })} />
               </DropdownItem>
             )}
             {allowFile && (
-              <DropdownItem
-                onClick={() => onChange({ ...pair, type: 'file' })}
-              >
-                File
+              <DropdownItem >
+                <ItemContent label="File" onClick={() => onChange({ ...pair, type: 'file' })} />
               </DropdownItem>
             )}
           </Dropdown>

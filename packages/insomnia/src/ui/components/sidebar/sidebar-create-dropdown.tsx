@@ -4,16 +4,10 @@ import { useSelector } from 'react-redux';
 import { createRequest, CreateRequestType } from '../../hooks/create-request';
 import { createRequestGroup } from '../../hooks/create-request-group';
 import { selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownHint } from '../base/dropdown/dropdown-hint';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Button } from '../base/dropdown-aria/button';
+import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
 
-interface Props {
-  right?: boolean;
-}
-
-export const SidebarCreateDropdown: FC<Props> = ({ right }) => {
+export const SidebarCreateDropdown: FC = () => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const activeWorkspaceId = activeWorkspace?._id;
@@ -36,32 +30,33 @@ export const SidebarCreateDropdown: FC<Props> = ({ right }) => {
   }, [activeWorkspaceId]);
   const dataTestId = 'SidebarCreateDropdown';
   return (
-    <Dropdown right={right} dataTestId={dataTestId}>
-      <DropdownButton className="btn btn--compact">
-        <i className="fa fa-plus-circle" />
-        <i className="fa fa-caret-down" />
-      </DropdownButton>
-
-      <DropdownItem dataTestId='CreateHttpRequest' onClick={() => create('HTTP')}>
-        <i className="fa fa-plus-circle" />HTTP Request
-        <DropdownHint keyBindings={hotKeyRegistry.request_createHTTP} />
+    <Dropdown
+      dataTestId={dataTestId}
+      triggerButton={
+        <Button className="btn btn--compact">
+          <i className="fa fa-plus-circle" />
+          <i className="fa fa-caret-down" />
+        </Button>
+      }
+    >
+      <DropdownItem> {/* dataTestId='CreateHttpRequest' */}
+        <ItemContent icon="plus-circle" label="HTTP Request" hint={hotKeyRegistry.request_createHTTP} onClick={() => create('HTTP')} />
       </DropdownItem>
 
-      <DropdownItem onClick={() => create('GraphQL')}>
-        <i className="fa fa-plus-circle" />GraphQL Request
+      <DropdownItem>
+        <ItemContent icon="plus-circle" label="GraphQL Request" onClick={() => create('GraphQL')} />
       </DropdownItem>
 
-      <DropdownItem onClick={() => create('gRPC')}>
-        <i className="fa fa-plus-circle" />gRPC Request
+      <DropdownItem>
+        <ItemContent icon="plus-circle" label="gRPC Request" onClick={() => create('gRPC')} />
       </DropdownItem>
 
-      <DropdownItem onClick={() => create('WebSocket')}>
-        <i className="fa fa-plus-circle" />WebSocket Request
+      <DropdownItem>
+        <ItemContent icon="plus-circle" label="WebSocket Request" onClick={() => create('WebSocket')} />
       </DropdownItem>
 
-      <DropdownItem onClick={createGroup}>
-        <i className="fa fa-folder" />New Folder
-        <DropdownHint keyBindings={hotKeyRegistry.request_showCreateFolder} />
+      <DropdownItem>
+        <ItemContent icon="circle" label="New Folder" hint={hotKeyRegistry.request_showCreateFolder} onClick={createGroup} />
       </DropdownItem>
     </Dropdown>
   );

@@ -2,10 +2,8 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 
 import { NunjucksEnabledProvider } from '../../context/nunjucks/nunjucks-enabled-context';
 import { CopyButton } from '../base/copy-button';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Button } from '../base/dropdown-aria/button';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -137,24 +135,28 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
       </ModalBody>
       <ModalFooter>
         {!hideMode ? (
-          <Dropdown>
-            <DropdownButton className="btn btn--clicky margin-left-sm">
-              {MODES[mode]}
-              <i className="fa fa-caret-down space-left" />
-            </DropdownButton>
-            <DropdownDivider>Editor Syntax</DropdownDivider>
-            {Object.keys(MODES).map(mode => (
-              <DropdownItem
-                key={mode}
-                onClick={() => {
-                  setState(state => ({ ...state, mode }));
-                  state.onModeChange?.(mode);
-                }}
-              >
-                <i className="fa fa-code" />
+          <Dropdown
+            triggerButton={
+              <Button className="btn btn--clicky margin-left-sm">
                 {MODES[mode]}
-              </DropdownItem>
-            ))}
+                <i className="fa fa-caret-down space-left" />
+              </Button>
+            }
+          >
+            <DropdownSection title="Editor Syntax">
+              {Object.keys(MODES).map(mode => (
+                <DropdownItem key={mode}>
+                  <ItemContent
+                    icon="code"
+                    label={MODES[mode]}
+                    onClick={() => {
+                      setState(state => ({ ...state, mode }));
+                      state.onModeChange?.(mode);
+                    }}
+                  />
+                </DropdownItem>
+              ))}
+            </DropdownSection>
           </Dropdown>
         ) : null}
         <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>

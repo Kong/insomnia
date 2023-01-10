@@ -1,4 +1,3 @@
-import classnames from 'classnames';
 import { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
@@ -24,10 +23,8 @@ import * as network from '../../../../network/network';
 import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { selectSettings } from '../../../redux/selectors';
-import { Dropdown } from '../../base/dropdown/dropdown';
-import { DropdownButton } from '../../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../../base/dropdown/dropdown-item';
+import { Button } from '../../base/dropdown-aria/button';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown-aria/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
@@ -446,68 +443,94 @@ export const GraphQLEditor: FC<Props> = ({
   return (
     <div className="graphql-editor">
       <Toolbar>
-        <Dropdown>
-          <DropdownButton disabled={!state.operations.length} className="btn btn--compact">{state.body.operationName || 'Operations'}</DropdownButton>
+        <Dropdown
+          triggerButton={
+            <Button disabled={!state.operations.length} className="btn btn--compact">
+              {state.body.operationName || 'Operations'}
+            </Button>
+          }
+        >
           {state.operations.map(operationName => (
-            <DropdownItem
-              key={operationName}
-              onClick={() => changeOperationName(operationName)}
-            >{operationName}</DropdownItem>
+            <DropdownItem key={operationName}>
+              <ItemContent label={operationName} onClick={() => changeOperationName(operationName)} />
+            </DropdownItem>
           ))}
         </Dropdown>
-        <Dropdown>
-          <DropdownButton className="btn btn--compact">
-            schema <i className="fa fa-wrench" />
-          </DropdownButton>
+        <Dropdown
+          triggerButton={
+            <Button className="btn btn--compact">
+              <span>schema <i className="fa fa-wrench" /></span>
+            </Button>
+          }
+        >
           <DropdownItem
-            onClick={() => {
-              setState(state => ({ ...state, explorerVisible: true }));
-            }}
-            disabled={!canShowSchema}
+          // disabled={!canShowSchema}
           >
-            <i className="fa fa-file-code-o" /> Show Documentation
+            <ItemContent
+              icon="file-code-o"
+              label="Show Documentation"
+              onClick={() => {
+                setState(state => ({ ...state, explorerVisible: true }));
+              }}
+            />
           </DropdownItem>
-          <DropdownDivider>Remote GraphQL Schema</DropdownDivider>
-          <DropdownItem
-            onClick={async () => {
-              // First, "forget" preference to hide errors so they always show
-              // again after a refresh
-              setState(state => ({ ...state, hideSchemaFetchErrors: false }));
-              setSchemaIsFetching(true);
-              await fetchGraphQLSchemaForRequest({
-                requestId: request._id,
-                environmentId,
-                url: request.url,
-              });
-              setSchemaIsFetching(false);
-            }}
-            stayOpenAfterClick
-          >
-            <i className={classnames('fa', 'fa-refresh', { 'fa-spin': schemaIsFetching })} /> Refresh Schema
-          </DropdownItem>
-          <DropdownItem
-            onClick={() => {
-              setAutoFetch(!automaticFetch);
-            }}
-            stayOpenAfterClick
-          >
-            <i className={`fa fa-toggle-${automaticFetch ? 'on' : 'off'}`} />{' '}
-            Automatic Fetch
-            <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
-          </DropdownItem>
-          <DropdownDivider>Local GraphQL Schema</DropdownDivider>
-          <DropdownItem
-            onClick={() => {
-              setState(state => ({ ...state, hideSchemaFetchErrors: false }));
-              loadAndSetLocalSchema();
-            }}
-          >
-            <i className="fa fa-file-code-o" /> Load schema from JSON
-            <HelpTooltip>
-              Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to
-              convert GraphQL DSL to JSON.
-            </HelpTooltip>
-          </DropdownItem>
+          <DropdownSection title="Remote GraphQL Schema">
+            <DropdownItem>
+              <ItemContent
+                icon={`refresh ${schemaIsFetching ? 'fa-spin' : ''}`}
+                label="Refresh Schema"
+                onClick={async () => {
+                  // First, "forget" preference to hide errors so they always show
+                  // again after a refresh
+                  setState(state => ({ ...state, hideSchemaFetchErrors: false }));
+                  setSchemaIsFetching(true);
+                  await fetchGraphQLSchemaForRequest({
+                    requestId: request._id,
+                    environmentId,
+                    url: request.url,
+                  });
+                  setSchemaIsFetching(false);
+                }}
+              // stayOpenAfterClick
+              />
+            </DropdownItem>
+            <DropdownItem>
+              <ItemContent
+                icon={`toggle-${automaticFetch ? 'on' : 'off'}`}
+                label={
+                  <span>
+                    Automatic Fetch
+                    <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
+                  </span>
+                }
+                onClick={() => {
+                  setAutoFetch(!automaticFetch);
+                }}
+              // stayOpenAfterClick
+              />
+            </DropdownItem>
+          </DropdownSection>
+
+          <DropdownSection title="Local GraphQL Schema">
+            <DropdownItem>
+              <ItemContent
+                icon="file-code-o"
+                label={
+                  <span>
+                    Load schema from JSON
+                    <HelpTooltip>
+                      Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to
+                      convert GraphQL DSL to JSON.
+                    </HelpTooltip>
+                  </span>
+                }
+                onClick={() => {
+                  setState(state => ({ ...state, hideSchemaFetchErrors: false }));
+                  loadAndSetLocalSchema();
+                }}
+              />
+            </DropdownItem>
+          </DropdownSection>
         </Dropdown>
       </Toolbar>
 
