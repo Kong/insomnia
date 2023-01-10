@@ -162,12 +162,14 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
             </DropdownItem>
 
             {currentBranch && (
-              <DropdownItem
-                onClick={() => {
-                  setIsGitBranchesModalOpen(true);
-                }}
-              >
-                <ItemContent icon="code-fork" label="Branches" />
+              <DropdownItem>
+                <ItemContent 
+                  icon="code-fork" 
+                  label="Branches" 
+                  onClick={() => {
+                    setIsGitBranchesModalOpen(true);
+                  }}
+                />
               </DropdownItem>
             )}
           </DropdownSection>
@@ -176,15 +178,14 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
             <>
               <DropdownSection title="Branches">
                 {branches.map(branch => {
-                  const icon = branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
                   const isCurrentBranch = branch === currentBranch;
                   return (
                     <DropdownItem
                       key={branch}
                       // disabled={isCurrentBranch}
-                      title={isCurrentBranch ? '' : `Switch to "${branch}"`}
                     >
                       <ItemContent
+                        title={isCurrentBranch ? '' : `Switch to "${branch}"`}
                         className={classnames({ bold: isCurrentBranch })}
                         icon={branch === currentBranch ? 'tag' : 'empty'}
                         label={branch}

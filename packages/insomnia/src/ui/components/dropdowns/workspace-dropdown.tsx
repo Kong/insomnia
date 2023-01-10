@@ -98,7 +98,7 @@ export const WorkspaceDropdown: FC = () => {
       className="wide workspace-dropdown"
       onOpen={handleDropdownOpen}
       triggerButton={
-        <DropdownButton className="row">
+        <DropdownButton variant="text" className="row" style={{ padding: 0, height: 15 }}>
           <div
             className="ellipsis"
             style={{
@@ -139,22 +139,18 @@ export const WorkspaceDropdown: FC = () => {
         </DropdownSection>
       }
 
-      {isDesign(activeWorkspace) && (
-        <>
-          {configGeneratorPlugins.length > 0 && (
-            <DropdownSection title="Config Generators">
-              {configGeneratorPlugins.map((p: ConfigGenerator) => (
-                <DropdownItem key="generateConfig">
-                  <ItemContent
-                    icon="code"
-                    label={p.label}
-                    onClick={() => handleGenerateConfig(p.label)}
-                  />
-                </DropdownItem>
-              ))}
-            </DropdownSection>
-          )}
-        </>
+      {isDesign(activeWorkspace) && configGeneratorPlugins.length > 0 && (
+        <DropdownSection title="Config Generators">
+          {configGeneratorPlugins.map((p: ConfigGenerator) => (
+            <DropdownItem key={`generateConfig-${p.label}`}>
+              <ItemContent
+                icon="code"
+                label={p.label}
+                onClick={() => handleGenerateConfig(p.label)}
+              />
+            </DropdownItem>
+          ))}
+        </DropdownSection>
       )}
     </Dropdown>
   );
