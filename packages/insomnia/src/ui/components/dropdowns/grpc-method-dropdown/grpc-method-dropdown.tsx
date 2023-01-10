@@ -2,7 +2,7 @@ import React, { Fragment, FunctionComponent } from 'react';
 import styled from 'styled-components';
 
 import type { GrpcMethodInfo } from '../../../../main/ipc/grpc';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown/dropdown';
 import { GrpcMethodTag } from '../../tags/grpc-method-tag';
 import { Tooltip } from '../../tooltip';
 

@@ -11,7 +11,7 @@ import {
 import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '../../../common/settings';
 import * as models from '../../../models/index';
 import { selectHotKeyRegistry, selectSettings } from '../../redux/selectors';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { Hotkey } from '../hotkey';
 import { showModal } from '../modals';

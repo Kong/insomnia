@@ -12,7 +12,7 @@ import { isRequestGroup } from '../../../models/request-group';
 import { importers } from '../../../utils/importers/importers';
 import { importClipBoard, importFile, importUri } from '../../import';
 import { selectActiveProject, selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName, selectProjects, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject, selectWorkspacesWithResolvedNameForActiveProject } from '../../redux/selectors';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
 import { Link } from '../base/link';
 import { AlertModal } from '../modals/alert-modal';
 import { ExportRequestsModal } from '../modals/export-requests-modal';

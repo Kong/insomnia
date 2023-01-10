@@ -1,8 +1,7 @@
 import React, { FC } from 'react';
 import styled from 'styled-components';
 
-import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { Dropdown as OriginalDropdown, DropdownButton, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown as OriginalDropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown/dropdown';
 
 const SplitButton = styled.div({
   display: 'flex',

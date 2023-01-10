@@ -11,7 +11,7 @@ import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
 import { showError, showModal } from '../modals';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';

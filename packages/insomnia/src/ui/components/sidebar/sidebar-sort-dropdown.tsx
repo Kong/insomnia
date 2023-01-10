@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 
 import { SORT_ORDERS, SortOrder, sortOrderName } from '../../../common/constants';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown/dropdown';
 
 interface Props {
   handleSort: (sortOrder: SortOrder) => void;

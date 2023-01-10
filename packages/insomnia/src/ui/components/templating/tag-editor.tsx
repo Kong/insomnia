@@ -20,7 +20,7 @@ import type {
 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
 import { FileInputButton } from '../base/file-input-button';
 import { HelpTooltip } from '../help-tooltip';
 

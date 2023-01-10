@@ -7,7 +7,7 @@ import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectHotKeyRegistry } from '../../redux/selectors';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { showPrompt } from '../modals';
 

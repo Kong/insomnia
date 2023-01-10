@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '../../../common/constants';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown/dropdown';
 
 interface Props {
   previewMode: string;

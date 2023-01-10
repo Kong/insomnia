@@ -20,7 +20,7 @@ import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveWorkspaceMeta, selectRemoteProjects, selectSyncItems } from '../../redux/selectors';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';

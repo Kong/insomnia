@@ -21,7 +21,7 @@ import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
 import { selectSettings } from '../../redux/selectors';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown/dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';

@@ -1,8 +1,7 @@
 import React, { forwardRef, useCallback, useState } from 'react';
 
 import { HTTP_METHODS, METHOD_GRPC } from '../../../common/constants';
-import { type DropdownHandle } from '../base/dropdown/dropdown';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
 import { showPrompt } from '../modals/index';
 
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';

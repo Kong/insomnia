@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { cookieToString } from '../../common/cookies';
 import { Cookie } from '../../models/cookie-jar';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown/dropdown';
 import { PromptButton } from './base/prompt-button';
 import { showModal } from './modals';
 import { CookieModifyModal } from './modals/cookie-modify-modal';
