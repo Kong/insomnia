@@ -277,7 +277,7 @@ export const GraphQLEditor: FC<Props> = ({
       setState(state => ({
         ...state,
         documentAST: null,
-        body: { ...state.body, query },
+        body: { ...state.body, query, operationName: query ? state.body.operationName : 'Operations' },
         operations: query ? state.operations : [],
       }));
     }
