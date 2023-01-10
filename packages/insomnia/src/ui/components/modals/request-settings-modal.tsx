@@ -2,6 +2,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { useSelector } from 'react-redux';
 
 import { database as db } from '../../../common/database';
+import { toKebabCase } from '../../../common/misc';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
@@ -142,6 +143,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                     defaultPreviewMode={defaultPreviewMode}
                     placeholder="Write a description"
                     defaultValue={request.description}
+                    dataTestId={`MarkdownEditor-${toKebabCase(request.name)}`}
                     onChange={async (description: string) => {
                       const updated = await requestOperations.update(request, {
                         description,
@@ -275,6 +277,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                     defaultPreviewMode={defaultPreviewMode}
                     placeholder="Write a description"
                     defaultValue={request.description}
+                    dataTestId={`MarkdownEditor-${toKebabCase(request.name)}`}
                     onChange={async (description: string) => {
                       const updated = await models.request.update(request, {
                         description,

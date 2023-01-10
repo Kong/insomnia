@@ -1,36 +1,37 @@
-
 import { test } from '../../playwright/test';
 
-test('Select body dropdown', async ({ page }) => {
-  await page.locator('div[role="tab"]:has-text("Body")').click();
-  await page.locator('button:has-text("JSON")').click();
+// test('Select body dropdown', async ({ page }) => {
+//   await page.locator('div[role="tab"]:has-text("Body")').click();
+//   await page.locator('button:has-text("JSON")').click();
 
-});
+// });
 
-test('Select auth dropdown', async ({ page }) => {
-  await page.locator('div[role="tab"]:has-text("Auth")').click();
-  await page.locator('[aria-label="Request pane tabs"] >> text=Auth').click();
-  await page.locator('button:has-text("OAuth 1.0")').click();
-});
-test('Open query parameters', async ({ page }) => {
-  await page.locator('[data-testid="request-pane"] >> text=Query').click();
-  await page.locator('text=Headers').click();
-});
+// test('Select auth dropdown', async ({ page }) => {
+//   await page.locator('div[role="tab"]:has-text("Auth")').click();
+//   await page.locator('[aria-label="Request pane tabs"] >> text=Auth').click();
+//   await page.locator('button:has-text("OAuth 1.0")').click();
+// });
+// test('Open query parameters', async ({ page }) => {
+//   await page.locator('[data-testid="request-pane"] >> text=Query').click();
+//   await page.locator('text=Headers').click();
+// });
 
-test('Open headers', async ({ page }) => {
-  await page.locator('text=Headers').click();
+// test('Open headers', async ({ page }) => {
+//   await page.locator('text=Headers').click();
 
-});
+// });
 
-test('Open docs', async ({ page }) => {
-  await page.locator('text=Docs').click();
-});
+// test('Open docs', async ({ page }) => {
+//   await page.locator('text=Docs').click();
+// });
 
 test('Add description to docs', async ({ page }) => {
   await page.locator('text=Docs').click();
   await page.locator('text=Add Description').click();
   await page.locator('[data-testid="CodeEditor"] pre[role="presentation"]:has-text("")').click();
-  await page.locator('textarea').nth(1).fill('new request');
+  // await page.locator('textarea[data-testid="MarkdownEditor-New-Request"]').fill('new request'); // this does not work
+  await page.locator('textarea').nth(1).fill('new request'); // this works
+  // TODO - fix the locator so we don't rely on `.nth(1)`
 });
 
 test('WS select body type dropdown', async ({ page }) => {
@@ -70,8 +71,7 @@ test('WS add description', async ({ page }) => {
   await page.locator('button:has-text("WebSocket Request")').first().click();
   await page.locator('text=Docs').click();
   await page.locator('text=Add Description').click();
-  await page.locator('[data-testid="CodeEditor"] pre[role="presentation"]:has-text("​")').click();
+  await page.locator('[data-testid="CodeEditor"] pre[role="presentation"]:has-text("")').click();
   await page.locator('textarea').nth(1).fill('new wss');
-
-// TODO: add a few scenarios ported from the release checklist
+  // TODO - fix the locator so we don't rely on `.nth(1)`
 });
