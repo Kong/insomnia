@@ -161,14 +161,15 @@ export const GraphQLEditor: FC<Props> = ({
   } catch (error) {
     documentAST = null;
   }
-
+  const operations = documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '') || [];
+  const operationName = requestBody.operationName || operations[0] || '';
   const [state, setState] = useState<State>({
     body: {
       query: requestBody.query || '',
       variables: requestBody.variables,
-      operationName: requestBody.operationName,
+      operationName,
     },
-    operations: documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '') || [],
+    operations,
     hideSchemaFetchErrors: false,
     variablesSyntaxError: '',
     activeReference: null,
@@ -222,9 +223,7 @@ export const GraphQLEditor: FC<Props> = ({
       useTabs: editorIndentWithTabs,
       tabWidth: editorIndentSize,
     });
-    const prettyVariables = body.variables && JSON.parse(jsonPrettify(JSON.stringify(body.variables)));
     changeQuery(prettyQuery);
-    changeVariables(prettyVariables);
     // Update editor contents
     if (editorRef.current) {
       editorRef.current?.setValue(prettyQuery);
@@ -240,7 +239,7 @@ export const GraphQLEditor: FC<Props> = ({
   };
   const changeVariables = (variablesInput: string) => {
     try {
-      const variables = JSON.parse(variablesInput || 'null');
+      const variables = JSON.parse(variablesInput || '{}');
       onChange(JSON.stringify({ ...state.body, variables }));
       setState(state => ({
         ...state,
@@ -252,17 +251,36 @@ export const GraphQLEditor: FC<Props> = ({
     }
   };
   const changeQuery = (query: string) => {
-    onChange(JSON.stringify({ ...state.body, query }));
     try {
       const documentAST = parse(query);
+      const operations = documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '');
+      // default to first operation when none selected
+      let operationName = state.body.operationName || operations[0] || '';
+      if (operations.length && state.body.operationName) {
+        const operationsChanged = state.operations.join() !== operations.join();
+        const operationNameWasChanged = !operations.includes(state.body.operationName);
+        if (operationsChanged && operationNameWasChanged) {
+          // preserve selection during name change or fallback to first operation
+          const oldPostion = state.operations.indexOf(state.body.operationName);
+          operationName = operations[oldPostion] || operations[0] || '';
+        }
+      }
+      onChange(JSON.stringify({ ...state.body, query, operationName }));
+
       setState(state => ({
         ...state,
-        body: { ...state.body, query },
-        operations: documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || ''),
+        documentAST,
+        body: { ...state.body, query, operationName },
+        operations,
       }));
     } catch (error) {
       console.warn('failed to parse', error);
-      setState(state => ({ ...state, documentAST: null, body: { ...state.body, query } }));
+      setState(state => ({
+        ...state,
+        documentAST: null,
+        body: { ...state.body, query, operationName: query ? state.body.operationName : 'Operations' },
+        operations: query ? state.operations : [],
+      }));
     }
   };
 
@@ -392,6 +410,7 @@ export const GraphQLEditor: FC<Props> = ({
       },
     };
   }
+
   const canShowSchema = schema && !schemaIsFetching && !schemaFetchError && schemaLastFetchTime > 0;
   return (
     <div className="graphql-editor">
