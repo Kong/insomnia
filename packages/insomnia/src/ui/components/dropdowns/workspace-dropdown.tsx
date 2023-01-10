@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { database as db } from '../../../common/database';
@@ -11,7 +11,7 @@ import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
+import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
 import { showError, showModal } from '../modals';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
@@ -28,6 +28,7 @@ export const WorkspaceDropdown: FC = () => {
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [configGeneratorPlugins, setConfigGeneratorPlugins] = useState<ConfigGenerator[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+  const dropdownRef = useRef<DropdownHandle>(null);
 
   const handlePluginClick = useCallback(async ({ action, plugin, label }: WorkspaceAction, workspace: Workspace) => {
     setLoadingActions({ ...loadingActions, [label]: true });
@@ -58,6 +59,7 @@ export const WorkspaceDropdown: FC = () => {
       });
     }
     setLoadingActions({ ...loadingActions, [label]: false });
+    dropdownRef.current?.hide();
   }, [activeEnvironment, activeProject._id, loadingActions]);
 
   const handleDropdownOpen = useCallback(async () => {
@@ -92,6 +94,7 @@ export const WorkspaceDropdown: FC = () => {
 
   return (
     <Dropdown
+      ref={dropdownRef}
       className="wide workspace-dropdown"
       onOpen={handleDropdownOpen}
       triggerButton={

@@ -57,7 +57,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
     }
   }, [apiSpec.contents, project._id, startLoading, stopLoading]);
 
-  const renderPluginDropdownItems = useCallback(() => actionPlugins.map(p => (
+  const renderPluginDropdownItems: any = useCallback(() => actionPlugins.map(p => (
     <DropdownItem
       key={`${p.plugin.name}:${p.label}`}
     // stayOpenAfterClick={!p.hideAfterClick}

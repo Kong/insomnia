@@ -41,6 +41,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
 
   return (
     <Dropdown
+      ref={dropdownRef}
       triggerButton={
         <DropdownButton className="btn btn--super-compact no-wrap">
           <div className="sidebar__menu__thing">
@@ -66,7 +67,6 @@ export const EnvironmentsDropdown: FC<Props> = ({
             </div>
             <i className="space-left fa fa-caret-down" />
           </div>
-
         </DropdownButton>
       }
     >

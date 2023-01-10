@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { toKebabCase } from '../../../common/misc';
@@ -12,7 +12,7 @@ import * as pluginContexts from '../../../plugins/context/index';
 import { createRequest, CreateRequestType } from '../../hooks/create-request';
 import { createRequestGroup } from '../../hooks/create-request-group';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
-import { type DropdownProps, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
+import { type DropdownHandle, type DropdownProps, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { showError, showModal, showPrompt } from '../modals';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
@@ -30,10 +30,11 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
   requestGroup,
   handleShowSettings,
   ...other
-}) => {
+}, ref) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+  const dropdownRef = useRef<DropdownHandle>(null);
 
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
@@ -48,6 +49,12 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
       });
     }
   }, [activeWorkspaceId, requestGroup._id]);
+
+  useImperativeHandle(ref, () => ({
+    show: () => {
+      dropdownRef.current?.show();
+    },
+  }));
 
   const onOpen = useCallback(async () => {
     const actionPlugins = await getRequestGroupActions();
@@ -121,11 +128,14 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
       [label]: false,
     });
 
-  }, [loadingActions, activeEnvironment, requestGroup, activeProject]);
+    dropdownRef.current?.hide();
+
+  }, [dropdownRef, loadingActions, activeEnvironment, requestGroup, activeProject]);
 
   return (
     <Dropdown
       {...other}
+      ref={dropdownRef}
       onOpen={onOpen}
       dataTestId={`Dropdown-${toKebabCase(requestGroup.name)}`}
       triggerButton={

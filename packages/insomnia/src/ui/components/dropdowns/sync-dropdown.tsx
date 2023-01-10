@@ -484,14 +484,14 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             return (
               <DropdownItem
                 key={branch}
-                // className={classnames({
-                //   bold: isCurrentBranch,
-                // })}
                 title={isCurrentBranch ? '' : `Switch to "${branch}"`}
               >
                 <ItemContent
                   icon={currentBranch ? 'tag' : 'empty'}
                   label={branch}
+                  className={classnames({
+                    bold: isCurrentBranch,
+                  })}
                   onClick={isCurrentBranch ? undefined : () => handleSwitchBranch(branch)}
                 />
               </DropdownItem>

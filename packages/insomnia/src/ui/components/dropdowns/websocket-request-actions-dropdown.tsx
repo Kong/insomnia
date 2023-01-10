@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { forwardRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { toKebabCase } from '../../../common/misc';
@@ -7,23 +7,23 @@ import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectHotKeyRegistry } from '../../redux/selectors';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
+import { type DropdownHandle, type DropdownProps, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { showPrompt } from '../modals';
 
-interface Props {
+interface Props extends DropdownProps {
   handleDuplicateRequest: Function;
   isPinned: Boolean;
   request: WebSocketRequest;
   handleShowSettings: () => void;
 }
 
-export const WebSocketRequestActionsDropdown = ({
+export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   handleDuplicateRequest,
   isPinned,
   handleShowSettings,
   request,
-}: Props) => {
+}, ref) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
 
   const duplicate = useCallback(() => {
@@ -54,6 +54,7 @@ export const WebSocketRequestActionsDropdown = ({
 
   return (
     <Dropdown
+      ref={ref}
       dataTestId={`Dropdown-${toKebabCase(request.name)}`}
       triggerButton={
         <DropdownButton variant='text' style={{ padding: 0, borderRadius: 'unset' }}>
@@ -82,6 +83,6 @@ export const WebSocketRequestActionsDropdown = ({
       </DropdownSection>
     </Dropdown>
   );
-};
+});
 
 WebSocketRequestActionsDropdown.displayName = 'WebSocketRequestActionsDropdown';

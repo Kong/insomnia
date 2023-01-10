@@ -1,5 +1,5 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
 import { decompressObject } from '../../../common/misc';
@@ -8,8 +8,9 @@ import { Response } from '../../../models/response';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
+import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
 import { PromptButton } from '../base/prompt-button';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
@@ -27,6 +28,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   className,
   requestId,
 }: Props<GenericResponse>) => {
+  const dropdownRef = useRef<DropdownHandle>(null);
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const responses = useSelector(selectActiveRequestResponses) as GenericResponse[];
   const activeRequest = useSelector(selectActiveRequest);
@@ -164,9 +166,12 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     );
   };
 
+  useDocBodyKeyboardShortcuts({
+    request_toggleHistory: () => dropdownRef.current?.toggle(true),
+  });
+
   const environmentName = activeEnvironment ? activeEnvironment.name : 'Base';
   const isLatestResponseActive = !responses.length || activeResponse._id === responses[0]._id;
-
   return (
     <Dropdown
       key={activeResponse ? activeResponse._id : 'n/a'}

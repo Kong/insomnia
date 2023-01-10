@@ -11,7 +11,6 @@ interface Props {
   className?: string;
   method: string;
   onChange: (method: string) => void;
-  right?: boolean;
   showGrpc?: boolean;
 }
 
@@ -73,8 +72,7 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
   const buttonLabel = method === METHOD_GRPC ? GRPC_LABEL : method;
   return (
     <Dropdown
-      closeOnSelect
-      // ref={ref}
+      ref={ref}
       className="method-dropdown"
       triggerButton={
         <DropdownButton className={className} variant="text" style={{ height: '100%', borderRadius: 'unset' }}>
