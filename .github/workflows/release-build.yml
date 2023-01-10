@@ -59,6 +59,7 @@ jobs:
         shell: bash
         run: |
           ls -lah packages/insomnia/dist/*
+          spctl -a -t open --context context:primary-signature -v "packages/insomnia/dist/mac-universal/Insomnia.app"
           ls -lah /Users/runner/work/***/***/packages/***/dist/mac-universal/Insomnia.app
           spctl -a -t open --context context:primary-signature -v "/Users/runner/work/***/***/packages/***/dist/mac-universal/Insomnia.app"
 
