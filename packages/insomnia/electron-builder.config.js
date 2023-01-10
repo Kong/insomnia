@@ -63,6 +63,8 @@ const config = {
     },
     notarize: {
       appBundleId: 'com.insomnia.app',
+      // @ts-expect-error -- trying this for now
+      appPath: 'dist/mac-universal/Insomnia.app',
     },
     asarUnpack: [
       'node_modules/@getinsomnia/node-libcurl',
