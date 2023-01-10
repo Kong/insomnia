@@ -554,6 +554,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
               ((
                 <Dropdown
                   key="history"
+                  className="tall"
                   triggerButton={
                     <DropdownButton className="btn btn--compact">
                       <i className="fa fa-clock-o" />
