@@ -58,8 +58,8 @@ jobs:
         if: always()
         shell: bash
         run: |
-          ls -lah /Users/runner/work/***/***/packages/***/dist/mac-universal/Insomnia.app
           ls -lah packages/insomnia/dist/*
+          ls -lah /Users/runner/work/***/***/packages/***/dist/mac-universal/Insomnia.app
           spctl -a -t open --context context:primary-signature -v "/Users/runner/work/***/***/packages/***/dist/mac-universal/Insomnia.app"
 
       - name: Package app (Windows and Linux)
