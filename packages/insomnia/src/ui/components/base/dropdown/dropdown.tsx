@@ -4,13 +4,13 @@ import { AriaButtonProps } from '@react-types/button';
 import type { AriaMenuProps, MenuTriggerProps } from '@react-types/menu';
 import type { Placement } from '@react-types/overlays';
 import classNames from 'classnames';
-import { PlatformKeyCombinations } from 'insomnia-common';
 import React, { CSSProperties, forwardRef, PropsWithChildren, ReactNode, useRef } from 'react';
 import { useMenuTrigger } from 'react-aria';
 import { mergeProps, useButton, useFocusRing } from 'react-aria';
 import { MenuTriggerState, useMenuTriggerState } from 'react-stately';
 import styled from 'styled-components';
 
+import { PlatformKeyCombinations } from '../../../../common/settings';
 import { Button as ThemedButton, ButtonProps } from '../../themed-button';
 import { DropdownHint } from './dropdown-hint';
 import { Menu } from './menu';
