@@ -251,23 +251,25 @@ export const GraphQLEditor: FC<Props> = ({
     }
   };
   const changeQuery = (query: string) => {
-    onChange(JSON.stringify({ ...state.body, query }));
     try {
       const documentAST = parse(query);
       const operations = documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '');
-      const operationsChanged = state.operations.join() !== operations.join();
-      if (operationsChanged && state.body.operationName) {
-        const oldPostion = state.operations.indexOf(state.body.operationName);
+      // default to first operation when none selected
+      let operationName = state.body.operationName || operations[0] || '';
+      if (operations.length && state.body.operationName) {
+        const operationsChanged = state.operations.join() !== operations.join();
         const operationNameWasChanged = !operations.includes(state.body.operationName);
-        if (operationNameWasChanged) {
+        if (operationsChanged && operationNameWasChanged) {
           // preserve selection during name change or fallback to first operation
-          changeOperationName(operations[oldPostion] || operations[0] || '');
+          const oldPostion = state.operations.indexOf(state.body.operationName);
+          operationName = operations[oldPostion] || operations[0] || '';
         }
       }
+      onChange(JSON.stringify({ ...state.body, query, operationName }));
 
       setState(state => ({
         ...state,
-        body: { ...state.body, query },
+        body: { ...state.body, query, operationName },
         operations,
       }));
     } catch (error) {
