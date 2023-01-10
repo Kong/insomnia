@@ -411,8 +411,6 @@ export const GraphQLEditor: FC<Props> = ({
     };
   }
 
-  console.log({ variableTypes, operationDefinitions: state.documentAST?.definitions.filter(isOperationDefinition) });
-
   const canShowSchema = schema && !schemaIsFetching && !schemaFetchError && schemaLastFetchTime > 0;
   return (
     <div className="graphql-editor">
