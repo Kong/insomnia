@@ -38,7 +38,7 @@ export interface DropdownProps extends AriaMenuProps<any>, MenuTriggerProps {
   disabled?: boolean;
 }
 
-const Dropdown = (props: DropdownProps) => {
+const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: DropdownProps, ref: any) => {
   const {
     placement,
     triggerButton,
@@ -58,7 +58,7 @@ const Dropdown = (props: DropdownProps) => {
     onOpenChange: isOpen => isOpen && onOpen?.(),
   });
 
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(ref);
 
   const { menuTriggerProps, menuProps } = useMenuTrigger({}, state, triggerRef);
 
@@ -85,7 +85,10 @@ const Dropdown = (props: DropdownProps) => {
       )}
     </Container>
   );
-};
+});
+
+Dropdown.displayName = 'Dropdown';
+
 interface StyledIconProps {
   icon: string;
 }
