@@ -139,6 +139,7 @@ type DropdownButtonProps = {
   isPressed?: boolean;
   style?: CSSProperties;
   onClick?: () => void;
+  isDisabled?: boolean;
 } & ButtonProps & AriaButtonProps;
 
 const DropdownButton = forwardRef<{}, DropdownButtonProps>((props: DropdownButtonProps, ref: any) => {

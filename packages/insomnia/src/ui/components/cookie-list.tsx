@@ -9,6 +9,7 @@ import { PromptButton } from './base/prompt-button';
 import { showModal } from './modals';
 import { CookieModifyModal } from './modals/cookie-modify-modal';
 import { RenderedText } from './rendered-text';
+
 export interface CookieListProps {
   handleCookieAdd: (cookie: Cookie) => void;
   handleCookieDelete: (cookie: Cookie) => void;

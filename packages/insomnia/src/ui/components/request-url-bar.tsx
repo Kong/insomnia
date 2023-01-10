@@ -18,8 +18,7 @@ import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { selectActiveEnvironment, selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
-import { type DropdownHandle } from './base/dropdown/dropdown';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from './base/dropdown/dropdown';
+import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from './base/dropdown/dropdown';
 import { PromptButton } from './base/prompt-button';
 import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
@@ -69,7 +68,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const activeRequest = useSelector(selectActiveRequest);
   const settings = useSelector(selectSettings);
   const methodDropdownRef = useRef<DropdownHandle>(null);
+  const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditorHandle>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleGenerateCode = () => {
     showModal(GenerateCodeModal, { request });
@@ -293,6 +294,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     request_toggleHttpMethodMenu: () => {
       methodDropdownRef.current?.toggle();
     },
+    request_showOptions: () => {
+      dropdownRef.current?.toggle(true);
+    },
   });
 
   const lastPastedTextRef = useRef('');
@@ -350,6 +354,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
 
   const onMethodChange = useCallback((method: string) => update(request, { method }), [request]);
 
+  const handleSendDropdownHide = useCallback(() => {
+    buttonRef.current?.blur();
+  }, []);
+
   const { url, method } = request;
   const isCancellable = currentInterval || currentTimeout;
   return (
@@ -392,6 +400,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               {downloadPath ? 'Download' : 'Send'}
             </button>
             <Dropdown
+              key="dropdown"
+              className="tall"
+              ref={dropdownRef}
+              onClose={handleSendDropdownHide}
               triggerButton={
                 <StyledDropdownButton className="urlbar__send-context" variant='text'>
                   <i className="fa fa-caret-down" />

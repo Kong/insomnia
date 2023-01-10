@@ -50,11 +50,11 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
   let storedClient: HTTPSnippetClient | undefined;
   try {
     storedTarget = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as HTTPSnippetTarget;
-  } catch (error) { }
+  } catch (error) {}
 
   try {
     storedClient = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client') || '') as HTTPSnippetClient;
-  } catch (error) { }
+  } catch (error) {}
   const [state, setState] = useState<State>({
     cmd: '',
     request: undefined,

@@ -284,6 +284,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
           <div className="sidebar__actions">
             {isWebSocketRequest(request) ? (
               <WebSocketRequestActionsDropdown
+                ref={requestActionsDropdown}
                 handleDuplicateRequest={handleDuplicateRequest}
                 request={request}
                 isPinned={isPinned}

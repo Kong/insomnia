@@ -43,7 +43,7 @@ export const MenuItem = <T extends object>({
   onAction,
   onClose,
 }: Props<T>) => {
-  const ref = useRef<HTMLLIElement | null>(null);
+  const ref = useRef<HTMLLIElement>(null);
   const { key, rendered } = item;
 
   const {

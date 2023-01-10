@@ -444,7 +444,7 @@ export const GraphQLEditor: FC<Props> = ({
       <Toolbar>
         <Dropdown
           triggerButton={
-            <DropdownButton disabled={!state.operations.length} className="btn btn--compact">
+            <DropdownButton isDisabled={!state.operations.length} className="btn btn--compact">
               {state.body.operationName || 'Operations'}
             </DropdownButton>
           }

@@ -48,8 +48,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           activeProject,
           projects,
           workspaceId: activeWorkspace?._id,
-          forceToWorkspace, onComplete: revalidate,
-        });
+          forceToWorkspace, onComplete: revalidate });
         hideSettingsModal();
       },
       ...defaultValue,
@@ -79,8 +78,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       activeProject,
       projects,
       workspaceId: activeWorkspace?._id,
-      forceToWorkspace, onComplete: revalidate,
-    });
+      forceToWorkspace, onComplete: revalidate });
     hideSettingsModal();
   }, [activeProjectWorkspaces, activeProject, projects, activeWorkspace?._id, forceToWorkspace, revalidate, hideSettingsModal]);
 
@@ -90,8 +88,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       activeProject,
       projects,
       workspaceId: activeWorkspace?._id,
-      forceToWorkspace, onComplete: revalidate,
-    });
+      forceToWorkspace, onComplete: revalidate });
     hideSettingsModal();
   }, [activeProjectWorkspaces, activeProject, projects, activeWorkspace?._id, forceToWorkspace, revalidate, hideSettingsModal]);
 
