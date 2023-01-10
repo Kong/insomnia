@@ -161,14 +161,15 @@ export const GraphQLEditor: FC<Props> = ({
   } catch (error) {
     documentAST = null;
   }
-
+  const operations = documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '') || [];
+  const operationName = requestBody.operationName || operations[0] || '';
   const [state, setState] = useState<State>({
     body: {
       query: requestBody.query || '',
       variables: requestBody.variables,
-      operationName: requestBody.operationName,
+      operationName,
     },
-    operations: documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '') || [],
+    operations,
     hideSchemaFetchErrors: false,
     variablesSyntaxError: '',
     activeReference: null,
@@ -253,10 +254,21 @@ export const GraphQLEditor: FC<Props> = ({
     onChange(JSON.stringify({ ...state.body, query }));
     try {
       const documentAST = parse(query);
+      const operations = documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '');
+      const operationsChanged = state.operations.join() !== operations.join();
+      if (operationsChanged && state.body.operationName) {
+        const oldPostion = state.operations.indexOf(state.body.operationName);
+        const operationNameWasChanged = !operations.includes(state.body.operationName);
+        if (operationNameWasChanged) {
+          // preserve selection during name change or fallback to first operation
+          changeOperationName(operations[oldPostion] || operations[0] || '');
+        }
+      }
+
       setState(state => ({
         ...state,
         body: { ...state.body, query },
-        operations: documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || ''),
+        operations,
       }));
     } catch (error) {
       console.warn('failed to parse', error);
