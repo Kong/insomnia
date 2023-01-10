@@ -180,8 +180,9 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
 
   return (
     <Dropdown
+      isDisabled={disabled}
       triggerButton={
-        <DropdownButton isDisabled={disabled} className="tall" variant='text'>
+        <DropdownButton className="tall" variant='text'>
           {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
           <i className="fa fa-caret-down space-left" />
         </DropdownButton>

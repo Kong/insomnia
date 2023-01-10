@@ -38,10 +38,18 @@ export const WebSocketPreviewModeDropdown: FC<Props> = ({
       </DropdownSection>
       <DropdownSection title="Actions">
         <DropdownItem>
-          <ItemContent icon="copy" label="Copy raw response" onClick={copyToClipboard} />
+          <ItemContent
+            icon="copy"
+            label="Copy raw response"
+            onClick={copyToClipboard}
+          />
         </DropdownItem>
         <DropdownItem>
-          <ItemContent icon="save" label="Export raw response" onClick={download} />
+          <ItemContent
+            icon="save"
+            label="Export raw response"
+            onClick={download}
+          />
         </DropdownItem>
       </DropdownSection>
     </Dropdown>

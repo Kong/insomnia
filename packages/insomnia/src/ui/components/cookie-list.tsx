@@ -107,11 +107,18 @@ export const CookieList: FC<CookieListProps> = ({
               }
             >
               <DropdownItem key="add-cookie">
-                <ItemContent icon="plus-circle" label="Add Cookie" onClick={addCookie} />
+                <ItemContent
+                  icon="plus-circle"
+                  label="Add Cookie"
+                  onClick={addCookie}
+                />
               </DropdownItem>
               <DropdownItem key="delete-all">
                 <PromptButton fullWidth onClick={handleDeleteAll}>
-                  <ItemContent icon="trash-o" label="Delete All" />
+                  <ItemContent
+                    icon="trash-o"
+                    label="Delete All"
+                  />
                 </PromptButton>
               </DropdownItem>
             </Dropdown>

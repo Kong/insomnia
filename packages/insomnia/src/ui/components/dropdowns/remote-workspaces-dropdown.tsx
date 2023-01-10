@@ -72,7 +72,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
         message="Please log in to access your remote collections"
         position="bottom"
       >
-        <StyledDropdownButton isDisabled={true}>
+        <StyledDropdownButton isDisabled>
           Pull <i className="fa fa-caret-down pad-left-sm" />
         </StyledDropdownButton>
       </Tooltip>

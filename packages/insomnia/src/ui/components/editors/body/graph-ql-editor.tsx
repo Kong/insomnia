@@ -443,15 +443,19 @@ export const GraphQLEditor: FC<Props> = ({
     <div className="graphql-editor">
       <Toolbar>
         <Dropdown
+          isDisabled={!state.operations.length}
           triggerButton={
-            <DropdownButton isDisabled={!state.operations.length} className="btn btn--compact">
+            <DropdownButton className="btn btn--compact">
               {state.body.operationName || 'Operations'}
             </DropdownButton>
           }
         >
           {state.operations.map(operationName => (
             <DropdownItem key={operationName}>
-              <ItemContent label={operationName} onClick={() => changeOperationName(operationName)} />
+              <ItemContent
+                label={operationName}
+                onClick={() => changeOperationName(operationName)}
+              />
             </DropdownItem>
           ))}
         </Dropdown>

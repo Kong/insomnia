@@ -98,7 +98,7 @@ export const WorkspaceDropdown: FC = () => {
       className="wide workspace-dropdown"
       onOpen={handleDropdownOpen}
       triggerButton={
-        <DropdownButton variant="text" className="row" style={{ padding: 0, height: 15 }}>
+        <DropdownButton className="row" variant="text" style={{ padding: 0, height: 15 }}>
           <div
             className="ellipsis"
             style={{
@@ -122,7 +122,11 @@ export const WorkspaceDropdown: FC = () => {
       </DropdownItem>
 
       <DropdownItem>
-        <ItemContent icon="share" label="Import/Export" onClick={handleShowExport} />
+        <ItemContent
+          icon="share"
+          label="Import/Export"
+          onClick={handleShowExport}
+        />
       </DropdownItem>
 
       {actionPlugins.length > 0 &&

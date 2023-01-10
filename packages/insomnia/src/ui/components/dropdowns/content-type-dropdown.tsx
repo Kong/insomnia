@@ -73,7 +73,6 @@ export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
   if (!activeRequest) {
     return null;
   }
-
   const { body } = activeRequest;
   const hasMimeType = 'mimeType' in body;
   const hasParams = body && 'params' in body && body.params;

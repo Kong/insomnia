@@ -412,30 +412,58 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
             >
               <DropdownSection title="Basic">
                 <DropdownItem key="send-now">
-                  <ItemContent icon="arrow-circle-o-right" label="Send Now" hint={hotKeyRegistry.request_send} onClick={send} />
+                  <ItemContent
+                    icon="arrow-circle-o-right"
+                    label="Send Now"
+                    hint={hotKeyRegistry.request_send}
+                    onClick={send}
+                  />
                 </DropdownItem>
                 <DropdownItem>
-                  <ItemContent icon="code" label="Generate Client Code" onClick={handleGenerateCode} />
+                  <ItemContent
+                    icon="code"
+                    label="Generate Client Code"
+                    onClick={handleGenerateCode}
+                  />
                 </DropdownItem>
               </DropdownSection>
               <DropdownSection title="Advanced">
                 <DropdownItem>
-                  <ItemContent icon="clock-o" label="Send After Delay" onClick={handleSendAfterDelay} />
+                  <ItemContent
+                    icon="clock-o"
+                    label="Send After Delay"
+                    onClick={handleSendAfterDelay}
+                  />
                 </DropdownItem>
                 <DropdownItem>
-                  <ItemContent icon="repeat" label="Repeat on Interval" onClick={handleSendOnInterval} />
+                  <ItemContent
+                    icon="repeat"
+                    label="Repeat on Interval"
+                    onClick={handleSendOnInterval}
+                  />
                 </DropdownItem>
                 {downloadPath ? (<DropdownItem>
                   <PromptButton fullWidth onClick={handleClearDownloadLocation}>
-                    <ItemContent icon="stop-circle" label="Stop Auto-Download" />
+                    <ItemContent
+                      icon="stop-circle"
+                      label="Stop Auto-Download"
+                    />
                   </PromptButton>
                 </DropdownItem>) : (
                   <DropdownItem>
-                    <ItemContent icon="download" label="Download After Send" onClick={downloadAfterSend} />
+                    <ItemContent
+                      icon="download"
+                      label="Download After Send"
+                      onClick={downloadAfterSend}
+                    />
                   </DropdownItem>
                 )}
                 <DropdownItem>
-                  <ItemContent icon="download" label="Send And Download" onClick={sendThenSetFilePath} />
+                  <ItemContent
+                    icon="download"
+                    label="Send And Download"
+                    onClick={sendThenSetFilePath}
+                  />
                 </DropdownItem>
               </DropdownSection>
             </Dropdown>

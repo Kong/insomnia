@@ -23,13 +23,24 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
       <Dropdown
         dataTestId={toKebabCase(`ProjectDropDown-${project.name}`)}
         triggerButton={
-          <DropdownButton variant='text' style={{ padding: 0 }}>
+          <DropdownButton
+            className="row"
+            title={project.name}
+            variant='text'
+            style={{ padding: 0 }}
+          >
             <i className="fa fa-ellipsis space-left" />
           </DropdownButton>
         }
       >
         <DropdownItem>
-          <ItemContent icon="gear" label={`${strings.project.singular} Settings`} onClick={() => setIsSettingsModalOpen(true)} />
+          <ItemContent
+            icon="gear"
+            style={{ gap: 'var(--padding-sm)' }}
+            iconStyle={{ width: 'unset', fill: 'var(--hl)' }}
+            label={`${strings.project.singular} Settings`}
+            onClick={() => setIsSettingsModalOpen(true)}
+          />
         </DropdownItem>
         <DropdownItem>
           <PromptButton

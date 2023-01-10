@@ -178,7 +178,11 @@ export const ResponseMultipartViewer: FC<Props> = ({
           >
             {parts.map(part => (
               <DropdownItem key={part.id}>
-                <ItemContent icon={selectedPart?.id === part.id ? 'check' : 'empty'} label={part.title} onClick={() => selectPart(part)} />
+                <ItemContent
+                  icon={selectedPart?.id === part.id ? 'check' : 'empty'}
+                  label={part.title}
+                  onClick={() => selectPart(part)}
+                />
               </DropdownItem>
             ))}
           </Dropdown>
@@ -191,10 +195,18 @@ export const ResponseMultipartViewer: FC<Props> = ({
           }
         >
           <DropdownItem>
-            <ItemContent icon="list" label="View Headers" onClick={viewHeaders} />
+            <ItemContent
+              icon="list"
+              label="View Headers"
+              onClick={viewHeaders}
+            />
           </DropdownItem>
           <DropdownItem>
-            <ItemContent icon="save" label="Save as File" onClick={saveAsFile} />
+            <ItemContent
+              icon="save"
+              label="Save as File"
+              onClick={saveAsFile}
+            />
           </DropdownItem>
         </Dropdown>
       </div>

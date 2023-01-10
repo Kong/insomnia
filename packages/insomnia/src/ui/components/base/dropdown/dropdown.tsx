@@ -35,7 +35,7 @@ export interface DropdownProps extends AriaMenuProps<any>, MenuTriggerProps {
   style?: CSSProperties;
   onOpen?: () => void;
   dataTestId?: string;
-  disabled?: boolean;
+  isDisabled?: boolean;
 }
 
 const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: DropdownProps, ref: any) => {
@@ -48,7 +48,7 @@ const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: DropdownProps
     closeOnSelect = false,
     style,
     dataTestId = 'DropdownButton',
-    // disabled,
+    isDisabled = false,
     onOpen,
   } = props;
 
@@ -60,7 +60,7 @@ const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: DropdownProps
 
   const triggerRef = useRef<HTMLButtonElement>(ref);
 
-  const { menuTriggerProps, menuProps } = useMenuTrigger({}, state, triggerRef);
+  const { menuTriggerProps, menuProps } = useMenuTrigger({ isDisabled }, state, triggerRef);
 
   return (
     <Container className={className} style={style} data-testid={dataTestId}>
@@ -121,11 +121,12 @@ type ItemContentProps = PropsWithChildren<{
   hint?: PlatformKeyCombinations;
   className?: string;
   iconStyle?: CSSProperties;
+  style?: CSSProperties;
   onClick?: () => void;
 }>;
 
-const ItemContent = ({ icon, label, hint, className, onClick, children, iconStyle }: ItemContentProps) => (
-  <StyledItemContainer className={className} role='button' onClick={onClick}>
+const ItemContent = ({ icon, label, hint, className, onClick, children, iconStyle, style }: ItemContentProps) => (
+  <StyledItemContainer className={className} role='button' onClick={onClick} style={style}>
     <StyledItemContent>
       {icon && <StyledIcon icon={icon} style={iconStyle} />}
       {children || label}
@@ -133,6 +134,10 @@ const ItemContent = ({ icon, label, hint, className, onClick, children, iconStyl
     {hint && <DropdownHint keyBindings={hint} />}
   </StyledItemContainer>
 );
+
+const StyledThemedButton = styled(ThemedButton)({
+
+});
 
 type DropdownButtonProps = {
   className?: string;
@@ -148,14 +153,14 @@ const DropdownButton = forwardRef<{}, DropdownButtonProps>((props: DropdownButto
   const { focusProps } = useFocusRing();
 
   return (
-    <ThemedButton
+    <StyledThemedButton
       ref={buttonRef}
       style={props.style}
       isPressed={isPressed || props.isPressed}
       {...mergeProps(buttonProps, focusProps, props)}
     >
       {props.children}
-    </ThemedButton>
+    </StyledThemedButton>
   );
 });
 

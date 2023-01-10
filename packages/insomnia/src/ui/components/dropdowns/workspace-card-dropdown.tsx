@@ -118,7 +118,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
         {renderPluginDropdownItems()}
 
         <DropdownSection>
-          <DropdownItem> {/* className="danger" */}
+          <DropdownItem>
             <ItemContent
               label="Delete"
               className="danger"

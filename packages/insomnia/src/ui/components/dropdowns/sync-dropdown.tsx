@@ -310,7 +310,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     return (
       <div>
         <Dropdown
-          style={{ marginLeft: 'var(--padding-md)' }}
+          style={{
+            marginLeft: 'var(--padding-md)',
+          }}
           className="wide tall"
           onOpen={() => refreshVCSAndRefetchRemote()}
           triggerButton={

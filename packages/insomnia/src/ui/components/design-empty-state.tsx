@@ -82,10 +82,18 @@ const ImportSpecButton: FC<Props> = ({ onImport }) => {
       }
     >
       <DropdownItem key="file">
-        <ItemContent icon="plus" label="File" onClick={handleImportFile} />
+        <ItemContent
+          icon="plus"
+          label="File"
+          onClick={handleImportFile}
+        />
       </DropdownItem>
       <DropdownItem key="url">
-        <ItemContent icon="link" label="URL" onClick={handleImportUri} />
+        <ItemContent
+          icon="link"
+          label="URL"
+          onClick={handleImportUri}
+        />
       </DropdownItem>
     </Dropdown>
   );

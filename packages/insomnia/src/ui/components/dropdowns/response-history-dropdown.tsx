@@ -174,6 +174,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   const isLatestResponseActive = !responses.length || activeResponse._id === responses[0]._id;
   return (
     <Dropdown
+      ref={dropdownRef}
       key={activeResponse ? activeResponse._id : 'n/a'}
       className={className}
       triggerButton={

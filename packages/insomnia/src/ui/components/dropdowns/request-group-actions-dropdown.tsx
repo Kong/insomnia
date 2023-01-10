@@ -145,36 +145,70 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
       }
     >
       <DropdownItem>
-        <ItemContent icon="plus-circle" label="New HTTP Request" hint={hotKeyRegistry.request_createHTTP} onClick={() => create('HTTP')} />
+        <ItemContent
+          icon="plus-circle"
+          label="New HTTP Request"
+          hint={hotKeyRegistry.request_createHTTP}
+          onClick={() => create('HTTP')}
+        />
       </DropdownItem>
 
       <DropdownItem>
-        <ItemContent icon="plus-circle" label="New GraphQL Request" onClick={() => create('GraphQL')} />
+        <ItemContent
+          icon="plus-circle"
+          label="New GraphQL Request"
+          onClick={() => create('GraphQL')}
+        />
       </DropdownItem>
 
       <DropdownItem>
-        <ItemContent icon="plus-circle" label="New gRPC Request" onClick={() => create('gRPC')} />
+        <ItemContent
+          icon="plus-circle"
+          label="New gRPC Request"
+          onClick={() => create('gRPC')}
+        />
       </DropdownItem>
 
       <DropdownItem>
-        <ItemContent icon="plus-circle" label="WebSocket Request" onClick={() => create('WebSocket')} />
+        <ItemContent
+          icon="plus-circle"
+          label="WebSocket Request"
+          onClick={() => create('WebSocket')}
+        />
       </DropdownItem>
 
       <DropdownItem>
-        <ItemContent icon="folder" label="New Folder" hint={hotKeyRegistry.request_showCreateFolder} onClick={createGroup} />
+        <ItemContent
+          icon="folder"
+          label="New Folder"
+          hint={hotKeyRegistry.request_showCreateFolder}
+          onClick={createGroup}
+        />
       </DropdownItem>
 
       <DropdownSection>
         <DropdownItem>
-          <ItemContent icon="copy" label="Duplicate" onClick={handleRequestGroupDuplicate} />
+          <ItemContent
+            icon="copy"
+            label="Duplicate"
+            onClick={handleRequestGroupDuplicate}
+          />
         </DropdownItem>
 
         <DropdownItem>
-          <ItemContent icon="code" label="Environment" onClick={() => showModal(EnvironmentEditModal, { requestGroup })} />
+          <ItemContent
+            icon="code"
+            label="Environment"
+            onClick={() => showModal(EnvironmentEditModal, { requestGroup })}
+          />
         </DropdownItem>
 
         <DropdownItem>
-          <ItemContent icon="edit" label="Rename" onClick={handleRename} />
+          <ItemContent
+            icon="edit"
+            label="Rename"
+            onClick={handleRename}
+          />
         </DropdownItem>
 
         <DropdownItem>

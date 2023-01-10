@@ -11,7 +11,7 @@ import { type DropdownHandle, type DropdownProps, Dropdown, DropdownButton, Drop
 import { PromptButton } from '../base/prompt-button';
 import { showPrompt } from '../modals';
 
-interface Props extends DropdownProps {
+interface Props extends Omit<DropdownProps, 'children' > {
   handleDuplicateRequest: Function;
   isPinned: Boolean;
   request: WebSocketRequest;

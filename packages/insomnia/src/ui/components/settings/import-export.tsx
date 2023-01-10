@@ -113,7 +113,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           <DropdownSection title="Choose Export Type">
             {activeWorkspace &&
               <DropdownItem onClick={showExportRequestsModal}>
-                <ItemContent icon="home" label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`} />
+                <ItemContent
+                  icon="home"
+                  label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`}
+                />
               </DropdownItem>
             }
             <DropdownItem>
@@ -135,16 +138,27 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         >
           <DropdownSection title="Choose Import Type">
             <DropdownItem>
-              <ItemContent icon="file-o" label="From File" onClick={handleImportFile} />
+              <ItemContent
+                icon="file-o"
+                label="From File"
+                onClick={handleImportFile}
+              />
             </DropdownItem>
             <DropdownItem>
-              <ItemContent icon="link" label="From URL" onClick={handleImportUri} />
+              <ItemContent
+                icon="link"
+                label="From URL"
+                onClick={handleImportUri}
+              />
             </DropdownItem>
             <DropdownItem >
-              <ItemContent icon="clipboard" label="From Clipboard" onClick={handleImportClipBoard} />
+              <ItemContent
+                icon="clipboard"
+                label="From Clipboard"
+                onClick={handleImportClipBoard}
+              />
             </DropdownItem>
           </DropdownSection>
-
         </Dropdown>
         &nbsp;&nbsp;
         <Link href="https://insomnia.rest/create-run-button" className="btn btn--compact" button>

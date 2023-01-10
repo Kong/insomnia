@@ -68,6 +68,21 @@ const StyledItem = styled.div({
   },
 });
 
+interface ItemWrapperProps {
+  checked: boolean;
+  htmlFor: string;
+  label: string;
+}
+
+const ItemWrapper = ({ checked, htmlFor, label }: ItemWrapperProps) => {
+  return (
+    <StyledItem>
+      <input type="checkbox" checked={checked} readOnly />
+      <label htmlFor={htmlFor}>{label}</label>
+    </StyledItem>
+  );
+};
+
 const DropdownEllipsis = () => <SvgIcon icon={IconEnum.ellipsesCircle} />;
 
 // Section Expansion & Filtering
@@ -118,34 +133,38 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
               <DropdownSection title="VISIBILITY">
                 <DropdownItem>
                   <ItemContent onClick={setServersVisible}>
-                    <StyledItem>
-                      <input type="checkbox" checked={serversVisible} readOnly />
-                      <label htmlFor="servers">Servers</label>
-                    </StyledItem>
+                    <ItemWrapper
+                      checked={serversVisible}
+                      htmlFor="servers"
+                      label="Servers"
+                    />
                   </ItemContent>
                 </DropdownItem>
                 <DropdownItem>
                   <ItemContent onClick={setPathsVisible}>
-                    <StyledItem>
-                      <input type="checkbox" checked={pathsVisible} readOnly />
-                      <label htmlFor="paths">Paths</label>
-                    </StyledItem>
+                    <ItemWrapper
+                      checked={pathsVisible}
+                      htmlFor="paths"
+                      label="Paths"
+                    />
                   </ItemContent>
                 </DropdownItem>
                 <DropdownItem>
                   <ItemContent onClick={setRequestsVisible}>
-                    <StyledItem>
-                      <input type="checkbox" checked={requestsVisible} readOnly />
-                      <label htmlFor="requests">Requests</label>
-                    </StyledItem>
+                    <ItemWrapper
+                      checked={requestsVisible}
+                      htmlFor="requests"
+                      label="Requests"
+                    />
                   </ItemContent>
                 </DropdownItem>
                 <DropdownItem>
                   <ItemContent onClick={setResponsesVisible}>
-                    <StyledItem>
-                      <input type="checkbox" checked={responsesVisible} readOnly />
-                      <label htmlFor="responses">Responses</label>
-                    </StyledItem>
+                    <ItemWrapper
+                      checked={responsesVisible}
+                      htmlFor="responses"
+                      label="Responses"
+                    />
                   </ItemContent>
                 </DropdownItem>
                 <DropdownItem>
@@ -158,26 +177,29 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                 </DropdownItem>
                 <DropdownItem>
                   <ItemContent onClick={setHeadersVisible}>
-                    <StyledItem>
-                      <input type="checkbox" checked={headersVisible} readOnly />
-                      <label htmlFor="headers">Headers</label>
-                    </StyledItem>
+                    <ItemWrapper
+                      checked={headersVisible}
+                      htmlFor="headers"
+                      label="Headers"
+                    />
                   </ItemContent>
                 </DropdownItem>
                 <DropdownItem>
                   <ItemContent onClick={setSchemasVisible}>
-                    <StyledItem>
-                      <input type="checkbox" checked={schemasVisible} readOnly />
-                      <label htmlFor="schemas">Schemas</label>
-                    </StyledItem>
+                    <ItemWrapper
+                      checked={schemasVisible}
+                      htmlFor="schemas"
+                      label="Schemas"
+                    />
                   </ItemContent>
                 </DropdownItem>
                 <DropdownItem>
                   <ItemContent onClick={setSecurityVisible}>
-                    <StyledItem>
-                      <input type="checkbox" checked={securityVisible} readOnly />
-                      <label htmlFor="security">Security</label>
-                    </StyledItem>
+                    <ItemWrapper
+                      checked={securityVisible}
+                      htmlFor="security"
+                      label="Security"
+                    />
                   </ItemContent>
                 </DropdownItem>
               </DropdownSection>

@@ -134,7 +134,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   const canGenerateCode = isRequest(request);
   return (
     <Dropdown
-      // ref={ref}
+      ref={ref}
       onOpen={onOpen}
       dataTestId={`Dropdown-${toKebabCase(request.name)}`}
       triggerButton={
@@ -144,7 +144,12 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       }
     >
       <DropdownItem>
-        <ItemContent icon="copy" label="Duplicate" hint={hotKeyRegistry.request_showDuplicate} onClick={duplicate} />
+        <ItemContent
+          icon="copy"
+          label="Duplicate"
+          hint={hotKeyRegistry.request_showDuplicate}
+          onClick={duplicate}
+        />
       </DropdownItem>
 
       {canGenerateCode && (
@@ -171,18 +176,30 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       {canGenerateCode && (
         // dataTestId={`DropdownItemCopyAsCurl-${toKebabCase(request.name)}`}
         <DropdownItem>
-          <ItemContent icon="copy" label="Copy as cURL" onClick={copyAsCurl} />
+          <ItemContent
+            icon="copy"
+            label="Copy as cURL"
+            onClick={copyAsCurl}
+          />
         </DropdownItem>
       )}
       {/* dataTestId={`DropdownItemRename-${toKebabCase(request.name)}`} */}
       <DropdownItem>
-        <ItemContent icon="edit" label="Rename" onClick={handleRename} />
+        <ItemContent
+          icon="edit"
+          label="Rename"
+          onClick={handleRename}
+        />
       </DropdownItem>
 
       {/* dataTestId={`DropdownItemDelete-${toKebabCase(request.name)}`} */}
       <DropdownItem>
         <PromptButton fullWidth onClick={deleteRequest}>
-          <ItemContent icon="trash-o" label="Delete" hint={hotKeyRegistry.request_showDelete} />
+          <ItemContent
+            icon="trash-o"
+            label="Delete"
+            hint={hotKeyRegistry.request_showDelete}
+          />
         </PromptButton>
       </DropdownItem>
 
@@ -202,7 +219,12 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
       <DropdownSection>
         <DropdownItem> {/* dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`}> */}
-          <ItemContent icon="wrench" label="Settings" hint={hotKeyRegistry.request_showSettings} onClick={handleShowSettings} />
+          <ItemContent
+            icon="wrench"
+            label="Settings"
+            hint={hotKeyRegistry.request_showSettings}
+            onClick={handleShowSettings}
+          />
         </DropdownItem>
       </DropdownSection>
     </Dropdown>
