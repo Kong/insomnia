@@ -36,7 +36,7 @@ import {
   smartEncodeUrl,
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthQueryParams } from './authentication';
-import { cancellableCurlRequest } from './cancellations';
+import { cancellableCurlRequest } from './cancellation';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 // used for oauth grant types
@@ -112,9 +112,13 @@ const fetchRequestData = async (requestId: string) => {
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'failed to find workspace');
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-  invariant(workspaceMeta.activeEnvironmentId, 'failed to find active environment');
-  const environment = await models.environment.getById(workspaceMeta.activeEnvironmentId);
+
+  // fallback to base environment
+  const environment = workspaceMeta.activeEnvironmentId ?
+    await models.environment.getById(workspaceMeta.activeEnvironmentId)
+    : await models.environment.getOrCreateForParentId(workspace._id);
   invariant(environment, 'failed to find environment');
+
   const settings = await models.settings.getOrCreate();
   invariant(settings, 'failed to create settings');
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);

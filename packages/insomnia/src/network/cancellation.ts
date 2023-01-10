@@ -1,4 +1,4 @@
-import { CurlRequestOptions, CurlRequestOutput } from '../main/network/libcurl-promise';
+import type { CurlRequestOptions, CurlRequestOutput } from '../main/network/libcurl-promise';
 const cancelRequestFunctionMap = new Map<string, () => void>();
 export async function cancelRequestById(requestId: string) {
   const cancel = cancelRequestFunctionMap.get(requestId);
