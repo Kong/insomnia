@@ -40,7 +40,7 @@ jobs:
       - name: debug try spctl
         if: matrix.os == 'macos-latest'
         shell: bash
-        run: spctl --help
+        run: spctl --status
 
       - name: Package app (MacOS only)
         if: matrix.os == 'macos-latest'
