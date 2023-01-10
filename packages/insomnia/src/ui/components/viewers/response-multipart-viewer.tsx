@@ -12,8 +12,7 @@ import {
   PREVIEW_MODE_FRIENDLY,
 } from '../../../common/constants';
 import type { ResponseHeader } from '../../../models/response';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
 import { showModal } from '../modals/index';
 import { WrapperModal } from '../modals/wrapper-modal';
 import { ResponseHeadersViewer } from './response-headers-viewer';
@@ -164,7 +163,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
         <div>
           <Dropdown
             triggerButton={
-              <Button className="btn btn--clicky">
+              <DropdownButton className="btn btn--clicky">
                 <div
                   style={{
                     minWidth: '200px',
@@ -174,7 +173,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
                   {selectedPart.title}
                 </div>
                 <i className="fa fa-caret-down fa--skinny space-left" />
-              </Button>
+              </DropdownButton>
             }
           >
             {parts.map(part => (
@@ -186,9 +185,9 @@ export const ResponseMultipartViewer: FC<Props> = ({
         </div>
         <Dropdown
           triggerButton={
-            <Button className="btn btn--clicky">
+            <DropdownButton className="btn btn--clicky">
               <i className="fa fa-bars" />
-            </Button>
+            </DropdownButton>
           }
         >
           <DropdownItem>

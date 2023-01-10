@@ -1,8 +1,7 @@
 import React, { FunctionComponent } from 'react';
 
 import { SORT_ORDERS, SortOrder, sortOrderName } from '../../../common/constants';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
 
 interface Props {
   handleSort: (sortOrder: SortOrder) => void;
@@ -11,9 +10,9 @@ interface Props {
 export const SidebarSortDropdown: FunctionComponent<Props> = ({ handleSort }) => (
   <Dropdown
     triggerButton={
-      <Button className="btn btn--compact">
+      <DropdownButton className="btn btn--compact">
         <i className="fa fa-sort" />
-      </Button>
+      </DropdownButton>
     }
   >
     {SORT_ORDERS.map(order => (

@@ -17,8 +17,7 @@ import {
 import { isWebSocketRequest } from '../../../models/websocket-request';
 import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import { selectActiveRequest } from '../../redux/selectors';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { AlertModal } from '../modals/alert-modal';
 import { showModal } from '../modals/index';
 
@@ -90,11 +89,11 @@ export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
   return (
     <Dropdown
       triggerButton={
-        <Button variant='text'>
+        <DropdownButton variant='text'>
           {hasMimeType ? getContentTypeName(body.mimeType) : 'Body'}
           {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
           <i className="fa fa-caret-down space-left" />
-        </Button>
+        </DropdownButton>
       }
     >
       <DropdownSection

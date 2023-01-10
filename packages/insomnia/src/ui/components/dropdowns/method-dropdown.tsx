@@ -2,9 +2,8 @@ import React, { forwardRef, useCallback, useState } from 'react';
 
 import { HTTP_METHODS, METHOD_GRPC } from '../../../common/constants';
 import { type DropdownHandle } from '../base/dropdown/dropdown';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { showPrompt } from '../modals/index';
-import { Button } from '../base/dropdown-aria/button';
 
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 const GRPC_LABEL = 'gRPC';
@@ -79,10 +78,10 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
       // ref={ref}
       className="method-dropdown"
       triggerButton={
-        <Button className={className} variant="text" style={{ height: '100%', borderRadius: 'unset' }}>
+        <DropdownButton className={className} variant="text" style={{ height: '100%', borderRadius: 'unset' }}>
           <span className={`http-method-${method}`}>{buttonLabel}</span>{' '}
           <i className="fa fa-caret-down space-left" />
-        </Button>
+        </DropdownButton>
       }
     >
       {HTTP_METHODS.map(method => (

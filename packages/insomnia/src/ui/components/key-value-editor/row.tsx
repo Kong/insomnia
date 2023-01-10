@@ -3,8 +3,7 @@ import React, { FC } from 'react';
 
 import { describeByteSize } from '../../../common/misc';
 import { useNunjucksEnabled } from '../../context/nunjucks/nunjucks-enabled-context';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
 import { FileInputButton } from '../base/file-input-button';
 import { PromptButton } from '../base/prompt-button';
 import { OneLineEditor } from '../codemirror/one-line-editor';
@@ -155,9 +154,9 @@ export const Row: FC<Props> = ({
         {hideButtons ? hiddenButtons : isFileOrMultiline ? (
           <Dropdown
             triggerButton={
-              <Button className="tall">
+              <DropdownButton className="tall">
                 <i className="fa fa-caret-down" />
-              </Button>
+              </DropdownButton>
             }
           >
             <DropdownItem>

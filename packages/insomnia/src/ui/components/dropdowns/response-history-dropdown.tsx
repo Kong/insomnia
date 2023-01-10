@@ -8,8 +8,7 @@ import { Response } from '../../../models/response';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -173,14 +172,14 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
       key={activeResponse ? activeResponse._id : 'n/a'}
       className={className}
       triggerButton={
-        <Button className="btn btn--super-compact tall" title="Response history">
+        <DropdownButton className="btn btn--super-compact tall" title="Response history">
           {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
           {!isLatestResponseActive ? (
             <i className="fa fa-thumb-tack space-left" />
           ) : (
             <i className="fa fa-caret-down space-left" />
           )}
-        </Button>
+        </DropdownButton>
       }
     >
       <DropdownSection title={<span><strong>{environmentName}</strong> Responses</span>}>

@@ -5,8 +5,7 @@ import styled from 'styled-components';
 import { documentationLinks } from '../../common/documentation';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
 import { faint } from '../css/css-in-js';
-import { Button } from './base/dropdown-aria/button';
-import { Dropdown, DropdownItem, ItemContent } from './base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown-aria/dropdown';
 import { showPrompt } from './modals';
 import { EmptyStatePane } from './panes/empty-state-pane';
 import { SvgIcon } from './svg-icon';
@@ -18,7 +17,7 @@ const Wrapper = styled.div({
   width: '100%',
 });
 
-const DropdownButton = styled(Button)({
+const StyledDropdownButton = styled(DropdownButton)({
   '&&': {
     pointerEvents: 'all',
     color: 'var(--color-font)',
@@ -76,10 +75,10 @@ const ImportSpecButton: FC<Props> = ({ onImport }) => {
   return (
     <Dropdown
       triggerButton={
-        <DropdownButton>
+        <StyledDropdownButton>
           Import OpenAPI
           <i className="fa fa-caret-down pad-left-sm" />
-        </DropdownButton>
+        </StyledDropdownButton>
       }
     >
       <DropdownItem key="file">

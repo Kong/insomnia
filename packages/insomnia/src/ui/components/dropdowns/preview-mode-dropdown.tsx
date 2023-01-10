@@ -8,7 +8,7 @@ import * as models from '../../../models';
 import { isRequest } from '../../../models/request';
 import { isResponse } from '../../../models/response';
 import { selectActiveRequest, selectActiveResponse, selectResponsePreviewMode } from '../../redux/selectors';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 
 interface Props {
   download: (pretty: boolean) => any;
@@ -94,11 +94,11 @@ export const PreviewModeDropdown: FC<Props> = ({
 
   return (
     <Dropdown
-      control={
-        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+      triggerButton={
+        <DropdownButton>
           {getPreviewModeName(previewMode)}
           <i className="fa fa-caret-down space-left" />
-        </div>
+        </DropdownButton>
       }
     >
       <DropdownSection title="Preview Mode">
@@ -114,7 +114,7 @@ export const PreviewModeDropdown: FC<Props> = ({
       </DropdownSection>
       <DropdownSection title="Action">
         <DropdownItem>
-          <ItemContent icon="copy" label="Copy raw response" onClick={copyToClipboard}/>
+          <ItemContent icon="copy" label="Copy raw response" onClick={copyToClipboard} />
         </DropdownItem>
         <DropdownItem>
           <ItemContent icon="save" label="Export raw response" onClick={handleDownloadNormal} />
@@ -128,7 +128,7 @@ export const PreviewModeDropdown: FC<Props> = ({
           <ItemContent icon="bug" label="Export HTTP debug" onClick={exportDebugFile} />
         </DropdownItem>
         <DropdownItem>
-          <ItemContent icon="save" label="Export as HAR" onClick={exportAsHAR}/>
+          <ItemContent icon="save" label="Export as HAR" onClick={exportAsHAR} />
         </DropdownItem>
       </DropdownSection>
     </Dropdown>

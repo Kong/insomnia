@@ -7,8 +7,7 @@ import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectHotKeyRegistry } from '../../redux/selectors';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { showPrompt } from '../modals';
 
@@ -57,9 +56,9 @@ export const WebSocketRequestActionsDropdown = ({
     <Dropdown
       dataTestId={`Dropdown-${toKebabCase(request.name)}`}
       triggerButton={
-        <Button variant='text' style={{ padding: 0, borderRadius: 'unset' }}>
+        <DropdownButton variant='text' style={{ padding: 0, borderRadius: 'unset' }}>
           <i className="fa fa-caret-down" />
-        </Button>
+        </DropdownButton>
       }
     >
       <DropdownItem>

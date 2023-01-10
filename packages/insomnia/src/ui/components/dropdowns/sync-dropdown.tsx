@@ -20,8 +20,7 @@ import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveWorkspaceMeta, selectRemoteProjects, selectSyncItems } from '../../redux/selectors';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
@@ -315,12 +314,12 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           className="wide tall"
           onOpen={() => refreshVCSAndRefetchRemote()}
           triggerButton={
-            <Button
+            <DropdownButton
               size="small"
               className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
             >
               <i className="fa fa-code-fork " /> Setup Sync
-            </Button>
+            </DropdownButton>
           }
         >
           <DropdownSection
@@ -393,7 +392,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         triggerButton={
           currentBranch === null ?
             <Fragment>Sync</Fragment> :
-            <Button
+            <DropdownButton
               size="small"
               className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
               disabled={initializing}
@@ -440,7 +439,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                   </Fragment>
                 )}
               </div>
-            </Button>
+            </DropdownButton>
         }
       >
         <DropdownSection

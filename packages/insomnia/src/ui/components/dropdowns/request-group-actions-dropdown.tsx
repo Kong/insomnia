@@ -13,12 +13,11 @@ import { createRequest, CreateRequestType } from '../../hooks/create-request';
 import { createRequestGroup } from '../../hooks/create-request-group';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownProps } from '../base/dropdown/dropdown';
-import { DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { Dropdown } from '../base/dropdown-aria/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { showError, showModal, showPrompt } from '../modals';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
-import { Button } from '../base/dropdown-aria/button';
 
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
@@ -132,9 +131,9 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
       onOpen={onOpen}
       dataTestId={`Dropdown-${toKebabCase(requestGroup.name)}`}
       triggerButton={
-        <Button>
+        <DropdownButton>
           <i className="fa fa-caret-down" />
-        </Button>
+        </DropdownButton>
       }
     >
       <DropdownItem>

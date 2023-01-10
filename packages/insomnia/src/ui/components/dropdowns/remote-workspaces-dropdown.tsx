@@ -6,8 +6,7 @@ import { isLoggedIn } from '../../../account/session';
 import { strings } from '../../../common/strings';
 import { RemoteProject } from '../../../models/project';
 import { RemoteCollectionsLoaderData } from '../../routes/remote-collections';
-import { Button } from '../base/dropdown-aria/button';
-import { DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { Dropdown } from '../base/dropdown-aria/dropdown';
 import { HelpTooltip } from '../help-tooltip';
 import { Tooltip } from '../tooltip';
@@ -16,7 +15,7 @@ interface Props {
   project: RemoteProject;
 }
 
-const DropdownButton = styled(Button)({
+const StyledDropdownButton = styled(DropdownButton)({
   '&&': {
     marginLeft: 'var(--padding-md)',
   },
@@ -74,9 +73,9 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
         message="Please log in to access your remote collections"
         position="bottom"
       >
-        <DropdownButton disabled>
+        <StyledDropdownButton disabled>
           Pull <i className="fa fa-caret-down pad-left-sm" />
-        </DropdownButton>
+        </StyledDropdownButton>
       </Tooltip>
     );
   }
@@ -85,9 +84,9 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
     <Dropdown
       onOpen={() => load(`/organization/${organizationId}/project/${projectId}/remote-collections`)}
       triggerButton={
-        <DropdownButton>
+        <StyledDropdownButton>
           Pull <i className="fa fa-caret-down pad-left-sm" />
-        </DropdownButton>
+        </StyledDropdownButton>
       }
     >
       <DropdownSection

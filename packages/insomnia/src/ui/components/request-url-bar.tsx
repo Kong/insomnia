@@ -19,8 +19,7 @@ import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { selectActiveEnvironment, selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
 import { type DropdownHandle } from './base/dropdown/dropdown';
-import { Button } from './base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from './base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from './base/dropdown-aria/dropdown';
 import { PromptButton } from './base/prompt-button';
 import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
@@ -29,16 +28,7 @@ import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
 import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 
-const DropdownButton = styled(Button)({
-  height: '100%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  paddingRight: 'var(--padding-xs)',
-  paddingLeft: 'var(--padding-xs)',
-  textAlign: 'center',
-  background: 'var(--color-surprise)',
-  color: 'var(--color-font-surprise)',
+const StyledDropdownButton = styled(DropdownButton)({
   borderRadius: 'unset',
   borderLeft: '1px solid var(--hl-md)',
 
@@ -325,8 +315,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           authentication: r.authentication,
           parameters: r.parameters,
         },
-          // Pass true to indicate that this is an import
-          true
+        // Pass true to indicate that this is an import
+        true
         );
       }
     } catch (error) {
@@ -403,9 +393,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
             </button>
             <Dropdown
               triggerButton={
-                <DropdownButton variant='text'>
+                <StyledDropdownButton className="urlbar__send-context" variant='text'>
                   <i className="fa fa-caret-down" />
-                </DropdownButton>
+                </StyledDropdownButton>
               }
             >
               <DropdownSection title="Basic">

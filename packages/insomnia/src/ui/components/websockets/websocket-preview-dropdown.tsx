@@ -1,8 +1,7 @@
 import React, { FC } from 'react';
 
 import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 
 interface Props {
   download: () => void;
@@ -20,10 +19,10 @@ export const WebSocketPreviewModeDropdown: FC<Props> = ({
   return (
     <Dropdown
       triggerButton={
-        <Button className="tall">
+        <DropdownButton className="tall">
           {getPreviewModeName(previewMode)}
           <i className="fa fa-caret-down space-left" />
-        </Button>
+        </DropdownButton>
       }
     >
       <DropdownSection title="Preview Mode">

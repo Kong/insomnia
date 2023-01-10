@@ -6,8 +6,7 @@ import { strings } from '../../../common/strings';
 import {
   Project,
 } from '../../../models/project';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import ProjectSettingsModal from '../modals/project-settings-modal';
 
@@ -24,9 +23,9 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
       <Dropdown
         dataTestId={toKebabCase(`ProjectDropDown-${project.name}`)}
         triggerButton={
-          <Button variant='text' style={{ padding: 0 }}>
+          <DropdownButton variant='text' style={{ padding: 0 }}>
             <i className="fa fa-ellipsis space-left" />
-          </Button>
+          </DropdownButton>
         }
       >
         <DropdownItem>

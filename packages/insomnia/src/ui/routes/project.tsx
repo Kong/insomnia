@@ -29,8 +29,7 @@ import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '../.
 import { isDefaultProject, isRemoteProject, Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
-import { Button } from '../components/base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../components/base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../components/base/dropdown-aria/dropdown';
 import { DashboardSortDropdown } from '../components/dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
@@ -39,6 +38,7 @@ import { showAlert, showPrompt } from '../components/modals';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
+import { Button } from '../components/themed-button/button';
 import { WorkspaceCard } from '../components/workspace-card';
 import {
   importClipBoard,
@@ -46,7 +46,7 @@ import {
   importUri,
 } from '../import';
 
-const DropdownButton = styled(Button).attrs({
+const StyledDropdownButton = styled(DropdownButton).attrs({
   variant: 'outlined',
 })({
   '&&': {
@@ -695,9 +695,9 @@ const ProjectRoute: FC = () => {
                   )}
                   <Dropdown
                     triggerButton={
-                      <DropdownButton>
+                      <StyledDropdownButton>
                         <i className="fa fa-plus" /> Create <i className="fa fa-caret-down pad-left-sm" />
-                      </DropdownButton>
+                      </StyledDropdownButton>
                     }
                   >
                     <DropdownSection title="New">

@@ -23,8 +23,7 @@ import * as network from '../../../../network/network';
 import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { selectSettings } from '../../../redux/selectors';
-import { Button } from '../../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown-aria/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
@@ -445,9 +444,9 @@ export const GraphQLEditor: FC<Props> = ({
       <Toolbar>
         <Dropdown
           triggerButton={
-            <Button disabled={!state.operations.length} className="btn btn--compact">
+            <DropdownButton disabled={!state.operations.length} className="btn btn--compact">
               {state.body.operationName || 'Operations'}
-            </Button>
+            </DropdownButton>
           }
         >
           {state.operations.map(operationName => (
@@ -458,9 +457,9 @@ export const GraphQLEditor: FC<Props> = ({
         </Dropdown>
         <Dropdown
           triggerButton={
-            <Button className="btn btn--compact">
+            <DropdownButton className="btn btn--compact">
               <span>schema <i className="fa fa-wrench" /></span>
-            </Button>
+            </DropdownButton>
           }
         >
           <DropdownItem

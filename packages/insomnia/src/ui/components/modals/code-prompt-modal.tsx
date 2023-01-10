@@ -2,8 +2,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 
 import { NunjucksEnabledProvider } from '../../context/nunjucks/nunjucks-enabled-context';
 import { CopyButton } from '../base/copy-button';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -137,10 +136,10 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
         {!hideMode ? (
           <Dropdown
             triggerButton={
-              <Button className="btn btn--clicky margin-left-sm">
+              <DropdownButton className="btn btn--clicky margin-left-sm">
                 {MODES[mode]}
                 <i className="fa fa-caret-down space-left" />
-              </Button>
+              </DropdownButton>
             }
           >
             <DropdownSection title="Editor Syntax">

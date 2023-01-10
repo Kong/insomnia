@@ -7,7 +7,7 @@ import { GitRepository } from '../../../models/git-repository';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import { GitRepoLoaderData, PullFromGitRemoteResult, PushToGitRemoteResult } from '../../routes/git-actions';
 import { type DropdownHandle } from '../base/dropdown/dropdown';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { showAlert } from '../modals';
@@ -125,13 +125,13 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
           className="wide tall"
           ref={dropdownRef}
           triggerButton={
-            <Button size="small" className="btn--clicky-small btn-sync">
+            <DropdownButton size="small" className="btn--clicky-small btn-sync">
               {iconClassName && (
                 <i className={classnames('space-right', iconClassName)} />
               )}
               <div className="ellipsis">{currentBranch}</div>
               <i className={`fa fa-code-fork space-left ${isLoading ? 'fa-fade' : ''}`} />
-            </Button>
+            </DropdownButton>
           }
         >
           <DropdownSection

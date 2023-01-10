@@ -2,12 +2,11 @@ import React, { Fragment, FunctionComponent } from 'react';
 import styled from 'styled-components';
 
 import type { GrpcMethodInfo } from '../../../../main/ipc/grpc';
-import { Button } from '../../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown-aria/dropdown';
 import { GrpcMethodTag } from '../../tags/grpc-method-tag';
 import { Tooltip } from '../../tooltip';
 
-const DropdownButton = styled(Button).attrs({
+const StyledDropdownButton = styled(DropdownButton).attrs({
   variant: 'text',
   size: 'medium',
   radius: '0',
@@ -82,12 +81,12 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
     <Dropdown
       className="tall wide"
       control={
-        <DropdownButton>
+        <StyledDropdownButton>
           <Tooltip message={selectedPath || 'Select Method'} position="bottom" delay={500}>
             {!selectedPath ? 'Select Method' : getShortGrpcPath(selectedPath)}
             <i className="fa fa-caret-down pad-left-sm" />
           </Tooltip>
-        </DropdownButton>
+        </StyledDropdownButton>
       }
     >
       <DropdownItem>

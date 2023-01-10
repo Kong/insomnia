@@ -4,8 +4,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState }
 import { exportHarRequest } from '../../../common/har';
 import { Request } from '../../../models/request';
 import { CopyButton } from '../base/copy-button';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
 import { Link } from '../base/link';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -118,10 +117,10 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
         <div className="pad">
           <Dropdown
             triggerButton={
-              <Button className="btn btn--clicky">
+              <DropdownButton className="btn btn--clicky">
                 {target ? target.title : 'n/a'}
                 <i className="fa fa-caret-down" />
-              </Button>
+              </DropdownButton>
             }
           >
             {targets.map(target => (
@@ -141,10 +140,10 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           &nbsp;&nbsp;
           <Dropdown
             triggerButton={
-              <Button className="btn btn--clicky">
+              <DropdownButton className="btn btn--clicky">
                 {client ? client.title : 'n/a'}
                 <i className="fa fa-caret-down" />
-              </Button>
+              </DropdownButton>
             }
           >
             {clients.map(client => (

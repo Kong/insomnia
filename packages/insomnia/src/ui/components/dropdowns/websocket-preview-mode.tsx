@@ -1,8 +1,7 @@
 import React, { FC } from 'react';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '../../../common/constants';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
 
 interface Props {
   previewMode: string;
@@ -12,13 +11,13 @@ export const WebSocketPreviewModeDropdown: FC<Props> = ({ previewMode, onClick }
   return (
     <Dropdown
       triggerButton={
-        <Button className="tall" variant='text'>
+        <DropdownButton className="tall" variant='text'>
           {{
             [CONTENT_TYPE_JSON]: 'JSON',
             [CONTENT_TYPE_PLAINTEXT]: 'Raw',
           }[previewMode]}
           <i className="fa fa-caret-down space-left" />
-        </Button>
+        </DropdownButton>
       }
     >
       <DropdownItem>

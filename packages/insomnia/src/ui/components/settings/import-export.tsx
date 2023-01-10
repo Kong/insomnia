@@ -12,8 +12,7 @@ import { isRequestGroup } from '../../../models/request-group';
 import { importers } from '../../../utils/importers/importers';
 import { importClipBoard, importFile, importUri } from '../../import';
 import { selectActiveProject, selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName, selectProjects, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject, selectWorkspacesWithResolvedNameForActiveProject } from '../../redux/selectors';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { Link } from '../base/link';
 import { AlertModal } from '../modals/alert-modal';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
@@ -109,9 +108,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       <div className="pad-top">
         <Dropdown
           triggerButton={
-            <Button className="btn btn--clicky">
+            <DropdownButton className="btn btn--clicky">
               Export Data <i className="fa fa-caret-down" />
-            </Button>
+            </DropdownButton>
           }
         >
           <DropdownSection title="Choose Export Type">
@@ -132,9 +131,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         &nbsp;&nbsp;
         <Dropdown
           triggerButton={
-            <Button className="btn btn--clicky">
+            <DropdownButton className="btn btn--clicky">
               Import Data <i className="fa fa-caret-down" />
-            </Button>
+            </DropdownButton>
           }
         >
           <DropdownSection title="Choose Import Type">

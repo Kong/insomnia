@@ -3,8 +3,7 @@ import styled from 'styled-components';
 
 import * as session from '../../account/session';
 import { clickLink } from '../../common/electron-helpers';
-import { Button as DropdownButton } from './base/dropdown-aria/button';
-import { Dropdown, DropdownItem, ItemContent } from './base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown-aria/dropdown';
 import { Link as ExternalLink } from './base/link';
 import { PromptButton } from './base/prompt-button';
 import { showLoginModal } from './modals/login-modal';

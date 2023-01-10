@@ -2,8 +2,7 @@ import React, { FC } from 'react';
 import styled from 'styled-components';
 
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown as OriginalDropdown, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown as OriginalDropdown, DropdownButton, ItemContent } from '../base/dropdown-aria/dropdown';
 
 const SplitButton = styled.div({
   display: 'flex',
@@ -63,12 +62,12 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
         className="tall"
         data-testid="DisconnectDropdown__Dropdown"
         triggerButton={
-          <Button
+          <DropdownButton
             name="DisconnectDropdown__DropdownButton"
             style={{ paddingRight: 'var(--padding-xs)', paddingLeft: 'var(--padding-xs)' }}
           >
             <i className="fa fa-caret-down" />
-          </Button>
+          </DropdownButton>
         }
       >
         <DropdownItem>

@@ -5,8 +5,7 @@ import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import { selectActiveWorkspaceMeta, selectEnvironments, selectHotKeyRegistry } from '../../redux/selectors';
 import { DropdownHandle } from '../base/dropdown/dropdown';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showModal } from '../modals/index';
 import { WorkspaceEnvironmentsEditModal } from '../modals/workspace-environments-edit-modal';
@@ -44,7 +43,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
   return (
     <Dropdown
       triggerButton={
-        <Button className="btn btn--super-compact no-wrap">
+        <DropdownButton className="btn btn--super-compact no-wrap">
           <div className="sidebar__menu__thing">
             {!activeEnvironment && subEnvironments.length > 0 && (
               <Tooltip
@@ -69,7 +68,7 @@ export const EnvironmentsDropdown: FC<Props> = ({
             <i className="space-left fa fa-caret-down" />
           </div>
 
-        </Button>
+        </DropdownButton>
       }
     >
       <DropdownSection title="Activate Environment">

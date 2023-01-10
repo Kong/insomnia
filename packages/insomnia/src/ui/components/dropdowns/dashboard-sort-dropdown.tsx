@@ -2,8 +2,7 @@ import React, { FC } from 'react';
 import styled from 'styled-components';
 
 import { DASHBOARD_SORT_ORDERS, DashboardSortOrder, dashboardSortOrderName } from '../../../common/constants';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
 import { SvgIcon } from '../svg-icon';
 import { svgPlacementHack } from './dropdown-placement-hacks';
 
@@ -33,9 +32,9 @@ export const DashboardSortDropdown: FC<DashboardSortDropdownProps> = ({ onSelect
     <Dropdown
       className="margin-left"
       triggerButton={
-        <Button>
+        <DropdownButton>
           <i className="fa fa-sort" />
-        </Button>
+        </DropdownButton>
       }
     >
       {DASHBOARD_SORT_ORDERS.map(order => (

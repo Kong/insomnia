@@ -11,8 +11,7 @@ import {
 import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '../../../common/settings';
 import * as models from '../../../models/index';
 import { selectHotKeyRegistry, selectSettings } from '../../redux/selectors';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { Hotkey } from '../hotkey';
 import { showModal } from '../modals';
@@ -57,9 +56,9 @@ export const Shortcuts: FC = () => {
                 <td className="text-right options" style={{ verticalAlign: 'middle' }}>
                   <Dropdown
                     triggerButton={
-                      <Button className="btn btn--clicky-small">
+                      <DropdownButton className="btn btn--clicky-small">
                         <i className="fa fa-gear" />
-                      </Button>
+                      </DropdownButton>
                     }
                   >
                     <DropdownItem>

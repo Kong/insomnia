@@ -13,8 +13,7 @@ import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import { AskModal } from '../modals/ask-modal';
 import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
@@ -85,9 +84,9 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
       <Dropdown
         onOpen={refresh}
         triggerButton={
-          <Button variant='text'>
+          <DropdownButton variant='text'>
             <SvgIcon icon="ellipsis" />
-          </Button>
+          </DropdownButton>
         }
       >
         <DropdownItem>

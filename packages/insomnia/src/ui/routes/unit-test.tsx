@@ -14,9 +14,7 @@ import {
 import * as models from '../../models';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { invariant } from '../../utils/invariant';
-import { Dropdown } from '../components/base/dropdown/dropdown';
-import { DropdownButton } from '../components/base/dropdown/dropdown-button';
-import { DropdownItem } from '../components/base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown-aria/dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { showPrompt } from '../components/modals';
 import { SidebarLayout } from '../components/sidebar-layout';
@@ -117,39 +115,45 @@ const TestRoute: FC = () => {
                     {suite.name}
                   </button>
 
-                  <Dropdown right>
-                    <DropdownButton className="unit-tests__sidebar__action">
-                      <i className="fa fa-caret-down" />
-                    </DropdownButton>
+                  <Dropdown
+                    triggerButton={
+                      <DropdownButton className="unit-tests__sidebar__action">
+                        <i className="fa fa-caret-down" />
+                      </DropdownButton>
+                    }
+                  >
                     <DropdownItem
-                      stayOpenAfterClick
-                      onClick={() => {
-                        runAllTestsFetcher.submit(
-                          {},
-                          {
-                            method: 'post',
-                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suite._id}/run-all-tests`,
-                          }
-                        );
-                      }}
-                      disabled={runAllTestsFetcher.state === 'submitting'}
+                    // stayOpenAfterClick
                     >
-                      {runAllTestsFetcher.state === 'submitting'
-                        ? 'Running... '
-                        : 'Run Tests'}
+                      <ItemContent
+                        label={runAllTestsFetcher.state === 'submitting'
+                          ? 'Running... '
+                          : 'Run Tests'}
+                        onClick={() => {
+                          runAllTestsFetcher.submit(
+                            {},
+                            {
+                              method: 'post',
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suite._id}/run-all-tests`,
+                            }
+                          );
+                        }}
+                      // disabled={runAllTestsFetcher.state === 'submitting'}
+                      />
                     </DropdownItem>
-                    <DropdownItem
-                      onClick={() =>
-                        deleteUnitTestSuiteFetcher.submit(
-                          {},
-                          {
-                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suite._id}/delete`,
-                            method: 'post',
-                          }
-                        )
-                      }
-                    >
-                      Delete Suite
+                    <DropdownItem>
+                      <ItemContent
+                        label="Delete Suite"
+                        onClick={() =>
+                          deleteUnitTestSuiteFetcher.submit(
+                            {},
+                            {
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suite._id}/delete`,
+                              method: 'post',
+                            }
+                          )
+                        }
+                      />
                     </DropdownItem>
                   </Dropdown>
                 </li>

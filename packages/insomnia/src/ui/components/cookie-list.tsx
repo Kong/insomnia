@@ -1,30 +1,14 @@
 import React, { FC, useCallback } from 'react';
-import styled from 'styled-components';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
 import { cookieToString } from '../../common/cookies';
 import { Cookie } from '../../models/cookie-jar';
-import { Dropdown, DropdownItem, ItemContent } from './base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown-aria/dropdown';
 import { PromptButton } from './base/prompt-button';
 import { showModal } from './modals';
 import { CookieModifyModal } from './modals/cookie-modify-modal';
 import { RenderedText } from './rendered-text';
-
-const DropdownTrigger = styled.div({
-  display: 'flex',
-  alignItems: 'center',
-  height: 'var(--line-height-xs)',
-  textAlign: 'center',
-  fontSize: 'var(--font-size-md)',
-  padding: '0 var(--padding-sm)',
-  margin: 0,
-  borderRadius: 'var(--radius-md)',
-  border: '1px solid var(--hl-lg)',
-  cursor: 'pointer',
-  background: 'var(--color-bg)',
-});
-
 export interface CookieListProps {
   handleCookieAdd: (cookie: Cookie) => void;
   handleCookieDelete: (cookie: Cookie) => void;
@@ -115,10 +99,10 @@ export const CookieList: FC<CookieListProps> = ({
             className="text-right"
           >
             <Dropdown
-              actionButton={
-                <DropdownTrigger>
+              triggerButton={
+                <DropdownButton className="btn btn--super-duper-compact btn--outlined txt-md">
                   Actions <i className="fa fa-caret-down" />
-                </DropdownTrigger>
+                </DropdownButton>
               }
             >
               <DropdownItem key="add-cookie">

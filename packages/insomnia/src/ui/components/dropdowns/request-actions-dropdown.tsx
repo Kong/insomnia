@@ -20,8 +20,7 @@ import * as pluginContexts from '../../../plugins/context/index';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown/dropdown';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { showError, showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -140,9 +139,9 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       onOpen={onOpen}
       dataTestId={`Dropdown-${toKebabCase(request.name)}`}
       triggerButton={
-        <Button variant='text' style={{ height: '100%', padding: 0 }}>
+        <DropdownButton variant='text' style={{ height: '100%', padding: 0 }}>
           <i className="fa fa-caret-down" />
-        </Button>
+        </DropdownButton>
       }
     >
       <DropdownItem>

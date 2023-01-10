@@ -1,9 +1,8 @@
 import React, { FunctionComponent } from 'react';
 import useToggle from 'react-use/lib/useToggle';
 import styled from 'styled-components';
-import { Button } from '../../base/dropdown-aria/button';
 
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown-aria/dropdown';
 import { IconEnum, SvgIcon } from '../../svg-icon';
 import { SidebarHeader } from './sidebar-header';
 import { SidebarHeaders } from './sidebar-headers';
@@ -111,9 +110,9 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
           <SidebarHeader headerTitle="INFO" sectionVisible={infoSec} toggleSection={setInfoSec}>
             <Dropdown
               triggerButton={
-                <Button>
+                <DropdownButton>
                   <DropdownEllipsis />
-                </Button>
+                </DropdownButton>
               }
             >
               <DropdownSection title="VISIBILITY">

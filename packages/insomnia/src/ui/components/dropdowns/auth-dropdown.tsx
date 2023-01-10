@@ -11,8 +11,7 @@ import { RequestAuthentication } from '../../../models/request';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
 import { selectActiveRequest } from '../../redux/selectors';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown-aria/dropdown';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 
@@ -183,10 +182,10 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
     <Dropdown
       disabled={disabled}
       triggerButton={
-        <Button variant='text'>
+        <DropdownButton className="tall" variant='text'>
           {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
           <i className="fa fa-caret-down space-left" />
-        </Button>
+        </DropdownButton>
       }
     >
       <DropdownSection title="Auth Types">

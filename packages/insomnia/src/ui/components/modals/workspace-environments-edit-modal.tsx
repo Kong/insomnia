@@ -6,8 +6,7 @@ import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import { selectActiveWorkspace, selectActiveWorkspaceMeta, selectEnvironments } from '../../redux/selectors';
-import { Button } from '../base/dropdown-aria/button';
-import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown-aria/dropdown';
 import { Editable } from '../base/editable';
 import { Link } from '../base/link';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
@@ -228,10 +227,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
             <h3 className="no-margin">Sub Environments</h3>
             <Dropdown
               triggerButton={
-                <Button>
+                <DropdownButton>
                   <i className="fa fa-plus-circle" />
                   <i className="fa fa-caret-down" />
-                </Button>
+                </DropdownButton>
               }
             >
               <DropdownItem>
@@ -312,7 +311,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 <Dropdown
                   className="space-right"
                   triggerButton={
-                    <Button className="btn btn--clicky">
+                    <DropdownButton className="btn btn--clicky">
                       {selectedEnvironmentColor && (
                         <i
                           className="fa fa-circle space-right"
@@ -322,7 +321,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                         />
                       )}
                       Color <i className="fa fa-caret-down" />
-                    </Button>
+                    </DropdownButton>
                   }
                 >
                   <DropdownItem>
