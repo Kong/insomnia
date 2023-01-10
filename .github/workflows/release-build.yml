@@ -54,6 +54,14 @@ jobs:
           CSC_LINK: ${{ matrix.csc_link_secret != '' && secrets[matrix.csc_link_secret] || '' }}
           CSC_KEY_PASSWORD: ${{ matrix.csc_key_password_secret != '' && secrets[matrix.csc_key_password_secret] || ''  }}
 
+      - name: post package debug
+        if: always()
+        shell: bash
+        run: |
+          ls -lah /Users/runner/work/***/***/packages/***/dist/mac-universal/Insomnia.app
+          ls -lah packages/insomnia/dist/*
+          spctl -a -t open --context context:primary-signature -v "/Users/runner/work/***/***/packages/***/dist/mac-universal/Insomnia.app"
+
       - name: Package app (Windows and Linux)
         if: matrix.os != 'macos-latest'
         shell: bash
