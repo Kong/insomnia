@@ -16,6 +16,10 @@ const Dropdown = styled(OriginalDropdown)({
     opacity: 0.9,
   },
 });
+const StyledDropdownButton = styled(DropdownButton)({
+  paddingRight: 'var(--padding-xs)',
+  paddingLeft: 'var(--padding-xs)',
+});
 const ActionButton = styled.button({
   paddingRight: 'var(--padding-md)',
   paddingLeft: 'var(--padding-md)',
@@ -61,12 +65,11 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
         className="tall"
         data-testid="DisconnectDropdown__Dropdown"
         triggerButton={
-          <DropdownButton
+          <StyledDropdownButton
             name="DisconnectDropdown__DropdownButton"
-            style={{ paddingRight: 'var(--padding-xs)', paddingLeft: 'var(--padding-xs)' }}
           >
             <i className="fa fa-caret-down" />
-          </DropdownButton>
+          </StyledDropdownButton>
         }
       >
         <DropdownItem>

@@ -317,6 +317,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           onOpen={() => refreshVCSAndRefetchRemote()}
           triggerButton={
             <DropdownButton
+              variant='outlined'
+              disableHoverBehavior={false}
+              removePaddings={false}
               className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
             >
               <i className="fa fa-code-fork " /> Setup Sync
@@ -390,13 +393,15 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         style={{ marginLeft: 'var(--padding-md)' }}
         className="wide tall"
         onOpen={() => refreshVCSAndRefetchRemote()}
+        isDisabled={initializing}
         triggerButton={
           currentBranch === null ?
             <Fragment>Sync</Fragment> :
             <DropdownButton
-              size="small"
+              variant='outlined'
+              disableHoverBehavior={false}
+              removePaddings={false}
               className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
-              disabled={initializing}
             >
               <div className="ellipsis">
                 <i className="fa fa-code-fork space-right" />{' '}
