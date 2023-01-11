@@ -73,7 +73,7 @@ export const SidebarCreateDropdown = () => {
 
       <DropdownItem>
         <ItemContent
-          icon="circle"
+          icon="folder"
           label="New Folder"
           hint={hotKeyRegistry.request_showCreateFolder}
           onClick={createGroup}
