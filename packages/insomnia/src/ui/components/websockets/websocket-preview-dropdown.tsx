@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 
 import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
 interface Props {
   download: () => void;

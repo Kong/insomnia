@@ -8,7 +8,7 @@ import { Response } from '../../../models/response';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
-import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
+import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { SizeTag } from '../tags/size-tag';

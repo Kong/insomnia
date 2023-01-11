@@ -6,7 +6,7 @@ import { strings } from '../../../common/strings';
 import {
   Project,
 } from '../../../models/project';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import ProjectSettingsModal from '../modals/project-settings-modal';
 

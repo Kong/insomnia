@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { createRequest, CreateRequestType } from '../../hooks/create-request';
 import { createRequestGroup } from '../../hooks/create-request-group';
 import { selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 
 export const SidebarCreateDropdown = () => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);

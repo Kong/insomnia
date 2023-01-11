@@ -6,7 +6,7 @@ import { docsGitSync } from '../../../common/documentation';
 import { GitRepository } from '../../../models/git-repository';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import { GitRepoLoaderData, PullFromGitRemoteResult, PushToGitRemoteResult } from '../../routes/git-actions';
-import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
+import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { showAlert } from '../modals';

@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react';
 import useToggle from 'react-use/lib/useToggle';
 import styled from 'styled-components';
 
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
 import { IconEnum, SvgIcon } from '../../svg-icon';
 import { SidebarHeader } from './sidebar-header';
 import { SidebarHeaders } from './sidebar-headers';

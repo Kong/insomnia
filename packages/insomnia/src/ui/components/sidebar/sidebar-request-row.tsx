@@ -15,7 +15,7 @@ import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { createRequest, updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
-import type { DropdownHandle } from '../base/dropdown/dropdown';
+import type { DropdownHandle } from '../base/dropdown';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
 import { RequestActionsDropdown } from '../dropdowns/request-actions-dropdown';

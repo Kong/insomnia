@@ -14,7 +14,7 @@ import {
 import * as models from '../../models';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { invariant } from '../../utils/invariant';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { showPrompt } from '../components/modals';
 import { SidebarLayout } from '../components/sidebar-layout';

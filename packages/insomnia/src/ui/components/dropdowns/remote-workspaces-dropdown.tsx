@@ -6,7 +6,7 @@ import { isLoggedIn } from '../../../account/session';
 import { strings } from '../../../common/strings';
 import { RemoteProject } from '../../../models/project';
 import { RemoteCollectionsLoaderData } from '../../routes/remote-collections';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { HelpTooltip } from '../help-tooltip';
 import { Tooltip } from '../tooltip';
 

@@ -6,7 +6,7 @@ import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import { selectActiveWorkspace, selectActiveWorkspaceMeta, selectEnvironments } from '../../redux/selectors';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { Editable } from '../base/editable';
 import { Link } from '../base/link';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';

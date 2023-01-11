@@ -17,7 +17,7 @@ import {
 import { isWebSocketRequest } from '../../../models/websocket-request';
 import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import { selectActiveRequest } from '../../redux/selectors';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { AlertModal } from '../modals/alert-modal';
 import { showModal } from '../modals/index';
 

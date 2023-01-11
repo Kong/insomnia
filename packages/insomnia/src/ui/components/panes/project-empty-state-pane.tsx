@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import styled from 'styled-components';
 
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { Button } from '../themed-button';
 
 const Wrapper = styled.div({

@@ -29,7 +29,7 @@ import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '../.
 import { isDefaultProject, isRemoteProject, Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../components/base/dropdown/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../components/base/dropdown';
 import { DashboardSortDropdown } from '../components/dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';

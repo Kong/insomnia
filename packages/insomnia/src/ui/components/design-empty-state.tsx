@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { documentationLinks } from '../../common/documentation';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
 import { faint } from '../css/css-in-js';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { showPrompt } from './modals';
 import { EmptyStatePane } from './panes/empty-state-pane';
 import { SvgIcon } from './svg-icon';

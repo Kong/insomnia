@@ -8,7 +8,7 @@ import * as models from '../../../models';
 import { isRequest } from '../../../models/request';
 import { isResponse } from '../../../models/response';
 import { selectActiveRequest, selectActiveResponse, selectResponsePreviewMode } from '../../redux/selectors';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
 interface Props {
   download: (pretty: boolean) => any;
