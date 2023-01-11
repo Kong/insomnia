@@ -7,9 +7,8 @@ import { Project } from '../models/project';
 import { isRequest } from '../models/request';
 import { isWorkspace, Workspace, WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
 import { SegmentEvent, trackSegmentEvent } from '../ui/analytics';
-import { AlertModal } from '../ui/components/modals/alert-modal';
 import { AskModal } from '../ui/components/modals/ask-modal';
-import { showError, showModal } from '../ui/components/modals/index';
+import { showModal } from '../ui/components/modals/index';
 import { showSelectModal } from '../ui/components/modals/select-modal';
 import { convert, ConvertResultType } from '../utils/importers/convert';
 import {
@@ -69,36 +68,7 @@ export async function importUri(uri: string, importConfig: ImportRawConfig) {
   }
 
   const result = await importRaw(rawText, importConfig);
-  const { summary, error } = result;
 
-  if (error) {
-    showError({
-      title: 'Failed to import',
-      error,
-      message: 'Import failed',
-    });
-    return result;
-  }
-
-  const statements = Object.keys(summary)
-    .map(type => {
-      const count = summary[type].length;
-      const name = models.getModelName(type, count);
-      return count === 0 ? null : `${count} ${name}`;
-    })
-    .filter(s => s !== null);
-  let message;
-
-  if (statements.length === 0) {
-    message = 'Nothing was found to import.';
-  } else {
-    message = `You imported ${statements.join(', ')}!`;
-  }
-
-  showModal(AlertModal, {
-    title: 'Import Succeeded',
-    message,
-  });
   return result;
 }
 

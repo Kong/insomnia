@@ -70,6 +70,23 @@ const router = createMemoryRouter(
       errorElement: <ErrorRoute />,
       children: [
         {
+          path: 'import',
+          children: [
+            {
+              path: 'file',
+              action: async (...args) => (await import('./routes/import')).importFileAction(...args),
+            },
+            {
+              path: 'uri',
+              action: async (...args) => (await import('./routes/import')).importUriAction(...args),
+            },
+            {
+              path: 'clipboard',
+              action: async (...args) => (await import('./routes/import')).importClipboardAction(...args),
+            },
+          ],
+        },
+        {
           path: 'organization',
           children: [
             {
