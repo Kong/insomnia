@@ -103,7 +103,6 @@ export interface CodeEditorProps {
   // NOTE: for caching scroll and marks
   uniquenessKey?: string;
   updateFilter?: (filter: string) => void;
-  dataTestId?: string;
 }
 
 const normalizeMimeType = (mode?: string) => {
@@ -167,7 +166,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   style,
   uniquenessKey,
   updateFilter,
-  dataTestId,
 }, ref) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -500,7 +498,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
 
   const showFilter = readOnly && (mode?.includes('json') || mode?.includes('xml'));
   const showPrettify = showPrettifyButton && mode?.includes('json') || mode?.includes('xml');
-  const _dataTestId = dataTestId ? dataTestId : 'CodeEditorTextArea';
   return (
     <div
       className={classnames(className, {
@@ -523,7 +520,6 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
           readOnly={readOnly}
           autoComplete="off"
           defaultValue=""
-          data-testid={_dataTestId}
         />
       </div>
       {

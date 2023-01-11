@@ -13,7 +13,6 @@ interface Props {
   className?: string;
   mode?: string;
   tall?: boolean;
-  dataTestId?: string;
 }
 
 interface MarkdownEditProps {
@@ -62,7 +61,6 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
   tall,
   defaultValue,
   onChange,
-  dataTestId,
 }, ref): ReactElement => {
   // default value is added here to capture the original class component's behavior, but this way cuts the flow of prop change event after the initial rendering
   const [markdown, setMarkdown] = useState(defaultValue);
@@ -72,7 +70,6 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
     setMarkdown(markdown);
   }, [onChange]);
 
-  const _dataTestId = dataTestId ? dataTestId : 'MarkdownEditCodeEditorTextArea';
   return (
     <Wrapper className={className}>
       <Tabs
@@ -94,7 +91,6 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
                 placeholder={placeholder}
                 defaultValue={markdown}
                 onChange={handleChange}
-                dataTestId={_dataTestId}
               />
             </div>
             <div className='txt-sm italic faint'>
