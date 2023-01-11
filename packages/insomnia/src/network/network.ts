@@ -4,33 +4,31 @@ import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import {
-  STATUS_CODE_PLUGIN_ERROR,
-} from '../common/constants';
 import { cookiesFromJar, jarFromCookies } from '../common/cookies';
 import { database as db } from '../common/database';
 import { getDataDirectory } from '../common/electron-helpers';
 import {
-  delay,
   getContentTypeHeader,
   getLocationHeader,
   getSetCookieHeaders,
 } from '../common/misc';
-import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
+import type { ExtraRenderInfo, RenderedRequest, RenderPurpose, RequestAndContext } from '../common/render';
 import {
   getRenderedRequestAndContext,
   RENDER_PURPOSE_NO_RENDER,
   RENDER_PURPOSE_SEND,
 } from '../common/render';
-import type { ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
+import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
-import { Cookie, CookieJar } from '../models/cookie-jar';
-import type { Environment } from '../models/environment';
-import type { Request } from '../models/request';
+import { CaCertificate } from '../models/ca-certificate';
+import { ClientCertificate } from '../models/client-certificate';
+import { Cookie } from '../models/cookie-jar';
+import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
 import * as pluginContexts from '../plugins/context/index';
 import * as plugins from '../plugins/index';
+import { invariant } from '../utils/invariant';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import {
   buildQueryStringFromParams,
@@ -38,160 +36,243 @@ import {
   smartEncodeUrl,
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthQueryParams } from './authentication';
+import { cancellableCurlRequest } from './cancellation';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
-// Time since user's last keypress to wait before making the request
-const MAX_DELAY_TIME = 1000;
+// used for oauth grant types
+// creates a new request with the patch args
+// and uses env and settings from workspace
+// not cancellable but currently is
+// used indirectly by send and getAuthHeader to fetch tokens
+// @TODO unpack oauth into regular timeline and remove oauth timeine dialog
+export async function sendWithSettings(
+  requestId: string,
+  requestPatch: Record<string, any>,
+) {
+  console.log(`[network] Sending with settings req=${requestId}`);
+  const { request,
+    environment,
+    settings,
+    clientCertificates,
+    caCert } = await fetchRequestData(requestId);
 
-const cancelRequestFunctionMap: Record<string, () => void> = {};
+  const newRequest: Request = await models.initModel(models.request.type, requestPatch, {
+    _id: request._id + '.other',
+    parentId: request._id,
+  });
 
-let lastUserInteraction = Date.now();
+  const renderResult = await tryToInterpolateRequest(newRequest, environment._id);
+  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
 
-export async function cancelRequestById(requestId: string) {
-  const hasCancelFunction = cancelRequestFunctionMap.hasOwnProperty(requestId) && typeof cancelRequestFunctionMap[requestId] === 'function';
-  if (hasCancelFunction) {
-    return cancelRequestFunctionMap[requestId]();
-  }
-  console.log(`[network] Failed to cancel req=${requestId} because cancel function not found`);
+  const response = await sendCurlAndWriteTimeline(
+    renderResult.request,
+    clientCertificates,
+    caCert,
+    { ...settings, validateSSL: settings.validateAuthSSL },
+  );
+  return responseTransform(response, renderedRequest, renderResult.context);
 }
 
-export async function _actuallySend(
+// used by test feature, inso, and plugin api
+// not all need to be cancellable or to use curl
+export async function send(
+  requestId: string,
+  environmentId?: string,
+  extraInfo?: ExtraRenderInfo,
+) {
+  console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
+
+  const { request,
+    environment,
+    settings,
+    clientCertificates,
+    caCert } = await fetchRequestData(requestId);
+
+  const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND, extraInfo);
+  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+  const response = await sendCurlAndWriteTimeline(
+    renderedRequest,
+    clientCertificates,
+    caCert,
+    settings,
+  );
+  return responseTransform(response, renderedRequest, renderResult.context);
+}
+
+const fetchRequestData = async (requestId: string) => {
+  const request = await models.request.getById(requestId);
+  invariant(request, 'failed to find request');
+  const ancestors = await db.withAncestors(request, [
+    models.request.type,
+    models.requestGroup.type,
+    models.workspace.type,
+  ]);
+  const workspaceDoc = ancestors.find(isWorkspace);
+  const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'failed to find workspace');
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+  // fallback to base environment
+  const environment = workspaceMeta.activeEnvironmentId ?
+    await models.environment.getById(workspaceMeta.activeEnvironmentId)
+    : await models.environment.getOrCreateForParentId(workspace._id);
+  invariant(environment, 'failed to find environment');
+
+  const settings = await models.settings.getOrCreate();
+  invariant(settings, 'failed to create settings');
+  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const caCert = await models.caCertificate.findByParentId(workspaceId);
+
+  return { request, environment, settings, clientCertificates, caCert };
+};
+
+export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
+  try {
+    return await getRenderedRequestAndContext({
+      request: request,
+      environmentId,
+      purpose,
+      extraInfo,
+    });
+  } catch (err) {
+    throw new Error(`Failed to render request: ${request._id}`);
+  }
+};
+export const tryToTransformRequestWithPlugins = async (renderResult: RequestAndContext) => {
+  const { request, context } = renderResult;
+  try {
+    return await _applyRequestPluginHooks(request, context);
+  } catch (err) {
+    throw new Error(`Failed to transform request with plugins: ${request._id}`);
+  }
+};
+export async function sendCurlAndWriteTimeline(
   renderedRequest: RenderedRequest,
-  workspaceId: string,
+  clientCertificates: ClientCertificate[],
+  caCert: CaCertificate | null,
   settings: Settings,
 ) {
-  return new Promise<ResponsePatch>(async resolve => {
-    const timeline: ResponseTimelineEntry[] = [];
+  const requestId = renderedRequest._id;
+  const timeline: ResponseTimelineEntry[] = [];
 
-    try {
-      // Setup the cancellation logic
-      cancelRequestFunctionMap[renderedRequest._id] = async () => {
-        const timelinePath = await storeTimeline(timeline);
-        // Tear Down the cancellation logic
-        if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
-          delete cancelRequestFunctionMap[renderedRequest._id];
-        }
-        // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
-        const nodejsCancelCurlRequest = process.type === 'renderer'
-          ? window.main.cancelCurlRequest
-          : (await import('../main/network/libcurl-promise')).cancelCurlRequest;
+  const { finalUrl, socketPath } = transformUrl(renderedRequest.url, renderedRequest.parameters, renderedRequest.authentication, renderedRequest.settingEncodeUrl);
 
-        nodejsCancelCurlRequest(renderedRequest._id);
-        return resolve({
-          elapsedTime: 0,
-          bytesRead: 0,
-          url: renderedRequest.url,
-          statusMessage: 'Cancelled',
-          error: 'Request was cancelled',
-          timelinePath,
-        });
-      };
-      const authQueryParam = await getAuthQueryParams(renderedRequest);
-      // Set the URL, including the query parameters
-      const qs = buildQueryStringFromParams(
-        authQueryParam
-          ? renderedRequest.parameters.concat([authQueryParam])
-          : renderedRequest.parameters
-      );
-      const url = joinUrlAndQueryString(renderedRequest.url, qs);
-      const isUnixSocket = url.match(/https?:\/\/unix:\//);
-      let finalUrl, socketPath;
-      if (!isUnixSocket) {
-        finalUrl = smartEncodeUrl(url, renderedRequest.settingEncodeUrl);
-      } else {
-        // URL prep will convert "unix:/path" hostname to "unix/path"
-        const match = smartEncodeUrl(url, renderedRequest.settingEncodeUrl).match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
-        const protocol = (match && match[1]) || '';
-        socketPath = (match && match[2]) || '';
-        const socketUrl = (match && match[3]) || '';
-        finalUrl = `${protocol}//${socketUrl}`;
-      }
-      timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
-      timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
-      timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() });
+  timeline.push({ value: `Preparing request to ${finalUrl}`, name: 'Text', timestamp: Date.now() });
+  timeline.push({ value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() });
+  timeline.push({ value: `${renderedRequest.settingEncodeUrl ? 'Enable' : 'Disable'} automatic URL encoding`, name: 'Text', timestamp: Date.now() });
 
-      if (!renderedRequest.settingSendCookies) {
-        timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
-      }
-      const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
-      const certificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url));
-      const caCert = await models.caCertificate.findByParentId(workspaceId);
-      const caCertficatePath = caCert?.disabled === false ? caCert.path : null;
-      const authHeader = await getAuthHeader(renderedRequest, finalUrl);
+  if (!renderedRequest.settingSendCookies) {
+    timeline.push({ value: 'Disable cookie sending due to user setting', name: 'Text', timestamp: Date.now() });
+  }
 
-      // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
-      const nodejsCurlRequest = process.type === 'renderer'
-        ? window.main.curlRequest
-        : (await import('../main/network/libcurl-promise')).curlRequest;
+  const authHeader = await getAuthHeader(renderedRequest, finalUrl);
+  const requestOptions = {
+    requestId,
+    req: renderedRequest,
+    finalUrl,
+    socketPath,
+    settings,
+    certificates: clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), renderedRequest.url)),
+    caCertficatePath: caCert?.disabled === false ? caCert.path : null,
+    authHeader,
+  };
 
-      const requestOptions = {
-        requestId: renderedRequest._id,
-        req: renderedRequest,
-        finalUrl,
-        socketPath,
-        settings,
-        certificates,
-        caCertficatePath,
-        authHeader,
-      };
-      const { patch, debugTimeline, headerResults, responseBodyPath } = await nodejsCurlRequest(requestOptions);
-      const { cookieJar, settingStoreCookies } = renderedRequest;
+  // NOTE: conditionally use ipc bridge, renderer cannot import native modules directly
+  const nodejsCurlRequest = process.type === 'renderer'
+    ? cancellableCurlRequest
+    : (await import('../main/network/libcurl-promise')).curlRequest;
+  const output = await nodejsCurlRequest(requestOptions);
 
-      // add set-cookie headers to file(cookiejar) and database
-      if (settingStoreCookies) {
-        // supports many set-cookies over many redirects
-        const redirects: string[][] = headerResults.map(({ headers }: any) => getSetCookiesFromResponseHeaders(headers));
-        const setCookieStrings: string[] = redirects.flat();
-        const totalSetCookies = setCookieStrings.length;
-        if (totalSetCookies) {
-          const currentUrl = getCurrentUrl({ headerResults, finalUrl });
-          const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar });
-          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
-          const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
-          if (hasCookiesToPersist) {
-            const patch: Partial<CookieJar> = { cookies };
-            await models.cookieJar.update(cookieJar, patch);
-            timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
-          }
-        }
-      }
+  if ('error' in output) {
+    const timelinePath = await storeTimeline(timeline);
 
-      const lastRedirect = headerResults[headerResults.length - 1];
-      const responsePatch: ResponsePatch = {
-        contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
-        headers: lastRedirect.headers,
-        httpVersion: lastRedirect.version,
-        statusCode: lastRedirect.code,
-        statusMessage: lastRedirect.reason,
-        ...patch,
-      };
-      const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
-      // Tear Down the cancellation logic
-      if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
-        delete cancelRequestFunctionMap[renderedRequest._id];
-      }
-      return resolve({
-        timelinePath,
-        bodyPath: responseBodyPath,
-        ...responsePatch,
-      });
-    } catch (err) {
-      console.log('[network] Error', err);
-      const timelinePath = await storeTimeline(timeline);
-      // Tear Down the cancellation logic
-      if (cancelRequestFunctionMap.hasOwnProperty(renderedRequest._id)) {
-        delete cancelRequestFunctionMap[renderedRequest._id];
-      }
-      return resolve({
-        url: renderedRequest.url,
-        error: err.message || 'Something went wrong',
-        elapsedTime: 0, // 0 because this path is hit during plugin calls
-        statusMessage: 'Error',
-        timelinePath,
-      });
-    }
-  });
+    return {
+      parentId: requestId,
+      url: requestOptions.finalUrl,
+      error: output.error,
+      elapsedTime: 0, // 0 because this path is hit during plugin calls
+      bytesRead: 0,
+      statusMessage: output.statusMessage,
+      timelinePath,
+    };
+  }
+  const { patch, debugTimeline, headerResults, responseBodyPath } = output;
+  const timelinePath = await storeTimeline([...timeline, ...debugTimeline]);
+  // transform output
+  const { cookies, rejectedCookies, totalSetCookies } = await extractCookies(headerResults, renderedRequest.cookieJar, finalUrl, renderedRequest.settingStoreCookies);
+  rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
+  if (cookies) {
+    await models.cookieJar.update(renderedRequest.cookieJar, { cookies });
+    timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
+  }
+  const lastRedirect = headerResults[headerResults.length - 1];
+
+  return {
+    parentId: renderedRequest._id,
+    timelinePath,
+    bodyPath: responseBodyPath,
+    contentType: getContentTypeHeader(lastRedirect.headers)?.value || '',
+    headers: lastRedirect.headers,
+    httpVersion: lastRedirect.version,
+    statusCode: lastRedirect.code,
+    statusMessage: lastRedirect.reason,
+    ...patch,
+  };
 }
+export const responseTransform = (patch: ResponsePatch, renderedRequest: RenderedRequest, context: Record<string, any>) => {
+  const response = {
+    ...patch,
+    environmentId: patch.environmentId,
+    bodyCompression: null,
+    settingSendCookies: renderedRequest.settingSendCookies,
+    settingStoreCookies: renderedRequest.settingStoreCookies,
+  };
+
+  if (response.error) {
+    console.log(`[network] Response failed req=${patch.parentId} err=${response.error || 'n/a'}`);
+    return response;
+  }
+  console.log(`[network] Response succeeded req=${patch.parentId} status=${response.statusCode || '?'}`,);
+  return _applyResponsePluginHooks(
+    response,
+    renderedRequest,
+    context,
+  );
+};
+export const transformUrl = (url: string, params: RequestParameter[], authentication: RequestAuthentication, shouldEncode: boolean) => {
+  const authQueryParam = getAuthQueryParams(authentication);
+  const customUrl = joinUrlAndQueryString(url, buildQueryStringFromParams(authQueryParam ? params.concat([authQueryParam]) : params));
+  const isUnixSocket = customUrl.match(/https?:\/\/unix:\//);
+  if (!isUnixSocket) {
+    return { finalUrl: smartEncodeUrl(customUrl, shouldEncode) };
+  }
+  // URL prep will convert "unix:/path" hostname to "unix/path"
+  const match = smartEncodeUrl(customUrl, shouldEncode).match(/(https?:)\/\/unix:?(\/[^:]+):\/(.+)/);
+  const protocol = (match && match[1]) || '';
+  const socketPath = (match && match[2]) || '';
+  const socketUrl = (match && match[3]) || '';
+  return { finalUrl: `${protocol}//${socketUrl}`, socketPath };
+};
+
+const extractCookies = async (headerResults: HeaderResult[], cookieJar: any, finalUrl: string, settingStoreCookies: boolean) => {
+  // add set-cookie headers to file(cookiejar) and database
+  if (settingStoreCookies) {
+    // supports many set-cookies over many redirects
+    const redirects: string[][] = headerResults.map(({ headers }: any) => getSetCookiesFromResponseHeaders(headers));
+    const setCookieStrings: string[] = redirects.flat();
+    const totalSetCookies = setCookieStrings.length;
+    if (totalSetCookies) {
+      const currentUrl = getCurrentUrl({ headerResults, finalUrl });
+      const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar });
+      const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
+      if (hasCookiesToPersist) {
+        return { cookies, rejectedCookies, totalSetCookies };
+      }
+    }
+  }
+  return { cookies: [], rejectedCookies: [], totalSetCookies: 0 };
+};
 
 export const getSetCookiesFromResponseHeaders = (headers: any[]) => getSetCookieHeaders(headers).map(h => h.value);
 
@@ -226,169 +307,6 @@ export const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentU
   const cookies = (await cookiesFromJar(jar)) as Cookie[];
   return { cookies, rejectedCookies };
 };
-
-export async function sendWithSettings(
-  requestId: string,
-  requestPatch: Record<string, any>,
-) {
-  console.log(`[network] Sending with settings req=${requestId}`);
-  const request = await models.request.getById(requestId);
-
-  if (!request) {
-    throw new Error(`Failed to find request: ${requestId}`);
-  }
-  const settings = await models.settings.getOrCreate();
-  const ancestors = await db.withAncestors(request, [
-    models.request.type,
-    models.requestGroup.type,
-    models.workspace.type,
-  ]);
-  const workspaceDoc = ancestors.find(isWorkspace);
-  const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
-  const workspace = await models.workspace.getById(workspaceId);
-
-  if (!workspace) {
-    throw new Error(`Failed to find workspace for: ${requestId}`);
-  }
-
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-  const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
-  const newRequest: Request = await models.initModel(models.request.type, requestPatch, {
-    _id: request._id + '.other',
-    parentId: request._id,
-  });
-  let renderResult: {
-    request: RenderedRequest;
-    context: Record<string, any>;
-  };
-  try {
-    renderResult = await getRenderedRequestAndContext({ request: newRequest, environmentId });
-  } catch (err) {
-    throw new Error(`Failed to render request: ${requestId}`);
-  }
-
-  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
-  const responseEnvironmentId = environment ? environment._id : null;
-
-  const response = await _actuallySend(
-    renderResult.request,
-    workspace._id,
-    { ...settings, validateSSL: settings.validateAuthSSL },
-  );
-  response.parentId = renderResult.request._id;
-  response.environmentId = responseEnvironmentId;
-  response.bodyCompression = null;
-  response.settingSendCookies = renderResult.request.settingSendCookies;
-  response.settingStoreCookies = renderResult.request.settingStoreCookies;
-  if (response.error) {
-    return response;
-  }
-  return _applyResponsePluginHooks(
-    response,
-    renderResult.request,
-    renderResult.context,
-  );
-}
-
-export async function send(
-  requestId: string,
-  environmentId?: string,
-  extraInfo?: ExtraRenderInfo,
-) {
-  console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
-  // HACK: wait for all debounces to finish
-
-  /*
-   * TODO: Do this in a more robust way
-   * The following block adds a "long" delay to let potential debounces and
-   * database updates finish before making the request. This is done by tracking
-   * the time of the user's last keypress and making sure the request is sent a
-   * significant time after the last press.
-   */
-  const timeSinceLastInteraction = Date.now() - lastUserInteraction;
-  const delayMillis = Math.max(0, MAX_DELAY_TIME - timeSinceLastInteraction);
-  if (delayMillis > 0) {
-    await delay(delayMillis);
-  }
-
-  // Fetch some things
-
-  const request = await models.request.getById(requestId);
-  const settings = await models.settings.getOrCreate();
-  const ancestors = await db.withAncestors(request, [
-    models.request.type,
-    models.requestGroup.type,
-    models.workspace.type,
-  ]);
-
-  if (!request) {
-    throw new Error(`Failed to find request to send for ${requestId}`);
-  }
-  const renderResult = await getRenderedRequestAndContext(
-    {
-      request,
-      environmentId,
-      purpose: RENDER_PURPOSE_SEND,
-      extraInfo,
-    },
-  );
-
-  const renderedRequestBeforePlugins = renderResult.request;
-  const renderedContextBeforePlugins = renderResult.context;
-  const workspaceDoc = ancestors.find(isWorkspace);
-  const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
-
-  if (!workspace) {
-    throw new Error(`Failed to find workspace for request: ${requestId}`);
-  }
-
-  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
-  const responseEnvironmentId = environment ? environment._id : null;
-
-  let renderedRequest: RenderedRequest;
-
-  try {
-    renderedRequest = await _applyRequestPluginHooks(
-      renderedRequestBeforePlugins,
-      renderedContextBeforePlugins,
-    );
-  } catch (err) {
-    return {
-      environmentId: responseEnvironmentId,
-      error: err.message || 'Something went wrong',
-      parentId: renderedRequestBeforePlugins._id,
-      settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
-      settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies,
-      statusCode: STATUS_CODE_PLUGIN_ERROR,
-      statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
-      url: renderedRequestBeforePlugins.url,
-    } as ResponsePatch;
-  }
-  const response = await _actuallySend(
-    renderedRequest,
-    workspace._id,
-    settings,
-  );
-  response.parentId = renderResult.request._id;
-  response.environmentId = responseEnvironmentId;
-  response.bodyCompression = null;
-  response.settingSendCookies = renderedRequest.settingSendCookies;
-  response.settingStoreCookies = renderedRequest.settingStoreCookies;
-
-  console.log(
-    response.error
-      ? `[network] Response failed req=${requestId} err=${response.error || 'n/a'}`
-      : `[network] Response succeeded req=${requestId} status=${response.statusCode || '?'}`,
-  );
-  if (response.error) {
-    return response;
-  }
-  return _applyResponsePluginHooks(
-    response,
-    renderedRequest,
-    renderedContextBeforePlugins,
-  );
-}
 
 async function _applyRequestPluginHooks(
   renderedRequest: RenderedRequest,
@@ -473,18 +391,5 @@ export function storeTimeline(timeline: ResponseTimelineEntry[]): Promise<string
       }
       resolve(timelinePath);
     });
-  });
-}
-
-if (global.document) {
-  document.addEventListener('keydown', (event: KeyboardEvent) => {
-    if (event.ctrlKey || event.metaKey || event.altKey) {
-      return;
-    }
-
-    lastUserInteraction = Date.now();
-  });
-  document.addEventListener('paste', () => {
-    lastUserInteraction = Date.now();
   });
 }

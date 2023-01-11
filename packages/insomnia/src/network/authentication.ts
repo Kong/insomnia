@@ -11,7 +11,7 @@ import {
   AUTH_OAUTH_2,
 } from '../common/constants';
 import type { RenderedRequest } from '../common/render';
-import { RequestParameter } from '../models/request';
+import { RequestAuthentication, RequestParameter } from '../models/request';
 import { COOKIE, HEADER, QUERY_PARAMS } from './api-key/constants';
 import { getBasicAuthHeader } from './basic-auth/get-header';
 import { getBearerAuthHeader } from './bearer-auth/get-header';
@@ -160,9 +160,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
   return;
 }
 
-export async function getAuthQueryParams(renderedRequest: RenderedRequest) {
-  const { authentication } = renderedRequest;
-
+export function getAuthQueryParams(authentication: RequestAuthentication) {
   if (authentication.disabled) {
     return;
   }

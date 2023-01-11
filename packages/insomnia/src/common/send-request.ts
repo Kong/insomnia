@@ -2,9 +2,17 @@ import { BaseModel, types as modelTypes } from '../models';
 import * as models from '../models';
 import { getBodyBuffer } from '../models/response';
 import { Settings } from '../models/settings';
-import { send } from '../network/network';
+import { isWorkspace } from '../models/workspace';
+import {
+  responseTransform,
+  sendCurlAndWriteTimeline,
+  tryToInterpolateRequest,
+  tryToTransformRequestWithPlugins,
+} from '../network/network';
 import * as plugins from '../plugins';
+import { invariant } from '../utils/invariant';
 import { database } from './database';
+import { RENDER_PURPOSE_SEND } from './render';
 
 // The network layer uses settings from the settings model
 // We want to give consumers the ability to override certain settings
@@ -35,14 +43,48 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     upsert: docs,
     remove: [],
   });
+  const fetchInsoRequestData = async (requestId: string) => {
+    const request = await models.request.getById(requestId);
+    invariant(request, 'failed to find request');
+    const ancestors = await database.withAncestors(request, [
+      models.request.type,
+      models.requestGroup.type,
+      models.workspace.type,
+    ]);
+    const workspaceDoc = ancestors.find(isWorkspace);
+    const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
+    const workspace = await models.workspace.getById(workspaceId);
+    invariant(workspace, 'failed to find workspace');
 
+    const settings = await models.settings.getOrCreate();
+    invariant(settings, 'failed to create settings');
+    const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+    const caCert = await models.caCertificate.findByParentId(workspaceId);
+
+    return { request, settings, clientCertificates, caCert };
+  };
   // Return callback helper to send requests
   return async function sendRequest(requestId: string) {
     try {
       plugins.ignorePlugin('insomnia-plugin-kong-declarative-config');
       plugins.ignorePlugin('insomnia-plugin-kong-kubernetes-config');
       plugins.ignorePlugin('insomnia-plugin-kong-portal');
-      const res = await send(requestId, environmentId);
+      const {
+        request,
+        settings,
+        clientCertificates,
+        caCert,
+      } = await fetchInsoRequestData(requestId);
+      // NOTE: inso ignores active environment, using the one passed in
+      const renderResult = await tryToInterpolateRequest(request, environmentId, RENDER_PURPOSE_SEND);
+      const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+      const response = await sendCurlAndWriteTimeline(
+        renderedRequest,
+        clientCertificates,
+        caCert,
+        settings,
+      );
+      const res = await responseTransform(response, renderedRequest, renderResult.context);
       const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
       const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
       const bodyBuffer = await getBodyBuffer(res) as Buffer;

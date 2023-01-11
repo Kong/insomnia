@@ -28,7 +28,7 @@ window.app = electron.app;
 
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
 
-describe('actuallySend()', () => {
+describe('sendCurlAndWriteTimeline()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     await models.project.all();
@@ -101,9 +101,10 @@ describe('actuallySend()', () => {
       },
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const response = await networkUtils._actuallySend(
+    const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
-      '',
+      [],
+      null,
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -176,9 +177,10 @@ describe('actuallySend()', () => {
       url: 'http://localhost',
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const response = await networkUtils._actuallySend(
+    const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
-      '',
+      [],
+      null,
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -276,9 +278,10 @@ describe('actuallySend()', () => {
       settingSendCookies: false,
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const response = await networkUtils._actuallySend(
+    const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
-      '',
+      [],
+      null,
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -336,9 +339,10 @@ describe('actuallySend()', () => {
       },
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const response = await networkUtils._actuallySend(
+    const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
-      '',
+      [],
+      null,
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -416,9 +420,10 @@ describe('actuallySend()', () => {
       },
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const response = await networkUtils._actuallySend(
+    const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
-      '',
+      [],
+      null,
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -477,9 +482,10 @@ describe('actuallySend()', () => {
       method: 'GET',
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const response = await networkUtils._actuallySend(
+    const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
-      '',
+      [],
+      null,
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -517,9 +523,10 @@ describe('actuallySend()', () => {
       method: 'HEAD',
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const response = await networkUtils._actuallySend(
+    const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
-      '',
+      [],
+      null,
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -556,9 +563,10 @@ describe('actuallySend()', () => {
       method: 'GET',
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const response = await networkUtils._actuallySend(
+    const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
-      '',
+      [],
+      null,
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -596,9 +604,10 @@ describe('actuallySend()', () => {
       },
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const response = await networkUtils._actuallySend(
+    const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
-      '',
+      [],
+      null,
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -693,9 +702,10 @@ describe('actuallySend()', () => {
       },
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const response = await networkUtils._actuallySend(
+    const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
-      '',
+      [],
+      null,
       { ...settings, validateSSL: false },
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
@@ -745,7 +755,7 @@ describe('actuallySend()', () => {
       parentId: workspace._id,
     });
     const renderedRequest = await getRenderedRequest({ request });
-    const responseV1 = await networkUtils._actuallySend(renderedRequest, '', {
+    const responseV1 = await networkUtils.sendCurlAndWriteTimeline(renderedRequest, [], null, {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
     });
