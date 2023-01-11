@@ -133,6 +133,9 @@ const config = {
       },
     ],
   },
+  snap: {
+    base: 'core22',
+  },
 };
 
 const { env: { BUILD_TARGETS }, platform } = process;
