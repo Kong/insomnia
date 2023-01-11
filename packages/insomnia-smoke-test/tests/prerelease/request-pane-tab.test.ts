@@ -29,9 +29,8 @@ test('Add description to docs', async ({ page }) => {
   await page.locator('text=Docs').click();
   await page.locator('text=Add Description').click();
   await page.locator('[data-testid="CodeEditor"] pre[role="presentation"]:has-text("")').click();
-  // await page.locator('textarea[data-testid="MarkdownEditor-New-Request"]').fill('new request'); // this does not work
   await page.locator('textarea').nth(1).fill('new request'); // this works
-  // TODO - fix the locator so we don't rely on `.nth(1)`
+  // TODO - fix the locator so we don't rely on `.nth(1)` https://linear.app/insomnia/issue/INS-2255/revisit-codemirror-playwright-selectorfill
 });
 
 test('WS select body type dropdown', async ({ page }) => {
@@ -73,5 +72,5 @@ test('WS add description', async ({ page }) => {
   await page.locator('text=Add Description').click();
   await page.locator('[data-testid="CodeEditor"] pre[role="presentation"]:has-text("")').click();
   await page.locator('textarea').nth(1).fill('new wss');
-  // TODO - fix the locator so we don't rely on `.nth(1)`
+  // TODO - fix the locator so we don't rely on `.nth(1)` https://linear.app/insomnia/issue/INS-2255/revisit-codemirror-playwright-selectorfill
 });
