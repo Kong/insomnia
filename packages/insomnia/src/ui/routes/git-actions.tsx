@@ -434,15 +434,13 @@ export const updateGitRepoAction: ActionFunction = async ({
       oauth2format,
     };
   } else {
-    const password = formData.get('password');
-    invariant(typeof password === 'string', 'Password is required');
     const token = formData.get('token');
     invariant(typeof token === 'string', 'Token is required');
     const username = formData.get('username');
     invariant(typeof username === 'string', 'Username is required');
 
     repoSettingsPatch.credentials = {
-      password,
+      password: token,
       username,
     };
   }
