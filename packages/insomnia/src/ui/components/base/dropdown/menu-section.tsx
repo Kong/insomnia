@@ -13,7 +13,7 @@ interface StyledDividerProps {
 const StyledDividerContainer = styled.div<StyledDividerProps>({
   display: 'flex',
   alignItems: 'center',
-  margin: '3px 10px',
+  margin: '0 10px',
 });
 
 const StyledDividerSpan = styled.span<StyledDividerProps>({
@@ -22,10 +22,11 @@ const StyledDividerSpan = styled.span<StyledDividerProps>({
   color: 'var(--hl)',
   fontSize: 'var(--font-size-xs)',
   textTransform: 'uppercase',
+  margin: 'var(--padding-sm) 0',
 });
 
 const StyledDivider = styled.hr({
-  margin: 'var(--padding-md) 0',
+  margin: 'var(--padding-xs) 0',
 });
 
 const StyledList = styled.ul({
