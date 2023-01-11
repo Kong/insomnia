@@ -498,6 +498,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
 
   const showFilter = readOnly && (mode?.includes('json') || mode?.includes('xml'));
   const showPrettify = showPrettifyButton && mode?.includes('json') || mode?.includes('xml');
+
   return (
     <div
       className={classnames(className, {
