@@ -445,7 +445,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         try {
           const newValue = shouldLint ? lintOption : false;
           if (!deepEqual(codeMirror.current?.getOption('lint'), newValue)) {
-            codeMirror.current?.setOption('lint', newValue);
+            tryToSetOption('lint', newValue);
           }
         } catch (err) {
           console.log('Failed to set CodeMirror option', err.message);
@@ -464,11 +464,19 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
     return () => codeMirror.current?.on('blur', handleOnBlur);
   }, [onBlur]);
 
-  useEffect(() => codeMirror.current?.setOption('hintOptions', hintOptions), [hintOptions]);
-  useEffect(() => codeMirror.current?.setOption('info', infoOptions), [infoOptions]);
-  useEffect(() => codeMirror.current?.setOption('jump', jumpOptions), [jumpOptions]);
-  useEffect(() => codeMirror.current?.setOption('lint', lintOptions), [lintOptions]);
-  useEffect(() => codeMirror.current?.setOption('mode', !handleRender ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) }), [handleRender, mode]);
+  const tryToSetOption = (key: keyof EditorConfiguration, value: any) => {
+    try {
+      codeMirror.current?.setOption(key, value);
+    } catch (err) {
+      console.log('Failed to set CodeMirror option', err.message, { key, value });
+    }
+  };
+
+  useEffect(() => tryToSetOption('hintOptions', hintOptions), [hintOptions]);
+  useEffect(() => tryToSetOption('info', infoOptions), [infoOptions]);
+  useEffect(() => tryToSetOption('jump', jumpOptions), [jumpOptions]);
+  useEffect(() => tryToSetOption('lint', lintOptions), [lintOptions]);
+  useEffect(() => tryToSetOption('mode', !handleRender ? normalizeMimeType(mode) : { name: 'nunjucks', baseMode: normalizeMimeType(mode) }), [handleRender, mode]);
 
   useImperativeHandle(ref, () => ({
     setValue: value => codeMirror.current?.setValue(value),
