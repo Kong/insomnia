@@ -1,29 +1,29 @@
 import { test } from '../../playwright/test';
 
-// test('Select body dropdown', async ({ page }) => {
-//   await page.locator('div[role="tab"]:has-text("Body")').click();
-//   await page.locator('button:has-text("JSON")').click();
+test('Select body dropdown', async ({ page }) => {
+  await page.locator('div[role="tab"]:has-text("Body")').click();
+  await page.locator('button:has-text("JSON")').click();
 
-// });
+});
 
-// test('Select auth dropdown', async ({ page }) => {
-//   await page.locator('div[role="tab"]:has-text("Auth")').click();
-//   await page.locator('[aria-label="Request pane tabs"] >> text=Auth').click();
-//   await page.locator('button:has-text("OAuth 1.0")').click();
-// });
-// test('Open query parameters', async ({ page }) => {
-//   await page.locator('[data-testid="request-pane"] >> text=Query').click();
-//   await page.locator('text=Headers').click();
-// });
+test('Select auth dropdown', async ({ page }) => {
+  await page.locator('div[role="tab"]:has-text("Auth")').click();
+  await page.locator('[aria-label="Request pane tabs"] >> text=Auth').click();
+  await page.locator('button:has-text("OAuth 1.0")').click();
+});
+test('Open query parameters', async ({ page }) => {
+  await page.locator('[data-testid="request-pane"] >> text=Query').click();
+  await page.locator('text=Headers').click();
+});
 
-// test('Open headers', async ({ page }) => {
-//   await page.locator('text=Headers').click();
+test('Open headers', async ({ page }) => {
+  await page.locator('text=Headers').click();
 
-// });
+});
 
-// test('Open docs', async ({ page }) => {
-//   await page.locator('text=Docs').click();
-// });
+test('Open docs', async ({ page }) => {
+  await page.locator('text=Docs').click();
+});
 
 test('Add description to docs', async ({ page }) => {
   await page.locator('text=Docs').click();
