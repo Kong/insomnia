@@ -461,7 +461,11 @@ export const GraphQLEditor: FC<Props> = ({
         </Dropdown>
         <Dropdown
           triggerButton={
-            <DropdownButton className="btn btn--compact">
+            <DropdownButton
+              className="btn btn--compact"
+              disableHoverBehavior={false}
+              removeBorderRadius
+            >
               <span>schema <i className="fa fa-wrench" /></span>
             </DropdownButton>
           }
@@ -501,10 +505,10 @@ export const GraphQLEditor: FC<Props> = ({
               <ItemContent
                 icon={`toggle-${automaticFetch ? 'on' : 'off'}`}
                 label={
-                  <span>
-                    Automatic Fetch
+                  <>
+                    <span style={{ marginRight: '10px' }}>Automatic Fetch</span>
                     <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
-                  </span>
+                  </>
                 }
                 onClick={() => {
                   setAutoFetch(!automaticFetch);
@@ -519,13 +523,13 @@ export const GraphQLEditor: FC<Props> = ({
               <ItemContent
                 icon="file-code-o"
                 label={
-                  <span>
-                    Load schema from JSON
+                  <>
+                    <span style={{ marginRight: '10px' }}>Load schema from JSON</span>
                     <HelpTooltip>
                       Run <i>apollo-codegen introspect-schema schema.graphql --output schema.json</i> to
                       convert GraphQL DSL to JSON.
                     </HelpTooltip>
-                  </span>
+                  </>
                 }
                 onClick={() => {
                   setState(state => ({ ...state, hideSchemaFetchErrors: false }));

@@ -6,18 +6,6 @@ import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } 
 import { GrpcMethodTag } from '../../tags/grpc-method-tag';
 import { Tooltip } from '../../tooltip';
 
-const StyledDropdownButton = styled(DropdownButton).attrs({
-  variant: 'text',
-  size: 'medium',
-  radius: '0',
-  className: 'tall wide',
-})({
-  height: '100%',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-});
-
 const DropdownMethodButtonLabel = styled.div({
   display: 'flex',
   alignItems: 'center',
@@ -81,12 +69,12 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
     <Dropdown
       className="tall wide"
       control={
-        <StyledDropdownButton>
+        <DropdownButton size='medium' className='tall wide'>
           <Tooltip message={selectedPath || 'Select Method'} position="bottom" delay={500}>
             {!selectedPath ? 'Select Method' : getShortGrpcPath(selectedPath)}
             <i className="fa fa-caret-down pad-left-sm" />
           </Tooltip>
-        </StyledDropdownButton>
+        </DropdownButton>
       }
     >
       <DropdownItem>

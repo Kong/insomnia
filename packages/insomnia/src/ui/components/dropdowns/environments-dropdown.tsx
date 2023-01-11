@@ -43,7 +43,10 @@ export const EnvironmentsDropdown: FC<Props> = ({
     <Dropdown
       ref={dropdownRef}
       triggerButton={
-        <DropdownButton className="btn btn--super-compact no-wrap">
+        <DropdownButton
+          className="btn btn--super-compact no-wrap"
+          disableHoverBehavior={false}
+        >
           <div className="sidebar__menu__thing">
             {!activeEnvironment && subEnvironments.length > 0 && (
               <Tooltip

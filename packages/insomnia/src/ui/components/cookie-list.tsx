@@ -101,7 +101,11 @@ export const CookieList: FC<CookieListProps> = ({
           >
             <Dropdown
               triggerButton={
-                <DropdownButton title="Add cookie" className="btn btn--super-duper-compact btn--outlined txt-md">
+                <DropdownButton
+                  title="Add cookie"
+                  className="btn btn--super-duper-compact btn--outlined txt-md"
+                  disableHoverBehavior={false}
+                >
                   Actions <i className="fa fa-caret-down" />
                 </DropdownButton>
               }

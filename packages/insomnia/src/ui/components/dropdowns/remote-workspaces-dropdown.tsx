@@ -83,7 +83,11 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
     <Dropdown
       onOpen={() => load(`/organization/${organizationId}/project/${projectId}/remote-collections`)}
       triggerButton={
-        <StyledDropdownButton>
+        <StyledDropdownButton
+          variant='outlined'
+          removePaddings={false}
+          disableHoverBehavior={false}
+        >
           Pull <i className="fa fa-caret-down pad-left-sm" />
         </StyledDropdownButton>
       }

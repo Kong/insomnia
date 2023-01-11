@@ -125,7 +125,7 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
           <SidebarHeader headerTitle="INFO" sectionVisible={infoSec} toggleSection={setInfoSec}>
             <Dropdown
               triggerButton={
-                <DropdownButton variant='text' style={{ padding: 'unset', height: 'unset' }}>
+                <DropdownButton>
                   <DropdownEllipsis />
                 </DropdownButton>
               }

@@ -317,7 +317,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           onOpen={() => refreshVCSAndRefetchRemote()}
           triggerButton={
             <DropdownButton
-              size="small"
               className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
             >
               <i className="fa fa-code-fork " /> Setup Sync

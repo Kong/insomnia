@@ -35,10 +35,10 @@ export const Menu = <T extends object>(props: Props<T>) => {
   const { menuProps } = useMenu(props, state, ref);
 
   const { onAction, onClose } = props;
-
+  // .filter((item: Node<T>) => item.rendered)
   return (
     <List {...menuProps} ref={ref}>
-      {[...state.collection].filter((item: Node<T>) => item.rendered).map((item: Node<T>) => (
+      {[...state.collection].map((item: Node<T>) => (
         item.type === 'section' ?
           (
             <MenuSection
@@ -49,7 +49,7 @@ export const Menu = <T extends object>(props: Props<T>) => {
               onClose={onClose}
             />
           ) :
-          (
+          item.rendered ? (
             <MenuItem
               key={item.key}
               item={item}
@@ -57,7 +57,7 @@ export const Menu = <T extends object>(props: Props<T>) => {
               onAction={onAction}
               onClose={onClose}
             />
-          )
+          ) : null
       ))}
     </List>
   );

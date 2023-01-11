@@ -10,7 +10,7 @@ interface StyledDividerProps {
   withoutLabel?: boolean;
 }
 
-const StyledContainer = styled.div<StyledDividerProps>({
+const StyledDividerContainer = styled.div<StyledDividerProps>({
   display: 'flex',
   alignItems: 'center',
   margin: '3px 10px',
@@ -22,6 +22,10 @@ const StyledDividerSpan = styled.span<StyledDividerProps>({
   color: 'var(--hl)',
   fontSize: 'var(--font-size-xs)',
   textTransform: 'uppercase',
+});
+
+const StyledDivider = styled.hr({
+  margin: 'var(--padding-md) 0',
 });
 
 const StyledList = styled.ul({
@@ -53,10 +57,10 @@ export const MenuSection = <T extends object>({
   return (
     <>
       <li {...itemProps}>
-        <StyledContainer>
+        <StyledDividerContainer>
           {section.rendered && <StyledDividerSpan {...headingProps}>{section.rendered}</StyledDividerSpan>}
-          <hr {...separatorProps}/>
-        </StyledContainer>
+          <StyledDivider {...separatorProps}/>
+        </StyledDividerContainer>
         <StyledList {...groupProps}>
           {[...section.childNodes].map((node: any) => (
             <MenuItem

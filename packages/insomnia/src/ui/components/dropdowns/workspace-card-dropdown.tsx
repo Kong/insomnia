@@ -84,13 +84,16 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
       <Dropdown
         onOpen={refresh}
         triggerButton={
-          <DropdownButton variant='text'>
+          <DropdownButton>
             <SvgIcon icon="ellipsis" />
           </DropdownButton>
         }
       >
         <DropdownItem>
-          <ItemContent label="Duplicate" onClick={() => setIsDuplicateModalOpen(true)} />
+          <ItemContent
+            label="Duplicate"
+            onClick={() => setIsDuplicateModalOpen(true)}
+          />
         </DropdownItem>
         <DropdownItem>
           <ItemContent

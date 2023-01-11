@@ -57,28 +57,51 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
       ref={ref}
       dataTestId={`Dropdown-${toKebabCase(request.name)}`}
       triggerButton={
-        <DropdownButton variant='text' style={{ padding: 0, borderRadius: 'unset' }}>
+        <DropdownButton>
           <i className="fa fa-caret-down" />
         </DropdownButton>
       }
     >
       <DropdownItem>
-        <ItemContent icon="copy" label="Duplicate" hint={hotKeyRegistry.request_showDuplicate} onClick={duplicate} />
+        <ItemContent
+          icon="copy"
+          label="Duplicate"
+          hint={hotKeyRegistry.request_showDuplicate}
+          onClick={duplicate}
+        />
       </DropdownItem>
       <DropdownItem>
-        <ItemContent icon="thumb-tack" label={isPinned ? 'Unpin' : 'Pin'} hint={hotKeyRegistry.request_togglePin} onClick={togglePin} />
+        <ItemContent
+          icon="thumb-tack"
+          label={isPinned ? 'Unpin' : 'Pin'}
+          hint={hotKeyRegistry.request_togglePin}
+          onClick={togglePin}
+        />
       </DropdownItem>
       <DropdownItem>
-        <ItemContent icon="edit" label="Rename" onClick={handleRename} />
+        <ItemContent
+          icon="edit"
+          label="Rename"
+          onClick={handleRename}
+        />
       </DropdownItem>
       <DropdownItem>
         <PromptButton fullWidth onClick={deleteRequest}>
-          <ItemContent icon="trash-o" label="Delete" hint={hotKeyRegistry.request_showDelete} />
+          <ItemContent
+            icon="trash-o"
+            label="Delete"
+            hint={hotKeyRegistry.request_showDelete}
+          />
         </PromptButton>
       </DropdownItem>
       <DropdownSection>
         <DropdownItem> {/* dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`} */}
-          <ItemContent icon="wrench" label="Settings" hint={hotKeyRegistry.request_showSettings} onClick={handleShowSettings} />
+          <ItemContent
+            icon="wrench"
+            label="Settings"
+            hint={hotKeyRegistry.request_showSettings}
+            onClick={handleShowSettings}
+          />
         </DropdownItem>
       </DropdownSection>
     </Dropdown>

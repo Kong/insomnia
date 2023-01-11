@@ -37,7 +37,11 @@ export const AccountToolbar = () => {
         <Dropdown
           aria-label="Account"
           triggerButton={
-            <DropdownButton size='small' style={{ gap: 'var(--padding-xs)' }} variant='text'>
+            <DropdownButton
+              style={{ gap: 'var(--padding-xs)' }}
+              removePaddings={false}
+              disableHoverBehavior={false}
+            >
               <SvgIcon icon='user' />{session.getFirstName()} {session.getLastName()}<i className="fa fa-caret-down" />
             </DropdownButton>
           }

@@ -75,7 +75,11 @@ const ImportSpecButton: FC<Props> = ({ onImport }) => {
   return (
     <Dropdown
       triggerButton={
-        <StyledDropdownButton>
+        <StyledDropdownButton
+          variant='outlined'
+          removePaddings={false}
+          disableHoverBehavior={false}
+        >
           Import OpenAPI
           <i className="fa fa-caret-down pad-left-sm" />
         </StyledDropdownButton>

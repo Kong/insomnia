@@ -11,7 +11,7 @@ export const WebSocketPreviewModeDropdown: FC<Props> = ({ previewMode, onClick }
   return (
     <Dropdown
       triggerButton={
-        <DropdownButton className="tall" variant='text'>
+        <DropdownButton className="tall">
           {{
             [CONTENT_TYPE_JSON]: 'JSON',
             [CONTENT_TYPE_PLAINTEXT]: 'Raw',

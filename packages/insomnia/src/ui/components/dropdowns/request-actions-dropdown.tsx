@@ -138,7 +138,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       onOpen={onOpen}
       dataTestId={`Dropdown-${toKebabCase(request.name)}`}
       triggerButton={
-        <DropdownButton variant='text' style={{ height: '100%', padding: 0 }}>
+        <DropdownButton>
           <i className="fa fa-caret-down" />
         </DropdownButton>
       }

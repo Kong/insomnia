@@ -98,7 +98,7 @@ export const WorkspaceDropdown: FC = () => {
       className="wide workspace-dropdown"
       onOpen={handleDropdownOpen}
       triggerButton={
-        <DropdownButton className="row" variant="text" style={{ padding: 0, height: 15 }}>
+        <DropdownButton className="row">
           <div
             className="ellipsis"
             style={{

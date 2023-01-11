@@ -124,7 +124,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
           className="wide tall"
           ref={dropdownRef}
           triggerButton={
-            <DropdownButton size="small" className="btn--clicky-small btn-sync">
+            <DropdownButton className="btn--clicky-small btn-sync">
               {iconClassName && (
                 <i className={classnames('space-right', iconClassName)} />
               )}

@@ -88,7 +88,7 @@ export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
   return (
     <Dropdown
       triggerButton={
-        <DropdownButton variant='text'>
+        <DropdownButton>
           {hasMimeType ? getContentTypeName(body.mimeType) : 'Body'}
           {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
           <i className="fa fa-caret-down space-left" />

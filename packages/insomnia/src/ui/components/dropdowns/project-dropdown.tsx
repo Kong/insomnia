@@ -23,12 +23,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
       <Dropdown
         dataTestId={toKebabCase(`ProjectDropDown-${project.name}`)}
         triggerButton={
-          <DropdownButton
-            className="row"
-            title={project.name}
-            variant='text'
-            style={{ padding: 0 }}
-          >
+          <DropdownButton className="row" title={project.name}>
             <i className="fa fa-ellipsis space-left" />
           </DropdownButton>
         }
@@ -44,6 +39,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
         </DropdownItem>
         <DropdownItem>
           <PromptButton
+            fullWidth
             onClick={() =>
               deleteProjectFetcher.submit(
                 {},

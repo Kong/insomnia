@@ -51,10 +51,7 @@ const StyledDropdownButton = styled(DropdownButton).attrs({
 })({
   '&&': {
     marginLeft: 'var(--padding-md)',
-    display: 'flex',
-    alignItems: 'center',
     gap: 'var(--padding-sm)',
-    padding: '0 var(--padding-sm)',
   },
 });
 
@@ -696,7 +693,10 @@ const ProjectRoute: FC = () => {
                   )}
                   <Dropdown
                     triggerButton={
-                      <StyledDropdownButton>
+                      <StyledDropdownButton
+                        disableHoverBehavior={false}
+                        removePaddings={false}
+                      >
                         <i className="fa fa-plus" /> Create <i className="fa fa-caret-down pad-left-sm" />
                       </StyledDropdownButton>
                     }

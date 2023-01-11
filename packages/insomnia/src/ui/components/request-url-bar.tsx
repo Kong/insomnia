@@ -28,7 +28,6 @@ import { showAlert, showModal, showPrompt } from './modals/index';
 import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 
 const StyledDropdownButton = styled(DropdownButton)({
-  borderRadius: 'unset',
   borderLeft: '1px solid var(--hl-md)',
 
   '&:hover:not(:disabled)': {
@@ -405,7 +404,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               ref={dropdownRef}
               onClose={handleSendDropdownHide}
               triggerButton={
-                <StyledDropdownButton className="urlbar__send-context" variant='text'>
+                <StyledDropdownButton
+                  className="urlbar__send-context"
+                  removeBorderRadius={true}
+                >
                   <i className="fa fa-caret-down" />
                 </StyledDropdownButton>
               }
