@@ -292,7 +292,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
               />
             ) : (
               <RequestActionsDropdown
-                right
                 ref={requestActionsDropdown}
                 handleDuplicateRequest={handleDuplicateRequest}
                 handleShowSettings={handleShowRequestSettings}

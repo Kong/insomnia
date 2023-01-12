@@ -24,7 +24,7 @@ import { showError, showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 
-interface Props extends DropdownProps {
+interface Props extends Omit<DropdownProps, 'children'> {
   activeEnvironment?: Environment | null;
   activeProject: Project;
   handleDuplicateRequest: Function;

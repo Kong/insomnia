@@ -114,21 +114,41 @@ export const PreviewModeDropdown: FC<Props> = ({
       </DropdownSection>
       <DropdownSection title="Action">
         <DropdownItem>
-          <ItemContent icon="copy" label="Copy raw response" onClick={copyToClipboard} />
+          <ItemContent
+            icon="copy"
+            label="Copy raw response"
+            onClick={copyToClipboard}
+          />
         </DropdownItem>
         <DropdownItem>
-          <ItemContent icon="save" label="Export raw response" onClick={handleDownloadNormal} />
+          <ItemContent
+            icon="save"
+            label="Export raw response"
+            onClick={handleDownloadNormal}
+          />
         </DropdownItem>
         <DropdownItem>
           {shouldPrettifyOption &&
-            <ItemContent icon="save" label="Export prettified response" onClick={handleDownloadPrettify} />
+            <ItemContent
+              icon="save"
+              label="Export prettified response"
+              onClick={handleDownloadPrettify}
+            />
           }
         </DropdownItem>
         <DropdownItem>
-          <ItemContent icon="bug" label="Export HTTP debug" onClick={exportDebugFile} />
+          <ItemContent
+            icon="bug"
+            label="Export HTTP debug"
+            onClick={exportDebugFile}
+          />
         </DropdownItem>
         <DropdownItem>
-          <ItemContent icon="save" label="Export as HAR" onClick={exportAsHAR} />
+          <ItemContent
+            icon="save"
+            label="Export as HAR"
+            onClick={exportAsHAR}
+          />
         </DropdownItem>
       </DropdownSection>
     </Dropdown>
