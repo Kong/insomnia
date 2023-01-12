@@ -87,24 +87,23 @@ export const Shortcuts: FC = () => {
                             const display = constructKeyCombinationDisplay(keyComb, false);
                             return (
                               <DropdownItem key={display}>
-                                <PromptButton>
-                                  <ItemContent
-                                    icon="trash-o"
-                                    label={display}
-                                    onClick={() => {
-                                      let toBeRemovedIndex = -1;
-                                      keyCombosForThisPlatform.forEach((existingKeyComb, index) => {
-                                        if (areSameKeyCombinations(existingKeyComb, keyComb)) {
-                                          toBeRemovedIndex = index;
-                                        }
-                                      });
-                                      if (toBeRemovedIndex >= 0) {
-                                        keyCombosForThisPlatform.splice(toBeRemovedIndex, 1);
-                                        models.settings.update(settings, { hotKeyRegistry });
+                                <ItemContent
+                                  icon="trash-o"
+                                  label={display}
+                                  withPrompt
+                                  onClick={() => {
+                                    let toBeRemovedIndex = -1;
+                                    keyCombosForThisPlatform.forEach((existingKeyComb, index) => {
+                                      if (areSameKeyCombinations(existingKeyComb, keyComb)) {
+                                        toBeRemovedIndex = index;
                                       }
-                                    }}
-                                  />
-                                </PromptButton>
+                                    });
+                                    if (toBeRemovedIndex >= 0) {
+                                      keyCombosForThisPlatform.splice(toBeRemovedIndex, 1);
+                                      models.settings.update(settings, { hotKeyRegistry });
+                                    }
+                                  }}
+                                />
                               </DropdownItem>
                             );
                           })
@@ -114,16 +113,16 @@ export const Shortcuts: FC = () => {
 
                     <DropdownSection>
                       <DropdownItem>
-                        <PromptButton
+                        <ItemContent
+                          icon="empty"
+                          label="Reset keyboard shortcuts"
+                          withPrompt
                           onClick={() => {
                             hotKeyRegistry[keyboardShortcut] = newDefaultRegistry()[keyboardShortcut];
                             models.settings.update(settings, { hotKeyRegistry });
                           }}
-                        >
-                          <ItemContent icon="empty" label="Reset keyboard shortcuts" />
-                        </PromptButton>
+                        />
                       </DropdownItem>
-
                     </DropdownSection>
                   </Dropdown>
                 </td>

@@ -44,13 +44,33 @@ export const MenuItem = <T extends object>({
   onClose,
 }: Props<T>) => {
   const ref = useRef<HTMLLIElement>(null);
-  const { key, rendered } = item;
+
+  // @ts-expect-error -- TSCONVERSION
+  const { withPrompt, onClick } = item.rendered?.props;
+
+  /**
+   * We use this hack to allow for a prompt to be shown before the action is executed.
+   * This is useful for things like deleting a document, where we want to show a prompt
+   * before actually deleting the document.
+   */
+  const handleClick = () => {
+    if (!withPrompt && onClick) {
+      onClick();
+    } else {
+      onAction?.(item.key);
+    }
+  };
 
   const {
     menuItemProps,
     isFocused,
     isDisabled,
-  } = useMenuItem({ key, onAction, onClose }, state, ref);
+  } = useMenuItem({
+    key: item.key,
+    closeOnSelect: !withPrompt,
+    onAction: handleClick,
+    onClose,
+  }, state, ref);
 
   return (
     <StyledListItem
@@ -59,7 +79,7 @@ export const MenuItem = <T extends object>({
       isFocused={isFocused}
       isDisabled={isDisabled}
     >
-      {rendered}
+      {item.rendered}
     </StyledListItem>
   );
 };

@@ -19,7 +19,6 @@ import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { selectActiveEnvironment, selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
 import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
-import { PromptButton } from './base/prompt-button';
 import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
@@ -444,22 +443,23 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                     onClick={handleSendOnInterval}
                   />
                 </DropdownItem>
-                {downloadPath ? (<DropdownItem>
-                  <PromptButton fullWidth onClick={handleClearDownloadLocation}>
+                {downloadPath ? (
+                  <DropdownItem>
                     <ItemContent
                       icon="stop-circle"
                       label="Stop Auto-Download"
+                      withPrompt
+                      onClick={handleClearDownloadLocation}
                     />
-                  </PromptButton>
-                </DropdownItem>) : (
-                  <DropdownItem>
+                  </DropdownItem>) :
+                  (<DropdownItem>
                     <ItemContent
                       icon="download"
                       label="Download After Send"
                       onClick={downloadAfterSend}
                     />
                   </DropdownItem>
-                )}
+                  )}
                 <DropdownItem>
                   <ItemContent
                     icon="download"

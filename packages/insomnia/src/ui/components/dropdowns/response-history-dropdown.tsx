@@ -9,7 +9,6 @@ import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocke
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { PromptButton } from '../base/prompt-button';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -190,14 +189,20 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     >
       <DropdownSection title={<span><strong>{environmentName}</strong> Responses</span>}>
         <DropdownItem>
-          <PromptButton onClick={handleDeleteResponse}>
-            <ItemContent icon="fa-trash-o" label="Delete Current Response" />
-          </PromptButton>
+          <ItemContent
+            icon="fa-trash-o"
+            label="Delete Current Response"
+            withPrompt
+            onClick={handleDeleteResponse}
+          />
         </DropdownItem>
         <DropdownItem>
-          <PromptButton onClick={handleDeleteResponses}>
-            <ItemContent icon="fa-trash-o" label="Clear History" />
-          </PromptButton>
+          <ItemContent
+            icon="fa-trash-o"
+            label="Clear History"
+            withPrompt
+            onClick={handleDeleteResponses}
+          />
         </DropdownItem>
       </DropdownSection>
 

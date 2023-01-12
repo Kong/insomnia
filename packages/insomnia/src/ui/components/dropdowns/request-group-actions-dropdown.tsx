@@ -13,7 +13,6 @@ import { createRequest, CreateRequestType } from '../../hooks/create-request';
 import { createRequestGroup } from '../../hooks/create-request-group';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, type DropdownProps, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { PromptButton } from '../base/prompt-button';
 import { showError, showModal, showPrompt } from '../modals';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
 
@@ -212,9 +211,12 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         </DropdownItem>
 
         <DropdownItem>
-          <PromptButton onClick={handleDeleteFolder}>
-            <ItemContent icon="trash-o" label="Delete" />
-          </PromptButton>
+          <ItemContent
+            icon="trash-o"
+            label="Delete"
+            withPrompt
+            onClick={handleDeleteFolder}
+          />
         </DropdownItem>
       </DropdownSection>
       {actionPlugins.length > 0 &&

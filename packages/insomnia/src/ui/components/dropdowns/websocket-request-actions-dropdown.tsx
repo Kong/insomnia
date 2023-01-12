@@ -8,7 +8,6 @@ import { WebSocketRequest } from '../../../models/websocket-request';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, type DropdownProps, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { PromptButton } from '../base/prompt-button';
 import { showPrompt } from '../modals';
 
 interface Props extends Omit<DropdownProps, 'children' > {
@@ -86,17 +85,18 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
         />
       </DropdownItem>
       <DropdownItem>
-        <PromptButton fullWidth onClick={deleteRequest}>
-          <ItemContent
-            icon="trash-o"
-            label="Delete"
-            hint={hotKeyRegistry.request_showDelete}
-          />
-        </PromptButton>
+        <ItemContent
+          icon="trash-o"
+          label="Delete"
+          hint={hotKeyRegistry.request_showDelete}
+          withPrompt
+          onClick={deleteRequest}
+        />
       </DropdownItem>
       <DropdownSection>
-        <DropdownItem> {/* dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`} */}
+        <DropdownItem>
           <ItemContent
+            // dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`}
             icon="wrench"
             label="Settings"
             hint={hotKeyRegistry.request_showSettings}

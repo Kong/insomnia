@@ -22,7 +22,6 @@ import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveWorkspaceMeta, selectRemoteProjects, selectSyncItems } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
-import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
 import { showError, showModal } from '../modals';
 import { LoginModal } from '../modals/login-modal';
@@ -342,8 +341,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               </>
             }
           >
-            {remoteBackendProjects.length === 0 && (
-              <DropdownItem>
+            <DropdownItem>
+              {remoteBackendProjects.length === 0 && (
                 <ItemContent
                   icon="plus-circle"
                   label="Create Locally"
@@ -360,8 +359,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                     }));
                   }}
                 />
-              </DropdownItem>
-            )}
+              )}
+            </DropdownItem>
             {remoteBackendProjects.map(p => (
               <DropdownItem key={p.id}>
                 <ItemContent
@@ -464,11 +463,16 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             </>
           }
         >
-          {!session.isLoggedIn() && (
-            <DropdownItem>
-              <ItemContent icon="sign-in" label="Log In" onClick={() => showModal(LoginModal)} />
-            </DropdownItem>
-          )}
+
+          <DropdownItem>
+            {!session.isLoggedIn() && (
+              <ItemContent
+                icon="sign-in"
+                label="Log In"
+                onClick={() => showModal(LoginModal)}
+              />
+            )}
+          </DropdownItem>
 
           <DropdownItem>
             <ItemContent icon="code-fork" label="Branches" onClick={() => showModal(SyncBranchesModal, { onHide: refreshVCSAndRefetchRemote })} />
@@ -516,9 +520,12 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           </DropdownItem>
 
           <DropdownItem> {/* disabled={!canCreateSnapshot || historyCount === 0} */}
-            <PromptButton onClick={handleRevert}>
-              <ItemContent icon="undo" label="Revert Changes" />
-            </PromptButton>
+            <ItemContent
+              icon="undo"
+              label="Revert Changes"
+              withPrompt
+              onClick={handleRevert}
+            />
           </DropdownItem>
 
           <DropdownItem> {/* disabled={!canCreateSnapshot} */}

@@ -7,7 +7,6 @@ import {
   Project,
 } from '../../../models/project';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
-import { PromptButton } from '../base/prompt-button';
 import ProjectSettingsModal from '../modals/project-settings-modal';
 
 interface Props {
@@ -38,17 +37,17 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
           />
         </DropdownItem>
         <DropdownItem>
-          <PromptButton
-            fullWidth
+          <ItemContent
+            icon="trash-o"
+            label="Delete"
+            withPrompt
             onClick={() =>
               deleteProjectFetcher.submit(
                 {},
                 { method: 'post', action: `/organization/${organizationId}/project/${project._id}/delete` }
               )
             }
-          >
-            <ItemContent icon="trash-o" label="Delete" />
-          </PromptButton>
+          />
         </DropdownItem>
       </Dropdown>
       {isSettingsModalOpen && (
