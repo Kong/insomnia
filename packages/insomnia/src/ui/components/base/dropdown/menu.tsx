@@ -34,8 +34,6 @@ export const Menu = <T extends object>(props: Props<T>) => {
   const ref = useRef<HTMLUListElement | null>(null);
   const { menuProps } = useMenu(props, state, ref);
 
-  const { onAction, onClose } = props;
-  // .filter((item: Node<T>) => item.rendered)
   return (
     <List {...menuProps} ref={ref}>
       {[...state.collection].map((item: Node<T>) => (
@@ -45,8 +43,8 @@ export const Menu = <T extends object>(props: Props<T>) => {
               key={item.key}
               section={item}
               state={state}
-              onAction={onAction}
-              onClose={onClose}
+              onAction={props.onAction}
+              onClose={props.onClose}
             />
           ) :
           item.rendered ? (
@@ -54,8 +52,8 @@ export const Menu = <T extends object>(props: Props<T>) => {
               key={item.key}
               item={item}
               state={state}
-              onAction={onAction}
-              onClose={onClose}
+              onAction={props.onAction}
+              onClose={props.onClose}
             />
           ) : null
       ))}
