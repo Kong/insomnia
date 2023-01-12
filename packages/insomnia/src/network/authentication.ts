@@ -11,12 +11,12 @@ import {
   AUTH_OAUTH_2,
 } from '../common/constants';
 import type { RenderedRequest } from '../common/render';
-import { RequestAuthentication, RequestParameter } from '../models/request';
+import { AuthTypeOAuth2, RequestAuthentication, RequestParameter } from '../models/request';
 import { COOKIE, HEADER, QUERY_PARAMS } from './api-key/constants';
 import { getBasicAuthHeader } from './basic-auth/get-header';
 import { getBearerAuthHeader } from './bearer-auth/get-header';
 import getOAuth1Token from './o-auth-1/get-token';
-import getOAuth2Token from './o-auth-2/get-token';
+import { getOAuth2Token } from './o-auth-2/get-token';
 
 interface Header {
   name: string;
@@ -64,7 +64,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     // pretending we are fetching a token for the original request. This makes sure
     // the same tokens are used for schema fetching. See issue #835 on GitHub.
     const tokenId = requestId.match(/\.graphql$/) ? requestId.replace(/\.graphql$/, '') : requestId;
-    const oAuth2Token = await getOAuth2Token(tokenId, authentication);
+    const oAuth2Token = await getOAuth2Token(tokenId, authentication as AuthTypeOAuth2);
 
     if (oAuth2Token) {
       const token = oAuth2Token.accessToken;

@@ -1,5 +1,4 @@
 import electron from 'electron';
-import querystring from 'querystring';
 import { v4 as uuidv4 } from 'uuid';
 
 import * as models from '../../models/index';
@@ -20,45 +19,6 @@ export function initNewOAuthSession() {
   const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
   window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
   return authWindowSessionId;
-}
-
-export function responseToObject(body: string | null, keys: string[], defaults: Record<string, string | string[]> = {}) {
-  let data: querystring.ParsedUrlQuery | null = null;
-
-  try {
-    // TODO: remove non-null assertion
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    data = JSON.parse(body!);
-  } catch (err) {}
-
-  if (!data) {
-    try {
-      // NOTE: parse does not return a JS Object, so
-      //   we cannot use hasOwnProperty on it
-      // TODO: remove non-null assertion
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      data = querystring.parse(body!);
-    } catch (err) {}
-  }
-
-  // Shouldn't happen but we'll check anyway
-  if (!data) {
-    data = {};
-  }
-
-  const results: Record<string, string | string[] | null | undefined> = {};
-
-  for (const key of keys) {
-    if (data[key] !== undefined) {
-      results[key] = data[key];
-    } else if (defaults?.hasOwnProperty(key)) {
-      results[key] = defaults[key];
-    } else {
-      results[key] = null;
-    }
-  }
-
-  return results;
 }
 
 export function authorizeUserInWindow({

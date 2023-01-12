@@ -370,15 +370,6 @@ export const selectActiveCookieJar = createSelector(
   },
 );
 
-export const selectActiveOAuth2Token = createSelector(
-  selectEntitiesLists,
-  selectActiveWorkspaceMeta,
-  (entities, workspaceMeta) => {
-    const id = workspaceMeta?.activeRequestId || 'n/a';
-    return entities.oAuth2Tokens.find(t => t.parentId === id);
-  },
-);
-
 export const selectUnseenWorkspaces = createSelector(
   selectEntitiesLists,
   entities => {
@@ -431,7 +422,7 @@ export const selectActiveRequestResponses = createSelector(
   (activeRequest, entities, activeEnvironment, settings) => {
     const requestId = activeRequest ? activeRequest._id : 'n/a';
 
-    const responses: (Response | WebSocketResponse)[] = (activeRequest && isWebSocketRequest(activeRequest)) ?  entities.webSocketResponses : entities.responses;
+    const responses: (Response | WebSocketResponse)[] = (activeRequest && isWebSocketRequest(activeRequest)) ? entities.webSocketResponses : entities.responses;
 
     // Filter responses down if the setting is enabled
     return responses.filter(response => {
