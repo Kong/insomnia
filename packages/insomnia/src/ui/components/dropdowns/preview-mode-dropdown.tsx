@@ -119,11 +119,11 @@ export const PreviewModeDropdown: FC<Props> = ({
         <DropdownItem>
           <ItemContent icon="save" label="Export raw response" onClick={handleDownloadNormal} />
         </DropdownItem>
-        {shouldPrettifyOption &&
-          <DropdownItem>
+        <DropdownItem>
+          {shouldPrettifyOption &&
             <ItemContent icon="save" label="Export prettified response" onClick={handleDownloadPrettify} />
-          </DropdownItem>
-        }
+          }
+        </DropdownItem>
         <DropdownItem>
           <ItemContent icon="bug" label="Export HTTP debug" onClick={exportDebugFile} />
         </DropdownItem>

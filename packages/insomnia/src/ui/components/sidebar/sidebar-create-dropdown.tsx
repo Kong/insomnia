@@ -38,8 +38,9 @@ export const SidebarCreateDropdown = () => {
         </DropdownButton>
       }
     >
-      <DropdownItem> {/* dataTestId='CreateHttpRequest' */}
+      <DropdownItem>
         <ItemContent
+          // dataTestId='CreateHttpRequest'
           icon="plus-circle"
           label="HTTP Request"
           hint={hotKeyRegistry.request_createHTTP}
