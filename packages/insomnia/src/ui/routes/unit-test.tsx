@@ -144,6 +144,7 @@ const TestRoute: FC = () => {
                     <DropdownItem>
                       <ItemContent
                         label="Delete Suite"
+                        withPrompt
                         onClick={() =>
                           deleteUnitTestSuiteFetcher.submit(
                             {},
