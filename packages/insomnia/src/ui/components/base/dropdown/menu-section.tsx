@@ -63,8 +63,8 @@ export const MenuSection = <T extends object>({
           <StyledDivider {...separatorProps}/>
         </StyledDividerContainer>
         <StyledList {...groupProps}>
-          {[...section.childNodes].map((node: any) => (
-            <MenuItem
+          {[...section.childNodes].map((node: Node<T>) => (
+            node.rendered && <MenuItem
               key={node.key}
               item={node}
               state={state}
