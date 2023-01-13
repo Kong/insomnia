@@ -27,15 +27,11 @@ import { showAlert, showModal, showPrompt } from './modals/index';
 import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 
 const StyledDropdownButton = styled(DropdownButton)({
-  borderLeft: '1px solid var(--hl-md)',
-
   '&:hover:not(:disabled)': {
-    filter: 'brightness(0.8)',
     backgroundColor: 'var(--color-surprise)',
   },
 
   '&:focus:not(:disabled)': {
-    filter: 'brightness(0.8)',
     backgroundColor: 'var(--color-surprise)',
   },
 });
