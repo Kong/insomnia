@@ -111,7 +111,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
     curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
     // attempt to read CA Certificate PEM from disk, fallback to root certificates
-    const caCert = caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString() || tls.rootCertificates.join('\n');
+    const caCert = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
     curl.setOpt(Curl.option.CAINFO_BLOB, caCert);
 
     certificates.forEach(validCert => {
