@@ -84,7 +84,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
         caCert,
         settings,
       );
-      const res = await responseTransform(response, renderedRequest, renderResult.context);
+      const res = await responseTransform(response, environmentId, renderedRequest, renderResult.context);
       const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
       const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
       const bodyBuffer = await getBodyBuffer(res) as Buffer;
