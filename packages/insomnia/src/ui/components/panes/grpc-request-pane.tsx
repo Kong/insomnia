@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import { documentationLinks } from '../../../common/documentation';
 import { generateId } from '../../../common/misc';
-import { getRenderedGrpcRequest, getRenderedGrpcRequestMessage, RENDER_PURPOSE_SEND } from '../../../common/render';
+import { getRenderContext, getRenderedGrpcRequest, getRenderedGrpcRequestMessage, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
@@ -170,8 +170,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 }}
                 handleChangeProtoFile={() => setIsProtoModalOpen(true)}
                 handleServerReflection={async () => {
-                  models.grpcRequest.update(activeRequest, { protoMethodName: '', protoFileId: '' });
-                  const methods = await window.main.grpc.loadMethodsFromReflection(activeRequest._id);
+                  const request = await models.grpcRequest.update(activeRequest, { protoMethodName: '', protoFileId: '' });
+                  const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+                  const rendered = await render({
+                    url: request.url,
+                    metadata: request.metadata,
+                  }, renderContext);
+                  const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
                   setGrpcState({ ...grpcState, methods, reloadMethods: false });
                 }}
               />
