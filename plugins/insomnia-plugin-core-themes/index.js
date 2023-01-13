@@ -1,5 +1,6 @@
 module.exports.themes = [
   require('./themes/default'),
+  require('./themes/legacy'),
   require('./themes/studio-light'),
   require('./themes/studio-dark'),
   require('./themes/material'),
