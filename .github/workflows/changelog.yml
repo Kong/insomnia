@@ -114,7 +114,7 @@ jobs:
           body-includes: Auto-generated changelog
 
       - name: Create or update comment
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v2
         with:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
           issue-number: ${{ steps.find-pull-request.outputs.number }}
