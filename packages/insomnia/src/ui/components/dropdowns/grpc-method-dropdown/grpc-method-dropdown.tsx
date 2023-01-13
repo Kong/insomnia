@@ -68,8 +68,13 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   return (
     <Dropdown
       className="tall wide"
-      control={
-        <DropdownButton size='medium' className='tall wide'>
+      triggerButton={
+        <DropdownButton
+          size='medium'
+          className='tall wide'
+          removeBorderRadius
+          disableHoverBehavior={false}
+        >
           <Tooltip message={selectedPath || 'Select Method'} position="bottom" delay={500}>
             {!selectedPath ? 'Select Method' : getShortGrpcPath(selectedPath)}
             <i className="fa fa-caret-down pad-left-sm" />
