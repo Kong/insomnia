@@ -1,7 +1,6 @@
 import React from 'react';
 import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
-import { database } from '../../common/database';
 import * as models from '../../models';
 import { GitRepository } from '../../models/git-repository';
 import { Project } from '../../models/project';
@@ -30,8 +29,7 @@ export const workspaceLoader: LoaderFunction = async ({
   // I don't know what to say man, this is just how it is
   await models.environment.getOrCreateForParentId(workspaceId);
   await models.cookieJar.getOrCreateForParentId(workspaceId);
-  await models.apiSpec.getByParentId(workspaceId);
-
+  await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   const activeProject = await models.project.getById(projectId);
   invariant(activeProject, 'Project not found');
