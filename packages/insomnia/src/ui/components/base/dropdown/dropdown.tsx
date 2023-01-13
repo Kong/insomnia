@@ -28,9 +28,9 @@ export interface DropdownProps extends AriaMenuProps<any>, MenuTriggerProps {
   placement?: Placement;
   className?: string;
   style?: CSSProperties;
-  onOpen?: () => void;
   dataTestId?: string;
   isDisabled?: boolean;
+  onOpen?: () => void;
 }
 
 export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: DropdownProps, ref: any) => {

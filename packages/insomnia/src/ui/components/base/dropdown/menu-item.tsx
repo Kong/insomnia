@@ -46,7 +46,9 @@ export const MenuItem = <T extends object>({
   const ref = useRef<HTMLLIElement>(null);
 
   // @ts-expect-error -- TSCONVERSION
-  const { withPrompt, onClick } = item.rendered?.props;
+  const withPrompt = item.rendered?.props?.withPrompt || false;
+  // @ts-expect-error -- TSCONVERSION
+  const onClick = item.rendered?.props?.onClick || null;
 
   /**
    * We use this hack to allow for a prompt to be shown before the action is executed.

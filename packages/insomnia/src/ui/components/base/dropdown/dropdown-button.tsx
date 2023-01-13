@@ -39,8 +39,8 @@ type DropdownButtonProps = {
   className?: string;
   isPressed?: boolean;
   style?: CSSProperties;
-  onClick?: () => void;
   isDisabled?: boolean;
+  onClick?: () => void;
 } & ButtonProps & AriaButtonProps & StyledThemedButtonProps;
 
 export const DropdownButton = forwardRef<{}, DropdownButtonProps>((props: DropdownButtonProps, ref: any) => {
