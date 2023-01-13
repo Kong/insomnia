@@ -16,6 +16,7 @@ This project contains the smoke testing suite for Insomnia App.
   - [Reproducing CI Failures](#reproducing-ci-failures)
     - [Getting traces from CI](#getting-traces-from-ci)
     - [Build and package methods](#build-and-package-methods)
+    - [Non recurring tests](#non-recurring-tests)
 
 ## Quick-start
 
@@ -119,3 +120,11 @@ npm run test:smoke:package
 ```
 
 Each of the above commands will automatically run the Express server, so you do not need to take any extra steps.
+
+### Non recurring tests
+
+Non recurring / non-CI tests, like pre-release ones, can be run using [Playwright VS Code extension](#playwright-vs-code-extension) or by running `test:dev` against the desired test file:
+
+```shell
+npm run test:dev --prefix packages/insomnia-smoke-test -- preferences-interactions
+```
