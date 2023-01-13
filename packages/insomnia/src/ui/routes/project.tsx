@@ -1,4 +1,4 @@
-import React, { FC, Fragment, useCallback, useState } from 'react';
+import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 import {
   LoaderFunction,
   redirect,
@@ -225,6 +225,23 @@ const OrganizationProjectsSidebar: FC<{
   activeProject: Project;
   organizationId: string;
 }> = ({ activeProject, projects, title, organizationId }) => {
+  const [collections, setCollections] = useState<Workspace[]>([]);
+  useEffect(() => {
+    const fn = async () => {
+      // get all workspaces at this organization in collection scope
+      const workspaces = await Promise.all(projects.map(p => models.workspace.findByParentId(p._id)));
+      const colections = workspaces.flat().filter(w => w.scope === 'collection');
+      const cool = await Promise.all(colections.map(async w => {
+        const base = await models.environment.getByParentId(w._id);
+        invariant(base, 'Expected base environment to exist');
+        const subenvs = await models.environment.findByParentId(base._id);
+        return ({ ...w, baseenvironment: { name: base.name, subenvs } });
+      }));
+
+      setCollections(cool);
+    };
+    fn();
+  }, [projects]);
   const createNewProjectFetcher = useFetcher();
   const navigate = useNavigate();
   return (
@@ -335,6 +352,50 @@ const OrganizationProjectsSidebar: FC<{
                   </div>
                 )}
               </div>
+              <ul>
+                {collections.map(collection => (<li key={collection.name}>
+                  <div className='sidebar__item sidebar__item--request'>
+                    <button
+                      className="wide"
+                      style={{
+                        paddingLeft: 'var(--padding-md)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--padding-sm)',
+                      }}
+                    ><i className="fa fa-arrow-right" />{collection.name}
+                    </button>
+                  </div>
+                  <div className='sidebar__item sidebar__item--request'>
+                    <button
+                      className="wide"
+                      style={{
+                        paddingLeft: 'var(--padding-lg)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--padding-sm)',
+                      }}
+                    ><i className="fa fa-laptop" />{collection.baseenvironment.name}
+                    </button>
+                  </div>
+                  <ul>
+                    {collection.baseenvironment.subenvs.map(env => (<li key={env.name}>
+                      <div className='sidebar__item sidebar__item--request'>
+                        <button
+                          className="wide"
+                          style={{
+                            paddingLeft: 'var(--padding-xl)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 'var(--padding-sm)',
+                          }}
+                        ><i className="fa fa-laptop" />{env.name}
+                        </button>
+                      </div>
+                    </li>))}
+                  </ul>
+                </li>))}
+              </ul>
             </li>
           );
         })}
