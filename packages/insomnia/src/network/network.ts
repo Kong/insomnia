@@ -54,7 +54,8 @@ export async function sendWithSettings(
     environment,
     settings,
     clientCertificates,
-    caCert } = await fetchRequestData(requestId);
+    caCert,
+    activeEnvironmentId } = await fetchRequestData(requestId);
 
   const newRequest: Request = await models.initModel(models.request.type, requestPatch, {
     _id: request._id + '.other',
@@ -70,7 +71,7 @@ export async function sendWithSettings(
     caCert,
     { ...settings, validateSSL: settings.validateAuthSSL },
   );
-  return responseTransform(response, renderedRequest, renderResult.context);
+  return responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
 }
 
 // used by test feature, inso, and plugin api
@@ -86,7 +87,8 @@ export async function send(
     environment,
     settings,
     clientCertificates,
-    caCert } = await fetchRequestData(requestId);
+    caCert,
+    activeEnvironmentId } = await fetchRequestData(requestId);
 
   const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND, extraInfo);
   const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
@@ -96,7 +98,7 @@ export async function send(
     caCert,
     settings,
   );
-  return responseTransform(response, renderedRequest, renderResult.context);
+  return responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
 }
 
 const fetchRequestData = async (requestId: string) => {
@@ -114,8 +116,9 @@ const fetchRequestData = async (requestId: string) => {
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
   // fallback to base environment
-  const environment = workspaceMeta.activeEnvironmentId ?
-    await models.environment.getById(workspaceMeta.activeEnvironmentId)
+  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const environment = activeEnvironmentId ?
+    await models.environment.getById(activeEnvironmentId)
     : await models.environment.getOrCreateForParentId(workspace._id);
   invariant(environment, 'failed to find environment');
 
@@ -124,7 +127,7 @@ const fetchRequestData = async (requestId: string) => {
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await models.caCertificate.findByParentId(workspaceId);
 
-  return { request, environment, settings, clientCertificates, caCert };
+  return { request, environment, settings, clientCertificates, caCert, activeEnvironmentId };
 };
 
 export const tryToInterpolateRequest = async (request: Request, environmentId: string, purpose?: RenderPurpose, extraInfo?: ExtraRenderInfo) => {
@@ -220,10 +223,11 @@ export async function sendCurlAndWriteTimeline(
     ...patch,
   };
 }
-export const responseTransform = (patch: ResponsePatch, renderedRequest: RenderedRequest, context: Record<string, any>) => {
+export const responseTransform = (patch: ResponsePatch, environmentId: string | null, renderedRequest: RenderedRequest, context: Record<string, any>) => {
   const response = {
     ...patch,
-    environmentId: patch.environmentId,
+    // important for filter by responses
+    environmentId,
     bodyCompression: null,
     settingSendCookies: renderedRequest.settingSendCookies,
     settingStoreCookies: renderedRequest.settingStoreCookies,
