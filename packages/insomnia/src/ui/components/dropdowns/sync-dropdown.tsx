@@ -512,15 +512,16 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         <DropdownSection title={currentBranch}>
           <DropdownItem>
             <ItemContent
+              // disabled={historyCount === 0}
               icon="clock-o"
               label="History"
               onClick={() => showModal(SyncHistoryModal)}
-            // disabled={historyCount === 0}
             />
           </DropdownItem>
 
-          <DropdownItem> {/* disabled={!canCreateSnapshot || historyCount === 0} */}
+          <DropdownItem>
             <ItemContent
+              // disabled={!canCreateSnapshot || historyCount === 0}
               icon="undo"
               label="Revert Changes"
               withPrompt
@@ -528,8 +529,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             />
           </DropdownItem>
 
-          <DropdownItem> {/* disabled={!canCreateSnapshot} */}
+          <DropdownItem>
             <ItemContent
+              // disabled={!canCreateSnapshot}
               icon="cube"
               label="Create Snapshot"
               onClick={() =>
@@ -541,8 +543,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             />
           </DropdownItem>
 
-          <DropdownItem> {/* disabled={behind === 0 || loadingPull}> */}
+          <DropdownItem>
             <ItemContent
+              // disabled={behind === 0 || loadingPull}
               icon={loadingPull ? 'spin fa-refresh' : 'cloud-download'}
               label={loadingPull ? 'Pulling Snapshots...' : `Pull ${behind || ''} Snapshot ${behind === 1 ? '' : 's'}`}
               onClick={handlePull}
@@ -550,10 +553,10 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           </DropdownItem>
           <DropdownItem>
             <ItemContent
+              // disabled={ahead === 0 || loadingPush}
               icon={loadingPush ? 'spin fa-refresh' : 'cloud-upload'}
               label={loadingPush ? 'Pushing Snapshots...' : `Push ${ahead || ''} Snapshot ${ahead === 1 ? '' : 's'}`}
               onClick={handlePush}
-            // disabled={ahead === 0 || loadingPush}
             />
           </DropdownItem>
         </DropdownSection>

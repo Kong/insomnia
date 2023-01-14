@@ -161,17 +161,17 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
               <i className="fa fa-wrench" /> Repository Settings
             </DropdownItem>
 
-            {currentBranch && (
-              <DropdownItem>
-                <ItemContent 
-                  icon="code-fork" 
-                  label="Branches" 
+            <DropdownItem>
+              {currentBranch && (
+                <ItemContent
+                  icon="code-fork"
+                  label="Branches"
                   onClick={() => {
                     setIsGitBranchesModalOpen(true);
                   }}
                 />
-              </DropdownItem>
-            )}
+              )}
+            </DropdownItem>
           </DropdownSection>
 
           {currentBranch &&
