@@ -470,10 +470,9 @@ export const GraphQLEditor: FC<Props> = ({
             </DropdownButton>
           }
         >
-          <DropdownItem
-          // disabled={!canShowSchema}
-          >
+          <DropdownItem>
             <ItemContent
+              // disabled={!canShowSchema}
               icon="file-code-o"
               label="Show Documentation"
               onClick={() => {

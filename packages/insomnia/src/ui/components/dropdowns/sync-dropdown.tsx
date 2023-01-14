@@ -361,17 +361,15 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                 />
               )}
             </DropdownItem>
-            <>
-              {remoteBackendProjects.map(p => (
-                <DropdownItem key={p.id}>
-                  <ItemContent
-                    icon="cloud-download"
-                    label={<>Pull <strong>{p.name}</strong></>}
-                    onClick={() => handleSetProject(p)}
-                  />
-                </DropdownItem>
-              ))}
-            </>
+            {remoteBackendProjects.map(p => (
+              <DropdownItem key={p.id}>
+                <ItemContent
+                  icon="cloud-download"
+                  label={<>Pull <strong>{p.name}</strong></>}
+                  onClick={() => handleSetProject(p)}
+                />
+              </DropdownItem>
+            ))}
           </DropdownSection>
         </Dropdown>
       </div>

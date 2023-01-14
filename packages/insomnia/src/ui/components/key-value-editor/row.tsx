@@ -165,24 +165,22 @@ export const Row: FC<Props> = ({
                 onClick={() => onChange({ ...pair, type: 'text', multiline: false })} 
               />
             </DropdownItem>
-            <>
+            <DropdownItem>
               {allowMultiline && (
-                <DropdownItem>
-                  <ItemContent
-                    label="Text (Multi-line)"
-                    onClick={() => onChange({ ...pair, type: 'text', multiline: true })}
-                  />
-                </DropdownItem>
+                <ItemContent
+                  label="Text (Multi-line)"
+                  onClick={() => onChange({ ...pair, type: 'text', multiline: true })}
+                />
               )}
+            </DropdownItem>
+            <DropdownItem>
               {allowFile && (
-                <DropdownItem>
-                  <ItemContent
-                    label="File"
-                    onClick={() => onChange({ ...pair, type: 'file' })}
-                  />
-                </DropdownItem>
+                <ItemContent
+                  label="File"
+                  onClick={() => onChange({ ...pair, type: 'file' })}
+                />
               )}
-            </>
+            </DropdownItem>
           </Dropdown>
         ) : null}
 

@@ -104,31 +104,32 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
           </>
         }
       >
-        <>
+        <DropdownItem>
           {remoteBackendProjects.length === 0 && (
-            <DropdownItem>Nothing to pull</DropdownItem>
+            <ItemContent label="Nothing to pull" />
           )}
-          {remoteBackendProjects.map(({ id, name }) => (
-            <DropdownItem key={id}>
-              <ItemContent
-                icon={state === 'submitting' ? 'refresh fa-spin' : 'cloud-download'}
-                label={<span>Pull <strong>{name}</strong></span>}
-                onClick={() =>
-                  submit(
-                    {
-                      remoteId,
-                      id,
-                    },
-                    {
-                      action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
-                      method: 'post',
-                    }
-                  )
-                }
-              />
-            </DropdownItem>
-          ))}
-        </>
+        </DropdownItem>
+        
+        {remoteBackendProjects.map(({ id, name }) => (
+          <DropdownItem key={id}>
+            <ItemContent
+              icon={state === 'submitting' ? 'refresh fa-spin' : 'cloud-download'}
+              label={<span>Pull <strong>{name}</strong></span>}
+              onClick={() =>
+                submit(
+                  {
+                    remoteId,
+                    id,
+                  },
+                  {
+                    action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
+                    method: 'post',
+                  }
+                )
+              }
+            />
+          </DropdownItem>
+        ))}
       </DropdownSection>
     </Dropdown>
   );

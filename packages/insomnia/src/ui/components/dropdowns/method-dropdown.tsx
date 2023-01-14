@@ -88,26 +88,37 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
         </StyledDropdownButton>
       }
     >
-      <>
-        {HTTP_METHODS.map(method => (
-          <DropdownItem key={method}>
-            <ItemContent className={`http-method-${method}`} label={method} onClick={() => onChange(method)} />
-          </DropdownItem>
-        ))}
 
-        {showGrpc && (
-          <DropdownSection>
-            <DropdownItem>
-              <ItemContent className="method-grpc" label={GRPC_LABEL} onClick={() => onChange(METHOD_GRPC)} />
-            </DropdownItem>
-          </DropdownSection>
-        )}
-      </>
+      {HTTP_METHODS.map(method => (
+        <DropdownItem key={method}>
+          <ItemContent
+            className={`http-method-${method}`}
+            label={method}
+            onClick={() => onChange(method)}
+          />
+        </DropdownItem>
+      ))}
+
+      {showGrpc && (
+        <DropdownSection>
+          <DropdownItem>
+            <ItemContent
+              className="method-grpc"
+              label={GRPC_LABEL}
+              onClick={() => onChange(METHOD_GRPC)}
+            />
+          </DropdownItem>
+        </DropdownSection>
+      )}
 
 
       <DropdownSection>
         <DropdownItem>
-          <ItemContent className="http-method-custom" label="Custom Method" onClick={handleSetCustomMethod} />
+          <ItemContent
+            className="http-method-custom"
+            label="Custom Method"
+            onClick={handleSetCustomMethod}
+          />
         </DropdownItem>
       </DropdownSection>
     </Dropdown>

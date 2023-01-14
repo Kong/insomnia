@@ -122,11 +122,9 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     const request = requestVersion ? decompressObject(requestVersion.compressedRequest) : null;
 
     return (
-      <DropdownItem
-        key={response._id}
-      // disabled={active}
-      >
+      <DropdownItem key={response._id}>
         <ItemContent
+          // disabled={active}
           icon={active ? 'thumb-track' : 'empty'}
           onClick={() => handleSetActiveResponse(requestId, response)}
           label={

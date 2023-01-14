@@ -236,10 +236,9 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
                     }}
                   />
                 </DropdownItem>
-                <DropdownItem
-                // disabled={log.length === 0}
-                >
+                <DropdownItem>
                   <ItemContent
+                    // disabled={log.length === 0}
                     icon="clock-o"
                     label={<span>History ({log.length})</span>}
                     onClick={() => setIsGitLogModalOpen(true)}
