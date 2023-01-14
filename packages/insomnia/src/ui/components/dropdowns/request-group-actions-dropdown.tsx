@@ -219,27 +219,29 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
           />
         </DropdownItem>
       </DropdownSection>
-      {actionPlugins.length > 0 &&
-        <DropdownSection title="Plugins">
-          {actionPlugins.map((requestGroupAction: RequestGroupAction) => (
-            <DropdownItem key={requestGroupAction.label}>
-              <ItemContent
-                icon={loadingActions[requestGroupAction.label] ? 'refresh fa-spin' : requestGroupAction.icon || 'fa-code'}
-                label={requestGroupAction.label}
-                onClick={() => handlePluginClick(requestGroupAction)}
-              />
-            </DropdownItem>
-          ))}
-        </DropdownSection>
-      }
+      <>
+        {actionPlugins.length > 0 &&
+          <DropdownSection title="Plugins">
+            {actionPlugins.map((requestGroupAction: RequestGroupAction) => (
+              <DropdownItem key={requestGroupAction.label}>
+                <ItemContent
+                  icon={loadingActions[requestGroupAction.label] ? 'refresh fa-spin' : requestGroupAction.icon || 'fa-code'}
+                  label={requestGroupAction.label}
+                  onClick={() => handlePluginClick(requestGroupAction)}
+                />
+              </DropdownItem>
+            ))}
+          </DropdownSection>
+        }
+      </>
 
       <DropdownSection>
         <DropdownItem>
           <ItemContent
+            // dataTestId={`DropdownItemSettings-${toKebabCase(requestGroup.name)}`}
             icon="wrench"
             label="Settings"
             onClick={() => handleShowSettings(requestGroup)}
-          // dataTestId={`DropdownItemSettings-${toKebabCase(requestGroup.name)}`}
           />
         </DropdownItem>
       </DropdownSection>

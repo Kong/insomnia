@@ -94,30 +94,32 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
           onClick={handleChangeProtoFile}
         />
       </DropdownItem>
-      {!methods.length && (
-        <DropdownSection>
-          <DropdownItem>No methods found</DropdownItem> {/* disabled */}
-        </DropdownSection>
-      )}
-      {Object.entries(groupedByPkg).map(([name, pkg]) => (
-        <Fragment key={name}>
-          <DropdownSection title={name !== NO_PACKAGE_KEY && <NormalCase>pkg: {name}</NormalCase>}>
-            {pkg.map(({ type, fullPath }) => (
-              <DropdownItem
-                key={fullPath}
-              // disabled={disabled}
-              // selected={fullPath === selectedPath}
-              >
-                <ItemContent onClick={() => handleChange(fullPath)}>
-                  <Tooltip message={fullPath} position="right" delay={500}>
-                    <DropdownMethodButtonLabel><GrpcMethodTag methodType={type} /> {getShortGrpcPath(fullPath)}</DropdownMethodButtonLabel>
-                  </Tooltip>
-                </ItemContent>
-              </DropdownItem>
-            ))}
+      <>
+        {!methods.length && (
+          <DropdownSection>
+            <DropdownItem>No methods found</DropdownItem>
           </DropdownSection>
-        </Fragment>
-      ))}
+        )}
+        {Object.entries(groupedByPkg).map(([name, pkg]) => (
+          <Fragment key={name}>
+            <DropdownSection title={name !== NO_PACKAGE_KEY && <NormalCase>pkg: {name}</NormalCase>}>
+              {pkg.map(({ type, fullPath }) => (
+                <DropdownItem key={fullPath}>
+                  <ItemContent
+                    // disabled={disabled}
+                    // selected={fullPath === selectedPath}
+                    onClick={() => handleChange(fullPath)}
+                  >
+                    <Tooltip message={fullPath} position="right" delay={500}>
+                      <DropdownMethodButtonLabel><GrpcMethodTag methodType={type} /> {getShortGrpcPath(fullPath)}</DropdownMethodButtonLabel>
+                    </Tooltip>
+                  </ItemContent>
+                </DropdownItem>
+              ))}
+            </DropdownSection>
+          </Fragment>
+        ))}
+      </>
     </Dropdown>
   );
 };

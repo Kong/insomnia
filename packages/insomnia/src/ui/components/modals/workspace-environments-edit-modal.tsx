@@ -311,7 +311,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 <Dropdown
                   className="space-right"
                   triggerButton={
-                    <DropdownButton className="btn btn--clicky" disableHoverBehavior={false}>
+                    <DropdownButton
+                      className="btn btn--clicky"
+                      disableHoverBehavior={false}
+                    >
                       {selectedEnvironmentColor && (
                         <i
                           className="fa fa-circle space-right"

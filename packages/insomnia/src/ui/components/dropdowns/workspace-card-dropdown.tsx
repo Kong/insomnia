@@ -62,7 +62,11 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
       key={`${p.plugin.name}:${p.label}`}
     // stayOpenAfterClick={!p.hideAfterClick}
     >
-      <ItemContent icon={isLoading(p.label) ? 'refresh fa-spin' : undefined} label={p.label} onClick={() => handleClick(p)} />
+      <ItemContent
+        icon={isLoading(p.label) ? 'refresh fa-spin' : undefined}
+        label={p.label}
+        onClick={() => handleClick(p)}
+      />
     </DropdownItem>
   )), [actionPlugins, handleClick, isLoading]);
 

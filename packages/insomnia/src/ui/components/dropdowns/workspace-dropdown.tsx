@@ -129,33 +129,35 @@ export const WorkspaceDropdown: FC = () => {
         />
       </DropdownItem>
 
-      {actionPlugins.length > 0 &&
-        <DropdownSection title="Plugins">
-          {actionPlugins.map((p: WorkspaceAction) => (
-            <DropdownItem key={p.label}>
-              <ItemContent
-                icon={loadingActions[p.label] ? 'refresh fa-spin' : p.icon || 'code'}
-                label={p.label}
-                onClick={() => handlePluginClick(p, activeWorkspace)}
-              />
-            </DropdownItem>
-          ))}
-        </DropdownSection>
-      }
-
-      {isDesign(activeWorkspace) && configGeneratorPlugins.length > 0 && (
-        <DropdownSection title="Config Generators">
-          {configGeneratorPlugins.map((p: ConfigGenerator) => (
-            <DropdownItem key={`generateConfig-${p.label}`}>
-              <ItemContent
-                icon="code"
-                label={p.label}
-                onClick={() => handleGenerateConfig(p.label)}
-              />
-            </DropdownItem>
-          ))}
-        </DropdownSection>
-      )}
+      <>
+        {actionPlugins.length > 0 &&
+          <DropdownSection title="Plugins">
+            {actionPlugins.map((p: WorkspaceAction) => (
+              <DropdownItem key={p.label}>
+                <ItemContent
+                  icon={loadingActions[p.label] ? 'refresh fa-spin' : p.icon || 'code'}
+                  label={p.label}
+                  onClick={() => handlePluginClick(p, activeWorkspace)}
+                />
+              </DropdownItem>
+            ))}
+          </DropdownSection>
+        }
+        
+        {isDesign(activeWorkspace) && configGeneratorPlugins.length > 0 && (
+          <DropdownSection title="Config Generators">
+            {configGeneratorPlugins.map((p: ConfigGenerator) => (
+              <DropdownItem key={`generateConfig-${p.label}`}>
+                <ItemContent
+                  icon="code"
+                  label={p.label}
+                  onClick={() => handleGenerateConfig(p.label)}
+                />
+              </DropdownItem>
+            ))}
+          </DropdownSection>
+        )}
+      </>
     </Dropdown>
   );
 };

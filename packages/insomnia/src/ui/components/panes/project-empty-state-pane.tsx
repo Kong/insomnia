@@ -80,16 +80,32 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
           }
         >
           <DropdownItem>
-            <ItemContent icon="plus" label="File" onClick={importFromFile} />
+            <ItemContent
+              icon="plus"
+              label="File"
+              onClick={importFromFile}
+            />
           </DropdownItem>
           <DropdownItem>
-            <ItemContent icon="link" label="URL" onClick={importFromURL} />
+            <ItemContent
+              icon="link"
+              label="URL"
+              onClick={importFromURL}
+            />
           </DropdownItem>
           <DropdownItem>
-            <ItemContent icon="clipboard" label="Clipboard" onClick={importFromClipboard} />
+            <ItemContent
+              icon="clipboard"
+              label="Clipboard"
+              onClick={importFromClipboard}
+            />
           </DropdownItem>
           <DropdownItem>
-            <ItemContent icon="code-fork" label="Git Clone" onClick={importFromGit} />
+            <ItemContent
+              icon="code-fork"
+              label="Git Clone"
+              onClick={importFromGit}
+            />
           </DropdownItem>
         </Dropdown>
       </div>

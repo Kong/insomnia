@@ -111,14 +111,17 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           }
         >
           <DropdownSection title="Choose Export Type">
-            {activeWorkspace &&
-              <DropdownItem onClick={showExportRequestsModal}>
-                <ItemContent
-                  icon="home"
-                  label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`}
-                />
-              </DropdownItem>
-            }
+            <>
+              {activeWorkspace &&
+                <DropdownItem>
+                  <ItemContent
+                    icon="home"
+                    label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`}
+                    onClick={showExportRequestsModal}
+                  />
+                </DropdownItem>
+              }
+            </>
             <DropdownItem>
               <ItemContent
                 icon="empty"

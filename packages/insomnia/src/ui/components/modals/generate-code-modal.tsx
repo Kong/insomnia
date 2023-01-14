@@ -148,7 +148,10 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           >
             {clients.map(client => (
               <DropdownItem key={client.key}>
-                <ItemContent label={client.title} onClick={() => request && generateCode(request, state.target, client)} />
+                <ItemContent
+                  label={client.title}
+                  onClick={() => request && generateCode(request, state.target, client)}
+                />
               </DropdownItem>
             ))}
           </Dropdown>
