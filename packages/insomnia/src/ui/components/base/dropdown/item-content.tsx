@@ -3,6 +3,8 @@ import React, { CSSProperties, FC, PropsWithChildren, ReactNode } from 'react';
 import styled from 'styled-components';
 
 import { PlatformKeyCombinations } from '../../../../common/settings';
+import { svgPlacementHack } from '../../dropdowns/dropdown-placement-hacks';
+import { SvgIcon } from '../../svg-icon';
 import { PromptButton } from '../prompt-button';
 import { DropdownHint } from './dropdown-hint';
 
@@ -41,6 +43,15 @@ const StyledItemContent = styled.div({
   width: '100%',
 });
 
+const Checkmark = styled(SvgIcon)({
+  '&&': {
+    ...svgPlacementHack,
+    '& svg': {
+      fill: 'var(--color-surprise)',
+    },
+  },
+});
+
 type ItemContentProps = PropsWithChildren<{
   icon?: string;
   label?: string | ReactNode;
@@ -49,31 +60,35 @@ type ItemContentProps = PropsWithChildren<{
   iconStyle?: CSSProperties;
   style?: CSSProperties;
   withPrompt?: boolean;
+  isSelected?: boolean;
   onClick?: () => void;
 }>;
 
 export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
-  const { icon, label, hint, className, withPrompt, children, iconStyle, style, onClick } = props;
+  const { icon, label, hint, className, withPrompt, children, iconStyle, style, isSelected, onClick } = props;
 
-  if (withPrompt) {
-    return (
-      <StyledItemPromptContainer fullWidth onClick={onClick}>
-        <StyledItemContent>
-          {icon && <StyledIcon icon={icon} style={iconStyle} />}
-          {children || label}
-        </StyledItemContent>
-        {hint && <DropdownHint keyBindings={hint} />}
-      </StyledItemPromptContainer>
-    );
-  }
-
-  return (
-    <StyledItemContainer className={className} role='button' onClick={onClick} style={style}>
+  const content = (
+    <>
       <StyledItemContent>
         {icon && <StyledIcon icon={icon} style={iconStyle} />}
         {children || label}
       </StyledItemContent>
       {hint && <DropdownHint keyBindings={hint} />}
+      {isSelected && <Checkmark icon="checkmark" />}
+    </>
+  );
+
+  if (withPrompt) {
+    return (
+      <StyledItemPromptContainer fullWidth className={className} onClick={onClick}>
+        {content}
+      </StyledItemPromptContainer>
+    );
+  }
+
+  return (
+    <StyledItemContainer role='button' className={className} style={style} onClick={onClick}>
+      {content}
     </StyledItemContainer>
   );
 };
