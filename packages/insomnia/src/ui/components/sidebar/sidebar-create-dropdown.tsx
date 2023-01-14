@@ -32,7 +32,10 @@ export const SidebarCreateDropdown = () => {
     <Dropdown
       dataTestId={dataTestId}
       triggerButton={
-        <DropdownButton className="btn btn--compact" disableHoverBehavior={false}>
+        <DropdownButton
+          className="btn btn--compact"
+          disableHoverBehavior={false}
+        >
           <i className="fa fa-plus-circle" />
           <i className="fa fa-caret-down" />
         </DropdownButton>

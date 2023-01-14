@@ -499,7 +499,6 @@ export const TagEditor: FC<Props> = props => {
                         }}
                       />
                     </DropdownItem>
-
                   </DropdownSection>
                 </Dropdown>
               </div>

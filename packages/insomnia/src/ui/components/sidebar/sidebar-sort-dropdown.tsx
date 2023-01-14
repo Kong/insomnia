@@ -10,7 +10,10 @@ interface Props {
 export const SidebarSortDropdown: FunctionComponent<Props> = ({ handleSort }) => (
   <Dropdown
     triggerButton={
-      <DropdownButton className="btn btn--compact" disableHoverBehavior={false}>
+      <DropdownButton
+        className="btn btn--compact"
+        disableHoverBehavior={false}
+      >
         <i className="fa fa-sort" />
       </DropdownButton>
     }

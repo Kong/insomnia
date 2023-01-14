@@ -24,7 +24,7 @@ export const Popover: FC<Props> = (props: Props) => {
   const { popoverProps } = usePopover({ ...{ ...props, ...overlayProps, offset: 4 }, popoverRef }, state);
 
   return (
-    <Overlay >
+    <Overlay>
       <div style={{ position: 'fixed', inset: 0 }} />
       <div {...popoverProps} ref={popoverRef}>
         {!isNonModal && <DismissButton onDismiss={state.close} />}

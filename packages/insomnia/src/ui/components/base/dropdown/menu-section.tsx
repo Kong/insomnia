@@ -56,24 +56,22 @@ export const MenuSection = <T extends object>({
   const { separatorProps } = useSeparator({ elementType: 'li' });
 
   return (
-    <>
-      <li {...itemProps}>
-        <StyledDividerContainer>
-          {section.rendered && <StyledDividerSpan {...headingProps}>{section.rendered}</StyledDividerSpan>}
-          <StyledDivider {...separatorProps}/>
-        </StyledDividerContainer>
-        <StyledList {...groupProps}>
-          {[...section.childNodes].map((node: Node<T>) => (
-            node.rendered && <MenuItem
-              key={node.key}
-              item={node}
-              state={state}
-              onAction={onAction}
-              onClose={onClose}
-            />
-          ))}
-        </StyledList>
-      </li>
-    </>
+    <li {...itemProps}>
+      <StyledDividerContainer>
+        {section.rendered && <StyledDividerSpan {...headingProps}>{section.rendered}</StyledDividerSpan>}
+        <StyledDivider {...separatorProps}/>
+      </StyledDividerContainer>
+      <StyledList {...groupProps}>
+        {[...section.childNodes].map((node: Node<T>) => (
+          node.rendered && <MenuItem
+            key={node.key}
+            item={node}
+            state={state}
+            onAction={onAction}
+            onClose={onClose}
+          />
+        ))}
+      </StyledList>
+    </li>
   );
 };
