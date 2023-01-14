@@ -80,36 +80,35 @@ export const Shortcuts: FC = () => {
                           )}
                       />
                     </DropdownItem>
-                    {keyCombosForThisPlatform.length &&
-                      <DropdownSection title='Remove existing'>
-                        {/* Dropdown items to remove key combinations. */
-                          keyCombosForThisPlatform.map((keyComb: KeyCombination) => {
-                            const display = constructKeyCombinationDisplay(keyComb, false);
-                            return (
-                              <DropdownItem key={display}>
-                                <ItemContent
-                                  icon="trash-o"
-                                  label={display}
-                                  withPrompt
-                                  onClick={() => {
-                                    let toBeRemovedIndex = -1;
-                                    keyCombosForThisPlatform.forEach((existingKeyComb, index) => {
-                                      if (areSameKeyCombinations(existingKeyComb, keyComb)) {
-                                        toBeRemovedIndex = index;
-                                      }
-                                    });
-                                    if (toBeRemovedIndex >= 0) {
-                                      keyCombosForThisPlatform.splice(toBeRemovedIndex, 1);
-                                      models.settings.update(settings, { hotKeyRegistry });
+                    <DropdownSection title='Remove existing'>
+                      {
+                      /* Dropdown items to remove key combinations. */
+                        keyCombosForThisPlatform.map((keyComb: KeyCombination) => {
+                          const display = constructKeyCombinationDisplay(keyComb, false);
+                          return (
+                            <DropdownItem key={display}>
+                              <ItemContent
+                                icon="trash-o"
+                                label={display}
+                                withPrompt
+                                onClick={() => {
+                                  let toBeRemovedIndex = -1;
+                                  keyCombosForThisPlatform.forEach((existingKeyComb, index) => {
+                                    if (areSameKeyCombinations(existingKeyComb, keyComb)) {
+                                      toBeRemovedIndex = index;
                                     }
-                                  }}
-                                />
-                              </DropdownItem>
-                            );
-                          })
-                        }
-                      </DropdownSection>
-                    }
+                                  });
+                                  if (toBeRemovedIndex >= 0) {
+                                    keyCombosForThisPlatform.splice(toBeRemovedIndex, 1);
+                                    models.settings.update(settings, { hotKeyRegistry });
+                                  }
+                                }}
+                              />
+                            </DropdownItem>
+                          );
+                        })
+                      }
+                    </DropdownSection>
 
                     <DropdownSection>
                       <DropdownItem>
