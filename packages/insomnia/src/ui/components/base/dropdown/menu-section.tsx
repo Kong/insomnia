@@ -40,6 +40,7 @@ interface Props<T> {
   state: TreeState<T>;
   onAction?: (key: Key) => void;
   onClose?: () => void;
+  closeOnSelect?: boolean;
 }
 
 export const MenuSection = <T extends object>({
@@ -47,6 +48,7 @@ export const MenuSection = <T extends object>({
   state,
   onAction,
   onClose,
+  closeOnSelect = true,
 }: Props<T>) => {
   const { itemProps, headingProps, groupProps } = useMenuSection({
     heading: section.rendered,
@@ -69,6 +71,7 @@ export const MenuSection = <T extends object>({
             state={state}
             onAction={onAction}
             onClose={onClose}
+            closeOnSelect={closeOnSelect}
           />
         ))}
       </StyledList>

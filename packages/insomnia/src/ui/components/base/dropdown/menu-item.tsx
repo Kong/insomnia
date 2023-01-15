@@ -22,7 +22,7 @@ const StyledListItem = styled.li<StyledListItemProps>(({ isFocused, isDisabled }
   margin: 0,
   whiteSpace: 'nowrap',
   backgroundColor: isFocused ? 'rgba(130, 130, 130, 0.25)' : 'transparent',
-  color: isDisabled ? 'rgb(51,51,51)' : 'rgb(51,51,51)',
+  color: 'rgb(51,51,51)',
   cursor: isDisabled ? 'not-allowed' : 'pointer',
 
   '&:focus': {
@@ -35,6 +35,7 @@ interface Props<T> {
   state: TreeState<T>;
   onAction?: (key: Key) => void;
   onClose?: () => void;
+  closeOnSelect?: boolean;
 }
 
 export const MenuItem = <T extends object>({
@@ -42,13 +43,16 @@ export const MenuItem = <T extends object>({
   state,
   onAction,
   onClose,
+  closeOnSelect = true,
 }: Props<T>) => {
   const ref = useRef<HTMLLIElement>(null);
 
   // @ts-expect-error -- TSCONVERSION
-  const withPrompt = item.rendered?.props?.withPrompt || false;
+  const withPrompt = item.rendered?.props?.withPrompt || undefined;
   // @ts-expect-error -- TSCONVERSION
   const onClick = item.rendered?.props?.onClick || null;
+  // @ts-expect-error -- TSCONVERSION
+  const isDisabled = item.rendered?.props?.disabled || false;
 
   /**
    * We use this hack to allow for a prompt to be shown before the action is executed.
@@ -56,7 +60,7 @@ export const MenuItem = <T extends object>({
    * before actually deleting the document.
    */
   const handleClick = () => {
-    if (!withPrompt && onClick) {
+    if (!!withPrompt && onClick && !isDisabled) {
       onClick();
     } else {
       onAction?.(item.key);
@@ -66,10 +70,9 @@ export const MenuItem = <T extends object>({
   const {
     menuItemProps,
     isFocused,
-    isDisabled,
   } = useMenuItem({
     key: item.key,
-    closeOnSelect: !withPrompt,
+    closeOnSelect: !!withPrompt || closeOnSelect,
     onAction: handleClick,
     onClose,
   }, state, ref);

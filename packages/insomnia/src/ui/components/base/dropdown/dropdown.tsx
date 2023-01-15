@@ -48,7 +48,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
 
   const state: MenuTriggerState = useMenuTriggerState({
     ...props,
-    closeOnSelect: selectionMode === 'multiple' || false,
     onOpenChange: isOpen => isOpen && onOpen?.(),
   });
 
