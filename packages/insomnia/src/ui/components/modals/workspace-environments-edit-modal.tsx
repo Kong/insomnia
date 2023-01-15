@@ -347,7 +347,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
                   <DropdownItem>
                     <ItemContent
-                      // disabled={!selectedEnvironmentColor}
+                      isDisabled={!selectedEnvironmentColor}
                       icon="minus-circle"
                       label="Unset Color"
                       onClick={() => updateEnvironment(selectedEnvironmentId, { color: null })}

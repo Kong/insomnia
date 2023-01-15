@@ -52,6 +52,7 @@ export const AccountToolbar = () => {
             <ItemContent
               icon="gear"
               label='Account Settings'
+              stayOpenAfterClick
               onClick={() => clickLink('https://app.insomnia.rest/app/account/')}
             />
           </DropdownItem>
@@ -60,6 +61,7 @@ export const AccountToolbar = () => {
               icon="sign-out"
               label="Logout"
               withPrompt
+              stayOpenAfterClick
               onClick={session.logout}
             />
           </DropdownItem>

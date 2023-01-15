@@ -136,6 +136,7 @@ export const WorkspaceDropdown: FC = () => {
               <ItemContent
                 icon={loadingActions[p.label] ? 'refresh fa-spin' : p.icon || 'code'}
                 label={p.label}
+                stayOpenAfterClick
                 onClick={() => handlePluginClick(p, activeWorkspace)}
               />
             </DropdownItem>

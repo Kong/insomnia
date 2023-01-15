@@ -20,39 +20,6 @@ const StyledDropdownButton = styled(DropdownButton)({
   },
 });
 
-const RemoteWorkspaceDropdownItem: FC<{
-  remoteId: string;
-  backendProjectId: string;
-  name: string;
-  projectId: string;
-  organizationId: string;
-}> = ({ remoteId, backendProjectId, name, projectId, organizationId }) => {
-  const { submit, state } = useFetcher();
-
-  return (
-    <DropdownItem key={backendProjectId}>
-      <ItemContent
-        icon={state === 'submitting' ? 'refresh fa-spin' : 'cloud-download'}
-        label={<span>Pull <strong>{name}</strong></span>}
-        onClick={() =>
-          submit(
-            {
-              remoteId,
-              backendProjectId,
-            },
-            {
-              action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
-              method: 'post',
-            }
-          )
-        }
-      />
-    </DropdownItem>
-  );
-};
-
-RemoteWorkspaceDropdownItem.displayName = DropdownItem.name;
-
 export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) => {
   const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
   const { load, submit, data, state } = useFetcher<RemoteCollectionsLoaderData>();
@@ -109,7 +76,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
             <ItemContent label="Nothing to pull" />
           )}
         </DropdownItem>
-        
+
         {remoteBackendProjects.map(({ id, name }) => (
           <DropdownItem key={id}>
             <ItemContent

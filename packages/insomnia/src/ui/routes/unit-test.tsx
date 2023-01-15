@@ -122,10 +122,10 @@ const TestRoute: FC = () => {
                       </DropdownButton>
                     }
                   >
-                    <DropdownItem
-                    // stayOpenAfterClick
-                    >
+                    <DropdownItem>
                       <ItemContent
+                        stayOpenAfterClick
+                        isDisabled={runAllTestsFetcher.state === 'submitting'}
                         label={runAllTestsFetcher.state === 'submitting'
                           ? 'Running... '
                           : 'Run Tests'}
@@ -138,7 +138,6 @@ const TestRoute: FC = () => {
                             }
                           );
                         }}
-                      // disabled={runAllTestsFetcher.state === 'submitting'}
                       />
                     </DropdownItem>
                     <DropdownItem>

@@ -60,11 +60,11 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
   const renderPluginDropdownItems: any = useCallback(() => actionPlugins.map(p => (
     <DropdownItem
       key={`${p.plugin.name}:${p.label}`}
-    // stayOpenAfterClick={!p.hideAfterClick}
     >
       <ItemContent
         icon={isLoading(p.label) ? 'refresh fa-spin' : undefined}
         label={p.label}
+        stayOpenAfterClick={!p.hideAfterClick}
         onClick={() => handleClick(p)}
       />
     </DropdownItem>

@@ -52,7 +52,13 @@ export const MenuItem = <T extends object>({
   // @ts-expect-error -- TSCONVERSION
   const onClick = item.rendered?.props?.onClick || null;
   // @ts-expect-error -- TSCONVERSION
-  const isDisabled = item.rendered?.props?.disabled || false;
+  const isDisabled = item.rendered?.props?.isDisabled || false;
+  // @ts-expect-error -- TSCONVERSION
+  const stayOpenAfterClick = item.rendered?.props?.stayOpenAfterClick || false;
+
+  // Close the menu if the item is not prompt or if user wants to stay open after click
+  // of if the dropdown is not set to close on select.
+  const closeOnSelectState = !!withPrompt || !stayOpenAfterClick || closeOnSelect;
 
   /**
    * We use this hack to allow for a prompt to be shown before the action is executed.
@@ -72,7 +78,7 @@ export const MenuItem = <T extends object>({
     isFocused,
   } = useMenuItem({
     key: item.key,
-    closeOnSelect: !!withPrompt || closeOnSelect,
+    closeOnSelect: closeOnSelectState,
     onAction: handleClick,
     onClose,
   }, state, ref);

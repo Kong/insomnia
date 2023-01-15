@@ -61,6 +61,8 @@ type ItemContentProps = PropsWithChildren<{
   style?: CSSProperties;
   withPrompt?: boolean;
   isSelected?: boolean;
+  isDisabled?: boolean;
+  stayOpenAfterClick?: boolean;
   onClick?: () => void;
 }>;
 

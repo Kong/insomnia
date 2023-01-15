@@ -219,19 +219,18 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
           />
         </DropdownItem>
       </DropdownSection>
-      {
-        <DropdownSection title="Plugins">
-          {actionPlugins.map((requestGroupAction: RequestGroupAction) => (
-            <DropdownItem key={requestGroupAction.label}>
-              <ItemContent
-                icon={loadingActions[requestGroupAction.label] ? 'refresh fa-spin' : requestGroupAction.icon || 'fa-code'}
-                label={requestGroupAction.label}
-                onClick={() => handlePluginClick(requestGroupAction)}
-              />
-            </DropdownItem>
-          ))}
-        </DropdownSection>
-      }
+
+      <DropdownSection title="Plugins">
+        {actionPlugins.map((requestGroupAction: RequestGroupAction) => (
+          <DropdownItem key={requestGroupAction.label}>
+            <ItemContent
+              icon={loadingActions[requestGroupAction.label] ? 'refresh fa-spin' : requestGroupAction.icon || 'fa-code'}
+              label={requestGroupAction.label}
+              onClick={() => handlePluginClick(requestGroupAction)}
+            />
+          </DropdownItem>
+        ))}
+      </DropdownSection>
 
       <DropdownSection>
         <DropdownItem>

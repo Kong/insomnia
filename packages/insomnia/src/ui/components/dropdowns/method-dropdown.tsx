@@ -111,7 +111,6 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
         </DropdownSection>
       )}
 
-
       <DropdownSection>
         <DropdownItem>
           <ItemContent
@@ -124,5 +123,4 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
     </Dropdown>
   );
 });
-
 MethodDropdown.displayName = 'MethodDropdown';

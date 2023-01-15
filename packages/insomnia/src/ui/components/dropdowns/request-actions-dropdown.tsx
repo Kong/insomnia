@@ -210,6 +210,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
             <ItemContent
               icon={loadingActions[plugin.label] ? 'refresh fa-spin' : plugin.icon || 'code'}
               label={plugin.label}
+              stayOpenAfterClick
               onClick={() => handlePluginClick(plugin)}
             />
           </DropdownItem>

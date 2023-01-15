@@ -124,7 +124,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     return (
       <DropdownItem key={response._id}>
         <ItemContent
-          // disabled={active}
+          isDisabled={active}
           icon={active ? 'thumb-track' : 'empty'}
           onClick={() => handleSetActiveResponse(requestId, response)}
           label={

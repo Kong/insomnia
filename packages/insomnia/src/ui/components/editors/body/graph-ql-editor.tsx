@@ -437,7 +437,6 @@ export const GraphQLEditor: FC<Props> = ({
       },
     };
   }
-
   const canShowSchema = schema && !schemaIsFetching && !schemaFetchError && schemaLastFetchTime > 0;
   return (
     <div className="graphql-editor">
@@ -472,7 +471,7 @@ export const GraphQLEditor: FC<Props> = ({
         >
           <DropdownItem>
             <ItemContent
-              // disabled={!canShowSchema}
+              isDisabled={!canShowSchema}
               icon="file-code-o"
               label="Show Documentation"
               onClick={() => {
@@ -483,6 +482,7 @@ export const GraphQLEditor: FC<Props> = ({
           <DropdownSection title="Remote GraphQL Schema">
             <DropdownItem>
               <ItemContent
+                stayOpenAfterClick
                 icon={`refresh ${schemaIsFetching ? 'fa-spin' : ''}`}
                 label="Refresh Schema"
                 onClick={async () => {
@@ -497,11 +497,11 @@ export const GraphQLEditor: FC<Props> = ({
                   });
                   setSchemaIsFetching(false);
                 }}
-              // stayOpenAfterClick
               />
             </DropdownItem>
             <DropdownItem>
               <ItemContent
+                stayOpenAfterClick
                 icon={`toggle-${automaticFetch ? 'on' : 'off'}`}
                 label={
                   <>
@@ -512,7 +512,6 @@ export const GraphQLEditor: FC<Props> = ({
                 onClick={() => {
                   setAutoFetch(!automaticFetch);
                 }}
-              // stayOpenAfterClick
               />
             </DropdownItem>
           </DropdownSection>

@@ -475,15 +475,19 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           </DropdownItem>
 
           <DropdownItem>
-            <ItemContent icon="code-fork" label="Branches" onClick={() => showModal(SyncBranchesModal, { onHide: refreshVCSAndRefetchRemote })} />
+            <ItemContent
+              icon="code-fork"
+              label="Branches"
+              onClick={() => showModal(SyncBranchesModal, { onHide: refreshVCSAndRefetchRemote })}
+            />
           </DropdownItem>
 
           <DropdownItem>
             <ItemContent
               icon="remove"
+              isDisabled={historyCount === 0}
               label={<>Delete {strings.collection.singular}</>}
               onClick={() => showModal(SyncDeleteModal, { onHide: refreshVCSAndRefetchRemote })}
-            // disabled={historyCount === 0}
             />
           </DropdownItem>
         </DropdownSection>
@@ -512,7 +516,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         <DropdownSection title={currentBranch}>
           <DropdownItem>
             <ItemContent
-              // disabled={historyCount === 0}
+              isDisabled={historyCount === 0}
               icon="clock-o"
               label="History"
               onClick={() => showModal(SyncHistoryModal)}
@@ -521,7 +525,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
 
           <DropdownItem>
             <ItemContent
-              // disabled={!canCreateSnapshot || historyCount === 0}
+              isDisabled={!canCreateSnapshot || historyCount === 0}
               icon="undo"
               label="Revert Changes"
               withPrompt
@@ -531,7 +535,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
 
           <DropdownItem>
             <ItemContent
-              // disabled={!canCreateSnapshot}
+              isDisabled={!canCreateSnapshot}
               icon="cube"
               label="Create Snapshot"
               onClick={() =>
@@ -545,7 +549,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
 
           <DropdownItem>
             <ItemContent
-              // disabled={behind === 0 || loadingPull}
+              isDisabled={behind === 0 || loadingPull}
               icon={loadingPull ? 'spin fa-refresh' : 'cloud-download'}
               label={loadingPull ? 'Pulling Snapshots...' : `Pull ${behind || ''} Snapshot ${behind === 1 ? '' : 's'}`}
               onClick={handlePull}
@@ -553,7 +557,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           </DropdownItem>
           <DropdownItem>
             <ItemContent
-              // disabled={ahead === 0 || loadingPush}
+              isDisabled={ahead === 0 || loadingPush}
               icon={loadingPush ? 'spin fa-refresh' : 'cloud-upload'}
               label={loadingPush ? 'Pushing Snapshots...' : `Push ${ahead || ''} Snapshot ${ahead === 1 ? '' : 's'}`}
               onClick={handlePush}

@@ -55,7 +55,7 @@ const NormalCase = styled.span`
 `;
 
 export const GrpcMethodDropdown: FunctionComponent<Props> = ({
-  // disabled,
+  disabled,
   methods,
   selectedMethod,
   handleChange,
@@ -105,7 +105,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
             {pkg.map(({ type, fullPath }) => (
               <DropdownItem key={fullPath}>
                 <ItemContent
-                  // disabled={disabled}
+                  isDisabled={disabled}
                   // selected={fullPath === selectedPath}
                   onClick={() => handleChange(fullPath)}
                 >

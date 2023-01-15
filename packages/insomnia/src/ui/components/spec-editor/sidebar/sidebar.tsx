@@ -133,7 +133,10 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
             >
               <DropdownSection title="VISIBILITY">
                 <DropdownItem>
-                  <ItemContent onClick={setServersVisible}>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setServersVisible}
+                  >
                     <ItemWrapper
                       checked={serversVisible}
                       htmlFor="servers"
@@ -142,7 +145,10 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                   </ItemContent>
                 </DropdownItem>
                 <DropdownItem>
-                  <ItemContent onClick={setPathsVisible}>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setPathsVisible}
+                  >
                     <ItemWrapper
                       checked={pathsVisible}
                       htmlFor="paths"
@@ -151,7 +157,10 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                   </ItemContent>
                 </DropdownItem>
                 <DropdownItem>
-                  <ItemContent onClick={setRequestsVisible}>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setRequestsVisible}
+                  >
                     <ItemWrapper
                       checked={requestsVisible}
                       htmlFor="requests"
@@ -160,7 +169,10 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                   </ItemContent>
                 </DropdownItem>
                 <DropdownItem>
-                  <ItemContent onClick={setResponsesVisible}>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setResponsesVisible}
+                  >
                     <ItemWrapper
                       checked={responsesVisible}
                       htmlFor="responses"
@@ -169,7 +181,10 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                   </ItemContent>
                 </DropdownItem>
                 <DropdownItem>
-                  <ItemContent onClick={setParametersVisible}>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setParametersVisible}
+                  >
                     <StyledItem>
                       <input type="checkbox" checked={parametersVisible} readOnly />
                       <label htmlFor="parameters">Parameters</label>
@@ -177,7 +192,10 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                   </ItemContent>
                 </DropdownItem>
                 <DropdownItem>
-                  <ItemContent onClick={setHeadersVisible}>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setHeadersVisible}
+                  >
                     <ItemWrapper
                       checked={headersVisible}
                       htmlFor="headers"
@@ -186,7 +204,10 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                   </ItemContent>
                 </DropdownItem>
                 <DropdownItem>
-                  <ItemContent onClick={setSchemasVisible}>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setSchemasVisible}
+                  >
                     <ItemWrapper
                       checked={schemasVisible}
                       htmlFor="schemas"
@@ -195,7 +216,10 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                   </ItemContent>
                 </DropdownItem>
                 <DropdownItem>
-                  <ItemContent onClick={setSecurityVisible}>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setSecurityVisible}
+                  >
                     <ItemWrapper
                       checked={securityVisible}
                       htmlFor="security"

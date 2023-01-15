@@ -174,21 +174,22 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
             </DropdownItem>
           </DropdownSection>
 
-          {currentBranch &&
-            <>
+          {currentBranch && (
+            <Fragment>
               <DropdownSection title="Branches">
                 {branches.map(branch => {
                   const isCurrentBranch = branch === currentBranch;
                   return (
                     <DropdownItem
                       key={branch}
-                      // disabled={isCurrentBranch}
+           
                     >
                       <ItemContent
                         title={isCurrentBranch ? '' : `Switch to "${branch}"`}
                         className={classnames({ bold: isCurrentBranch })}
                         icon={branch === currentBranch ? 'tag' : 'empty'}
                         label={branch}
+                        isDisabled={isCurrentBranch}
                         onClick={async () => {
                           gitCheckoutFetcher.submit({
                             branch,
@@ -212,20 +213,18 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
                   />
                 </DropdownItem>
                 {log.length > 0 && (
-                  <DropdownItem
-                  // stayOpenAfterClick
-                  >
+                  <DropdownItem>
                     <ItemContent
+                      stayOpenAfterClick
                       icon={loadingPush ? 'refresh fa-spin' : 'cloud-upload'}
                       label="Push"
                       onClick={() => handlePush({ force: false })}
                     />
                   </DropdownItem>
                 )}
-                <DropdownItem
-                // stayOpenAfterClick
-                >
+                <DropdownItem>
                   <ItemContent
+                    stayOpenAfterClick
                     icon={loadingPull ? 'refresh fa-spin' : 'cloud-download'}
                     label="Pull"
                     onClick={async () => {
@@ -238,15 +237,15 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
                 </DropdownItem>
                 <DropdownItem>
                   <ItemContent
-                    // disabled={log.length === 0}
+                    isDisabled={log.length === 0}
                     icon="clock-o"
                     label={<span>History ({log.length})</span>}
                     onClick={() => setIsGitLogModalOpen(true)}
                   />
                 </DropdownItem>
               </DropdownSection>
-            </>
-          }
+            </Fragment>
+          )}
         </Dropdown>
       </div>
     );
