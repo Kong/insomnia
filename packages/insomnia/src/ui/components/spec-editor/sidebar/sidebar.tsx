@@ -124,6 +124,7 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
         <StyledSection>
           <SidebarHeader headerTitle="INFO" sectionVisible={infoSec} toggleSection={setInfoSec}>
             <Dropdown
+              closeOnSelect={false}
               triggerButton={
                 <DropdownButton>
                   <DropdownEllipsis />
