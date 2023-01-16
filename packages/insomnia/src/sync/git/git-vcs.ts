@@ -146,7 +146,7 @@ export class GitVCS {
 
   async listFiles() {
     console.log('[git] List files');
-    const files = await git.listFiles({ ...this._baseOpts });
+    const files = await git.listFiles({ ...this._baseOpts, dir: GIT_INSOMNIA_DIR, gitdir: GIT_INSOMNIA_DIR });
     return files.map(convertToOsSep);
   }
 
