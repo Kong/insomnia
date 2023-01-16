@@ -116,13 +116,14 @@ const TestRoute: FC = () => {
                   </button>
 
                   <Dropdown
+                    aria-label='Test Suite Actions'
                     triggerButton={
                       <DropdownButton className="unit-tests__sidebar__action">
                         <i className="fa fa-caret-down" />
                       </DropdownButton>
                     }
                   >
-                    <DropdownItem>
+                    <DropdownItem aria-label='Run Tests'>
                       <ItemContent
                         stayOpenAfterClick
                         isDisabled={runAllTestsFetcher.state === 'submitting'}
@@ -140,7 +141,7 @@ const TestRoute: FC = () => {
                         }}
                       />
                     </DropdownItem>
-                    <DropdownItem>
+                    <DropdownItem aria-label='Delete Suite'>
                       <ItemContent
                         label="Delete Suite"
                         withPrompt

@@ -73,34 +73,35 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
         </div>
         <Divider>or</Divider>
         <Dropdown
+          aria-label='Import From Dropdown'
           triggerButton={
             <DropdownButton style={{ width: '100%', alignSelf: 'stretch' }}>
               Import From <i className="fa fa-caret-down pad-left-sm" />
             </DropdownButton>
           }
         >
-          <DropdownItem>
+          <DropdownItem aria-label='File'>
             <ItemContent
               icon="plus"
               label="File"
               onClick={importFromFile}
             />
           </DropdownItem>
-          <DropdownItem>
+          <DropdownItem aria-label='URL'>
             <ItemContent
               icon="link"
               label="URL"
               onClick={importFromURL}
             />
           </DropdownItem>
-          <DropdownItem>
+          <DropdownItem aria-label='Clipboard'>
             <ItemContent
               icon="clipboard"
               label="Clipboard"
               onClick={importFromClipboard}
             />
           </DropdownItem>
-          <DropdownItem>
+          <DropdownItem aria-label='Git Clone'>
             <ItemContent
               icon="code-fork"
               label="Git Clone"

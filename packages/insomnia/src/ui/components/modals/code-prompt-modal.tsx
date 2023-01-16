@@ -135,6 +135,7 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
       <ModalFooter>
         {!hideMode ? (
           <Dropdown
+            aria-label='Select a mode'
             triggerButton={
               <DropdownButton className="btn btn--clicky margin-left-sm">
                 {MODES[mode]}
@@ -142,9 +143,15 @@ export const CodePromptModal = forwardRef<CodePromptModalHandle, ModalProps>((_,
               </DropdownButton>
             }
           >
-            <DropdownSection title="Editor Syntax">
+            <DropdownSection
+              aria-label="Editor Syntax"
+              title="Editor Syntax"
+            >
               {Object.keys(MODES).map(mode => (
-                <DropdownItem key={mode}>
+                <DropdownItem
+                  key={mode}
+                  aria-label={MODES[mode]}
+                >
                   <ItemContent
                     icon="code"
                     label={MODES[mode]}

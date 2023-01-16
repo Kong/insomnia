@@ -116,6 +116,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       >
         <div className="pad">
           <Dropdown
+            aria-label='Select a target'
             triggerButton={
               <DropdownButton className="btn btn--clicky">
                 {target ? target.title : 'n/a'}
@@ -124,7 +125,10 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
             }
           >
             {targets.map(target => (
-              <DropdownItem key={target.key}>
+              <DropdownItem
+                key={target.key}
+                aria-label={target.title}
+              >
                 <ItemContent
                   label={target.title}
                   onClick={() => {
@@ -139,6 +143,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           </Dropdown>
           &nbsp;&nbsp;
           <Dropdown
+            aria-label='Select a client'
             triggerButton={
               <DropdownButton className="btn btn--clicky">
                 {client ? client.title : 'n/a'}
@@ -147,7 +152,10 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
             }
           >
             {clients.map(client => (
-              <DropdownItem key={client.key}>
+              <DropdownItem
+                key={client.key}
+                aria-label={client.title}
+              >
                 <ItemContent
                   label={client.title}
                   onClick={() => request && generateCode(request, state.target, client)}

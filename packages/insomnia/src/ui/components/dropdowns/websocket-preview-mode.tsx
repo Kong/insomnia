@@ -10,6 +10,7 @@ interface Props {
 export const WebSocketPreviewModeDropdown: FC<Props> = ({ previewMode, onClick }) => {
   return (
     <Dropdown
+      aria-label="Websocket Preview Mode Dropdown"
       triggerButton={
         <DropdownButton className="tall">
           {{
@@ -20,13 +21,13 @@ export const WebSocketPreviewModeDropdown: FC<Props> = ({ previewMode, onClick }
         </DropdownButton>
       }
     >
-      <DropdownItem>
+      <DropdownItem aria-label='JSON'>
         <ItemContent
           label="JSON"
           onClick={() => onClick(CONTENT_TYPE_JSON)}
         />
       </DropdownItem>
-      <DropdownItem>
+      <DropdownItem aria-label='Raw'>
         <ItemContent
           label="Raw"
           onClick={() => onClick(CONTENT_TYPE_PLAINTEXT)}

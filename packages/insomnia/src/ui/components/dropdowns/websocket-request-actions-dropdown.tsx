@@ -54,6 +54,7 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
   return (
     <Dropdown
       ref={ref}
+      aria-label="Websocket Request Actions Dropdown"
       dataTestId={`Dropdown-${toKebabCase(request.name)}`}
       triggerButton={
         <DropdownButton>
@@ -61,7 +62,7 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
         </DropdownButton>
       }
     >
-      <DropdownItem>
+      <DropdownItem aria-label='Duplicate'>
         <ItemContent
           icon="copy"
           label="Duplicate"
@@ -69,7 +70,7 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
           onClick={duplicate}
         />
       </DropdownItem>
-      <DropdownItem>
+      <DropdownItem aria-label={isPinned ? 'Unpin' : 'Pin'}>
         <ItemContent
           icon="thumb-tack"
           label={isPinned ? 'Unpin' : 'Pin'}
@@ -77,14 +78,14 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
           onClick={togglePin}
         />
       </DropdownItem>
-      <DropdownItem>
+      <DropdownItem aria-label='Rename'>
         <ItemContent
           icon="edit"
           label="Rename"
           onClick={handleRename}
         />
       </DropdownItem>
-      <DropdownItem>
+      <DropdownItem aria-label='Delete'>
         <ItemContent
           icon="trash-o"
           label="Delete"
@@ -93,8 +94,8 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
           onClick={deleteRequest}
         />
       </DropdownItem>
-      <DropdownSection>
-        <DropdownItem>
+      <DropdownSection aria-label='Settings section'>
+        <DropdownItem aria-label='Settings'>
           <ItemContent
             // dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`}
             icon="wrench"

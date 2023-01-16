@@ -100,6 +100,7 @@ export const CookieList: FC<CookieListProps> = ({
             className="text-right"
           >
             <Dropdown
+              aria-label='Cookie Actions Dropdown'
               triggerButton={
                 <DropdownButton
                   title="Add cookie"
@@ -110,14 +111,14 @@ export const CookieList: FC<CookieListProps> = ({
                 </DropdownButton>
               }
             >
-              <DropdownItem>
+              <DropdownItem aria-label='Add Cookie'>
                 <ItemContent
                   icon="plus-circle"
                   label="Add Cookie"
                   onClick={addCookie}
                 />
               </DropdownItem>
-              <DropdownItem>
+              <DropdownItem aria-label='Delete All'>
                 <ItemContent
                   icon="trash-o"
                   label="Delete All"

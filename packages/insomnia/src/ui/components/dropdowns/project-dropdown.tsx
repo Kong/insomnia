@@ -20,6 +20,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
   return (
     <Fragment>
       <Dropdown
+        aria-label='Project Dropdown'
         dataTestId={toKebabCase(`ProjectDropDown-${project.name}`)}
         triggerButton={
           <DropdownButton className="row" title={project.name}>
@@ -27,7 +28,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
           </DropdownButton>
         }
       >
-        <DropdownItem>
+        <DropdownItem aria-label={`${strings.project.singular} Settings`}>
           <ItemContent
             icon="gear"
             style={{ gap: 'var(--padding-sm)' }}
@@ -36,7 +37,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
             onClick={() => setIsSettingsModalOpen(true)}
           />
         </DropdownItem>
-        <DropdownItem>
+        <DropdownItem aria-label='Delete'>
           <ItemContent
             icon="trash-o"
             label="Delete"

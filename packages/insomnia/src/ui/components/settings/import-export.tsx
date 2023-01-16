@@ -104,16 +104,20 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       </p>
       <div className="pad-top">
         <Dropdown
+          aria-label='Export Data Dropdown'
           triggerButton={
             <DropdownButton className="btn btn--clicky">
               Export Data <i className="fa fa-caret-down" />
             </DropdownButton>
           }
         >
-          <DropdownSection title="Choose Export Type">
+          <DropdownSection
+            aria-label="Choose Export Type"
+            title="Choose Export Type"
+          >
             <>
               {activeWorkspace &&
-                <DropdownItem>
+                <DropdownItem aria-label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`}>
                   <ItemContent
                     icon="home"
                     label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`}
@@ -122,7 +126,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                 </DropdownItem>
               }
             </>
-            <DropdownItem>
+            <DropdownItem aria-label={`All ${strings.document.plural} and ${strings.collection.plural} from the "${projectName}" ${strings.project.singular}`}>
               <ItemContent
                 icon="empty"
                 label={`All ${strings.document.plural} and ${strings.collection.plural} from the "${projectName}" ${strings.project.singular}`}
@@ -133,28 +137,32 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         </Dropdown>
         &nbsp;&nbsp;
         <Dropdown
+          aria-label='Import Data Dropdown'
           triggerButton={
             <DropdownButton className="btn btn--clicky">
               Import Data <i className="fa fa-caret-down" />
             </DropdownButton>
           }
         >
-          <DropdownSection title="Choose Import Type">
-            <DropdownItem>
+          <DropdownSection
+            aria-label="Choose Import Type"
+            title="Choose Import Type"
+          >
+            <DropdownItem aria-label='From File'>
               <ItemContent
                 icon="file-o"
                 label="From File"
                 onClick={handleImportFile}
               />
             </DropdownItem>
-            <DropdownItem>
+            <DropdownItem aria-label='From URL'>
               <ItemContent
                 icon="link"
                 label="From URL"
                 onClick={handleImportUri}
               />
             </DropdownItem>
-            <DropdownItem >
+            <DropdownItem aria-label='From Clipboard'>
               <ItemContent
                 icon="clipboard"
                 label="From Clipboard"

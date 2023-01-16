@@ -48,6 +48,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
 
   return (
     <Dropdown
+      aria-label='Remote Workspaces Dropdown'
       onOpen={() => load(`/organization/${organizationId}/project/${projectId}/remote-collections`)}
       triggerButton={
         <StyledDropdownButton
@@ -60,6 +61,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
       }
     >
       <DropdownSection
+        aria-label='Remote Workspaces Section'
         title={
           <>
             Remote {strings.collection.plural}
@@ -71,14 +73,17 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
           </>
         }
       >
-        <DropdownItem>
+        <DropdownItem aria-label='Nothing to pull'>
           {remoteBackendProjects.length === 0 && (
             <ItemContent label="Nothing to pull" />
           )}
         </DropdownItem>
 
         {remoteBackendProjects.map(({ id, name }) => (
-          <DropdownItem key={id}>
+          <DropdownItem 
+            key={id}
+            aria-label={name}
+          >
             <ItemContent
               icon={state === 'submitting' ? 'refresh fa-spin' : 'cloud-download'}
               label={<span>Pull <strong>{name}</strong></span>}

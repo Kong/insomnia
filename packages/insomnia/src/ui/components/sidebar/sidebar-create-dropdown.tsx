@@ -30,6 +30,7 @@ export const SidebarCreateDropdown = () => {
   const dataTestId = 'SidebarCreateDropdown';
   return (
     <Dropdown
+      aria-label='Create Dropdown'
       dataTestId={dataTestId}
       triggerButton={
         <DropdownButton
@@ -41,7 +42,7 @@ export const SidebarCreateDropdown = () => {
         </DropdownButton>
       }
     >
-      <DropdownItem>
+      <DropdownItem aria-label='HTTP Request'>
         <ItemContent
           // dataTestId='CreateHttpRequest'
           icon="plus-circle"
@@ -51,7 +52,7 @@ export const SidebarCreateDropdown = () => {
         />
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label='GraphQL Request'>
         <ItemContent
           icon="plus-circle"
           label="GraphQL Request"
@@ -59,7 +60,7 @@ export const SidebarCreateDropdown = () => {
         />
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label='gRPC Request'>
         <ItemContent
           icon="plus-circle"
           label="gRPC Request"
@@ -67,7 +68,7 @@ export const SidebarCreateDropdown = () => {
         />
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label='WebSocket Request'>
         <ItemContent
           icon="plus-circle"
           label="WebSocket Request"
@@ -75,7 +76,7 @@ export const SidebarCreateDropdown = () => {
         />
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label='New Folder'>
         <ItemContent
           icon="folder"
           label="New Folder"

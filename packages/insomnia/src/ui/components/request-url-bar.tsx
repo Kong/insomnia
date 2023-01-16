@@ -397,6 +397,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               key="dropdown"
               className="tall"
               ref={dropdownRef}
+              aria-label="Request Options"
               onClose={handleSendDropdownHide}
               triggerButton={
                 <StyledDropdownButton
@@ -407,8 +408,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                 </StyledDropdownButton>
               }
             >
-              <DropdownSection title="Basic">
-                <DropdownItem key="send-now">
+              <DropdownSection
+                aria-label="Basic Section"
+                title="Basic"
+              >
+                <DropdownItem aria-label="send-now">
                   <ItemContent
                     icon="arrow-circle-o-right"
                     label="Send Now"
@@ -416,7 +420,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                     onClick={send}
                   />
                 </DropdownItem>
-                <DropdownItem>
+                <DropdownItem aria-label='Generate Client Code'>
                   <ItemContent
                     icon="code"
                     label="Generate Client Code"
@@ -424,15 +428,18 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                   />
                 </DropdownItem>
               </DropdownSection>
-              <DropdownSection title="Advanced">
-                <DropdownItem>
+              <DropdownSection
+                aria-label="Advanced Section"
+                title="Advanced"
+              >
+                <DropdownItem aria-label='Send After Delay'>
                   <ItemContent
                     icon="clock-o"
                     label="Send After Delay"
                     onClick={handleSendAfterDelay}
                   />
                 </DropdownItem>
-                <DropdownItem>
+                <DropdownItem aria-label='Repeat on Interval'>
                   <ItemContent
                     icon="repeat"
                     label="Repeat on Interval"
@@ -440,7 +447,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                   />
                 </DropdownItem>
                 {downloadPath ? (
-                  <DropdownItem>
+                  <DropdownItem aria-label='Stop Auto-Download'>
                     <ItemContent
                       icon="stop-circle"
                       label="Stop Auto-Download"
@@ -448,7 +455,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                       onClick={handleClearDownloadLocation}
                     />
                   </DropdownItem>) :
-                  (<DropdownItem>
+                  (<DropdownItem aria-label='Download After Send'>
                     <ItemContent
                       icon="download"
                       label="Download After Send"
@@ -456,7 +463,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                     />
                   </DropdownItem>
                   )}
-                <DropdownItem>
+                <DropdownItem aria-label='Send And Download'>
                   <ItemContent
                     icon="download"
                     label="Send And Download"

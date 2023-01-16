@@ -153,19 +153,20 @@ export const Row: FC<Props> = ({
 
         {hideButtons ? hiddenButtons : isFileOrMultiline ? (
           <Dropdown
+            aria-label='Select type Dropdown'
             triggerButton={
               <DropdownButton className="tall">
                 <i className="fa fa-caret-down" />
               </DropdownButton>
             }
           >
-            <DropdownItem>
+            <DropdownItem aria-label='Text'>
               <ItemContent
                 label="Text"
                 onClick={() => onChange({ ...pair, type: 'text', multiline: false })} 
               />
             </DropdownItem>
-            <DropdownItem>
+            <DropdownItem aria-label='Text (Multi-line)'>
               {allowMultiline && (
                 <ItemContent
                   label="Text (Multi-line)"
@@ -173,7 +174,7 @@ export const Row: FC<Props> = ({
                 />
               )}
             </DropdownItem>
-            <DropdownItem>
+            <DropdownItem aria-label='File'>
               {allowFile && (
                 <ItemContent
                   label="File"

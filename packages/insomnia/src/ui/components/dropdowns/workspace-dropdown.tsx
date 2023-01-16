@@ -94,6 +94,7 @@ export const WorkspaceDropdown: FC = () => {
 
   return (
     <Dropdown
+      aria-label="Workspace Dropdown"
       ref={dropdownRef}
       className="wide workspace-dropdown"
       onOpen={handleDropdownOpen}
@@ -112,7 +113,7 @@ export const WorkspaceDropdown: FC = () => {
         </DropdownButton>
       }
     >
-      <DropdownItem>
+      <DropdownItem aria-label={`${getWorkspaceLabel(activeWorkspace).singular} Settings`}>
         <ItemContent
           icon="wrench"
           label={<>{getWorkspaceLabel(activeWorkspace).singular} Settings</>}
@@ -121,7 +122,7 @@ export const WorkspaceDropdown: FC = () => {
         />
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label='Import/Export'>
         <ItemContent
           icon="share"
           label="Import/Export"
@@ -130,9 +131,15 @@ export const WorkspaceDropdown: FC = () => {
       </DropdownItem>
 
       {
-        <DropdownSection title="Plugins">
+        <DropdownSection
+          aria-label='Plugins Section'
+          title="Plugins"
+        >
           {actionPlugins.map((p: WorkspaceAction) => (
-            <DropdownItem key={p.label}>
+            <DropdownItem
+              key={p.label}
+              aria-label={p.label}
+            >
               <ItemContent
                 icon={loadingActions[p.label] ? 'refresh fa-spin' : p.icon || 'code'}
                 label={p.label}
@@ -145,9 +152,15 @@ export const WorkspaceDropdown: FC = () => {
       }
 
       {isDesign(activeWorkspace) && configGeneratorPlugins.length > 0 && (
-        <DropdownSection title="Config Generators">
+        <DropdownSection
+          aria-label='Config Generators Section'
+          title="Config Generators"
+        >
           {configGeneratorPlugins.map((p: ConfigGenerator) => (
-            <DropdownItem key={`generateConfig-${p.label}`}>
+            <DropdownItem 
+              key={`generateConfig-${p.label}`}
+              aria-label={p.label}
+            >
               <ItemContent
                 icon="code"
                 label={p.label}

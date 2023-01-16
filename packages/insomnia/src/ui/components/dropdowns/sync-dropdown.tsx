@@ -314,6 +314,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           }}
           className="wide tall"
           onOpen={() => refreshVCSAndRefetchRemote()}
+          aria-label="Select a project to sync with"
           triggerButton={
             <DropdownButton
               variant='outlined'
@@ -326,6 +327,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           }
         >
           <DropdownSection
+            aria-label='Sync Projects List'
             title={
               <>
                 Insomnia Sync{' '}
@@ -362,7 +364,10 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               )}
             </DropdownItem>
             {remoteBackendProjects.map(p => (
-              <DropdownItem key={p.id}>
+              <DropdownItem 
+                key={p.id}
+                arial-label={`Pull ${p.name}`}
+              >
                 <ItemContent
                   icon="cloud-download"
                   label={<>Pull <strong>{p.name}</strong></>}
@@ -389,6 +394,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   return (
     <div>
       <Dropdown
+        aria-label='Select a branch to sync with'
         style={{ marginLeft: 'var(--padding-md)' }}
         className="wide tall"
         onOpen={() => refreshVCSAndRefetchRemote()}
@@ -448,6 +454,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         }
       >
         <DropdownSection
+          aria-label='Sync Branches List'
           title={
             <>
               Insomnia Sync{' '}
@@ -464,7 +471,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           }
         >
 
-          <DropdownItem>
+          <DropdownItem aria-label='Login'>
             {!session.isLoggedIn() && (
               <ItemContent
                 icon="sign-in"
@@ -474,7 +481,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             )}
           </DropdownItem>
 
-          <DropdownItem>
+          <DropdownItem aria-label='Branches'>
             <ItemContent
               icon="code-fork"
               label="Branches"
@@ -482,7 +489,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             />
           </DropdownItem>
 
-          <DropdownItem>
+          <DropdownItem aria-label={`Delete ${strings.collection.singular}`}>
             <ItemContent
               icon="remove"
               isDisabled={historyCount === 0}
@@ -492,12 +499,16 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           </DropdownItem>
         </DropdownSection>
 
-        <DropdownSection title="Local Branches">
+        <DropdownSection
+          aria-label='Local Branches List'
+          title="Local Branches"
+        >
           {visibleBranches.map(branch => {
             const isCurrentBranch = branch === currentBranch;
             return (
               <DropdownItem
                 key={branch}
+                aria-label={branch}
                 title={isCurrentBranch ? '' : `Switch to "${branch}"`}
               >
                 <ItemContent
@@ -513,8 +524,11 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           })}
         </DropdownSection>
 
-        <DropdownSection title={currentBranch}>
-          <DropdownItem>
+        <DropdownSection
+          aria-label='Snapshot action section'
+          title={currentBranch}
+        >
+          <DropdownItem aria-label='History'>
             <ItemContent
               isDisabled={historyCount === 0}
               icon="clock-o"
@@ -523,7 +537,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             />
           </DropdownItem>
 
-          <DropdownItem>
+          <DropdownItem aria-label='Revert Changes'>
             <ItemContent
               isDisabled={!canCreateSnapshot || historyCount === 0}
               icon="undo"
@@ -533,7 +547,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             />
           </DropdownItem>
 
-          <DropdownItem>
+          <DropdownItem aria-label='Create Snapshot'>
             <ItemContent
               isDisabled={!canCreateSnapshot}
               icon="cube"
@@ -547,7 +561,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             />
           </DropdownItem>
 
-          <DropdownItem>
+          <DropdownItem aria-label={loadingPull ? 'Pulling Snapshots...' : `Pull ${behind || ''} Snapshot ${behind === 1 ? '' : 's'}`}>
             <ItemContent
               isDisabled={behind === 0 || loadingPull}
               icon={loadingPull ? 'spin fa-refresh' : 'cloud-download'}
@@ -555,7 +569,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               onClick={handlePull}
             />
           </DropdownItem>
-          <DropdownItem>
+          <DropdownItem aria-label={loadingPush ? 'Pushing Snapshots...' : `Push ${ahead || ''} Snapshot ${ahead === 1 ? '' : 's'}`}>
             <ItemContent
               isDisabled={ahead === 0 || loadingPush}
               icon={loadingPush ? 'spin fa-refresh' : 'cloud-upload'}

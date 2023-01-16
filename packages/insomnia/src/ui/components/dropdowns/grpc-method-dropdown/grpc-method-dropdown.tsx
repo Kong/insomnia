@@ -67,6 +67,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
 
   return (
     <Dropdown
+      aria-label='Select gRPC method dropdown'
       className="tall wide"
       triggerButton={
         <DropdownButton
@@ -82,13 +83,13 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
         </DropdownButton>
       }
     >
-      <DropdownItem>
+      <DropdownItem aria-label='Click to use server reflection'>
         <ItemContent
           label={<em>Click to use server reflection</em>}
           onClick={handleServerReflection}
         />
       </DropdownItem>
-      <DropdownItem>
+      <DropdownItem aria-label='Click to change proto file'>
         <ItemContent
           label={<em>Click to change proto file</em>}
           onClick={handleChangeProtoFile}
@@ -96,14 +97,20 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
       </DropdownItem>
       {!methods.length && (
         <DropdownSection>
-          <DropdownItem>No methods found</DropdownItem>
+          <DropdownItem aria-label='No methods found'>No methods found</DropdownItem>
         </DropdownSection>
       )}
       {Object.entries(groupedByPkg).map(([name, pkg]) => (
         <Fragment key={name}>
-          <DropdownSection title={name !== NO_PACKAGE_KEY && <NormalCase>pkg: {name}</NormalCase>}>
+          <DropdownSection
+            aria-label='Select gRPC method section'
+            title={name !== NO_PACKAGE_KEY && <NormalCase>pkg: {name}</NormalCase>}
+          >
             {pkg.map(({ type, fullPath }) => (
-              <DropdownItem key={fullPath}>
+              <DropdownItem
+                key={fullPath}
+                aria-label={fullPath}
+              >
                 <ItemContent
                   isDisabled={disabled}
                   // selected={fullPath === selectedPath}

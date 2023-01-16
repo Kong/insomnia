@@ -134,6 +134,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   return (
     <Dropdown
       ref={ref}
+      aria-label="Request Actions Dropdown"
       onOpen={onOpen}
       dataTestId={`Dropdown-${toKebabCase(request.name)}`}
       triggerButton={
@@ -142,7 +143,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
         </DropdownButton>
       }
     >
-      <DropdownItem>
+      <DropdownItem aria-label='Duplicate'>
         <ItemContent
           icon="copy"
           label="Duplicate"
@@ -151,7 +152,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
         />
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label='Generate Code'>
         {canGenerateCode && (
           <ItemContent
             // dataTestId={`DropdownItemGenerateCode-${toKebabCase(request.name)}`}
@@ -163,7 +164,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
         )}
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label={isPinned ? 'Unpin' : 'Pin'}>
         <ItemContent
           // dataTestId={`DropdownItemPinRequest-${toKebabCase(request.name)}`}
           icon="thumb-tack"
@@ -173,7 +174,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
         />
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label='Copy as cURL'>
         {canGenerateCode && (
           <ItemContent
             // dataTestId={`DropdownItemCopyAsCurl-${toKebabCase(request.name)}`}
@@ -184,7 +185,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
         )}
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label='Rename'>
         <ItemContent
           // dataTestId={`DropdownItemRename-${toKebabCase(request.name)}`}
           icon="edit"
@@ -193,7 +194,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
         />
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label='Delete'>
         <ItemContent
           // dataTestId={`DropdownItemDelete-${toKebabCase(request.name)}`}
           icon="trash-o"
@@ -204,9 +205,15 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
         />
       </DropdownItem>
 
-      <DropdownSection title="Plugins">
+      <DropdownSection
+        aria-label='Plugins Section'
+        title="Plugins"
+      >
         {actionPlugins.map((plugin: RequestAction) => (
-          <DropdownItem key={`${plugin.plugin.name}::${plugin.label}`}>
+          <DropdownItem
+            key={`${plugin.plugin.name}::${plugin.label}`}
+            aria-label={plugin.label}
+          >
             <ItemContent
               icon={loadingActions[plugin.label] ? 'refresh fa-spin' : plugin.icon || 'code'}
               label={plugin.label}
@@ -217,8 +224,8 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
         ))}
       </DropdownSection>
 
-      <DropdownSection>
-        <DropdownItem>
+      <DropdownSection aria-label='Settings Section'>
+        <DropdownItem aria-label='Settings'>
           <ItemContent
             // dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`}>
             icon="wrench"

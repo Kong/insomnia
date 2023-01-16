@@ -122,7 +122,10 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     const request = requestVersion ? decompressObject(requestVersion.compressedRequest) : null;
 
     return (
-      <DropdownItem key={response._id}>
+      <DropdownItem
+        key={response._id}
+        aria-label={response._id}
+      >
         <ItemContent
           isDisabled={active}
           icon={active ? 'thumb-track' : 'empty'}
@@ -172,6 +175,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   return (
     <Dropdown
       ref={dropdownRef}
+      aria-label="Response history dropdown"
       key={activeResponse ? activeResponse._id : 'n/a'}
       className={className}
       triggerButton={
@@ -185,8 +189,11 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
         </DropdownButton>
       }
     >
-      <DropdownSection title={<span><strong>{environmentName}</strong> Responses</span>}>
-        <DropdownItem>
+      <DropdownSection
+        aria-label={`${environmentName} Responses`}
+        title={<span><strong>{environmentName}</strong> Responses</span>}
+      >
+        <DropdownItem aria-label='Delete Current Response'>
           <ItemContent
             icon="fa-trash-o"
             label="Delete Current Response"
@@ -194,7 +201,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
             onClick={handleDeleteResponse}
           />
         </DropdownItem>
-        <DropdownItem>
+        <DropdownItem aria-label='Clear History'>
           <ItemContent
             icon="fa-trash-o"
             label="Clear History"
@@ -204,23 +211,38 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
         </DropdownItem>
       </DropdownSection>
 
-      <DropdownSection title="Just Now">
+      <DropdownSection
+        aria-label='Minutes Section'
+        title="Just Now"
+      >
         {categories.minutes.map(renderResponseRow)}
       </DropdownSection>
 
-      <DropdownSection title="Less Than Two Hours Ago">
+      <DropdownSection
+        aria-label='Hours Section'
+        title="Less Than Two Hours Ago"
+      >
         {categories.hours.map(renderResponseRow)}
       </DropdownSection>
 
-      <DropdownSection title="Today">
+      <DropdownSection
+        aria-label='Today Section'
+        title="Today"
+      >
         {categories.today.map(renderResponseRow)}
       </DropdownSection>
 
-      <DropdownSection title="This Week">
+      <DropdownSection
+        aria-label='Week Section'
+        title="This Week"
+      >
         {categories.week.map(renderResponseRow)}
       </DropdownSection>
 
-      <DropdownSection title="Older Than This Week">
+      <DropdownSection
+        aria-label='Other Section'
+        title="Older Than This Week"
+      >
         {categories.other.map(renderResponseRow)}
       </DropdownSection>
     </Dropdown>

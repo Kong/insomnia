@@ -134,6 +134,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
   return (
     <Dropdown
       {...other}
+      aria-label="Request Group Actions Dropdown"
       ref={dropdownRef}
       onOpen={onOpen}
       dataTestId={`Dropdown-${toKebabCase(requestGroup.name)}`}
@@ -143,7 +144,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         </DropdownButton>
       }
     >
-      <DropdownItem>
+      <DropdownItem aria-label='New HTTP Request'>
         <ItemContent
           icon="plus-circle"
           label="New HTTP Request"
@@ -152,7 +153,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         />
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label='New GraphQL Request'>
         <ItemContent
           icon="plus-circle"
           label="New GraphQL Request"
@@ -160,7 +161,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         />
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label='New gRPC Request'>
         <ItemContent
           icon="plus-circle"
           label="New gRPC Request"
@@ -168,7 +169,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         />
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label='WebSocket Request'>
         <ItemContent
           icon="plus-circle"
           label="WebSocket Request"
@@ -176,7 +177,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         />
       </DropdownItem>
 
-      <DropdownItem>
+      <DropdownItem aria-label='New Folder'>
         <ItemContent
           icon="folder"
           label="New Folder"
@@ -185,8 +186,8 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         />
       </DropdownItem>
 
-      <DropdownSection>
-        <DropdownItem>
+      <DropdownSection aria-label='Actions Section'>
+        <DropdownItem aria-label='Duplicate'>
           <ItemContent
             icon="copy"
             label="Duplicate"
@@ -194,7 +195,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
           />
         </DropdownItem>
 
-        <DropdownItem>
+        <DropdownItem aria-label='Environment'>
           <ItemContent
             icon="code"
             label="Environment"
@@ -202,7 +203,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
           />
         </DropdownItem>
 
-        <DropdownItem>
+        <DropdownItem aria-label='Rename'>
           <ItemContent
             icon="edit"
             label="Rename"
@@ -210,7 +211,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
           />
         </DropdownItem>
 
-        <DropdownItem>
+        <DropdownItem aria-label='Delete'>
           <ItemContent
             icon="trash-o"
             label="Delete"
@@ -220,9 +221,15 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         </DropdownItem>
       </DropdownSection>
 
-      <DropdownSection title="Plugins">
+      <DropdownSection
+        aria-label='Plugins Section'
+        title="Plugins"
+      >
         {actionPlugins.map((requestGroupAction: RequestGroupAction) => (
-          <DropdownItem key={requestGroupAction.label}>
+          <DropdownItem
+            key={requestGroupAction.label}
+            aria-label={requestGroupAction.label}
+          >
             <ItemContent
               icon={loadingActions[requestGroupAction.label] ? 'refresh fa-spin' : requestGroupAction.icon || 'fa-code'}
               label={requestGroupAction.label}
@@ -232,8 +239,8 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         ))}
       </DropdownSection>
 
-      <DropdownSection>
-        <DropdownItem>
+      <DropdownSection aria-label='Settings Section'>
+        <DropdownItem aria-label='Settings'>
           <ItemContent
             // dataTestId={`DropdownItemSettings-${toKebabCase(requestGroup.name)}`}
             icon="wrench"

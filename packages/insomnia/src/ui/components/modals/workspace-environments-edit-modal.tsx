@@ -226,6 +226,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
           <div className="pad env-modal__sidebar-heading">
             <h3 className="no-margin">Sub Environments</h3>
             <Dropdown
+              aria-label='Create Environment Dropdown'
               triggerButton={
                 <DropdownButton>
                   <i className="fa fa-plus-circle" />
@@ -233,7 +234,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 </DropdownButton>
               }
             >
-              <DropdownItem>
+              <DropdownItem aria-label='Environment'>
                 <ItemContent
                   icon="eye"
                   label="Environment"
@@ -252,6 +253,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 />
               </DropdownItem>
               <DropdownItem
+                aria-label='Private Environment'
                 title="Environment will not be exported or synced"
               >
                 <ItemContent
@@ -309,6 +311,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 />
 
                 <Dropdown
+                  aria-label='Environment Color Dropdown'
                   className="space-right"
                   triggerButton={
                     <DropdownButton
@@ -327,7 +330,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                     </DropdownButton>
                   }
                 >
-                  <DropdownItem>
+                  <DropdownItem aria-label={selectedEnvironmentColor ? 'Change Color' : 'Assign Color'}>
                     <ItemContent
                       icon="circle"
                       label={selectedEnvironmentColor ? 'Change Color' : 'Assign Color'}
@@ -345,7 +348,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                     />
                   </DropdownItem>
 
-                  <DropdownItem>
+                  <DropdownItem aria-label='Unset Color'>
                     <ItemContent
                       isDisabled={!selectedEnvironmentColor}
                       icon="minus-circle"

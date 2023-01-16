@@ -180,6 +180,7 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
 
   return (
     <Dropdown
+      aria-label='Authentication Dropdown'
       isDisabled={disabled}
       triggerButton={
         <DropdownButton className="tall">
@@ -188,9 +189,15 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
         </DropdownButton>
       }
     >
-      <DropdownSection title="Auth Types">
+      <DropdownSection
+        aria-label='Auth types section'
+        title="Auth Types"
+      >
         {authTypes.map(authType =>
-          <DropdownItem key={authType}>
+          <DropdownItem
+            key={authType}
+            aria-label={getAuthTypeName(authType, true)}
+          >
             <ItemContent
               icon={isCurrent(authType) ? 'check' : 'empty'}
               label={getAuthTypeName(authType, true)}
@@ -199,8 +206,11 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
           </DropdownItem>
         )}
       </DropdownSection>
-      <DropdownSection title="Other">
-        <DropdownItem key="none">
+      <DropdownSection
+        aria-label="Other types section"
+        title="Other"
+      >
+        <DropdownItem aria-label='None' key="none">
           <ItemContent
             icon={isCurrent('none') ? 'check' : 'empty'}
             label={'No Authentication'}

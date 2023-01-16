@@ -124,6 +124,7 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
         <StyledSection>
           <SidebarHeader headerTitle="INFO" sectionVisible={infoSec} toggleSection={setInfoSec}>
             <Dropdown
+              aria-label='Info Dropdown'
               closeOnSelect={false}
               triggerButton={
                 <DropdownButton>
@@ -131,8 +132,11 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                 </DropdownButton>
               }
             >
-              <DropdownSection title="VISIBILITY">
-                <DropdownItem>
+              <DropdownSection
+                aria-label='Visibility section'
+                title="VISIBILITY"
+              >
+                <DropdownItem aria-label='Servers'>
                   <ItemContent
                     stayOpenAfterClick
                     onClick={setServersVisible}
@@ -144,7 +148,7 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                     />
                   </ItemContent>
                 </DropdownItem>
-                <DropdownItem>
+                <DropdownItem aria-label='Paths'>
                   <ItemContent
                     stayOpenAfterClick
                     onClick={setPathsVisible}
@@ -156,7 +160,7 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                     />
                   </ItemContent>
                 </DropdownItem>
-                <DropdownItem>
+                <DropdownItem aria-label='Requests'>
                   <ItemContent
                     stayOpenAfterClick
                     onClick={setRequestsVisible}
@@ -168,7 +172,7 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                     />
                   </ItemContent>
                 </DropdownItem>
-                <DropdownItem>
+                <DropdownItem aria-label='Responses'>
                   <ItemContent
                     stayOpenAfterClick
                     onClick={setResponsesVisible}
@@ -180,7 +184,7 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                     />
                   </ItemContent>
                 </DropdownItem>
-                <DropdownItem>
+                <DropdownItem aria-label='Parameters'>
                   <ItemContent
                     stayOpenAfterClick
                     onClick={setParametersVisible}
@@ -191,7 +195,7 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                     </StyledItem>
                   </ItemContent>
                 </DropdownItem>
-                <DropdownItem>
+                <DropdownItem aria-label='Headers'>
                   <ItemContent
                     stayOpenAfterClick
                     onClick={setHeadersVisible}
@@ -203,7 +207,7 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                     />
                   </ItemContent>
                 </DropdownItem>
-                <DropdownItem>
+                <DropdownItem aria-label='Schemas'>
                   <ItemContent
                     stayOpenAfterClick
                     onClick={setSchemasVisible}
@@ -215,7 +219,7 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
                     />
                   </ItemContent>
                 </DropdownItem>
-                <DropdownItem>
+                <DropdownItem aria-label='Security'>
                   <ItemContent
                     stayOpenAfterClick
                     onClick={setSecurityVisible}

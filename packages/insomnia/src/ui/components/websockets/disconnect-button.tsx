@@ -64,6 +64,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
         key="dropdown"
         className="tall"
         data-testid="DisconnectDropdown__Dropdown"
+        aria-label='Disconnect Dropdown'
         triggerButton={
           <StyledDropdownButton
             name="DisconnectDropdown__DropdownButton"
@@ -72,7 +73,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
           </StyledDropdownButton>
         }
       >
-        <DropdownItem>
+        <DropdownItem aria-label='Disconnect this request'>
           <ItemContent onClick={handleCloseThisRequest}>
             <Connections>
               <Connection />
@@ -82,7 +83,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
             </TextWrapper>
           </ItemContent>
         </DropdownItem>
-        <DropdownItem>
+        <DropdownItem aria-label='Disconnect all requests'>
           <ItemContent onClick={handleCloseAllRequests}>
             <Connections>
               <Connection size={5} />

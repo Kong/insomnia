@@ -453,14 +453,18 @@ export const TagEditor: FC<Props> = props => {
                 })}
               >
                 <Dropdown
+                  aria-label='Variable Dropdown'
                   triggerButton={
                     <DropdownButton className="btn btn--clicky">
                       <i className="fa fa-gear" />
                     </DropdownButton>
                   }
                 >
-                  <DropdownSection title="Input Type">
-                    <DropdownItem>
+                  <DropdownSection
+                    aria-label="Input Type Section"
+                    title="Input Type"
+                  >
+                    <DropdownItem aria-label='Static Value'>
                       <ItemContent
                         icon={isVariable ? 'check' : ''}
                         label="Static Value"
@@ -480,7 +484,7 @@ export const TagEditor: FC<Props> = props => {
                         }}
                       />
                     </DropdownItem>
-                    <DropdownItem>
+                    <DropdownItem aria-label='Environment Variable'>
                       <ItemContent
                         icon={isVariable ? '' : 'check'}
                         label="Environment Variable"

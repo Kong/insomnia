@@ -9,6 +9,7 @@ interface Props {
 
 export const SidebarSortDropdown: FunctionComponent<Props> = ({ handleSort }) => (
   <Dropdown
+    aria-label="Sidebar Sort Dropdown"
     triggerButton={
       <DropdownButton
         className="btn btn--compact"
@@ -19,7 +20,10 @@ export const SidebarSortDropdown: FunctionComponent<Props> = ({ handleSort }) =>
     }
   >
     {SORT_ORDERS.map(order => (
-      <DropdownItem key={order}>
+      <DropdownItem
+        aria-label={sortOrderName[order]}
+        key={order}
+      >
         <ItemContent
           label={sortOrderName[order]}
           onClick={() => handleSort(order)}

@@ -553,6 +553,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
             {showFilter && filterHistory?.length ?
               ((
                 <Dropdown
+                  aria-label='Filter History'
                   key="history"
                   className="tall"
                   triggerButton={
@@ -564,6 +565,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                   {filterHistory.reverse().map(filter => (
                     <DropdownItem key={filter}>
                       <ItemContent
+                        aria-label={filter}
                         label={filter}
                         onClick={() => {
                           if (inputRef.current) {

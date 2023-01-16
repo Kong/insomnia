@@ -74,6 +74,7 @@ const ImportSpecButton: FC<Props> = ({ onImport }) => {
 
   return (
     <Dropdown
+      aria-label='Import OpenAPI Dropdown'
       triggerButton={
         <StyledDropdownButton
           variant='outlined'
@@ -85,14 +86,14 @@ const ImportSpecButton: FC<Props> = ({ onImport }) => {
         </StyledDropdownButton>
       }
     >
-      <DropdownItem>
+      <DropdownItem aria-label='File'>
         <ItemContent
           icon="plus"
           label="File"
           onClick={handleImportFile}
         />
       </DropdownItem>
-      <DropdownItem>
+      <DropdownItem aria-label='URL'>
         <ItemContent
           icon="link"
           label="URL"

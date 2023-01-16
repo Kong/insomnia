@@ -55,13 +55,14 @@ export const Shortcuts: FC = () => {
                 </td>
                 <td className="text-right options" style={{ verticalAlign: 'middle' }}>
                   <Dropdown
+                    aria-label='Select a mode'
                     triggerButton={
                       <DropdownButton className="btn btn--clicky-small">
                         <i className="fa fa-gear" />
                       </DropdownButton>
                     }
                   >
-                    <DropdownItem>
+                    <DropdownItem aria-label='Add keyboard shortcut'>
                       <ItemContent
                         icon="plus-circle"
                         label="Add keyboard shortcut"
@@ -80,13 +81,19 @@ export const Shortcuts: FC = () => {
                           )}
                       />
                     </DropdownItem>
-                    <DropdownSection title='Remove existing'>
+                    <DropdownSection
+                      aria-label='Remove existing section'
+                      title='Remove existing'
+                    >
                       {
                       /* Dropdown items to remove key combinations. */
                         keyCombosForThisPlatform.map((keyComb: KeyCombination) => {
                           const display = constructKeyCombinationDisplay(keyComb, false);
                           return (
-                            <DropdownItem key={display}>
+                            <DropdownItem
+                              key={display}
+                              aria-label={display}
+                            >
                               <ItemContent
                                 icon="trash-o"
                                 label={display}
@@ -110,8 +117,8 @@ export const Shortcuts: FC = () => {
                       }
                     </DropdownSection>
 
-                    <DropdownSection>
-                      <DropdownItem>
+                    <DropdownSection aria-label='Reset keyboard shortcuts section'>
+                      <DropdownItem aria-label='Reset keyboard shortcuts'>
                         <ItemContent
                           icon="empty"
                           label="Reset keyboard shortcuts"

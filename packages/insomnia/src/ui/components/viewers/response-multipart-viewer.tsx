@@ -162,6 +162,7 @@ export const ResponseMultipartViewer: FC<Props> = ({
       >
         <div>
           <Dropdown
+            aria-label='Select Part Dropdown'
             triggerButton={
               <DropdownButton className="btn btn--clicky">
                 <div
@@ -177,7 +178,10 @@ export const ResponseMultipartViewer: FC<Props> = ({
             }
           >
             {parts.map(part => (
-              <DropdownItem key={part.id}>
+              <DropdownItem
+                aria-label={part.title}
+                key={part.id}
+              >
                 <ItemContent
                   icon={selectedPart?.id === part.id ? 'check' : 'empty'}
                   label={part.title}
@@ -188,20 +192,21 @@ export const ResponseMultipartViewer: FC<Props> = ({
           </Dropdown>
         </div>
         <Dropdown
+          aria-label='Part Actions Dropdown'
           triggerButton={
             <DropdownButton className="btn btn--clicky">
               <i className="fa fa-bars" />
             </DropdownButton>
           }
         >
-          <DropdownItem>
+          <DropdownItem aria-label='View Headers'>
             <ItemContent
               icon="list"
               label="View Headers"
               onClick={viewHeaders}
             />
           </DropdownItem>
-          <DropdownItem>
+          <DropdownItem aria-label='Save as File'>
             <ItemContent
               icon="save"
               label="Save as File"

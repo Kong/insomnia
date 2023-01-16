@@ -94,6 +94,7 @@ export const PreviewModeDropdown: FC<Props> = ({
 
   return (
     <Dropdown
+      aria-label='Preview Mode Dropdown'
       triggerButton={
         <DropdownButton className="tall">
           {getPreviewModeName(previewMode)}
@@ -101,9 +102,15 @@ export const PreviewModeDropdown: FC<Props> = ({
         </DropdownButton>
       }
     >
-      <DropdownSection title="Preview Mode">
+      <DropdownSection
+        aria-label='Preview Mode Section'
+        title="Preview Mode"
+      >
         {PREVIEW_MODES.map(mode =>
-          <DropdownItem key={mode}>
+          <DropdownItem
+            key={mode}
+            aria-label={getPreviewModeName(mode, true)}
+          >
             <ItemContent
               icon={previewMode === mode ? 'check' : 'empty'}
               label={getPreviewModeName(mode, true)}
@@ -112,22 +119,25 @@ export const PreviewModeDropdown: FC<Props> = ({
           </DropdownItem>
         )}
       </DropdownSection>
-      <DropdownSection title="Action">
-        <DropdownItem>
+      <DropdownSection
+        aria-label='Action Section'
+        title="Action"
+      >
+        <DropdownItem aria-label='Copy raw response'>
           <ItemContent
             icon="copy"
             label="Copy raw response"
             onClick={copyToClipboard}
           />
         </DropdownItem>
-        <DropdownItem>
+        <DropdownItem aria-label='Export raw response'>
           <ItemContent
             icon="save"
             label="Export raw response"
             onClick={handleDownloadNormal}
           />
         </DropdownItem>
-        <DropdownItem>
+        <DropdownItem aria-label='Export prettified response'>
           {shouldPrettifyOption &&
             <ItemContent
               icon="save"
@@ -136,14 +146,14 @@ export const PreviewModeDropdown: FC<Props> = ({
             />
           }
         </DropdownItem>
-        <DropdownItem>
+        <DropdownItem aria-label='Export HTTP debug'>
           <ItemContent
             icon="bug"
             label="Export HTTP debug"
             onClick={exportDebugFile}
           />
         </DropdownItem>
-        <DropdownItem>
+        <DropdownItem aria-label='Export as HAR'>
           <ItemContent
             icon="save"
             label="Export as HAR"

@@ -18,6 +18,7 @@ export const WebSocketPreviewModeDropdown: FC<Props> = ({
 }) => {
   return (
     <Dropdown
+      aria-label="Websocket Preview Mode Dropdown"
       triggerButton={
         <DropdownButton className="tall">
           {getPreviewModeName(previewMode)}
@@ -25,9 +26,15 @@ export const WebSocketPreviewModeDropdown: FC<Props> = ({
         </DropdownButton>
       }
     >
-      <DropdownSection title="Preview Mode">
+      <DropdownSection
+        aria-label="Preview Mode Section"
+        title="Preview Mode"
+      >
         {PREVIEW_MODES.map(mode =>
-          <DropdownItem key={mode}>
+          <DropdownItem
+            aria-label={getPreviewModeName(mode, true)}
+            key={mode}
+          >
             <ItemContent
               icon={previewMode === mode ? 'check' : 'empty'}
               label={getPreviewModeName(mode, true)}
@@ -36,15 +43,18 @@ export const WebSocketPreviewModeDropdown: FC<Props> = ({
           </DropdownItem>
         )}
       </DropdownSection>
-      <DropdownSection title="Actions">
-        <DropdownItem>
+      <DropdownSection
+        aria-label="Actions Section"
+        title="Actions"
+      >
+        <DropdownItem aria-label='Copy raw response'>
           <ItemContent
             icon="copy"
             label="Copy raw response"
             onClick={copyToClipboard}
           />
         </DropdownItem>
-        <DropdownItem>
+        <DropdownItem aria-label='Export raw response'>
           <ItemContent
             icon="save"
             label="Export raw response"

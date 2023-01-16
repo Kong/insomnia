@@ -60,6 +60,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
   const renderPluginDropdownItems: any = useCallback(() => actionPlugins.map(p => (
     <DropdownItem
       key={`${p.plugin.name}:${p.label}`}
+      aria-label={p.label}
     >
       <ItemContent
         icon={isLoading(p.label) ? 'refresh fa-spin' : undefined}
@@ -86,6 +87,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
   return (
     <Fragment>
       <Dropdown
+        aria-label='Workspace Actions Dropdown'
         onOpen={refresh}
         triggerButton={
           <DropdownButton>
@@ -93,13 +95,13 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           </DropdownButton>
         }
       >
-        <DropdownItem>
+        <DropdownItem aria-label='Duplicate'>
           <ItemContent
             label="Duplicate"
             onClick={() => setIsDuplicateModalOpen(true)}
           />
         </DropdownItem>
-        <DropdownItem>
+        <DropdownItem aria-label='Rename'>
           <ItemContent
             label="Rename"
             onClick={() => {
@@ -124,8 +126,8 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
 
         {renderPluginDropdownItems()}
 
-        <DropdownSection>
-          <DropdownItem>
+        <DropdownSection aria-label='Delete section'>
+          <DropdownItem aria-label='Delete'>
             <ItemContent
               label="Delete"
               className="danger"

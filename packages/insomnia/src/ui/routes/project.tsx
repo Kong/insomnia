@@ -692,6 +692,7 @@ const ProjectRoute: FC = () => {
                     <RemoteWorkspacesDropdown key={activeProject._id} project={activeProject} />
                   )}
                   <Dropdown
+                    aria-label='Create New Dropdown'
                     triggerButton={
                       <StyledDropdownButton
                         disableHoverBehavior={false}
@@ -701,15 +702,18 @@ const ProjectRoute: FC = () => {
                       </StyledDropdownButton>
                     }
                   >
-                    <DropdownSection title="New">
-                      <DropdownItem>
+                    <DropdownSection
+                      aria-label="New Section"
+                      title="New"
+                    >
+                      <DropdownItem aria-label='Request Collection'>
                         <ItemContent
                           icon="bars"
                           label="Request Collection"
                           onClick={createNewCollection}
                         />
                       </DropdownItem>
-                      <DropdownItem>
+                      <DropdownItem aria-label='Design Document'>
                         <ItemContent
                           icon="file-o"
                           label="Design Document"
@@ -717,29 +721,32 @@ const ProjectRoute: FC = () => {
                         />
                       </DropdownItem>
                     </DropdownSection>
-                    <DropdownSection title="Import From">
-                      <DropdownItem>
+                    <DropdownSection
+                      aria-label="Import From"
+                      title="Import From"
+                    >
+                      <DropdownItem aria-label='File'>
                         <ItemContent
                           icon="plus"
                           label="File"
                           onClick={importFromFile}
                         />
                       </DropdownItem>
-                      <DropdownItem>
+                      <DropdownItem aria-label='URL'>
                         <ItemContent
                           icon="link"
                           label="URL"
                           onClick={importFromURL}
                         />
                       </DropdownItem>
-                      <DropdownItem>
+                      <DropdownItem aria-label='Clipboard'>
                         <ItemContent
                           icon="clipboard"
                           label="Clipboard"
                           onClick={importFromClipboard}
                         />
                       </DropdownItem>
-                      <DropdownItem>
+                      <DropdownItem aria-label='Git Clone'>
                         <ItemContent
                           icon="code-fork"
                           label="Git Clone"

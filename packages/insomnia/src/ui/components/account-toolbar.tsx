@@ -56,7 +56,10 @@ export const AccountToolbar = () => {
               onClick={() => clickLink('https://app.insomnia.rest/app/account/')}
             />
           </DropdownItem>
-          <DropdownItem key="logout" aria-label='logout'>
+          <DropdownItem
+            key="logout"
+            aria-label='logout'
+          >
             <ItemContent
               icon="sign-out"
               label="Logout"

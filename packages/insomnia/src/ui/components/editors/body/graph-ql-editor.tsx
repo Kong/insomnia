@@ -442,6 +442,7 @@ export const GraphQLEditor: FC<Props> = ({
     <div className="graphql-editor">
       <Toolbar>
         <Dropdown
+          aria-label='Operations Dropdown'
           isDisabled={!state.operations.length}
           triggerButton={
             <DropdownButton className="btn btn--compact">
@@ -450,7 +451,10 @@ export const GraphQLEditor: FC<Props> = ({
           }
         >
           {state.operations.map(operationName => (
-            <DropdownItem key={operationName}>
+            <DropdownItem
+              key={operationName}
+              aria-label={`Operation ${operationName}`}
+            >
               <ItemContent
                 label={operationName}
                 onClick={() => changeOperationName(operationName)}
@@ -459,6 +463,7 @@ export const GraphQLEditor: FC<Props> = ({
           ))}
         </Dropdown>
         <Dropdown
+          aria-label='Schema Dropdown'
           triggerButton={
             <DropdownButton
               className="btn btn--compact"
@@ -469,7 +474,7 @@ export const GraphQLEditor: FC<Props> = ({
             </DropdownButton>
           }
         >
-          <DropdownItem>
+          <DropdownItem aria-label='Show Documentation'>
             <ItemContent
               isDisabled={!canShowSchema}
               icon="file-code-o"
@@ -479,8 +484,11 @@ export const GraphQLEditor: FC<Props> = ({
               }}
             />
           </DropdownItem>
-          <DropdownSection title="Remote GraphQL Schema">
-            <DropdownItem>
+          <DropdownSection
+            aria-label='Remote GraphQL Schema Section'
+            title="Remote GraphQL Schema"
+          >
+            <DropdownItem aria-label='Refresh Schema'>
               <ItemContent
                 stayOpenAfterClick
                 icon={`refresh ${schemaIsFetching ? 'fa-spin' : ''}`}
@@ -499,7 +507,7 @@ export const GraphQLEditor: FC<Props> = ({
                 }}
               />
             </DropdownItem>
-            <DropdownItem>
+            <DropdownItem aria-label='Automatic Fetch'>
               <ItemContent
                 stayOpenAfterClick
                 icon={`toggle-${automaticFetch ? 'on' : 'off'}`}
@@ -516,8 +524,11 @@ export const GraphQLEditor: FC<Props> = ({
             </DropdownItem>
           </DropdownSection>
 
-          <DropdownSection title="Local GraphQL Schema">
-            <DropdownItem>
+          <DropdownSection
+            aria-label="Local GraphQL Schema Section"
+            title="Local GraphQL Schema"
+          >
+            <DropdownItem aria-label='Load schema from JSON'>
               <ItemContent
                 icon="file-code-o"
                 label={
