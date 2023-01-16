@@ -66,7 +66,7 @@ export const MenuItem = <T extends object>({
    * before actually deleting the document.
    */
   const handleClick = () => {
-    if (!!withPrompt && onClick && !isDisabled) {
+    if (!withPrompt && onClick && !isDisabled) {
       onClick();
     } else {
       onAction?.(item.key);
