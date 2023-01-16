@@ -113,7 +113,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
               >
                 <ItemContent
                   isDisabled={disabled}
-                  // selected={fullPath === selectedPath}
+                  isSelected={fullPath === selectedPath}
                   onClick={() => handleChange(fullPath)}
                 >
                   <Tooltip message={fullPath} position="right" delay={500}>
