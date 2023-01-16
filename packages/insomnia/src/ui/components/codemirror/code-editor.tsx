@@ -563,7 +563,10 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                   }
                 >
                   {filterHistory.reverse().map(filter => (
-                    <DropdownItem key={filter}>
+                    <DropdownItem
+                      key={filter}
+                      aria-label={filter}
+                    >
                       <ItemContent
                         aria-label={filter}
                         label={filter}
