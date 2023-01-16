@@ -31,6 +31,8 @@ const StyledItemContainer = styled.div<ContainerProps>(props => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
+  paddingRight: 'calc(1rem * 1.2)',
+  paddingLeft: 'calc(1rem * 0.6)',
   background: props.isSelected ? 'var(--hl-xs)' : 'initial',
   fontWeight: props.isSelected ? 'bold' : 'normal',
 }));
@@ -41,6 +43,8 @@ const StyledItemPromptContainer = styled(PromptButton)<ContainerProps>(props => 
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
+  paddingRight: 'calc(1rem * 1.2)',
+  paddingLeft: 'calc(1rem * 0.6)',
   background: props.isSelected ? 'var(--hl-xs)' : 'initial',
   fontWeight: props.isSelected ? 'bold' : 'normal',
 }));

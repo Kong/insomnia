@@ -17,8 +17,6 @@ const StyledListItem = styled.li<StyledListItemProps>(({ isFocused, isDisabled }
   minWidth: '15rem',
   fontSize: '1rem',
   textAlign: 'left',
-  paddingRight: 'calc(1rem * 1.2)',
-  paddingLeft: 'calc(1rem * 0.6)',
   margin: 0,
   whiteSpace: 'nowrap',
   backgroundColor: isFocused ? 'rgba(130, 130, 130, 0.25)' : 'transparent',
