@@ -21,21 +21,29 @@ const StyledIcon = styled.i.attrs<StyledIconProps>(props => ({
   width: 'unset',
 });
 
-const StyledItemContainer = styled.div({
-  width: '100%',
-  height: '100%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-});
+interface ContainerProps {
+  isSelected?: boolean;
+}
 
-const StyledItemPromptContainer = styled(PromptButton)({
+const StyledItemContainer = styled.div<ContainerProps>(props => ({
   width: '100%',
   height: '100%',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-});
+  background: props.isSelected ? 'var(--hl-xs)' : 'initial',
+  fontWeight: props.isSelected ? 'bold' : 'normal',
+}));
+
+const StyledItemPromptContainer = styled(PromptButton)<ContainerProps>(props => ({
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  background: props.isSelected ? 'var(--hl-xs)' : 'initial',
+  fontWeight: props.isSelected ? 'bold' : 'normal',
+}));
 
 const StyledItemContent = styled.div({
   display: 'flex',
@@ -82,14 +90,25 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
 
   if (withPrompt) {
     return (
-      <StyledItemPromptContainer fullWidth className={className} onClick={onClick}>
+      <StyledItemPromptContainer
+        fullWidth
+        className={className}
+        isSelected={isSelected}
+        onClick={onClick}
+      >
         {content}
       </StyledItemPromptContainer>
     );
   }
 
   return (
-    <StyledItemContainer role='button' className={className} style={style} onClick={onClick}>
+    <StyledItemContainer
+      role='button'
+      className={className}
+      style={style}
+      onClick={onClick}
+      isSelected={isSelected}
+    >
       {content}
     </StyledItemContainer>
   );
