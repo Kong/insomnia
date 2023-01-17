@@ -230,13 +230,30 @@ export const GraphQLEditor: FC<Props> = ({
     beautifyRequestBody,
   });
   const changeOperationName = (operationName: string) => {
-    onChange(JSON.stringify({ ...state.body, operationName }));
+    const content = { ...state.body };
+    delete content.operationName;
+    if (operationName !== '') {
+      content.operationName = operationName;
+    }
+
+    onChange(JSON.stringify(content));
     setState(prevState => ({ ...prevState, body: { ...prevState.body, operationName } }));
   };
   const changeVariables = (variablesInput: string) => {
     try {
       const variables = JSON.parse(variablesInput || '{}');
-      onChange(JSON.stringify({ ...state.body, variables }));
+      const content = { ...state.body };
+      if (state.body.operationName === '') {
+        delete content.operationName;
+      }
+
+      if (operationName !== '') {
+        content.operationName = operationName;
+      }
+
+      content.variables = variables;
+
+      onChange(JSON.stringify(content));
       setState(state => ({
         ...state,
         body: { ...state.body, variables },
@@ -261,7 +278,14 @@ export const GraphQLEditor: FC<Props> = ({
           operationName = operations[oldPostion] || operations[0] || '';
         }
       }
-      onChange(JSON.stringify({ ...state.body, query, operationName }));
+
+      const content = { ...state.body, query };
+      delete content.operationName;
+      if (operationName !== '') {
+        content.operationName = operationName;
+      }
+
+      onChange(JSON.stringify(content));
 
       setState(state => ({
         ...state,
