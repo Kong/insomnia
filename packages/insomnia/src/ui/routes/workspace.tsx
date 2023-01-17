@@ -1,7 +1,6 @@
 import React from 'react';
 import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
-import { database } from '../../common/database';
 import * as models from '../../models';
 import { GitRepository } from '../../models/git-repository';
 import { Project } from '../../models/project';
@@ -27,22 +26,15 @@ export const workspaceLoader: LoaderFunction = async ({
 
   invariant(workspace, 'Workspace not found');
 
-  const workspaceEnvironments = await models.environment.findByParentId(workspaceId);
+  // I don't know what to say man, this is just how it is
+  await models.environment.getOrCreateForParentId(workspaceId);
+  await models.cookieJar.getOrCreateForParentId(workspaceId);
+  await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-  const cookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
   const activeProject = await models.project.getById(projectId);
   invariant(activeProject, 'Project not found');
 
   const gitRepository = await models.gitRepository.getById(workspaceMeta.gitRepositoryId || '');
-
-  const workspaceHasChildren = workspaceEnvironments.length && cookieJar && apiSpec && workspaceMeta;
-  if (!workspaceHasChildren) {
-    const flushId = await database.bufferChanges();
-    await models.workspace.ensureChildren(workspace);
-    await database.flushChanges(flushId);
-  }
-
   return {
     activeWorkspace: workspace,
     activeProject,

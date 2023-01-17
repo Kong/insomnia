@@ -15,7 +15,6 @@ import { convert, ConvertResultType } from '../utils/importers/convert';
 import {
   BASE_ENVIRONMENT_ID_KEY,
   CONTENT_TYPE_GRAPHQL,
-  EXPORT_TYPE_ENVIRONMENT,
   EXPORT_TYPE_WORKSPACE,
   WORKSPACE_ID_KEY,
 } from './constants';
@@ -188,15 +187,6 @@ export async function importRaw(
     // Replace null parentIds with current workspace
     if (!resource.parentId && resource._type !== EXPORT_TYPE_WORKSPACE) {
       resource.parentId = WORKSPACE_ID_KEY;
-    }
-
-    // Always generate base environment id, ensuring to not create another one
-    if (resource._type === EXPORT_TYPE_ENVIRONMENT) {
-      if (resource.parentId === WORKSPACE_ID_KEY || resource.parentId.match(`${models.workspace.prefix}_\w*`)) {
-        resource._id = BASE_ENVIRONMENT_ID_KEY;
-      } else {
-        resource.parentId = BASE_ENVIRONMENT_ID_KEY;
-      }
     }
 
     // Replace ID placeholders (eg. __WORKSPACE_ID__) with generated values

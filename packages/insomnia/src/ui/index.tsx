@@ -520,7 +520,11 @@ async function renderApp() {
 
     const { _id: workspaceId } = workspace;
 
-    await models.workspace.ensureChildren(workspace);
+    // Create default env, cookie jar, and meta
+    await models.environment.getOrCreateForParentId(workspace._id);
+    await models.cookieJar.getOrCreateForParentId(workspace._id);
+    await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+
     const request = await models.request.create({ parentId: workspaceId });
 
     const unitTestSuite = await models.unitTestSuite.create({

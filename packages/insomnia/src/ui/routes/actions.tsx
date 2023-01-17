@@ -98,7 +98,10 @@ export const createNewWorkspaceAction: ActionFunction = async ({
     scope,
     parentId: projectId,
   });
-  await models.workspace.ensureChildren(workspace);
+
+  // Create default env, cookie jar, and meta
+  await models.environment.getOrCreateForParentId(workspace._id);
+  await models.cookieJar.getOrCreateForParentId(workspace._id);
   await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
   await database.flushChanges(flushId);
@@ -185,7 +188,10 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
     parentId: projectId,
   });
 
-  await models.workspace.ensureChildren(newWorkspace);
+  // Create default env, cookie jar, and meta
+  await models.environment.getOrCreateForParentId(newWorkspace._id);
+  await models.cookieJar.getOrCreateForParentId(newWorkspace._id);
+  await models.workspaceMeta.getOrCreateByParentId(newWorkspace._id);
 
   try {
     // Mark for sync if logged in and in the expected project
