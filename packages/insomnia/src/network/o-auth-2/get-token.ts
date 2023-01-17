@@ -58,7 +58,13 @@ export const getOAuth2Token = async (
     });
     console.log('[oauth2] Detected redirect ' + redirectedTo);
 
-    const hash = new URL(redirectedTo).hash.slice(1);
+    const responseUrl = new URL(redirectedTo);
+    if (responseUrl.searchParams.has('error')) {
+      const params = Object.fromEntries(responseUrl.searchParams);
+      const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+      return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(params));
+    }
+    const hash = responseUrl.hash.slice(1);
     invariant(hash, 'No hash found in response URL from OAuth2 provider');
     const data = Object.fromEntries(new URLSearchParams(hash));
     const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
@@ -259,8 +265,9 @@ const transformNewAccessTokenToOauthModel = (accessToken: Partial<Record<AuthKey
     error: accessToken.error || undefined,
     errorDescription: accessToken.error_description || undefined,
     errorUri: accessToken.error_uri || undefined,
-    // Special Cases
+    // Special Case for response timeline viewing
     xResponseId: accessToken.xResponseId || null,
+    // Special Case for empty body or http error code custom messages
     xError: accessToken.xError || null,
   };
 };
