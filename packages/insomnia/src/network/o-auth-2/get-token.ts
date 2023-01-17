@@ -59,7 +59,7 @@ export const getOAuth2Token = async (
     console.log('[oauth2] Detected redirect ' + redirectedTo);
 
     const hash = new URL(redirectedTo).hash.slice(1);
-    invariant(hash, 'No hash found in redirect URL');
+    invariant(hash, 'No hash found in response URL from OAuth2 provider');
     const data = Object.fromEntries(new URLSearchParams(hash));
     const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
     return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({
