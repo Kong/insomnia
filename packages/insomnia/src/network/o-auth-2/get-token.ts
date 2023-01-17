@@ -58,8 +58,14 @@ export const getOAuth2Token = async (
     });
     console.log('[oauth2] Detected redirect ' + redirectedTo);
 
-    const hash = new URL(redirectedTo).hash.slice(1);
-    invariant(hash, 'No hash found in redirect URL');
+    const responseUrl = new URL(redirectedTo);
+    if (responseUrl.searchParams.has('error')) {
+      const params = Object.fromEntries(responseUrl.searchParams);
+      const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+      return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(params));
+    }
+    const hash = responseUrl.hash.slice(1);
+    invariant(hash, 'No hash found in response URL from OAuth2 provider');
     const data = Object.fromEntries(new URLSearchParams(hash));
     const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
     return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({
@@ -74,7 +80,8 @@ export const getOAuth2Token = async (
     invariant(authentication.authorizationUrl, 'Invalid authorization URL');
 
     const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
-    const codeChallenge = authentication.pkceMethod !== PKCE_CHALLENGE_S256 ? codeVerifier : encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest());
+    const usePkceAnd256 = authentication.usePkce && authentication.pkceMethod === PKCE_CHALLENGE_S256;
+    const codeChallenge = usePkceAnd256 ? encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest()) : codeVerifier;
     const authCodeUrl = new URL(authentication.authorizationUrl);
     [
       { name: 'response_type', value: RESPONSE_TYPE_CODE },
@@ -258,8 +265,9 @@ const transformNewAccessTokenToOauthModel = (accessToken: Partial<Record<AuthKey
     error: accessToken.error || undefined,
     errorDescription: accessToken.error_description || undefined,
     errorUri: accessToken.error_uri || undefined,
-    // Special Cases
+    // Special Case for response timeline viewing
     xResponseId: accessToken.xResponseId || null,
+    // Special Case for empty body or http error code custom messages
     xError: accessToken.xError || null,
   };
 };
