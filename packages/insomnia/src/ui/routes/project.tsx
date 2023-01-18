@@ -218,13 +218,68 @@ const Sidebar = styled.div({
   display: 'flex',
   flexDirection: 'column',
 });
+const OrgSideBarSection = ({ projects, activeProject, organizationId }: { projects: Project[]; activeProject: Project; organizationId: string }) => {
+  const createNewProjectFetcher = useFetcher();
 
-const OrganizationProjectsSidebar: FC<{
-  title: string;
-  projects: Project[];
-  activeProject: Project;
-  organizationId: string;
-}> = ({ activeProject, projects, title, organizationId }) => {
+  return (
+    <SidebarSection>
+      <SidebarSectionTitle>
+        Projects ({projects.length})
+      </SidebarSectionTitle>
+      <Button
+        style={{
+          padding: 'var(--padding-sm)',
+          minWidth: 'auto',
+          width: 'unset',
+          flex: 0,
+        }}
+        variant="text"
+        size="small"
+        onClick={() => {
+          if (activeProject.remoteId) {
+            showAlert({
+              title: 'This capability is coming soon',
+              okLabel: 'Close',
+              message: (
+                <div>
+                  <p>
+                    At the moment it is not possible to create more cloud
+                    projects within a team in Insomnia.
+                  </p>
+                  <p>
+                    🚀 This feature is coming soon!
+                  </p>
+                </div>
+              ),
+            });
+          } else {
+            const defaultValue = `My ${strings.project.singular}`;
+            showPrompt({
+              title: `Create New ${strings.project.singular}`,
+              submitName: 'Create',
+              placeholder: defaultValue,
+              defaultValue,
+              selectText: true,
+              onComplete: async name =>
+                createNewProjectFetcher.submit(
+                  {
+                    name,
+                  },
+                  {
+                    action: `/organization/${organizationId}/project/new`,
+                    method: 'post',
+                  }
+                ),
+            });
+          }
+        }}
+      >
+        <i data-testid="CreateProjectButton" className="fa fa-plus" />
+      </Button>
+    </SidebarSection>
+  );
+};
+const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { projects: Project[]; activeProject: Project; organizationId: string }) => {
   const [collections, setCollections] = useState<Workspace[]>([]);
   useEffect(() => {
     const fn = async () => {
@@ -242,8 +297,105 @@ const OrganizationProjectsSidebar: FC<{
     };
     fn();
   }, [projects]);
-  const createNewProjectFetcher = useFetcher();
   const navigate = useNavigate();
+  return (
+    <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
+      {projects.map(proj => {
+        return (
+          <li key={proj._id} className="sidebar__row">
+            <div
+              className={`sidebar__item sidebar__item--request ${activeProject._id === proj._id ? 'sidebar__item--active' : ''}`}
+            >
+              <button
+                style={{
+                  paddingLeft: 'var(--padding-md)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--padding-sm)',
+                }}
+                onClick={() =>
+                  navigate(
+                    `/organization/${organizationId}/project/${proj._id}`
+                  )
+                }
+                className="wide"
+              >
+                {isRemoteProject(activeProject) ? (
+                  <i className="fa fa-globe" />
+                ) : (
+                  <i className="fa fa-laptop" />
+                )}{' '}
+                {proj.name}
+              </button>
+              {!isDefaultProject(proj) && (
+                <div
+                  style={{
+                    display: 'flex',
+                    height: '100%',
+                    alignItems: 'center',
+                    padding: '0 var(--padding-md)',
+                  }}
+                >
+                  <ProjectDropdown organizationId={organizationId} project={proj} />
+                </div>
+              )}
+            </div>
+            <ul>
+              {collections.map(collection => (<li key={collection.name}>
+                <div className='sidebar__item sidebar__item--request'>
+                  <button
+                    className="wide"
+                    style={{
+                      paddingLeft: 'var(--padding-md)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--padding-sm)',
+                    }}
+                  ><i className="fa fa-arrow-right" />{collection.name}
+                  </button>
+                </div>
+                <div className='sidebar__item sidebar__item--request'>
+                  <button
+                    className="wide"
+                    style={{
+                      paddingLeft: 'var(--padding-lg)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--padding-sm)',
+                    }}
+                  ><i className="fa fa-laptop" />{collection.baseenvironment.name}
+                  </button>
+                </div>
+                <ul>
+                  {collection.baseenvironment.subenvs.map(env => (<li key={env.name}>
+                    <div className='sidebar__item sidebar__item--request'>
+                      <button
+                        className="wide"
+                        style={{
+                          paddingLeft: 'var(--padding-xl)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 'var(--padding-sm)',
+                        }}
+                      ><i className="fa fa-laptop" />{env.name}
+                      </button>
+                    </div>
+                  </li>))}
+                </ul>
+              </li>))}
+            </ul>
+          </li>
+        );
+      })}
+    </ul>
+  );
+};
+const OrganizationProjectsSidebar: FC<{
+  title: string;
+  projects: Project[];
+  activeProject: Project;
+  organizationId: string;
+}> = ({ activeProject, projects, title, organizationId }) => {
   return (
     <Sidebar
       style={{
@@ -253,153 +405,8 @@ const OrganizationProjectsSidebar: FC<{
       <SidebarTitle>
         {title}
       </SidebarTitle>
-      <SidebarSection>
-        <SidebarSectionTitle>
-          Projects ({projects.length})
-        </SidebarSectionTitle>
-        <Button
-          style={{
-            padding: 'var(--padding-sm)',
-            minWidth: 'auto',
-            width: 'unset',
-            flex: 0,
-          }}
-          variant="text"
-          size="small"
-          onClick={() => {
-            if (activeProject.remoteId) {
-              showAlert({
-                title: 'This capability is coming soon',
-                okLabel: 'Close',
-                message: (
-                  <div>
-                    <p>
-                      At the moment it is not possible to create more cloud
-                      projects within a team in Insomnia.
-                    </p>
-                    <p>
-                      🚀 This feature is coming soon!
-                    </p>
-                  </div>
-                ),
-              });
-            } else {
-              const defaultValue = `My ${strings.project.singular}`;
-              showPrompt({
-                title: `Create New ${strings.project.singular}`,
-                submitName: 'Create',
-                placeholder: defaultValue,
-                defaultValue,
-                selectText: true,
-                onComplete: async name =>
-                  createNewProjectFetcher.submit(
-                    {
-                      name,
-                    },
-                    {
-                      action: `/organization/${organizationId}/project/new`,
-                      method: 'post',
-                    }
-                  ),
-              });
-            }
-          }}
-        >
-          <i data-testid="CreateProjectButton" className="fa fa-plus" />
-        </Button>
-      </SidebarSection>
-      <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
-        {projects.map(proj => {
-          return (
-            <li key={proj._id} className="sidebar__row">
-              <div
-                className={`sidebar__item sidebar__item--request ${activeProject._id === proj._id
-                  ? 'sidebar__item--active'
-                  : ''
-                }`}
-              >
-                <button
-                  style={{
-                    paddingLeft: 'var(--padding-md)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--padding-sm)',
-                  }}
-                  onClick={() =>
-                    navigate(
-                      `/organization/${organizationId}/project/${proj._id}`
-                    )
-                  }
-                  className="wide"
-                >
-                  {isRemoteProject(activeProject) ? (
-                    <i className="fa fa-globe" />
-                  ) : (
-                    <i className="fa fa-laptop" />
-                  )}{' '}
-                  {proj.name}
-                </button>
-                {!isDefaultProject(proj) && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      height: '100%',
-                      alignItems: 'center',
-                      padding: '0 var(--padding-md)',
-                    }}
-                  >
-                    <ProjectDropdown organizationId={organizationId} project={proj} />
-                  </div>
-                )}
-              </div>
-              <ul>
-                {collections.map(collection => (<li key={collection.name}>
-                  <div className='sidebar__item sidebar__item--request'>
-                    <button
-                      className="wide"
-                      style={{
-                        paddingLeft: 'var(--padding-md)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 'var(--padding-sm)',
-                      }}
-                    ><i className="fa fa-arrow-right" />{collection.name}
-                    </button>
-                  </div>
-                  <div className='sidebar__item sidebar__item--request'>
-                    <button
-                      className="wide"
-                      style={{
-                        paddingLeft: 'var(--padding-lg)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 'var(--padding-sm)',
-                      }}
-                    ><i className="fa fa-laptop" />{collection.baseenvironment.name}
-                    </button>
-                  </div>
-                  <ul>
-                    {collection.baseenvironment.subenvs.map(env => (<li key={env.name}>
-                      <div className='sidebar__item sidebar__item--request'>
-                        <button
-                          className="wide"
-                          style={{
-                            paddingLeft: 'var(--padding-xl)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 'var(--padding-sm)',
-                          }}
-                        ><i className="fa fa-laptop" />{env.name}
-                        </button>
-                      </div>
-                    </li>))}
-                  </ul>
-                </li>))}
-              </ul>
-            </li>
-          );
-        })}
-      </ul>
+      <OrgSideBarSection projects={projects} activeProject={activeProject} organizationId={organizationId} />
+      <ProjectSidebarSection projects={projects} activeProject={activeProject} organizationId={organizationId} />
     </Sidebar>
   );
 };
