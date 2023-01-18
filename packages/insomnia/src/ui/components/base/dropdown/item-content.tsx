@@ -37,7 +37,7 @@ const StyledItemContainer = styled.div<ContainerProps>(props => ({
   fontWeight: props.isSelected ? 'bold' : 'normal',
 }));
 
-const StyledItemPromptContainer = styled(PromptButton)<ContainerProps>(props => ({
+const StyledItemPromptContainer = styled(PromptButton)({
   width: '100%',
   height: '100%',
   display: 'flex',
@@ -45,9 +45,7 @@ const StyledItemPromptContainer = styled(PromptButton)<ContainerProps>(props => 
   justifyContent: 'space-between',
   paddingRight: 'calc(1rem * 1.2)',
   paddingLeft: 'calc(1rem * 0.6)',
-  background: props.isSelected ? 'var(--hl-xs)' : 'initial',
-  fontWeight: props.isSelected ? 'bold' : 'normal',
-}));
+});
 
 const StyledItemContent = styled.div({
   display: 'flex',
@@ -97,7 +95,6 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
       <StyledItemPromptContainer
         fullWidth
         className={className}
-        isSelected={isSelected}
         onClick={onClick}
       >
         {content}
@@ -110,7 +107,6 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
       role='button'
       className={className}
       style={style}
-      onClick={onClick}
       isSelected={isSelected}
     >
       {content}
