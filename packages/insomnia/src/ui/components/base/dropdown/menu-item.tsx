@@ -41,14 +41,14 @@ export const MenuItem = <T extends object>({
   state,
   onAction,
   onClose,
-  closeOnSelect = true,
+  closeOnSelect,
 }: Props<T>) => {
   const ref = useRef<HTMLLIElement>(null);
 
   // @ts-expect-error -- TSCONVERSION
-  const withPrompt = item.rendered?.props?.withPrompt || undefined;
+  const withPrompt = item.rendered?.props?.withPrompt || false;
   // @ts-expect-error -- TSCONVERSION
-  const onClick = item.rendered?.props?.onClick || null;
+  const onClick = item.rendered?.props?.onClick || undefined;
   // @ts-expect-error -- TSCONVERSION
   const isDisabled = item.rendered?.props?.isDisabled || false;
   // @ts-expect-error -- TSCONVERSION
@@ -56,7 +56,7 @@ export const MenuItem = <T extends object>({
 
   // Close the menu if the item is not prompt or if user wants to stay open after click
   // of if the dropdown is not set to close on select.
-  const closeOnSelectState = !!withPrompt || !stayOpenAfterClick || closeOnSelect;
+  const shouldRemainOpen = withPrompt || stayOpenAfterClick;
 
   /**
    * We use this hack to allow for a prompt to be shown before the action is executed.
@@ -64,10 +64,8 @@ export const MenuItem = <T extends object>({
    * before actually deleting the document.
    */
   const handleClick = () => {
-    if (!withPrompt && onClick && !isDisabled) {
+    if (onClick && !isDisabled) {
       onClick();
-    } else {
-      onAction?.(item.key);
     }
   };
 
@@ -76,8 +74,9 @@ export const MenuItem = <T extends object>({
     isFocused,
   } = useMenuItem({
     key: item.key,
-    closeOnSelect: closeOnSelectState,
-    onAction: handleClick,
+    closeOnSelect: closeOnSelect || !shouldRemainOpen,
+    'aria-label': item['aria-label'],
+    onAction: !withPrompt ? handleClick : onAction,
     onClose,
   }, state, ref);
 
