@@ -29,7 +29,7 @@ test.describe('Cookie editor', async () => {
     await page.getByText('Edit').first().click();
 
     // Try to replace text in Raw view
-    await page.click('text=Raw');
+    await page.getByRole('tab', { name: 'Raw' }).click();
     await page.locator('text=Raw Cookie String >> input[type="text"]').fill('foo2=bar2; Expires=Tue, 19 Jan 2038 03:14:07 GMT; Domain=localhost; Path=/');
 
     await page.locator('text=Done').nth(1).click();
@@ -40,16 +40,16 @@ test.describe('Cookie editor', async () => {
     await page.click('[data-testid="request-pane"] button:has-text("Send")');
 
     // Check in the timeline that the cookie was sent
-    await page.click('text=Timeline');
+    await page.getByRole('tab', { name: 'Timeline' }).click();
     await page.click('text=foo2=bar2; foo=b123ar');
 
     // Send ws request
-    await page.click('button:has-text("WSexample websocket")');
+    await page.getByRole('button', { name: 'example websocket' }).click();
     await page.click('text=ws://localhost:4010');
     await page.click('[data-testid="request-pane"] >> text=Connect');
 
     // Check in the timeline that the cookie was sent
-    await page.click('text=Timeline');
+    await page.getByRole('tab', { name: 'Timeline' }).click();
     await page.click('text=foo2=bar2; foo=b123ar;');
   });
 
