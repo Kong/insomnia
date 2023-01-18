@@ -38,30 +38,34 @@ export const Menu = <T extends object>(props: Props<T>) => {
 
   return (
     <List {...menuProps} ref={ref}>
-      {[...state.collection].map((item: Node<T>) => (
-        item.type === 'section' ?
-          (
-            [...item.childNodes].length !== 0 &&
-              <MenuSection
-                key={item.key}
-                section={item}
-                state={state}
-                onAction={props.onAction}
-                onClose={props.onClose}
-                closeOnSelect={props.closeOnSelect}
-              />
-          ) :
-          item.rendered ? (
+      {[...state.collection].map((item: Node<T>) => {
+        // If the item is a section and the section has items, render a MenuSection
+        if (item.type === 'section' && [...item.childNodes].length !== 0) {
+          return (
+            <MenuSection
+              key={item.key}
+              section={item}
+              state={state}
+              closeOnSelect={props.closeOnSelect}
+            />
+          );
+        }
+
+        // If the item is a dropdown item and has content, render a MenuItem
+        if (item.type === 'item' && item.rendered) {
+          return (
             <MenuItem
               key={item.key}
               item={item}
               state={state}
-              onAction={props.onAction}
-              onClose={props.onClose}
               closeOnSelect={props.closeOnSelect}
             />
-          ) : null
-      ))}
+          );
+        }
+
+        return null;
+
+      })}
     </List>
   );
 };

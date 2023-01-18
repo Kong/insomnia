@@ -1,5 +1,5 @@
 import type { Node } from '@react-types/shared';
-import React, { Key } from 'react';
+import React from 'react';
 import { useMenuSection, useSeparator } from 'react-aria';
 import { TreeState } from 'react-stately';
 import styled from 'styled-components';
@@ -38,16 +38,12 @@ interface Props<T> {
   dividerLabel?: string;
   section: Node<T>;
   state: TreeState<T>;
-  onAction?: (key: Key) => void;
-  onClose?: () => void;
   closeOnSelect?: boolean;
 }
 
 export const MenuSection = <T extends object>({
   section,
   state,
-  onAction,
-  onClose,
   closeOnSelect = true,
 }: Props<T>) => {
   const { itemProps, headingProps, groupProps } = useMenuSection({
@@ -69,8 +65,6 @@ export const MenuSection = <T extends object>({
             key={node.key}
             item={node}
             state={state}
-            onAction={onAction}
-            onClose={onClose}
             closeOnSelect={closeOnSelect}
           />
         ))}

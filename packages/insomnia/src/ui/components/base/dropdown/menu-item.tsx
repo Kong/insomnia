@@ -1,5 +1,5 @@
 import { Node } from '@react-types/shared';
-import React, { Key } from 'react';
+import React from 'react';
 import { useRef } from 'react';
 import { useMenuItem } from 'react-aria';
 import { TreeState } from 'react-stately';
@@ -31,16 +31,12 @@ const StyledListItem = styled.li<StyledListItemProps>(({ isFocused, isDisabled }
 interface Props<T> {
   item: Node<T>;
   state: TreeState<T>;
-  onAction?: (key: Key) => void;
-  onClose?: () => void;
   closeOnSelect?: boolean;
 }
 
 export const MenuItem = <T extends object>({
   item,
   state,
-  onAction,
-  onClose,
   closeOnSelect,
 }: Props<T>) => {
   const ref = useRef<HTMLLIElement>(null);
@@ -76,8 +72,7 @@ export const MenuItem = <T extends object>({
     key: item.key,
     closeOnSelect: closeOnSelect || !shouldRemainOpen,
     'aria-label': item['aria-label'],
-    onAction: !withPrompt ? handleClick : onAction,
-    onClose,
+    onAction: !withPrompt ? handleClick : undefined,
   }, state, ref);
 
   return (
