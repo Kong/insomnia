@@ -14,10 +14,10 @@ test.describe('Design interactions', async () => {
   test('Can import an OpenAPI 3 spec into a Design Document', async ({ app, page }) => {
     // Setup
     await page.click('[data-testid="project"] >> text=Insomnia');
-    await page.click('text=Create');
+    await page.getByRole('button', { name: 'Create' }).click();
     const text = await loadFixture('openapi3.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-    await page.click('button:has-text("Clipboard")');
+    await page.getByRole('menuitem', { name: 'Clipboard' }).click();
     await page.click('div[role="dialog"] >> text=Design Document');
     await page.click('text=DocumentSmoke Test API server 1.0.0v1.0.0OpenAPI 3.0.0just now');
 
@@ -32,8 +32,8 @@ test.describe('Design interactions', async () => {
     await expect(page.locator('.app')).toContainText('Auth');
 
     // Created Environment from spec
-    await page.click('#wrapper button:has-text("OpenAPI env")');
-    await page.click('button:has-text("Manage Environments")');
+    await page.getByRole('button', { name: 'OpenAPI env' }).click();
+    await page.getByRole('menuitem', { name: 'Manage Environments' }).click();
     await page.click('text=/.*"localhost:4010".*/');
   });
 
@@ -52,10 +52,10 @@ test.describe('Design interactions', async () => {
   test('Unit Test interactions', async ({ app, page }) => {
     // Setup
     await page.click('[data-testid="project"] >> text=Insomnia');
-    await page.click('text=Create');
+    await page.getByRole('button', { name: 'Create' }).click();
     const text = await loadFixture('unit-test.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-    await page.click('button:has-text("Clipboard")');
+    await page.getByRole('menuitem', { name: 'Clipboard' }).click();
     await page.click('text=unit-test.yamljust now');
 
     // Switch to Test tab
