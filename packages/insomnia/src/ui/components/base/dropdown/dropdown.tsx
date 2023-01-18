@@ -71,6 +71,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
             {...menuProps}
             {...props}
             selectionMode={selectionMode}
+            closeOnSelect={props.closeOnSelect}
             autoFocus={state.focusStrategy || true}
             onClose={() => state.close()}
           />
