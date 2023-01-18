@@ -5,10 +5,10 @@ test.describe('Cookie editor', async () => {
 
   test.beforeEach(async ({ app, page }) => {
     await page.click('[data-testid="project"] >> text=Insomnia');
-    await page.click('text=Create');
+    await page.getByRole('button', { name: 'Create' }).click();
     const text = await loadFixture('simple.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-    await page.click('button:has-text("Clipboard")');
+    await page.getByRole('menuitem', { name: 'Clipboard' }).click();
     await page.click('text=Collectionsimplejust now');
   });
 
@@ -24,9 +24,9 @@ test.describe('Cookie editor', async () => {
     await page.locator('text=Done').nth(1).click();
 
     // Create a new cookie
-    await page.click('text=Actions');
-    await page.click('button:has-text("Add Cookie")');
-    await page.locator('text=Edit').first().click();
+    await page.getByRole('button', { name: 'Actions' }).click();
+    await page.getByRole('menuitem', { name: 'Add Cookie' }).click();
+    await page.getByText('Edit').first().click();
 
     // Try to replace text in Raw view
     await page.click('text=Raw');
@@ -36,7 +36,7 @@ test.describe('Cookie editor', async () => {
     await page.click('text=Done');
 
     // Send http request
-    await page.click('button:has-text("GETexample http")');
+    await page.getByRole('button', { name: 'example http' }).click();
     await page.click('[data-testid="request-pane"] button:has-text("Send")');
 
     // Check in the timeline that the cookie was sent
