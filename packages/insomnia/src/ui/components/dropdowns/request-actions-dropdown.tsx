@@ -155,7 +155,6 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       <DropdownItem aria-label='Generate Code'>
         {canGenerateCode && (
           <ItemContent
-            // dataTestId={`DropdownItemGenerateCode-${toKebabCase(request.name)}`}
             icon="code"
             label="Generate Code"
             hint={hotKeyRegistry.request_showGenerateCodeEditor}
@@ -166,7 +165,6 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
       <DropdownItem aria-label={isPinned ? 'Unpin' : 'Pin'}>
         <ItemContent
-          // dataTestId={`DropdownItemPinRequest-${toKebabCase(request.name)}`}
           icon="thumb-tack"
           label={isPinned ? 'Unpin' : 'Pin'}
           hint={hotKeyRegistry.request_togglePin}
@@ -177,7 +175,6 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       <DropdownItem aria-label='Copy as cURL'>
         {canGenerateCode && (
           <ItemContent
-            // dataTestId={`DropdownItemCopyAsCurl-${toKebabCase(request.name)}`}
             icon="copy"
             label="Copy as cURL"
             onClick={copyAsCurl}
@@ -187,7 +184,6 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
       <DropdownItem aria-label='Rename'>
         <ItemContent
-          // dataTestId={`DropdownItemRename-${toKebabCase(request.name)}`}
           icon="edit"
           label="Rename"
           onClick={handleRename}
@@ -196,7 +192,6 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
       <DropdownItem aria-label='Delete'>
         <ItemContent
-          // dataTestId={`DropdownItemDelete-${toKebabCase(request.name)}`}
           icon="trash-o"
           label="Delete"
           hint={hotKeyRegistry.request_showDelete}
@@ -227,7 +222,6 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       <DropdownSection aria-label='Settings Section'>
         <DropdownItem aria-label='Settings'>
           <ItemContent
-            // dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`}>
             icon="wrench"
             label="Settings"
             hint={hotKeyRegistry.request_showSettings}
