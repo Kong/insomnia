@@ -41,14 +41,15 @@ export const Menu = <T extends object>(props: Props<T>) => {
       {[...state.collection].map((item: Node<T>) => (
         item.type === 'section' ?
           (
-            <MenuSection
-              key={item.key}
-              section={item}
-              state={state}
-              onAction={props.onAction}
-              onClose={props.onClose}
-              closeOnSelect={props.closeOnSelect}
-            />
+            [...item.childNodes].length !== 0 &&
+              <MenuSection
+                key={item.key}
+                section={item}
+                state={state}
+                onAction={props.onAction}
+                onClose={props.onClose}
+                closeOnSelect={props.closeOnSelect}
+              />
           ) :
           item.rendered ? (
             <MenuItem
