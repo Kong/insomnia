@@ -21,9 +21,9 @@ test.describe('Dashboard', async () => {
 
       // Rename Project
       await page.click('[data-testid="ProjectDropDown-My-Project"] button');
-      await page.click('button:has-text("Project Settings")');
-      await page.click('[placeholder="My Project"]');
-      await page.locator('[placeholder="My Project"]').fill('My Project123');
+      await page.getByRole('menuitem', { name: 'Project Settings' }).click();
+      await page.getByPlaceholder('My Project').click();
+      await page.getByPlaceholder('My Project').fill('My Project123');
 
       // Check that the project name is updated on modal
       await expect(page.locator('.app')).toContainText('My Project123');
@@ -34,10 +34,10 @@ test.describe('Dashboard', async () => {
 
       // Delete project
       await page.click('[data-testid="ProjectDropDown-My-Project123"] button');
-      await page.click('button:has-text("Project Settings")');
+      await page.getByRole('menuitem', { name: 'Project Settings' }).click();
       // Click text=NameActions Delete >> button
       await page.click('text=NameActions Delete >> button');
-      await page.click('button:has-text("Click to confirm")');
+      await page.getByRole('button', { name: 'Click to confirm' }).click();
 
       // After deleting project, return to default Insomnia Dashboard
       await expect(page.locator('.app')).toContainText('Insomnia');
@@ -53,10 +53,10 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).toContainText('All Files (1)');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
-      await page.click('text=Create');
+      await page.getByRole('button', { name: 'Create' }).click();
       const text = await loadFixture('multiple-workspaces.yaml');
       await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-      await page.click('button:has-text("Clipboard")');
+      await page.getByRole('menuitem', { name: 'Clipboard' }).click();
 
       // Check that 10 new workspaces are imported besides the default one
       const workspaceCards = page.locator('.card-badge');
@@ -89,8 +89,8 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
       // Create new document
-      await page.click('text=Create');
-      await page.click('button:has-text("Design Document")');
+      await page.getByRole('button', { name: 'Create' }).click();
+      await page.getByRole('menuitem', { name: 'Design Document' }).click();
       await page.locator('text=Create').nth(1).click();
 
       // Return to dashboard
@@ -99,14 +99,14 @@ test.describe('Dashboard', async () => {
 
       // Rename document
       await page.click('text=Documentmy-spec.yamljust now >> button');
-      await page.locator('button:has-text("Rename")').first().click();
+      await page.getByRole('menuitem', { name: 'Rename' }).click();
       await page.locator('text=Rename DocumentName Rename >> input[type="text"]').fill('test123');
       await page.click('#root button:has-text("Rename")');
       await expect(page.locator('.app')).toContainText('test123');
 
       // Duplicate document
       await page.click('text=Documenttest123just now >> button');
-      await page.locator('button:has-text("Duplicate")').first().click();
+      await page.getByRole('menuitem', { name: 'Duplicate' }).click();
       await page.locator('input[name="name"]').fill('test123-duplicate');
       await page.click('[role="dialog"] button:has-text("Duplicate")');
 
@@ -119,7 +119,7 @@ test.describe('Dashboard', async () => {
 
       // Delete document
       await page.click('text=Documenttest123just now >> button');
-      await page.locator('button:has-text("Delete")').nth(1).click();
+      await page.getByRole('menuitem', { name: 'Delete' }).click();
       await page.locator('text=Yes').click();
       await expect(workspaceCards).toHaveCount(2);
     });
@@ -130,8 +130,8 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
       // Create new collection
-      await page.click('text=Create');
-      await page.click('button:has-text("Request Collection")');
+      await page.getByRole('button', { name: 'Create' }).click();
+      await page.getByRole('menuitem', { name: 'Request Collection' }).click();
       await page.locator('text=Create').nth(1).click();
 
       // Return to dashboard
@@ -140,14 +140,14 @@ test.describe('Dashboard', async () => {
 
       // Rename collection
       await page.click('text=CollectionMy Collectionjust now >> button');
-      await page.locator('button:has-text("Rename")').first().click();
+      await page.getByRole('menuitem', { name: 'Rename' }).click();
       await page.locator('text=Rename CollectionName Rename >> input[type="text"]').fill('test123');
       await page.click('#root button:has-text("Rename")');
       await expect(page.locator('.app')).toContainText('test123');
 
       // Duplicate collection
       await page.click('text=Collectiontest123just now >> button');
-      await page.locator('button:has-text("Duplicate")').first().click();
+      await page.getByRole('menuitem', { name: 'Duplicate' }).click();
       await page.locator('input[name="name"]').fill('test123-duplicate');
       await page.click('[role="dialog"] button:has-text("Duplicate")');
 
@@ -159,7 +159,7 @@ test.describe('Dashboard', async () => {
 
       // Delete collection
       await page.click('text=Collectiontest123just now >> button');
-      await page.locator('button:has-text("Delete")').nth(1).click();
+      await page.getByRole('menuitem', { name: 'Delete' }).click();
       await page.locator('text=Yes').click();
       await expect(workspaceCards).toHaveCount(2);
     });
