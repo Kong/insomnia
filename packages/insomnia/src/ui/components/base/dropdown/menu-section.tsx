@@ -20,6 +20,7 @@ const StyledDividerSpan = styled.span<StyledDividerProps>({
   whiteSpace: 'nowrap',
   paddingRight: '1em',
   color: 'var(--hl)',
+  background: 'var(--color-bg)',
   fontSize: 'var(--font-size-xs)',
   textTransform: 'uppercase',
   margin: 'var(--padding-sm) 0',

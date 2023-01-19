@@ -13,14 +13,14 @@ interface StyledListItemProps {
 const StyledListItem = styled.li<StyledListItemProps>(({ isFocused, isDisabled }) => ({
   display: 'flex',
   alignItems: 'center',
-  height: '30px',
+  height: 'var(--line-height-xs)',
   minWidth: '15rem',
-  fontSize: '1rem',
+  fontSize: 'var(--font-size-md)',
   textAlign: 'left',
   margin: 0,
   whiteSpace: 'nowrap',
-  backgroundColor: isFocused ? 'rgba(130, 130, 130, 0.25)' : 'transparent',
-  color: 'rgb(51,51,51)',
+  color: 'var(--color-font)',
+  background: isFocused ? 'var(--hl-sm)' : 'transparent',
   cursor: isDisabled ? 'not-allowed' : 'pointer',
 
   '&:focus': {

@@ -12,7 +12,7 @@ const List = styled.ul({
   border: '1px solid var(--hl-sm)',
   boxShadow: '0 0 1rem 0 rgba(0, 0, 0, 0.1)',
   boxSizing: 'border-box',
-  background: 'rgb(255,255,255)',
+  background: 'var(--color-bg)',
   margin: 'var(--padding-xxs) 3px',
   paddingTop: 'var(--radius-md)',
   paddingBottom: 'var(--radius-md)',
@@ -37,7 +37,7 @@ export const Menu = <T extends object>(props: Props<T>) => {
   const { menuProps } = useMenu(props, state, ref);
 
   return (
-    <List {...menuProps} ref={ref}>
+    <List {...menuProps} ref={ref} className="dropdown__menu">
       {[...state.collection].map((item: Node<T>) => {
         // If the item is a section and the section has items, render a MenuSection
         if (item.type === 'section' && [...item.childNodes].length !== 0) {
