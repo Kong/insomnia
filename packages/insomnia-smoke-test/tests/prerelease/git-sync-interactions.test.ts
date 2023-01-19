@@ -39,7 +39,6 @@ test('Clone new repo', async ({ page }) => {
   await page.locator('[placeholder="MyUser"]').click();
   await page.locator('[placeholder="MyUser"]').fill('kreosus');
   await page.locator('[placeholder="\\38 8e7ee63b254e4b0bf047559eafe86ba9dd49507"]').click();
-  await page.locator('[placeholder="\\38 8e7ee63b254e4b0bf047559eafe86ba9dd49507"]').fill('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');
   await page.locator('[data-testid="git-repository-settings-modal__sync-btn"]').click();
 
 });
