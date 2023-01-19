@@ -297,13 +297,17 @@ const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { pr
     const fn = async () => {
       // get all workspaces at this organization in collection scope
       const workspaces = await Promise.all(projects.map(p => models.workspace.findByParentId(p._id)));
-      const colections = workspaces.flat().filter(w => w.scope === 'collection');
-      const cool = await Promise.all(colections.map(async w => {
+      const collections = workspaces.flat().filter(w => w.scope === 'collection');
+      const cool = await Promise.all(collections.map(async w => {
         const base = await models.environment.getOrCreateForParentId(w._id);
         const cookieJar = await models.cookieJar.getOrCreateForParentId(w._id);
         invariant(base, 'Expected base environment to exist');
         const subenvs = await models.environment.findByParentId(base._id);
-        return ({ ...w, baseenvironment: { name: base.name, subenvs }, cookieJar });
+        const requests = await models.request.findByParentId(w._id);
+
+        const composed = { ...w, baseenvironment: { name: base.name, subenvs }, cookieJar, requests };
+        console.log(composed);
+        return composed;
       }));
 
       setCollections(cool);
@@ -327,34 +331,48 @@ const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { pr
                 </NavContextMenu>
               )}
             </div>
-            <ul>
-              {collections.map(collection => (
-                <li key={collection.name}>
-                  <div className='sidebar__item sidebar__item--request'>
-                    <NavButton className="wide" onClick={() => navigate(`/organization/${organizationId}/project/${proj._id}/workspace/${collection._id}/${collection.scope === 'design' ? ACTIVITY_SPEC : ACTIVITY_DEBUG}`)}>
-                      <i className="fa fa-arrow-right" />{collection.name}
-                    </NavButton>
-                  </div>
-                  <div className='sidebar__item sidebar__item--request'>
-                    <NavButton className="wide">
-                      <i className="fa fa-cookie" />{collection.cookieJar.name}
-                    </NavButton>
-                  </div>
-                  <div className='sidebar__item sidebar__item--request'>
-                    <NavButton className="wide">
-                      <i className="fa fa-pen-to-square" />{collection.baseenvironment.name}
-                    </NavButton>
-                  </div>
-                  <ul>
-                    {collection.baseenvironment.subenvs.map(env => (<li key={env.name}>
-                      <div className='sidebar__item sidebar__item--request'>
-                        <NavButton className="wide">
-                          <i className="fa fa-pen-to-square" />{env.name}
-                        </NavButton>
-                      </div>
-                    </li>))}
-                  </ul>
-                </li>))}
+            <ul className="margin-left">
+              {collections.map(collection => {
+                const linkToDesignOrCOllection = `/organization/${organizationId}/project/${proj._id}/workspace/${collection._id}/${collection.scope === 'design' ? ACTIVITY_SPEC : ACTIVITY_DEBUG}`;
+                return (
+                  <li key={collection.name}>
+                    <div className='sidebar__item sidebar__item--request'>
+                      <NavButton className="wide" onClick={() => navigate(linkToDesignOrCOllection)}>
+                        <i className="fa fa-arrow-right" />{collection.name}
+                      </NavButton>
+                    </div>
+                    <div className='sidebar__item sidebar__item--request'>
+                      <NavButton className="wide">
+                        <i className="fa fa-cookie" />{collection.cookieJar.name}
+                      </NavButton>
+                    </div>
+                    <div className='sidebar__item sidebar__item--request'>
+                      <NavButton className="wide">
+                        <i className="fa fa-pen-to-square" />{collection.baseenvironment.name}
+                      </NavButton>
+                    </div>
+                    <ul className="margin-left">
+                      {collection.baseenvironment.subenvs.map(env => (
+                        <li key={env.name}>
+                          <div className='sidebar__item sidebar__item--request'>
+                            <NavButton className="wide">
+                              <i className="fa fa-pen-to-square" />{env.name}
+                            </NavButton>
+                          </div>
+                        </li>))}
+                    </ul>
+                    <ul className="margin-left">
+                      {collection.requests.map(request => (
+                        <li key={request.name}>
+                          <div className='sidebar__item sidebar__item--request'>
+                            <NavButton className="wide">
+                              <i className="fa fa-pen-to-square" />{request.name}
+                            </NavButton>
+                          </div>
+                        </li>))}
+                    </ul>
+                  </li>);
+              })}
             </ul>
           </li>
         );
