@@ -57,7 +57,13 @@ export const Shortcuts: FC = () => {
                   <Dropdown
                     aria-label='Select a mode'
                     triggerButton={
-                      <DropdownButton className="btn btn--clicky-small">
+                      <DropdownButton
+                        removePaddings={false}
+                        removeBorderRadius={false}
+                        disableHoverBehavior={false}
+                        radius="var(--radius-md)"
+                        variant='outlined'
+                      >
                         <i className="fa fa-gear" />
                       </DropdownButton>
                     }
