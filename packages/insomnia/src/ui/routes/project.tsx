@@ -24,9 +24,12 @@ import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
+import { CookieJar } from '../../models/cookie-jar';
+import { Environment } from '../../models/environment';
 import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '../../models/organization';
 import { isDefaultProject, isRemoteProject, Project } from '../../models/project';
+import { Request } from '../../models/request';
 import { isDesign, Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
 import { Dropdown } from '../components/base/dropdown/dropdown';
@@ -130,7 +133,6 @@ const SidebarTitle = styled.h2({
   margin: 0,
   paddingLeft: 'var(--padding-md)',
   borderBottom: '1px solid var(--hl-md)',
-  overflow: 'hidden',
   whiteSpace: 'nowrap',
   textOverflow: 'ellipsis',
 });
@@ -146,9 +148,6 @@ const SidebarSection = styled.div({
   color: 'var(--hl)',
   paddingRight: 'var(--padding-xs)',
   height: 'var(--height-nav)',
-
-  // Make it scroll when too skinny
-  overflow: 'auto',
 
   '&::-webkit-scrollbar': {
     display: 'none',
@@ -291,8 +290,15 @@ const NavContextMenu = styled.div({
   alignItems: 'center',
   padding: '0 var(--padding-md)',
 });
+type WorkspaceAnd = Workspace & {
+  cookieJar: CookieJar;
+  baseenvironment: Environment & {
+    subenvs: Environment[];
+  };
+  requests: Request[];
+};
 const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { projects: Project[]; activeProject: Project; organizationId: string }) => {
-  const [collections, setCollections] = useState<Workspace[]>([]);
+  const [collections, setCollections] = useState<WorkspaceAnd[]>([]);
   useEffect(() => {
     const fn = async () => {
       // get all workspaces at this organization in collection scope
@@ -305,7 +311,7 @@ const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { pr
         const subenvs = await models.environment.findByParentId(base._id);
         const requests = await models.request.findByParentId(w._id);
 
-        const composed = { ...w, baseenvironment: { name: base.name, subenvs }, cookieJar, requests };
+        const composed = { ...w, baseenvironment: { ...base, subenvs }, cookieJar, requests };
         console.log(composed);
         return composed;
       }));
@@ -336,40 +342,21 @@ const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { pr
                 const linkToDesignOrCOllection = `/organization/${organizationId}/project/${proj._id}/workspace/${collection._id}/${collection.scope === 'design' ? ACTIVITY_SPEC : ACTIVITY_DEBUG}`;
                 return (
                   <li key={collection.name}>
-                    <div className='sidebar__item sidebar__item--request'>
-                      <NavButton className="wide" onClick={() => navigate(linkToDesignOrCOllection)}>
-                        <i className="fa fa-arrow-right" />{collection.name}
-                      </NavButton>
-                    </div>
-                    <div className='sidebar__item sidebar__item--request'>
-                      <NavButton className="wide">
-                        <i className="fa fa-cookie" />{collection.cookieJar.name}
-                      </NavButton>
-                    </div>
-                    <div className='sidebar__item sidebar__item--request'>
-                      <NavButton className="wide">
-                        <i className="fa fa-pen-to-square" />{collection.baseenvironment.name}
-                      </NavButton>
-                    </div>
+                    <NavItem name={collection.name} icon="cookie" onClick={() => navigate(linkToDesignOrCOllection)} />
+                    <NavItem name={collection.cookieJar.name} icon="cookie" />
+                    <NavItem name={collection.baseenvironment.name} icon="pen-to-square" />
                     <ul className="margin-left">
                       {collection.baseenvironment.subenvs.map(env => (
                         <li key={env.name}>
-                          <div className='sidebar__item sidebar__item--request'>
-                            <NavButton className="wide">
-                              <i className="fa fa-pen-to-square" />{env.name}
-                            </NavButton>
-                          </div>
+                          <NavItem name={env.name} icon="pen-to-square" />
                         </li>))}
                     </ul>
                     <ul className="margin-left">
                       {collection.requests.map(request => (
-                        <li key={request.name}>
-                          <div className='sidebar__item sidebar__item--request'>
-                            <NavButton className="wide">
-                              <i className="fa fa-pen-to-square" />{request.name}
-                            </NavButton>
-                          </div>
-                        </li>))}
+                        <li key={request._id}>
+                          <NavItem name={request.name} icon="rocket" />
+                        </li>
+                      ))}
                     </ul>
                   </li>);
               })}
@@ -380,6 +367,13 @@ const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { pr
     </ul>
   );
 };
+const NavItem = ({ name, icon, onClick }: { name: string; icon: string; onClick?: () => void }) => (
+  <div className='sidebar__item sidebar__item--request'>
+    <NavButton className="wide" onClick={onClick}>
+      <i className={`fa fa-${icon}`} />{name}
+    </NavButton>
+  </div>
+);
 
 interface WorkspaceWithMetadata {
   hasUnsavedChanges: boolean;
