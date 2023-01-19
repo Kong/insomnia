@@ -3,10 +3,6 @@ export const GRANT_TYPE_IMPLICIT = 'implicit';
 export const GRANT_TYPE_PASSWORD = 'password';
 export const GRANT_TYPE_CLIENT_CREDENTIALS = 'client_credentials';
 export const GRANT_TYPE_REFRESH = 'refresh_token';
-export const RESPONSE_TYPE_CODE = 'code';
-export const RESPONSE_TYPE_ID_TOKEN = 'id_token';
-export const RESPONSE_TYPE_TOKEN = 'token';
-export const RESPONSE_TYPE_ID_TOKEN_TOKEN = 'id_token token';
 export type AuthKeys =
     'access_token' |
     'id_token' |

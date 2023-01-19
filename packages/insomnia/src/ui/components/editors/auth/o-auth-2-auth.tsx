@@ -5,7 +5,7 @@ import accessTokenUrls from '../../../../datasets/access-token-urls';
 import authorizationUrls from '../../../../datasets/authorization-urls';
 import * as models from '../../../../models';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
-import type { AuthTypeOAuth2, Request } from '../../../../models/request';
+import type { AuthTypeOAuth2, OAuth2ResponseType, Request } from '../../../../models/request';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,
@@ -13,9 +13,6 @@ import {
   GRANT_TYPE_PASSWORD,
   PKCE_CHALLENGE_PLAIN,
   PKCE_CHALLENGE_S256,
-  RESPONSE_TYPE_ID_TOKEN,
-  RESPONSE_TYPE_ID_TOKEN_TOKEN,
-  RESPONSE_TYPE_TOKEN,
 } from '../../../../network/o-auth-2/constants';
 import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
@@ -65,18 +62,18 @@ const pkceMethodOptions = [
   },
 ];
 
-const responseTypeOptions = [
+const responseTypeOptions: { name: string; value: OAuth2ResponseType }[] = [
   {
     name: 'Access Token',
-    value: RESPONSE_TYPE_TOKEN,
+    value: 'token',
   },
   {
     name: 'ID Token',
-    value: RESPONSE_TYPE_ID_TOKEN,
+    value: 'id_token',
   },
   {
     name: 'ID and Access Token',
-    value: RESPONSE_TYPE_ID_TOKEN_TOKEN,
+    value: 'id_token token',
   },
 ];
 
