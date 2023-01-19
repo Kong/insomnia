@@ -9,19 +9,12 @@ import {
   AUTH_NTLM,
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
-  CONTENT_TYPE_FILE,
-  CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
-  CONTENT_TYPE_GRAPHQL,
-  CONTENT_TYPE_JSON,
-  CONTENT_TYPE_OTHER,
   getContentTypeFromHeaders,
   HAWK_ALGORITHM_SHA256,
   METHOD_GET,
-  METHOD_POST,
 } from '../common/constants';
 import { database as db } from '../common/database';
-import { getContentTypeHeader } from '../common/misc';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../network/o-auth-2/constants';
 import { deconstructQueryStringToParams } from '../utils/url/querystring';
@@ -38,7 +31,30 @@ export const canDuplicate = true;
 export const canSync = true;
 
 export type RequestAuthentication = Record<string, any>;
-
+export interface AuthTypeOAuth2 {
+  type: 'oauth2';
+  grantType: 'authorization_code' | 'client_credentials' | 'password' | 'implicit' | 'refresh_token';
+  accessTokenUrl?: string;
+  authorizationUrl?: string;
+  clientId?: string;
+  clientSecret?: string;
+  audience?: string;
+  scope?: string;
+  resource?: string;
+  username?: string;
+  password?: string;
+  redirectUrl?: string;
+  credentialsInBody?: boolean;
+  state?: string;
+  code?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tokenPrefix?: string;
+  usePkce?: boolean;
+  pkceMethod?: string;
+  responseType?: string;
+  origin?: string;
+}
 export interface RequestHeader {
   name: string;
   value: string;
@@ -206,65 +222,6 @@ export function newAuth(type: string, oldAuth: RequestAuthentication = {}): Requ
   }
 }
 
-export function newBodyNone(): RequestBody {
-  return {};
-}
-
-export function newBodyRaw(rawBody: string, contentType?: string): RequestBody {
-  if (typeof contentType !== 'string') {
-    return {
-      text: rawBody,
-    };
-  }
-
-  const mimeType = contentType.split(';')[0];
-  return {
-    mimeType,
-    text: rawBody,
-  };
-}
-
-export function newBodyGraphQL(rawBody: string): RequestBody {
-  try {
-    // Only strip the newlines if rawBody is a parsable JSON
-    JSON.parse(rawBody);
-    return {
-      mimeType: CONTENT_TYPE_GRAPHQL,
-      text: rawBody.replace(/\\\\n/g, ''),
-    };
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      return {
-        mimeType: CONTENT_TYPE_GRAPHQL,
-        text: rawBody,
-      };
-    } else {
-      throw error;
-    }
-  }
-}
-
-export function newBodyFormUrlEncoded(parameters: RequestBodyParameter[] | null): RequestBody {
-  return {
-    mimeType: CONTENT_TYPE_FORM_URLENCODED,
-    params: parameters || [],
-  };
-}
-
-export function newBodyFile(path: string): RequestBody {
-  return {
-    mimeType: CONTENT_TYPE_FILE,
-    fileName: path,
-  };
-}
-
-export function newBodyForm(parameters: RequestBodyParameter[]): RequestBody {
-  return {
-    mimeType: CONTENT_TYPE_FORM_DATA,
-    params: parameters || [],
-  };
-}
-
 export function migrate(doc: Request): Request {
   doc = migrateBody(doc);
   doc = migrateWeirdUrls(doc);
@@ -290,105 +247,6 @@ export function findByParentId(parentId: string) {
 
 export function update(request: Request, patch: Partial<Request>) {
   return db.docUpdate<Request>(request, patch);
-}
-
-export function updateMimeType(
-  request: Request,
-  mimeType: string,
-  doCreate = false,
-  savedBody: RequestBody = {},
-) {
-  let headers = request.headers ? [...request.headers] : [];
-  const contentTypeHeader = getContentTypeHeader(headers);
-  // GraphQL uses JSON content-type
-  const contentTypeHeaderValue = mimeType === CONTENT_TYPE_GRAPHQL ? CONTENT_TYPE_JSON : mimeType;
-
-  // GraphQL must be POST
-  if (mimeType === CONTENT_TYPE_GRAPHQL) {
-    request.method = METHOD_POST;
-  }
-
-  // Check if we are converting to/from variants of XML or JSON
-  let leaveContentTypeAlone = false;
-
-  if (contentTypeHeader && mimeType) {
-    const current = contentTypeHeader.value;
-
-    if (current.includes('xml') && mimeType.includes('xml')) {
-      leaveContentTypeAlone = true;
-    } else if (current.includes('json') && mimeType.includes('json')) {
-      leaveContentTypeAlone = true;
-    }
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // 1. Update Content-Type header //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  const hasBody = typeof mimeType === 'string';
-
-  if (!hasBody) {
-    headers = headers.filter(h => h !== contentTypeHeader);
-  } else if (mimeType === CONTENT_TYPE_OTHER) {
-    // Leave headers alone
-  } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
-    contentTypeHeader.value = contentTypeHeaderValue;
-  } else if (mimeType && !contentTypeHeader) {
-    headers.push({
-      name: 'Content-Type',
-      value: contentTypeHeaderValue,
-    });
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // 2. Make a new request body //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  let body;
-  const oldBody = Object.keys(savedBody).length === 0 ? request.body : savedBody;
-
-  if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-    // Urlencoded
-    body = oldBody.params
-      ? newBodyFormUrlEncoded(oldBody.params)
-      // @ts-expect-error -- TSCONVERSION
-      : newBodyFormUrlEncoded(deconstructQueryStringToParams(oldBody.text));
-  } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
-    // Form Data
-    body = oldBody.params
-      ? newBodyForm(oldBody.params)
-      // @ts-expect-error -- TSCONVERSION
-      : newBodyForm(deconstructQueryStringToParams(oldBody.text));
-  } else if (mimeType === CONTENT_TYPE_FILE) {
-    // File
-    body = newBodyFile('');
-  } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
-    if (contentTypeHeader) {
-      contentTypeHeader.value = CONTENT_TYPE_JSON;
-    }
-
-    body = newBodyGraphQL(oldBody.text || '');
-  } else if (typeof mimeType !== 'string') {
-    // No body
-    body = newBodyNone();
-  } else {
-    // Raw Content-Type (ex: application/json)
-    body = newBodyRaw(oldBody.text || '', mimeType);
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // 2. create/update request //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~ //
-  if (doCreate) {
-    const newRequest: Request = Object.assign({}, request, {
-      headers,
-      body,
-    });
-    return create(newRequest);
-  } else {
-    return update(request, {
-      headers,
-      body,
-    });
-  }
 }
 
 export async function duplicate(request: Request, patch: Partial<Request> = {}) {
@@ -450,13 +308,20 @@ function migrateBody(request: Request) {
 
   if (wasFormUrlEncoded) {
     // Convert old-style form-encoded request bodies to new style
-    const body = typeof request.body === 'string' ? request.body : '';
-    request.body = newBodyFormUrlEncoded(deconstructQueryStringToParams(body, false));
+    request.body = {
+      mimeType: CONTENT_TYPE_FORM_URLENCODED,
+      params: deconstructQueryStringToParams(typeof request.body === 'string' ? request.body : '', false),
+    };
   } else if (!request.body && !contentType) {
     request.body = {};
   } else {
-    const body: string = typeof request.body === 'string' ? request.body : '';
-    request.body = newBodyRaw(body, contentType);
+    const rawBody: string = typeof request.body === 'string' ? request.body : '';
+    request.body = typeof contentType !== 'string' ? {
+      text: rawBody,
+    } : {
+      mimeType: contentType.split(';')[0],
+      text: rawBody,
+    };
   }
 
   return request;

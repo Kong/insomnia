@@ -155,14 +155,14 @@ jobs:
           RELEASE_VERSION: ${{ env.INSO_VERSION }}
           RELEASE_CHANNEL: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
-      - name: Upload to snapcraft (stable only)
-        if: ${{ env.IS_PRERELEASE == 'false' }}
+      - name: Upload to snapcraft (beta and stable only)
+        if: "!contains(github.event.inputs.version, 'alpha')"
         uses: snapcore/action-publish@7fe468c9de12396a9c8964af5d0dfd1d5b493bd7
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN_FILE }}
         with:
           snap: artifacts/ubuntu-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.snap
-          release: stable
+          release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Upload .deb to pulp (stable only)
         if: ${{ env.IS_PRERELEASE == 'false' }}

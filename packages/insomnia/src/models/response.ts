@@ -157,7 +157,7 @@ export async function getLatestForRequest(
   return response || null;
 }
 
-export async function create(patch: Record<string, any> = {}, maxResponses = 20) {
+export async function create(patch: Partial<Response> = {}, maxResponses = 20): Promise<Response> {
   if (!patch.parentId) {
     throw new Error('New Response missing `parentId`');
   }
@@ -168,16 +168,11 @@ export async function create(patch: Record<string, any> = {}, maxResponses = 20)
   const requestVersion = request ? await models.requestVersion.create(request) : null;
   patch.requestVersionId = requestVersion ? requestVersion._id : null;
   // Filter responses by environment if setting is enabled
-  const query: Record<string, any> = {
+  const shouldQueryByEnvId = (await models.settings.getOrCreate()).filterResponsesByEnv && patch.hasOwnProperty('environmentId');
+  const query = {
     parentId,
+    ...(shouldQueryByEnvId ? { environmentId: patch.environmentId } : {}),
   };
-
-  if (
-    (await models.settings.getOrCreate()).filterResponsesByEnv &&
-    patch.hasOwnProperty('environmentId')
-  ) {
-    query.environmentId = patch.environmentId;
-  }
 
   // Delete all other responses before creating the new one
   const allResponses = await db.findMostRecentlyModified<Response>(type, query, Math.max(1, maxResponses));

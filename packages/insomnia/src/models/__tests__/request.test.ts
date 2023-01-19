@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { CONTENT_TYPE_GRAPHQL } from '../../common/constants';
+import { newBodyGraphQL, updateMimeType } from '../../ui/components/panes/request-pane';
 import * as models from '../index';
-import { newBodyGraphQL } from '../request';
 
 describe('init()', () => {
   beforeEach(globalBeforeEach);
@@ -87,7 +87,7 @@ describe('updateMimeType()', () => {
       parentId: 'fld_1',
     });
     expect(request).not.toBeNull();
-    const newRequest = await models.request.updateMimeType(request, 'text/html');
+    const newRequest = await updateMimeType(request, 'text/html');
     expect(newRequest.headers).toEqual([
       {
         name: 'Content-Type',
@@ -116,7 +116,7 @@ describe('updateMimeType()', () => {
       ],
     });
     expect(request).not.toBeNull();
-    const newRequest = await models.request.updateMimeType(request, 'text/html');
+    const newRequest = await updateMimeType(request, 'text/html');
     expect(newRequest.headers).toEqual([
       {
         name: 'content-tYPE',
@@ -145,7 +145,7 @@ describe('updateMimeType()', () => {
       ],
     });
     expect(request).not.toBeNull();
-    const newRequest = await models.request.updateMimeType(request, 'text/html');
+    const newRequest = await updateMimeType(request, 'text/html');
     expect(newRequest.headers).toEqual([
       {
         name: 'content-tYPE',
@@ -166,7 +166,7 @@ describe('updateMimeType()', () => {
       ],
     });
     expect(request).not.toBeNull();
-    const newRequest = await models.request.updateMimeType(request, null);
+    const newRequest = await updateMimeType(request, null);
     expect(newRequest.body).toEqual({});
     expect(newRequest.headers).toEqual([]);
   });
@@ -180,7 +180,7 @@ describe('updateMimeType()', () => {
       },
     });
     expect(request).not.toBeNull();
-    const newRequest = await models.request.updateMimeType(request, 'application/json', false, {
+    const newRequest = await updateMimeType(request, 'application/json', false, {
       text: 'Saved Data',
     });
     expect(newRequest.body.text).toEqual('Saved Data');
@@ -195,7 +195,7 @@ describe('updateMimeType()', () => {
       },
     });
     expect(request).not.toBeNull();
-    const newRequest = await models.request.updateMimeType(request, 'application/json', false, {});
+    const newRequest = await updateMimeType(request, 'application/json', false, {});
     expect(newRequest.body.text).toEqual('My Data');
   });
 });

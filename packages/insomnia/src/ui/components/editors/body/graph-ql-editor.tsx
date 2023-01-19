@@ -21,6 +21,7 @@ import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
 import * as network from '../../../../network/network';
+import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { selectSettings } from '../../../redux/selectors';
 import { Dropdown } from '../../base/dropdown/dropdown';
@@ -34,10 +35,33 @@ import { HelpTooltip } from '../../help-tooltip';
 import { Toolbar } from '../../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../../keydown-binder';
 import { TimeFromNow } from '../../time-from-now';
-const explorerContainer = document.querySelector('#graphql-explorer-container');
 
-if (!explorerContainer) {
-  throw new Error('Failed to find #graphql-explorer-container');
+function getGraphQLContent(body: GraphQLBody, query?: string, operationName?: string, variables?: string): string {
+  // the body object is one dimensional, so we don't need to worry about shallow copying.
+  const { query: originalQuery, ...optionalProps } = body;
+  const content: GraphQLBody = { query: originalQuery };
+
+  if (optionalProps.operationName) {
+    content.operationName = optionalProps.operationName;
+  }
+
+  if (optionalProps.variables) {
+    content.variables = optionalProps.variables;
+  }
+
+  if (query) {
+    content.query = query;
+  }
+
+  if (operationName) {
+    content.operationName = operationName;
+  }
+
+  if (variables) {
+    content.variables = variables;
+  }
+
+  return JSON.stringify(content);
 }
 
 const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionNode => def.kind === Kind.OPERATION_DEFINITION;
@@ -234,13 +258,16 @@ export const GraphQLEditor: FC<Props> = ({
     beautifyRequestBody,
   });
   const changeOperationName = (operationName: string) => {
-    onChange(JSON.stringify({ ...state.body, operationName }));
+    const content = getGraphQLContent(state.body, undefined, operationName);
+    onChange(content);
     setState(prevState => ({ ...prevState, body: { ...prevState.body, operationName } }));
   };
   const changeVariables = (variablesInput: string) => {
     try {
       const variables = JSON.parse(variablesInput || '{}');
-      onChange(JSON.stringify({ ...state.body, variables }));
+
+      const content = getGraphQLContent(state.body, undefined, operationName, variables);
+      onChange(content);
       setState(state => ({
         ...state,
         body: { ...state.body, variables },
@@ -265,7 +292,9 @@ export const GraphQLEditor: FC<Props> = ({
           operationName = operations[oldPostion] || operations[0] || '';
         }
       }
-      onChange(JSON.stringify({ ...state.body, query, operationName }));
+
+      const content = getGraphQLContent(state.body, query);
+      onChange(content);
 
       setState(state => ({
         ...state,
@@ -361,6 +390,8 @@ export const GraphQLEditor: FC<Props> = ({
 
   // Create portal for GraphQL Explorer
   let graphQLExplorerPortal: React.ReactPortal | null = null;
+  const explorerContainer = document.querySelector('#graphql-explorer-container');
+  invariant(explorerContainer, 'Failed to find #graphql-explorer-container');
   if (explorerContainer) {
     graphQLExplorerPortal = ReactDOM.createPortal(
       <GraphQLExplorer

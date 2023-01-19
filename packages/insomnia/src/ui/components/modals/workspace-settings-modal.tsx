@@ -372,7 +372,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                         <label>
                           Private Certificates
                           <HelpTooltip position="right" className="space-left">
-                            Private certificates will not be synced.
+                            Certificates will not be Git Synced.
                           </HelpTooltip>
                         </label>
                         {privateCertificates.map(renderCertificate)}
@@ -464,7 +464,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                       <label>
                         Private
                         <HelpTooltip className="space-left">
-                          Private certificates will not be synced
+                          Certificates will not be Git Synced
                         </HelpTooltip>
                         <input
                           type="checkbox"

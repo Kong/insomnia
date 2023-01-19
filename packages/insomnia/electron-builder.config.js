@@ -8,6 +8,7 @@ const BINARY_PREFIX = 'Insomnia.Core';
  * @see https://www.electron.build/configuration/configuration
  */
 const config = {
+  npmRebuild: false,
   appId: 'com.insomnia.app',
   protocols: [
     {
@@ -25,7 +26,6 @@ const config = {
     './package.json',
   ],
   publish: null,
-  afterSign: './scripts/afterSignHook.js',
   extraResources: [
     {
       from: './bin',
@@ -46,6 +46,7 @@ const config = {
     hardenedRuntime: true,
     category: 'public.app-category.developer-tools',
     entitlements: './build/static/entitlements.mac.inherit.plist',
+    entitlementsInherit: './build/static/entitlements.mac.inherit.plist',
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
     target: [
       {
@@ -60,6 +61,12 @@ const config = {
     extendInfo: {
       NSRequiresAquaSystemAppearance: false,
     },
+    notarize: {
+      appBundleId: 'com.insomnia.app',
+    },
+    asarUnpack: [
+      'node_modules/@getinsomnia/node-libcurl',
+    ],
   },
   dmg: {
     window: {
@@ -125,6 +132,9 @@ const config = {
         target: 'snap',
       },
     ],
+  },
+  snap: {
+    base: 'core22',
   },
 };
 

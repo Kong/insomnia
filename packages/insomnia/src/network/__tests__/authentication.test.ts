@@ -197,12 +197,8 @@ describe('API Key', () => {
         value: 'test',
         addTo: 'queryParams',
       };
-      const request = {
-        url: 'https://insomnia.rest/',
-        method: 'GET',
-        authentication,
-      };
-      const header = await getAuthQueryParams(request, 'https://insomnia.rest/');
+
+      const header = getAuthQueryParams(authentication, 'https://insomnia.rest/');
       expect(header).toEqual({
         'name': 'x-api-key',
         'value': 'test',

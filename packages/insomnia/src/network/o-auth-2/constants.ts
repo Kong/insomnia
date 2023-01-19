@@ -7,31 +7,32 @@ export const RESPONSE_TYPE_CODE = 'code';
 export const RESPONSE_TYPE_ID_TOKEN = 'id_token';
 export const RESPONSE_TYPE_TOKEN = 'token';
 export const RESPONSE_TYPE_ID_TOKEN_TOKEN = 'id_token token';
-export const P_ACCESS_TOKEN = 'access_token';
-export const P_ID_TOKEN = 'id_token';
-export const P_CLIENT_ID = 'client_id';
-export const P_CLIENT_SECRET = 'client_secret';
-export const P_AUDIENCE = 'audience';
-export const P_RESOURCE = 'resource';
-export const P_CODE_CHALLENGE = 'code_challenge';
-export const P_CODE_CHALLENGE_METHOD = 'code_challenge_method';
-export const P_CODE_VERIFIER = 'code_verifier';
-export const P_CODE = 'code';
-export const P_NONCE = 'nonce';
-export const P_ERROR = 'error';
-export const P_ERROR_DESCRIPTION = 'error_description';
-export const P_ERROR_URI = 'error_uri';
-export const P_EXPIRES_IN = 'expires_in';
-export const P_GRANT_TYPE = 'grant_type';
-export const P_PASSWORD = 'password';
-export const P_REDIRECT_URI = 'redirect_uri';
-export const P_REFRESH_TOKEN = 'refresh_token';
-export const P_RESPONSE_TYPE = 'response_type';
-export const P_SCOPE = 'scope';
-export const P_STATE = 'state';
-export const P_TOKEN_TYPE = 'token_type';
-export const P_USERNAME = 'username';
-export const X_RESPONSE_ID = 'xResponseId';
-export const X_ERROR = 'xError';
+export type AuthKeys =
+    'access_token' |
+    'id_token' |
+    'client_id' |
+    'client_secret' |
+    'audience' |
+    'resource' |
+    'code_challenge' |
+    'code_challenge_method' |
+    'code_verifier' |
+    'code' |
+    'nonce' |
+    'error' |
+    'error_description' |
+    'error_uri' |
+    'expires_in' |
+    'grant_type' |
+    'password' |
+    'redirect_uri' |
+    'refresh_token' |
+    'response_type' |
+    'scope' |
+    'state' |
+    'token_type' |
+    'username' |
+    'xError' |
+    'xResponseId';
 export const PKCE_CHALLENGE_S256 = 'S256';
 export const PKCE_CHALLENGE_PLAIN = 'plain';

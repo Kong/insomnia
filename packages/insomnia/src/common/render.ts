@@ -450,6 +450,10 @@ export async function getRenderedGrpcRequestMessage(
 }
 
 type RenderRequestOptions = BaseRenderContextOptions & RenderRequest<Request>;
+export interface RequestAndContext {
+  request: RenderedRequest;
+  context: Record<string, any>;
+}
 export async function getRenderedRequestAndContext(
   {
     request,
@@ -457,7 +461,7 @@ export async function getRenderedRequestAndContext(
     extraInfo,
     purpose,
   }: RenderRequestOptions,
-) {
+): Promise<RequestAndContext> {
   const ancestors = await getRenderContextAncestors(request);
   const workspace = ancestors.find(isWorkspace);
   const parentId = workspace ? workspace._id : 'n/a';

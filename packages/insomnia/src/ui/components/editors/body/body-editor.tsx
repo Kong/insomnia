@@ -16,12 +16,6 @@ import type {
   Request,
   RequestBodyParameter,
 } from '../../../../models/request';
-import {
-  newBodyFile,
-  newBodyForm,
-  newBodyFormUrlEncoded,
-  newBodyRaw,
-} from '../../../../models/request';
 import type { Workspace } from '../../../../models/workspace';
 import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
 import { AskModal } from '../../modals/ask-modal';
@@ -46,24 +40,51 @@ export const BodyEditor: FC<Props> = ({
   environmentId,
 }) => {
   const handleRawChange = useCallback((rawValue: string) => {
-    models.request.update(request, { body: newBodyRaw(rawValue, request.body.mimeType || '') });
+    models.request.update(request, {
+      body: typeof request.body.mimeType !== 'string' ? {
+        text: rawValue,
+      } : {
+        mimeType: request.body.mimeType.split(';')[0],
+        text: rawValue,
+      },
+    });
   }, [request]);
 
   const handleGraphQLChange = useCallback((content: string) => {
-    models.request.update(request, { body: newBodyRaw(content, CONTENT_TYPE_GRAPHQL) });
+    models.request.update(request, {
+      body: typeof CONTENT_TYPE_GRAPHQL !== 'string' ? {
+        text: content,
+      } : {
+        mimeType: CONTENT_TYPE_GRAPHQL.split(';')[0],
+        text: content,
+      },
+    });
   }, [request]);
 
-  const handleFormUrlEncodedChange = useCallback((parameters: RequestBodyParameter[]) => {
-    models.request.update(request, { body: newBodyFormUrlEncoded(parameters) });
+  const handleFormUrlEncodedChange = useCallback((params: RequestBodyParameter[]) => {
+    models.request.update(request, {
+      body: {
+        mimeType: CONTENT_TYPE_FORM_URLENCODED,
+        params,
+      },
+    });
   }, [request]);
 
   const handleFormChange = useCallback((parameters: RequestBodyParameter[]) => {
-    models.request.update(request, { body: newBodyForm(parameters) });
+    models.request.update(request, {
+      body: {
+        mimeType: CONTENT_TYPE_FORM_DATA,
+        params: parameters || [],
+      },
+    });
   }, [request]);
 
   const handleFileChange = async (path: string) => {
     const headers = clone(request.headers);
-    const body = newBodyFile(path);
+    const body = {
+      mimeType: CONTENT_TYPE_FILE,
+      fileName: path,
+    };
     const newRequest = await models.request.update(request, { body });
     let contentTypeHeader = getContentTypeHeader(headers);
 

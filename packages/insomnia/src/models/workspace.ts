@@ -168,12 +168,6 @@ function _migrateIntoDefaultProject(workspace: Workspace) {
   return workspace;
 }
 
-export async function ensureChildren({ _id }: Workspace) {
-  await models.environment.getOrCreateForParentId(_id);
-  await models.cookieJar.getOrCreateForParentId(_id);
-  await models.workspaceMeta.getOrCreateByParentId(_id);
-}
-
 function expectParentToBeProject(parentId?: string | null) {
   if (parentId && !isProjectId(parentId)) {
     throw new Error('Expected the parent of a Workspace to be a Project');

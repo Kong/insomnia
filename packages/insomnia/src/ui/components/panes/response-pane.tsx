@@ -9,7 +9,7 @@ import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Request } from '../../../models/request';
 import type { Response } from '../../../models/response';
-import { cancelRequestById } from '../../../network/network';
+import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveResponse, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';

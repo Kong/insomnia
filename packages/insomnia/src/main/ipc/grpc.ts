@@ -106,10 +106,9 @@ const getMethodsFromReflection = async (host: string, metadata: GrpcRequestHeade
     throw error;
   }
 };
-const loadMethodsFromReflection = async (requestId: string): Promise<GrpcMethodInfo[]> => {
-  const request = await models.grpcRequest.getById(requestId);
-  invariant(request, `Grpc request ${requestId} not found`);
-  const methods = await getMethodsFromReflection(request.url, request.metadata);
+const loadMethodsFromReflection = async (options: { url: string; metadata: GrpcRequestHeader[] }): Promise<GrpcMethodInfo[]> => {
+  invariant(options.url, 'gRPC request url not provided');
+  const methods = await getMethodsFromReflection(options.url, options.metadata);
   return methods.map(method => ({
     type: getMethodType(method),
     fullPath: method.path,

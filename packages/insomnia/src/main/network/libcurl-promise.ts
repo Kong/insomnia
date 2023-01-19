@@ -1,8 +1,7 @@
 // NOTE: this file should not be imported by electron renderer because node-libcurl is not-context-aware
 // Related issue https://github.com/JCMais/node-libcurl/issues/155
-if (process.type === 'renderer') {
-  throw new Error('node-libcurl unavailable in renderer');
-}
+import { invariant } from '../../utils/invariant';
+invariant(process.type !== 'renderer', 'Native abstractions for Nodejs module unavailable in renderer');
 
 import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, CurlNetrc } from '@getinsomnia/node-libcurl';
 import electron from 'electron';
@@ -22,7 +21,7 @@ import { ResponseHeader } from '../../models/response';
 import { buildMultipart } from './multipart';
 import { parseHeaderStrings } from './parse-header-strings';
 
-interface CurlRequestOptions {
+export interface CurlRequestOptions {
   requestId: string; // for cancellation
   req: RequestUsedHere;
   finalUrl: string;
@@ -63,7 +62,7 @@ export interface ResponseTimelineEntry {
   value: string;
 }
 
-interface CurlRequestOutput {
+export interface CurlRequestOutput {
   patch: ResponsePatch;
   debugTimeline: ResponseTimelineEntry[];
   headerResults: HeaderResult[];
@@ -112,7 +111,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
     curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
     // attempt to read CA Certificate PEM from disk, fallback to root certificates
-    const caCert = caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString() || tls.rootCertificates.join('\n');
+    const caCert = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
     curl.setOpt(Curl.option.CAINFO_BLOB, caCert);
 
     certificates.forEach(validCert => {
@@ -234,9 +233,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     const { authentication } = req;
     if (requestBodyPath) {
       // AWS IAM file upload not supported
-      if (authentication.type === AUTH_AWS_IAM) {
-        throw new Error('AWS authentication not supported for provided body type');
-      }
+      invariant(authentication.type !== AUTH_AWS_IAM, 'AWS authentication not supported for provided body type');
       const { size: contentLength } = fs.statSync(requestBodyPath);
       curl.setOpt(Curl.option.INFILESIZE_LARGE, contentLength);
       curl.setOpt(Curl.option.UPLOAD, 1);
@@ -338,7 +335,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     });
     // NOTE: legacy write end callback
     curl.on('error', () => responseBodyWriteStream.end());
-    curl.on('error', async function(err, code) {
+    curl.on('error', async (err, code) => {
       const elapsedTime = curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000;
       curl.close();
       await waitForStreamToFinish(responseBodyWriteStream);
@@ -380,7 +377,7 @@ const closeReadFunction = (fd: number, isMultipart: boolean, path?: string) => {
   }
 };
 
-interface HeaderResult {
+export interface HeaderResult {
   headers: ResponseHeader[];
   version: string;
   code: number;

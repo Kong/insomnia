@@ -36,6 +36,6 @@ const config: PlaywrightTestConfig = {
   expect: {
     timeout: process.env.CI ? 25 * 1000 : 10 * 1000,
   },
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
 };
 export default config;

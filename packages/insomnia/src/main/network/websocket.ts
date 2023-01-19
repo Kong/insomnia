@@ -3,7 +3,7 @@ import fs from 'fs';
 import { IncomingMessage } from 'http';
 import mkdirp from 'mkdirp';
 import path from 'path';
-import { KeyObject, PxfObject } from 'tls';
+import tls, { KeyObject, PxfObject } from 'tls';
 import { v4 as uuidV4 } from 'uuid';
 import {
   CloseEvent,
@@ -130,6 +130,11 @@ const openWebSocketConnection = async (
   const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
   const responseEnvironmentId = environment ? environment._id : null;
 
+  const caCert = await models.caCertificate.findByParentId(options.workspaceId);
+  const caCertficatePath = caCert?.path;
+  // attempt to read CA Certificate PEM from disk, fallback to root certificates
+  const caCertificate = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
+
   try {
     const readyStateChannel = `webSocket.${request._id}.readyState`;
 
@@ -213,6 +218,7 @@ const openWebSocketConnection = async (
     const protocols = lowerCasedEnabledHeaders['sec-websocket-protocol'];
     const ws = new WebSocket(url, protocols, {
       headers: lowerCasedEnabledHeaders,
+      ca: caCertificate,
       cert: pemCertificates,
       key: pemCertificateKeys,
       pfx: pfxCertificates,
