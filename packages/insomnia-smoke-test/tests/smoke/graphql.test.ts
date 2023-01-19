@@ -7,7 +7,7 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   // Create a new the project
-  await page.click('[data-testid="project"]');
+  await page.getByTestId('project').click();
   await page.getByRole('button', { name: 'Create' }).click();
 
   // Copy the collection with the graphql query to clipboard
@@ -47,7 +47,7 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   // Create a new the project
-  await page.click('[data-testid="project"]');
+  await page.getByTestId('project').click();
   await page.getByRole('button', { name: 'Create' }).click();
 
   const text = await loadFixture('graphql.yaml');

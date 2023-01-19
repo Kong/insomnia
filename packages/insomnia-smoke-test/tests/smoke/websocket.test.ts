@@ -10,7 +10,7 @@ test('can make websocket connection', async ({ app, page }) => {
     has: page.locator('.CodeMirror-activeline'),
   });
 
-  await page.click('[data-testid="project"]');
+  await page.getByTestId('project').click();
   await page.getByRole('button', { name: 'Create' }).click();
 
   const text = await loadFixture('websockets.yaml');

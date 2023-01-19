@@ -10,7 +10,7 @@ test('can send requests', async ({ app, page }) => {
     has: page.locator('.CodeMirror-activeline'),
   });
 
-  await page.click('[data-testid="project"]');
+  await page.getByTestId('project').click();
   await page.getByRole('button', { name: 'Create' }).click();
 
   const text = await loadFixture('smoke-test-collection.yaml');
@@ -62,7 +62,7 @@ test('can send requests', async ({ app, page }) => {
 // This feature is unsafe to place beside other tests, cancelling a request can cause network code to block
 // related to https://linear.app/insomnia/issue/INS-973
 test('can cancel requests', async ({ app, page }) => {
-  await page.click('[data-testid="project"]');
+  await page.getByTestId('project').click();
   await page.getByRole('button', { name: 'Create' }).click();
 
   const text = await loadFixture('smoke-test-collection.yaml');

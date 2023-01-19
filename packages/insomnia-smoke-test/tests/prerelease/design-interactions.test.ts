@@ -7,13 +7,13 @@ test.describe('Design interactions', async () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   test.fixme('Requests are auto-generated when switching tabs', async ({ page }) => {
     // TODO(filipe) - this is currently not working
-    await page.click('[data-testid="project"] >> text=Insomnia');
+    await page.getByTestId('project').click();
     await expect(true).toBeTruthy();
   });
 
   test('Can import an OpenAPI 3 spec into a Design Document', async ({ app, page }) => {
     // Setup
-    await page.click('[data-testid="project"] >> text=Insomnia');
+    await page.getByTestId('project').click();
     await page.getByRole('button', { name: 'Create' }).click();
     const text = await loadFixture('openapi3.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
@@ -39,19 +39,19 @@ test.describe('Design interactions', async () => {
 
   test.fixme('Can filter values in Design sidebar', async ({ page }) => {
     // TODO(filipe) implement in another PR
-    await page.click('[data-testid="project"] >> text=Insomnia');
+    await page.getByTestId('project').click();
     await expect(true).toBeTruthy();
   });
 
   test.fixme('[INS-567] Requests are not duplicated when switching between tabs', async ({ page }) => {
     // TODO(filipe) implement in another PR
-    await page.click('[data-testid="project"] >> text=Insomnia');
+    await page.getByTestId('project').click();
     await expect(true).toBeTruthy();
   });
 
   test('Unit Test interactions', async ({ app, page }) => {
     // Setup
-    await page.click('[data-testid="project"] >> text=Insomnia');
+    await page.getByTestId('project').click();
     await page.getByRole('button', { name: 'Create' }).click();
     const text = await loadFixture('unit-test.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);

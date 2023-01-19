@@ -4,7 +4,7 @@ import { test } from '../../playwright/test';
 test.describe('Cookie editor', async () => {
 
   test.beforeEach(async ({ app, page }) => {
-    await page.click('[data-testid="project"] >> text=Insomnia');
+    await page.getByTestId('project').click();
     await page.getByRole('button', { name: 'Create' }).click();
     const text = await loadFixture('simple.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);

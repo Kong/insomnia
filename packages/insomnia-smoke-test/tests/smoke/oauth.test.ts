@@ -16,7 +16,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
     has: page.locator('.CodeMirror-activeline'),
   });
 
-  await page.locator('[data-testid="project"]').click();
+  await page.getByTestId('project').click();
   const projectView = page.locator('#wrapper');
   await projectView.getByRole('button', { name: 'Create' }).click();
 

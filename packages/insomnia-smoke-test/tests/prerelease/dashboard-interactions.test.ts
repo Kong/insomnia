@@ -8,7 +8,7 @@ test.describe('Dashboard', async () => {
   test.describe('Projects', async () => {
     test('Can create, rename and delete new project', async ({ page }) => {
       // Return to Dashboard
-      await page.click('[data-testid="project"] >> text=Insomnia');
+      await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
@@ -49,7 +49,7 @@ test.describe('Dashboard', async () => {
   });
   test.describe('Interactions', async () => { // Not sure about the name here
     test('Can filter through multiple collections', async ({ app, page }) => {
-      await page.click('[data-testid="project"] >> text=Insomnia');
+      await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
@@ -84,7 +84,7 @@ test.describe('Dashboard', async () => {
     });
 
     test('Can create, rename and delete a document', async ({ page }) => {
-      await page.click('[data-testid="project"] >> text=Insomnia');
+      await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
@@ -94,7 +94,7 @@ test.describe('Dashboard', async () => {
       await page.locator('text=Create').nth(1).click();
 
       // Return to dashboard
-      await page.click('[data-testid="project"] >> text=Insomnia');
+      await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('my-spec.yaml');
 
       // Rename document
@@ -111,7 +111,7 @@ test.describe('Dashboard', async () => {
       await page.click('[role="dialog"] button:has-text("Duplicate")');
 
       // Return to dashboard
-      await page.click('[data-testid="project"] >> text=Insomnia');
+      await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('test123-duplicate');
 
       const workspaceCards = page.locator('.card-badge');
@@ -125,7 +125,7 @@ test.describe('Dashboard', async () => {
     });
 
     test('Can create, rename and delete a collection', async ({ page }) => {
-      await page.click('[data-testid="project"] >> text=Insomnia');
+      await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
@@ -135,7 +135,7 @@ test.describe('Dashboard', async () => {
       await page.locator('text=Create').nth(1).click();
 
       // Return to dashboard
-      await page.click('[data-testid="project"] >> text=Insomnia');
+      await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('My Collection');
 
       // Rename collection
@@ -152,7 +152,7 @@ test.describe('Dashboard', async () => {
       await page.click('[role="dialog"] button:has-text("Duplicate")');
 
       // Return to dashboard
-      await page.click('[data-testid="project"] >> text=Insomnia');
+      await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('test123-duplicate');
       const workspaceCards = page.locator('.card-badge');
       await expect(workspaceCards).toHaveCount(3);
