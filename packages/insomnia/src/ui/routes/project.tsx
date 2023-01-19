@@ -18,6 +18,7 @@ import {
   ACTIVITY_SPEC,
   DashboardSortOrder,
 } from '../../common/constants';
+import { database as db } from '../../common/database';
 import { ForceToWorkspace } from '../../common/import';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
@@ -296,6 +297,7 @@ type WorkspaceAnd = Workspace & {
     subenvs: Environment[];
   };
   requests: Request[];
+  apiSpec: ApiSpec;
 };
 const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { projects: Project[]; activeProject: Project; organizationId: string }) => {
   const [collections, setCollections] = useState<WorkspaceAnd[]>([]);
@@ -303,23 +305,30 @@ const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { pr
     const fn = async () => {
       // get all workspaces at this organization in collection scope
       const workspaces = await Promise.all(projects.map(p => models.workspace.findByParentId(p._id)));
-      const collections = workspaces.flat().filter(w => w.scope === 'collection');
+      const collections = workspaces.flat();
       const cool = await Promise.all(collections.map(async w => {
         const base = await models.environment.getOrCreateForParentId(w._id);
         const cookieJar = await models.cookieJar.getOrCreateForParentId(w._id);
         invariant(base, 'Expected base environment to exist');
         const subenvs = await models.environment.findByParentId(base._id);
         const requests = await models.request.findByParentId(w._id);
-
-        const composed = { ...w, baseenvironment: { ...base, subenvs }, cookieJar, requests };
-        console.log(composed);
+        const apiSpec = await models.apiSpec.getOrCreateForParentId(w._id);
+        const composed = { ...w,
+          baseenvironment: { ...base, subenvs },
+          cookieJar,
+          requests,
+          apiSpec };
+        console.log('composed', composed);
+        const d = await db.withDescendants(activeProject);
+        console.log('d', d);
         return composed;
       }));
 
       setCollections(cool);
     };
     fn();
-  }, [projects]);
+  }, [activeProject, projects]);
+
   const navigate = useNavigate();
   return (
     <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
@@ -342,21 +351,22 @@ const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { pr
                 const linkToDesignOrCOllection = `/organization/${organizationId}/project/${proj._id}/workspace/${collection._id}/${collection.scope === 'design' ? ACTIVITY_SPEC : ACTIVITY_DEBUG}`;
                 return (
                   <li key={collection.name}>
-                    <NavItem name={collection.name} icon="cookie" onClick={() => navigate(linkToDesignOrCOllection)} />
-                    <NavItem name={collection.cookieJar.name} icon="cookie" />
-                    <NavItem name={collection.baseenvironment.name} icon="pen-to-square" />
-                    <ul className="margin-left">
-                      {collection.baseenvironment.subenvs.map(env => (
-                        <li key={env.name}>
-                          <NavItem name={env.name} icon="pen-to-square" />
-                        </li>))}
-                    </ul>
+                    <NavItem name={collection.name} type={collection.type} onClick={() => navigate(linkToDesignOrCOllection)} />
                     <ul className="margin-left">
                       {collection.requests.map(request => (
                         <li key={request._id}>
-                          <NavItem name={request.name} icon="rocket" />
+                          <NavItem name={request.name} type={request.type} />
                         </li>
                       ))}
+                    </ul>
+                    <NavItem name={collection.apiSpec.fileName} type={collection.apiSpec.type} onClick={() => navigate(linkToDesignOrCOllection)} />
+                    <NavItem name={collection.cookieJar.name} type={collection.cookieJar.type} />
+                    <NavItem name={collection.baseenvironment.name} type={collection.baseenvironment.type} />
+                    <ul className="margin-left">
+                      {collection.baseenvironment.subenvs.map(env => (
+                        <li key={env.name}>
+                          <NavItem name={env.name} type={collection.baseenvironment.type} />
+                        </li>))}
                     </ul>
                   </li>);
               })}
@@ -367,10 +377,16 @@ const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { pr
     </ul>
   );
 };
-const NavItem = ({ name, icon, onClick }: { name: string; icon: string; onClick?: () => void }) => (
+const modelTypeToIcon = {
+  [models.request.type]: 'fa-rocket',
+  [models.apiSpec.type]: 'fa-file-code',
+  [models.environment.type]: 'fa-pen-to-square',
+  [models.cookieJar.type]: 'fa-cookie-bite',
+};
+const NavItem = ({ name, type, onClick }: { name: string; type: string; onClick?: () => void }) => (
   <div className='sidebar__item sidebar__item--request'>
     <NavButton className="wide" onClick={onClick}>
-      <i className={`fa fa-${icon}`} />{name}
+      <i className={`fa ${modelTypeToIcon[type] || 'fa-question'}`} />{name}
     </NavButton>
   </div>
 );
