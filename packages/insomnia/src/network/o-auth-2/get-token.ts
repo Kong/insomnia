@@ -3,7 +3,7 @@ import querystring from 'querystring';
 
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
-import type { AuthTypeOAuth2, RequestHeader, RequestParameter } from '../../models/request';
+import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParameter } from '../../models/request';
 import type { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
@@ -13,9 +13,6 @@ import {
   AuthKeys,
   GRANT_TYPE_AUTHORIZATION_CODE,
   PKCE_CHALLENGE_S256,
-  RESPONSE_TYPE_CODE,
-  RESPONSE_TYPE_ID_TOKEN,
-  RESPONSE_TYPE_ID_TOKEN_TOKEN,
 } from './constants';
 import { getOAuthSession } from './misc';
 
@@ -36,10 +33,11 @@ export const getOAuth2Token = async (
   invariant(validGrantType, `Invalid grant type ${authentication.grantType}`);
   if (authentication.grantType === 'implicit') {
     invariant(authentication.authorizationUrl, 'Missing authorization URL');
-    const hasNonce = !authentication.responseType || authentication.responseType === RESPONSE_TYPE_ID_TOKEN_TOKEN || authentication.responseType === RESPONSE_TYPE_ID_TOKEN;
+    const responseTypeOrFallback = authentication.responseType || 'token';
+    const hasNonce = responseTypeOrFallback === 'id_token token' || responseTypeOrFallback === 'id_token';
     const implicitUrl = new URL(authentication.authorizationUrl);
     [
-      { name: 'response_type', value: authentication.responseType },
+      { name: 'response_type', value: responseTypeOrFallback },
       { name: 'client_id', value: authentication.clientId },
       ...insertAuthKeyIf('redirect_uri', authentication.redirectUrl),
       ...insertAuthKeyIf('scope', authentication.scope),
@@ -81,8 +79,9 @@ export const getOAuth2Token = async (
     const usePkceAnd256 = authentication.usePkce && authentication.pkceMethod === PKCE_CHALLENGE_S256;
     const codeChallenge = usePkceAnd256 ? encodePKCE(crypto.createHash('sha256').update(codeVerifier).digest()) : codeVerifier;
     const authCodeUrl = new URL(authentication.authorizationUrl);
+    const responseType: OAuth2ResponseType = 'code';
     [
-      { name: 'response_type', value: RESPONSE_TYPE_CODE },
+      { name: 'response_type', value: responseType },
       { name: 'client_id', value: authentication.clientId },
       ...insertAuthKeyIf('redirect_uri', authentication.redirectUrl),
       ...insertAuthKeyIf('scope', authentication.scope),

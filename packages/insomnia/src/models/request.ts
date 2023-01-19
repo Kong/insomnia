@@ -31,6 +31,7 @@ export const canDuplicate = true;
 export const canSync = true;
 
 export type RequestAuthentication = Record<string, any>;
+export type OAuth2ResponseType = 'code' | 'id_token' | 'id_token token' | 'none' | 'token';
 export interface AuthTypeOAuth2 {
   type: 'oauth2';
   grantType: 'authorization_code' | 'client_credentials' | 'password' | 'implicit' | 'refresh_token';
@@ -52,7 +53,7 @@ export interface AuthTypeOAuth2 {
   tokenPrefix?: string;
   usePkce?: boolean;
   pkceMethod?: string;
-  responseType?: string;
+  responseType?: OAuth2ResponseType;
   origin?: string;
 }
 export interface RequestHeader {
