@@ -91,7 +91,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
                 submit(
                   {
                     remoteId,
-                    id,
+                    backendProjectId: id,
                   },
                   {
                     action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
