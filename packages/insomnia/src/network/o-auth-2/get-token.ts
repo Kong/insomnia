@@ -204,7 +204,7 @@ async function getExisingAccessTokenAndRefreshIfExpired(
   }
   const isSuccessful = statusCode >= 200 && statusCode < 300;
   const hasBodyAndIsError = bodyBuffer && statusCode === 400;
-  if (isSuccessful) {
+  if (!isSuccessful) {
     if (hasBodyAndIsError) {
       const body = tryToParse(bodyBuffer.toString());
       // If the refresh token was rejected due an oauth2 invalid_grant error, we will
