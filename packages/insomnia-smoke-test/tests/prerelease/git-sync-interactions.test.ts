@@ -5,43 +5,43 @@ import { test } from '../../playwright/test';
 test('Clone Repo with bad values', async ({ page }) => {
   await page.click('[data-testid="project"] >> text=Insomnia');
   await page.locator('text=Create').click();
-  // Click button:has-text("Git Clone")
-  await page.locator('button:has-text("Git Clone")').click();
-  // Click #react-aria2363789071-6-tab-custom
-  await page.locator('#react-aria2363789071-6-tab-custom').click();
-
-  // Click [placeholder="Name"]
-  await page.locator('[placeholder="Name"]').click();
-  // Fill [placeholder="Name"]
+  await page.getByRole('button', { name: 'Git Clone' }).click();
+  await page.getByRole('tab', { name: 'Git' }).nth(2).click();
+  await page.getByPlaceholder('https://github.com/org/repo.git').fill('https://github.com/kong/dino-park-insomnia');
   await page.locator('[placeholder="Name"]').fill('test');
-  // Click [placeholder="Email"]
   await page.locator('[placeholder="Email"]').click();
-  // Fill [placeholder="Email"]
   await page.locator('[placeholder="Email"]').fill('test');
-  // Click [placeholder="MyUser"]
   await page.locator('[placeholder="MyUser"]').click();
-  // Fill [placeholder="MyUser"]
   await page.locator('[placeholder="MyUser"]').fill('test');
-  // Click [placeholder="\38 8e7ee63b254e4b0bf047559eafe86ba9dd49507"]
   await page.locator('[placeholder="\\38 8e7ee63b254e4b0bf047559eafe86ba9dd49507"]').click();
-  // Fill [placeholder="\38 8e7ee63b254e4b0bf047559eafe86ba9dd49507"]
   await page.locator('[placeholder="\\38 8e7ee63b254e4b0bf047559eafe86ba9dd49507"]').fill('test');
-  // Press Enter
   await page.locator('[placeholder="\\38 8e7ee63b254e4b0bf047559eafe86ba9dd49507"]').press('Enter');
-  // Click [data-testid="CodeEditor"] >> text=description >> nth=0
   await page.locator('[data-testid="CodeEditor"] >> text=description').first().click();
-  // Click text=openapi
   await page.locator('text=openapi').click();
-  // Click #root button:has-text("main")
   await page.locator('#root button:has-text("main")').click();
-  // Click button:has-text("History (44)")
   await page.locator('button:has-text("History (44)")').click();
-  // Click text=Git History (44)
   await page.locator('text=Git History (44)').click();
-  // Click text=Done
   await page.locator('text=Done').click();
 
   await expect(true).toBeTruthy();
+});
+
+test('Clone new repo', async ({ page }) => {
+  await page.locator('.fa').first().click();
+  await page.locator('text=Create').click();
+  await page.locator('button:has-text("Git Clone")').click();
+  await page.locator('#react-aria7161960595-6-tab-custom').click();
+  await page.locator('[placeholder="https\\:\\/\\/github\\.com\\/org\\/repo\\.git"]').fill('https://github.com/Kong/dino-park-insomnia.git');
+  await page.locator('[placeholder="Name"]').click();
+  await page.locator('[placeholder="Name"]').fill('filipe freire');
+  await page.locator('[placeholder="Email"]').click();
+  await page.locator('[placeholder="Email"]').fill('filipe.freire@konghq.com');
+  await page.locator('[placeholder="MyUser"]').click();
+  await page.locator('[placeholder="MyUser"]').fill('kreosus');
+  await page.locator('[placeholder="\\38 8e7ee63b254e4b0bf047559eafe86ba9dd49507"]').click();
+  await page.locator('[placeholder="\\38 8e7ee63b254e4b0bf047559eafe86ba9dd49507"]').fill('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');
+  await page.locator('[data-testid="git-repository-settings-modal__sync-btn"]').click();
+
 });
 
 // TODO(kreosus): more preferences scenarios will be added in the followup iterations of increasing app test coverage
