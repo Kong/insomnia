@@ -279,6 +279,18 @@ const OrgSideBarSection = ({ projects, activeProject, organizationId }: { projec
     </SidebarSection>
   );
 };
+const NavButton = styled.button({
+  paddingLeft: 'var(--padding-md)',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 'var(--padding-sm)',
+});
+const NavContextMenu = styled.div({
+  display: 'flex',
+  height: '100%',
+  alignItems: 'center',
+  padding: '0 var(--padding-md)',
+});
 const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { projects: Project[]; activeProject: Project; organizationId: string }) => {
   const [collections, setCollections] = useState<Workspace[]>([]);
   useEffect(() => {
@@ -287,10 +299,11 @@ const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { pr
       const workspaces = await Promise.all(projects.map(p => models.workspace.findByParentId(p._id)));
       const colections = workspaces.flat().filter(w => w.scope === 'collection');
       const cool = await Promise.all(colections.map(async w => {
-        const base = await models.environment.getByParentId(w._id);
+        const base = await models.environment.getOrCreateForParentId(w._id);
+        const cookieJar = await models.cookieJar.getOrCreateForParentId(w._id);
         invariant(base, 'Expected base environment to exist');
         const subenvs = await models.environment.findByParentId(base._id);
-        return ({ ...w, baseenvironment: { name: base.name, subenvs } });
+        return ({ ...w, baseenvironment: { name: base.name, subenvs }, cookieJar });
       }));
 
       setCollections(cool);
@@ -304,75 +317,44 @@ const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { pr
         return (
           <li key={proj._id} className="sidebar__row">
             <div className={`sidebar__item sidebar__item--request ${activeProject._id === proj._id ? 'sidebar__item--active' : ''}`}>
-              <button
-                style={{
-                  paddingLeft: 'var(--padding-md)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--padding-sm)',
-                }}
-                onClick={() => navigate(`/organization/${organizationId}/project/${proj._id}`)}
-                className="wide"
-              >
-                <i className={`fa fa-${isRemoteProject(activeProject) ? 'globe' : 'laptop'}`} />{' '}
-                {proj.name}
-              </button>
+              <NavButton className="wide" onClick={() => navigate(`/organization/${organizationId}/project/${proj._id}`)}>
+                <i className={`fa fa-${isRemoteProject(activeProject) ? 'globe' : 'laptop'}`} />
+                {' '}{proj.name}
+              </NavButton>
               {!isDefaultProject(proj) && (
-                <div
-                  style={{
-                    display: 'flex',
-                    height: '100%',
-                    alignItems: 'center',
-                    padding: '0 var(--padding-md)',
-                  }}
-                >
+                <NavContextMenu>
                   <ProjectDropdown organizationId={organizationId} project={proj} />
-                </div>
+                </NavContextMenu>
               )}
             </div>
             <ul>
-              {collections.map(collection => (<li key={collection.name}>
-                <div className='sidebar__item sidebar__item--request'>
-                  <button
-                    className="wide"
-                    style={{
-                      paddingLeft: 'var(--padding-md)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 'var(--padding-sm)',
-                    }}
-                  ><i className="fa fa-arrow-right" />{collection.name}
-                  </button>
-                </div>
-                <div className='sidebar__item sidebar__item--request'>
-                  <button
-                    className="wide"
-                    style={{
-                      paddingLeft: 'var(--padding-lg)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 'var(--padding-sm)',
-                    }}
-                  ><i className="fa fa-laptop" />{collection.baseenvironment.name}
-                  </button>
-                </div>
-                <ul>
-                  {collection.baseenvironment.subenvs.map(env => (<li key={env.name}>
-                    <div className='sidebar__item sidebar__item--request'>
-                      <button
-                        className="wide"
-                        style={{
-                          paddingLeft: 'var(--padding-xl)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 'var(--padding-sm)',
-                        }}
-                      ><i className="fa fa-laptop" />{env.name}
-                      </button>
-                    </div>
-                  </li>))}
-                </ul>
-              </li>))}
+              {collections.map(collection => (
+                <li key={collection.name}>
+                  <div className='sidebar__item sidebar__item--request'>
+                    <NavButton className="wide" onClick={() => navigate(`/organization/${organizationId}/project/${proj._id}/workspace/${collection._id}/${collection.scope === 'design' ? ACTIVITY_SPEC : ACTIVITY_DEBUG}`)}>
+                      <i className="fa fa-arrow-right" />{collection.name}
+                    </NavButton>
+                  </div>
+                  <div className='sidebar__item sidebar__item--request'>
+                    <NavButton className="wide">
+                      <i className="fa fa-cookie" />{collection.cookieJar.name}
+                    </NavButton>
+                  </div>
+                  <div className='sidebar__item sidebar__item--request'>
+                    <NavButton className="wide">
+                      <i className="fa fa-pen-to-square" />{collection.baseenvironment.name}
+                    </NavButton>
+                  </div>
+                  <ul>
+                    {collection.baseenvironment.subenvs.map(env => (<li key={env.name}>
+                      <div className='sidebar__item sidebar__item--request'>
+                        <NavButton className="wide">
+                          <i className="fa fa-pen-to-square" />{env.name}
+                        </NavButton>
+                      </div>
+                    </li>))}
+                  </ul>
+                </li>))}
             </ul>
           </li>
         );
@@ -696,11 +678,7 @@ const ProjectRoute: FC = () => {
       <Fragment>
         <SidebarLayout
           renderPageSidebar={
-            <Sidebar
-              style={{
-                height: '100%',
-              }}
-            >
+            <Sidebar style={{ height: '100%' }}>
               <SidebarTitle>
                 {organization.name}
               </SidebarTitle>
@@ -730,12 +708,7 @@ const ProjectRoute: FC = () => {
                   </SearchFormControl>
                   <DashboardSortDropdown
                     value={sortOrder}
-                    onSelect={sortOrder => {
-                      submit({
-                        sortOrder,
-                        filter,
-                      });
-                    }}
+                    onSelect={sortOrder => submit({ sortOrder, filter })}
                   />
                   {isRemoteProject(activeProject) && (
                     <RemoteWorkspacesDropdown key={activeProject._id} project={activeProject} />
