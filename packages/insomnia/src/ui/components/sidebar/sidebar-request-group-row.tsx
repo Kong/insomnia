@@ -101,7 +101,6 @@ export const SidebarRequestGroupRowFC = forwardRef<SidebarRequestGroupRowHandle,
             ref={dropdownRef}
             handleShowSettings={() => showModal(RequestGroupSettingsModal, { requestGroup })}
             requestGroup={requestGroup}
-            right
           />
         </div>
       </div>
