@@ -101,14 +101,14 @@ const SidebarList: FC<SidebarListProps> =
     return (
       <ul>
         {environments.map(environment =>
-        (<SidebarListItem
-          changeEnvironmentName={changeEnvironmentName}
-          environment={environment}
-          key={environment._id}
-          selectedEnvironmentId={selectedEnvironmentId}
-          showEnvironment={showEnvironment}
-        />
-        )
+          (<SidebarListItem
+            changeEnvironmentName={changeEnvironmentName}
+            environment={environment}
+            key={environment._id}
+            selectedEnvironmentId={selectedEnvironmentId}
+            showEnvironment={showEnvironment}
+          />
+          )
         )}
       </ul>);
   };

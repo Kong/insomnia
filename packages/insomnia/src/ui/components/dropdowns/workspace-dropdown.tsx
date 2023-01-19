@@ -157,7 +157,7 @@ export const WorkspaceDropdown: FC = () => {
           title="Config Generators"
         >
           {configGeneratorPlugins.map((p: ConfigGenerator) => (
-            <DropdownItem 
+            <DropdownItem
               key={`generateConfig-${p.label}`}
               aria-label={p.label}
             >

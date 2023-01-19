@@ -80,7 +80,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
         </DropdownItem>
 
         {remoteBackendProjects.map(({ id, name }) => (
-          <DropdownItem 
+          <DropdownItem
             key={id}
             aria-label={name}
           >

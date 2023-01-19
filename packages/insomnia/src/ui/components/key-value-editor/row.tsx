@@ -163,7 +163,7 @@ export const Row: FC<Props> = ({
             <DropdownItem aria-label='Text'>
               <ItemContent
                 label="Text"
-                onClick={() => onChange({ ...pair, type: 'text', multiline: false })} 
+                onClick={() => onChange({ ...pair, type: 'text', multiline: false })}
               />
             </DropdownItem>
             <DropdownItem aria-label='Text (Multi-line)'>
