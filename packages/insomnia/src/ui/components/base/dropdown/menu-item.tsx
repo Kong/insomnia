@@ -41,6 +41,12 @@ export const MenuItem = <T extends object>({
 }: Props<T>) => {
   const ref = useRef<HTMLLIElement>(null);
 
+  /**
+   * We do this hack because the Dropdown item cannot been interactive
+   * for more information see the following links:
+   * 1. https://react-spectrum.adobe.com/react-aria/useMenu.html#:~:text=NOTE%3A%20menu%20items%20cannot%20contain%20interactive%20content%20(e.g.%20buttons%2C%20checkboxes%2C%20etc.).
+   * 2. https://github.com/adobe/react-spectrum/issues/1244
+   */
   // @ts-expect-error -- TSCONVERSION
   const withPrompt = item.rendered?.props?.withPrompt || false;
   // @ts-expect-error -- TSCONVERSION
@@ -54,25 +60,14 @@ export const MenuItem = <T extends object>({
   // of if the dropdown is not set to close on select.
   const shouldRemainOpen = withPrompt || stayOpenAfterClick;
 
-  /**
-   * We use this hack to allow for a prompt to be shown before the action is executed.
-   * This is useful for things like deleting a document, where we want to show a prompt
-   * before actually deleting the document.
-   */
-  const handleClick = () => {
-    if (onClick && !isDisabled) {
-      onClick();
-    }
-  };
-
   const {
     menuItemProps,
     isFocused,
   } = useMenuItem({
     key: item.key,
-    closeOnSelect: closeOnSelect || !shouldRemainOpen,
     'aria-label': item['aria-label'],
-    onAction: !withPrompt ? handleClick : undefined,
+    closeOnSelect: closeOnSelect || !shouldRemainOpen,
+    onAction: !withPrompt && !isDisabled && onClick,
   }, state, ref);
 
   return (
