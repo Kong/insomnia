@@ -364,7 +364,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               )}
             </DropdownItem>
             {remoteBackendProjects.map(p => (
-              <DropdownItem 
+              <DropdownItem
                 key={p.id}
                 arial-label={`Pull ${p.name}`}
               >
@@ -561,19 +561,19 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             />
           </DropdownItem>
 
-          <DropdownItem aria-label={loadingPull ? 'Pulling Snapshots...' : `Pull ${behind || ''} Snapshot ${behind === 1 ? '' : 's'}`}>
+          <DropdownItem aria-label={loadingPull ? 'Pulling Snapshots...' : `Pull ${behind || ''} Snapshot${behind === 1 ? '' : 's'}`}>
             <ItemContent
               isDisabled={behind === 0 || loadingPull}
               icon={loadingPull ? 'spin fa-refresh' : 'cloud-download'}
-              label={loadingPull ? 'Pulling Snapshots...' : `Pull ${behind || ''} Snapshot ${behind === 1 ? '' : 's'}`}
+              label={loadingPull ? 'Pulling Snapshots...' : `Pull ${behind || ''} Snapshot${behind === 1 ? '' : 's'}`}
               onClick={handlePull}
             />
           </DropdownItem>
-          <DropdownItem aria-label={loadingPush ? 'Pushing Snapshots...' : `Push ${ahead || ''} Snapshot ${ahead === 1 ? '' : 's'}`}>
+          <DropdownItem aria-label={loadingPush ? 'Pushing Snapshots...' : `Push ${ahead || ''} Snapshot${ahead === 1 ? '' : 's'}`}>
             <ItemContent
               isDisabled={ahead === 0 || loadingPush}
               icon={loadingPush ? 'spin fa-refresh' : 'cloud-upload'}
-              label={loadingPush ? 'Pushing Snapshots...' : `Push ${ahead || ''} Snapshot ${ahead === 1 ? '' : 's'}`}
+              label={loadingPush ? 'Pushing Snapshots...' : `Push ${ahead || ''} Snapshot${ahead === 1 ? '' : 's'}`}
               onClick={handlePush}
             />
           </DropdownItem>
