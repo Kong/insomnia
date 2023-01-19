@@ -105,6 +105,44 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
 
   let dropdown: React.ReactNode = null;
 
+  const currentBranchActions = [
+    {
+      id: 1,
+      icon: 'check',
+      label: 'Commit',
+      onClick: () => setIsGitStagingModalOpen(true),
+    },
+    {
+      id: 2,
+      stayOpenAfterClick: true,
+      icon: loadingPull ? 'refresh fa-spin' : 'cloud-download',
+      label: 'Pull',
+      onClick: async () => {
+        gitPullFetcher.submit({}, {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/pull`,
+          method: 'post',
+        });
+      },
+    },
+    {
+      id: 3,
+      isDisabled: log.length === 0,
+      icon: 'clock-o',
+      label: <span>History ({log.length})</span>,
+      onClick: () => setIsGitLogModalOpen(true),
+    },
+  ];
+
+  if (log.length > 0) {
+    currentBranchActions.splice(1, 0, {
+      id: 4,
+      stayOpenAfterClick: true,
+      icon: loadingPush ? 'refresh fa-spin' : 'cloud-upload',
+      label: 'Push',
+      onClick: () => handlePush({ force: false }),
+    });
+  }
+
   if (isButton) {
     dropdown = (
       <Button
@@ -158,7 +196,6 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
                   setIsGitRepoSettingsModalOpen(true);
                 }}
               />
-              <i className="fa fa-wrench" /> Repository Settings
             </DropdownItem>
 
             <DropdownItem>
@@ -174,78 +211,47 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
             </DropdownItem>
           </DropdownSection>
 
-          {currentBranch && (
-            <Fragment>
-              <DropdownSection title="Branches">
-                {branches.map(branch => {
-                  const isCurrentBranch = branch === currentBranch;
-                  return (
-                    <DropdownItem
-                      key={branch}
+          <DropdownSection
+            title="Branches"
+            items={currentBranch ? branches.map(b => ({ branch: b })) : []}
+          >
+            {({ branch }) => {
+              const isCurrentBranch = branch === currentBranch;
 
-                    >
-                      <ItemContent
-                        title={isCurrentBranch ? '' : `Switch to "${branch}"`}
-                        className={classnames({ bold: isCurrentBranch })}
-                        icon={branch === currentBranch ? 'tag' : 'empty'}
-                        label={branch}
-                        isDisabled={isCurrentBranch}
-                        onClick={async () => {
-                          gitCheckoutFetcher.submit({
-                            branch,
-                          }, {
-                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/checkout`,
-                            method: 'post',
-                          });
-                        }}
-                      />
-                    </DropdownItem>
-                  );
-                })}
-              </DropdownSection>
-
-              <DropdownSection title={currentBranch}>
-                <DropdownItem>
+              return (
+                <DropdownItem
+                  key={branch}
+                  title={isCurrentBranch ? '' : `Switch to "${branch}"`}
+                >
                   <ItemContent
-                    icon="check"
-                    label="Commit"
-                    onClick={() => setIsGitStagingModalOpen(true)}
-                  />
-                </DropdownItem>
-                {log.length > 0 && (
-                  <DropdownItem>
-                    <ItemContent
-                      stayOpenAfterClick
-                      icon={loadingPush ? 'refresh fa-spin' : 'cloud-upload'}
-                      label="Push"
-                      onClick={() => handlePush({ force: false })}
-                    />
-                  </DropdownItem>
-                )}
-                <DropdownItem>
-                  <ItemContent
-                    stayOpenAfterClick
-                    icon={loadingPull ? 'refresh fa-spin' : 'cloud-download'}
-                    label="Pull"
+                    className={classnames({ bold: isCurrentBranch })}
+                    icon={branch === currentBranch ? 'tag' : 'empty'}
+                    label={branch}
+                    isDisabled={isCurrentBranch}
                     onClick={async () => {
-                      gitPullFetcher.submit({}, {
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/pull`,
+                      gitCheckoutFetcher.submit({
+                        branch,
+                      }, {
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branch/checkout`,
                         method: 'post',
                       });
                     }}
                   />
                 </DropdownItem>
-                <DropdownItem>
-                  <ItemContent
-                    isDisabled={log.length === 0}
-                    icon="clock-o"
-                    label={<span>History ({log.length})</span>}
-                    onClick={() => setIsGitLogModalOpen(true)}
-                  />
-                </DropdownItem>
-              </DropdownSection>
-            </Fragment>
-          )}
+              );
+            }}
+          </DropdownSection>
+
+          <DropdownSection
+            title={currentBranch}
+            items={currentBranch ? currentBranchActions : []}
+          >
+            {({ id, ...action }) =>
+              <DropdownItem key={id}>
+                <ItemContent {...action} />
+              </DropdownItem>
+            }
+          </DropdownSection>
         </Dropdown>
       </div>
     );
