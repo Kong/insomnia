@@ -76,7 +76,6 @@ export const getOAuth2Token = async (
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
   let params: RequestHeader[] = [];
   if (authentication.grantType === 'authorization_code') {
-    invariant(authentication.redirectUrl, 'Missing redirect URL');
     invariant(authentication.authorizationUrl, 'Invalid authorization URL');
 
     const codeVerifier = authentication.usePkce ? encodePKCE(crypto.randomBytes(32)) : '';
@@ -98,8 +97,8 @@ export const getOAuth2Token = async (
     ].forEach(p => p.value && authCodeUrl.searchParams.append(p.name, p.value));
     const redirectedTo = await window.main.authorizeUserInWindow({
       url: authCodeUrl.toString(),
-      urlSuccessRegex: new RegExp(`${escapeRegex(authentication.redirectUrl)}.*(code=)`, 'i'),
-      urlFailureRegex: new RegExp(`${escapeRegex(authentication.redirectUrl)}.*(error=)`, 'i'),
+      urlSuccessRegex: /(code=)/,
+      urlFailureRegex: /(error=)/,
       sessionId: getOAuthSession(),
     });
     console.log('[oauth2] Detected redirect ' + redirectedTo);
