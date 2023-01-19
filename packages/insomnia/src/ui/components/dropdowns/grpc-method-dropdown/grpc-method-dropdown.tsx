@@ -65,6 +65,7 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   const groupedByPkg = groupGrpcMethodsByPackage(methods);
   const selectedPath = selectedMethod?.fullPath;
 
+  console.log('methods: ', methods);
   return (
     <Dropdown
       aria-label='Select gRPC method dropdown'
@@ -97,33 +98,37 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
       </DropdownItem>
       {!methods.length && (
         <DropdownSection>
-          <DropdownItem aria-label='No methods found'>No methods found</DropdownItem>
+          <DropdownItem aria-label='No methods found'>
+            <ItemContent
+              isDisabled
+              label={<em>No methods found</em>}
+            />
+          </DropdownItem>
         </DropdownSection>
       )}
       {Object.entries(groupedByPkg).map(([name, pkg]) => (
-        <Fragment key={name}>
-          <DropdownSection
-            aria-label='Select gRPC method section'
-            title={name !== NO_PACKAGE_KEY && <NormalCase>pkg: {name}</NormalCase>}
-          >
-            {pkg.map(({ type, fullPath }) => (
-              <DropdownItem
-                key={fullPath}
-                aria-label={fullPath}
+        <DropdownSection
+          key={name}
+          aria-label='Select gRPC method section'
+          title={name !== NO_PACKAGE_KEY && <NormalCase>pkg: {name}</NormalCase>}
+        >
+          {pkg.map(({ type, fullPath }) => (
+            <DropdownItem
+              key={fullPath}
+              aria-label={fullPath}
+            >
+              <ItemContent
+                isDisabled={disabled}
+                isSelected={fullPath === selectedPath}
+                onClick={() => handleChange(fullPath)}
               >
-                <ItemContent
-                  isDisabled={disabled}
-                  isSelected={fullPath === selectedPath}
-                  onClick={() => handleChange(fullPath)}
-                >
-                  <Tooltip message={fullPath} position="right" delay={500}>
-                    <DropdownMethodButtonLabel><GrpcMethodTag methodType={type} /> {getShortGrpcPath(fullPath)}</DropdownMethodButtonLabel>
-                  </Tooltip>
-                </ItemContent>
-              </DropdownItem>
-            ))}
-          </DropdownSection>
-        </Fragment>
+                <Tooltip message={fullPath} position="right" delay={500}>
+                  <DropdownMethodButtonLabel><GrpcMethodTag methodType={type} /> {getShortGrpcPath(fullPath)}</DropdownMethodButtonLabel>
+                </Tooltip>
+              </ItemContent>
+            </DropdownItem>
+          ))}
+        </DropdownSection>
       ))}
     </Dropdown>
   );
