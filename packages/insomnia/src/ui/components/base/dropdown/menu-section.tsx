@@ -36,7 +36,6 @@ const StyledList = styled.ul({
 });
 
 interface Props<T> {
-  dividerLabel?: string;
   section: Node<T>;
   state: TreeState<T>;
   closeOnSelect?: boolean;
@@ -54,11 +53,13 @@ export const MenuSection = <T extends object>({
 
   const { separatorProps } = useSeparator({ elementType: 'li' });
 
+  const shouldDisplayDivider = section.rendered || section.key !== state.collection.getFirstKey();
+
   return (
     <li {...itemProps}>
       <StyledDividerContainer>
         {section.rendered && <StyledDividerSpan {...headingProps}>{section.rendered}</StyledDividerSpan>}
-        <StyledDivider {...separatorProps}/>
+        {shouldDisplayDivider && <StyledDivider {...separatorProps}/>}
       </StyledDividerContainer>
       <StyledList {...groupProps}>
         {[...section.childNodes].map((node: Node<T>) => (
