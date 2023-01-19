@@ -62,6 +62,11 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
     >
       <DropdownSection
         aria-label='Remote Workspaces Section'
+        items={remoteBackendProjects.length === 0 ? [{
+          id: 1,
+          isDisabled: true,
+          label: 'Nothing to pull',
+        }] : []}
         title={
           <>
             Remote {strings.collection.plural}
@@ -73,13 +78,28 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
           </>
         }
       >
-        <DropdownItem aria-label='Nothing to pull'>
-          {remoteBackendProjects.length === 0 && (
-            <ItemContent label="Nothing to pull" />
-          )}
-        </DropdownItem>
+        {({ id, ...rest }) =>
+          <DropdownItem aria-label='Nothing to pull'>
+            <ItemContent {...rest} />
+          </DropdownItem>
+        }
+      </DropdownSection>
 
-        {remoteBackendProjects.map(({ id, name }) => (
+      <DropdownSection
+        aria-label='Remote Workspaces Section'
+        items={remoteBackendProjects.length ? remoteBackendProjects : []}
+        title={
+          <>
+            Remote {strings.collection.plural}
+            <HelpTooltip>
+              These {strings.collection.plural.toLowerCase()} have been shared with
+              you via Insomnia Sync and do not yet exist on your machine.
+            </HelpTooltip>{' '}
+            {state === 'loading' && <i className="fa fa-spin fa-refresh" />}
+          </>
+        }
+      >
+        {({ id, name }) =>
           <DropdownItem
             key={id}
             aria-label={name}
@@ -101,7 +121,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
               }
             />
           </DropdownItem>
-        ))}
+        }
       </DropdownSection>
     </Dropdown>
   );
