@@ -65,7 +65,6 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   const groupedByPkg = groupGrpcMethodsByPackage(methods);
   const selectedPath = selectedMethod?.fullPath;
 
-  console.log('methods: ', methods);
   return (
     <Dropdown
       aria-label='Select gRPC method dropdown'
