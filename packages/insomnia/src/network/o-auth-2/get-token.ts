@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import querystring from 'querystring';
 
-import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { AuthTypeOAuth2, RequestHeader, RequestParameter } from '../../models/request';
