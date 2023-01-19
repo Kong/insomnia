@@ -303,9 +303,7 @@ const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { pr
       {projects.map(proj => {
         return (
           <li key={proj._id} className="sidebar__row">
-            <div
-              className={`sidebar__item sidebar__item--request ${activeProject._id === proj._id ? 'sidebar__item--active' : ''}`}
-            >
+            <div className={`sidebar__item sidebar__item--request ${activeProject._id === proj._id ? 'sidebar__item--active' : ''}`}>
               <button
                 style={{
                   paddingLeft: 'var(--padding-md)',
@@ -313,18 +311,10 @@ const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { pr
                   alignItems: 'center',
                   gap: 'var(--padding-sm)',
                 }}
-                onClick={() =>
-                  navigate(
-                    `/organization/${organizationId}/project/${proj._id}`
-                  )
-                }
+                onClick={() => navigate(`/organization/${organizationId}/project/${proj._id}`)}
                 className="wide"
               >
-                {isRemoteProject(activeProject) ? (
-                  <i className="fa fa-globe" />
-                ) : (
-                  <i className="fa fa-laptop" />
-                )}{' '}
+                <i className={`fa fa-${isRemoteProject(activeProject) ? 'globe' : 'laptop'}`} />{' '}
                 {proj.name}
               </button>
               {!isDefaultProject(proj) && (
@@ -388,26 +378,6 @@ const ProjectSidebarSection = ({ projects, activeProject, organizationId }: { pr
         );
       })}
     </ul>
-  );
-};
-const OrganizationProjectsSidebar: FC<{
-  title: string;
-  projects: Project[];
-  activeProject: Project;
-  organizationId: string;
-}> = ({ activeProject, projects, title, organizationId }) => {
-  return (
-    <Sidebar
-      style={{
-        height: '100%',
-      }}
-    >
-      <SidebarTitle>
-        {title}
-      </SidebarTitle>
-      <OrgSideBarSection projects={projects} activeProject={activeProject} organizationId={organizationId} />
-      <ProjectSidebarSection projects={projects} activeProject={activeProject} organizationId={organizationId} />
-    </Sidebar>
   );
 };
 
@@ -726,12 +696,17 @@ const ProjectRoute: FC = () => {
       <Fragment>
         <SidebarLayout
           renderPageSidebar={
-            <OrganizationProjectsSidebar
-              organizationId={organizationId}
-              title={organization.name}
-              projects={projects}
-              activeProject={activeProject}
-            />
+            <Sidebar
+              style={{
+                height: '100%',
+              }}
+            >
+              <SidebarTitle>
+                {organization.name}
+              </SidebarTitle>
+              <OrgSideBarSection projects={projects} activeProject={activeProject} organizationId={organizationId} />
+              <ProjectSidebarSection projects={projects} activeProject={activeProject} organizationId={organizationId} />
+            </Sidebar>
           }
           renderPaneOne={
             <Pane>
