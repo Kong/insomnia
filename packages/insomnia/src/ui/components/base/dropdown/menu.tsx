@@ -1,3 +1,4 @@
+import { getItemCount } from '@react-stately/collections';
 import type { AriaMenuProps } from '@react-types/menu';
 import { Node } from '@react-types/shared';
 import React, { useRef } from 'react';
@@ -40,7 +41,7 @@ export const Menu = <T extends object>(props: Props<T>) => {
     <List {...menuProps} ref={ref} className="dropdown__menu">
       {[...state.collection].map((item: Node<T>) => {
         // If the item is a section and the section has items, render a MenuSection
-        if (item.type === 'section' && [...item.childNodes].length !== 0) {
+        if (item.type === 'section' && getItemCount(item.childNodes) !== 0) {
           return (
             <MenuSection
               key={item.key}
