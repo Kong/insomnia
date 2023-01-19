@@ -202,24 +202,21 @@ async function getExisingAccessTokenAndRefreshIfExpired(
     models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
     return null;
   }
-  const isSuccessful = statusCode >= 200 && statusCode < 300;
   const hasBodyAndIsError = bodyBuffer && statusCode === 400;
-  if (isSuccessful) {
-    if (hasBodyAndIsError) {
-      const body = tryToParse(bodyBuffer.toString());
-      // If the refresh token was rejected due an oauth2 invalid_grant error, we will
-      // return a null access_token to trigger an authentication request to fetch
-      // brand new refresh and access tokens.
-      if (body?.error === 'invalid_grant') {
-        console.log(`[oauth2] Refresh token rejected due to invalid_grant error: ${body.error_description}`);
-        const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
-        models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
-        return null;
-      }
+  if (hasBodyAndIsError) {
+    const body = tryToParse(bodyBuffer.toString());
+    // If the refresh token was rejected due an oauth2 invalid_grant error, we will
+    // return a null access_token to trigger an authentication request to fetch
+    // brand new refresh and access tokens.
+    if (body?.error === 'invalid_grant') {
+      console.log(`[oauth2] Refresh token rejected due to invalid_grant error: ${body.error_description}`);
+      const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+      models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({ access_token: null }));
+      return null;
     }
-
     throw new Error(`[oauth2] Failed to refresh token url=${authentication.accessTokenUrl} status=${statusCode}`);
   }
+  
   invariant(bodyBuffer, `[oauth2] No body returned from ${authentication.accessTokenUrl}`);
   const data = tryToParse(bodyBuffer.toString());
   if (!data) {
