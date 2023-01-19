@@ -1,12 +1,11 @@
 import React, { forwardRef, useCallback, useState } from 'react';
 import styled from 'styled-components';
 
-import { HTTP_METHODS, METHOD_GRPC } from '../../../common/constants';
+import { HTTP_METHODS } from '../../../common/constants';
 import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showPrompt } from '../modals/index';
 
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
-const GRPC_LABEL = 'gRPC';
 
 const StyledDropdownButton = styled(DropdownButton)({
   '&&': {
@@ -18,14 +17,12 @@ interface Props {
   className?: string;
   method: string;
   onChange: (method: string) => void;
-  showGrpc?: boolean;
 }
 
 export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
   className,
   method,
   onChange,
-  showGrpc,
 }, ref) => {
   const localStorageHttpMethods = window.localStorage.getItem(LOCALSTORAGE_KEY);
   const parsedLocalStorageHttpMethods = localStorageHttpMethods ? JSON.parse(localStorageHttpMethods) as string[] : [];
@@ -76,40 +73,28 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
     });
   }, [method, onChange, recent]);
 
-  const buttonLabel = method === METHOD_GRPC ? GRPC_LABEL : method;
   return (
     <Dropdown
       ref={ref}
       className="method-dropdown"
       triggerButton={
         <StyledDropdownButton className={className}>
-          <span className={`http-method-${method}`}>{buttonLabel}</span>{' '}
+          <span className={`http-method-${method}`}>{method}</span>{' '}
           <i className="fa fa-caret-down space-left" />
         </StyledDropdownButton>
       }
     >
-
-      {HTTP_METHODS.map(method => (
-        <DropdownItem key={method}>
-          <ItemContent
-            className={`http-method-${method}`}
-            label={method}
-            onClick={() => onChange(method)}
-          />
-        </DropdownItem>
-      ))}
-
-      {showGrpc && (
-        <DropdownSection>
-          <DropdownItem>
+      <DropdownSection>
+        {HTTP_METHODS.map(method => (
+          <DropdownItem key={method}>
             <ItemContent
-              className="method-grpc"
-              label={GRPC_LABEL}
-              onClick={() => onChange(METHOD_GRPC)}
+              className={`http-method-${method}`}
+              label={method}
+              onClick={() => onChange(method)}
             />
           </DropdownItem>
-        </DropdownSection>
-      )}
+        ))}
+      </DropdownSection>
 
       <DropdownSection>
         <DropdownItem>
@@ -123,4 +108,5 @@ export const MethodDropdown = forwardRef<DropdownHandle, Props>(({
     </Dropdown>
   );
 });
+
 MethodDropdown.displayName = 'MethodDropdown';

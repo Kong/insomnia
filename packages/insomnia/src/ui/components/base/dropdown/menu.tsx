@@ -65,7 +65,6 @@ export const Menu = <T extends object>(props: Props<T>) => {
         }
 
         return null;
-
       })}
     </List>
   );
