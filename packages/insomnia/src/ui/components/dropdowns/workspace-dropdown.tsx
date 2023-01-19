@@ -130,46 +130,43 @@ export const WorkspaceDropdown: FC = () => {
         />
       </DropdownItem>
 
-      {
-        <DropdownSection
-          aria-label='Plugins Section'
-          title="Plugins"
-        >
-          {actionPlugins.map((p: WorkspaceAction) => (
-            <DropdownItem
-              key={p.label}
-              aria-label={p.label}
-            >
-              <ItemContent
-                icon={loadingActions[p.label] ? 'refresh fa-spin' : p.icon || 'code'}
-                label={p.label}
-                stayOpenAfterClick
-                onClick={() => handlePluginClick(p, activeWorkspace)}
-              />
-            </DropdownItem>
-          ))}
-        </DropdownSection>
-      }
+      <DropdownSection
+        aria-label='Plugins Section'
+        title="Plugins"
+      >
+        {actionPlugins.map((p: WorkspaceAction) => (
+          <DropdownItem
+            key={p.label}
+            aria-label={p.label}
+          >
+            <ItemContent
+              icon={loadingActions[p.label] ? 'refresh fa-spin' : p.icon || 'code'}
+              label={p.label}
+              stayOpenAfterClick
+              onClick={() => handlePluginClick(p, activeWorkspace)}
+            />
+          </DropdownItem>
+        ))}
+      </DropdownSection>
 
-      {isDesign(activeWorkspace) && configGeneratorPlugins.length > 0 && (
-        <DropdownSection
-          aria-label='Config Generators Section'
-          title="Config Generators"
-        >
-          {configGeneratorPlugins.map((p: ConfigGenerator) => (
-            <DropdownItem
-              key={`generateConfig-${p.label}`}
-              aria-label={p.label}
-            >
-              <ItemContent
-                icon="code"
-                label={p.label}
-                onClick={() => handleGenerateConfig(p.label)}
-              />
-            </DropdownItem>
-          ))}
-        </DropdownSection>
-      )}
+      <DropdownSection
+        aria-label='Config Generators Section'
+        title="Config Generators"
+        items={isDesign(activeWorkspace) && configGeneratorPlugins.length > 0 ? configGeneratorPlugins : []}
+      >
+        {(p: ConfigGenerator) =>
+          <DropdownItem
+            key={`generateConfig-${p.label}`}
+            aria-label={p.label}
+          >
+            <ItemContent
+              icon="code"
+              label={p.label}
+              onClick={() => handleGenerateConfig(p.label)}
+            />
+          </DropdownItem>
+        }
+      </DropdownSection>
     </Dropdown>
   );
 };
