@@ -71,11 +71,20 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
           size='medium'
           className='tall wide'
           removeBorderRadius
+          removePaddings={false}
           disableHoverBehavior={false}
           isDisabled={methods.length === 0}
+          style={{ maxWidth: '250px' }}
         >
-          <Tooltip message={selectedPath || 'Add proto file or use server reflection'} position="bottom" delay={500}>
-            {!selectedPath ? 'Select Method' : getShortGrpcPath(selectedPath)}
+          <Tooltip
+            message={selectedPath || 'Add proto file or use server reflection'}
+            position="bottom"
+            delay={500}
+            style={{ maxWidth: '240px', display: 'flex', alignItems: 'center' }}
+          >
+            <span style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {!selectedPath ? 'Select Method' : getShortGrpcPath(selectedPath)}
+            </span>
             <i className="fa fa-caret-down pad-left-sm" />
           </Tooltip>
         </DropdownButton>
