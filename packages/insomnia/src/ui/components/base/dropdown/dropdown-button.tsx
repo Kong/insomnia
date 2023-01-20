@@ -10,14 +10,16 @@ interface StyledThemedButtonProps extends ButtonProps {
   removePaddings?: boolean;
   removeBorderRadius?: boolean;
   disableHoverBehavior?: boolean;
+  isDisabled?: boolean;
 }
 
-const StyledThemedButton = styled(ThemedButton)(({ removePaddings, disableHoverBehavior }: StyledThemedButtonProps) => ({
+const StyledThemedButton = styled(ThemedButton)(({ removePaddings, disableHoverBehavior, isDisabled }: StyledThemedButtonProps) => ({
   height: '100%',
   display: 'flex !important',
   justifyContent: 'space-between',
   alignItems: 'center',
   padding: removePaddings ? 0 : 'var(--padding-xs) var(--padding-sm)',
+  cursor: isDisabled ? 'not-allowed' : 'pointer',
 
   '&:focus:not(:disabled)': {
     boxShadow: `${disableHoverBehavior && 'unset'}`,
@@ -58,6 +60,7 @@ export const DropdownButton = forwardRef<{}, DropdownButtonProps>((props: Dropdo
       radius={props.removeBorderRadius ? '0' : props.radius || '3px'}
       removePaddings={props.removePaddings || true}
       disableHoverBehavior={props.disableHoverBehavior || true}
+      isDisabled={props.isDisabled}
       {...mergeProps(buttonProps, focusProps, props)}
     >
       {props.children}
