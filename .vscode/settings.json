@@ -13,5 +13,4 @@
     "*.njson": "ndjson"
   },
   "files.insertFinalNewline": true,
-  "jira-plugin.workingProject": "",
 }
