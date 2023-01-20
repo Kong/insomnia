@@ -178,6 +178,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               <Button
                 variant="text"
                 data-testid="button-server-reflection"
+                disabled={!activeRequest.url}
                 onClick={async () => {
                   const request = await models.grpcRequest.update(activeRequest, { protoMethodName: '', protoFileId: '' });
                   const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
