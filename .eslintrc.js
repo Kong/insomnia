@@ -113,8 +113,6 @@ module.exports = {
       ],
     }],
 
-    'filenames/match-exported': [ERROR, 'kebab'],
-
     'react/no-find-dom-node': OFF(UNKNOWN),
     'react/no-unescaped-entities': OFF(TYPESCRIPT_CONVERSION),
     'react/jsx-first-prop-new-line': [ERROR, 'multiline'],
@@ -128,7 +126,6 @@ module.exports = {
       'namedComponents':  'arrow-function',
       'unnamedComponents': 'arrow-function',
     }],
-    'react/jsx-max-props-per-line': [ERROR, { 'maximum': 1, 'when': 'multiline' }],
     'react/jsx-closing-bracket-location': [ERROR, 'line-aligned'],
     'react/prefer-stateless-function': ERROR,
     'react/jsx-key': [ERROR, { 'checkFragmentShorthand': true }],
