@@ -294,6 +294,20 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   const canCreateSnapshot =
     Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
   const visibleBranches = localBranches.filter(b => !b.match(/\.hidden$/));
+  const syncMenuHeader = (
+    <>
+      Insomnia Sync{' '}
+      <HelpTooltip>
+        Sync and collaborate on workspaces{' '}
+        <Link href={docsVersionControl}>
+          <span className="no-wrap">
+            <br />
+            Documentation <i className="fa fa-external-link" />
+          </span>
+        </Link>
+      </HelpTooltip>
+    </>
+  );
 
   if (loadingProjectPull) {
     return (
@@ -304,6 +318,24 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       </div>
     );
   }
+
+  const emptyDropdownItemsArray = [{
+    id: 'empty',
+    icon: 'plus-circle',
+    name: 'Create Locally',
+    onClick: async () => {
+      setState(state => ({
+        ...state,
+        loadingProjectPull: true,
+      }));
+      await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
+      await refreshVCSAndRefetchRemote();
+      setState(state => ({
+        ...state,
+        loadingProjectPull: false,
+      }));
+    },
+  }];
 
   if (!vcs.hasBackendProject()) {
     return (
@@ -328,42 +360,23 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         >
           <DropdownSection
             aria-label='Sync Projects List'
-            title={
-              <>
-                Insomnia Sync{' '}
-                <HelpTooltip>
-                  Sync and collaborate on workspaces{' '}
-                  <Link href={docsVersionControl}>
-                    <span className="no-wrap">
-                      <br />
-                      Documentation <i className="fa fa-external-link" />
-                    </span>
-                  </Link>
-                </HelpTooltip>
-              </>
-            }
+            items={remoteBackendProjects.length === 0 ? emptyDropdownItemsArray : []}
+            title={syncMenuHeader}
           >
-            <DropdownItem>
-              {remoteBackendProjects.length === 0 && (
-                <ItemContent
-                  icon="plus-circle"
-                  label="Create Locally"
-                  onClick={async () => {
-                    setState(state => ({
-                      ...state,
-                      loadingProjectPull: true,
-                    }));
-                    await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
-                    await refreshVCSAndRefetchRemote();
-                    setState(state => ({
-                      ...state,
-                      loadingProjectPull: false,
-                    }));
-                  }}
-                />
-              )}
-            </DropdownItem>
-            {remoteBackendProjects.map(p => (
+            {p =>
+              <DropdownItem
+                key={p.id}
+              >
+                <ItemContent {...p} />
+              </DropdownItem>
+            }
+          </DropdownSection>
+          <DropdownSection
+            aria-label='Sync Projects List'
+            items={remoteBackendProjects.length !== 0 ? remoteBackendProjects : []}
+            title={syncMenuHeader}
+          >
+            {p =>
               <DropdownItem
                 key={p.id}
                 arial-label={`Pull ${p.name}`}
@@ -374,7 +387,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                   onClick={() => handleSetProject(p)}
                 />
               </DropdownItem>
-            ))}
+            }
           </DropdownSection>
         </Dropdown>
       </div>
@@ -455,20 +468,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       >
         <DropdownSection
           aria-label='Sync Branches List'
-          title={
-            <>
-              Insomnia Sync{' '}
-              <HelpTooltip>
-                Sync and collaborate on workspaces{' '}
-                <Link href={docsVersionControl}>
-                  <span className="no-wrap">
-                    <br />
-                    Documentation <i className="fa fa-external-link" />
-                  </span>
-                </Link>
-              </HelpTooltip>
-            </>
-          }
+          title={syncMenuHeader}
         >
 
           <DropdownItem aria-label='Login'>
