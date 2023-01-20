@@ -140,7 +140,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
         />
         <URLTag
           small
-          url={response.url}
+          url={request.url}
           method={request ? request.method : ''}
           tooltipDelay={1000}
         />
