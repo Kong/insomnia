@@ -177,6 +177,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               />
               <Button
                 variant="text"
+                data-testid="button-server-reflection"
                 onClick={async () => {
                   const request = await models.grpcRequest.update(activeRequest, { protoMethodName: '', protoFileId: '' });
                   const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
@@ -192,7 +193,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   <i className="fa fa-refresh" />
                 </Tooltip>
               </Button>
-              <Button variant="text" onClick={() => setIsProtoModalOpen(true)}>
+              <Button
+                data-testid="button-proto-file"
+                variant="text"
+                onClick={() => setIsProtoModalOpen(true)}
+              >
                 <Tooltip message="Click to change proto file" position="bottom" delay={500}>
                   <i className="fa fa-file-code-o" />
                 </Tooltip>

@@ -21,8 +21,8 @@ test('can send gRPC requests with reflection', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Route Guide Example' }).click();
 
   await page.getByRole('button', { name: 'UnaryWithOutProtoFile' }).click();
-  await page.getByRole('button', { name: 'Select Method' }).click();
-  await page.getByRole('menuitem', { name: 'Click to use server reflection' }).click();
+  await expect(page.getByRole('button', { name: 'Select Method' })).toBeDisabled();
+  await page.getByTestId('button-server-reflection').click();
 
   await page.getByRole('button', { name: 'Select Method' }).click();
   await page.getByRole('menuitem', { name: 'RouteGuide/GetFeature' }).click();
