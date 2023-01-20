@@ -169,4 +169,5 @@ Button.defaultProps = {
   bg: 'default',
   size: 'default',
   radius: '3px',
+  role: 'button',
 };

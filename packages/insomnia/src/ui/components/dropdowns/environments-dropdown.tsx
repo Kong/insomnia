@@ -4,11 +4,7 @@ import { useSelector } from 'react-redux';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import { selectActiveWorkspaceMeta, selectEnvironments, selectHotKeyRegistry } from '../../redux/selectors';
-import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownHint } from '../base/dropdown/dropdown-hint';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showModal } from '../modals/index';
 import { WorkspaceEnvironmentsEditModal } from '../modals/workspace-environments-edit-modal';
@@ -44,69 +40,80 @@ export const EnvironmentsDropdown: FC<Props> = ({
   const description = (!activeEnvironment || activeEnvironment === baseEnvironment) ? 'No Environment' : activeEnvironment.name;
 
   return (
-    <Dropdown ref={dropdownRef}>
-      <DropdownButton className="btn btn--super-compact no-wrap">
-        <div className="sidebar__menu__thing">
-          {!activeEnvironment && subEnvironments.length > 0 && (
-            <Tooltip
-              message="No environments active. Please select one to use."
-              className="space-right"
-              position="right"
-            >
-              <i className="fa fa-exclamation-triangle notice" />
-            </Tooltip>
-          )}
-          <div className="sidebar__menu__thing__text">
-            {activeEnvironment?.color && (
-              <i
-                className="fa fa-circle space-right"
-                style={{
-                  color: activeEnvironment.color,
-                }}
-              />
+    <Dropdown
+      ref={dropdownRef}
+      triggerButton={
+        <DropdownButton
+          className="btn btn--super-compact no-wrap"
+          disableHoverBehavior={false}
+        >
+          <div className="sidebar__menu__thing">
+            {!activeEnvironment && subEnvironments.length > 0 && (
+              <Tooltip
+                message="No environments active. Please select one to use."
+                className="space-right"
+                position="right"
+              >
+                <i className="fa fa-exclamation-triangle notice" />
+              </Tooltip>
             )}
-            {description}
+            <div className="sidebar__menu__thing__text">
+              {activeEnvironment?.color && (
+                <i
+                  className="fa fa-circle space-right"
+                  style={{
+                    color: activeEnvironment.color,
+                  }}
+                />
+              )}
+              {description}
+            </div>
+            <i className="space-left fa fa-caret-down" />
           </div>
-          <i className="space-left fa fa-caret-down" />
-        </div>
-      </DropdownButton>
+        </DropdownButton>
+      }
+    >
+      <DropdownSection title="Activate Environment">
+        {subEnvironments.map(environment => (
+          <DropdownItem key={environment._id}>
+            <ItemContent
+              icon="random"
+              label={<span>Use <strong>{environment.name}</strong></span>}
+              iconStyle={{
+                ...(environment.color ? { color: environment.color } : {}),
+              }}
+              onClick={() => {
+                if (activeWorkspaceMeta) {
+                  models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId: environment._id });
+                }
+              }}
+            />
+          </DropdownItem>
+        ))}
+      </DropdownSection>
 
-      <DropdownDivider>Activate Environment</DropdownDivider>
-      {subEnvironments.map(environment => (
-        <DropdownItem
-          key={environment._id}
+      <DropdownItem>
+        <ItemContent
+          icon="empty"
+          label="No Environment"
           onClick={() => {
             if (activeWorkspaceMeta) {
-              models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId: environment._id });
+              models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId: null });
             }
           }}
-        >
-          <i
-            className="fa fa-random"
-            style={{
-              ...(environment.color ? { color: environment.color } : {}),
-            }}
+        />
+      </DropdownItem>
+
+      <DropdownSection title="General">
+        <DropdownItem>
+          <ItemContent
+            icon="wrench"
+            label="Manage Environments"
+            hint={hotKeyRegistry.environment_showEditor}
+            onClick={() => showModal(WorkspaceEnvironmentsEditModal)}
           />
-          Use <strong>{environment.name}</strong>
         </DropdownItem>
-      ))}
-
-      <DropdownItem
-        onClick={() => {
-          if (activeWorkspaceMeta) {
-            models.workspaceMeta.update(activeWorkspaceMeta, { activeEnvironmentId: null });
-          }
-        }}
-      >
-        <i className="fa fa-empty" /> No Environment
-      </DropdownItem>
-
-      <DropdownDivider>General</DropdownDivider>
-
-      <DropdownItem onClick={() => showModal(WorkspaceEnvironmentsEditModal)}>
-        <i className="fa fa-wrench" /> Manage Environments
-        <DropdownHint keyBindings={hotKeyRegistry.environment_showEditor} />
-      </DropdownItem>
+      </DropdownSection>
     </Dropdown>
   );
 };

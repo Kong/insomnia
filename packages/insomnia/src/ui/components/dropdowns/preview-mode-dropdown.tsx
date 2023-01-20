@@ -8,10 +8,7 @@ import * as models from '../../../models';
 import { isRequest } from '../../../models/request';
 import { isResponse } from '../../../models/response';
 import { selectActiveRequest, selectActiveResponse, selectResponsePreviewMode } from '../../redux/selectors';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
 interface Props {
   download: (pretty: boolean) => any;
@@ -94,36 +91,76 @@ export const PreviewModeDropdown: FC<Props> = ({
     }
   }, [request, response]);
   const shouldPrettifyOption = response.contentType.includes('json');
-  return <Dropdown beside>
-    <DropdownButton className="tall">
-      {getPreviewModeName(previewMode)}
-      <i className="fa fa-caret-down space-left" />
-    </DropdownButton>
-    <DropdownDivider>Preview Mode</DropdownDivider>
-    {PREVIEW_MODES.map(mode => <DropdownItem key={mode} onClick={() => handleClick(mode)}>
-      {previewMode === mode ? <i className="fa fa-check" /> : <i className="fa fa-empty" />}
-      {getPreviewModeName(mode, true)}
-    </DropdownItem>)}
-    <DropdownDivider>Actions</DropdownDivider>
-    <DropdownItem onClick={copyToClipboard}>
-      <i className="fa fa-copy" />
-      Copy raw response
-    </DropdownItem>
-    <DropdownItem onClick={handleDownloadNormal}>
-      <i className="fa fa-save" />
-      Export raw response
-    </DropdownItem>
-    {shouldPrettifyOption && <DropdownItem onClick={handleDownloadPrettify}>
-      <i className="fa fa-save" />
-      Export prettified response
-    </DropdownItem>}
-    <DropdownItem onClick={exportDebugFile}>
-      <i className="fa fa-bug" />
-      Export HTTP debug
-    </DropdownItem>
-    <DropdownItem onClick={exportAsHAR}>
-      <i className="fa fa-save" />
-      Export as HAR
-    </DropdownItem>
-  </Dropdown>;
+
+  return (
+    <Dropdown
+      aria-label='Preview Mode Dropdown'
+      triggerButton={
+        <DropdownButton className="tall">
+          {getPreviewModeName(previewMode)}
+          <i className="fa fa-caret-down space-left" />
+        </DropdownButton>
+      }
+    >
+      <DropdownSection
+        aria-label='Preview Mode Section'
+        title="Preview Mode"
+      >
+        {PREVIEW_MODES.map(mode =>
+          <DropdownItem
+            key={mode}
+            aria-label={getPreviewModeName(mode, true)}
+          >
+            <ItemContent
+              icon={previewMode === mode ? 'check' : 'empty'}
+              label={getPreviewModeName(mode, true)}
+              onClick={() => handleClick(mode)}
+            />
+          </DropdownItem>
+        )}
+      </DropdownSection>
+      <DropdownSection
+        aria-label='Action Section'
+        title="Action"
+      >
+        <DropdownItem aria-label='Copy raw response'>
+          <ItemContent
+            icon="copy"
+            label="Copy raw response"
+            onClick={copyToClipboard}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label='Export raw response'>
+          <ItemContent
+            icon="save"
+            label="Export raw response"
+            onClick={handleDownloadNormal}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label='Export prettified response'>
+          {shouldPrettifyOption &&
+            <ItemContent
+              icon="save"
+              label="Export prettified response"
+              onClick={handleDownloadPrettify}
+            />
+          }
+        </DropdownItem>
+        <DropdownItem aria-label='Export HTTP debug'>
+          <ItemContent
+            icon="bug"
+            label="Export HTTP debug"
+            onClick={exportDebugFile}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label='Export as HAR'>
+          <ItemContent
+            icon="save"
+            label="Export as HAR"
+            onClick={exportAsHAR}
+          />
+        </DropdownItem>
+      </DropdownSection>
+    </Dropdown>
+  );
 };

@@ -1,8 +1,8 @@
 import { test } from '../../playwright/test';
 
 test('Sign in with Gitlab', async ({ app, page }) => {
-  await page.locator('text=Setup Git Sync').click();
-  await page.locator('div[role="tab"]:has-text("GitLab")').click();
+  await page.getByRole('button', { name: 'Setup Git Sync' }).click();
+  await page.getByRole('tab', { name: 'GitLab' }).click();
 
   const fakeGitLabOAuthWebFlow = app.evaluate(electron => {
     return new Promise<{ redirectUrl: string }>(resolve => {
@@ -22,7 +22,7 @@ test('Sign in with Gitlab', async ({ app, page }) => {
 
   const [{ redirectUrl }] = await Promise.all([
     fakeGitLabOAuthWebFlow,
-    page.locator('text=Authenticate with GitLab').click({
+    page.getByText('Authenticate with GitLab').click({
       // When playwright clicks a link it waits for navigation to finish.
       // In our case we are stubbing the navigation and we don't want to wait for it.
       noWaitAfter: true,
@@ -31,7 +31,7 @@ test('Sign in with Gitlab', async ({ app, page }) => {
 
   await page.locator('input[name="link"]').click();
   await page.locator('input[name="link"]').fill(redirectUrl);
-  await page.locator('button[name="add-token"]').click();
+  await page.getByRole('button', { name: 'Add' }).click();
 
   test.expect(await page.locator('text="Mark Kim"')).toBeTruthy();
   test.expect(await page.locator('button[name="sign-out"]')).toBeTruthy();

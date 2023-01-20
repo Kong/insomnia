@@ -7,25 +7,25 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   // Create a new the project
-  await page.click('[data-testid="project"]');
-  await page.click('text=Create');
+  await page.getByTestId('project').click();
+  await page.getByRole('button', { name: 'Create' }).click();
 
   // Copy the collection with the graphql query to clipboard
   const text = await loadFixture('graphql.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   // Import from clipboard
-  await page.click('button:has-text("Clipboard")');
+  await page.getByRole('menuitem', { name: 'Clipboard' }).click();
   // Open the new collection workspace
   await page.click('text=CollectionSmoke GraphQLjust now');
   // Open the graphql request
-  await page.click('button:has-text("POSTGQLGraphQL request")');
+  await page.getByRole('button', { name: 'GraphQL request' }).click();
   // Assert the schema is fetched after switching to GraphQL request
   await expect(page.locator('.app')).toContainText('schema fetched just now');
 
   // Assert schema documentation stuff
-  await page.click('[data-testid="request-pane"] button:has-text("schema")');
-  await page.click('button:has-text("Show Documentation")');
+  await page.getByRole('button', { name: 'schema' }).click();
+  await page.getByRole('menuitem', { name: 'Show Documentation' }).click();
   await page.click('a:has-text("Query")');
   await page.locator('a:has-text("RingBearer")').click();
   const graphqlExplorer = page.locator('.graphql-explorer');
@@ -47,14 +47,14 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
   // Create a new the project
-  await page.click('[data-testid="project"]');
-  await page.click('text=Create');
+  await page.getByTestId('project').click();
+  await page.getByRole('button', { name: 'Create' }).click();
 
   const text = await loadFixture('graphql.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-  await page.click('button:has-text("Clipboard")');
+  await page.getByRole('menuitem', { name: 'Clipboard' }).click();
   await page.click('text=CollectionSmoke GraphQLjust now');
-  await page.click('button:has-text("POSTGQLGraphQL request")');
+  await page.getByRole('button', { name: 'GraphQL request' }).click();
 
   // Edit and prettify query
   await page.locator('pre[role="presentation"]:has-text("hello,")').click();

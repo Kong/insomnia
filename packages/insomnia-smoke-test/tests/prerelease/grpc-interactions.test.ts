@@ -11,13 +11,13 @@ test.describe('gRPC interactions', () => {
   let streamMessage: Locator;
 
   test.beforeEach(async ({ app, page }) => {
-    await page.click('[data-testid="project"]');
-    await page.click('text=Create');
+    await page.getByTestId('project').click();
+    await page.getByRole('button', { name: 'Create' }).click();
 
     const text = await loadFixture('grpc.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-    await page.click('button:has-text("Clipboard")');
+    await page.getByRole('menuitem', { name: 'Clipboard' }).click();
     await page.click('text=CollectionPreRelease gRPCjust now');
     statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {

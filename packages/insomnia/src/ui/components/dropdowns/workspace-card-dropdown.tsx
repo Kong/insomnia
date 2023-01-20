@@ -13,10 +13,7 @@ import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import { AskModal } from '../modals/ask-modal';
 import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
@@ -28,8 +25,6 @@ interface Props {
   project: Project;
   projects: Project[];
 }
-
-const spinner = <i className="fa fa-refresh fa-spin" />;
 
 const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
   const [actionPlugins, setActionPlugins] = useState<DocumentAction[]>([]);
@@ -62,14 +57,17 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
     }
   }, [apiSpec.contents, project._id, startLoading, stopLoading]);
 
-  const renderPluginDropdownItems = useCallback(() => actionPlugins.map(p => (
+  const renderPluginDropdownItems: any = useCallback(() => actionPlugins.map(p => (
     <DropdownItem
       key={`${p.plugin.name}:${p.label}`}
-      onClick={() => handleClick(p)}
-      stayOpenAfterClick={!p.hideAfterClick}
+      aria-label={p.label}
     >
-      {isLoading(p.label) && spinner}
-      {p.label}
+      <ItemContent
+        icon={isLoading(p.label) ? 'refresh fa-spin' : undefined}
+        label={p.label}
+        stayOpenAfterClick={!p.hideAfterClick}
+        onClick={() => handleClick(p)}
+      />
     </DropdownItem>
   )), [actionPlugins, handleClick, isLoading]);
 
@@ -88,65 +86,76 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
 
   return (
     <Fragment>
-      <Dropdown beside onOpen={refresh}>
-        <DropdownButton>
-          <SvgIcon icon="ellipsis" />
-        </DropdownButton>
-
-        <DropdownItem onClick={() => setIsDuplicateModalOpen(true)}>Duplicate</DropdownItem>
-        <DropdownItem
-          onClick={() => {
-            showPrompt({
-              title: `Rename ${getWorkspaceLabel(workspace).singular}`,
-              defaultValue: workspaceName,
-              submitName: 'Rename',
-              selectText: true,
-              label: 'Name',
-              onComplete: name =>
-                fetcher.submit(
-                  { name, workspaceId: workspace._id },
-                  {
-                    action: `/organization/${organizationId}/project/${workspace.parentId}/workspace/update`,
-                    method: 'post',
-                  }
-                ),
-            });
-          }}
-        >
-          Rename
+      <Dropdown
+        aria-label='Workspace Actions Dropdown'
+        onOpen={refresh}
+        triggerButton={
+          <DropdownButton>
+            <SvgIcon icon="ellipsis" />
+          </DropdownButton>
+        }
+      >
+        <DropdownItem aria-label='Duplicate'>
+          <ItemContent
+            label="Duplicate"
+            onClick={() => setIsDuplicateModalOpen(true)}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label='Rename'>
+          <ItemContent
+            label="Rename"
+            onClick={() => {
+              showPrompt({
+                title: `Rename ${getWorkspaceLabel(workspace).singular}`,
+                defaultValue: workspaceName,
+                submitName: 'Rename',
+                selectText: true,
+                label: 'Name',
+                onComplete: name =>
+                  fetcher.submit(
+                    { name, workspaceId: workspace._id },
+                    {
+                      action: `/organization/${organizationId}/project/${workspace.parentId}/workspace/update`,
+                      method: 'post',
+                    }
+                  ),
+              });
+            }}
+          />
         </DropdownItem>
 
         {renderPluginDropdownItems()}
 
-        <DropdownDivider />
+        <DropdownSection aria-label='Delete section'>
+          <DropdownItem aria-label='Delete'>
+            <ItemContent
+              label="Delete"
+              className="danger"
+              onClick={() => {
+                const label = getWorkspaceLabel(workspace);
+                showModal(AskModal, {
+                  title: `Delete ${label.singular}`,
+                  message: `Do you really want to delete "${workspaceName}"?`,
+                  yesText: 'Yes',
+                  noText: 'Cancel',
+                  onDone: async (isYes: boolean) => {
+                    if (!isYes) {
+                      return;
+                    }
 
-        <DropdownItem
-          className="danger"
-          onClick={() => {
-            const label = getWorkspaceLabel(workspace);
-            showModal(AskModal, {
-              title: `Delete ${label.singular}`,
-              message: `Do you really want to delete "${workspaceName}"?`,
-              yesText: 'Yes',
-              noText: 'Cancel',
-              onDone: async (isYes: boolean) => {
-                if (!isYes) {
-                  return;
-                }
-
-                fetcher.submit(
-                  { workspaceId: workspace._id },
-                  {
-                    action: `/organization/${organizationId}/project/${workspace.parentId}/workspace/delete`,
-                    method: 'post',
-                  }
-                );
-              },
-            });
-          }}
-        >
-          Delete
-        </DropdownItem>
+                    fetcher.submit(
+                      { workspaceId: workspace._id },
+                      {
+                        action: `/organization/${organizationId}/project/${workspace.parentId}/workspace/delete`,
+                        method: 'post',
+                      }
+                    );
+                  },
+                });
+              }}
+            />
+          </DropdownItem>
+        </DropdownSection>
       </Dropdown>
       {isDuplicateModalOpen && (
         <WorkspaceDuplicateModal

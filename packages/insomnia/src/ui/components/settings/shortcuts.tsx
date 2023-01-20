@@ -11,10 +11,7 @@ import {
 import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '../../../common/settings';
 import * as models from '../../../models/index';
 import { selectHotKeyRegistry, selectSettings } from '../../redux/selectors';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { Hotkey } from '../hotkey';
 import { showModal } from '../modals';
@@ -57,68 +54,88 @@ export const Shortcuts: FC = () => {
                   })}
                 </td>
                 <td className="text-right options" style={{ verticalAlign: 'middle' }}>
-                  <Dropdown outline>
-                    <DropdownButton className="btn btn--clicky-small">
-                      <i className="fa fa-gear" />
-                    </DropdownButton>
-                    <DropdownItem
-                      onClick={() =>
-                        showModal(
-                          AddKeyCombinationModal,
-                          {
-                            keyboardShortcut,
-                            checkKeyCombinationDuplicate: (pressed: KeyCombination) => isKeyCombinationInRegistry(pressed, hotKeyRegistry),
-                            addKeyCombination:(keyboardShortcut: KeyboardShortcut, keyComb: KeyCombination) => {
-                              const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[keyboardShortcut]);
-                              keyCombs.push(keyComb);
-                              models.settings.update(settings, { hotKeyRegistry });
-                            },
-                          }
-                        )}
-                    >
-                      <i className="fa fa-plus-circle" />
-                      Add keyboard shortcut
-                    </DropdownItem>
-
-                    {keyCombosForThisPlatform.length && <DropdownDivider>Remove existing</DropdownDivider>}
-                    {
-                      /* Dropdown items to remove key combinations. */
-                      keyCombosForThisPlatform.map((keyComb: KeyCombination) => {
-                        const display = constructKeyCombinationDisplay(keyComb, false);
-                        return (
-                          <DropdownItem
-                            key={display}
-                            buttonClass={PromptButton}
-                            onClick={() => {
-                              let toBeRemovedIndex = -1;
-                              keyCombosForThisPlatform.forEach((existingKeyComb, index) => {
-                                if (areSameKeyCombinations(existingKeyComb, keyComb)) {
-                                  toBeRemovedIndex = index;
-                                }
-                              });
-                              if (toBeRemovedIndex >= 0) {
-                                keyCombosForThisPlatform.splice(toBeRemovedIndex, 1);
-                                models.settings.update(settings, { hotKeyRegistry });
-                              }
-                            }}
-                          >
-                            <i className="fa fa-trash-o" /> {display}
-                          </DropdownItem>
-                        );
-                      })
+                  <Dropdown
+                    aria-label='Select a mode'
+                    triggerButton={
+                      <DropdownButton
+                        removePaddings={false}
+                        removeBorderRadius={false}
+                        disableHoverBehavior={false}
+                        radius="var(--radius-md)"
+                        variant='outlined'
+                      >
+                        <i className="fa fa-gear" />
+                      </DropdownButton>
                     }
-
-                    <DropdownDivider />
-                    <DropdownItem
-                      buttonClass={PromptButton}
-                      onClick={() => {
-                        hotKeyRegistry[keyboardShortcut] = newDefaultRegistry()[keyboardShortcut];
-                        models.settings.update(settings, { hotKeyRegistry });
-                      }}
-                    >
-                      <i className="fa fa-empty" /> Reset keyboard shortcuts
+                  >
+                    <DropdownItem aria-label='Add keyboard shortcut'>
+                      <ItemContent
+                        icon="plus-circle"
+                        label="Add keyboard shortcut"
+                        onClick={() =>
+                          showModal(
+                            AddKeyCombinationModal,
+                            {
+                              keyboardShortcut,
+                              checkKeyCombinationDuplicate: (pressed: KeyCombination) => isKeyCombinationInRegistry(pressed, hotKeyRegistry),
+                              addKeyCombination: (keyboardShortcut: KeyboardShortcut, keyComb: KeyCombination) => {
+                                const keyCombs = getPlatformKeyCombinations(hotKeyRegistry[keyboardShortcut]);
+                                keyCombs.push(keyComb);
+                                models.settings.update(settings, { hotKeyRegistry });
+                              },
+                            }
+                          )}
+                      />
                     </DropdownItem>
+                    <DropdownSection
+                      aria-label='Remove existing section'
+                      title='Remove existing'
+                    >
+                      {
+                      /* Dropdown items to remove key combinations. */
+                        keyCombosForThisPlatform.map((keyComb: KeyCombination) => {
+                          const display = constructKeyCombinationDisplay(keyComb, false);
+                          return (
+                            <DropdownItem
+                              key={display}
+                              aria-label={display}
+                            >
+                              <ItemContent
+                                icon="trash-o"
+                                label={display}
+                                withPrompt
+                                onClick={() => {
+                                  let toBeRemovedIndex = -1;
+                                  keyCombosForThisPlatform.forEach((existingKeyComb, index) => {
+                                    if (areSameKeyCombinations(existingKeyComb, keyComb)) {
+                                      toBeRemovedIndex = index;
+                                    }
+                                  });
+                                  if (toBeRemovedIndex >= 0) {
+                                    keyCombosForThisPlatform.splice(toBeRemovedIndex, 1);
+                                    models.settings.update(settings, { hotKeyRegistry });
+                                  }
+                                }}
+                              />
+                            </DropdownItem>
+                          );
+                        })
+                      }
+                    </DropdownSection>
 
+                    <DropdownSection aria-label='Reset keyboard shortcuts section'>
+                      <DropdownItem aria-label='Reset keyboard shortcuts'>
+                        <ItemContent
+                          icon="empty"
+                          label="Reset keyboard shortcuts"
+                          withPrompt
+                          onClick={() => {
+                            hotKeyRegistry[keyboardShortcut] = newDefaultRegistry()[keyboardShortcut];
+                            models.settings.update(settings, { hotKeyRegistry });
+                          }}
+                        />
+                      </DropdownItem>
+                    </DropdownSection>
                   </Dropdown>
                 </td>
               </tr>

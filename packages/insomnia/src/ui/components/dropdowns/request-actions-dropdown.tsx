@@ -1,4 +1,3 @@
-import classnames from 'classnames';
 import { clipboard } from 'electron';
 import HTTPSnippet from 'httpsnippet';
 import React, { forwardRef, useCallback, useState } from 'react';
@@ -20,17 +19,12 @@ import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectHotKeyRegistry } from '../../redux/selectors';
-import { type DropdownHandle, type DropdownProps, Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownHint } from '../base/dropdown/dropdown-hint';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { PromptButton } from '../base/prompt-button';
+import { type DropdownHandle, type DropdownProps, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 
-interface Props extends Pick<DropdownProps, 'right'> {
+interface Props extends Omit<DropdownProps, 'children'> {
   activeEnvironment?: Environment | null;
   activeProject: Project;
   handleDuplicateRequest: Function;
@@ -48,7 +42,6 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   isPinned,
   request,
   requestGroup,
-  right,
 }, ref) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
@@ -139,80 +132,103 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);
   return (
-    <Dropdown right={right} ref={ref} onOpen={onOpen} dataTestId={`Dropdown-${toKebabCase(request.name)}`}>
-      <DropdownButton>
-        <i className="fa fa-caret-down" />
-      </DropdownButton>
-
-      <DropdownItem onClick={duplicate}>
-        <i className="fa fa-copy" /> Duplicate
-        <DropdownHint keyBindings={hotKeyRegistry.request_showDuplicate} />
+    <Dropdown
+      ref={ref}
+      aria-label="Request Actions Dropdown"
+      onOpen={onOpen}
+      dataTestId={`Dropdown-${toKebabCase(request.name)}`}
+      triggerButton={
+        <DropdownButton>
+          <i className="fa fa-caret-down" />
+        </DropdownButton>
+      }
+    >
+      <DropdownItem aria-label='Duplicate'>
+        <ItemContent
+          icon="copy"
+          label="Duplicate"
+          hint={hotKeyRegistry.request_showDuplicate}
+          onClick={duplicate}
+        />
       </DropdownItem>
 
-      {canGenerateCode && (
-        <DropdownItem
-          dataTestId={`DropdownItemGenerateCode-${toKebabCase(request.name)}`}
-          onClick={generateCode}
-        >
-          <i className="fa fa-code" /> Generate Code
-          <DropdownHint
-            keyBindings={hotKeyRegistry.request_showGenerateCodeEditor}
+      <DropdownItem aria-label='Generate Code'>
+        {canGenerateCode && (
+          <ItemContent
+            icon="code"
+            label="Generate Code"
+            hint={hotKeyRegistry.request_showGenerateCodeEditor}
+            onClick={generateCode}
+          />
+        )}
+      </DropdownItem>
+
+      <DropdownItem aria-label={isPinned ? 'Unpin' : 'Pin'}>
+        <ItemContent
+          icon="thumb-tack"
+          label={isPinned ? 'Unpin' : 'Pin'}
+          hint={hotKeyRegistry.request_togglePin}
+          onClick={togglePin}
+        />
+      </DropdownItem>
+
+      <DropdownItem aria-label='Copy as cURL'>
+        {canGenerateCode && (
+          <ItemContent
+            icon="copy"
+            label="Copy as cURL"
+            onClick={copyAsCurl}
+          />
+        )}
+      </DropdownItem>
+
+      <DropdownItem aria-label='Rename'>
+        <ItemContent
+          icon="edit"
+          label="Rename"
+          onClick={handleRename}
+        />
+      </DropdownItem>
+
+      <DropdownItem aria-label='Delete'>
+        <ItemContent
+          icon="trash-o"
+          label="Delete"
+          hint={hotKeyRegistry.request_showDelete}
+          withPrompt
+          onClick={deleteRequest}
+        />
+      </DropdownItem>
+
+      <DropdownSection
+        aria-label='Plugins Section'
+        title="Plugins"
+      >
+        {actionPlugins.map((plugin: RequestAction) => (
+          <DropdownItem
+            key={`${plugin.plugin.name}::${plugin.label}`}
+            aria-label={plugin.label}
+          >
+            <ItemContent
+              icon={loadingActions[plugin.label] ? 'refresh fa-spin' : plugin.icon || 'code'}
+              label={plugin.label}
+              stayOpenAfterClick
+              onClick={() => handlePluginClick(plugin)}
+            />
+          </DropdownItem>
+        ))}
+      </DropdownSection>
+
+      <DropdownSection aria-label='Settings Section'>
+        <DropdownItem aria-label='Settings'>
+          <ItemContent
+            icon="wrench"
+            label="Settings"
+            hint={hotKeyRegistry.request_showSettings}
+            onClick={handleShowSettings}
           />
         </DropdownItem>
-      )}
-
-      <DropdownItem dataTestId={`DropdownItemPinRequest-${toKebabCase(request.name)}`} onClick={togglePin}>
-        <i className="fa fa-thumb-tack" /> {isPinned ? 'Unpin' : 'Pin'}
-        <DropdownHint keyBindings={hotKeyRegistry.request_togglePin} />
-      </DropdownItem>
-
-      {canGenerateCode && (
-        <DropdownItem
-          dataTestId={`DropdownItemCopyAsCurl-${toKebabCase(request.name)}`}
-          onClick={copyAsCurl}
-        >
-          <i className="fa fa-copy" /> Copy as Curl
-        </DropdownItem>
-      )}
-
-      <DropdownItem
-        dataTestId={`DropdownItemRename-${toKebabCase(request.name)}`}
-        onClick={handleRename}
-      >
-        <i className="fa fa-edit" /> Rename
-      </DropdownItem>
-
-      <DropdownItem
-        dataTestId={`DropdownItemDelete-${toKebabCase(request.name)}`}
-        buttonClass={PromptButton}
-        onClick={deleteRequest}
-      >
-        <i className="fa fa-trash-o" /> Delete
-        <DropdownHint keyBindings={hotKeyRegistry.request_showDelete} />
-      </DropdownItem>
-
-      {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
-      {actionPlugins.map((plugin: RequestAction) => (
-        <DropdownItem
-          key={`${plugin.plugin.name}::${plugin.label}`}
-          onClick={() => handlePluginClick(plugin)}
-          stayOpenAfterClick
-        >
-          {loadingActions[plugin.label] ? (
-            <i className="fa fa-refresh fa-spin" />
-          ) : (
-            <i className={classnames('fa', plugin.icon || 'fa-code')} />
-          )}
-          {plugin.label}
-        </DropdownItem>
-      ))}
-
-      <DropdownDivider />
-
-      <DropdownItem onClick={handleShowSettings} dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`}>
-        <i className="fa fa-wrench" /> Settings
-        <DropdownHint keyBindings={hotKeyRegistry.request_showSettings} />
-      </DropdownItem>
+      </DropdownSection>
     </Dropdown>
   );
 });

@@ -1,5 +1,5 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
-import React, { Fragment, useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 
 import { decompressObject } from '../../../common/misc';
@@ -8,11 +8,7 @@ import { Response } from '../../../models/response';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
-import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
-import { PromptButton } from '../base/prompt-button';
+import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -128,37 +124,44 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     return (
       <DropdownItem
         key={response._id}
-        disabled={active}
-        onClick={() => handleSetActiveResponse(requestId, response)}
+        aria-label={response._id}
       >
-        {active ? <i className="fa fa-thumb-tack" /> : <i className="fa fa-empty" />}{' '}
-        <StatusTag
-          small
-          statusCode={response.statusCode}
-          statusMessage={response.statusMessage || undefined}
-          tooltipDelay={1000}
+        <ItemContent
+          isDisabled={active}
+          icon={active ? 'thumb-track' : 'empty'}
+          onClick={() => handleSetActiveResponse(requestId, response)}
+          label={
+            <>
+              <StatusTag
+                small
+                statusCode={response.statusCode}
+                statusMessage={response.statusMessage || undefined}
+                tooltipDelay={1000}
+              />
+              <URLTag
+                small
+                url={request.url}
+                method={request ? request.method : ''}
+                tooltipDelay={1000}
+              />
+              <TimeTag milliseconds={response.elapsedTime} small tooltipDelay={1000} />
+              {!isWebSocketResponse(response) && (
+                <SizeTag
+                  bytesRead={response.bytesRead}
+                  bytesContent={response.bytesContent}
+                  small
+                  tooltipDelay={1000}
+                />
+              )}
+              {!response.requestVersionId ?
+                <i
+                  className="icon fa fa-info-circle"
+                  title={'Request will not be restored with this response because it was created before this ability was added'}
+                />
+                : null}
+            </>
+          }
         />
-        <URLTag
-          small
-          url={request.url}
-          method={request ? request.method : ''}
-          tooltipDelay={1000}
-        />
-        <TimeTag milliseconds={response.elapsedTime} small tooltipDelay={1000} />
-        {!isWebSocketResponse(response) && (
-          <SizeTag
-            bytesRead={response.bytesRead}
-            bytesContent={response.bytesContent}
-            small
-            tooltipDelay={1000}
-          />
-        )}
-        {!response.requestVersionId ?
-          <i
-            className="icon fa fa-info-circle"
-            title={'Request will not be restored with this response because it was created before this ability was added'}
-          />
-          : null}
       </DropdownItem>
     );
   };
@@ -172,40 +175,76 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   return (
     <Dropdown
       ref={dropdownRef}
+      aria-label="Response history dropdown"
       key={activeResponse ? activeResponse._id : 'n/a'}
       className={className}
+      triggerButton={
+        <DropdownButton className="btn btn--super-compact tall" title="Response history">
+          {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
+          {!isLatestResponseActive ? (
+            <i className="fa fa-thumb-tack space-left" />
+          ) : (
+            <i className="fa fa-caret-down space-left" />
+          )}
+        </DropdownButton>
+      }
     >
-      <DropdownButton className="btn btn--super-compact tall" title="Response history">
-        {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
-        {!isLatestResponseActive ? (
-          <i className="fa fa-thumb-tack space-left" />
-        ) : (
-          <i className="fa fa-caret-down space-left" />
-        )}
-      </DropdownButton>
-      <DropdownDivider>
-        <strong>{environmentName}</strong> Responses
-      </DropdownDivider>
-      <DropdownItem buttonClass={PromptButton} onClick={handleDeleteResponse}>
-        <i className="fa fa-trash-o" />
-        Delete Current Response
-      </DropdownItem>
-      <DropdownItem buttonClass={PromptButton} onClick={handleDeleteResponses}>
-        <i className="fa fa-trash-o" />
-        Clear History
-      </DropdownItem>
-      <Fragment>
-        <DropdownDivider>Just Now</DropdownDivider>
+      <DropdownSection
+        aria-label={`${environmentName} Responses`}
+        title={<span><strong>{environmentName}</strong> Responses</span>}
+      >
+        <DropdownItem aria-label='Delete Current Response'>
+          <ItemContent
+            icon="fa-trash-o"
+            label="Delete Current Response"
+            withPrompt
+            onClick={handleDeleteResponse}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label='Clear History'>
+          <ItemContent
+            icon="fa-trash-o"
+            label="Clear History"
+            withPrompt
+            onClick={handleDeleteResponses}
+          />
+        </DropdownItem>
+      </DropdownSection>
+
+      <DropdownSection
+        aria-label='Minutes Section'
+        title="Just Now"
+      >
         {categories.minutes.map(renderResponseRow)}
-        <DropdownDivider>Less Than Two Hours Ago</DropdownDivider>
+      </DropdownSection>
+
+      <DropdownSection
+        aria-label='Hours Section'
+        title="Less Than Two Hours Ago"
+      >
         {categories.hours.map(renderResponseRow)}
-        <DropdownDivider>Today</DropdownDivider>
+      </DropdownSection>
+
+      <DropdownSection
+        aria-label='Today Section'
+        title="Today"
+      >
         {categories.today.map(renderResponseRow)}
-        <DropdownDivider>This Week</DropdownDivider>
+      </DropdownSection>
+
+      <DropdownSection
+        aria-label='Week Section'
+        title="This Week"
+      >
         {categories.week.map(renderResponseRow)}
-        <DropdownDivider>Older Than This Week</DropdownDivider>
+      </DropdownSection>
+
+      <DropdownSection
+        aria-label='Other Section'
+        title="Older Than This Week"
+      >
         {categories.other.map(renderResponseRow)}
-      </Fragment>
+      </DropdownSection>
     </Dropdown>
   );
 };

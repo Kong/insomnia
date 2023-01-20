@@ -20,10 +20,7 @@ import type {
 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { FileInputButton } from '../base/file-input-button';
 import { HelpTooltip } from '../help-tooltip';
 
@@ -455,46 +452,58 @@ export const TagEditor: FC<Props> = props => {
                   'form-control--no-label': argDefinition.type !== 'boolean',
                 })}
               >
-                <Dropdown right>
-                  <DropdownButton className="btn btn--clicky">
-                    <i className="fa fa-gear" />
-                  </DropdownButton>
-                  <DropdownDivider>Input Type</DropdownDivider>
-                  <DropdownItem
-                    onClick={() => {
-                      const { activeTagData, activeTagDefinition, variables } = state;
-                      if (!activeTagData || !activeTagDefinition) {
-                        console.warn('Failed to change arg variable', { state: state });
-                        return;
-                      }
-                      const argData = activeTagData.args[index];
-                      const argDef = activeTagDefinition.args[index];
-                      const existingValue = argData ? argData.value : '';
-                      const initialType = argDef ? argDef.type : 'string';
-                      const variable = variables.find(v => v.name === existingValue);
-                      const value = variable ? variable.value : '';
-                      return updateArg(value, index, initialType, { quotedBy: "'" });
-                    }}
+                <Dropdown
+                  aria-label='Variable Dropdown'
+                  triggerButton={
+                    <DropdownButton className="btn btn--clicky">
+                      <i className="fa fa-gear" />
+                    </DropdownButton>
+                  }
+                >
+                  <DropdownSection
+                    aria-label="Input Type Section"
+                    title="Input Type"
                   >
-                    <i className={'fa ' + (isVariable ? '' : 'fa-check')} /> Static Value
-                  </DropdownItem>
-                  <DropdownItem
-                    onClick={() => {
-                      const { activeTagData, activeTagDefinition, variables } = state;
-                      if (!activeTagData || !activeTagDefinition) {
-                        console.warn('Failed to change arg variable', { state: state });
-                        return;
-                      }
-                      const argData = activeTagData.args[index];
-                      const existingValue = argData ? argData.value : '';
-                      const variable = variables.find(v => v.value === existingValue);
-                      const firstVariable = variables.length ? variables[0].name : '';
-                      const value = variable ? variable.name : firstVariable;
-                      return updateArg(value || 'my_variable', index, 'variable');
-                    }}
-                  >
-                    <i className={'fa ' + (isVariable ? 'fa-check' : '')} /> Environment Variable
-                  </DropdownItem>
+                    <DropdownItem aria-label='Static Value'>
+                      <ItemContent
+                        icon={isVariable ? 'check' : ''}
+                        label="Static Value"
+                        onClick={() => {
+                          const { activeTagData, activeTagDefinition, variables } = state;
+                          if (!activeTagData || !activeTagDefinition) {
+                            console.warn('Failed to change arg variable', { state: state });
+                            return;
+                          }
+                          const argData = activeTagData.args[index];
+                          const argDef = activeTagDefinition.args[index];
+                          const existingValue = argData ? argData.value : '';
+                          const initialType = argDef ? argDef.type : 'string';
+                          const variable = variables.find(v => v.name === existingValue);
+                          const value = variable ? variable.value : '';
+                          return updateArg(value, index, initialType, { quotedBy: "'" });
+                        }}
+                      />
+                    </DropdownItem>
+                    <DropdownItem aria-label='Environment Variable'>
+                      <ItemContent
+                        icon={isVariable ? '' : 'check'}
+                        label="Environment Variable"
+                        onClick={() => {
+                          const { activeTagData, activeTagDefinition, variables } = state;
+                          if (!activeTagData || !activeTagDefinition) {
+                            console.warn('Failed to change arg variable', { state: state });
+                            return;
+                          }
+                          const argData = activeTagData.args[index];
+                          const existingValue = argData ? argData.value : '';
+                          const variable = variables.find(v => v.value === existingValue);
+                          const firstVariable = variables.length ? variables[0].name : '';
+                          const value = variable ? variable.name : firstVariable;
+                          return updateArg(value || 'my_variable', index, 'variable');
+                        }}
+                      />
+                    </DropdownItem>
+                  </DropdownSection>
                 </Dropdown>
               </div>
             ) : null}

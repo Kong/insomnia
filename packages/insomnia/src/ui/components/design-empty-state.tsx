@@ -5,14 +5,10 @@ import styled from 'styled-components';
 import { documentationLinks } from '../../common/documentation';
 import { selectFileOrFolder } from '../../common/select-file-or-folder';
 import { faint } from '../css/css-in-js';
-import { Dropdown } from './base/dropdown/dropdown';
-import { DropdownButton } from './base/dropdown/dropdown-button';
-import { DropdownItem } from './base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { showPrompt } from './modals';
 import { EmptyStatePane } from './panes/empty-state-pane';
 import { SvgIcon } from './svg-icon';
-import { Button } from './themed-button';
-
 const Wrapper = styled.div({
   position: 'absolute',
   top: '50%',
@@ -21,12 +17,12 @@ const Wrapper = styled.div({
   width: '100%',
 });
 
-const StyledButton = styled(Button)({
+const StyledDropdownButton = styled(DropdownButton)({
   '&&': {
     pointerEvents: 'all',
     color: 'var(--color-font)',
     marginTop: 'var(--padding-md)',
-    marginLeft: '0 !important', // unfortunately, we're in specificty battle with a default marginLeft
+    marginLeft: '0 !important', // unfortunately, we're in specificity battle with a default marginLeft
   },
 });
 
@@ -77,22 +73,32 @@ const ImportSpecButton: FC<Props> = ({ onImport }) => {
   }, [onImport]);
 
   return (
-    <Dropdown>
-      <DropdownButton buttonClass={StyledButton}>
-        Import OpenAPI
-        <i className="fa fa-caret-down pad-left-sm" />
-      </DropdownButton>
-      <DropdownItem
-        onClick={handleImportFile}
-      >
-        <i className="fa fa-plus" />
-        File
+    <Dropdown
+      aria-label='Import OpenAPI Dropdown'
+      triggerButton={
+        <StyledDropdownButton
+          variant='outlined'
+          removePaddings={false}
+          disableHoverBehavior={false}
+        >
+          Import OpenAPI
+          <i className="fa fa-caret-down pad-left-sm" />
+        </StyledDropdownButton>
+      }
+    >
+      <DropdownItem aria-label='File'>
+        <ItemContent
+          icon="plus"
+          label="File"
+          onClick={handleImportFile}
+        />
       </DropdownItem>
-      <DropdownItem
-        onClick={handleImportUri}
-      >
-        <i className="fa fa-link" />
-        URL
+      <DropdownItem aria-label='URL'>
+        <ItemContent
+          icon="link"
+          label="URL"
+          onClick={handleImportUri}
+        />
       </DropdownItem>
     </Dropdown>
   );

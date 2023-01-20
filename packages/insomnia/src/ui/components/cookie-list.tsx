@@ -4,9 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { cookieToString } from '../../common/cookies';
 import { Cookie } from '../../models/cookie-jar';
-import { Dropdown } from './base/dropdown/dropdown';
-import { DropdownButton } from './base/dropdown/dropdown-button';
-import { DropdownItem } from './base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { PromptButton } from './base/prompt-button';
 import { showModal } from './modals';
 import { CookieModifyModal } from './modals/cookie-modify-modal';
@@ -101,15 +99,32 @@ export const CookieList: FC<CookieListProps> = ({
             }}
             className="text-right"
           >
-            <Dropdown right>
-              <DropdownButton title="Add cookie" className="btn btn--super-duper-compact btn--outlined txt-md">
-                Actions <i className="fa fa-caret-down" />
-              </DropdownButton>
-              <DropdownItem onClick={addCookie}>
-                <i className="fa fa-plus-circle" /> Add Cookie
+            <Dropdown
+              aria-label='Cookie Actions Dropdown'
+              triggerButton={
+                <DropdownButton
+                  title="Add cookie"
+                  className="btn btn--super-duper-compact btn--outlined txt-md"
+                  disableHoverBehavior={false}
+                >
+                  Actions <i className="fa fa-caret-down" />
+                </DropdownButton>
+              }
+            >
+              <DropdownItem aria-label='Add Cookie'>
+                <ItemContent
+                  icon="plus-circle"
+                  label="Add Cookie"
+                  onClick={addCookie}
+                />
               </DropdownItem>
-              <DropdownItem onClick={handleDeleteAll} buttonClass={PromptButton}>
-                <i className="fa fa-trash-o" /> Delete All
+              <DropdownItem aria-label='Delete All'>
+                <ItemContent
+                  icon="trash-o"
+                  label="Delete All"
+                  withPrompt
+                  onClick={handleDeleteAll}
+                />
               </DropdownItem>
             </Dropdown>
           </th>

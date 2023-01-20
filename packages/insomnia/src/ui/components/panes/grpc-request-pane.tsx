@@ -25,6 +25,8 @@ import { showAlert, showModal } from '../modals';
 import { ProtoFilesModal } from '../modals/proto-files-modal';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { SvgIcon } from '../svg-icon';
+import { Button } from '../themed-button';
+import { Tooltip } from '../tooltip';
 import { GrpcTabbedMessages } from '../viewers/grpc-tabbed-messages';
 import { EmptyStatePane } from './empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from './pane';
@@ -46,13 +48,17 @@ const StyledUrlBar = styled.div`
 `;
 
 const StyledUrlEditor = styled.div`
-  flex: 3 0 4em;
-  max-width: 11em;
+  flex: 1;
 `;
 
-const StyledDropdown = styled.div`
-  flex: 1 0 auto;
-`;
+const StyledDropdownWrapper = styled.div({
+  flex: '1',
+  display: 'flex',
+  alignItems: 'center',
+  paddingRight: 'var(--padding-sm)',
+  gap: 'var(--padding-xs)',
+});
+
 export const canClientStream = (methodType?: GrpcMethodType) => methodType === 'client' || methodType === 'bidi';
 export const GrpcMethodTypeName = {
   unary: 'Unary',
@@ -153,7 +159,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, activeRequest._id)}
               />
             </StyledUrlEditor>
-            <StyledDropdown>
+            <StyledDropdownWrapper>
               <GrpcMethodDropdown
                 disabled={running}
                 methods={methods}
@@ -168,8 +174,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     error: undefined,
                   });
                 }}
-                handleChangeProtoFile={() => setIsProtoModalOpen(true)}
-                handleServerReflection={async () => {
+              />
+              <Button
+                variant="text"
+                data-testid="button-server-reflection"
+                disabled={!activeRequest.url}
+                onClick={async () => {
                   const request = await models.grpcRequest.update(activeRequest, { protoMethodName: '', protoFileId: '' });
                   const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
                   const rendered = await render({
@@ -179,9 +189,21 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
                   setGrpcState({ ...grpcState, methods, reloadMethods: false });
                 }}
-              />
-            </StyledDropdown>
-
+              >
+                <Tooltip message="Click to use server reflection" position="bottom" delay={500}>
+                  <i className="fa fa-refresh" />
+                </Tooltip>
+              </Button>
+              <Button
+                data-testid="button-proto-file"
+                variant="text"
+                onClick={() => setIsProtoModalOpen(true)}
+              >
+                <Tooltip message="Click to change proto file" position="bottom" delay={500}>
+                  <i className="fa fa-file-code-o" />
+                </Tooltip>
+              </Button>
+            </StyledDropdownWrapper>
             <GrpcSendButton
               running={running}
               methodType={methodType}

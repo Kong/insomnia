@@ -2,10 +2,7 @@ import React, { FunctionComponent } from 'react';
 import useToggle from 'react-use/lib/useToggle';
 import styled from 'styled-components';
 
-import { Dropdown } from '../../base/dropdown/dropdown';
-import { DropdownButton } from '../../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../../base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
 import { IconEnum, SvgIcon } from '../../svg-icon';
 import { SidebarHeader } from './sidebar-header';
 import { SidebarHeaders } from './sidebar-headers';
@@ -71,6 +68,21 @@ const StyledItem = styled.div({
   },
 });
 
+interface ItemWrapperProps {
+  checked: boolean;
+  htmlFor: string;
+  label: string;
+}
+
+const ItemWrapper = ({ checked, htmlFor, label }: ItemWrapperProps) => {
+  return (
+    <StyledItem>
+      <input type="checkbox" checked={checked} readOnly />
+      <label htmlFor={htmlFor}>{label}</label>
+    </StyledItem>
+  );
+};
+
 const DropdownEllipsis = () => <SvgIcon icon={IconEnum.ellipsesCircle} />;
 
 // Section Expansion & Filtering
@@ -111,59 +123,115 @@ export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) 
       {info && (
         <StyledSection>
           <SidebarHeader headerTitle="INFO" sectionVisible={infoSec} toggleSection={setInfoSec}>
-            <Dropdown>
-              <DropdownButton>
-                <DropdownEllipsis />
-              </DropdownButton>
-              <DropdownDivider>VISIBILITY</DropdownDivider>
-              <DropdownItem stayOpenAfterClick onClick={setServersVisible}>
-                <StyledItem>
-                  <input type="checkbox" checked={serversVisible} readOnly />
-                  <label htmlFor="servers">Servers</label>
-                </StyledItem>
-              </DropdownItem>
-              <DropdownItem stayOpenAfterClick onClick={setPathsVisible}>
-                <StyledItem>
-                  <input type="checkbox" checked={pathsVisible} readOnly />
-                  <label htmlFor="paths">Paths</label>
-                </StyledItem>
-              </DropdownItem>
-              <DropdownItem stayOpenAfterClick onClick={setRequestsVisible}>
-                <StyledItem>
-                  <input type="checkbox" checked={requestsVisible} readOnly />
-                  <label htmlFor="requests">Requests</label>
-                </StyledItem>
-              </DropdownItem>
-              <DropdownItem stayOpenAfterClick onClick={setResponsesVisible}>
-                <StyledItem>
-                  <input type="checkbox" checked={responsesVisible} readOnly />
-                  <label htmlFor="responses">Responses</label>
-                </StyledItem>
-              </DropdownItem>
-              <DropdownItem stayOpenAfterClick onClick={setParametersVisible}>
-                <StyledItem>
-                  <input type="checkbox" checked={parametersVisible} readOnly />
-                  <label htmlFor="parameters">Parameters</label>
-                </StyledItem>
-              </DropdownItem>
-              <DropdownItem stayOpenAfterClick onClick={setHeadersVisible}>
-                <StyledItem>
-                  <input type="checkbox" checked={headersVisible} readOnly />
-                  <label htmlFor="headers">Headers</label>
-                </StyledItem>
-              </DropdownItem>
-              <DropdownItem stayOpenAfterClick onClick={setSchemasVisible}>
-                <StyledItem>
-                  <input type="checkbox" checked={schemasVisible} readOnly />
-                  <label htmlFor="schemas">Schemas</label>
-                </StyledItem>
-              </DropdownItem>
-              <DropdownItem stayOpenAfterClick onClick={setSecurityVisible}>
-                <StyledItem>
-                  <input type="checkbox" checked={securityVisible} readOnly />
-                  <label htmlFor="security">Security</label>
-                </StyledItem>
-              </DropdownItem>
+            <Dropdown
+              aria-label='Info Dropdown'
+              closeOnSelect={false}
+              triggerButton={
+                <DropdownButton>
+                  <DropdownEllipsis />
+                </DropdownButton>
+              }
+            >
+              <DropdownSection
+                aria-label='Visibility section'
+                title="VISIBILITY"
+              >
+                <DropdownItem aria-label='Servers'>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setServersVisible}
+                  >
+                    <ItemWrapper
+                      checked={serversVisible}
+                      htmlFor="servers"
+                      label="Servers"
+                    />
+                  </ItemContent>
+                </DropdownItem>
+                <DropdownItem aria-label='Paths'>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setPathsVisible}
+                  >
+                    <ItemWrapper
+                      checked={pathsVisible}
+                      htmlFor="paths"
+                      label="Paths"
+                    />
+                  </ItemContent>
+                </DropdownItem>
+                <DropdownItem aria-label='Requests'>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setRequestsVisible}
+                  >
+                    <ItemWrapper
+                      checked={requestsVisible}
+                      htmlFor="requests"
+                      label="Requests"
+                    />
+                  </ItemContent>
+                </DropdownItem>
+                <DropdownItem aria-label='Responses'>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setResponsesVisible}
+                  >
+                    <ItemWrapper
+                      checked={responsesVisible}
+                      htmlFor="responses"
+                      label="Responses"
+                    />
+                  </ItemContent>
+                </DropdownItem>
+                <DropdownItem aria-label='Parameters'>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setParametersVisible}
+                  >
+                    <StyledItem>
+                      <input type="checkbox" checked={parametersVisible} readOnly />
+                      <label htmlFor="parameters">Parameters</label>
+                    </StyledItem>
+                  </ItemContent>
+                </DropdownItem>
+                <DropdownItem aria-label='Headers'>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setHeadersVisible}
+                  >
+                    <ItemWrapper
+                      checked={headersVisible}
+                      htmlFor="headers"
+                      label="Headers"
+                    />
+                  </ItemContent>
+                </DropdownItem>
+                <DropdownItem aria-label='Schemas'>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setSchemasVisible}
+                  >
+                    <ItemWrapper
+                      checked={schemasVisible}
+                      htmlFor="schemas"
+                      label="Schemas"
+                    />
+                  </ItemContent>
+                </DropdownItem>
+                <DropdownItem aria-label='Security'>
+                  <ItemContent
+                    stayOpenAfterClick
+                    onClick={setSecurityVisible}
+                  >
+                    <ItemWrapper
+                      checked={securityVisible}
+                      htmlFor="security"
+                      label="Security"
+                    />
+                  </ItemContent>
+                </DropdownItem>
+              </DropdownSection>
             </Dropdown>
           </SidebarHeader>
           <SidebarInfo childrenVisible={infoSec} info={info} onClick={onClick} />
