@@ -5,7 +5,7 @@ import { test } from '../../playwright/test';
 test('Clone Repo with bad values', async ({ page }) => {
   await page.click('[data-testid="project"] >> text=Insomnia');
   await page.getByRole('button', { name: 'Create' }).click();
-  await page.getByRole('button', { name: 'Git Clone' }).click();
+  await page.getByRole('menuitem', { name: 'Git Clone' }).click();
   await page.getByRole('tab', { name: 'Git' }).nth(2).click();
 
   // Fill in Git Sync details and clone repository
@@ -24,14 +24,14 @@ test('Clone Repo with bad values', async ({ page }) => {
   await page.getByRole('button', { name: 'POST Turn on/off the electricity of the fences' }).click();
   // Environments
   await page.getByRole('button', { name: 'No Environment' }).click();
-  await page.getByRole('button', { name: 'Use Via Kong GW' }).click();
+  await page.getByRole('menuitem', { name: 'Use Via Kong GW' }).click();
   // Tests
   await page.getByRole('link', { name: 'Test' }).click();
   await page.getByRole('heading', { name: 'Check status' }).click();
 
   // Check branch history
   await page.getByRole('button', { name: 'main' }).click();
-  await page.getByRole('button', { name: 'History' }).click();
+  await page.getByRole('menuitem', { name: 'History' }).click();
   await page.locator('text=Git History').click();
 
   // Check a recent and old commit show up on history
@@ -41,13 +41,13 @@ test('Clone Repo with bad values', async ({ page }) => {
 
   // Create a branch and try to push with bad Git token
   await page.getByRole('button', { name: 'main' }).click();
-  await page.getByRole('button', { name: 'Branches' }).click();
+  await page.getByRole('menuitem', { name: 'Branches' }).click();
   await page.getByPlaceholder('testing-branch').fill('test123');
   await page.getByRole('button', { name: '+ Create' }).click();
   await page.getByRole('cell', { name: 'test123(current)' }).click();
   await page.getByRole('button', { name: 'Done' }).click();
   await page.getByRole('button', { name: 'test123' }).click();
-  await page.getByRole('button', { name: 'Push' }).click();
+  await page.getByRole('menuitem', { name: 'Push' }).click();
   await expect(page.locator('.app')).toContainText('Error Pushing Repository');
 });
 
