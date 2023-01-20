@@ -1,16 +1,19 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
+import styled from 'styled-components';
 
 import { PlatformKeyCombinations } from '../../../../common/settings';
 import { Hotkey } from '../../hotkey';
+
+const StyledHotkey = styled(Hotkey)({
+  color: 'var(--hl-xl)',
+  marginLeft: 'auto',
+  paddingLeft: 'var(--padding-lg)',
+});
 
 interface Props {
   keyBindings: PlatformKeyCombinations;
 }
 
-// eslint-disable-next-line react/prefer-stateless-function -- Dropdown's implementation makes changing this to a function component tricky.
-export class DropdownHint extends PureComponent<Props> {
-  render() {
-    const { keyBindings } = this.props;
-    return <Hotkey className="dropdown__hint" keyBindings={keyBindings} />;
-  }
-}
+export const DropdownHint = (props: Props) => {
+  return <StyledHotkey keyBindings={props.keyBindings} />;
+};

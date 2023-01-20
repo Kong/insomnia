@@ -17,10 +17,7 @@ import {
 import { isWebSocketRequest } from '../../../models/websocket-request';
 import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import { selectActiveRequest } from '../../redux/selectors';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { AlertModal } from '../modals/alert-modal';
 import { showModal } from '../modals/index';
 
@@ -30,15 +27,7 @@ interface Props {
 
 const EMPTY_MIME_TYPE = null;
 
-const MimeTypeItem: FC<{
-  forcedName?: string;
-  mimeType: string | null;
-  onChange: Props['onChange'];
-}> = ({
-  forcedName = '',
-  mimeType,
-  onChange,
-}) => {
+export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
   const request = useSelector(selectActiveRequest);
   const activeRequest = request && !isWebSocketRequest(request) ? request : null;
 
@@ -81,22 +70,6 @@ const MimeTypeItem: FC<{
     trackSegmentEvent(SegmentEvent.requestBodyTypeSelect, { type: mimeType });
   }, [onChange, activeRequest]);
 
-  const contentType = activeRequest?.body && 'mimeType' in activeRequest.body ? activeRequest.body.mimeType : null;
-  const contentTypeFallback = typeof contentType === 'string' ? contentType : EMPTY_MIME_TYPE;
-  const iconClass = mimeType === contentTypeFallback ? 'fa-check' : 'fa-empty';
-  return (
-    <DropdownItem onClick={() => handleChangeMimeType(mimeType)}>
-      <i className={`fa ${iconClass}`} />
-      {forcedName || getContentTypeName(mimeType, true)}
-    </DropdownItem>
-  );
-};
-MimeTypeItem.displayName = DropdownItem.name;
-
-export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
-  const request = useSelector(selectActiveRequest);
-  const activeRequest = request && !isWebSocketRequest(request) ? request : null;
-
   if (!activeRequest) {
     return null;
   }
@@ -105,39 +78,130 @@ export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
   const hasParams = body && 'params' in body && body.params;
   const numBodyParams = hasParams ? body.params?.filter(({ disabled }) => !disabled).length : 0;
 
+  const getIcon = (mimeType: string | null) => {
+    const contentType = activeRequest?.body && 'mimeType' in activeRequest.body ? activeRequest.body.mimeType : null;
+    const contentTypeFallback = typeof contentType === 'string' ? contentType : EMPTY_MIME_TYPE;
+
+    return mimeType === contentTypeFallback ? 'check' : 'empty';
+  };
+
   return (
-    <Dropdown>
-      <DropdownButton className="tall">
-        {hasMimeType ? getContentTypeName(body.mimeType) : 'Body'}
-        {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
-        <i className="fa fa-caret-down space-left" />
-      </DropdownButton>
-      <DropdownDivider>
-        <span>
-          <i className="fa fa-bars" /> Structured
-        </span>
-      </DropdownDivider>
-      <MimeTypeItem mimeType={CONTENT_TYPE_FORM_DATA} onChange={onChange} />
-      <MimeTypeItem mimeType={CONTENT_TYPE_FORM_URLENCODED} onChange={onChange} />
-      <MimeTypeItem mimeType={CONTENT_TYPE_GRAPHQL} onChange={onChange} />
-      <DropdownDivider>
-        <span>
-          <i className="fa fa-code" /> Text
-        </span>
-      </DropdownDivider>
-      <MimeTypeItem mimeType={CONTENT_TYPE_JSON} onChange={onChange} />
-      <MimeTypeItem mimeType={CONTENT_TYPE_XML} onChange={onChange} />
-      <MimeTypeItem mimeType={CONTENT_TYPE_YAML} onChange={onChange} />
-      <MimeTypeItem mimeType={CONTENT_TYPE_EDN} onChange={onChange} />
-      <MimeTypeItem mimeType={CONTENT_TYPE_PLAINTEXT} onChange={onChange} />
-      <MimeTypeItem mimeType={CONTENT_TYPE_OTHER} onChange={onChange} />
-      <DropdownDivider>
-        <span>
-          <i className="fa fa-ellipsis-h" /> Other
-        </span>
-      </DropdownDivider>
-      <MimeTypeItem mimeType={CONTENT_TYPE_FILE} onChange={onChange} />
-      <MimeTypeItem mimeType={EMPTY_MIME_TYPE} forcedName="No Body" onChange={onChange} />
+    <Dropdown
+      aria-label='Change Body Type'
+      triggerButton={
+        <DropdownButton>
+          {hasMimeType ? getContentTypeName(body.mimeType) : 'Body'}
+          {numBodyParams ? <span className="bubble space-left">{numBodyParams}</span> : null}
+          <i className="fa fa-caret-down space-left" />
+        </DropdownButton>
+      }
+    >
+      <DropdownSection
+        aria-label='Structured Type Section'
+        title={
+          <span>
+            <i className="fa fa-bars" /> Structured
+          </span>
+        }
+      >
+        <DropdownItem aria-label={getContentTypeName(CONTENT_TYPE_FORM_DATA, true)}>
+          <ItemContent
+            icon={getIcon(CONTENT_TYPE_FORM_DATA)}
+            label={getContentTypeName(CONTENT_TYPE_FORM_DATA, true)}
+            onClick={() => handleChangeMimeType(CONTENT_TYPE_FORM_DATA)}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label={getContentTypeName(CONTENT_TYPE_FORM_URLENCODED, true)}>
+          <ItemContent
+            icon={getIcon(CONTENT_TYPE_FORM_URLENCODED)}
+            label={getContentTypeName(CONTENT_TYPE_FORM_URLENCODED, true)}
+            onClick={() => handleChangeMimeType(CONTENT_TYPE_FORM_URLENCODED)}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label={getContentTypeName(CONTENT_TYPE_GRAPHQL, true)}>
+          <ItemContent
+            icon={getIcon(CONTENT_TYPE_GRAPHQL)}
+            label={getContentTypeName(CONTENT_TYPE_GRAPHQL, true)}
+            onClick={() => handleChangeMimeType(CONTENT_TYPE_GRAPHQL)}
+          />
+        </DropdownItem>
+      </DropdownSection>
+
+      <DropdownSection
+        aria-label='Text Type Section'
+        title={
+          <span>
+            <i className="fa fa-code" /> Text
+          </span>
+        }
+      >
+        <DropdownItem aria-label={getContentTypeName(CONTENT_TYPE_JSON, true)}>
+          <ItemContent
+            icon={getIcon(CONTENT_TYPE_JSON)}
+            label={getContentTypeName(CONTENT_TYPE_JSON, true)}
+            onClick={() => handleChangeMimeType(CONTENT_TYPE_JSON)}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label={getContentTypeName(CONTENT_TYPE_XML, true)}>
+          <ItemContent
+            icon={getIcon(CONTENT_TYPE_XML)}
+            label={getContentTypeName(CONTENT_TYPE_XML, true)}
+            onClick={() => handleChangeMimeType(CONTENT_TYPE_XML)}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label={getContentTypeName(CONTENT_TYPE_YAML, true)}>
+          <ItemContent
+            icon={getIcon(CONTENT_TYPE_YAML)}
+            label={getContentTypeName(CONTENT_TYPE_YAML, true)}
+            onClick={() => handleChangeMimeType(CONTENT_TYPE_YAML)}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label={getContentTypeName(CONTENT_TYPE_EDN, true)}>
+          <ItemContent
+            icon={getIcon(CONTENT_TYPE_EDN)}
+            label={getContentTypeName(CONTENT_TYPE_EDN, true)}
+            onClick={() => handleChangeMimeType(CONTENT_TYPE_EDN)}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label={getContentTypeName(CONTENT_TYPE_PLAINTEXT, true)}>
+          <ItemContent
+            icon={getIcon(CONTENT_TYPE_PLAINTEXT)}
+            label={getContentTypeName(CONTENT_TYPE_PLAINTEXT, true)}
+            onClick={() => handleChangeMimeType(CONTENT_TYPE_PLAINTEXT)}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label={getContentTypeName(CONTENT_TYPE_OTHER, true)}>
+          <ItemContent
+            icon={getIcon(CONTENT_TYPE_OTHER)}
+            label={getContentTypeName(CONTENT_TYPE_OTHER, true)}
+            onClick={() => handleChangeMimeType(CONTENT_TYPE_OTHER)}
+          />
+        </DropdownItem>
+      </DropdownSection>
+
+      <DropdownSection
+        aria-label='Other Type Section'
+        title={
+          <span>
+            <i className="fa fa-ellipsis-h" /> Other
+          </span>
+        }
+      >
+        <DropdownItem aria-label={getContentTypeName(CONTENT_TYPE_FILE, true)}>
+          <ItemContent
+            icon={getIcon(CONTENT_TYPE_FILE)}
+            label={getContentTypeName(CONTENT_TYPE_FILE, true)}
+            onClick={() => handleChangeMimeType(CONTENT_TYPE_FILE)}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label="No Body">
+          <ItemContent
+            icon={getIcon(EMPTY_MIME_TYPE)}
+            label="No Body"
+            onClick={() => handleChangeMimeType(EMPTY_MIME_TYPE)}
+          />
+        </DropdownItem>
+      </DropdownSection>
     </Dropdown>
   );
 };

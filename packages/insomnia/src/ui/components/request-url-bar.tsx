@@ -5,6 +5,7 @@ import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useInterval } from 'react-use';
+import styled from 'styled-components';
 
 import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
@@ -17,18 +18,23 @@ import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { selectActiveEnvironment, selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
-import { type DropdownHandle, Dropdown } from './base/dropdown/dropdown';
-import { DropdownButton } from './base/dropdown/dropdown-button';
-import { DropdownDivider } from './base/dropdown/dropdown-divider';
-import { DropdownHint } from './base/dropdown/dropdown-hint';
-import { DropdownItem } from './base/dropdown/dropdown-item';
-import { PromptButton } from './base/prompt-button';
+import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
 import { RequestRenderErrorModal } from './modals/request-render-error-modal';
+
+const StyledDropdownButton = styled(DropdownButton)({
+  '&:hover:not(:disabled)': {
+    backgroundColor: 'var(--color-surprise)',
+  },
+
+  '&:focus:not(:disabled)': {
+    backgroundColor: 'var(--color-surprise)',
+  },
+});
 
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
@@ -390,47 +396,81 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
             <Dropdown
               key="dropdown"
               className="tall"
-              right
               ref={dropdownRef}
-              onHide={handleSendDropdownHide}
-            >
-              <DropdownButton
-                className="urlbar__send-context"
-                onClick={() => dropdownRef.current?.show()}
-              >
-                <i className="fa fa-caret-down" />
-              </DropdownButton>
-              <DropdownDivider>Basic</DropdownDivider>
-              <DropdownItem onClick={send}>
-                <i className="fa fa-arrow-circle-o-right" /> Send Now
-                <DropdownHint keyBindings={hotKeyRegistry.request_send} />
-              </DropdownItem>
-              <DropdownItem onClick={handleGenerateCode}>
-                <i className="fa fa-code" /> Generate Client Code
-              </DropdownItem>
-              <DropdownDivider>Advanced</DropdownDivider>
-              <DropdownItem onClick={handleSendAfterDelay}>
-                <i className="fa fa-clock-o" /> Send After Delay
-              </DropdownItem>
-              <DropdownItem onClick={handleSendOnInterval}>
-                <i className="fa fa-repeat" /> Repeat on Interval
-              </DropdownItem>
-              {downloadPath ? (
-                <DropdownItem
-                  stayOpenAfterClick
-                  buttonClass={PromptButton}
-                  onClick={handleClearDownloadLocation}
+              aria-label="Request Options"
+              onClose={handleSendDropdownHide}
+              triggerButton={
+                <StyledDropdownButton
+                  className="urlbar__send-context"
+                  removeBorderRadius={true}
                 >
-                  <i className="fa fa-stop-circle" /> Stop Auto-Download
+                  <i className="fa fa-caret-down" />
+                </StyledDropdownButton>
+              }
+            >
+              <DropdownSection
+                aria-label="Basic Section"
+                title="Basic"
+              >
+                <DropdownItem aria-label="send-now">
+                  <ItemContent
+                    icon="arrow-circle-o-right"
+                    label="Send Now"
+                    hint={hotKeyRegistry.request_send}
+                    onClick={send}
+                  />
                 </DropdownItem>
-              ) : (
-                <DropdownItem onClick={downloadAfterSend}>
-                  <i className="fa fa-download" /> Download After Send
+                <DropdownItem aria-label='Generate Client Code'>
+                  <ItemContent
+                    icon="code"
+                    label="Generate Client Code"
+                    onClick={handleGenerateCode}
+                  />
                 </DropdownItem>
-              )}
-              <DropdownItem onClick={() => sendThenSetFilePath()}>
-                <i className="fa fa-download" /> Send And Download
-              </DropdownItem>
+              </DropdownSection>
+              <DropdownSection
+                aria-label="Advanced Section"
+                title="Advanced"
+              >
+                <DropdownItem aria-label='Send After Delay'>
+                  <ItemContent
+                    icon="clock-o"
+                    label="Send After Delay"
+                    onClick={handleSendAfterDelay}
+                  />
+                </DropdownItem>
+                <DropdownItem aria-label='Repeat on Interval'>
+                  <ItemContent
+                    icon="repeat"
+                    label="Repeat on Interval"
+                    onClick={handleSendOnInterval}
+                  />
+                </DropdownItem>
+                {downloadPath ? (
+                  <DropdownItem aria-label='Stop Auto-Download'>
+                    <ItemContent
+                      icon="stop-circle"
+                      label="Stop Auto-Download"
+                      withPrompt
+                      onClick={handleClearDownloadLocation}
+                    />
+                  </DropdownItem>) :
+                  (<DropdownItem aria-label='Download After Send'>
+                    <ItemContent
+                      icon="download"
+                      label="Download After Send"
+                      onClick={downloadAfterSend}
+                    />
+                  </DropdownItem>
+                  )}
+                <DropdownItem aria-label='Send And Download'>
+                  <ItemContent
+                    icon="download"
+                    label="Send And Download"
+                    onClick={sendThenSetFilePath}
+                  />
+                </DropdownItem>
+              </DropdownSection>
             </Dropdown>
           </>
         )}

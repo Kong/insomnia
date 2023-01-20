@@ -12,10 +12,7 @@ import { isRequestGroup } from '../../../models/request-group';
 import { importers } from '../../../utils/importers/importers';
 import { importClipBoard, importFile, importUri } from '../../import';
 import { selectActiveProject, selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName, selectProjects, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject, selectWorkspacesWithResolvedNameForActiveProject } from '../../redux/selectors';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
 import { AlertModal } from '../modals/alert-modal';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
@@ -106,40 +103,75 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         Your format isn't supported? <Link href={docsImportExport}>Add Your Own</Link>.
       </p>
       <div className="pad-top">
-        <Dropdown outline>
-          <DropdownButton className="btn btn--clicky">
-            Export Data <i className="fa fa-caret-down" />
-          </DropdownButton>
-          <DropdownDivider>Choose Export Type</DropdownDivider>
-          {activeWorkspace && <DropdownItem onClick={showExportRequestsModal}>
-            <i className="fa fa-home" />
-            Export the "{activeWorkspaceName}" {getWorkspaceLabel(activeWorkspace).singular}
-          </DropdownItem>}
-          <DropdownItem onClick={handleExportAllToFile}>
-            <i className="fa fa-empty" />
-            All {strings.document.plural} and {strings.collection.plural} from the "{projectName}" {strings.project.singular}
-          </DropdownItem>
+        <Dropdown
+          aria-label='Export Data Dropdown'
+          triggerButton={
+            <DropdownButton className="btn btn--clicky">
+              Export Data <i className="fa fa-caret-down" />
+            </DropdownButton>
+          }
+        >
+          <DropdownSection
+            aria-label="Choose Export Type"
+            title="Choose Export Type"
+          >
+            <>
+              {activeWorkspace &&
+                <DropdownItem aria-label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`}>
+                  <ItemContent
+                    icon="home"
+                    label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`}
+                    onClick={showExportRequestsModal}
+                  />
+                </DropdownItem>
+              }
+            </>
+            <DropdownItem aria-label={`All ${strings.document.plural} and ${strings.collection.plural} from the "${projectName}" ${strings.project.singular}`}>
+              <ItemContent
+                icon="empty"
+                label={`All ${strings.document.plural} and ${strings.collection.plural} from the "${projectName}" ${strings.project.singular}`}
+                onClick={handleExportAllToFile}
+              />
+            </DropdownItem>
+          </DropdownSection>
         </Dropdown>
-          &nbsp;&nbsp;
-        <Dropdown outline>
-          <DropdownButton className="btn btn--clicky">
-            Import Data <i className="fa fa-caret-down" />
-          </DropdownButton>
-          <DropdownDivider>Choose Import Type</DropdownDivider>
-          <DropdownItem onClick={handleImportFile}>
-            <i className="fa fa-file-o" />
-            From File
-          </DropdownItem>
-          <DropdownItem onClick={handleImportUri}>
-            <i className="fa fa-link" />
-            From URL
-          </DropdownItem>
-          <DropdownItem onClick={handleImportClipBoard}>
-            <i className="fa fa-clipboard" />
-            From Clipboard
-          </DropdownItem>
+        &nbsp;&nbsp;
+        <Dropdown
+          aria-label='Import Data Dropdown'
+          triggerButton={
+            <DropdownButton className="btn btn--clicky">
+              Import Data <i className="fa fa-caret-down" />
+            </DropdownButton>
+          }
+        >
+          <DropdownSection
+            aria-label="Choose Import Type"
+            title="Choose Import Type"
+          >
+            <DropdownItem aria-label='From File'>
+              <ItemContent
+                icon="file-o"
+                label="From File"
+                onClick={handleImportFile}
+              />
+            </DropdownItem>
+            <DropdownItem aria-label='From URL'>
+              <ItemContent
+                icon="link"
+                label="From URL"
+                onClick={handleImportUri}
+              />
+            </DropdownItem>
+            <DropdownItem aria-label='From Clipboard'>
+              <ItemContent
+                icon="clipboard"
+                label="From Clipboard"
+                onClick={handleImportClipBoard}
+              />
+            </DropdownItem>
+          </DropdownSection>
         </Dropdown>
-          &nbsp;&nbsp;
+        &nbsp;&nbsp;
         <Link href="https://insomnia.rest/create-run-button" className="btn btn--compact" button>
           Create Run Button
         </Link>

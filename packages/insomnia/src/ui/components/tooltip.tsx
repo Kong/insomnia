@@ -1,5 +1,6 @@
 import classnames from 'classnames';
 import React, {
+  CSSProperties,
   ReactNode,
 } from 'react';
 import {
@@ -19,11 +20,12 @@ interface Props {
   selectable?: boolean;
   delay?: number;
   wide?: boolean;
+  style?: CSSProperties;
   onClick?: () => void;
 }
 
 export const Tooltip = (props: Props) => {
-  const { children, message, className, wide, selectable, delay = 400, position } = props;
+  const { children, message, className, wide, selectable, delay = 400, position, style } = props;
   const triggerRef = React.useRef(null);
   const overlayRef = React.useRef(null);
 
@@ -50,7 +52,7 @@ export const Tooltip = (props: Props) => {
     <div
       ref={triggerRef}
       className={tooltipClasses}
-      style={{ position: 'relative' }}
+      style={{ position: 'relative', ...style }}
       {...trigger.triggerProps}
       onClick={props.onClick}
     >

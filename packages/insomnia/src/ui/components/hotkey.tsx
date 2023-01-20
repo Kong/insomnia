@@ -51,12 +51,12 @@ export const Hotkey: FC<Props> = memo(({ keyCombination, keyBindings, className,
   };
 
   return (
-    <span
+    <kbd
       className={classnames(className, classes)}
       style={{ verticalAlign: 'middle' }}
     >
       {display}
-    </span>
+    </kbd>
   );
 });
 

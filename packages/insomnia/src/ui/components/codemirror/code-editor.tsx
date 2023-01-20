@@ -21,9 +21,7 @@ import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
 import { selectSettings } from '../../redux/selectors';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
@@ -554,24 +552,34 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
               />) : null}
             {showFilter && filterHistory?.length ?
               ((
-                <Dropdown key="history" className="tall" right>
-                  <DropdownButton className="btn btn--compact">
-                    <i className="fa fa-clock-o" />
-                  </DropdownButton>
+                <Dropdown
+                  aria-label='Filter History'
+                  key="history"
+                  className="tall"
+                  triggerButton={
+                    <DropdownButton className="btn btn--compact">
+                      <i className="fa fa-clock-o" />
+                    </DropdownButton>
+                  }
+                >
                   {filterHistory.reverse().map(filter => (
                     <DropdownItem
                       key={filter}
-                      onClick={() => {
-                        if (inputRef.current) {
-                          inputRef.current.value = filter;
-                        }
-                        if (updateFilter) {
-                          updateFilter(filter);
-                        }
-                        maybePrettifyAndSetValue(originalCode, false, filter);
-                      }}
+                      aria-label={filter}
                     >
-                      {filter}
+                      <ItemContent
+                        aria-label={filter}
+                        label={filter}
+                        onClick={() => {
+                          if (inputRef.current) {
+                            inputRef.current.value = filter;
+                          }
+                          if (updateFilter) {
+                            updateFilter(filter);
+                          }
+                          maybePrettifyAndSetValue(originalCode, false, filter);
+                        }}
+                      />
                     </DropdownItem>
                   ))}
                 </Dropdown>

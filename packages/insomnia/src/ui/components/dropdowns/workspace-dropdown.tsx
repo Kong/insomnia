@@ -1,4 +1,3 @@
-import classnames from 'classnames';
 import React, { FC, useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -12,11 +11,7 @@ import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
-import { type DropdownHandle, Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownHint } from '../base/dropdown/dropdown-hint';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showError, showModal } from '../modals';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
@@ -99,62 +94,79 @@ export const WorkspaceDropdown: FC = () => {
 
   return (
     <Dropdown
-      beside
+      aria-label="Workspace Dropdown"
       ref={dropdownRef}
       className="wide workspace-dropdown"
       onOpen={handleDropdownOpen}
+      triggerButton={
+        <DropdownButton className="row">
+          <div
+            className="ellipsis"
+            style={{
+              maxWidth: '400px',
+            }}
+            title={activeWorkspaceName}
+          >
+            {activeWorkspaceName}
+          </div>
+          <i className="fa fa-caret-down space-left" />
+        </DropdownButton>
+      }
     >
-      <DropdownButton className="row">
-        <div
-          className="ellipsis"
-          style={{
-            maxWidth: '400px',
-          }}
-          title={activeWorkspaceName}
-        >
-          {activeWorkspaceName}
-        </div>
-        <i className="fa fa-caret-down space-left" />
-      </DropdownButton>
-      <DropdownItem onClick={handleShowWorkspaceSettings}>
-        <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings
-        <DropdownHint keyBindings={hotKeyRegistry.workspace_showSettings} />
+      <DropdownItem aria-label={`${getWorkspaceLabel(activeWorkspace).singular} Settings`}>
+        <ItemContent
+          icon="wrench"
+          label={<>{getWorkspaceLabel(activeWorkspace).singular} Settings</>}
+          hint={hotKeyRegistry.workspace_showSettings}
+          onClick={handleShowWorkspaceSettings}
+        />
       </DropdownItem>
 
-      <DropdownItem onClick={handleShowExport}>
-        <i className="fa fa-share" /> Import/Export
+      <DropdownItem aria-label='Import/Export'>
+        <ItemContent
+          icon="share"
+          label="Import/Export"
+          onClick={handleShowExport}
+        />
       </DropdownItem>
-      {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
-      {actionPlugins.map((p: WorkspaceAction) => (
-        <DropdownItem
-          key={p.label}
-          onClick={() => handlePluginClick(p, activeWorkspace)}
-          stayOpenAfterClick
-        >
-          {loadingActions[p.label] ? (
-            <i className="fa fa-refresh fa-spin" />
-          ) : (
-            <i className={classnames('fa', p.icon || 'fa-code')} />
-          )}
-          {p.label}
-        </DropdownItem>
-      ))}
-      {isDesign(activeWorkspace) && (
-        <>
-          {configGeneratorPlugins.length > 0 && (
-            <DropdownDivider>Config Generators</DropdownDivider>
-          )}
-          {configGeneratorPlugins.map((p: ConfigGenerator) => (
-            <DropdownItem
-              key="generateConfig"
+
+      <DropdownSection
+        aria-label='Plugins Section'
+        title="Plugins"
+      >
+        {actionPlugins.map((p: WorkspaceAction) => (
+          <DropdownItem
+            key={p.label}
+            aria-label={p.label}
+          >
+            <ItemContent
+              icon={loadingActions[p.label] ? 'refresh fa-spin' : p.icon || 'code'}
+              label={p.label}
+              stayOpenAfterClick
+              onClick={() => handlePluginClick(p, activeWorkspace)}
+            />
+          </DropdownItem>
+        ))}
+      </DropdownSection>
+
+      <DropdownSection
+        aria-label='Config Generators Section'
+        title="Config Generators"
+        items={isDesign(activeWorkspace) && configGeneratorPlugins.length > 0 ? configGeneratorPlugins : []}
+      >
+        {(p: ConfigGenerator) =>
+          <DropdownItem
+            key={`generateConfig-${p.label}`}
+            aria-label={p.label}
+          >
+            <ItemContent
+              icon="code"
+              label={p.label}
               onClick={() => handleGenerateConfig(p.label)}
-            >
-              <i className="fa fa-code" />
-              {p.label}
-            </DropdownItem>
-          ))}
-        </>
-      )}
+            />
+          </DropdownItem>
+        }
+      </DropdownSection>
     </Dropdown>
   );
 };

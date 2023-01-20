@@ -10,46 +10,46 @@ test('can make websocket connection', async ({ app, page }) => {
     has: page.locator('.CodeMirror-activeline'),
   });
 
-  await page.click('[data-testid="project"]');
-  await page.click('text=Create');
+  await page.getByTestId('project').click();
+  await page.getByRole('button', { name: 'Create' }).click();
 
   const text = await loadFixture('websockets.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-  await page.click('button:has-text("Clipboard")');
+  await page.getByRole('menuitem', { name: 'Clipboard' }).click();
   await page.click('text=CollectionWebSocketsjust now');
 
-  await page.click('button:has-text("localhost:4010")');
+  await page.getByRole('button', { name: 'localhost:4010' }).click();
   await expect(page.locator('.app')).toContainText('ws://localhost:4010');
   await page.click('text=Connect');
   await expect(statusTag).toContainText('101 Switching Protocols');
-  await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
+  await page.getByRole('tab', { name: 'Timeline' }).click();
   await expect(responseBody).toContainText('WebSocket connection established');
   await page.click('text=Disconnect');
   await expect(responseBody).toContainText('Closing connection with code 1005');
 
   // Can connect with Basic Auth
-  await page.click('button:has-text("basic-auth")');
+  await page.getByRole('button', { name: 'basic-auth' }).click();
   await expect(page.locator('.app')).toContainText('ws://localhost:4010/basic-auth');
   await page.click('text=Connect');
   await expect(statusTag).toContainText('101 Switching Protocols');
-  await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
+  await page.getByRole('tab', { name: 'Timeline' }).click();
   await expect(responseBody).toContainText('> authorization: Basic dXNlcjpwYXNzd29yZA==');
 
   // Can connect with Bearer Auth
-  await page.click('button:has-text("bearer")');
+  await page.getByRole('button', { name: 'bearer' }).click();
   await expect(page.locator('.app')).toContainText('ws://localhost:4010/bearer');
   await page.click('text=Connect');
   await expect(statusTag).toContainText('101 Switching Protocols');
-  await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
+  await page.getByRole('tab', { name: 'Timeline' }).click();
   await expect(responseBody).toContainText('> authorization: Bearer insomnia-cool-token-!!!1112113243111');
 
   // Can handle redirects
-  await page.click('button:has-text("redirect")');
+  await page.getByRole('button', { name: 'redirect' }).click();
   await expect(page.locator('.app')).toContainText('ws://localhost:4010/redirect');
   await page.click('text=Connect');
   await expect(statusTag).toContainText('101 Switching Protocols');
-  await page.click('[data-testid="response-pane"] >> [role="tab"]:has-text("Timeline")');
+  await page.getByRole('tab', { name: 'Timeline' }).click();
   await expect(responseBody).toContainText('WebSocket connection established');
 
   const webSocketActiveConnections = page.locator('[data-testid="WebSocketSpinner__Connected"]');
@@ -59,6 +59,6 @@ test('can make websocket connection', async ({ app, page }) => {
 
   // Can disconnect from all connections
   await page.locator('button[name="DisconnectDropdown__DropdownButton"]').click();
-  await page.locator('text=Disconnect all requests').click();
+  await page.getByRole('menuitem', { name: 'Disconnect all requests' }).click();
   await expect(webSocketActiveConnections).toHaveCount(0);
 });

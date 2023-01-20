@@ -1,26 +1,10 @@
-import React, { Fragment, FunctionComponent } from 'react';
+import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
 
 import type { GrpcMethodInfo } from '../../../../main/ipc/grpc';
-import { Dropdown } from '../../base/dropdown/dropdown';
-import { DropdownButton } from '../../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../../base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
 import { GrpcMethodTag } from '../../tags/grpc-method-tag';
-import { Button } from '../../themed-button';
 import { Tooltip } from '../../tooltip';
-
-const DropdownMethodButton = styled(Button).attrs({
-  variant: 'text',
-  size:'medium',
-  radius:'0',
-  className: 'tall wide',
-})({
-  height: '100%',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-});
 
 const DropdownMethodButtonLabel = styled.div({
   display: 'flex',
@@ -33,14 +17,12 @@ interface Props {
   methods: GrpcMethodInfo[];
   selectedMethod?: GrpcMethodInfo;
   handleChange: (arg0: string) => void;
-  handleChangeProtoFile: () => void;
-  handleServerReflection: () => void;
 }
 const PROTO_PATH_REGEX = /^\/(?:(?<package>[\w.]+)\.)?(?<service>\w+)\/(?<method>\w+)$/;
 
 export const NO_PACKAGE_KEY = 'no-package';
 
-function groupBy(list: {}[], keyGetter: (item: any) => string):Record<string, any[]> {
+function groupBy(list: {}[], keyGetter: (item: any) => string): Record<string, any[]> {
   const map = new Map();
   list.forEach(item => {
     const key = keyGetter(item);
@@ -75,54 +57,62 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   methods,
   selectedMethod,
   handleChange,
-  handleChangeProtoFile,
-  handleServerReflection,
 }) => {
   const groupedByPkg = groupGrpcMethodsByPackage(methods);
   const selectedPath = selectedMethod?.fullPath;
 
   return (
     <Dropdown
+      aria-label='Select gRPC method dropdown'
       className="tall wide"
+      isDisabled={methods.length === 0}
+      triggerButton={
+        <DropdownButton
+          size='medium'
+          className='tall wide'
+          removeBorderRadius
+          removePaddings={false}
+          disableHoverBehavior={false}
+          isDisabled={methods.length === 0}
+          style={{ maxWidth: '250px' }}
+        >
+          <Tooltip
+            message={selectedPath || 'Add proto file or use server reflection'}
+            position="bottom"
+            delay={500}
+            style={{ maxWidth: '240px', display: 'flex', alignItems: 'center' }}
+          >
+            <span style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {!selectedPath ? 'Select Method' : getShortGrpcPath(selectedPath)}
+            </span>
+            <i className="fa fa-caret-down pad-left-sm" />
+          </Tooltip>
+        </DropdownButton>
+      }
     >
-      <DropdownButton
-        buttonClass={DropdownMethodButton}
-      >
-        <Tooltip message={selectedPath || 'Select Method'} position="bottom" delay={500}>
-          {!selectedPath ? 'Select Method' : getShortGrpcPath(selectedPath)}
-          <i className="fa fa-caret-down pad-left-sm" />
-        </Tooltip>
-      </DropdownButton>
-      <DropdownItem onClick={handleServerReflection}>
-        <em>Click to use server reflection</em>
-      </DropdownItem>
-      <DropdownItem onClick={handleChangeProtoFile}>
-        <em>Click to change proto file</em>
-      </DropdownItem>
-      {!methods.length && (
-        <>
-          <DropdownDivider />
-          <DropdownItem disabled>No methods found</DropdownItem>
-        </>
-      )}
       {Object.entries(groupedByPkg).map(([name, pkg]) => (
-        <Fragment key={name}>
-          <DropdownDivider>
-            {name !== NO_PACKAGE_KEY && <NormalCase>pkg: {name}</NormalCase>}
-          </DropdownDivider>
+        <DropdownSection
+          key={name}
+          aria-label='Select gRPC method section'
+          title={name !== NO_PACKAGE_KEY && <NormalCase>pkg: {name}</NormalCase>}
+        >
           {pkg.map(({ type, fullPath }) => (
             <DropdownItem
               key={fullPath}
-              onClick={() => handleChange(fullPath)}
-              disabled={disabled}
-              selected={fullPath === selectedPath}
+              aria-label={fullPath}
             >
-              <Tooltip message={fullPath} position="right" delay={500}>
-                <DropdownMethodButtonLabel><GrpcMethodTag methodType={type} /> {getShortGrpcPath(fullPath)}</DropdownMethodButtonLabel>
-              </Tooltip>
+              <ItemContent
+                isDisabled={disabled}
+                isSelected={fullPath === selectedPath}
+                onClick={() => handleChange(fullPath)}
+              >
+                <Tooltip message={fullPath} position="right" delay={500}>
+                  <DropdownMethodButtonLabel><GrpcMethodTag methodType={type} /> {getShortGrpcPath(fullPath)}</DropdownMethodButtonLabel>
+                </Tooltip>
+              </ItemContent>
             </DropdownItem>
           ))}
-        </Fragment>
+        </DropdownSection>
       ))}
     </Dropdown>
   );

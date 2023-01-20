@@ -1,9 +1,9 @@
 import { test } from '../../playwright/test';
 
 test('Sign in with GitHub', async ({ app, page }) => {
-  await page.locator('text=Setup Git Sync').click();
+  await page.getByRole('button', { name: 'Setup Git Sync' }).click();
 
-  await page.locator('div[role="tab"]:has-text("GitHub")').click();
+  await page.getByRole('tab', { name: 'Github' }).click();
 
   // Prevent the app from opening the browser to the authorization page
   // and return the url that would be created by following the GitHub OAuth flow.
@@ -26,7 +26,7 @@ test('Sign in with GitHub', async ({ app, page }) => {
 
   const [{ redirectUrl }] = await Promise.all([
     fakeGitHubOAuthWebFlow,
-    page.locator('text=Authenticate with GitHub').click({
+    page.getByText('Authenticate with GitHub').click({
       // When playwright clicks a link it waits for navigation to finish.
       // In our case we are stubbing the navigation and we don't want to wait for it.
       noWaitAfter: true,
@@ -37,7 +37,7 @@ test('Sign in with GitHub', async ({ app, page }) => {
 
   await page.locator('input[name="link"]').fill(redirectUrl);
 
-  await page.locator('button[name="add-token"]').click();
+  await page.getByRole('button', { name: 'Add' }).click();
 
   await page
     .locator('input[name="uri"]')

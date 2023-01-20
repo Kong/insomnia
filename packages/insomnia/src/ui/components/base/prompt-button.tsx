@@ -17,6 +17,7 @@ interface Props<T> {
   doneMessage?: string;
   tabIndex?: number;
   title?: string;
+  fullWidth?: boolean;
   onClick?: (event: MouseEvent<HTMLButtonElement>, value?: T) => void;
 }
 
@@ -28,6 +29,7 @@ export const PromptButton = <T, >({
   tabIndex,
   title,
   className,
+  fullWidth = false,
   children,
 }: PropsWithChildren<Props<T>>) => {
   // Create flag to store the state value.
@@ -84,6 +86,9 @@ export const PromptButton = <T, >({
       tabIndex={tabIndex}
       title={title}
       className={className}
+      style={{
+        width: fullWidth ? '100%' : 'auto',
+      }}
     >
       <PromptMessage
         promptState={state}

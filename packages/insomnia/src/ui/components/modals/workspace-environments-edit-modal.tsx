@@ -6,9 +6,7 @@ import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import { selectActiveWorkspace, selectActiveWorkspaceMeta, selectEnvironments } from '../../redux/selectors';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { Editable } from '../base/editable';
 import { Link } from '../base/link';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
@@ -227,43 +225,53 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
           </li>
           <div className="pad env-modal__sidebar-heading">
             <h3 className="no-margin">Sub Environments</h3>
-            <Dropdown right>
-              <DropdownButton>
-                <i className="fa fa-plus-circle" />
-                <i className="fa fa-caret-down" />
-              </DropdownButton>
-              <DropdownItem
-                onClick={async () => {
-                  if (baseEnvironment) {
-                    const environment = await models.environment.create({
-                      parentId: baseEnvironment._id,
-                      isPrivate: false,
-                    });
-                    setState(state => ({
-                      ...state,
-                      selectedEnvironmentId: environment._id,
-                    }));
-                  }
-                }}
-              >
-                <i className="fa fa-eye" /> Environment
+            <Dropdown
+              aria-label='Create Environment Dropdown'
+              triggerButton={
+                <DropdownButton>
+                  <i className="fa fa-plus-circle" />
+                  <i className="fa fa-caret-down" />
+                </DropdownButton>
+              }
+            >
+              <DropdownItem aria-label='Environment'>
+                <ItemContent
+                  icon="eye"
+                  label="Environment"
+                  onClick={async () => {
+                    if (baseEnvironment) {
+                      const environment = await models.environment.create({
+                        parentId: baseEnvironment._id,
+                        isPrivate: false,
+                      });
+                      setState(state => ({
+                        ...state,
+                        selectedEnvironmentId: environment._id,
+                      }));
+                    }
+                  }}
+                />
               </DropdownItem>
               <DropdownItem
-                onClick={async () => {
-                  if (baseEnvironment) {
-                    const environment = await models.environment.create({
-                      parentId: baseEnvironment._id,
-                      isPrivate: true,
-                    });
-                    setState(state => ({
-                      ...state,
-                      selectedEnvironmentId: environment._id,
-                    }));
-                  }
-                }}
+                aria-label='Private Environment'
                 title="Environment will not be exported or synced"
               >
-                <i className="fa fa-eye-slash" /> Private Environment
+                <ItemContent
+                  icon="eye-slash"
+                  label="Private Environment"
+                  onClick={async () => {
+                    if (baseEnvironment) {
+                      const environment = await models.environment.create({
+                        parentId: baseEnvironment._id,
+                        isPrivate: true,
+                      });
+                      setState(state => ({
+                        ...state,
+                        selectedEnvironmentId: environment._id,
+                      }));
+                    }
+                  }}
+                />
               </DropdownItem>
             </Dropdown>
           </div>
@@ -302,44 +310,51 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                   onChange={event => updateEnvironment(selectedEnvironmentId, { color: event.target.value })}
                 />
 
-                <Dropdown className="space-right" right>
-                  <DropdownButton className="btn btn--clicky">
-                    {selectedEnvironmentColor && (
-                      <i
-                        className="fa fa-circle space-right"
-                        style={{
-                          color: selectedEnvironmentColor,
-                        }}
-                      />
-                    )}
-                    Color <i className="fa fa-caret-down" />
-                  </DropdownButton>
-
-                  <DropdownItem
-                    onClick={() => {
-                      if (!selectedEnvironmentColor) {
-                        // TODO: fix magic-number. Currently this is the `surprise` background color for the default theme,
-                        // but we should be grabbing the actual value from the user's actual theme instead.
-                        updateEnvironment(selectedEnvironmentId, { color: '#7d69cb' });
-                      }
-                      inputRef.current?.click();
-                    }}
-                  >
-                    <i
-                      className="fa fa-circle"
-                      style={{
+                <Dropdown
+                  aria-label='Environment Color Dropdown'
+                  className="space-right"
+                  triggerButton={
+                    <DropdownButton
+                      className="btn btn--clicky"
+                      disableHoverBehavior={false}
+                    >
+                      {selectedEnvironmentColor && (
+                        <i
+                          className="fa fa-circle space-right"
+                          style={{
+                            color: selectedEnvironmentColor,
+                          }}
+                        />
+                      )}
+                      Color <i className="fa fa-caret-down" />
+                    </DropdownButton>
+                  }
+                >
+                  <DropdownItem aria-label={selectedEnvironmentColor ? 'Change Color' : 'Assign Color'}>
+                    <ItemContent
+                      icon="circle"
+                      label={selectedEnvironmentColor ? 'Change Color' : 'Assign Color'}
+                      iconStyle={{
                         ...(selectedEnvironmentColor ? { color: selectedEnvironmentColor } : {}),
                       }}
+                      onClick={() => {
+                        if (!selectedEnvironmentColor) {
+                          // TODO: fix magic-number. Currently this is the `surprise` background color for the default theme,
+                          // but we should be grabbing the actual value from the user's actual theme instead.
+                          updateEnvironment(selectedEnvironmentId, { color: '#7d69cb' });
+                        }
+                        inputRef.current?.click();
+                      }}
                     />
-                    {selectedEnvironmentColor ? 'Change Color' : 'Assign Color'}
                   </DropdownItem>
 
-                  <DropdownItem
-                    onClick={() => updateEnvironment(selectedEnvironmentId, { color: null })}
-                    disabled={!selectedEnvironmentColor}
-                  >
-                    <i className="fa fa-minus-circle" />
-                    Unset Color
+                  <DropdownItem aria-label='Unset Color'>
+                    <ItemContent
+                      isDisabled={!selectedEnvironmentColor}
+                      icon="minus-circle"
+                      label="Unset Color"
+                      onClick={() => updateEnvironment(selectedEnvironmentId, { color: null })}
+                    />
                   </DropdownItem>
                 </Dropdown>
 

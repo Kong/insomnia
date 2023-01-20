@@ -1,22 +1,13 @@
-import classNames from 'classnames';
 import React, { Fragment } from 'react';
 import styled from 'styled-components';
 
 import * as session from '../../account/session';
 import { clickLink } from '../../common/electron-helpers';
-import { Dropdown } from './base/dropdown/dropdown';
-import { DropdownButton } from './base/dropdown/dropdown-button';
-import { DropdownItem } from './base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { Link as ExternalLink } from './base/link';
-import { PromptButton } from './base/prompt-button';
 import { showLoginModal } from './modals/login-modal';
 import { SvgIcon } from './svg-icon';
 import { Button } from './themed-button';
-import { Tooltip } from './tooltip';
-
-interface StyledIconProps {
-  faIcon: string;
-}
 
 const Toolbar = styled.div({
   display: 'flex',
@@ -24,16 +15,6 @@ const Toolbar = styled.div({
   paddingRight: 'var(--padding-sm)',
   gap: 'var(--padding-sm)',
   margin: 0,
-});
-
-const StyledIcon = styled.i.attrs<StyledIconProps>(props => ({
-  className: classNames('fa', props.faIcon),
-}))<StyledIconProps>({
-  display: 'flex',
-  alignItems: 'center',
-  paddingLeft: 'var(--padding-xs)',
-  paddingRight: 'var(--padding-md)',
-  width: 'unset !important',
 });
 
 const SignUpButton = styled(Button)({
@@ -52,28 +33,40 @@ export const AccountToolbar = () => {
   return (
     <Toolbar>
       {isLoggedIn ? (
-        <Dropdown>
-          <DropdownButton noWrap>
-            <Tooltip delay={1000} position="bottom" message="Account">
-              <Button size='small' style={{ gap: 'var(--padding-xs)' }} variant='text'>
-                <SvgIcon icon='user' />{session.getFirstName()} {session.getLastName()}<i className="fa fa-caret-down" />
-              </Button>
-            </Tooltip>
-          </DropdownButton>
+        <Dropdown
+          aria-label="Account"
+          triggerButton={
+            <DropdownButton
+              style={{ gap: 'var(--padding-xs)' }}
+              removePaddings={false}
+              disableHoverBehavior={false}
+            >
+              <SvgIcon icon='user' />{session.getFirstName()} {session.getLastName()}<i className="fa fa-caret-down" />
+            </DropdownButton>
+          }
+        >
           <DropdownItem
             key="account-settings"
-            stayOpenAfterClick
-            onClick={() => clickLink('https://app.insomnia.rest/app/account/')}
+            aria-label="Account settings"
           >
-            <StyledIcon faIcon="fa-gear" /> Account Settings
+            <ItemContent
+              icon="gear"
+              label='Account Settings'
+              stayOpenAfterClick
+              onClick={() => clickLink('https://app.insomnia.rest/app/account/')}
+            />
           </DropdownItem>
           <DropdownItem
             key="logout"
-            stayOpenAfterClick
-            buttonClass={PromptButton}
-            onClick={session.logout}
+            aria-label='logout'
           >
-            <StyledIcon faIcon="fa-sign-out" />Logout
+            <ItemContent
+              icon="sign-out"
+              label="Logout"
+              withPrompt
+              stayOpenAfterClick
+              onClick={session.logout}
+            />
           </DropdownItem>
         </Dropdown>
       ) : (

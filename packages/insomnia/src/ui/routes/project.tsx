@@ -29,10 +29,7 @@ import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '../.
 import { isDefaultProject, isRemoteProject, Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
-import { Dropdown } from '../components/base/dropdown/dropdown';
-import { DropdownButton } from '../components/base/dropdown/dropdown-button';
-import { DropdownDivider } from '../components/base/dropdown/dropdown-divider';
-import { DropdownItem } from '../components/base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../components/base/dropdown';
 import { DashboardSortDropdown } from '../components/dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
@@ -41,7 +38,7 @@ import { showAlert, showPrompt } from '../components/modals';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
-import { Button } from '../components/themed-button';
+import { Button } from '../components/themed-button/button';
 import { WorkspaceCard } from '../components/workspace-card';
 import {
   importClipBoard,
@@ -49,15 +46,12 @@ import {
   importUri,
 } from '../import';
 
-const CreateButton = styled(Button).attrs({
+const StyledDropdownButton = styled(DropdownButton).attrs({
   variant: 'outlined',
 })({
   '&&': {
     marginLeft: 'var(--padding-md)',
-    display: 'flex',
-    alignItems: 'center',
     gap: 'var(--padding-sm)',
-    padding: '0 var(--padding-sm)',
   },
 });
 
@@ -697,36 +691,69 @@ const ProjectRoute: FC = () => {
                   {isRemoteProject(activeProject) && (
                     <RemoteWorkspacesDropdown key={activeProject._id} project={activeProject} />
                   )}
-                  <Dropdown>
-                    <DropdownButton buttonClass={CreateButton}>
-                      <i className="fa fa-plus" />Create <i className="fa fa-caret-down pad-left-sm" />
-                    </DropdownButton>
-                    <DropdownDivider>New</DropdownDivider>
-                    <DropdownItem onClick={createNewCollection}>
-                      <i className="fa fa-bars" />
-                      Request Collection
-                    </DropdownItem>
-                    <DropdownItem onClick={createNewDocument}>
-                      <i className="fa fa-file-o" />
-                      Design Document
-                    </DropdownItem>
-                    <DropdownDivider>Import From</DropdownDivider>
-                    <DropdownItem onClick={importFromFile}>
-                      <i className="fa fa-plus" />
-                      File
-                    </DropdownItem>
-                    <DropdownItem onClick={importFromURL}>
-                      <i className="fa fa-link" />
-                      URL
-                    </DropdownItem>
-                    <DropdownItem onClick={importFromClipboard}>
-                      <i className="fa fa-clipboard" />
-                      Clipboard
-                    </DropdownItem>
-                    <DropdownItem onClick={importFromGit}>
-                      <i className="fa fa-code-fork" />
-                      Git Clone
-                    </DropdownItem>
+                  <Dropdown
+                    aria-label='Create New Dropdown'
+                    triggerButton={
+                      <StyledDropdownButton
+                        disableHoverBehavior={false}
+                        removePaddings={false}
+                      >
+                        <i className="fa fa-plus" /> Create <i className="fa fa-caret-down pad-left-sm" />
+                      </StyledDropdownButton>
+                    }
+                  >
+                    <DropdownSection
+                      aria-label="New Section"
+                      title="New"
+                    >
+                      <DropdownItem aria-label='Request Collection'>
+                        <ItemContent
+                          icon="bars"
+                          label="Request Collection"
+                          onClick={createNewCollection}
+                        />
+                      </DropdownItem>
+                      <DropdownItem aria-label='Design Document'>
+                        <ItemContent
+                          icon="file-o"
+                          label="Design Document"
+                          onClick={createNewDocument}
+                        />
+                      </DropdownItem>
+                    </DropdownSection>
+                    <DropdownSection
+                      aria-label="Import From"
+                      title="Import From"
+                    >
+                      <DropdownItem aria-label='File'>
+                        <ItemContent
+                          icon="plus"
+                          label="File"
+                          onClick={importFromFile}
+                        />
+                      </DropdownItem>
+                      <DropdownItem aria-label='URL'>
+                        <ItemContent
+                          icon="link"
+                          label="URL"
+                          onClick={importFromURL}
+                        />
+                      </DropdownItem>
+                      <DropdownItem aria-label='Clipboard'>
+                        <ItemContent
+                          icon="clipboard"
+                          label="Clipboard"
+                          onClick={importFromClipboard}
+                        />
+                      </DropdownItem>
+                      <DropdownItem aria-label='Git Clone'>
+                        <ItemContent
+                          icon="code-fork"
+                          label="Git Clone"
+                          onClick={importFromGit}
+                        />
+                      </DropdownItem>
+                    </DropdownSection>
                   </Dropdown>
                 </PaneHeaderToolbar>
               </PaneHeader>

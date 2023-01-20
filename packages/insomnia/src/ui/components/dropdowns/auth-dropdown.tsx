@@ -11,10 +11,7 @@ import { RequestAuthentication } from '../../../models/request';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
 import { selectActiveRequest } from '../../redux/selectors';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownDivider } from '../base/dropdown/dropdown-divider';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 
@@ -127,20 +124,6 @@ function makeNewAuth(type: string, oldAuth: RequestAuthentication = {}): Request
       };
   }
 }
-
-const AuthItem: FC<{
-  type: AuthType;
-  nameOverride?: string;
-  isCurrent: (type: AuthType) => boolean;
-  onClick: (type: AuthType) => void;
-}> = ({ type, nameOverride, isCurrent, onClick }) => (
-  <DropdownItem onClick={() => onClick(type)}>
-    {<i className={`fa fa-${isCurrent(type) ? 'check' : 'empty'}`} />}{' '}
-    {nameOverride || getAuthTypeName(type, true)}
-  </DropdownItem>
-);
-AuthItem.displayName = DropdownItem.name;
-
 interface Props {
   authTypes?: AuthType[];
   disabled?: boolean;
@@ -195,30 +178,46 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
     return null;
   }
 
-  const itemProps = { onClick, isCurrent };
-
   return (
-    <Dropdown beside>
-      <DropdownDivider>Auth Types</DropdownDivider>
-      <DropdownButton className="tall" disabled={disabled}>
-        {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
-        <i className="fa fa-caret-down space-left" />
-      </DropdownButton>
-      {authTypes.map(authType =>
-        <AuthItem
-          key={authType}
-          type={authType}
-          {...itemProps}
-        />)}
-      <DropdownDivider key="divider-other">
-        Other
-      </DropdownDivider>
-      <AuthItem
-        key="none"
-        type="none"
-        nameOverride="No Authentication"
-        {...itemProps}
-      />
+    <Dropdown
+      aria-label='Authentication Dropdown'
+      isDisabled={disabled}
+      triggerButton={
+        <DropdownButton className="tall">
+          {'authentication' in activeRequest ? getAuthTypeName(activeRequest.authentication.type) || 'Auth' : 'Auth'}
+          <i className="fa fa-caret-down space-left" />
+        </DropdownButton>
+      }
+    >
+      <DropdownSection
+        aria-label='Auth types section'
+        title="Auth Types"
+      >
+        {authTypes.map(authType =>
+          <DropdownItem
+            key={authType}
+            aria-label={getAuthTypeName(authType, true)}
+          >
+            <ItemContent
+              icon={isCurrent(authType) ? 'check' : 'empty'}
+              label={getAuthTypeName(authType, true)}
+              onClick={() => onClick(authType)}
+            />
+          </DropdownItem>
+        )}
+      </DropdownSection>
+      <DropdownSection
+        aria-label="Other types section"
+        title="Other"
+      >
+        <DropdownItem aria-label='None' key="none">
+          <ItemContent
+            icon={isCurrent('none') ? 'check' : 'empty'}
+            label={'No Authentication'}
+            onClick={() => onClick('none')}
+          />
+        </DropdownItem>
+      </DropdownSection>
     </Dropdown>
   );
 };

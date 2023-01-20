@@ -4,9 +4,7 @@ import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState }
 import { exportHarRequest } from '../../../common/har';
 import { Request } from '../../../models/request';
 import { CopyButton } from '../base/copy-button';
-import { Dropdown } from '../base/dropdown/dropdown';
-import { DropdownButton } from '../base/dropdown/dropdown-button';
-import { DropdownItem } from '../base/dropdown/dropdown-item';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -117,41 +115,55 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
         }}
       >
         <div className="pad">
-          <Dropdown outline>
-            <DropdownButton className="btn btn--clicky">
-              {target ? target.title : 'n/a'}
-              <i className="fa fa-caret-down" />
-            </DropdownButton>
+          <Dropdown
+            aria-label='Select a target'
+            triggerButton={
+              <DropdownButton className="btn btn--clicky">
+                {target ? target.title : 'n/a'}
+                <i className="fa fa-caret-down" />
+              </DropdownButton>
+            }
+          >
             {targets.map(target => (
               <DropdownItem
                 key={target.key}
-                onClick={() => {
-                  const client = target.clients.find(c => c.key === target.default);
-                  if (request && client) {
-                    generateCode(request, target, client);
-                  }
-                }}
+                aria-label={target.title}
               >
-                {target.title}
+                <ItemContent
+                  label={target.title}
+                  onClick={() => {
+                    const client = target.clients.find(c => c.key === target.default);
+                    if (request && client) {
+                      generateCode(request, target, client);
+                    }
+                  }}
+                />
               </DropdownItem>
             ))}
           </Dropdown>
-            &nbsp;&nbsp;
-          <Dropdown outline>
-            <DropdownButton className="btn btn--clicky">
-              {client ? client.title : 'n/a'}
-              <i className="fa fa-caret-down" />
-            </DropdownButton>
+          &nbsp;&nbsp;
+          <Dropdown
+            aria-label='Select a client'
+            triggerButton={
+              <DropdownButton className="btn btn--clicky">
+                {client ? client.title : 'n/a'}
+                <i className="fa fa-caret-down" />
+              </DropdownButton>
+            }
+          >
             {clients.map(client => (
               <DropdownItem
                 key={client.key}
-                onClick={() => request && generateCode(request, state.target, client)}
+                aria-label={client.title}
               >
-                {client.title}
+                <ItemContent
+                  label={client.title}
+                  onClick={() => request && generateCode(request, state.target, client)}
+                />
               </DropdownItem>
             ))}
           </Dropdown>
-            &nbsp;&nbsp;
+          &nbsp;&nbsp;
           <CopyButton content={cmd} className="pull-right" />
         </div>
         <CodeEditor
