@@ -17,8 +17,6 @@ interface Props {
   methods: GrpcMethodInfo[];
   selectedMethod?: GrpcMethodInfo;
   handleChange: (arg0: string) => void;
-  handleChangeProtoFile: () => void;
-  handleServerReflection: () => void;
 }
 const PROTO_PATH_REGEX = /^\/(?:(?<package>[\w.]+)\.)?(?<service>\w+)\/(?<method>\w+)$/;
 
@@ -59,8 +57,6 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   methods,
   selectedMethod,
   handleChange,
-  handleChangeProtoFile,
-  handleServerReflection,
 }) => {
   const groupedByPkg = groupGrpcMethodsByPackage(methods);
   const selectedPath = selectedMethod?.fullPath;
@@ -69,42 +65,22 @@ export const GrpcMethodDropdown: FunctionComponent<Props> = ({
     <Dropdown
       aria-label='Select gRPC method dropdown'
       className="tall wide"
+      isDisabled={methods.length === 0}
       triggerButton={
         <DropdownButton
           size='medium'
           className='tall wide'
           removeBorderRadius
           disableHoverBehavior={false}
+          isDisabled={methods.length === 0}
         >
-          <Tooltip message={selectedPath || 'Select Method'} position="bottom" delay={500}>
+          <Tooltip message={selectedPath || 'Add proto file or use server reflection'} position="bottom" delay={500}>
             {!selectedPath ? 'Select Method' : getShortGrpcPath(selectedPath)}
             <i className="fa fa-caret-down pad-left-sm" />
           </Tooltip>
         </DropdownButton>
       }
     >
-      <DropdownItem aria-label='Click to use server reflection'>
-        <ItemContent
-          label={<em>Click to use server reflection</em>}
-          onClick={handleServerReflection}
-        />
-      </DropdownItem>
-      <DropdownItem aria-label='Click to change proto file'>
-        <ItemContent
-          label={<em>Click to change proto file</em>}
-          onClick={handleChangeProtoFile}
-        />
-      </DropdownItem>
-      {!methods.length && (
-        <DropdownSection>
-          <DropdownItem aria-label='No methods found'>
-            <ItemContent
-              isDisabled
-              label={<em>No methods found</em>}
-            />
-          </DropdownItem>
-        </DropdownSection>
-      )}
       {Object.entries(groupedByPkg).map(([name, pkg]) => (
         <DropdownSection
           key={name}
