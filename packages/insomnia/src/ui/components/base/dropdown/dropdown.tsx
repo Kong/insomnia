@@ -3,7 +3,7 @@ import type { AriaMenuProps, MenuTriggerProps } from '@react-types/menu';
 import type { Placement } from '@react-types/overlays';
 import classnames from 'classnames';
 import React, { CSSProperties, forwardRef, ReactNode, useRef } from 'react';
-import { useMenuTrigger } from 'react-aria';
+import { mergeProps, useMenuTrigger } from 'react-aria';
 import { MenuTriggerState, useMenuTriggerState } from 'react-stately';
 import styled from 'styled-components';
 
@@ -54,7 +54,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
   const triggerRef = useRef<HTMLButtonElement>(ref);
 
   const { menuTriggerProps, menuProps } = useMenuTrigger({ isDisabled }, state, triggerRef);
-
+  console.log(menuProps);
   return (
     <Container className={classnames('dropdown', className)} style={style} data-testid={dataTestId}>
       <PressResponder {...menuTriggerProps} isPressed={state.isOpen} ref={triggerRef}>
@@ -68,8 +68,7 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
           placement={placement || 'bottom end'}
         >
           <Menu
-            {...menuProps}
-            {...props}
+            {...mergeProps(props, menuProps)}
             selectionMode={selectionMode}
             closeOnSelect={props.closeOnSelect}
             autoFocus={state.focusStrategy || true}
