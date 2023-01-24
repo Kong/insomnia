@@ -252,10 +252,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                   }}
                 />
               </DropdownItem>
-              <DropdownItem
-                aria-label='Private Environment'
-                title="Environment will not be exported or synced"
-              >
+              <DropdownItem aria-label='Private Environment'>
                 <ItemContent
                   icon="eye-slash"
                   label="Private Environment"
