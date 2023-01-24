@@ -14,10 +14,10 @@ resources:
     body:
       mimeType: text/plain
       text: |-
-        {{ _.examplObject.anotherString }}
+        {{ _.exampleObject.anotherString }}
         {{ _.exampleString }}
         {{ _.exampleNumber }}
-        {{ _.examplObject.anotherNumber }}
+        {{ _.exampleObject.anotherNumber }}
     parameters: []
     headers:
       - name: Content-Type
@@ -46,17 +46,17 @@ resources:
     created: 1670587793246
     name: Base Environment
     data:
-      exampleString: test222A
-      exampleNumber: 111
-      examplObject:
-        anotherString: test222A
-        anotherNumber: 111
+      exampleString: baseenv0
+      exampleNumber: 1001
+      exampleObject:
+        anotherString: baseenv1
+        anotherNumber: 1001
     dataPropertyOrder:
       "&":
         - exampleString
         - exampleNumber
-        - examplObject
-      "&~|examplObject":
+        - exampleObject
+      "&~|exampleObject":
         - anotherString
         - anotherNumber
     color: null
@@ -84,17 +84,17 @@ resources:
     created: 1670587812382
     name: ExampleA
     data:
-      exampleString: test222A
-      exampleNumber: 111
-      examplObject:
-        anotherString: test222A
-        anotherNumber: 111
+      exampleString: subenvA0
+      exampleNumber: 1111
+      exampleObject:
+        anotherString: subenvA1
+        anotherNumber: 1111
     dataPropertyOrder:
       "&":
         - exampleString
         - exampleNumber
-        - examplObject
-      "&~|examplObject":
+        - exampleObject
+      "&~|exampleObject":
         - anotherString
         - anotherNumber
     color: null
@@ -107,17 +107,17 @@ resources:
     created: 1670587826837
     name: ExampleB
     data:
-      exampleString: test222A
-      exampleNumber: 111
-      examplObject:
-        anotherString: test222A
-        anotherNumber: 111
+      exampleString: subenvB0
+      exampleNumber: 2222
+      exampleObject:
+        anotherString: subenvB1
+        anotherNumber: 2222
     dataPropertyOrder:
       "&":
         - exampleString
         - exampleNumber
-        - examplObject
-      "&~|examplObject":
+        - exampleObject
+      "&~|exampleObject":
         - anotherString
         - anotherNumber
     color: null
