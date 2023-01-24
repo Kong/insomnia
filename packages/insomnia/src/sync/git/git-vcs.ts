@@ -146,8 +146,9 @@ export class GitVCS {
 
   async listFiles() {
     console.log('[git] List files');
-    const files = await git.listFiles({ ...this._baseOpts });
-    return files.map(convertToOsSep);
+    const repositoryFiles = await git.listFiles({ ...this._baseOpts });
+    const insomniaFiles = repositoryFiles.filter(file => file.startsWith(GIT_INSOMNIA_DIR_NAME)).map(convertToOsSep);
+    return insomniaFiles;
   }
 
   async getBranch() {
