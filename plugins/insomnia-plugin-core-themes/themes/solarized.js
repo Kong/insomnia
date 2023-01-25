@@ -36,6 +36,9 @@ module.exports = {
         foreground: {
           default: '#839496',
         },
+        highlight: {
+          default: 'rgb(88, 110, 117)',
+        },
       },
     },
   },

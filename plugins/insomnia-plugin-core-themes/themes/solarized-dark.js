@@ -23,5 +23,12 @@ module.exports = {
       lg: 'rgba(142, 149, 146, 0.6)',
       xl: 'rgba(142, 149, 146, 0.8)',
     },
+    styles: {
+      sidebar: {
+        highlight: {
+          default: 'rgb(88, 110, 117)',
+        },
+      }
+    },
   },
 };
