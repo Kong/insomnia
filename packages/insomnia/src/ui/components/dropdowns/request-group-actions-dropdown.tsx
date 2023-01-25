@@ -5,14 +5,12 @@ import { useFetcher, useParams } from 'react-router-dom';
 import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import * as models from '../../../models';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
-import { createRequest, CreateRequestType } from '../../hooks/create-request';
-import { createRequestGroup } from '../../hooks/create-request-group';
-import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
+import { CreateRequestType } from '../../hooks/create-request';
+import { selectActiveEnvironment, selectActiveProject, selectHotKeyRegistry } from '../../redux/selectors';
 import { type DropdownHandle, type DropdownProps, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
@@ -82,7 +80,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
     submitName: 'Create',
     label: 'Name',
     selectText: true,
-    onComplete: async name => createRequestFetcher.submit({ parentId: requestGroup._id, name },
+    onComplete: name => createRequestFetcher.submit({ parentId: requestGroup._id, name },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
         method: 'post',

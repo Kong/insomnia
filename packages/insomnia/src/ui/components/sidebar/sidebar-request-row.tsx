@@ -2,6 +2,7 @@ import classnames from 'classnames';
 import React, { FC, forwardRef, MouseEvent, ReactElement, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
@@ -13,8 +14,8 @@ import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
-import { createRequest, updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
+import { updateRequestMetaByParentId } from '../../hooks/create-request';
+import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspaceMeta } from '../../redux/selectors';
 import type { DropdownHandle } from '../base/dropdown';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
@@ -67,12 +68,12 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   request,
   requestGroup,
 }, ref) => {
+  const createRequestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const { handleRender } = useNunjucks();
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
-  const activeWorkspaceId = activeWorkspace?._id;
   const [dragDirection, setDragDirection] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const handleSetActiveRequest = useCallback(() => {
@@ -149,15 +150,16 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   }, [request, stopEditing]);
 
   const handleRequestCreateFromEmpty = useCallback(() => {
-    if (!requestGroup?._id || !activeWorkspaceId) {
+    if (!requestGroup?._id) {
       return;
     }
-    createRequest({
-      requestType: 'HTTP',
-      parentId: requestGroup?._id,
-      workspaceId: activeWorkspaceId,
-    });
-  }, [requestGroup?._id, activeWorkspaceId]);
+
+    createRequestFetcher.submit({ requestType: 'HTTP', parentId: requestGroup._id },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+        method: 'post',
+      });
+  }, [requestGroup?._id, createRequestFetcher, organizationId, projectId, workspaceId]);
 
   const handleShowRequestSettings = useCallback(() => {
     request && showModal(RequestSettingsModal, { request });

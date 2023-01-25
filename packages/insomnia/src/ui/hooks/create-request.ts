@@ -1,17 +1,8 @@
-import { unreachableCase } from 'ts-assert-unreachable';
-
-import {
-  CONTENT_TYPE_GRAPHQL,
-  CONTENT_TYPE_JSON,
-  METHOD_GET,
-  METHOD_POST,
-} from '../../common/constants';
 import * as models from '../../models';
 import { isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { WorkspaceMeta } from '../../models/workspace-meta';
-import { SegmentEvent, trackSegmentEvent } from '../analytics';
 
 export const updateActiveWorkspaceMeta = async (
   patch: Partial<WorkspaceMeta>,
@@ -49,75 +40,3 @@ export const setActiveRequest = async (
 };
 
 export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL' | 'WebSocket';
-type RequestCreator = (input: {
-  parentId: string;
-  requestType: CreateRequestType;
-  workspaceId: string;
-}) => Promise<void>;
-
-export const createRequest: RequestCreator = async ({
-  parentId,
-  requestType,
-  workspaceId,
-}) => {
-  switch (requestType) {
-    case 'gRPC': {
-      const request = await models.grpcRequest.create({
-        parentId,
-        name: 'New Request',
-      });
-      setActiveRequest(request._id, workspaceId);
-      break;
-    }
-
-    case 'GraphQL': {
-      const request = await models.request.create({
-        parentId,
-        method: METHOD_POST,
-        headers: [
-          {
-            name: 'Content-Type',
-            value: CONTENT_TYPE_JSON,
-          },
-        ],
-        body: {
-          mimeType: CONTENT_TYPE_GRAPHQL,
-          text: '',
-        },
-        name: 'New Request',
-      });
-      models.stats.incrementCreatedRequests();
-      setActiveRequest(request._id, workspaceId);
-      break;
-    }
-
-    case 'HTTP': {
-      const request = await models.request.create({
-        parentId,
-        method: METHOD_GET,
-        name: 'New Request',
-      });
-      models.stats.incrementCreatedRequests();
-      setActiveRequest(request._id, workspaceId);
-      break;
-    }
-
-    case 'WebSocket': {
-      const request = await models.webSocketRequest.create({
-        parentId,
-        name: 'New WebSocket Request',
-      });
-      models.stats.incrementCreatedRequests();
-      setActiveRequest(request._id, workspaceId);
-      break;
-    }
-
-    default:
-      unreachableCase(
-        requestType,
-        "tried to create a request but didn't specify the type"
-      );
-  }
-
-  trackSegmentEvent(SegmentEvent.requestCreate, { requestType });
-};
