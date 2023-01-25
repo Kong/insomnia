@@ -1,13 +1,15 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
+import { Request } from '../../../models/request';
 import { Response } from '../../../models/response';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
+import { selectActiveEnvironment, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { SizeTag } from '../tags/size-tag';
@@ -30,7 +32,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   const dropdownRef = useRef<DropdownHandle>(null);
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const responses = useSelector(selectActiveRequestResponses) as GenericResponse[];
-  const activeRequest = useSelector(selectActiveRequest);
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
   const requestVersions = useSelector(selectRequestVersions);
   const now = new Date();
   const categories: Record<string, GenericResponse[]> = {

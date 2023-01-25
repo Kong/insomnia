@@ -1,7 +1,7 @@
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
@@ -10,7 +10,7 @@ import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isRequest } from '../../models/request';
+import { isRequest, Request } from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
@@ -39,7 +39,6 @@ import { WebSocketResponsePane } from '../components/websockets/websocket-respon
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import {
   selectActiveEnvironment,
-  selectActiveRequest,
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
   selectSettings,
@@ -72,7 +71,8 @@ const INITIAL_GRPC_REQUEST_STATE = {
 };
 export const Debug: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeRequest = useSelector(selectActiveRequest);
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>([]);
   useEffect(() => {

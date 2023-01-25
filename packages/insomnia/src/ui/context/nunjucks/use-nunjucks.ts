@@ -1,11 +1,12 @@
 import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render } from '../../../common/render';
+import { Request } from '../../../models/request';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { getKeys } from '../../../templating/utils';
-import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace } from '../../redux/selectors';
-
+import { selectActiveEnvironment, selectActiveWorkspace } from '../../redux/selectors';
 let getRenderContextPromiseCache: any = {};
 
 export const initializeNunjucksRenderPromiseCache = () => {
@@ -19,7 +20,8 @@ initializeNunjucksRenderPromiseCache();
  */
 export const useNunjucks = () => {
   const environmentId = useSelector(selectActiveEnvironment)?._id;
-  const request = useSelector(selectActiveRequest);
+  const request = useRouteLoaderData('request/:requestId') as Request;
+
   const workspace = useSelector(selectActiveWorkspace);
 
   const fetchRenderContext = useCallback(async () => {

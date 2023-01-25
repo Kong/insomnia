@@ -4,6 +4,7 @@ import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
@@ -17,7 +18,7 @@ import { convert } from '../../utils/importers/convert';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import { selectActiveEnvironment, selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
+import { selectActiveEnvironment, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
 import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
@@ -59,7 +60,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const downloadPath = useSelector(selectResponseDownloadPath);
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeRequest = useSelector(selectActiveRequest);
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
   const settings = useSelector(selectSettings);
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);

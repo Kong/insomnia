@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import React, { forwardRef, Fragment, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { METHOD_GRPC } from '../../../common/constants';
 import { fuzzyMatchAll } from '../../../common/misc';
@@ -13,7 +14,7 @@ import { Workspace } from '../../../models/workspace';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectActiveRequest, selectActiveWorkspace, selectActiveWorkspaceMeta, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { selectActiveWorkspace, selectActiveWorkspaceMeta, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { Highlight } from '../base/highlight';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -68,7 +69,8 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     title: null,
   });
   const dispatch = useDispatch();
-  const activeRequest = useSelector(selectActiveRequest);
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+
   const workspace = useSelector(selectActiveWorkspace);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);

@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { ACTIVITY_HOME, getProductName } from '../../common/constants';
-import { selectActiveActivity, selectActiveEnvironment, selectActiveProject, selectActiveRequest, selectActiveWorkspace, selectActiveWorkspaceName } from '../redux/selectors';
-
+import { Request } from '../../models/request';
+import { selectActiveActivity, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName } from '../redux/selectors';
 export const useDocumentTitle = () => {
   const activeActivity = useSelector(selectActiveActivity);
   const activeProject = useSelector(selectActiveProject);
@@ -11,7 +12,8 @@ export const useDocumentTitle = () => {
   const activeWorkspace = useSelector(selectActiveWorkspace);
 
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeRequest = useSelector(selectActiveRequest);
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+
   // Update document title
   useEffect(() => {
     let title;
