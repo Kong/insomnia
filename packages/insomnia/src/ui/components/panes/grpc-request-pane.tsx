@@ -1,5 +1,6 @@
 import React, { FunctionComponent, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams } from 'react-router-dom';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
 
@@ -69,7 +70,6 @@ export const GrpcMethodTypeName = {
 
 export const GrpcRequestPane: FunctionComponent<Props> = ({
   activeRequest,
-  workspaceId,
   grpcState,
   setGrpcState,
   reloadRequests,
@@ -92,6 +92,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const environmentId = activeEnvironment?._id || 'n/a';
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
@@ -155,7 +158,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 type="text"
                 defaultValue={activeRequest.url}
                 placeholder="grpcb.in:9000"
-                onChange={url => models.grpcRequest.update(activeRequest, { url })}
+                onChange={url => requestFetcher.submit({ url },
+                  {
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}/update`,
+                    method: 'post',
+                  })}
                 getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, activeRequest._id)}
               />
             </StyledUrlEditor>
@@ -165,7 +172,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 methods={methods}
                 selectedMethod={method}
                 handleChange={protoMethodName => {
-                  models.grpcRequest.update(activeRequest, { protoMethodName });
+                  requestFetcher.submit({ protoMethodName },
+                    {
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}/update`,
+                      method: 'post',
+                    });
                   setGrpcState({
                     ...grpcState,
                     requestMessages: [],
