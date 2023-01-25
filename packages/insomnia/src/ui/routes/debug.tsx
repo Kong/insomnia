@@ -1,6 +1,7 @@
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
@@ -17,7 +18,7 @@ import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
-import { showModal } from '../components/modals';
+import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { CookiesModal, showCookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
@@ -36,7 +37,6 @@ import { SidebarLayout } from '../components/sidebar-layout';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { WebSocketResponsePane } from '../components/websockets/websocket-response-pane';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
-import { createRequestGroup } from '../hooks/create-request-group';
 import {
   selectActiveEnvironment,
   selectActiveRequest,
@@ -95,7 +95,8 @@ export const Debug: FC = () => {
     };
     fn();
   }, [activeWorkspace]);
-
+  const createRequestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const settings = useSelector(selectSettings);
   const sidebarFilter = useSelector(selectSidebarFilter);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
@@ -206,7 +207,19 @@ export const Debug: FC = () => {
     request_showCreateFolder:
       () => {
         if (activeWorkspace) {
-          createRequestGroup(activeRequest ? activeRequest.parentId : activeWorkspace._id);
+          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+          showPrompt({
+            title: 'New Folder',
+            defaultValue: 'My Folder',
+            submitName: 'Create',
+            label: 'Name',
+            selectText: true,
+            onComplete: name => createRequestFetcher.submit({ parentId, name },
+              {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+                method: 'post',
+              }),
+          });
         }
       },
     request_showRecent:

@@ -3,14 +3,12 @@ import { useSelector } from 'react-redux';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { CreateRequestType } from '../../hooks/create-request';
-import { createRequestGroup } from '../../hooks/create-request-group';
-import { selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
+import { selectHotKeyRegistry } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { showPrompt } from '../modals';
 
 export const SidebarCreateDropdown = () => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceId = activeWorkspace?._id;
   const createRequestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const create = useCallback((value: CreateRequestType) =>
@@ -21,12 +19,19 @@ export const SidebarCreateDropdown = () => {
       }), [createRequestFetcher, organizationId, projectId, workspaceId]);
 
   const createGroup = useCallback(() => {
-    if (!activeWorkspaceId) {
-      return;
-    }
-
-    createRequestGroup(activeWorkspaceId);
-  }, [activeWorkspaceId]);
+    showPrompt({
+      title: 'New Folder',
+      defaultValue: 'My Folder',
+      submitName: 'Create',
+      label: 'Name',
+      selectText: true,
+      onComplete: name => createRequestFetcher.submit({ parentId: workspaceId, name },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+          method: 'post',
+        }),
+    });
+  }, [createRequestFetcher, organizationId, projectId, workspaceId]);
   const dataTestId = 'SidebarCreateDropdown';
   return (
     <Dropdown
