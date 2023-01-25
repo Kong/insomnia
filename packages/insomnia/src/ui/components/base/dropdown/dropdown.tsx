@@ -54,7 +54,6 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
   const triggerRef = useRef<HTMLButtonElement>(ref);
 
   const { menuTriggerProps, menuProps } = useMenuTrigger({ isDisabled }, state, triggerRef);
-  console.log(menuProps);
   return (
     <Container className={classnames('dropdown', className)} style={style} data-testid={dataTestId}>
       <PressResponder {...menuTriggerProps} isPressed={state.isOpen} ref={triggerRef}>
