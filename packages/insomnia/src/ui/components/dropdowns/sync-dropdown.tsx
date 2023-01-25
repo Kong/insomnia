@@ -5,7 +5,7 @@ import { useInterval, useMount } from 'react-use';
 
 import * as session from '../../../account/session';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
-import { database as db } from '../../../common/database';
+import { database as db, Operation } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
@@ -216,8 +216,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         resourceName: branch,
         resourceType: 'branch',
       });
-      // @ts-expect-error -- TSCONVERSION
-      await db.batchModifyDocs(delta);
+      await db.batchModifyDocs(delta as unknown as Operation);
     } catch (err) {
       showError({
         title: 'Pull Error',
@@ -235,8 +234,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   async function handleRevert() {
     try {
       const delta = await vcs.rollbackToLatest(syncItems);
-      // @ts-expect-error -- TSCONVERSION
-      await db.batchModifyDocs(delta);
+      await db.batchModifyDocs(delta as unknown as Operation);
     } catch (err) {
       showError({
         title: 'Revert Error',
@@ -258,8 +256,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           delta.remove = delta.remove.filter(e => e?.type !== models.workspace.type);
         }
       }
-      // @ts-expect-error -- TSCONVERSION
-      await db.batchModifyDocs(delta);
+      await db.batchModifyDocs(delta as unknown as Operation);
     } catch (err) {
       showError({
         title: 'Branch Switch Error',
