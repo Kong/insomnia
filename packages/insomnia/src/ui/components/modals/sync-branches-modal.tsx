@@ -2,6 +2,7 @@ import classnames from 'classnames';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
+import { database as db, Operation } from '../../../common/database';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { selectSyncItems } from '../../redux/selectors';
@@ -83,8 +84,7 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
   async function handleCheckout(branch: string) {
     try {
       const delta = await vcs.checkout(syncItems, branch);
-      // @ts-expect-error -- TSCONVERSION
-      await db.batchModifyDocs(delta);
+      await db.batchModifyDocs(delta as Operation);
       await refreshState();
     } catch (err) {
       console.log('Failed to checkout', err.stack);
@@ -97,8 +97,7 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
   const handleMerge = async (branch: string) => {
     const delta = await vcs.merge(syncItems, branch);
     try {
-      // @ts-expect-error -- TSCONVERSION
-      await db.batchModifyDocs(delta);
+      await db.batchModifyDocs(delta as Operation);
       await refreshState();
     } catch (err) {
       console.log('Failed to merge', err.stack);
@@ -143,8 +142,7 @@ export const SyncBranchesModal = forwardRef<SyncBranchesModalHandle, Props>(({ v
       await vcs.fork(newBranchName);
       // Checkout new branch
       const delta = await vcs.checkout(syncItems, newBranchName);
-      // @ts-expect-error -- TSCONVERSION
-      await db.batchModifyDocs(delta);
+      await db.batchModifyDocs(delta as Operation);
       // Clear branch name and refresh things
       await refreshState();
       setState(state => ({

@@ -29,7 +29,7 @@ export interface Query {
 
 type Sort = Record<string, any>;
 
-interface Operation {
+export interface Operation {
   upsert?: BaseModel[];
   remove?: BaseModel[];
 }
