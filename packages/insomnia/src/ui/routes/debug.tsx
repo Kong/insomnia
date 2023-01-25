@@ -95,7 +95,7 @@ export const Debug: FC = () => {
     };
     fn();
   }, [activeWorkspace]);
-  const createRequestFetcher = useFetcher();
+  const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const settings = useSelector(selectSettings);
   const sidebarFilter = useSelector(selectSidebarFilter);
@@ -214,7 +214,7 @@ export const Debug: FC = () => {
             submitName: 'Create',
             label: 'Name',
             selectText: true,
-            onComplete: name => createRequestFetcher.submit({ parentId, name },
+            onComplete: name => requestFetcher.submit({ parentId, name },
               {
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
                 method: 'post',

@@ -8,14 +8,14 @@ import { Pane, PaneBody, PaneHeader } from './pane';
 
 export const PlaceholderRequestPane: FC = () => {
   const { hotKeyRegistry } = useSelector(selectSettings);
-  const createRequestFetcher = useFetcher();
+  const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const createHttpRequest = useCallback(() =>
-    createRequestFetcher.submit({ requestType: 'HTTP', parentId: workspaceId },
+    requestFetcher.submit({ requestType: 'HTTP', parentId: workspaceId },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
         method: 'post',
-      }), [createRequestFetcher, organizationId, projectId, workspaceId]);
+      }), [requestFetcher, organizationId, projectId, workspaceId]);
 
   return (
     <Pane type="request">

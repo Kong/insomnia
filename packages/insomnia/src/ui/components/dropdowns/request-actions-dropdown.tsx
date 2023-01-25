@@ -46,7 +46,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
-  const createRequestFetcher = useFetcher();
+  const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
   const onOpen = useCallback(async () => {
@@ -116,13 +116,13 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: name => createRequestFetcher.submit({ name },
+      onComplete: name => requestFetcher.submit({ name },
         {
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
           method: 'post',
         }),
     });
-  }, [createRequestFetcher, organizationId, projectId, request._id, request.name, workspaceId]);
+  }, [requestFetcher, organizationId, projectId, request._id, request.name, workspaceId]);
 
   const togglePin = useCallback(() => {
     updateRequestMetaByParentId(request._id, { pinned: !isPinned });
@@ -130,12 +130,12 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
   const deleteRequest = useCallback(() => {
     incrementDeletedRequests();
-    createRequestFetcher.submit({ id: request._id },
+    requestFetcher.submit({ id: request._id },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
         method: 'post',
       });
-  }, [createRequestFetcher, organizationId, projectId, request._id, workspaceId]);
+  }, [requestFetcher, organizationId, projectId, request._id, workspaceId]);
 
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);

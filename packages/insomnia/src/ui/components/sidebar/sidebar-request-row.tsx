@@ -66,7 +66,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   request,
   requestGroup,
 }, ref) => {
-  const createRequestFetcher = useFetcher();
+  const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const { handleRender } = useNunjucks();
   const activeProject = useSelector(selectActiveProject);
@@ -90,13 +90,13 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       submitName: 'Create',
       label: 'New Name',
       selectText: true,
-      onComplete: (name: string) => createRequestFetcher.submit({ name },
+      onComplete: (name: string) => requestFetcher.submit({ name },
         {
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request?._id}/duplicate`,
           method: 'post',
         }),
     });
-  }, [createRequestFetcher, organizationId, projectId, request, workspaceId]);
+  }, [requestFetcher, organizationId, projectId, request, workspaceId]);
 
   const nodeRef = useRef<HTMLLIElement>(null);
   useImperativeHandle(ref, () => ({
@@ -123,25 +123,25 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       return;
     }
 
-    createRequestFetcher.submit({ name },
+    requestFetcher.submit({ name },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
         method: 'post',
       });
     setIsEditing(false);
-  }, [createRequestFetcher, organizationId, projectId, request, workspaceId]);
+  }, [requestFetcher, organizationId, projectId, request, workspaceId]);
 
   const handleRequestCreateFromEmpty = useCallback(() => {
     if (!requestGroup?._id) {
       return;
     }
 
-    createRequestFetcher.submit({ requestType: 'HTTP', parentId: requestGroup._id },
+    requestFetcher.submit({ requestType: 'HTTP', parentId: requestGroup._id },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
         method: 'post',
       });
-  }, [requestGroup?._id, createRequestFetcher, organizationId, projectId, workspaceId]);
+  }, [requestGroup?._id, requestFetcher, organizationId, projectId, workspaceId]);
 
   const handleShowRequestSettings = useCallback(() => {
     request && showModal(RequestSettingsModal, { request });

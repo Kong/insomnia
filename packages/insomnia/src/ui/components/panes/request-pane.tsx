@@ -206,10 +206,10 @@ export const RequestPane: FC<Props> = ({
   workspace,
   setLoading,
 }) => {
-  const createRequestFetcher = useFetcher();
+  const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const updateRequestUrl = (url: string) =>
-    createRequestFetcher.submit({ url },
+    requestFetcher.submit({ url },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
         method: 'post',

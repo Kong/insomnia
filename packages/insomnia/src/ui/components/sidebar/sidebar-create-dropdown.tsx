@@ -9,14 +9,14 @@ import { showPrompt } from '../modals';
 
 export const SidebarCreateDropdown = () => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
-  const createRequestFetcher = useFetcher();
+  const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const create = useCallback((value: CreateRequestType) =>
-    createRequestFetcher.submit({ requestType:value, parentId: workspaceId  },
+    requestFetcher.submit({ requestType:value, parentId: workspaceId  },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
         method: 'post',
-      }), [createRequestFetcher, organizationId, projectId, workspaceId]);
+      }), [requestFetcher, organizationId, projectId, workspaceId]);
 
   const createGroup = useCallback(() => {
     showPrompt({
@@ -25,13 +25,13 @@ export const SidebarCreateDropdown = () => {
       submitName: 'Create',
       label: 'Name',
       selectText: true,
-      onComplete: name => createRequestFetcher.submit({ parentId: workspaceId, name },
+      onComplete: name => requestFetcher.submit({ parentId: workspaceId, name },
         {
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
           method: 'post',
         }),
     });
-  }, [createRequestFetcher, organizationId, projectId, workspaceId]);
+  }, [requestFetcher, organizationId, projectId, workspaceId]);
   const dataTestId = 'SidebarCreateDropdown';
   return (
     <Dropdown
