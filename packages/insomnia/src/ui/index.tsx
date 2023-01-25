@@ -159,16 +159,30 @@ const router = createMemoryRouter(
                                   action: async (...args) => (await import('./routes/request')).createRequestAction(...args),
                                 },
                                 {
-                                  path: 'request/new-folder',
-                                  action: async (...args) => (await import('./routes/request')).createRequestGroupAction(...args),
-                                },
-                                {
                                   path: 'request/delete',
                                   action: async (...args) => (await import('./routes/request')).deleteRequestAction(...args),
                                 },
                                 {
-                                  path: 'request/delete-folder',
-                                  action: async (...args) => (await import('./routes/request')).deleteRequestGroupAction(...args),
+                                  path: 'request-group/new',
+                                  action: async (...args) => (await import('./routes/request-group')).createRequestGroupAction(...args),
+                                },
+                                {
+                                  path: 'request-group/delete',
+                                  action: async (...args) => (await import('./routes/request-group')).deleteRequestGroupAction(...args),
+                                },
+                                {
+                                  path: 'request-group/update',
+                                  action: async (...args) => (await import('./routes/request-group')).updateRequestGroupAction(...args),
+                                },
+                                {
+                                  path: 'request-group/:requestGroupId',
+                                  id: 'request-group/:requestGroupId',
+                                  children: [
+                                    {
+                                      path: 'update',
+                                      action: async (...args) => (await import('./routes/request-group')).updateRequestGroupAction(...args),
+                                    },
+                                  ],
                                 },
                               ],
                             },

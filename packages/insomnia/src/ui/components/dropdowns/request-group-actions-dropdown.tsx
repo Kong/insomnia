@@ -1,5 +1,6 @@
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
@@ -37,17 +38,16 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
 
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceId = activeWorkspace?._id;
+  const createRequestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
-  const create = useCallback((requestType: CreateRequestType) => {
-    if (activeWorkspaceId) {
-      createRequest({
-        parentId: requestGroup._id,
-        requestType, workspaceId: activeWorkspaceId,
-      });
-    }
-  }, [activeWorkspaceId, requestGroup._id]);
+  const create = useCallback((requestType: CreateRequestType) =>
+    createRequestFetcher.submit({ requestType, parentId: requestGroup?._id || '' },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+        method: 'post',
+      }),
+  [createRequestFetcher, organizationId, projectId, requestGroup?._id, workspaceId]);
 
   useImperativeHandle(ref, () => ({
     show: () => {
@@ -76,9 +76,18 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
     });
   }, [requestGroup]);
 
-  const createGroup = useCallback(() => {
-    createRequestGroup(requestGroup._id);
-  }, [requestGroup._id]);
+  const createGroup = useCallback(() => showPrompt({
+    title: 'New Folder',
+    defaultValue: 'My Folder',
+    submitName: 'Create',
+    label: 'Name',
+    selectText: true,
+    onComplete: async name => createRequestFetcher.submit({ parentId: requestGroup._id, name },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+        method: 'post',
+      }),
+  }), [createRequestFetcher, organizationId, projectId, requestGroup._id, workspaceId]);
 
   const handleRename = useCallback(() => {
     showPrompt({
@@ -87,16 +96,22 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: name => {
-        requestOperations.update(requestGroup, { name });
-      },
+      onComplete: name => createRequestFetcher.submit({ name },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${requestGroup._id}/update`,
+          method: 'post',
+        }),
     });
-  }, [requestGroup]);
+  }, [createRequestFetcher, organizationId, projectId, requestGroup._id, requestGroup.name, workspaceId]);
 
   const handleDeleteFolder = useCallback(async () => {
-    await models.stats.incrementDeletedRequestsForDescendents(requestGroup);
-    models.requestGroup.remove(requestGroup);
-  }, [requestGroup]);
+    models.stats.incrementDeletedRequestsForDescendents(requestGroup);
+    createRequestFetcher.submit({ id: requestGroup._id },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/delete`,
+        method: 'post',
+      });
+  }, [createRequestFetcher, organizationId, projectId, requestGroup, workspaceId]);
 
   const handlePluginClick = useCallback(async ({ label, plugin, action }: RequestGroupAction) => {
     setLoadingActions({ ...loadingActions, [label]: true });

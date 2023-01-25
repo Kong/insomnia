@@ -26,14 +26,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<Request | WebS
   }
   return req;
 };
-export const createRequestGroupAction: ActionFunction = async ({ request, params }) => {
-  const { workspaceId } = params;
-  const formData = await request.formData();
-  const name = formData.get('name') as string;
-  const parentId = formData.get('parentId') as string;
-  const requestGroup = await models.requestGroup.create({ parentId: parentId || workspaceId, name });
-  models.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: false });
-};
+
 export const createRequestAction: ActionFunction = async ({ request, params }) => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
@@ -111,6 +104,7 @@ export const updateHackRequestAction: ActionFunction = async ({ request, params 
     requestOperations.update(req, { metadata: JSON.parse(metadata) as GrpcRequestHeader[] });
   }
 };
+
 export const updateRequestAction: ActionFunction = async ({ request, params }) => {
   const { requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
@@ -150,15 +144,6 @@ export const deleteRequestAction: ActionFunction = async ({ request }) => {
   invariant(req, 'Request not found');
   models.stats.incrementDeletedRequests();
   requestOperations.remove(req);
-};
-
-export const deleteRequestGroupAction: ActionFunction = async ({ request }) => {
-  const formData = await request.formData();
-  const id = formData.get('id') as string;
-  const requestGroup = await models.requestGroup.getById(id);
-  invariant(requestGroup, 'Request not found');
-  models.stats.incrementDeletedRequestsForDescendents(requestGroup);
-  models.requestGroup.remove(requestGroup);
 };
 
 export const duplicateRequestAction: ActionFunction = async ({ request, params }) => {
