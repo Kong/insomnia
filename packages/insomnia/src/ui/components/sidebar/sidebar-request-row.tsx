@@ -2,20 +2,18 @@ import classnames from 'classnames';
 import React, { FC, forwardRef, MouseEvent, ReactElement, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
 import { useSelector } from 'react-redux';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
-import { stats, workspaceMeta } from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import { isRequest, Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
+import { invariant } from '../../../utils/invariant';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspaceMeta } from '../../redux/selectors';
+import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
 import type { DropdownHandle } from '../base/dropdown';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
@@ -73,21 +71,13 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   const { handleRender } = useNunjucks();
   const activeProject = useSelector(selectActiveProject);
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const [dragDirection, setDragDirection] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
   const handleSetActiveRequest = useCallback(() => {
-    if (!request || isActive) {
-      return;
-    }
-
-    if (activeWorkspaceMeta) {
-      workspaceMeta.update(activeWorkspaceMeta, {
-        activeRequestId: request._id,
-      });
-    }
-    updateRequestMetaByParentId(request._id, { lastActive: Date.now() });
-  }, [activeWorkspaceMeta, isActive, request]);
+    invariant(request, 'Request is required');
+    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}`);
+  }, [navigate, organizationId, projectId, request, workspaceId]);
 
   const handleDuplicateRequest = useCallback(() => {
     if (!request) {
@@ -100,20 +90,13 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       submitName: 'Create',
       label: 'New Name',
       selectText: true,
-      onComplete: async (name: string) => {
-        const newRequest = await requestOperations.duplicate(request, {
-          name,
-        });
-        if (activeWorkspaceMeta) {
-          await workspaceMeta.update(activeWorkspaceMeta, {
-            activeRequestId: newRequest._id,
-          });
-        }
-        await updateRequestMetaByParentId(newRequest._id, { lastActive: Date.now() });
-        stats.incrementCreatedRequests();
-      },
+      onComplete: (name: string) => createRequestFetcher.submit({ name },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request?._id}/duplicate`,
+          method: 'post',
+        }),
     });
-  }, [activeWorkspaceMeta, request]);
+  }, [createRequestFetcher, organizationId, projectId, request, workspaceId]);
 
   const nodeRef = useRef<HTMLLIElement>(null);
   useImperativeHandle(ref, () => ({
@@ -123,10 +106,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
 
   const startEditing = useCallback(() => {
     setIsEditing(true);
-  }, []);
-
-  const stopEditing = useCallback(() => {
-    setIsEditing(false);
   }, []);
 
   const [renderedUrl, setRenderedUrl] = useState('');
@@ -140,14 +119,17 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   }, [requestActionsDropdown]);
 
   const handleRequestUpdateName = useCallback((name?: string) => {
-    if (!request) {
+    if (!request || !name) {
       return;
     }
 
-    requestOperations.update(request, { name }).then(() => {
-      stopEditing();
-    });
-  }, [request, stopEditing]);
+    createRequestFetcher.submit({ name },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
+        method: 'post',
+      });
+    setIsEditing(false);
+  }, [createRequestFetcher, organizationId, projectId, request, workspaceId]);
 
   const handleRequestCreateFromEmpty = useCallback(() => {
     if (!requestGroup?._id) {
