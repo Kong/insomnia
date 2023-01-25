@@ -1,8 +1,8 @@
 import React, { forwardRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
@@ -24,6 +24,8 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
   request,
 }, ref) => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
+  const createRequestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
   const duplicate = useCallback(() => {
     handleDuplicateRequest(request);
@@ -36,11 +38,13 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: name => {
-        requestOperations.update(request, { name });
-      },
+      onComplete: name => createRequestFetcher.submit({ name },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
+          method: 'post',
+        }),
     });
-  }, [request]);
+  }, [createRequestFetcher, organizationId, projectId, request._id, request.name, workspaceId]);
 
   const togglePin = useCallback(() => {
     updateRequestMetaByParentId(request._id, { pinned: !isPinned });
@@ -48,8 +52,12 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
 
   const deleteRequest = useCallback(() => {
     incrementDeletedRequests();
-    requestOperations.remove(request);
-  }, [request]);
+    createRequestFetcher.submit({ id: request._id },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
+        method: 'post',
+      });
+  }, [createRequestFetcher, organizationId, projectId, request._id, workspaceId]);
 
   return (
     <Dropdown
