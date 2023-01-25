@@ -134,6 +134,43 @@ const router = createMemoryRouter(
                                   <Debug />
                                 </Suspense>
                               ),
+                              children: [
+                                {
+                                  path: 'request/:requestId',
+                                  id: 'request/:requestId',
+                                  loader: async (...args) => (await import('./routes/request')).loader(...args),
+                                  children: [
+                                    {
+                                      path: 'duplicate',
+                                      action: async (...args) => (await import('./routes/request')).duplicateRequestAction(...args),
+                                    },
+                                    {
+                                      path: 'update',
+                                      action: async (...args) => (await import('./routes/request')).updateRequestAction(...args),
+                                    },
+                                    {
+                                      path: 'update-hack',
+                                      action: async (...args) => (await import('./routes/request')).updateHackRequestAction(...args),
+                                    },
+                                  ],
+                                },
+                                {
+                                  path: 'request/new',
+                                  action: async (...args) => (await import('./routes/request')).createRequestAction(...args),
+                                },
+                                {
+                                  path: 'request/new-folder',
+                                  action: async (...args) => (await import('./routes/request')).createRequestGroupAction(...args),
+                                },
+                                {
+                                  path: 'request/delete',
+                                  action: async (...args) => (await import('./routes/request')).deleteRequestAction(...args),
+                                },
+                                {
+                                  path: 'request/delete-folder',
+                                  action: async (...args) => (await import('./routes/request')).deleteRequestGroupAction(...args),
+                                },
+                              ],
                             },
                             {
                               path: `${ACTIVITY_SPEC}`,
