@@ -40,7 +40,7 @@ const StyledDropdownButton = styled(DropdownButton)({
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;
-  onUrlChange: (r: Request, url: string) => Promise<Request>;
+  onUrlChange: (url: string) => void;
   request: Request;
   uniquenessKey: string;
   setLoading: (l: boolean) => void;
@@ -329,7 +329,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     const pastedText = lastPastedTextRef.current;
     // If no pasted text in the queue, just fire the regular change handler
     if (!pastedText) {
-      onUrlChange(request, url);
+      onUrlChange(url);
       return;
     }
     // Reset pasted text cache
@@ -338,9 +338,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     const importedRequest = await handleImport(pastedText);
     // Update depending on whether something was imported
     if (!importedRequest) {
-      onUrlChange(request, url);
+      onUrlChange(url);
     }
-  }, [handleImport, onUrlChange, request]);
+  }, [handleImport, onUrlChange]);
 
   const handleUrlPaste = useCallback((event: ClipboardEvent) => {
     // NOTE: We're not actually doing the import here to avoid races with onChange

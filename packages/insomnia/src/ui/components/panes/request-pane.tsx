@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_POST } from '../../../common/constants';
@@ -205,13 +206,14 @@ export const RequestPane: FC<Props> = ({
   workspace,
   setLoading,
 }) => {
-
-  const updateRequestUrl = (request: Request, url: string) => {
-    if (request.url === url) {
-      return Promise.resolve(request);
-    }
-    return update(request, { url });
-  };
+  const createRequestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const updateRequestUrl = (url: string) =>
+    createRequestFetcher.submit({ url },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+        method: 'post',
+      });
 
   const handleEditDescription = useCallback((forceEditMode: boolean) => {
     request && showModal(RequestSettingsModal, { request, forceEditMode });
