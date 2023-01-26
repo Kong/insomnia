@@ -55,6 +55,7 @@ const verticalStyles = {
 };
 
 const LayoutGrid = styled.div<{orientation: 'vertical' | 'horizontal'}>(props => ({
+  gridArea: 'Content',
   backgroundColor: 'var(--color-bg)',
   boxSizing: 'border-box',
   color: 'var(--color-font)',
@@ -350,7 +351,7 @@ export const SidebarLayout: FC<Props> = ({
   const realSidebarWidth = activeWorkspaceMeta?.sidebarHidden ? 0 : sidebarWidth;
   const gridRows = renderPaneTwo
     ? `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
-    : '1fr';
+    : '100%';
   const gridColumns =
     `auto ${realSidebarWidth}rem 0 ` +
     `${renderPaneTwo ? `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)` : '1fr'}`;
