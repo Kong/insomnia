@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
@@ -36,19 +37,18 @@ const SendMessageForm = styled.form({
   position: 'relative',
   boxSizing: 'border-box',
 });
-const SendButton = styled.button<{ isConnected: boolean }>(({ isConnected }) =>
-  ({
-    padding: '0 var(--padding-md)',
-    marginLeft: 'var(--padding-xs)',
-    height: '100%',
-    border: '1px solid var(--hl-lg)',
-    borderRadius: 'var(--radius-md)',
-    background: isConnected ? 'var(--color-surprise)' : 'inherit',
-    color: isConnected ? 'var(--color-font-surprise)' : 'inherit',
-    ':hover': {
-      filter: 'brightness(0.8)',
-    },
-  }));
+const SendButton = styled.button<{ isConnected: boolean }>(({ isConnected }) => ({
+  padding: '0 var(--padding-md)',
+  marginLeft: 'var(--padding-xs)',
+  height: '100%',
+  border: '1px solid var(--hl-lg)',
+  borderRadius: 'var(--radius-md)',
+  background: isConnected ? 'var(--color-surprise)' : 'inherit',
+  color: isConnected ? 'var(--color-font-surprise)' : 'inherit',
+  ':hover': {
+    filter: 'brightness(0.8)',
+  },
+}));
 
 const PaneSendButton = styled.div({
   display: 'flex',
@@ -201,16 +201,14 @@ interface Props {
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environment }) => {
+export const WebSocketRequestPane: FC<Props> = ({ request, environment }) => {
   const readyState = useWSReadyState(request._id);
   const { useBulkParametersEditor } = useSelector(selectSettings);
 
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
-  const handleOnChange = (url: string) => {
-    if (url !== request.url) {
-      models.webSocketRequest.update(request, { url });
-    }
-  };
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+
   const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
 
   useEffect(() => {
@@ -271,7 +269,11 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           environmentId={environment?._id || ''}
           defaultValue={request.url}
           readyState={readyState}
-          onChange={handleOnChange}
+          onChange={url => requestFetcher.submit({ url },
+            {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
+              method: 'post',
+            })}
         />
       </PaneHeader>
       <Tabs aria-label="Websocket request pane tabs">
