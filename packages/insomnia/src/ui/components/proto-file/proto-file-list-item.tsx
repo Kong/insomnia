@@ -1,11 +1,9 @@
 import React, { FunctionComponent, useCallback } from 'react';
 
 import type { ProtoFile } from '../../../models/proto-file';
-import { Editable } from '../base/editable';
 import { AsyncButton, Button } from '../themed-button';
 import type {
   DeleteProtoFileHandler,
-  RenameProtoFileHandler,
   SelectProtoFileHandler,
   UpdateProtoFileHandler,
 } from './proto-file-list';
@@ -17,7 +15,6 @@ interface Props {
   handleSelect: SelectProtoFileHandler;
   indentLevel: number;
   handleDelete: DeleteProtoFileHandler;
-  handleRename: RenameProtoFileHandler;
   handleUpdate: UpdateProtoFileHandler;
 }
 
@@ -28,7 +25,6 @@ export const ProtoFileListItem: FunctionComponent<Props> = ({
   isSelected,
   handleSelect,
   handleDelete,
-  handleRename,
   handleUpdate,
   indentLevel,
 }) => {
@@ -42,12 +38,7 @@ export const ProtoFileListItem: FunctionComponent<Props> = ({
     },
     [handleDelete, protoFile],
   );
-  const handleRenameCallback = useCallback(
-    async (newName?: string) => {
-      await handleRename(protoFile, newName);
-    },
-    [handleRename, protoFile],
-  );
+
   const handleUpdateCallback = useCallback(
     async (event: React.SyntheticEvent<HTMLButtonElement>) => {
       event.stopPropagation();
@@ -73,7 +64,7 @@ export const ProtoFileListItem: FunctionComponent<Props> = ({
         <>
           <span className="wide">
             <i className="fa fa-file-o pad-right-sm" />
-            <Editable className="wide" onSubmit={handleRenameCallback} value={name} preventBlank />
+            {name}
           </span>
           <div className="row">
             <AsyncButton

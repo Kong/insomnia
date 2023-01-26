@@ -278,6 +278,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       {isProtoModalOpen && <ProtoFilesModal
         reloadRequests={reloadRequests}
         defaultId={activeRequest.protoFileId}
+        onHide={() => setIsProtoModalOpen(false)}
         onSave={async (protoFileId: string) => {
           if (activeRequest.protoFileId !== protoFileId) {
             await models.grpcRequest.update(activeRequest, {
@@ -288,6 +289,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               protoMethodName: '',
             });
             setGrpcState({ ...grpcState, reloadMethods: true });
+            setIsProtoModalOpen(false);
           }
         }}
       />}
