@@ -132,9 +132,11 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
       body: initial.body,
       protoMethodName: initial.protoMethodName,
     });
-    // dispatch(grpcActions.invalidate(request._id));
   }
-
+  const text = formData.get('text') as string | null;
+  if (text !== null) {
+    requestOperations.update(req, { body: { text } });
+  }
 };
 
 export const deleteRequestAction: ActionFunction = async ({ request }) => {

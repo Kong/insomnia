@@ -237,9 +237,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   tabNamePrefix="Stream"
                   messages={requestMessages}
                   bodyText={activeRequest.body.text}
-                  handleBodyChange={value => models.grpcRequest.update(activeRequest, {
-                    body: { ...activeRequest.body, text: value },
-                  })}
+                  handleBodyChange={text => requestFetcher.submit({ text },
+                    {
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}/update`,
+                      method: 'post',
+                    })}
                   showActions={running && canClientStream(methodType)}
                   handleStream={async () => {
                     const requestBody = await getRenderedGrpcRequestMessage({
@@ -297,13 +299,11 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         onHide={() => setIsProtoModalOpen(false)}
         onSave={async (protoFileId: string) => {
           if (activeRequest.protoFileId !== protoFileId) {
-            await models.grpcRequest.update(activeRequest, {
-              protoFileId,
-              body: {
-                text: '{}',
-              },
-              protoMethodName: '',
-            });
+            requestFetcher.submit({ protoFileId },
+              {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}/update`,
+                method: 'post',
+              });
             setGrpcState({ ...grpcState, reloadMethods: true });
             setIsProtoModalOpen(false);
           }
