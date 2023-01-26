@@ -59,7 +59,6 @@ export interface GrpcRequestState {
   status?: StatusObject;
   error?: ServiceError;
   methods: GrpcMethodInfo[];
-  reloadMethods: boolean;
 }
 const INITIAL_GRPC_REQUEST_STATE = {
   running: false,
@@ -68,7 +67,6 @@ const INITIAL_GRPC_REQUEST_STATE = {
   status: undefined,
   error: undefined,
   methods: [],
-  reloadMethods: true,
 };
 export const Debug: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
@@ -111,7 +109,7 @@ export const Debug: FC = () => {
   const grpcState = grpcStates.find(s => s.requestId === activeRequest?._id);
   const setGrpcState = (newState:GrpcRequestState) => setGrpcStates(state => state.map(s => s.requestId === activeRequest?._id ? newState : s));
   const reloadRequests = (requestIds:string[]) => {
-    setGrpcStates(state => state.map(s => requestIds.includes(s.requestId) ? { ...s, reloadMethods: true } : s));
+    setGrpcStates(state => state.map(s => requestIds.includes(s.requestId) ? { ...s, methods: [] } : s));
   };
   useEffect(() => window.main.on('grpc.start', (_, id) => {
     setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, running: true } : s));
