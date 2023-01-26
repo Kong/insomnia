@@ -39,8 +39,6 @@ import { WebSocketResponsePane } from '../components/websockets/websocket-respon
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import {
   selectActiveEnvironment,
-  selectActiveWorkspace,
-  selectActiveWorkspaceMeta,
   selectSettings,
 } from '../redux/selectors';
 import { selectSidebarFilter } from '../redux/sidebar-selectors';
@@ -71,7 +69,8 @@ export const Debug: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useRouteLoaderData('request/:requestId') as Request | GrpcRequest | WebSocketRequest | null;
 
-  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>([]);
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
@@ -85,19 +84,17 @@ export const Debug: FC = () => {
   }, []);
   useEffect(() => {
     const fn = async () => {
-      if (activeWorkspace) {
+      if (workspaceId) {
+        const activeWorkspace = await models.workspace.getById(workspaceId);
         const children = await db.withDescendants(activeWorkspace);
         const grpcRequests = children.filter(d => isGrpcRequest(d));
         setGrpcStates(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
       }
     };
     fn();
-  }, [activeWorkspace]);
-  const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  }, [workspaceId]);
   const settings = useSelector(selectSettings);
   const sidebarFilter = useSelector(selectSidebarFilter);
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const [runningRequests, setRunningRequests] = useState({});
   const setLoading = (isLoading: boolean) => {
     invariant(requestId, 'No active request');
@@ -175,8 +172,9 @@ export const Debug: FC = () => {
               const newRequest = await requestOperations.duplicate(activeRequest, {
                 name,
               });
-              if (activeWorkspaceMeta) {
-                await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: newRequest._id });
+              const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+              if (workspaceMeta) {
+                await models.workspaceMeta.update(workspaceMeta, { activeRequestId: newRequest._id });
               }
               await updateRequestMetaByParentId(newRequest._id, {
                 lastActive: Date.now(),
@@ -188,14 +186,15 @@ export const Debug: FC = () => {
       },
     request_createHTTP:
       async () => {
-        if (activeWorkspace) {
-          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+        if (workspaceId) {
+          const parentId = activeRequest ? activeRequest.parentId : workspaceId;
           const request = await models.request.create({
             parentId,
             name: 'New Request',
           });
-          if (activeWorkspaceMeta) {
-            await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
+          const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+          if (workspaceMeta) {
+            await models.workspaceMeta.update(workspaceMeta, { activeRequestId: request._id });
           }
           await updateRequestMetaByParentId(request._id, {
             lastActive: Date.now(),
@@ -206,8 +205,8 @@ export const Debug: FC = () => {
       },
     request_showCreateFolder:
       () => {
-        if (activeWorkspace) {
-          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+        if (workspaceId) {
+          const parentId = activeRequest ? activeRequest.parentId : workspaceId;
           showPrompt({
             title: 'New Folder',
             defaultValue: 'My Folder',
@@ -256,11 +255,11 @@ export const Debug: FC = () => {
 
   return (
     <SidebarLayout
-      renderPageSidebar={activeWorkspace ? <Fragment>
+      renderPageSidebar={workspaceId ? <Fragment>
         <div className="sidebar__menu">
           <EnvironmentsDropdown
             activeEnvironment={activeEnvironment}
-            workspaceId={activeWorkspace._id}
+            workspaceId={workspaceId}
           />
           <button className="btn btn--super-compact" onClick={showCookiesModal}>
             <div className="sidebar__menu__thing">
@@ -270,7 +269,7 @@ export const Debug: FC = () => {
         </div>
 
         <SidebarFilter
-          key={`${activeWorkspace._id}::filter`}
+          key={`${workspaceId}::filter`}
           filter={sidebarFilter || ''}
         />
 
@@ -279,7 +278,7 @@ export const Debug: FC = () => {
         />
       </Fragment>
         : null}
-      renderPaneOne={activeWorkspace ?
+      renderPaneOne={workspaceId ?
         <ErrorBoundary showAlert>
           {isGrpcRequestId(requestId) && grpcState && (
             <GrpcRequestPane
@@ -292,7 +291,6 @@ export const Debug: FC = () => {
           {isRequestId(requestId) && (<RequestPane
             environmentId={activeEnvironment ? activeEnvironment._id : ''}
             settings={settings}
-            workspace={activeWorkspace}
             setLoading={setLoading}
           />)}
           {!requestId && <PlaceholderRequestPane />}

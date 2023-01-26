@@ -11,7 +11,7 @@ import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspa
 import { update } from '../../../models/helpers/request-operations';
 import { Request, RequestBody } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
-import { create, Workspace } from '../../../models/workspace';
+import { create } from '../../../models/workspace';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveEnvironment, selectActiveRequestMeta } from '../../redux/selectors';
@@ -62,7 +62,6 @@ const TabPanelBody = styled.div({
 interface Props {
   environmentId: string;
   settings: Settings;
-  workspace: Workspace;
   setLoading: (l: boolean) => void;
 }
 export function newBodyGraphQL(rawBody: string): RequestBody {
@@ -201,7 +200,6 @@ export function updateMimeType(
 export const RequestPane: FC<Props> = ({
   environmentId,
   settings,
-  workspace,
   setLoading,
 }) => {
   const request = useRouteLoaderData('request/:requestId') as Request;
@@ -271,7 +269,7 @@ export const RequestPane: FC<Props> = ({
   useEffect(() => {
     requestUrlBarRef.current?.focusInput();
   }, [
-    request?._id, // happens when the user switches requests
+    requestId, // happens when the user switches requests
     settings.hasPromptedAnalytics, // happens when the user dismisses the analytics modal
     uniqueKey,
   ]);
@@ -287,7 +285,7 @@ export const RequestPane: FC<Props> = ({
       console.warn('Tried to update request mime-type when no active request');
       return null;
     }
-    const requestMeta = await models.requestMeta.getOrCreateByParentId(request._id,);
+    const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
     // Switched to No body
     const savedRequestBody = typeof mimeType !== 'string' ? request.body : {};
     // Clear saved value in requestMeta
@@ -304,11 +302,11 @@ export const RequestPane: FC<Props> = ({
       <PaneHeader>
         <ErrorBoundary errorClassName="font-error pad text-center">
           <RequestUrlBar
-            key={request._id}
+            key={requestId}
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
             onUrlChange={updateRequestUrl}
-            handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspace._id, models.request.type, request?._id)}
+            handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             request={request}
             setLoading={setLoading}
@@ -320,7 +318,7 @@ export const RequestPane: FC<Props> = ({
           <BodyEditor
             key={uniqueKey}
             request={request}
-            workspace={workspace}
+            workspaceId={workspaceId}
             environmentId={environmentId}
           />
         </TabItem>
