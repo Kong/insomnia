@@ -178,6 +178,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
             icon="copy"
             label="Copy as cURL"
             onClick={copyAsCurl}
+            withPrompt
           />
         )}
       </DropdownItem>
