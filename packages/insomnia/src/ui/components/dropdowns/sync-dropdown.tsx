@@ -506,7 +506,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               <DropdownItem
                 key={branch}
                 aria-label={branch}
-                title={isCurrentBranch ? '' : `Switch to "${branch}"`}
               >
                 <ItemContent
                   icon={currentBranch ? 'tag' : 'empty'}

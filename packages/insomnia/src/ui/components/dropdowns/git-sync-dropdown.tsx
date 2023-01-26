@@ -221,7 +221,6 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
               return (
                 <DropdownItem
                   key={branch}
-                  title={isCurrentBranch ? '' : `Switch to "${branch}"`}
                 >
                   <ItemContent
                     className={classnames({ bold: isCurrentBranch })}
