@@ -23,6 +23,7 @@ import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
+import { ErrorModal } from '../modals/error-modal';
 import { ProtoFilesModal } from '../modals/proto-files-modal';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { SvgIcon } from '../svg-icon';
@@ -197,8 +198,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     url: request.url,
                     metadata: request.metadata,
                   }, renderContext);
-                  const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
-                  setGrpcState({ ...grpcState, methods, reloadMethods: false });
+                  try {
+                    const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
+                    setGrpcState({ ...grpcState, methods, reloadMethods: false });
+                  } catch (error) {
+                    showModal(ErrorModal, { error });
+                  }
                 }}
               >
                 <Tooltip message="Click to use server reflection" position="bottom" delay={500}>
