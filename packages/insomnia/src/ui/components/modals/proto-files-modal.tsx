@@ -62,6 +62,12 @@ const isProtofileValid = (filePath: string) => {
   }
 };
 
+const traverseDirectory = (dir: ProtoDirectory, files: ProtoFile[], directories: ProtoDirectory[]): ExpandedProtoDirectory => ({
+  dir,
+  files: files.filter(pf => pf.parentId === dir._id),
+  subDirs: directories.filter(pd => pd.parentId === dir._id).map(subDir => traverseDirectory(subDir, files, directories)),
+});
+
 const getProtoDirectories = async (workspaceId: string) => {
   const allFiles = await models.protoFile.all();
   const allDirs = await models.protoDirectory.all();
@@ -84,21 +90,6 @@ const getProtoDirectories = async (workspaceId: string) => {
   }
 
   return expandedDirs;
-};
-const traverseDirectory = (
-  dir: ProtoDirectory,
-  allFiles: ProtoFile[],
-  allDirs: ProtoDirectory[],
-): ExpandedProtoDirectory => {
-  const filesInDir = allFiles.filter(pf => pf.parentId === dir._id);
-  const subDirs = allDirs.filter(pd => pd.parentId === dir._id);
-  // Expand sub directories
-  const expandedSubDirs = subDirs.map(subDir => traverseDirectory(subDir, allFiles, allDirs));
-  return {
-    dir,
-    files: filesInDir,
-    subDirs: expandedSubDirs,
-  };
 };
 
 export interface Props {
