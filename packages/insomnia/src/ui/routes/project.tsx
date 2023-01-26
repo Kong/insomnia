@@ -285,8 +285,7 @@ const OrganizationProjectsSidebar: FC<{
   return (
     <Sidebar
       style={{
-        height: '100%',
-        alignSelf: 'stretch',
+        height: '100vh',
       }}
     >
       <SidebarTitle>
