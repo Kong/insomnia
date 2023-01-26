@@ -27,45 +27,54 @@ interface Props {
 }
 
 const recursiveRender = (
-  { dir, files, subDirs }: ExpandedProtoDirectory,
-  props: Props,
   indent: number,
-): React.ReactNode => {
-  const {
-    handleDelete,
-    handleDeleteDirectory,
-    handleSelect,
-    handleUpdate,
-    selectedId,
-  } = props;
-  const dirNode = dir && (
-    <ProtoDirectoryListItem
-      key={dir.name}
-      dir={dir}
-      indentLevel={indent++}
-      handleDeleteDirectory={handleDeleteDirectory}
-    />
-  );
-  const fileNodes = files.map(f => (
+  { dir, files, subDirs }: ExpandedProtoDirectory,
+  handleSelect: SelectProtoFileHandler,
+  handleUpdate: UpdateProtoFileHandler,
+  handleDelete: DeleteProtoFileHandler,
+  handleDeleteDirectory: DeleteProtoDirectoryHandler,
+  selectedId?: string,
+): React.ReactNode => ([
+  dir && (<ProtoDirectoryListItem
+    key={dir.name}
+    dir={dir}
+    indentLevel={indent++}
+    handleDeleteDirectory={handleDeleteDirectory}
+  />),
+  ...files.map(f => (
     <ProtoFileListItem
       key={f._id}
       protoFile={f}
       isSelected={f._id === selectedId}
       handleSelect={handleSelect}
-      handleDelete={handleDelete}
       handleUpdate={handleUpdate}
+      handleDelete={handleDelete}
       indentLevel={indent}
     />
-  ));
-  const subDirNodes = subDirs.map(sd => recursiveRender(sd, props, indent));
-  return [dirNode, ...fileNodes, ...subDirNodes];
-};
+  )),
+  ...subDirs.map(sd => recursiveRender(
+    indent,
+    sd,
+    handleSelect,
+    handleUpdate,
+    handleDelete,
+    handleDeleteDirectory,
+    selectedId,
+  ))]);
 
 export const ProtoFileList: FunctionComponent<Props> = props => (
   <ListGroup bordered>
     {!props.protoDirectories.length && (
       <ListGroupItem>No proto files exist for this workspace</ListGroupItem>
     )}
-    {props.protoDirectories.map(dir => recursiveRender(dir, props, 0))}
+    {props.protoDirectories.map(dir => recursiveRender(
+      0,
+      dir,
+      props.handleSelect,
+      props.handleUpdate,
+      props.handleDelete,
+      props.handleDeleteDirectory,
+      props.selectedId
+    ))}
   </ListGroup>
 );
