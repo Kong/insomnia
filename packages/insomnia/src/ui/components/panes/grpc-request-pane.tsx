@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useFetcher, useParams } from 'react-router-dom';
-import { useAsync } from 'react-use';
+import { useMount } from 'react-use';
 import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
@@ -76,20 +76,15 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   reloadRequests,
 }) => {
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
-  const { requestMessages, running, reloadMethods, methods } = grpcState;
-  useAsync(async () => {
-    // don't actually reload until the request has stopped running or if methods do not need to be reloaded
-    if (!reloadMethods || running) {
-      return;
-    }
-
+  const { requestMessages, running, methods } = grpcState;
+  useMount(async () => {
     if (!activeRequest.protoFileId) {
       return;
     }
     console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
     const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
-    setGrpcState({ ...grpcState, methods, reloadMethods: false });
-  }, [reloadMethods, running, setGrpcState, grpcState, activeRequest.protoFileId]);
+    setGrpcState({ ...grpcState, methods });
+  });
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
