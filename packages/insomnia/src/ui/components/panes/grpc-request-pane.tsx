@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useMount } from 'react-use';
 import styled from 'styled-components';
 
@@ -33,8 +33,6 @@ import { GrpcTabbedMessages } from '../viewers/grpc-tabbed-messages';
 import { EmptyStatePane } from './empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from './pane';
 interface Props {
-  activeRequest: GrpcRequest;
-  workspaceId: string;
   grpcState: GrpcRequestState;
   setGrpcState: (states: GrpcRequestState) => void;
   reloadRequests: (requestIds: string[]) => void;
@@ -70,11 +68,11 @@ export const GrpcMethodTypeName = {
 } as const;
 
 export const GrpcRequestPane: FunctionComponent<Props> = ({
-  activeRequest,
   grpcState,
   setGrpcState,
   reloadRequests,
 }) => {
+  const activeRequest = useRouteLoaderData('request/:requestId') as GrpcRequest;
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
   const { requestMessages, running, methods } = grpcState;
   useMount(async () => {

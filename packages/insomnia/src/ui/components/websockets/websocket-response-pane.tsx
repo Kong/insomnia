@@ -1,6 +1,7 @@
 import fs from 'fs';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -82,36 +83,31 @@ const PaddedButton = styled('button')({
   padding: 'var(--padding-sm)',
 });
 
-export const WebSocketResponsePane: FC<{ requestId: string }> =
-  ({
-    requestId,
-  }) => {
-    const response = useSelector(selectActiveResponse) as WebSocketResponse | null;
-    if (!response) {
-      return (
-        <Pane type="response">
-          <PaneHeader />
-          <EmptyStatePane
-            icon={<i className="fa fa-paper-plane" />}
-            documentationLinks={[
-              {
-                title: 'Introduction to WebSockets in Insomnia',
-                url: 'https://docs.insomnia.rest/insomnia/requests',
-              },
-            ]}
-            title="Enter a URL and connect to a WebSocket server to start sending data"
-            secondaryAction="Select a payload type to send data to the connection"
-          />
-        </Pane>
-      );
-    }
-    return <WebSocketActiveResponsePane requestId={requestId} response={response} />;
-  };
+export const WebSocketResponsePane = () => {
+  const response = useSelector(selectActiveResponse) as WebSocketResponse | null;
+  if (!response) {
+    return (
+      <Pane type="response">
+        <PaneHeader />
+        <EmptyStatePane
+          icon={<i className="fa fa-paper-plane" />}
+          documentationLinks={[
+            {
+              title: 'Introduction to WebSockets in Insomnia',
+              url: 'https://docs.insomnia.rest/insomnia/requests',
+            },
+          ]}
+          title="Enter a URL and connect to a WebSocket server to start sending data"
+          secondaryAction="Select a payload type to send data to the connection"
+        />
+      </Pane>
+    );
+  }
+  return <WebSocketActiveResponsePane response={response} />;
+};
 
-const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketResponse }> = ({
-  requestId,
-  response,
-}) => {
+const WebSocketActiveResponsePane: FC<{response: WebSocketResponse }> = ({ response }) => {
+  const { requestId } = useParams() as { requestId: string };
   const [selectedEvent, setSelectedEvent] = useState<WebSocketEvent | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
 

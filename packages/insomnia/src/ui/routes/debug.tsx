@@ -7,12 +7,12 @@ import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
-import { isGrpcRequest } from '../../models/grpc-request';
+import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isRequest, Request } from '../../models/request';
+import { isRequest, isRequestId, Request } from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
-import { isWebSocketRequest } from '../../models/websocket-request';
+import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
@@ -69,7 +69,7 @@ const INITIAL_GRPC_REQUEST_STATE = {
 };
 export const Debug: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request | GrpcRequest | WebSocketRequest | null;
 
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>([]);
@@ -94,22 +94,22 @@ export const Debug: FC = () => {
     fn();
   }, [activeWorkspace]);
   const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const settings = useSelector(selectSettings);
   const sidebarFilter = useSelector(selectSidebarFilter);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const [runningRequests, setRunningRequests] = useState({});
   const setLoading = (isLoading: boolean) => {
-    invariant(activeRequest, 'No active request');
+    invariant(requestId, 'No active request');
     setRunningRequests({
       ...runningRequests,
-      [activeRequest._id]: isLoading ? true : false,
+      [requestId]: isLoading ? true : false,
     });
   };
 
-  const grpcState = grpcStates.find(s => s.requestId === activeRequest?._id);
-  const setGrpcState = (newState:GrpcRequestState) => setGrpcStates(state => state.map(s => s.requestId === activeRequest?._id ? newState : s));
-  const reloadRequests = (requestIds:string[]) => {
+  const grpcState = grpcStates.find(s => s.requestId === requestId);
+  const setGrpcState = (newState: GrpcRequestState) => setGrpcStates(state => state.map(s => s.requestId === requestId ? newState : s));
+  const reloadRequests = (requestIds: string[]) => {
     setGrpcStates(state => state.map(s => requestIds.includes(s.requestId) ? { ...s, methods: [] } : s));
   };
   useEffect(() => window.main.on('grpc.start', (_, id) => {
@@ -119,11 +119,13 @@ export const Debug: FC = () => {
     setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, running: false } : s));
   }), []);
   useEffect(() => window.main.on('grpc.data', (_, id, value) => {
-    setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, responseMessages: [...s.responseMessages, {
-      id: generateId(),
-      text: JSON.stringify(value),
-      created: Date.now(),
-    }] } : s));
+    setGrpcStates(state => state.map(s => s.requestId === id ? {
+      ...s, responseMessages: [...s.responseMessages, {
+        id: generateId(),
+        text: JSON.stringify(value),
+        created: Date.now(),
+      }],
+    } : s));
   }), []);
   useEffect(() => window.main.on('grpc.error', (_, id, error) => {
     setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, error } : s));
@@ -134,14 +136,14 @@ export const Debug: FC = () => {
   useDocBodyKeyboardShortcuts({
     request_togglePin:
       async () => {
-        if (activeRequest) {
-          const meta = isGrpcRequest(activeRequest) ? await getGrpcRequestMetaByParentId(activeRequest._id) : await getRequestMetaByParentId(activeRequest._id);
-          updateRequestMetaByParentId(activeRequest._id, { pinned: !meta?.pinned });
+        if (requestId) {
+          const meta = isGrpcRequestId(requestId) ? await getGrpcRequestMetaByParentId(requestId) : await getRequestMetaByParentId(requestId);
+          updateRequestMetaByParentId(requestId, { pinned: !meta?.pinned });
         }
       },
     request_showSettings:
       () => {
-        if (activeRequest && isRequest(activeRequest)) {
+        if (activeRequest) {
           showModal(RequestSettingsModal, { request: activeRequest });
         }
       },
@@ -279,38 +281,31 @@ export const Debug: FC = () => {
         : null}
       renderPaneOne={activeWorkspace ?
         <ErrorBoundary showAlert>
-          {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+          {isGrpcRequestId(requestId) && grpcState && (
             <GrpcRequestPane
-              activeRequest={activeRequest}
-              workspaceId={activeWorkspace._id}
               grpcState={grpcState}
               setGrpcState={setGrpcState}
               reloadRequests={reloadRequests}
             />)}
-          {activeRequest && isWebSocketRequest(activeRequest) && (
-            <WebSocketRequestPane
-              request={activeRequest}
-              workspaceId={activeWorkspace._id}
-              environment={activeEnvironment}
-            />)}
-          {activeRequest && isRequest(activeRequest) && (<RequestPane
+          {isWebSocketRequestId(requestId) && (
+            <WebSocketRequestPane environment={activeEnvironment} />)}
+          {isRequestId(requestId) && (<RequestPane
             environmentId={activeEnvironment ? activeEnvironment._id : ''}
-            request={activeRequest}
             settings={settings}
             workspace={activeWorkspace}
             setLoading={setLoading}
           />)}
-          {!activeRequest && <PlaceholderRequestPane />}
+          {!requestId && <PlaceholderRequestPane />}
         </ErrorBoundary>
         : null}
       renderPaneTwo={
         <ErrorBoundary showAlert>
-          {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
-            <GrpcResponsePane activeRequest={activeRequest} grpcState={grpcState} />)}
-          {activeRequest && isWebSocketRequest(activeRequest) && (
-            <WebSocketResponsePane requestId={activeRequest._id} />)}
-          {activeRequest && isRequest(activeRequest) && (
-            <ResponsePane request={activeRequest} runningRequests={runningRequests} />)}
+          {isGrpcRequestId(requestId) && grpcState && (
+            <GrpcResponsePane grpcState={grpcState} />)}
+          {isWebSocketRequestId(requestId) && (
+            <WebSocketResponsePane />)}
+          {isRequestId(requestId) && (
+            <ResponsePane runningRequests={runningRequests} />)}
         </ErrorBoundary>}
     />
   );

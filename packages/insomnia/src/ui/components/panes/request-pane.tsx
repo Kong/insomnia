@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_POST } from '../../../common/constants';
@@ -61,7 +61,6 @@ const TabPanelBody = styled.div({
 
 interface Props {
   environmentId: string;
-  request?: Request | null;
   settings: Settings;
   workspace: Workspace;
   setLoading: (l: boolean) => void;
@@ -201,11 +200,11 @@ export function updateMimeType(
 }
 export const RequestPane: FC<Props> = ({
   environmentId,
-  request,
   settings,
   workspace,
   setLoading,
 }) => {
+  const request = useRouteLoaderData('request/:requestId') as Request;
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const updateRequestUrl = (url: string) =>
