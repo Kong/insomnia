@@ -141,7 +141,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   useDocBodyKeyboardShortcuts({
     request_send: handleRequestSend,
   });
-
+  console.log(activeRequest);
   return (
     <>
       <Pane type="request">
@@ -270,9 +270,14 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       valuePlaceholder="value"
                       descriptionPlaceholder="description"
                       pairs={activeRequest.metadata}
+                      isDisabled={running}
                       handleGetAutocompleteNameConstants={getCommonHeaderNames}
                       handleGetAutocompleteValueConstants={getCommonHeaderValues}
-                      onChange={(metadata: GrpcRequestHeader[]) => models.grpcRequest.update(activeRequest, { metadata })}
+                      onChange={(metadata: GrpcRequestHeader[]) => requestFetcher.submit({ metadata: JSON.stringify(metadata) },
+                        {
+                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}/update-hack`,
+                          method: 'post',
+                        })}
                     />
                   </ErrorBoundary>
                 </PanelContainer>

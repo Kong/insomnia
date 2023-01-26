@@ -2,7 +2,7 @@ import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
 import { CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import * as models from '../../models';
-import { GrpcRequest, GrpcRequestBody, GrpcRequestHeader, isGrpcRequestId } from '../../models/grpc-request';
+import { GrpcRequest, GrpcRequestBody, GrpcRequestHeader, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { Request, RequestAuthentication, RequestBody, RequestHeader } from '../../models/request';
 import { WebSocketRequest } from '../../models/websocket-request';
@@ -120,22 +120,24 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
   if (url !== null) {
     requestOperations.update(req, { url });
   }
-  const protoMethodName = formData.get('protoMethodName') as string | null;
-  if (protoMethodName !== null) {
-    requestOperations.update(req, { protoMethodName });
-  }
-  const protoFileId = formData.get('protoFileId') as string | null;
-  if (protoFileId !== null) {
-    const initial = models.grpcRequest.init();
-    requestOperations.update(req, {
-      protoFileId,
-      body: initial.body,
-      protoMethodName: initial.protoMethodName,
-    });
-  }
-  const text = formData.get('text') as string | null;
-  if (text !== null) {
-    requestOperations.update(req, { body: { text } });
+  if (isGrpcRequest(req)) {
+    const protoMethodName = formData.get('protoMethodName') as string | null;
+    if (protoMethodName !== null) {
+      models.grpcRequest.update(req, { protoMethodName });
+    }
+    const protoFileId = formData.get('protoFileId') as string | null;
+    if (protoFileId !== null) {
+      const initial = models.grpcRequest.init();
+      models.grpcRequest.update(req, {
+        protoFileId,
+        body: initial.body,
+        protoMethodName: initial.protoMethodName,
+      });
+    }
+    const text = formData.get('text') as string | null;
+    if (text !== null) {
+      models.grpcRequest.update(req, { body: { text } });
+    }
   }
 };
 
