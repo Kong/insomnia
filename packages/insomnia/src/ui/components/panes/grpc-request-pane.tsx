@@ -141,7 +141,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   useDocBodyKeyboardShortcuts({
     request_send: handleRequestSend,
   });
-  console.log(activeRequest);
   return (
     <>
       <Pane type="request">
@@ -187,9 +186,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 data-testid="button-server-reflection"
                 disabled={!activeRequest.url}
                 onClick={async () => {
-                  const renderContext = await getRenderContext({ request: activeRequest, environmentId, purpose: RENDER_PURPOSE_SEND });
-                  const rendered = await render({ url: activeRequest.url, metadata: activeRequest.metadata }, renderContext);
                   try {
+                    const renderContext = await getRenderContext({ request: activeRequest, environmentId, purpose: RENDER_PURPOSE_SEND });
+                    const rendered = await render({ url: activeRequest.url, metadata: activeRequest.metadata }, renderContext);
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
                     setGrpcState({ ...grpcState, methods });
                     requestFetcher.submit({ protoMethodName: '', protoFileId: '' },
