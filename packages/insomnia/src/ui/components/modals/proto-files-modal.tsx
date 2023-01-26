@@ -2,22 +2,20 @@ import * as protoLoader from '@grpc/proto-loader';
 import fs from 'fs';
 import path from 'path';
 import React, { FC, useEffect, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
-import { database as db } from '../../../common/database';
+import { ChangeBufferEvent, database as db } from '../../../common/database';
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';
 import * as models from '../../../models';
-import { ProtoDirectory } from '../../../models/proto-directory';
+import { isProtoDirectory, ProtoDirectory } from '../../../models/proto-directory';
 import { type ProtoFile, isProtoFile } from '../../../models/proto-file';
 import { ProtoDirectoryLoader } from '../../../network/grpc/proto-directory-loader';
 import { writeProtoFile } from '../../../network/grpc/write-proto-file';
-import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
 import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import { ProtoFileList } from '../proto-file/proto-file-list';
+import { ExpandedProtoDirectory, ProtoFileList } from '../proto-file/proto-file-list';
 import { AsyncButton } from '../themed-button';
 import { showAlert, showError } from '.';
 const tryToSelectFilePath = async () => {
@@ -44,7 +42,7 @@ const tryToSelectFolderPath = async () => {
   }
   return;
 };
-const isProtofileValid = (filePath:string) => {
+const isProtofileValid = (filePath: string) => {
   try {
     protoLoader.load(filePath, {
       keepCase: true,
@@ -64,6 +62,45 @@ const isProtofileValid = (filePath:string) => {
   }
 };
 
+const getProtoDirectories = async (workspaceId: string) => {
+  const allFiles = await models.protoFile.all();
+  const allDirs = await models.protoDirectory.all();
+
+  // Get directories where the parent is the workspace
+  const rootDirs = await models.protoDirectory.findByParentId(workspaceId);
+  // Expand each directory
+  const expandedDirs = rootDirs.map(dir => traverseDirectory(dir, allFiles, allDirs));
+  // Get files where the parent is the workspace
+  const individualFiles = await models.protoFile.findByParentId(workspaceId);
+  if (individualFiles.length) {
+    return [
+      {
+        files: individualFiles,
+        dir: null,
+        subDirs: [],
+      },
+      ...expandedDirs,
+    ];
+  }
+
+  return expandedDirs;
+};
+const traverseDirectory = (
+  dir: ProtoDirectory,
+  allFiles: ProtoFile[],
+  allDirs: ProtoDirectory[],
+): ExpandedProtoDirectory => {
+  const filesInDir = allFiles.filter(pf => pf.parentId === dir._id);
+  const subDirs = allDirs.filter(pd => pd.parentId === dir._id);
+  // Expand sub directories
+  const expandedSubDirs = subDirs.map(subDir => traverseDirectory(subDir, allFiles, allDirs));
+  return {
+    dir,
+    files: filesInDir,
+    subDirs: expandedSubDirs,
+  };
+};
+
 export interface Props {
   defaultId?: string;
   onSave?: (arg0: string) => Promise<void>;
@@ -76,12 +113,27 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave, reloadRe
   const { workspaceId } = useParams() as { workspaceId: string };
 
   const [selectedId, setSelectedId] = useState(defaultId);
+  const [protoDirectories, setProtoDirectories] = useState<ExpandedProtoDirectory[]>([]);
+
+  useEffect(() => modalRef.current?.show(), []);
 
   useEffect(() => {
-    modalRef.current?.show();
-  }, []);
+    const fn = async () => {
+      setProtoDirectories(await getProtoDirectories(workspaceId));
+    };
+    fn();
+  }, [workspaceId]);
 
-  const protoDirectories = useSelector(selectExpandedActiveProtoDirectories);
+  useEffect(() => {
+    db.onChange(async (changes: ChangeBufferEvent[]) => {
+      for (const change of changes) {
+        const [, doc] = change;
+        if (isProtoFile(doc) || isProtoDirectory(doc)) {
+          setProtoDirectories(await getProtoDirectories(workspaceId));
+        }
+      }
+    });
+  }, [workspaceId]);
 
   const handleAddDirectory = async () => {
     let rollback = false;
@@ -128,7 +180,8 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave, reloadRe
             enums: String,
             defaults: true,
             oneofs: true,
-            includeDirs: dirs });
+            includeDirs: dirs,
+          });
         } catch (error) {
           showError({
             title: 'Invalid Proto File',

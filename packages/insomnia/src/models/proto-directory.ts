@@ -52,6 +52,10 @@ export function getByParentId(parentId: string) {
   return db.getWhere<ProtoDirectory>(type, { parentId });
 }
 
+export function findByParentId(parentId: string) {
+  return db.find<ProtoDirectory>(type, { parentId });
+}
+
 export function remove(obj: ProtoDirectory) {
   return db.remove(obj);
 }

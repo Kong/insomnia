@@ -2,7 +2,6 @@ import React, { FunctionComponent } from 'react';
 
 import { ProtoDirectory } from '../../../models/proto-directory';
 import type { ProtoFile } from '../../../models/proto-file';
-import type { ExpandedProtoDirectory } from '../../redux/proto-selectors';
 import { ListGroup, ListGroupItem } from '../list-group';
 import { ProtoDirectoryListItem } from './proto-directory-list-item';
 import { ProtoFileListItem } from './proto-file-list-item';
@@ -13,6 +12,11 @@ export type DeleteProtoDirectoryHandler = (protoDirectory: ProtoDirectory) => vo
 export type UpdateProtoFileHandler = (protofile: ProtoFile) => Promise<void>;
 export type RenameProtoFileHandler = (protoFile: ProtoFile, name?: string) => Promise<void>;
 
+export interface ExpandedProtoDirectory {
+  files: ProtoFile[];
+  dir: ProtoDirectory | null;
+  subDirs: ExpandedProtoDirectory[];
+}
 interface Props {
   protoDirectories: ExpandedProtoDirectory[];
   selectedId?: string;
