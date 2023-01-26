@@ -2,6 +2,7 @@ import React, { FC, Fragment, useCallback, useRef, useState } from 'react';
 import {
   AriaButtonProps,
   AriaGridListItemOptions,
+  AriaGridListOptions,
   mergeProps,
   useButton,
   useFocusRing,
@@ -1117,7 +1118,7 @@ const ListContent = styled.ul({
 });
 
 const List = <T extends object>(
-  props: ListProps<T> & AriaGridListItemOptions
+  props: ListProps<T> & AriaGridListOptions<T>
 ) => {
   const state = useListState(props);
   const ref = useRef(null);
