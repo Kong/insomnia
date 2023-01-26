@@ -302,6 +302,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             setGrpcState({ ...grpcState, reloadMethods: true });
             setIsProtoModalOpen(false);
           }
+          setIsProtoModalOpen(false);
         }}
       />}
     </>
