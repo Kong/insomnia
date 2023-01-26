@@ -235,6 +235,21 @@ const Sidebar = styled.div({
   flexDirection: 'column',
 });
 
+const SidebarDivider = styled.span({
+  width: '100%',
+  borderTop: '1px solid var(--hl-md)',
+  paddingBottom: 'var(--padding-md)',
+});
+
+const SearchFormContainer = styled.div({
+  padding: 'var(--padding-xs)',
+  paddingTop: 0,
+});
+
+const ProjectListContainer = styled.ul({
+  flex: 1,
+});
+
 const OrganizationProjectsSidebar: FC<{
   title: string;
   projects: Project[];
@@ -365,12 +380,7 @@ const OrganizationProjectsSidebar: FC<{
         </Button>
       </SidebarSection>
       {isSearchOpen && shouldShowSearch && (
-        <div
-          style={{
-            padding: 'var(--padding-xs)',
-            paddingTop: 0,
-          }}
-        >
+        <SearchFormContainer>
           <SearchFormControl className="form-control form-control--outlined no-margin">
             <SearchInput
               autoFocus
@@ -390,12 +400,9 @@ const OrganizationProjectsSidebar: FC<{
               className="no-margin"
             />
           </SearchFormControl>
-        </div>
+        </SearchFormContainer>
       )}
-      <ul
-        style={{
-          flex: 1,
-        }}
+      <ProjectListContainer
         className="sidebar__list sidebar__list-root theme--sidebar__list"
       >
         {projects.map(proj => {
@@ -449,20 +456,11 @@ const OrganizationProjectsSidebar: FC<{
             </li>
           );
         })}
-      </ul>
-      <span
-        style={{
-          width: '100%',
-          borderTop: '1px solid var(--hl-md)',
-          paddingBottom: 'var(--padding-md)',
-        }}
-      />
+      </ProjectListContainer>
 
-      <div
-        style={{
-          flex: 1,
-        }}
-      >
+      <SidebarDivider />
+
+      <ProjectListContainer>
         <List
           selectionMode="single"
           selectionBehavior="toggle"
@@ -476,26 +474,18 @@ const OrganizationProjectsSidebar: FC<{
         >
           <Item key="" aria-label="All Files">
             <SidebarListItemContent level={1}>
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 'var(--padding-sm)',
-                }}
-              >
-                <i className="fa fa-folder" /> All Files ({allFilesCount})
-              </div>
+              <SidebarListItemTitle
+                icon="folder"
+                label={`All Files (${allFilesCount})`}
+              />
             </SidebarListItemContent>
           </Item>
           <Item key="design" aria-label="Documents">
             <SidebarListItemContent level={2}>
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 'var(--padding-sm)',
-                }}
-              >
-                <i className="fa fa-file" /> Documents ({documentsCount})
-              </div>
+              <SidebarListItemTitle
+                icon="file"
+                label={`Documents (${documentsCount})`}
+              />
               <ListItemButton
                 onPress={() => {
                   createNewDocument();
@@ -507,14 +497,10 @@ const OrganizationProjectsSidebar: FC<{
           </Item>
           <Item key="collection" aria-label="Collections">
             <SidebarListItemContent level={2}>
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 'var(--padding-sm)',
-                }}
-              >
-                <i className="fa fa-bars" /> Collections ({collectionsCount})
-              </div>
+              <SidebarListItemTitle
+                icon="bars"
+                label={`Collections (${collectionsCount})`}
+              />
               <ListItemButton
                 onPress={() => {
                   createNewCollection();
@@ -525,15 +511,10 @@ const OrganizationProjectsSidebar: FC<{
             </SidebarListItemContent>
           </Item>
         </List>
-      </div>
+      </ProjectListContainer>
 
-      <span
-        style={{
-          width: '100%',
-          borderTop: '1px solid var(--hl-md)',
-          paddingBottom: 'var(--padding-md)',
-        }}
-      />
+      <SidebarDivider />
+
       <List
         onAction={key => {
           clickLink(key);
@@ -544,14 +525,10 @@ const OrganizationProjectsSidebar: FC<{
           aria-label="Help and Feedback"
         >
           <SidebarListItemContent level={1}>
-            <div
-              style={{
-                display: 'flex',
-                gap: 'var(--padding-sm)',
-              }}
-            >
-              <i className="fa fa-arrow-up-right-from-square" /> Explore Subscriptions
-            </div>
+            <SidebarListItemTitle
+              icon="arrow-up-right-from-square"
+              label="Explore Subscriptions"
+            />
           </SidebarListItemContent>
         </Item>
       </List>
@@ -597,6 +574,24 @@ const SidebarListItemContent = styled.div<{
   boxSizing: 'border-box',
   position: 'relative',
 }));
+
+const StyledSidebarListItemTitle = styled.div({
+  display: 'flex',
+  gap: 'var(--padding-sm)',
+});
+
+interface SidebarListItemTitleProps {
+  icon: string;
+  label: string;
+}
+
+const SidebarListItemTitle = ({ icon, label }: SidebarListItemTitleProps) => {
+  return (
+    <StyledSidebarListItemTitle>
+      <i className={`fa fa-${icon}`} /> {label}
+    </StyledSidebarListItemTitle>
+  );
+};
 
 interface WorkspaceWithMetadata {
   hasUnsavedChanges: boolean;
