@@ -58,7 +58,6 @@ export interface GrpcRequestState {
   status?: StatusObject;
   error?: ServiceError;
   methods: GrpcMethodInfo[];
-  reloadMethods: boolean;
 }
 const INITIAL_GRPC_REQUEST_STATE = {
   running: false,
@@ -67,7 +66,6 @@ const INITIAL_GRPC_REQUEST_STATE = {
   status: undefined,
   error: undefined,
   methods: [],
-  reloadMethods: true,
 };
 export const Debug: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);

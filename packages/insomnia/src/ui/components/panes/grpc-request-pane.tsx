@@ -187,15 +187,16 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 data-testid="button-server-reflection"
                 disabled={!activeRequest.url}
                 onClick={async () => {
-                  const request = await models.grpcRequest.update(activeRequest, { protoMethodName: '', protoFileId: '' });
-                  const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-                  const rendered = await render({
-                    url: request.url,
-                    metadata: request.metadata,
-                  }, renderContext);
+                  const renderContext = await getRenderContext({ request: activeRequest, environmentId, purpose: RENDER_PURPOSE_SEND });
+                  const rendered = await render({ url: activeRequest.url, metadata: activeRequest.metadata }, renderContext);
                   try {
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
-                    setGrpcState({ ...grpcState, methods, reloadMethods: false });
+                    setGrpcState({ ...grpcState, methods });
+                    requestFetcher.submit({ protoMethodName: '', protoFileId: '' },
+                      {
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}/update`,
+                        method: 'post',
+                      });
                   } catch (error) {
                     showModal(ErrorModal, { error });
                   }
@@ -299,7 +300,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}/update`,
                 method: 'post',
               });
-            setGrpcState({ ...grpcState, reloadMethods: true });
+            const methods = await window.main.grpc.loadMethods(protoFileId);
+            setGrpcState({ ...grpcState, methods });
             setIsProtoModalOpen(false);
           }
           setIsProtoModalOpen(false);
