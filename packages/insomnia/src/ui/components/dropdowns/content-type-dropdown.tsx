@@ -15,7 +15,6 @@ import {
   getContentTypeName,
 } from '../../../common/constants';
 import { Request } from '../../../models/request';
-import { isWebSocketRequest } from '../../../models/websocket-request';
 import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { AlertModal } from '../modals/alert-modal';
@@ -28,15 +27,9 @@ interface Props {
 const EMPTY_MIME_TYPE = null;
 
 export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
-  const request = useRouteLoaderData('request/:requestId') as Request;
-
-  const activeRequest = request && !isWebSocketRequest(request) ? request : null;
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
 
   const handleChangeMimeType = useCallback(async (mimeType: string | null) => {
-    if (!activeRequest) {
-      return;
-    }
-
     const { body } = activeRequest;
     const hasMimeType = 'mimeType' in body;
     if (hasMimeType && body.mimeType === mimeType) {
@@ -71,9 +64,6 @@ export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
     trackSegmentEvent(SegmentEvent.requestBodyTypeSelect, { type: mimeType });
   }, [onChange, activeRequest]);
 
-  if (!activeRequest) {
-    return null;
-  }
   const { body } = activeRequest;
   const hasMimeType = 'mimeType' in body;
   const hasParams = body && 'params' in body && body.params;

@@ -147,7 +147,6 @@ export const ResponsePane: FC<Props> = ({
           </div>
           <ResponseHistoryDropdown
             activeResponse={response}
-            requestId={request._id}
             className="tall pane__header__right"
           />
         </PaneHeader>

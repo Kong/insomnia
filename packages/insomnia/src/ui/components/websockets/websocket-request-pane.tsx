@@ -201,20 +201,20 @@ interface Props {
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   const request = useRouteLoaderData('request/:requestId') as WebSocketRequest;
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
 
-  const readyState = useWSReadyState(request._id);
+  const readyState = useWSReadyState(requestId);
   const { useBulkParametersEditor } = useSelector(selectSettings);
 
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
-  const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
   const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
 
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      const payload = await models.webSocketPayload.getByParentId(request._id);
+      const payload = await models.webSocketPayload.getByParentId(requestId);
       if (isMounted && payload) {
         setPreviewMode(payload.mode);
       }
@@ -223,7 +223,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
     return () => {
       isMounted = false;
     };
-  }, [request._id]);
+  }, [requestId]);
 
   const changeMode = (mode: string) => {
     setPreviewMode(mode);
@@ -232,12 +232,12 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
 
   const upsertPayloadWithMode = async (mode: string) => {
     // @TODO: multiple payloads
-    const payload = await models.webSocketPayload.getByParentId(request._id);
+    const payload = await models.webSocketPayload.getByParentId(requestId);
     if (payload) {
       await models.webSocketPayload.update(payload, { mode });
     } else {
       await models.webSocketPayload.create({
-        parentId: request._id,
+        parentId: requestId,
         value: '',
         mode,
       });
@@ -257,7 +257,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   const activeRequestMeta = useSelector(selectActiveRequestMeta);
 
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${environment?.modified}::${request?._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
+  const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
 
   return (
     <Pane type="request">
@@ -271,7 +271,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           readyState={readyState}
           onChange={url => requestFetcher.submit({ url },
             {
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
               method: 'post',
             })}
         />

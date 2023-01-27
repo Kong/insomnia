@@ -30,10 +30,6 @@ import { OAuth2Auth } from './o-auth-2-auth';
 export const AuthWrapper: FC<{ disabled?: boolean }> = ({ disabled = false }) => {
   const request = useRouteLoaderData('request/:requestId') as Request;
 
-  if (!request || !('authentication' in request)) {
-    return null;
-  }
-
   const { authentication: { type } } = request;
 
   let authBody: ReactNode = null;

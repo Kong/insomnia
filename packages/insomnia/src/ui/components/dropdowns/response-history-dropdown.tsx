@@ -1,11 +1,10 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
-import { Request } from '../../../models/request';
 import { Response } from '../../../models/response';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
@@ -21,18 +20,16 @@ import { TimeFromNow } from '../time-from-now';
 interface Props<GenericResponse extends Response | WebSocketResponse> {
   activeResponse: GenericResponse;
   className?: string;
-  requestId: string;
 }
 
 export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSocketResponse>({
   activeResponse,
   className,
-  requestId,
 }: Props<GenericResponse>) => {
+  const { requestId } = useParams() as { requestId: string };
   const dropdownRef = useRef<DropdownHandle>(null);
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const responses = useSelector(selectActiveRequestResponses) as GenericResponse[];
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
   const requestVersions = useSelector(selectRequestVersions);
   const now = new Date();
   const categories: Record<string, GenericResponse[]> = {
@@ -63,10 +60,8 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     } else {
       await models.response.removeForRequest(requestId, environmentId);
     }
-    if (activeRequest && activeRequest._id === requestId) {
-      await updateRequestMetaByParentId(requestId, { activeResponseId: null });
-    }
-  }, [activeEnvironment, activeRequest, activeResponse, requestId]);
+    await updateRequestMetaByParentId(requestId, { activeResponseId: null });
+  }, [activeEnvironment, activeResponse, requestId]);
 
   const handleDeleteResponse = useCallback(async () => {
     let response: Response | WebSocketResponse | null = null;

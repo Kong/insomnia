@@ -1,7 +1,7 @@
 import React, { FC, Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import { useSelector } from 'react-redux';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
@@ -81,7 +81,7 @@ const RecursiveSidebarRows = ({
   isInPinnedList,
   filter,
 }: RecursiveSidebarRowsProps) => {
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+  const { requestId } = useParams() as { requestId: string };
 
   return (
     <>
@@ -93,7 +93,7 @@ const RecursiveSidebarRows = ({
               <SidebarRequestGroupRow
                 key={row.doc._id}
                 filter={filter || ''}
-                isActive={hasActiveChild(row.children, activeRequest?._id)}
+                isActive={hasActiveChild(row.children, requestId)}
                 isCollapsed={row.collapsed}
                 requestGroup={row.doc}
               >
@@ -111,7 +111,7 @@ const RecursiveSidebarRows = ({
             <SidebarRequestRow
               key={row.doc._id}
               filter={isInPinnedList ? '' : filter || ''}
-              isActive={row.doc._id === activeRequest?._id}
+              isActive={row.doc._id === requestId}
               isPinned={row.pinned}
               disableDragAndDrop={isInPinnedList}
               request={row.doc}

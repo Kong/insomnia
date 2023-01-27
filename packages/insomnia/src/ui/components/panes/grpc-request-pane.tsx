@@ -87,12 +87,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
 
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const environmentId = activeEnvironment?._id || 'n/a';
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniquenessKey = `${activeEnvironment?.modified}::${activeRequest?._id}::${gitVersion}::${activeRequestSyncVersion}`;
+  const uniquenessKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}`;
   const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
   const methodType = method?.type;
   const handleRequestSend = async () => {
@@ -153,10 +153,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 placeholder="grpcb.in:9000"
                 onChange={url => requestFetcher.submit({ url },
                   {
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}/update`,
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
                     method: 'post',
                   })}
-                getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, activeRequest._id)}
+                getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)}
               />
             </StyledUrlEditor>
             <StyledDropdownWrapper>
@@ -167,7 +167,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 handleChange={protoMethodName => {
                   requestFetcher.submit({ protoMethodName },
                     {
-                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}/update`,
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
                       method: 'post',
                     });
                   setGrpcState({
@@ -191,7 +191,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     setGrpcState({ ...grpcState, methods });
                     requestFetcher.submit({ protoMethodName: '', protoFileId: '' },
                       {
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}/update`,
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
                         method: 'post',
                       });
                   } catch (error) {
@@ -216,7 +216,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             <GrpcSendButton
               running={running}
               methodType={methodType}
-              handleCancel={() => window.main.grpc.cancel(activeRequest._id)}
+              handleCancel={() => window.main.grpc.cancel(requestId)}
               handleStart={handleRequestSend}
             />
           </StyledUrlBar>
@@ -232,7 +232,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   bodyText={activeRequest.body.text}
                   handleBodyChange={text => requestFetcher.submit({ text },
                     {
-                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}/update`,
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
                       method: 'post',
                     })}
                   showActions={running && canClientStream(methodType)}
@@ -244,7 +244,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     });
                     const preparedMessage = {
                       body: requestBody,
-                      requestId: activeRequest._id,
+                      requestId,
                     };
                     window.main.grpc.sendMessage(preparedMessage);
                     setGrpcState({
@@ -256,7 +256,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     });
 
                   }}
-                  handleCommit={() => window.main.grpc.commit(activeRequest._id)}
+                  handleCommit={() => window.main.grpc.commit(requestId)}
                 />
               </TabItem>
               <TabItem key="headers" title="Headers">
@@ -272,7 +272,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       handleGetAutocompleteValueConstants={getCommonHeaderValues}
                       onChange={(metadata: GrpcRequestHeader[]) => requestFetcher.submit({ metadata: JSON.stringify(metadata) },
                         {
-                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}/update-hack`,
+                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
                           method: 'post',
                         })}
                     />
@@ -299,7 +299,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           if (activeRequest.protoFileId !== protoFileId) {
             requestFetcher.submit({ protoFileId },
               {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequest._id}/update`,
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
                 method: 'post',
               });
             const methods = await window.main.grpc.loadMethods(protoFileId);

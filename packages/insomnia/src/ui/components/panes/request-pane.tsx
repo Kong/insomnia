@@ -213,7 +213,7 @@ export const RequestPane: FC<Props> = ({
       });
 
   const handleEditDescription = useCallback((forceEditMode: boolean) => {
-    request && showModal(RequestSettingsModal, { request, forceEditMode });
+    showModal(RequestSettingsModal, { request, forceEditMode });
   }, [request]);
 
   const handleEditDescriptionAdd = useCallback(() => {
@@ -229,11 +229,6 @@ export const RequestPane: FC<Props> = ({
   }, [settings]);
 
   const handleImportQueryFromUrl = useCallback(() => {
-    if (!request) {
-      console.warn('Tried to import query when no request active');
-      return;
-    }
-
     let query;
 
     try {

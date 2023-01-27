@@ -105,7 +105,6 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
       <DropdownSection aria-label='Settings section'>
         <DropdownItem aria-label='Settings'>
           <ItemContent
-            // dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`}
             icon="wrench"
             label="Settings"
             hint={hotKeyRegistry.request_showSettings}

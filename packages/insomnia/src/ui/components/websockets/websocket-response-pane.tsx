@@ -1,7 +1,6 @@
 import fs from 'fs';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -106,8 +105,7 @@ export const WebSocketResponsePane = () => {
   return <WebSocketActiveResponsePane response={response} />;
 };
 
-const WebSocketActiveResponsePane: FC<{response: WebSocketResponse }> = ({ response }) => {
-  const { requestId } = useParams() as { requestId: string };
+const WebSocketActiveResponsePane: FC<{ response: WebSocketResponse }> = ({ response }) => {
   const [selectedEvent, setSelectedEvent] = useState<WebSocketEvent | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
 
@@ -183,7 +181,6 @@ const WebSocketActiveResponsePane: FC<{response: WebSocketResponse }> = ({ respo
         </div>
         <ResponseHistoryDropdown
           activeResponse={response}
-          requestId={requestId}
           className="tall pane__header__right"
         />
       </PaneHeader>
@@ -250,7 +247,6 @@ const WebSocketActiveResponsePane: FC<{response: WebSocketResponse }> = ({ respo
                   <EventViewWrapper>
                     <EventView
                       key={selectedEvent._id}
-                      requestId={requestId}
                       event={selectedEvent}
                     />
                   </EventViewWrapper>

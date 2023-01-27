@@ -21,14 +21,10 @@ export const PreviewModeDropdown: FC<Props> = ({
   copyToClipboard,
 }) => {
   const request = useRouteLoaderData('request/:requestId') as Request;
-
   const previewMode = useSelector(selectResponsePreviewMode);
   const response = useSelector(selectActiveResponse);
 
   const handleClick = async (previewMode: PreviewMode) => {
-    if (!request || !isRequest(request)) {
-      return;
-    }
     return models.requestMeta.updateOrCreateByParentId(request._id, { previewMode });
   };
   const handleDownloadPrettify = useCallback(() => download(true), [download]);

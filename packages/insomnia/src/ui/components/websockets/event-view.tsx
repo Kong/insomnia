@@ -2,6 +2,7 @@ import { clipboard } from 'electron';
 import fs from 'fs';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
@@ -14,7 +15,6 @@ import { WebSocketPreviewModeDropdown } from './websocket-preview-dropdown';
 
 interface Props<T extends WebSocketEvent> {
   event: T;
-  requestId: string;
 }
 
 const PreviewPane = styled.div({
@@ -37,7 +37,9 @@ const PreviewPaneContents = styled.div({
   flexGrow: 1,
 });
 
-export const MessageEventView: FC<Props<WebSocketMessageEvent>> = ({ event, requestId }) => {
+export const MessageEventView: FC<Props<WebSocketMessageEvent>> = ({ event }) => {
+  const { requestId } = useParams() as { requestId: string };
+
   // TODO: Handle non-string data.
   const raw = event.data.toString('utf-8');
 
@@ -126,10 +128,10 @@ export const MessageEventView: FC<Props<WebSocketMessageEvent>> = ({ event, requ
   );
 };
 
-export const EventView: FC<Props<WebSocketEvent>> = ({ event, ...props }) => {
+export const EventView: FC<Props<WebSocketEvent>> = ({ event }) => {
   switch (event.type) {
     case 'message':
-      return <MessageEventView event={event} {...props}/>;
+      return <MessageEventView event={event} />;
     default:
       return null;
   }
