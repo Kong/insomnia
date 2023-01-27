@@ -165,7 +165,6 @@ export const RequestPane: FC<Props> = ({
           <BodyEditor
             key={uniqueKey}
             request={request}
-            workspaceId={workspaceId}
             environmentId={environmentId}
           />
         </TabItem>
