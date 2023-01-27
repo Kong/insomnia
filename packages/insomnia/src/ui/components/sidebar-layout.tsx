@@ -55,6 +55,7 @@ const verticalStyles = {
 };
 
 const LayoutGrid = styled.div<{orientation: 'vertical' | 'horizontal'}>(props => ({
+  gridArea: 'Content',
   backgroundColor: 'var(--color-bg)',
   boxSizing: 'border-box',
   color: 'var(--color-font)',
@@ -164,7 +165,7 @@ const LayoutGrid = styled.div<{orientation: 'vertical' | 'horizontal'}>(props =>
     gridColumnEnd: 'span 1',
   },
 
-  '@media (max-width: 880px)': {
+  '@media (max-width: 1200px)': {
     ...verticalStyles,
   },
 

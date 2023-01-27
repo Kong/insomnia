@@ -1,4 +1,14 @@
-import React, { FC, Fragment, useCallback, useState } from 'react';
+import React, { FC, Fragment, useCallback, useRef, useState } from 'react';
+import {
+  AriaButtonProps,
+  AriaGridListItemOptions,
+  AriaGridListOptions,
+  mergeProps,
+  useButton,
+  useFocusRing,
+  useGridList,
+  useGridListItem,
+} from 'react-aria';
 import {
   LoaderFunction,
   redirect,
@@ -7,9 +17,16 @@ import {
   useNavigate,
   useParams,
   useRevalidator,
+  useRouteLoaderData,
   useSearchParams,
   useSubmit,
 } from 'react-router-dom';
+import {
+  Item,
+  ListProps,
+  ListState,
+  useListState,
+} from 'react-stately';
 import styled from 'styled-components';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
@@ -18,6 +35,7 @@ import {
   ACTIVITY_SPEC,
   DashboardSortOrder,
 } from '../../common/constants';
+import { clickLink } from '../../common/electron-helpers';
 import { ForceToWorkspace } from '../../common/import';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
@@ -25,11 +43,25 @@ import { strings } from '../../common/strings';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { sortProjects } from '../../models/helpers/project';
-import { DEFAULT_ORGANIZATION_ID, defaultOrganization, Organization } from '../../models/organization';
-import { isDefaultProject, isRemoteProject, Project } from '../../models/project';
+import {
+  DEFAULT_ORGANIZATION_ID,
+  defaultOrganization,
+  Organization,
+} from '../../models/organization';
+import {
+  isDefaultProject,
+  isRemoteProject,
+  Project,
+} from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../components/base/dropdown';
+import {
+  Dropdown,
+  DropdownButton,
+  DropdownItem,
+  DropdownSection,
+  ItemContent,
+} from '../components/base/dropdown';
 import { DashboardSortDropdown } from '../components/dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
@@ -40,11 +72,8 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button/button';
 import { WorkspaceCard } from '../components/workspace-card';
-import {
-  importClipBoard,
-  importFile,
-  importUri,
-} from '../import';
+import { importClipBoard, importFile, importUri } from '../import';
+import { RootLoaderData } from './root';
 
 const StyledDropdownButton = styled(DropdownButton).attrs({
   variant: 'outlined',
@@ -69,13 +98,6 @@ const SearchFormControl = styled.div({
 const SearchInput = styled.input({
   margin: '0',
   width: '15rem',
-});
-
-const PaneHeaderTitle = styled.h2({
-  margin: 0,
-  whiteSpace: 'nowrap',
-  textOverflow: 'ellipsis',
-  flex: 1,
 });
 
 const PaneHeaderToolbar = styled.div({
@@ -213,27 +235,100 @@ const Sidebar = styled.div({
   flexDirection: 'column',
 });
 
+const SidebarDivider = styled.span({
+  width: '100%',
+  borderTop: '1px solid var(--hl-md)',
+  paddingBottom: 'var(--padding-md)',
+});
+
+const SearchFormContainer = styled.div({
+  padding: 'var(--padding-xs)',
+  paddingTop: 0,
+});
+
+const ProjectListContainer = styled.ul({
+  flex: 1,
+});
+
 const OrganizationProjectsSidebar: FC<{
   title: string;
   projects: Project[];
+  workspaces: Workspace[];
   activeProject: Project;
   organizationId: string;
-}> = ({ activeProject, projects, title, organizationId }) => {
+  allFilesCount: number;
+  documentsCount: number;
+  collectionsCount: number;
+  createNewCollection: () => void;
+  createNewDocument: () => void;
+}> = ({
+  activeProject,
+  projects,
+  title,
+  organizationId,
+  collectionsCount,
+  documentsCount,
+  allFilesCount,
+  createNewCollection,
+  createNewDocument,
+}) => {
   const createNewProjectFetcher = useFetcher();
+  const { organizations } = useRouteLoaderData('root') as RootLoaderData;
   const navigate = useNavigate();
+  const submit = useSubmit();
+  const [searchParams] = useSearchParams();
+  const [isSearchOpen, setSearchOpen] = useState(false);
+
+  // Only show the search in the default organization (local data) since other organizations (remote data) only have one project
+  const shouldShowSearch = organizationId === DEFAULT_ORGANIZATION_ID;
+
   return (
     <Sidebar
       style={{
-        height: '100%',
+        gridArea: '1 / 1 / -1 / -1',
       }}
     >
       <SidebarTitle>
-        {title}
+        <Dropdown
+          placement="bottom end"
+          triggerButton={
+            <DropdownButton>
+              {title} <i className="fa fa-caret-down" />
+            </DropdownButton>
+          }
+        >
+          <DropdownSection items={organizations}>
+            {organization => (
+              <DropdownItem key={organization._id}>
+                <ItemContent
+                  label={organization.name}
+                  isSelected={organization._id === organizationId}
+                  onClick={() => {
+                    navigate(`/organization/${organization._id}`);
+                  }}
+                />
+              </DropdownItem>
+            )}
+          </DropdownSection>
+        </Dropdown>
       </SidebarTitle>
       <SidebarSection>
-        <SidebarSectionTitle>
-          Projects ({projects.length})
-        </SidebarSectionTitle>
+        <SidebarSectionTitle>Projects ({projects.length})</SidebarSectionTitle>
+        {shouldShowSearch && <Button
+          style={{
+            padding: 'var(--padding-sm)',
+            minWidth: 'auto',
+            width: 'unset',
+            flex: 0,
+          }}
+          variant="text"
+          size="small"
+          onClick={() => {
+            setSearchOpen(!isSearchOpen);
+          }}
+        >
+          <i data-testid="SearchProjectsButton" className="fa fa-search" />
+        </Button>}
         <Button
           style={{
             padding: 'var(--padding-sm)',
@@ -254,9 +349,7 @@ const OrganizationProjectsSidebar: FC<{
                       At the moment it is not possible to create more cloud
                       projects within a team in Insomnia.
                     </p>
-                    <p>
-                      🚀 This feature is coming soon!
-                    </p>
+                    <p>🚀 This feature is coming soon!</p>
                   </div>
                 ),
               });
@@ -285,14 +378,38 @@ const OrganizationProjectsSidebar: FC<{
           <i data-testid="CreateProjectButton" className="fa fa-plus" />
         </Button>
       </SidebarSection>
-      <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
+      {isSearchOpen && shouldShowSearch && (
+        <SearchFormContainer>
+          <SearchFormControl className="form-control form-control--outlined no-margin">
+            <SearchInput
+              autoFocus
+              style={{
+                padding: 'var(--padding-xs)',
+                height: 'auto',
+                fontSize: 'var(--font-size-sm)',
+              }}
+              type="text"
+              placeholder="Filter by project name"
+              onChange={event =>
+                submit({
+                  ...Object.fromEntries(searchParams.entries()),
+                  projectName: event.target.value,
+                })
+              }
+              className="no-margin"
+            />
+          </SearchFormControl>
+        </SearchFormContainer>
+      )}
+      <ProjectListContainer
+        className="sidebar__list sidebar__list-root theme--sidebar__list"
+      >
         {projects.map(proj => {
           return (
             <li key={proj._id} className="sidebar__row">
               <div
-                className={`sidebar__item sidebar__item--request ${activeProject._id === proj._id
-                  ? 'sidebar__item--active'
-                  : ''
+                className={`sidebar__item sidebar__item--request ${
+                  activeProject._id === proj._id ? 'sidebar__item--active' : ''
                 }`}
               >
                 <button
@@ -304,7 +421,10 @@ const OrganizationProjectsSidebar: FC<{
                   }}
                   onClick={() =>
                     navigate(
-                      `/organization/${organizationId}/project/${proj._id}`
+                      {
+                        pathname: `/organization/${organizationId}/project/${proj._id}`,
+                        search: searchParams.toString(),
+                      },
                     )
                   }
                   className="wide"
@@ -325,15 +445,151 @@ const OrganizationProjectsSidebar: FC<{
                       padding: '0 var(--padding-md)',
                     }}
                   >
-                    <ProjectDropdown organizationId={organizationId} project={proj} />
+                    <ProjectDropdown
+                      organizationId={organizationId}
+                      project={proj}
+                    />
                   </div>
                 )}
               </div>
             </li>
           );
         })}
-      </ul>
+      </ProjectListContainer>
+
+      <SidebarDivider />
+
+      <ProjectListContainer>
+        <List
+          selectionMode="single"
+          selectionBehavior="toggle"
+          selectedKeys={[searchParams.get('scope') || '']}
+          onSelectionChange={selection => {
+            submit({
+              ...Object.fromEntries(searchParams.entries()),
+              scope: [...selection][0].toString(),
+            });
+          }}
+        >
+          <Item key="" aria-label="All Files">
+            <SidebarListItemContent level={1}>
+              <SidebarListItemTitle
+                icon="folder"
+                label={`All Files (${allFilesCount})`}
+              />
+            </SidebarListItemContent>
+          </Item>
+          <Item key="design" aria-label="Documents">
+            <SidebarListItemContent level={2}>
+              <SidebarListItemTitle
+                icon="file"
+                label={`Documents (${documentsCount})`}
+              />
+              <ListItemButton
+                onPress={() => {
+                  createNewDocument();
+                }}
+              >
+                <i className="fa fa-plus" />
+              </ListItemButton>
+            </SidebarListItemContent>
+          </Item>
+          <Item key="collection" aria-label="Collections">
+            <SidebarListItemContent level={2}>
+              <SidebarListItemTitle
+                icon="bars"
+                label={`Collections (${collectionsCount})`}
+              />
+              <ListItemButton
+                onPress={() => {
+                  createNewCollection();
+                }}
+              >
+                <i className="fa fa-plus" />
+              </ListItemButton>
+            </SidebarListItemContent>
+          </Item>
+        </List>
+      </ProjectListContainer>
+
+      <SidebarDivider />
+
+      <List
+        onAction={key => {
+          clickLink(key);
+        }}
+      >
+        <Item
+          key="https://insomnia.rest/pricing"
+          aria-label="Help and Feedback"
+        >
+          <SidebarListItemContent level={1}>
+            <SidebarListItemTitle
+              icon="arrow-up-right-from-square"
+              label="Explore Subscriptions"
+            />
+          </SidebarListItemContent>
+        </Item>
+      </List>
     </Sidebar>
+  );
+};
+
+const ButtonWithoutHoverBackground = styled(Button)({
+  '&&:hover': {
+    backgroundColor: 'unset',
+  },
+});
+
+const ListItemButton = (
+  props: AriaButtonProps & {
+    children: React.ReactNode;
+  }
+) => {
+  const ref = useRef(null);
+  const { buttonProps } = useButton(props, ref);
+
+  return (
+    <ButtonWithoutHoverBackground
+      variant="text"
+      size="xs"
+      ref={ref}
+      {...buttonProps}
+    >
+      {props.children}
+    </ButtonWithoutHoverBackground>
+  );
+};
+
+const SidebarListItemContent = styled.div<{
+  level: number;
+}>(props => ({
+  display: 'flex',
+  width: '100%',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: 'var(--padding-sm)',
+  paddingLeft: `calc(var(--padding-md) * ${props.level || 1})`,
+  boxSizing: 'border-box',
+  position: 'relative',
+}));
+
+const StyledSidebarListItemTitle = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 'var(--padding-sm)',
+});
+
+interface SidebarListItemTitleProps {
+  icon: string;
+  label: string;
+}
+
+const SidebarListItemTitle = ({ icon, label }: SidebarListItemTitleProps) => {
+  return (
+    <StyledSidebarListItemTitle>
+      <i className={`fa fa-${icon}`} /> {label}
+    </StyledSidebarListItemTitle>
   );
 };
 
@@ -357,9 +613,13 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   invariant(organizationId, 'Organization ID is required');
 
   if (models.organization.DEFAULT_ORGANIZATION_ID === organizationId) {
-    const localProjects = (await models.project.all()).filter(proj => !isRemoteProject(proj));
+    const localProjects = (await models.project.all()).filter(
+      proj => !isRemoteProject(proj)
+    );
     if (localProjects[0]._id) {
-      return redirect(`/organization/${organizationId}/project/${localProjects[0]._id}`);
+      return redirect(
+        `/organization/${organizationId}/project/${localProjects[0]._id}`
+      );
     }
   } else {
     const projectId = organizationId;
@@ -371,6 +631,9 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
 interface LoaderData {
   workspaces: WorkspaceWithMetadata[];
+  allFilesCount: number;
+  documentsCount: number;
+  collectionsCount: number;
   activeProject: Project;
   projects: Project[];
   organization: Organization;
@@ -387,6 +650,8 @@ export const loader: LoaderFunction = async ({
 
   const sortOrder = search.get('sortOrder') || 'modified-desc';
   const filter = search.get('filter') || '';
+  const scope = search.get('scope') || '';
+  const projectName = search.get('projectName') || '';
 
   const project = await models.project.getById(projectId);
 
@@ -440,8 +705,8 @@ export const loader: LoaderFunction = async ({
 
     const hasUnsavedChanges = Boolean(
       isDesign(workspace) &&
-      workspaceMeta?.cachedGitLastCommitTime &&
-      apiSpec.modified > workspaceMeta?.cachedGitLastCommitTime
+        workspaceMeta?.cachedGitLastCommitTime &&
+        apiSpec.modified > workspaceMeta?.cachedGitLastCommitTime
     );
 
     return {
@@ -525,31 +790,54 @@ export const loader: LoaderFunction = async ({
   );
 
   const workspaces = workspacesWithMetaData
+    .filter(w => (scope ? w.workspace.scope === scope : true))
     .filter(filterWorkspace)
     .sort(sortWorkspaces);
 
   const allProjects = await models.project.all();
 
-  const organizationProjects = organizationId === DEFAULT_ORGANIZATION_ID ? allProjects.filter(proj => !isRemoteProject(proj)) : [project];
+  const organizationProjects =
+    organizationId === DEFAULT_ORGANIZATION_ID
+      ? allProjects.filter(proj => !isRemoteProject(proj))
+      : [project];
 
-  const projects = sortProjects(organizationProjects);
+  const projects = sortProjects(organizationProjects).filter(p => p.name.toLowerCase().includes(projectName.toLowerCase()));
 
   return {
-    organization: organizationId === DEFAULT_ORGANIZATION_ID ? defaultOrganization : {
-      _id: organizationId,
-      name: projects[0].name,
-    },
+    organization:
+      organizationId === DEFAULT_ORGANIZATION_ID
+        ? defaultOrganization
+        : {
+          _id: organizationId,
+          name: projects[0].name,
+        },
     workspaces,
     projects,
     activeProject: project,
+    allFilesCount: workspacesWithMetaData.length,
+    documentsCount: workspacesWithMetaData.filter(
+      w => w.workspace.scope === 'design'
+    ).length,
+    collectionsCount: workspacesWithMetaData.filter(
+      w => w.workspace.scope === 'collection'
+    ).length,
   };
 };
 
 const ProjectRoute: FC = () => {
-  const { workspaces, activeProject, projects, organization } = useLoaderData() as LoaderData;
+  const {
+    workspaces,
+    activeProject,
+    projects,
+    organization,
+    allFilesCount,
+    collectionsCount,
+    documentsCount,
+  } = useLoaderData() as LoaderData;
   const { organizationId } = useParams() as { organizationId: string };
   const [searchParams] = useSearchParams();
-  const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] = useState(false);
+  const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
+    useState(false);
 
   const fetcher = useFetcher();
   const { revalidate } = useRevalidator();
@@ -656,13 +944,18 @@ const ProjectRoute: FC = () => {
               organizationId={organizationId}
               title={organization.name}
               projects={projects}
+              workspaces={workspaces.map(w => w.workspace)}
               activeProject={activeProject}
+              allFilesCount={allFilesCount}
+              collectionsCount={collectionsCount}
+              documentsCount={documentsCount}
+              createNewCollection={createNewCollection}
+              createNewDocument={createNewDocument}
             />
           }
           renderPaneOne={
             <Pane>
               <PaneHeader>
-                <PaneHeaderTitle>All Files ({workspaces.length})</PaneHeaderTitle>
                 <PaneHeaderToolbar>
                   <SearchFormControl className="form-control form-control--outlined no-margin">
                     <SearchInput
@@ -671,8 +964,8 @@ const ProjectRoute: FC = () => {
                       placeholder="Filter..."
                       onChange={event =>
                         submit({
+                          ...Object.fromEntries(searchParams.entries()),
                           filter: event.target.value,
-                          sortOrder,
                         })
                       }
                       className="no-margin"
@@ -683,37 +976,38 @@ const ProjectRoute: FC = () => {
                     value={sortOrder}
                     onSelect={sortOrder => {
                       submit({
+                        ...Object.fromEntries(searchParams.entries()),
                         sortOrder,
-                        filter,
                       });
                     }}
                   />
                   {isRemoteProject(activeProject) && (
-                    <RemoteWorkspacesDropdown key={activeProject._id} project={activeProject} />
+                    <RemoteWorkspacesDropdown
+                      key={activeProject._id}
+                      project={activeProject}
+                    />
                   )}
                   <Dropdown
-                    aria-label='Create New Dropdown'
+                    aria-label="Create New Dropdown"
                     triggerButton={
                       <StyledDropdownButton
                         disableHoverBehavior={false}
                         removePaddings={false}
                       >
-                        <i className="fa fa-plus" /> Create <i className="fa fa-caret-down pad-left-sm" />
+                        <i className="fa fa-plus" /> Create{' '}
+                        <i className="fa fa-caret-down pad-left-sm" />
                       </StyledDropdownButton>
                     }
                   >
-                    <DropdownSection
-                      aria-label="New Section"
-                      title="New"
-                    >
-                      <DropdownItem aria-label='Request Collection'>
+                    <DropdownSection aria-label="New Section" title="New">
+                      <DropdownItem aria-label="Request Collection">
                         <ItemContent
                           icon="bars"
                           label="Request Collection"
                           onClick={createNewCollection}
                         />
                       </DropdownItem>
-                      <DropdownItem aria-label='Design Document'>
+                      <DropdownItem aria-label="Design Document">
                         <ItemContent
                           icon="file-o"
                           label="Design Document"
@@ -725,28 +1019,28 @@ const ProjectRoute: FC = () => {
                       aria-label="Import From"
                       title="Import From"
                     >
-                      <DropdownItem aria-label='File'>
+                      <DropdownItem aria-label="File">
                         <ItemContent
                           icon="plus"
                           label="File"
                           onClick={importFromFile}
                         />
                       </DropdownItem>
-                      <DropdownItem aria-label='URL'>
+                      <DropdownItem aria-label="URL">
                         <ItemContent
                           icon="link"
                           label="URL"
                           onClick={importFromURL}
                         />
                       </DropdownItem>
-                      <DropdownItem aria-label='Clipboard'>
+                      <DropdownItem aria-label="Clipboard">
                         <ItemContent
                           icon="clipboard"
                           label="Clipboard"
                           onClick={importFromClipboard}
                         />
                       </DropdownItem>
-                      <DropdownItem aria-label='Git Clone'>
+                      <DropdownItem aria-label="Git Clone">
                         <ItemContent
                           icon="code-fork"
                           label="Git Clone"
@@ -768,10 +1062,12 @@ const ProjectRoute: FC = () => {
                         activeProject={activeProject}
                         onSelect={() =>
                           navigate(
-                            `/organization/${organizationId}/project/${activeProject._id
-                            }/workspace/${workspace.workspace._id}/${workspace.workspace.scope === 'design'
-                              ? ACTIVITY_SPEC
-                              : ACTIVITY_DEBUG
+                            `/organization/${organizationId}/project/${
+                              activeProject._id
+                            }/workspace/${workspace.workspace._id}/${
+                              workspace.workspace.scope === 'design'
+                                ? ACTIVITY_SPEC
+                                : ACTIVITY_DEBUG
                             }`
                           )
                         }
@@ -800,10 +1096,89 @@ const ProjectRoute: FC = () => {
           }
         />
         {isGitRepositoryCloneModalOpen && (
-          <GitRepositoryCloneModal onHide={() => setIsGitRepositoryCloneModalOpen(false)} />
+          <GitRepositoryCloneModal
+            onHide={() => setIsGitRepositoryCloneModalOpen(false)}
+          />
         )}
       </Fragment>
     </ErrorBoundary>
+  );
+};
+
+const ListContent = styled.ul({
+  listStyle: 'none',
+  margin: 0,
+  padding: 0,
+  width: '100%',
+});
+
+const List = <T extends object>(
+  props: ListProps<T> & AriaGridListOptions<T>
+) => {
+  const state = useListState(props);
+  const ref = useRef(null);
+  const { gridProps } = useGridList(props, state, ref);
+
+  return (
+    <ListContent {...gridProps} ref={ref}>
+      {[...state.collection].map(item => (
+        <ListItem key={item.key} item={item} state={state} />
+      ))}
+    </ListContent>
+  );
+};
+
+const ListItemContent = styled.li<{
+  isSelected: boolean;
+  nestingLevel?: number;
+}>(props => ({
+  display: 'flex',
+  alignItems: 'center',
+  flexWrap: 'nowrap',
+  width: '100%',
+  outline: 'none',
+  padding: 0,
+  gap: 'var(--padding-sm)',
+  color: props.isSelected ? 'var(--color-font)' : 'var(--hl)',
+  backgroundColor: props.isSelected ? 'var(--hl-xs)' : undefined,
+  boxSizing: 'border-box',
+  '&:hover': {
+    backgroundColor: 'var(--hl-xs)',
+  },
+}));
+
+interface ItemProps<T extends object> {
+  item: AriaGridListItemOptions['node'];
+  state: ListState<T>;
+}
+
+const ListItem = <T extends object>({ item, state }: ItemProps<T>) => {
+  const ref = React.useRef(null);
+  const { rowProps, gridCellProps } = useGridListItem(
+    { node: item },
+    state,
+    ref
+  );
+
+  const { focusProps } = useFocusRing();
+  const isSelected = state.selectionManager.selectedKeys.has(item.key);
+
+  return (
+    <ListItemContent
+      nestingLevel={item.level}
+      isSelected={isSelected}
+      {...mergeProps(rowProps, focusProps)}
+      ref={ref}
+    >
+      <div
+        style={{
+          width: '100%',
+        }}
+        {...gridCellProps}
+      >
+        {item.rendered}
+      </div>
+    </ListItemContent>
   );
 };
 
