@@ -17,6 +17,7 @@ import { Link } from '../base/link';
 import { AlertModal } from '../modals/alert-modal';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { showModal, showPrompt } from '../modals/index';
+import { Button } from '../themed-button';
 
 interface Props {
   hideSettingsModal: () => void;
@@ -103,38 +104,36 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         Your format isn't supported? <Link href={docsImportExport}>Add Your Own</Link>.
       </p>
       <div className="pad-top">
-        <Dropdown
-          aria-label='Export Data Dropdown'
-          triggerButton={
-            <DropdownButton className="btn btn--clicky">
-              Export Data <i className="fa fa-caret-down" />
-            </DropdownButton>
-          }
-        >
-          <DropdownSection
-            aria-label="Choose Export Type"
-            title="Choose Export Type"
+        {activeWorkspace ?
+          (<Dropdown
+            aria-label='Export Data Dropdown'
+            triggerButton={
+              <DropdownButton className="btn btn--clicky">
+                Export Data <i className="fa fa-caret-down" />
+              </DropdownButton>
+            }
           >
-            <>
-              {activeWorkspace &&
-                <DropdownItem aria-label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`}>
-                  <ItemContent
-                    icon="home"
-                    label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`}
-                    onClick={showExportRequestsModal}
-                  />
-                </DropdownItem>
-              }
-            </>
-            <DropdownItem aria-label={`All ${strings.document.plural} and ${strings.collection.plural} from the "${projectName}" ${strings.project.singular}`}>
-              <ItemContent
-                icon="empty"
-                label={`All ${strings.document.plural} and ${strings.collection.plural} from the "${projectName}" ${strings.project.singular}`}
-                onClick={handleExportAllToFile}
-              />
-            </DropdownItem>
-          </DropdownSection>
-        </Dropdown>
+            <DropdownSection
+              aria-label="Choose Export Type"
+              title="Choose Export Type"
+            >
+              <DropdownItem aria-label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`}>
+                <ItemContent
+                  icon="home"
+                  label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`}
+                  onClick={showExportRequestsModal}
+                />
+              </DropdownItem>
+              <DropdownItem aria-label={`All ${strings.document.plural} and ${strings.collection.plural} from the "${projectName}" ${strings.project.singular}`}>
+                <ItemContent
+                  icon="empty"
+                  label={`All ${strings.document.plural} and ${strings.collection.plural} from the "${projectName}" ${strings.project.singular}`}
+                  onClick={handleExportAllToFile}
+                />
+              </DropdownItem>
+            </DropdownSection>
+          </Dropdown>) : (<Button onClick={handleExportAllToFile}>Export all</Button>)
+        }
         &nbsp;&nbsp;
         <Dropdown
           aria-label='Import Data Dropdown'
