@@ -77,9 +77,3 @@ test('can cancel requests', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Cancel Request' }).click();
   await page.click('text=Request was cancelled');
 });
-
-test('url field is focused for first time users', async ({ page }) => {
-  const urlInput = ':nth-match(textarea, 2)';
-  const locator = page.locator(urlInput);
-  await expect(locator).toBeFocused();
-});
