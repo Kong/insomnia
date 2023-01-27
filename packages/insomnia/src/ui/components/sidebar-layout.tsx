@@ -351,7 +351,7 @@ export const SidebarLayout: FC<Props> = ({
   const realSidebarWidth = activeWorkspaceMeta?.sidebarHidden ? 0 : sidebarWidth;
   const gridRows = renderPaneTwo
     ? `minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
-    : '100%';
+    : '1fr';
   const gridColumns =
     `auto ${realSidebarWidth}rem 0 ` +
     `${renderPaneTwo ? `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)` : '1fr'}`;
