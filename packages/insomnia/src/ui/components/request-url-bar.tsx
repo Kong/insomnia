@@ -178,6 +178,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       });
     } finally {
       // Unset active response because we just made a new one
+      // TODO: remove this with the redux fallback to first element
       await updateRequestMetaByParentId(request._id, { activeResponseId: null });
       setLoading(false);
     }
@@ -197,7 +198,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     setLoading(true);
     try {
       const responsePatch = await network.send(request._id, activeEnvironment?._id);
-      await models.response.create(responsePatch, settings.maxHistoryResponses);
+      const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
+      await updateRequestMetaByParentId(request._id, { activeResponseId: response._id });
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {

@@ -249,8 +249,8 @@ const openWebSocketConnection = async (
       };
 
       const settings = await models.settings.getOrCreate();
-      models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
+      const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
       if (request.settingStoreCookies) {
         const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
