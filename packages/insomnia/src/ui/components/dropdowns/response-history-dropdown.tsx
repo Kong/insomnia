@@ -195,7 +195,6 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
           <ItemContent
             icon="fa-trash-o"
             label="Delete Current Response"
-            withPrompt
             onClick={handleDeleteResponse}
           />
         </DropdownItem>
@@ -203,7 +202,6 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
           <ItemContent
             icon="fa-trash-o"
             label="Clear History"
-            withPrompt
             onClick={handleDeleteResponses}
           />
         </DropdownItem>
