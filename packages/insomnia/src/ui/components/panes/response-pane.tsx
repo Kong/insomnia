@@ -3,6 +3,7 @@ import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -31,13 +32,12 @@ import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
-  request?: Request | null;
   runningRequests: Record<string, number>;
 }
 export const ResponsePane: FC<Props> = ({
-  request,
   runningRequests,
 }) => {
+  const request = useRouteLoaderData('request/:requestId') as Request | null;
   const response = useSelector(selectActiveResponse) as Response | null;
   const filterHistory = useSelector(selectResponseFilterHistory);
   const filter = useSelector(selectResponseFilter);
