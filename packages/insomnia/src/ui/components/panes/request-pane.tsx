@@ -3,11 +3,11 @@ import { useSelector } from 'react-redux';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { CONTENT_TYPE_GRAPHQL, getContentTypeFromHeaders } from '../../../common/constants';
+import { getContentTypeFromHeaders } from '../../../common/constants';
 import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { Request, RequestBody } from '../../../models/request';
+import { Request } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';

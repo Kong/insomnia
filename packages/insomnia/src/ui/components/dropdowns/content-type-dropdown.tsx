@@ -16,7 +16,6 @@ import {
   METHOD_POST,
 } from '../../../common/constants';
 import { getContentTypeHeader } from '../../../common/misc';
-import * as models from '../../../models';
 import { Request, RequestBody } from '../../../models/request';
 import { deconstructQueryStringToParams } from '../../../utils/url/querystring';
 import { SegmentEvent, trackSegmentEvent } from '../../analytics';
@@ -60,17 +59,11 @@ export const ContentTypeDropdown: FC = () => {
         addCancel: true,
       });
     }
-
-    const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
-    // Switched to No body
-    const savedRequestBody = typeof mimeType !== 'string' ? request.body : {};
-    // Clear saved value in requestMeta
-    await models.requestMeta.update(requestMeta, { savedRequestBody });
-    // @ts-expect-error -- TSCONVERSION mimeType can be null when no body is selected but the updateMimeType logic needs to be reexamined
-    const res = updateMimeType(request, mimeType, requestMeta.savedRequestBody);
-    requestFetcher.submit({ headers: JSON.stringify(res.headers), body: JSON.stringify(res.body) },
+    // TODO: This is a hack to get around the fact that we don't have a way to send null
+    const mimeTypeHack = typeof mimeType === 'string' ? mimeType : 'null';
+    requestFetcher.submit({ mimeType: mimeTypeHack },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
         method: 'post',
       });
     trackSegmentEvent(SegmentEvent.requestBodyTypeSelect, { type: mimeType });
@@ -229,7 +222,7 @@ export function newBodyGraphQL(rawBody: string): RequestBody {
 }
 export const updateMimeType = (
   request: Request,
-  mimeType: string,
+  mimeType: string | null,
   savedBody: RequestBody = {},
 ) => {
   let headers = request.headers ? [...request.headers] : [];
@@ -256,11 +249,11 @@ export const updateMimeType = (
   } else if (mimeType === CONTENT_TYPE_OTHER) {
     // Leave headers alone
   } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
-    contentTypeHeader.value = contentTypeHeaderValue;
+    contentTypeHeader.value = contentTypeHeaderValue || '';
   } else if (mimeType && !contentTypeHeader) {
     headers.push({
       name: 'Content-Type',
-      value: contentTypeHeaderValue,
+      value: contentTypeHeaderValue || '',
     });
   }
   const oldBody = Object.keys(savedBody).length === 0 ? request.body : savedBody;

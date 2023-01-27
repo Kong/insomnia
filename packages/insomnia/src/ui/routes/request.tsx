@@ -4,10 +4,11 @@ import { CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from
 import * as models from '../../models';
 import { GrpcRequest, GrpcRequestBody, GrpcRequestHeader, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { Request, RequestAuthentication, RequestBody, RequestHeader } from '../../models/request';
+import { isRequest, Request, RequestAuthentication, RequestBody, RequestHeader } from '../../models/request';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
+import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
 import { CreateRequestType } from '../hooks/create-request';
 
 export const loader: LoaderFunction = async ({ params }): Promise<Request | WebSocketRequest | GrpcRequest> => {
@@ -86,14 +87,6 @@ export const updateHackRequestAction: ActionFunction = async ({ request, params 
   const formData = await request.formData();
   const body = formData.get('body') as string | null;
   const headers = formData.get('headers') as string | null;
-  // TODO: remove workaround for mimetype setting in body and headers
-  if (body !== null && headers !== null) {
-    requestOperations.update(req, {
-      body: JSON.parse(body) as RequestBody,
-      headers: JSON.parse(headers) as RequestHeader[],
-    });
-    console.log('body and headers', await requestOperations.getById(requestId));
-  }
   if (body !== null) {
     requestOperations.update(req, { body: JSON.parse(body) as RequestBody | GrpcRequestBody });
   }
@@ -124,6 +117,20 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
   const url = formData.get('url') as string | null;
   if (url !== null) {
     requestOperations.update(req, { url });
+  }
+  if (isRequest(req)) {
+    let mimeType = formData.get('mimeType') as string | null;
+    // TODO: This is a hack to get around the fact that we don't have a way to send null
+    if (mimeType !== null) {
+      if (mimeType === 'null') {
+        mimeType = null;
+      }
+      const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
+      const savedRequestBody = !mimeType ? (req.body || {}) : {};
+      await models.requestMeta.update(requestMeta, { savedRequestBody });
+      const res = updateMimeType(req, mimeType, requestMeta.savedRequestBody);
+      requestOperations.update(req, { body: res.body, headers: res.headers });
+    }
   }
   if (isGrpcRequest(req)) {
     const protoMethodName = formData.get('protoMethodName') as string | null;

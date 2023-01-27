@@ -170,7 +170,7 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
         method: 'post',
       });
-  }, [activeRequest]);
+  }, [activeRequest, organizationId, projectId, requestFetcher, requestId, workspaceId]);
   const isCurrent = useCallback((type: AuthType) => {
     if (!activeRequest || !('authentication' in activeRequest)) {
       return false;
