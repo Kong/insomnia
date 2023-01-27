@@ -33,7 +33,6 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
 
   const formData = await request.formData();
   const requestType = formData.get('requestType') as CreateRequestType;
-  const protoFileId = formData.get('protoFileId');
   const parentId = formData.get('parentId') as string | null;
   let activeRequestId;
   if (requestType === 'HTTP') {
@@ -44,11 +43,9 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
     }))._id;
   }
   if (requestType === 'gRPC') {
-    invariant(typeof protoFileId === 'string', 'Proto File ID is required');
     activeRequestId = (await models.grpcRequest.create({
       parentId: parentId || workspaceId,
       name: 'New Request',
-      protoFileId,
     }))._id;
   }
   if (requestType === 'GraphQL') {
