@@ -85,10 +85,18 @@ export const updateHackRequestAction: ActionFunction = async ({ request, params 
   invariant(req, 'Request not found');
   const formData = await request.formData();
   const body = formData.get('body') as string | null;
+  const headers = formData.get('headers') as string | null;
+  // TODO: remove workaround for mimetype setting in body and headers
+  if (body !== null && headers !== null) {
+    requestOperations.update(req, {
+      body: JSON.parse(body) as RequestBody,
+      headers: JSON.parse(headers) as RequestHeader[],
+    });
+    console.log('body and headers', await requestOperations.getById(requestId));
+  }
   if (body !== null) {
     requestOperations.update(req, { body: JSON.parse(body) as RequestBody | GrpcRequestBody });
   }
-  const headers = formData.get('headers') as string | null;
   if (headers !== null) {
     requestOperations.update(req, { headers: JSON.parse(headers) as RequestHeader[] });
   }

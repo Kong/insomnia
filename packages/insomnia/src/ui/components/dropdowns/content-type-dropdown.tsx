@@ -263,54 +263,62 @@ export const updateMimeType = (
       value: contentTypeHeaderValue,
     });
   }
-  let body;
   const oldBody = Object.keys(savedBody).length === 0 ? request.body : savedBody;
   if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-    // Urlencoded
-    body = oldBody.params
-      ? {
+    return {
+      body: {
         mimeType: CONTENT_TYPE_FORM_URLENCODED,
-        params: oldBody.params,
-      } : {
-        mimeType: CONTENT_TYPE_FORM_URLENCODED,
-        params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
-      };
-  } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
-    // Form Data
-    body = oldBody.params
-      ? {
-        mimeType: CONTENT_TYPE_FORM_DATA,
-        params: oldBody.params || [],
-      } : {
-        mimeType: CONTENT_TYPE_FORM_DATA,
-        params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
-      };
-  } else if (mimeType === CONTENT_TYPE_FILE) {
-    // File
-    body = {
-      mimeType: CONTENT_TYPE_FILE,
-      fileName: '',
+        params: oldBody.params || (oldBody.text ? deconstructQueryStringToParams(oldBody.text) : []),
+      },
+      headers,
     };
-  } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
+  }
+  if (mimeType === CONTENT_TYPE_FORM_DATA) {
+    // Form Data
+    return {
+      body: oldBody.params
+        ? {
+          mimeType: CONTENT_TYPE_FORM_DATA,
+          params: oldBody.params || [],
+        } : {
+          mimeType: CONTENT_TYPE_FORM_DATA,
+          params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
+        },
+      headers,
+    };
+  }
+  if (mimeType === CONTENT_TYPE_FILE) {
+    return {
+      body: {
+        mimeType: CONTENT_TYPE_FILE,
+        fileName: '',
+      },
+      headers,
+    };
+  }
+  if (mimeType === CONTENT_TYPE_GRAPHQL) {
     if (contentTypeHeader) {
       contentTypeHeader.value = CONTENT_TYPE_JSON;
     }
-
-    body = newBodyGraphQL(oldBody.text || '');
-  } else if (typeof mimeType !== 'string') {
-    // No body
-    body = {};
-  } else {
-    // Raw Content-Type (ex: application/json)
-    body = typeof mimeType !== 'string' ? {
+    return {
+      body: newBodyGraphQL(oldBody.text || ''),
+      headers,
+    };
+  }
+  if (typeof mimeType !== 'string') {
+    return {
+      body: {},
+      headers,
+    };
+  }
+  // Raw Content-Type (ex: application/json)
+  return {
+    body: typeof mimeType !== 'string' ? {
       text: oldBody.text || '',
     } : {
       mimeType: mimeType.split(';')[0],
       text: oldBody.text || '',
-    };
-  }
-  return {
-    body,
+    },
     headers,
   };
 };
