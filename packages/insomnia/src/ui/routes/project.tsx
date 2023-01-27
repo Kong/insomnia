@@ -285,7 +285,7 @@ const OrganizationProjectsSidebar: FC<{
   return (
     <Sidebar
       style={{
-        height: '92vh',
+        gridArea: '1 / 1 / -1 / -1',
       }}
     >
       <SidebarTitle>
@@ -576,6 +576,7 @@ const SidebarListItemContent = styled.div<{
 
 const StyledSidebarListItemTitle = styled.div({
   display: 'flex',
+  alignItems: 'center',
   gap: 'var(--padding-sm)',
 });
 
