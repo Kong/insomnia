@@ -189,7 +189,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     const rendered = await render({ url: activeRequest.url, metadata: activeRequest.metadata }, renderContext);
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
                     setGrpcState({ ...grpcState, methods });
-                    requestFetcher.submit({ protoMethodName: '', protoFileId: '' },
+                    requestFetcher.submit({ protoFileId: '' },
                       {
                         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
                         method: 'post',

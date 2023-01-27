@@ -124,11 +124,9 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
     }
     const protoFileId = formData.get('protoFileId') as string | null;
     if (protoFileId !== null) {
-      const initial = models.grpcRequest.init();
       models.grpcRequest.update(req, {
         protoFileId,
-        body: initial.body,
-        protoMethodName: initial.protoMethodName,
+        protoMethodName: '',
       });
     }
     const text = formData.get('text') as string | null;
