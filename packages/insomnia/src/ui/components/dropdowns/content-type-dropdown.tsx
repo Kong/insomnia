@@ -1,5 +1,5 @@
-import React, { FC, useCallback } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import React, { FC } from 'react';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import {
   CONTENT_TYPE_EDN,
@@ -13,24 +13,25 @@ import {
   CONTENT_TYPE_XML,
   CONTENT_TYPE_YAML,
   getContentTypeName,
+  METHOD_POST,
 } from '../../../common/constants';
-import { Request } from '../../../models/request';
+import { getContentTypeHeader } from '../../../common/misc';
+import * as models from '../../../models';
+import { Request, RequestBody } from '../../../models/request';
+import { deconstructQueryStringToParams } from '../../../utils/url/querystring';
 import { SegmentEvent, trackSegmentEvent } from '../../analytics';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { AlertModal } from '../modals/alert-modal';
 import { showModal } from '../modals/index';
 
-interface Props {
-  onChange: (mimeType: string | null) => void;
-}
-
 const EMPTY_MIME_TYPE = null;
 
-export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
-
-  const handleChangeMimeType = useCallback(async (mimeType: string | null) => {
-    const { body } = activeRequest;
+export const ContentTypeDropdown: FC = () => {
+  const request = useRouteLoaderData('request/:requestId') as Request;
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const requestFetcher = useFetcher();
+  const handleChangeMimeType = async (mimeType: string | null) => {
+    const { body } = request;
     const hasMimeType = 'mimeType' in body;
     if (hasMimeType && body.mimeType === mimeType) {
       // Nothing to do since the mimeType hasn't changed
@@ -60,17 +61,28 @@ export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
       });
     }
 
-    onChange(mimeType);
+    const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
+    // Switched to No body
+    const savedRequestBody = typeof mimeType !== 'string' ? request.body : {};
+    // Clear saved value in requestMeta
+    await models.requestMeta.update(requestMeta, { savedRequestBody });
+    // @ts-expect-error -- TSCONVERSION mimeType can be null when no body is selected but the updateMimeType logic needs to be reexamined
+    const res = updateMimeType(request, mimeType, requestMeta.savedRequestBody);
+    requestFetcher.submit({ headers: JSON.stringify(res.headers), body: JSON.stringify(res.body) },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        method: 'post',
+      });
     trackSegmentEvent(SegmentEvent.requestBodyTypeSelect, { type: mimeType });
-  }, [onChange, activeRequest]);
+  };
 
-  const { body } = activeRequest;
+  const { body } = request;
   const hasMimeType = 'mimeType' in body;
   const hasParams = body && 'params' in body && body.params;
   const numBodyParams = hasParams ? body.params?.filter(({ disabled }) => !disabled).length : 0;
 
   const getIcon = (mimeType: string | null) => {
-    const contentType = activeRequest?.body && 'mimeType' in activeRequest.body ? activeRequest.body.mimeType : null;
+    const contentType = request?.body && 'mimeType' in request.body ? request.body.mimeType : null;
     const contentTypeFallback = typeof contentType === 'string' ? contentType : EMPTY_MIME_TYPE;
 
     return mimeType === contentTypeFallback ? 'check' : 'empty';
@@ -195,4 +207,109 @@ export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
       </DropdownSection>
     </Dropdown>
   );
+};
+export function newBodyGraphQL(rawBody: string): RequestBody {
+  try {
+    // Only strip the newlines if rawBody is a parsable JSON
+    JSON.parse(rawBody);
+    return {
+      mimeType: CONTENT_TYPE_GRAPHQL,
+      text: rawBody.replace(/\\\\n/g, ''),
+    };
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      return {
+        mimeType: CONTENT_TYPE_GRAPHQL,
+        text: rawBody,
+      };
+    } else {
+      throw error;
+    }
+  }
+}
+export const updateMimeType = (
+  request: Request,
+  mimeType: string,
+  savedBody: RequestBody = {},
+) => {
+  let headers = request.headers ? [...request.headers] : [];
+  const contentTypeHeader = getContentTypeHeader(headers);
+  // GraphQL uses JSON content-type
+  const contentTypeHeaderValue = mimeType === CONTENT_TYPE_GRAPHQL ? CONTENT_TYPE_JSON : mimeType;
+  // GraphQL must be POST
+  if (mimeType === CONTENT_TYPE_GRAPHQL) {
+    request.method = METHOD_POST;
+  }
+  // Check if we are converting to/from variants of XML or JSON
+  let leaveContentTypeAlone = false;
+  if (contentTypeHeader && mimeType) {
+    const current = contentTypeHeader.value;
+    if (current.includes('xml') && mimeType.includes('xml')) {
+      leaveContentTypeAlone = true;
+    } else if (current.includes('json') && mimeType.includes('json')) {
+      leaveContentTypeAlone = true;
+    }
+  }
+  const hasBody = typeof mimeType === 'string';
+  if (!hasBody) {
+    headers = headers.filter(h => h !== contentTypeHeader);
+  } else if (mimeType === CONTENT_TYPE_OTHER) {
+    // Leave headers alone
+  } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
+    contentTypeHeader.value = contentTypeHeaderValue;
+  } else if (mimeType && !contentTypeHeader) {
+    headers.push({
+      name: 'Content-Type',
+      value: contentTypeHeaderValue,
+    });
+  }
+  let body;
+  const oldBody = Object.keys(savedBody).length === 0 ? request.body : savedBody;
+  if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+    // Urlencoded
+    body = oldBody.params
+      ? {
+        mimeType: CONTENT_TYPE_FORM_URLENCODED,
+        params: oldBody.params,
+      } : {
+        mimeType: CONTENT_TYPE_FORM_URLENCODED,
+        params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
+      };
+  } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
+    // Form Data
+    body = oldBody.params
+      ? {
+        mimeType: CONTENT_TYPE_FORM_DATA,
+        params: oldBody.params || [],
+      } : {
+        mimeType: CONTENT_TYPE_FORM_DATA,
+        params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
+      };
+  } else if (mimeType === CONTENT_TYPE_FILE) {
+    // File
+    body = {
+      mimeType: CONTENT_TYPE_FILE,
+      fileName: '',
+    };
+  } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
+    if (contentTypeHeader) {
+      contentTypeHeader.value = CONTENT_TYPE_JSON;
+    }
+
+    body = newBodyGraphQL(oldBody.text || '');
+  } else if (typeof mimeType !== 'string') {
+    // No body
+    body = {};
+  } else {
+    // Raw Content-Type (ex: application/json)
+    body = typeof mimeType !== 'string' ? {
+      text: oldBody.text || '',
+    } : {
+      mimeType: mimeType.split(';')[0],
+      text: oldBody.text || '',
+    };
+  }
+  return {
+    body, headers,
+  };
 };

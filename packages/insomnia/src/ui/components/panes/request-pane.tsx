@@ -3,15 +3,12 @@ import { useSelector } from 'react-redux';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_POST } from '../../../common/constants';
+import { CONTENT_TYPE_GRAPHQL, getContentTypeFromHeaders } from '../../../common/constants';
 import { database } from '../../../common/database';
-import { getContentTypeHeader } from '../../../common/misc';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { update } from '../../../models/helpers/request-operations';
 import { Request, RequestBody } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
-import { create } from '../../../models/workspace';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveEnvironment, selectActiveRequestMeta } from '../../redux/selectors';
@@ -64,139 +61,7 @@ interface Props {
   settings: Settings;
   setLoading: (l: boolean) => void;
 }
-export function newBodyGraphQL(rawBody: string): RequestBody {
-  try {
-    // Only strip the newlines if rawBody is a parsable JSON
-    JSON.parse(rawBody);
-    return {
-      mimeType: CONTENT_TYPE_GRAPHQL,
-      text: rawBody.replace(/\\\\n/g, ''),
-    };
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      return {
-        mimeType: CONTENT_TYPE_GRAPHQL,
-        text: rawBody,
-      };
-    } else {
-      throw error;
-    }
-  }
-}
-export function updateMimeType(
-  request: Request,
-  mimeType: string,
-  doCreate = false,
-  savedBody: RequestBody = {},
-) {
-  let headers = request.headers ? [...request.headers] : [];
-  const contentTypeHeader = getContentTypeHeader(headers);
-  // GraphQL uses JSON content-type
-  const contentTypeHeaderValue = mimeType === CONTENT_TYPE_GRAPHQL ? CONTENT_TYPE_JSON : mimeType;
 
-  // GraphQL must be POST
-  if (mimeType === CONTENT_TYPE_GRAPHQL) {
-    request.method = METHOD_POST;
-  }
-
-  // Check if we are converting to/from variants of XML or JSON
-  let leaveContentTypeAlone = false;
-
-  if (contentTypeHeader && mimeType) {
-    const current = contentTypeHeader.value;
-
-    if (current.includes('xml') && mimeType.includes('xml')) {
-      leaveContentTypeAlone = true;
-    } else if (current.includes('json') && mimeType.includes('json')) {
-      leaveContentTypeAlone = true;
-    }
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // 1. Update Content-Type header //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  const hasBody = typeof mimeType === 'string';
-
-  if (!hasBody) {
-    headers = headers.filter(h => h !== contentTypeHeader);
-  } else if (mimeType === CONTENT_TYPE_OTHER) {
-    // Leave headers alone
-  } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
-    contentTypeHeader.value = contentTypeHeaderValue;
-  } else if (mimeType && !contentTypeHeader) {
-    headers.push({
-      name: 'Content-Type',
-      value: contentTypeHeaderValue,
-    });
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // 2. Make a new request body //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  let body;
-  const oldBody = Object.keys(savedBody).length === 0 ? request.body : savedBody;
-
-  if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-    // Urlencoded
-    body = oldBody.params
-      ? {
-        mimeType: CONTENT_TYPE_FORM_URLENCODED,
-        params: oldBody.params,
-      } : {
-        mimeType: CONTENT_TYPE_FORM_URLENCODED,
-        params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
-      };
-  } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
-    // Form Data
-    body = oldBody.params
-      ? {
-        mimeType: CONTENT_TYPE_FORM_DATA,
-        params: oldBody.params || [],
-      } : {
-        mimeType: CONTENT_TYPE_FORM_DATA,
-        params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
-      };
-  } else if (mimeType === CONTENT_TYPE_FILE) {
-    // File
-    body = {
-      mimeType: CONTENT_TYPE_FILE,
-      fileName: '',
-    };
-  } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
-    if (contentTypeHeader) {
-      contentTypeHeader.value = CONTENT_TYPE_JSON;
-    }
-
-    body = newBodyGraphQL(oldBody.text || '');
-  } else if (typeof mimeType !== 'string') {
-    // No body
-    body = {};
-  } else {
-    // Raw Content-Type (ex: application/json)
-    body = typeof mimeType !== 'string' ? {
-      text: oldBody.text || '',
-    } : {
-      mimeType: mimeType.split(';')[0],
-      text: oldBody.text || '',
-    };
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // 2. create/update request //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~ //
-  if (doCreate) {
-    const newRequest: Request = Object.assign({}, request, {
-      headers,
-      body,
-    });
-    return create(newRequest);
-  } else {
-    return update(request, {
-      headers,
-      body,
-    });
-  }
-}
 export const RequestPane: FC<Props> = ({
   environmentId,
   settings,
@@ -275,19 +140,6 @@ export const RequestPane: FC<Props> = ({
     );
   }
 
-  async function updateRequestMimeType(mimeType: string | null): Promise<Request | null> {
-    if (!request) {
-      console.warn('Tried to update request mime-type when no active request');
-      return null;
-    }
-    const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
-    // Switched to No body
-    const savedRequestBody = typeof mimeType !== 'string' ? request.body : {};
-    // Clear saved value in requestMeta
-    await models.requestMeta.update(requestMeta, { savedRequestBody });
-    // @ts-expect-error -- TSCONVERSION mimeType can be null when no body is selected but the updateMimeType logic needs to be reexamined
-    return updateMimeType(request, mimeType, false, requestMeta.savedRequestBody);
-  }
   const numParameters = request.parameters.filter(p => !p.disabled).length;
   const numHeaders = request.headers.filter(h => !h.disabled).length;
   const urlHasQueryParameters = request.url.indexOf('?') >= 0;
@@ -309,7 +161,7 @@ export const RequestPane: FC<Props> = ({
         </ErrorBoundary>
       </PaneHeader>
       <Tabs aria-label="Request pane tabs">
-        <TabItem key="content-type" title={<ContentTypeDropdown onChange={updateRequestMimeType} />}>
+        <TabItem key="content-type" title={<ContentTypeDropdown />}>
           <BodyEditor
             key={uniqueKey}
             request={request}
