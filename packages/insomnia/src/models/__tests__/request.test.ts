@@ -180,7 +180,7 @@ describe('updateMimeType()', () => {
       },
     });
     expect(request).not.toBeNull();
-    const newRequest = await updateMimeType(request, 'application/json', false, {
+    const newRequest = await updateMimeType(request, 'application/json', {
       text: 'Saved Data',
     });
     expect(newRequest.body.text).toEqual('Saved Data');
@@ -195,7 +195,7 @@ describe('updateMimeType()', () => {
       },
     });
     expect(request).not.toBeNull();
-    const newRequest = await updateMimeType(request, 'application/json', false, {});
+    const newRequest = await updateMimeType(request, 'application/json', {});
     expect(newRequest.body.text).toEqual('My Data');
   });
 });
