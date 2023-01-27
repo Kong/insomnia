@@ -19,7 +19,7 @@ const List = styled.ul({
   paddingBottom: 'var(--radius-md)',
   borderRadius: 'var(--radius-md)',
   overflowY: 'auto',
-  maxHeight: '90vh',
+  maxHeight: '85vh',
 
   '&:focus': {
     outline: '0',
