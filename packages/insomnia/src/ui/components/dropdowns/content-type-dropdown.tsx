@@ -310,6 +310,7 @@ export const updateMimeType = (
     };
   }
   return {
-    body, headers,
+    body,
+    headers,
   };
 };
