@@ -155,7 +155,6 @@ export const RequestPane: FC<Props> = ({
             onUrlChange={updateRequestUrl}
             handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            request={request}
             setLoading={setLoading}
           />
         </ErrorBoundary>
@@ -220,7 +219,6 @@ export const RequestPane: FC<Props> = ({
             <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
               <TabPanelBody>
                 <RequestHeadersEditor
-                  request={request}
                   bulk={settings.useBulkHeaderEditor}
                 />
               </TabPanelBody>

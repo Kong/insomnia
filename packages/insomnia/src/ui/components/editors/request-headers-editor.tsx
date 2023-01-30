@@ -10,14 +10,13 @@ import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 interface Props {
   bulk: boolean;
   isDisabled?: boolean;
-  request: Request | WebSocketRequest;
 }
 
 export const RequestHeadersEditor: FC<Props> = ({
   bulk,
   isDisabled,
 }) => {
-  const request = useRouteLoaderData('request/:requestId') as Request;
+  const request = useRouteLoaderData('request/:requestId') as Request | WebSocketRequest;
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
 

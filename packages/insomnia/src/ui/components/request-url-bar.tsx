@@ -4,14 +4,13 @@ import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
 import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
 import * as models from '../../models';
-import { update } from '../../models/helpers/request-operations';
 import { isRequest, Request } from '../../models/request';
 import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
@@ -41,7 +40,6 @@ interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;
   onUrlChange: (url: string) => void;
-  request: Request;
   uniquenessKey: string;
   setLoading: (l: boolean) => void;
 }
@@ -53,14 +51,15 @@ export interface RequestUrlBarHandle {
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   handleAutocompleteUrls,
   onUrlChange,
-  request,
   uniquenessKey,
   setLoading,
 }, ref) => {
   const downloadPath = useSelector(selectResponseDownloadPath);
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+  const request = useRouteLoaderData('request/:requestId') as Request;
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const settings = useSelector(selectSettings);
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
@@ -304,10 +303,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       const { data } = await convert(text);
       const { resources } = data;
       const r = resources[0];
-      if (r && r._type === 'request' && activeRequest && isRequest(activeRequest)) {
+      if (r && r._type === 'request' && request && isRequest(request)) {
         // Only pull fields that we want to update
         return database.update({
-          ...activeRequest,
+          ...request,
           modified: Date.now(),
           url: r.url,
           method: r.method,
@@ -325,7 +324,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       console.error(error);
     }
     return null;
-  }, [activeRequest]);
+  }, [request]);
 
   const handleUrlChange = useCallback(async (url: string) => {
     const pastedText = lastPastedTextRef.current;
@@ -349,7 +348,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     lastPastedTextRef.current = event.clipboardData?.getData('text/plain') || '';
   }, []);
 
-  const onMethodChange = useCallback((method: string) => update(request, { method }), [request]);
+  const onMethodChange = useCallback((method: string) => requestFetcher.submit({ method },
+    {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+      method: 'post',
+    }), [organizationId, projectId, requestFetcher, requestId, workspaceId]);
 
   const handleSendDropdownHide = useCallback(() => {
     buttonRef.current?.blur();
