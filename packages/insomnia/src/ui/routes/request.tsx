@@ -4,7 +4,7 @@ import { CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from
 import * as models from '../../models';
 import { GrpcRequest, GrpcRequestBody, GrpcRequestHeader, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isRequest, Request, RequestAuthentication, RequestBody, RequestHeader } from '../../models/request';
+import { isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
@@ -96,6 +96,10 @@ export const updateHackRequestAction: ActionFunction = async ({ request, params 
   const authentication = formData.get('authentication') as string | null;
   if (authentication !== null) {
     requestOperations.update(req, { authentication: JSON.parse(authentication) as RequestAuthentication });
+  }
+  const parameters = formData.get('parameters') as string | null;
+  if (parameters !== null) {
+    requestOperations.update(req, { parameters: JSON.parse(parameters) as RequestParameter[] });
   }
   const metadata = formData.get('metadata') as string | null;
   if (metadata !== null) {
