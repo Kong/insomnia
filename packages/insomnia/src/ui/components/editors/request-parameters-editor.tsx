@@ -1,22 +1,24 @@
 import React, { FC, useCallback } from 'react';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { update } from '../../../models/helpers/request-operations';
-import type { Request, RequestParameter } from '../../../models/request';
+import { Request, RequestParameter } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
   bulk: boolean;
-  request: Request | WebSocketRequest;
   disabled?: boolean;
 }
 
 export const RequestParametersEditor: FC<Props> = ({
-  request,
   bulk,
   disabled = false,
 }) => {
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const request = useRouteLoaderData('request/:requestId') as Request | WebSocketRequest;
+
   const handleBulkUpdate = useCallback((paramsString: string) => {
     const parameters: {
       name: string;
@@ -38,8 +40,12 @@ export const RequestParametersEditor: FC<Props> = ({
         value,
       });
     }
-    update(request, { parameters });
-  }, [request]);
+    requestFetcher.submit({ parameters: JSON.stringify(parameters) },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        method: 'post',
+      });
+  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
 
   let paramsString = '';
   for (const param of request.parameters) {
@@ -56,8 +62,12 @@ export const RequestParametersEditor: FC<Props> = ({
   }
 
   const onChangeParameter = useCallback((parameters: RequestParameter[]) => {
-    update(request, { parameters });
-  }, [request]);
+    requestFetcher.submit({ parameters: JSON.stringify(parameters) },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        method: 'post',
+      });
+  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
 
   if (bulk) {
     return (
