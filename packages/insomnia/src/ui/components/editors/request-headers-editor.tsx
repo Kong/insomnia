@@ -1,7 +1,7 @@
 import React, { FC, useCallback } from 'react';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
-import { update } from '../../../models/helpers/request-operations';
 import type { Request, RequestHeader } from '../../../models/request';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { CodeEditor } from '../codemirror/code-editor';
@@ -14,10 +14,13 @@ interface Props {
 }
 
 export const RequestHeadersEditor: FC<Props> = ({
-  request,
   bulk,
   isDisabled,
 }) => {
+  const request = useRouteLoaderData('request/:requestId') as Request;
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+
   const handleBulkUpdate = useCallback((headersString: string) => {
     const headers: {
       name: string;
@@ -40,8 +43,12 @@ export const RequestHeadersEditor: FC<Props> = ({
       });
     }
 
-    update(request, { headers });
-  }, [request]);
+    requestFetcher.submit({ headers: JSON.stringify(headers) },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        method: 'post',
+      });
+  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
 
   let headersString = '';
   for (const header of request.headers) {
@@ -58,8 +65,12 @@ export const RequestHeadersEditor: FC<Props> = ({
   }
 
   const onChangeHeaders = useCallback((headers: RequestHeader[]) => {
-    update(request, { headers });
-  }, [request]);
+    requestFetcher.submit({ headers: JSON.stringify(headers) },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        method: 'post',
+      });
+  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
 
   if (bulk) {
     return (
