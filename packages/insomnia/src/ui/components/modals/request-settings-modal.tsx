@@ -74,31 +74,22 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     const { activeWorkspaceIdToCopyTo, request } = state;
     invariant(request, 'Request is required');
     invariant(activeWorkspaceIdToCopyTo, 'Workspace ID is required');
-    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo);
-    invariant(workspace, 'Workspace is required');
-    // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
-    await requestOperations.update(request, {
-      metaSortKey: -1e9,
-      // Move to top of sort order
-      parentId: activeWorkspaceIdToCopyTo,
-    });
+    requestFetcher.submit({ parentId: activeWorkspaceIdToCopyTo },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
+        method: 'post',
+      });
   }
 
   async function handleCopyToWorkspace() {
     const { activeWorkspaceIdToCopyTo, request } = state;
     invariant(request, 'Request is required');
     invariant(activeWorkspaceIdToCopyTo, 'Workspace ID is required');
-    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo);
-    invariant(workspace, 'Workspace is required');
-    // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
-    await requestOperations.duplicate(request, {
-      metaSortKey: -1e9,
-      // Move to top of sort order
-      name: request.name,
-      // Because duplicate will add (Copy) suffix if name is not provided in patch
-      parentId: activeWorkspaceIdToCopyTo,
-    });
-    models.stats.incrementCreatedRequests();
+    requestFetcher.submit({ parentId: activeWorkspaceIdToCopyTo },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/duplicate`,
+        method: 'post',
+      });
   }
   const { request, showDescription, defaultPreviewMode, activeWorkspaceIdToCopyTo, workspace } = state;
   const toggleCheckBox = async (event: any) => {
