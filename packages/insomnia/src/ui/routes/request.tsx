@@ -102,7 +102,27 @@ export const updateHackRequestAction: ActionFunction = async ({ request, params 
     requestOperations.update(req, { metadata: JSON.parse(metadata) as GrpcRequestHeader[] });
   }
 };
+// TODO: boolean serialisation needs a standard, here I am just using empty string as false. Not good.
+export const updateRequestSettingAction: ActionFunction = async ({ request, params }) => {
+  const { requestId } = params;
+  invariant(typeof requestId === 'string', 'Request ID is required');
+  const req = await requestOperations.getById(requestId);
+  invariant(req, 'Request not found');
+  const formData = await request.formData();
 
+  const settingSendCookies = formData.get('settingSendCookies') as string | null;
+  if (settingSendCookies !== null) {
+    requestOperations.update(req, { settingSendCookies: Boolean(settingSendCookies) });
+  }
+  const settingStoreCookies = formData.get('settingStoreCookies') as string | null;
+  if (settingStoreCookies !== null) {
+    requestOperations.update(req, { settingStoreCookies: Boolean(settingStoreCookies) });
+  }
+  const settingEncodeUrl = formData.get('settingEncodeUrl') as string | null;
+  if (settingEncodeUrl !== null) {
+    requestOperations.update(req, { settingEncodeUrl: Boolean(settingEncodeUrl) });
+  }
+};
 export const updateRequestAction: ActionFunction = async ({ request, params }) => {
   const { requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
@@ -125,6 +145,10 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
   const description = formData.get('description') as string | null;
   if (description !== null) {
     requestOperations.update(req, { description });
+  }
+  const settingFollowRedirects = formData.get('settingFollowRedirects') as Request['settingFollowRedirects'] | null;
+  if (settingFollowRedirects !== null) {
+    requestOperations.update(req, { settingFollowRedirects });
   }
   if (isRequest(req)) {
     let mimeType = formData.get('mimeType') as string | null;

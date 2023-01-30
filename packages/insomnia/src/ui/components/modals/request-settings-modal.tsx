@@ -45,7 +45,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     workspace: undefined,
   });
   const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   useImperativeHandle(ref, () => ({
@@ -103,15 +103,19 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
   const { request, showDescription, defaultPreviewMode, activeWorkspaceIdToCopyTo, workspace } = state;
   const toggleCheckBox = async (event: any) => {
     invariant(request, 'Request is required');
-    const updated = await requestOperations.update(request, {
-      [event.currentTarget.name]: event.currentTarget.checked,
-    });
+    requestFetcher.submit({ [event.currentTarget.name]: event.currentTarget.checked ? 'truthy' : '' },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update-setting`,
+        method: 'post',
+      });
+    const updated = { ...state.request, [event.currentTarget.name]: event.currentTarget.checked } as Request;
     setState(state => ({ ...state, request: updated }));
   };
   const updateDescription = (description: string) => {
+    invariant(request, 'Request is required');
     requestFetcher.submit({ description },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
         method: 'post',
       });
     const updated = { ...state.request, description } as Request;
@@ -122,9 +126,10 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     });
   };
   const updateName = (name: string) => {
+    invariant(request, 'Request is required');
     requestFetcher.submit({ name },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
         method: 'post',
       });
     const updated = { ...state.request, name } as Request;
@@ -183,7 +188,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                       <input
                         type="checkbox"
                         name="settingSendCookies"
-                        checked={request['settingSendCookies']}
+                        checked={request.settingSendCookies}
                         onChange={toggleCheckBox}
                       />
                     </label>
@@ -194,7 +199,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                       <input
                         type="checkbox"
                         name="settingStoreCookies"
-                        checked={request['settingStoreCookies']}
+                        checked={request.settingStoreCookies}
                         onChange={toggleCheckBox}
                       />
                     </label>
@@ -204,7 +209,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                   <label>
                     Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
                     <select
-                      defaultValue={request?.settingFollowRedirects}
+                      defaultValue={request.settingFollowRedirects}
                       name="settingFollowRedirects"
                       onChange={toggleCheckBox}
                     >
@@ -302,7 +307,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                       <input
                         type="checkbox"
                         name="settingSendCookies"
-                        checked={request['settingSendCookies']}
+                        checked={request.settingSendCookies}
                         onChange={toggleCheckBox}
                       />
                     </label>
@@ -313,7 +318,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                       <input
                         type="checkbox"
                         name="settingStoreCookies"
-                        checked={request['settingStoreCookies']}
+                        checked={request.settingStoreCookies}
                         onChange={toggleCheckBox}
                       />
                     </label>
@@ -324,7 +329,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                       <input
                         type="checkbox"
                         name="settingEncodeUrl"
-                        checked={request['settingEncodeUrl']}
+                        checked={request.settingEncodeUrl}
                         onChange={toggleCheckBox}
                       />
                       <HelpTooltip position="top" className="space-left">
@@ -339,7 +344,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                       <input
                         type="checkbox"
                         name="settingDisableRenderRequestBody"
-                        checked={request['settingDisableRenderRequestBody']}
+                        checked={request.settingDisableRenderRequestBody}
                         onChange={toggleCheckBox}
                       />
                       <HelpTooltip position="top" className="space-left">
@@ -368,7 +373,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                   <label>
                     Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
                     <select
-                      defaultValue={request?.settingFollowRedirects}
+                      defaultValue={request.settingFollowRedirects}
                       name="settingFollowRedirects"
                       onChange={async event => {
                         const updated = await models.request.update(request, {
