@@ -118,6 +118,14 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
   if (url !== null) {
     requestOperations.update(req, { url });
   }
+  const method = formData.get('method') as string | null;
+  if (method !== null) {
+    requestOperations.update(req, { method });
+  }
+  const description = formData.get('description') as string | null;
+  if (description !== null) {
+    requestOperations.update(req, { description });
+  }
   if (isRequest(req)) {
     let mimeType = formData.get('mimeType') as string | null;
     // TODO: This is a hack to get around the fact that we don't have a way to send null

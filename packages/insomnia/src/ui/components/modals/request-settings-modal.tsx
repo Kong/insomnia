@@ -1,5 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { database as db } from '../../../common/database';
 import * as models from '../../../models';
@@ -43,6 +44,9 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     activeWorkspaceIdToCopyTo: null,
     workspace: undefined,
   });
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   useImperativeHandle(ref, () => ({
     hide: () => {
@@ -104,6 +108,31 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     });
     setState(state => ({ ...state, request: updated }));
   };
+  const updateDescription = (description: string) => {
+    requestFetcher.submit({ description },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+        method: 'post',
+      });
+    const updated = { ...state.request, description } as Request;
+    setState({
+      ...state,
+      request: updated,
+      defaultPreviewMode: false,
+    });
+  };
+  const updateName = (name: string) => {
+    requestFetcher.submit({ name },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+        method: 'post',
+      });
+    const updated = { ...state.request, name } as Request;
+    setState(state => ({
+      ...state,
+      request: updated,
+    }));
+  };
 
   return (
     <Modal ref={modalRef}>
@@ -121,14 +150,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                 type="text"
                 placeholder={request?.url || 'My Request'}
                 defaultValue={request?.name}
-                onChange={async event => {
-                  invariant(request, 'Request is required');
-                  const updatedRequest = await requestOperations.update(request, { name: event.target.value });
-                  setState(state => ({
-                    ...state,
-                    request: updatedRequest,
-                  }));
-                }}
+                onChange={event => updateName(event.target.value)}
               />
             </label>
           </div>
@@ -142,16 +164,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                     defaultPreviewMode={defaultPreviewMode}
                     placeholder="Write a description"
                     defaultValue={request.description}
-                    onChange={async (description: string) => {
-                      const updated = await requestOperations.update(request, {
-                        description,
-                      });
-                      setState({
-                        ...state,
-                        request: updated,
-                        defaultPreviewMode: false,
-                      });
-                    }}
+                    onChange={updateDescription}
                   />
                 ) : (
                   <button
@@ -193,12 +206,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                     <select
                       defaultValue={request?.settingFollowRedirects}
                       name="settingFollowRedirects"
-                      onChange={async event => {
-                        const updated = await requestOperations.update(request, {
-                          [event.currentTarget.name]: event.currentTarget.value,
-                        });
-                        setState(state => ({ ...state, request: updated }));
-                      }}
+                      onChange={toggleCheckBox}
                     >
                       <option value={'global'}>Use global setting</option>
                       <option value={'off'}>Don't follow redirects</option>
@@ -275,16 +283,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
                     defaultPreviewMode={defaultPreviewMode}
                     placeholder="Write a description"
                     defaultValue={request.description}
-                    onChange={async (description: string) => {
-                      const updated = await models.request.update(request, {
-                        description,
-                      });
-                      setState(state => ({
-                        ...state,
-                        request: updated,
-                        defaultPreviewMode: false,
-                      }));
-                    }}
+                    onChange={updateDescription}
                   />
                 ) : (
                   <button
