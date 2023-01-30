@@ -330,7 +330,6 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                 errorClassName="tall wide vertically-align font-error pad text-center"
               >
                 <RequestParametersEditor
-                  request={request}
                   bulk={useBulkParametersEditor}
                   disabled={disabled}
                 />
@@ -342,7 +341,6 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           {disabled && <PaneReadOnlyBanner />}
           <RequestHeadersEditor
             key={uniqueKey}
-            request={request}
             bulk={false}
             isDisabled={readyState === ReadyState.OPEN}
           />

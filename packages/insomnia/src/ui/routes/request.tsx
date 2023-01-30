@@ -136,7 +136,7 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
     invariant(workspace, 'Workspace is required');
     // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
     // Move to top of sort order
-    requestOperations.update(req, { parentId, metaSortKey: -1e9, });
+    requestOperations.update(req, { parentId, metaSortKey: -1e9 });
   }
   const name = formData.get('name') as string | null;
   if (name !== null) {
@@ -212,12 +212,12 @@ export const duplicateRequestAction: ActionFunction = async ({ request, params }
   if (parentId) {
     const workspace = await models.workspace.getById(parentId);
     invariant(workspace, 'Workspace is required');
-        // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
+    // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
     // Move to top of sort order
     const newRequest = await requestOperations.duplicate(req, { name, parentId, metaSortKey: -1e9 });
     invariant(newRequest, 'Failed to duplicate request');
     models.stats.incrementCreatedRequests();
-    return
+    return;
   }
   const newRequest = await requestOperations.duplicate(req, { name });
   invariant(newRequest, 'Failed to duplicate request');

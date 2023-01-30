@@ -5,7 +5,6 @@ import { useFetcher, useParams } from 'react-router-dom';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import { isRequest, Request } from '../../../models/request';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { isWorkspace, Workspace } from '../../../models/workspace';

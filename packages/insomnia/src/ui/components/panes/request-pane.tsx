@@ -192,7 +192,6 @@ export const RequestPane: FC<Props> = ({
               >
                 <RequestParametersEditor
                   key={contentType}
-                  request={request}
                   bulk={settings.useBulkParametersEditor}
                 />
               </ErrorBoundary>
