@@ -170,6 +170,7 @@ export const duplicateRequestAction: ActionFunction = async ({ request, params }
   invariant(req, 'Request not found');
   const newRequest = await requestOperations.duplicate(req, { name });
   invariant(newRequest, 'Failed to duplicate request');
+  models.stats.incrementCreatedRequests();
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${newRequest._id}`);
 };
 

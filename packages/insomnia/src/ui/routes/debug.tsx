@@ -9,7 +9,6 @@ import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
-import * as requestOperations from '../../models/helpers/request-operations';
 import { isRequest, isRequestId, Request } from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
@@ -152,8 +151,11 @@ export const Debug: FC = () => {
             message: `Really delete ${activeRequest.name}?`,
             onDone: async (confirmed: boolean) => {
               if (confirmed) {
-                await requestOperations.remove(activeRequest);
-                models.stats.incrementDeletedRequests();
+                requestFetcher.submit({ id: requestId },
+                  {
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
+                    method: 'post',
+                  });
               }
             },
           });
@@ -169,17 +171,11 @@ export const Debug: FC = () => {
             label: 'New Name',
             selectText: true,
             onComplete: async (name: string) => {
-              const newRequest = await requestOperations.duplicate(activeRequest, {
-                name,
-              });
-              const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-              if (workspaceMeta) {
-                await models.workspaceMeta.update(workspaceMeta, { activeRequestId: newRequest._id });
-              }
-              await updateRequestMetaByParentId(newRequest._id, {
-                lastActive: Date.now(),
-              });
-              models.stats.incrementCreatedRequests();
+              requestFetcher.submit({ name },
+                {
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/duplicate`,
+                  method: 'post',
+                });
             },
           });
         }
