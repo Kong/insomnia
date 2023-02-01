@@ -606,7 +606,7 @@ async function renderApp() {
       activeUnitTestSuiteId: unitTestSuite._id,
     });
 
-    router.navigate(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}/workspace/${workspaceId}/${ACTIVITY_DEBUG}`);
+    router.navigate(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}/workspace/${workspaceId}/${ACTIVITY_DEBUG}/request/${request._id}`);
   }
 
   const root = document.getElementById('root');
