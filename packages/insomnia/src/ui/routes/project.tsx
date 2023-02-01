@@ -84,11 +84,6 @@ const StyledDropdownButton = styled(DropdownButton).attrs({
   },
 });
 
-const CardsContainer = styled.div({
-  display: 'flex',
-  flexWrap: 'wrap',
-});
-
 const SearchFormControl = styled.div({
   fontSize: 'var(--font-size-md)',
   maxWidth: '400px',
@@ -98,43 +93,42 @@ const SearchFormControl = styled.div({
 const SearchInput = styled.input({
   margin: '0',
   width: '15rem',
+  height: '100%',
+  padding: 'var(--padding-xs)',
+  fontSize: 'var(--font-size-sm)',
 });
 
 const PaneHeaderToolbar = styled.div({
   display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  flex: 1,
-});
-
-const PaneHeader = styled.div({
-  display: 'flex',
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  width: '100%',
-  margin: 0,
   boxSizing: 'border-box',
-  gap: 'var(--padding-md)',
-  padding: 'var(--padding-md)',
+  justifyContent: 'space-between',
+  flex: 0,
+  gridColumn: '1 / -1',
+  width: '100%',
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
+  paddingTop: 'var(--padding-md)',
+  paddingBottom: 'var(--padding-sm)',
   backgroundColor: 'var(--color-bg)',
-});
-
-const PaneBody = styled.div({
-  padding: 'var(--padding-md)',
-  overflowY: 'auto',
-  alignItems: 'center',
-  flex: 1,
 });
 
 const Pane = styled.div({
   position: 'relative',
-  display: 'flex',
-  flexDirection: 'column',
   height: '100%',
   width: '100%',
   boxSizing: 'border-box',
   background: 'var(--color-bg)',
+  display: 'grid',
+  gridAutoColumns: 'minmax(204px, auto)',
+  gridTemplateColumns: 'repeat(auto-fit, 208px)',
+  gridAutoRows: 'min-content',
+  overflow: 'hidden auto',
+  placeItems: 'center',
+  padding: '0 var(--padding-md)',
+  gap: '1rem',
+  flex: '1 0 auto',
+  overflowY: 'auto',
 });
 
 const SidebarTitle = styled.h2({
@@ -955,23 +949,29 @@ const ProjectRoute: FC = () => {
           }
           renderPaneOne={
             <Pane>
-              <PaneHeader>
-                <PaneHeaderToolbar>
-                  <SearchFormControl className="form-control form-control--outlined no-margin">
-                    <SearchInput
-                      autoFocus
-                      type="text"
-                      placeholder="Filter..."
-                      onChange={event =>
-                        submit({
-                          ...Object.fromEntries(searchParams.entries()),
-                          filter: event.target.value,
-                        })
-                      }
-                      className="no-margin"
-                    />
-                    <span className="fa fa-search filter-icon" />
-                  </SearchFormControl>
+              <PaneHeaderToolbar>
+                <SearchFormControl className="form-control form-control--outlined no-margin">
+                  <SearchInput
+                    autoFocus
+                    type="text"
+                    placeholder="Filter..."
+                    onChange={event =>
+                      submit({
+                        ...Object.fromEntries(searchParams.entries()),
+                        filter: event.target.value,
+                      })
+                    }
+                    className="no-margin"
+                  />
+                  <span
+                    style={{
+                      fontSize: 'var(--font-size-xs)',
+                      marginTop: '-18px',
+                    }}
+                    className="fa fa-search filter-icon"
+                  />
+                </SearchFormControl>
+                <div style={{ display: 'flex' }}>
                   <DashboardSortDropdown
                     value={sortOrder}
                     onSelect={sortOrder => {
@@ -993,6 +993,7 @@ const ProjectRoute: FC = () => {
                       <StyledDropdownButton
                         disableHoverBehavior={false}
                         removePaddings={false}
+                        size="medium"
                       >
                         <i className="fa fa-plus" /> Create{' '}
                         <i className="fa fa-caret-down pad-left-sm" />
@@ -1049,49 +1050,44 @@ const ProjectRoute: FC = () => {
                       </DropdownItem>
                     </DropdownSection>
                   </Dropdown>
-                </PaneHeaderToolbar>
-              </PaneHeader>
-              <PaneBody>
-                {hasWorkspaces && (
-                  <CardsContainer>
-                    {workspaces.map(workspace => (
-                      <WorkspaceCard
-                        {...workspace}
-                        projects={projects}
-                        key={workspace.apiSpec._id}
-                        activeProject={activeProject}
-                        onSelect={() =>
-                          navigate(
-                            `/organization/${organizationId}/project/${
-                              activeProject._id
-                            }/workspace/${workspace.workspace._id}/${
-                              workspace.workspace.scope === 'design'
-                                ? ACTIVITY_SPEC
-                                : ACTIVITY_DEBUG
-                            }`
-                          )
-                        }
-                        filter={filter}
-                      />
-                    ))}
-                  </CardsContainer>
-                )}
-                {filter && !hasWorkspaces && (
-                  <p className="notice subtle">
-                    No documents found for <strong>{filter}</strong>
-                  </p>
-                )}
-                {!filter && !hasWorkspaces && (
-                  <EmptyStatePane
-                    createRequestCollection={createNewCollection}
-                    createDesignDocument={createNewDocument}
-                    importFromFile={importFromFile}
-                    importFromURL={importFromURL}
-                    importFromClipboard={importFromClipboard}
-                    importFromGit={importFromGit}
-                  />
-                )}
-              </PaneBody>
+                </div>
+
+              </PaneHeaderToolbar>
+              {hasWorkspaces && workspaces.map(workspace => (
+                <WorkspaceCard
+                  {...workspace}
+                  projects={projects}
+                  key={workspace.apiSpec._id}
+                  activeProject={activeProject}
+                  onSelect={() =>
+                    navigate(
+                      `/organization/${organizationId}/project/${
+                        activeProject._id
+                      }/workspace/${workspace.workspace._id}/${
+                        workspace.workspace.scope === 'design'
+                          ? ACTIVITY_SPEC
+                          : ACTIVITY_DEBUG
+                      }`
+                    )
+                  }
+                  filter={filter}
+                />
+              ))}
+              {filter && !hasWorkspaces && (
+                <p className="notice subtle">
+                  No documents found for <strong>{filter}</strong>
+                </p>
+              )}
+              {!filter && !hasWorkspaces && (
+                <EmptyStatePane
+                  createRequestCollection={createNewCollection}
+                  createDesignDocument={createNewDocument}
+                  importFromFile={importFromFile}
+                  importFromURL={importFromURL}
+                  importFromClipboard={importFromClipboard}
+                  importFromGit={importFromGit}
+                />
+              )}
             </Pane>
           }
         />
