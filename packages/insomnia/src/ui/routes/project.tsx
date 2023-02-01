@@ -85,17 +85,17 @@ const StyledDropdownButton = styled(DropdownButton).attrs({
 });
 
 const SearchFormControl = styled.div({
+  position: 'relative',
   fontSize: 'var(--font-size-md)',
   maxWidth: '400px',
   minWidth: '200px',
 });
 
 const SearchInput = styled.input({
-  margin: '0',
-  width: '15rem',
-  height: '100%',
-  padding: 'var(--padding-xs)',
-  fontSize: 'var(--font-size-sm)',
+  '&&': {
+    paddingRight: 'var(--padding-lg)!important',
+    fontSize: 'var(--font-size-sm)',
+  },
 });
 
 const PaneHeaderToolbar = styled.div({
@@ -123,9 +123,9 @@ const Pane = styled.div({
   gridAutoColumns: 'minmax(204px, auto)',
   gridTemplateColumns: 'repeat(auto-fit, 208px)',
   gridAutoRows: 'min-content',
+  placeContent: 'start',
   overflow: 'hidden auto',
-  placeItems: 'center',
-  padding: '0 var(--padding-md)',
+  padding: '0 var(--padding-md) var(--padding-md) var(--padding-md)',
   gap: '1rem',
   flex: '1 0 auto',
   overflowY: 'auto',
@@ -377,11 +377,6 @@ const OrganizationProjectsSidebar: FC<{
           <SearchFormControl className="form-control form-control--outlined no-margin">
             <SearchInput
               autoFocus
-              style={{
-                padding: 'var(--padding-xs)',
-                height: 'auto',
-                fontSize: 'var(--font-size-sm)',
-              }}
               type="text"
               placeholder="Filter by project name"
               onChange={event =>
@@ -948,7 +943,12 @@ const ProjectRoute: FC = () => {
             />
           }
           renderPaneOne={
-            <Pane>
+            <Pane
+              style={!hasWorkspaces ? {
+                gridTemplateRows: 'auto 1fr',
+                gridTemplateColumns: '1fr',
+              } : undefined}
+            >
               <PaneHeaderToolbar>
                 <SearchFormControl className="form-control form-control--outlined no-margin">
                   <SearchInput
@@ -966,9 +966,12 @@ const ProjectRoute: FC = () => {
                   <span
                     style={{
                       fontSize: 'var(--font-size-xs)',
-                      marginTop: '-18px',
+                      position: 'absolute',
+                      right: 'var(--padding-sm)',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
                     }}
-                    className="fa fa-search filter-icon"
+                    className="fa fa-search"
                   />
                 </SearchFormControl>
                 <div style={{ display: 'flex' }}>
@@ -1074,9 +1077,11 @@ const ProjectRoute: FC = () => {
                 />
               ))}
               {filter && !hasWorkspaces && (
-                <p className="notice subtle">
-                  No documents found for <strong>{filter}</strong>
-                </p>
+                <div>
+                  <p className="notice subtle">
+                    No documents found for <strong>{filter}</strong>
+                  </p>
+                </div>
               )}
               {!filter && !hasWorkspaces && (
                 <EmptyStatePane
