@@ -84,57 +84,51 @@ const StyledDropdownButton = styled(DropdownButton).attrs({
   },
 });
 
-const CardsContainer = styled.div({
-  display: 'flex',
-  flexWrap: 'wrap',
-});
-
 const SearchFormControl = styled.div({
+  position: 'relative',
   fontSize: 'var(--font-size-md)',
   maxWidth: '400px',
   minWidth: '200px',
 });
 
 const SearchInput = styled.input({
-  margin: '0',
-  width: '15rem',
+  '&&': {
+    paddingRight: 'var(--padding-lg)!important',
+    fontSize: 'var(--font-size-sm)',
+  },
 });
 
 const PaneHeaderToolbar = styled.div({
   display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  flex: 1,
-});
-
-const PaneHeader = styled.div({
-  display: 'flex',
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  width: '100%',
-  margin: 0,
   boxSizing: 'border-box',
-  gap: 'var(--padding-md)',
-  padding: 'var(--padding-md)',
+  justifyContent: 'space-between',
+  flex: 0,
+  gridColumn: '1 / -1',
+  width: '100%',
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
+  paddingTop: 'var(--padding-md)',
+  paddingBottom: 'var(--padding-sm)',
   backgroundColor: 'var(--color-bg)',
-});
-
-const PaneBody = styled.div({
-  padding: 'var(--padding-md)',
-  overflowY: 'auto',
-  alignItems: 'center',
-  flex: 1,
 });
 
 const Pane = styled.div({
   position: 'relative',
-  display: 'flex',
-  flexDirection: 'column',
   height: '100%',
   width: '100%',
   boxSizing: 'border-box',
   background: 'var(--color-bg)',
+  display: 'grid',
+  gridAutoColumns: 'minmax(204px, auto)',
+  gridTemplateColumns: 'repeat(auto-fit, 208px)',
+  gridAutoRows: 'min-content',
+  placeContent: 'start',
+  overflow: 'hidden auto',
+  padding: '0 var(--padding-md) var(--padding-md) var(--padding-md)',
+  gap: '1rem',
+  flex: '1 0 auto',
+  overflowY: 'auto',
 });
 
 const SidebarTitle = styled.h2({
@@ -383,11 +377,6 @@ const OrganizationProjectsSidebar: FC<{
           <SearchFormControl className="form-control form-control--outlined no-margin">
             <SearchInput
               autoFocus
-              style={{
-                padding: 'var(--padding-xs)',
-                height: 'auto',
-                fontSize: 'var(--font-size-sm)',
-              }}
               type="text"
               placeholder="Filter by project name"
               onChange={event =>
@@ -954,24 +943,38 @@ const ProjectRoute: FC = () => {
             />
           }
           renderPaneOne={
-            <Pane>
-              <PaneHeader>
-                <PaneHeaderToolbar>
-                  <SearchFormControl className="form-control form-control--outlined no-margin">
-                    <SearchInput
-                      autoFocus
-                      type="text"
-                      placeholder="Filter..."
-                      onChange={event =>
-                        submit({
-                          ...Object.fromEntries(searchParams.entries()),
-                          filter: event.target.value,
-                        })
-                      }
-                      className="no-margin"
-                    />
-                    <span className="fa fa-search filter-icon" />
-                  </SearchFormControl>
+            <Pane
+              style={!hasWorkspaces ? {
+                gridTemplateRows: 'auto 1fr',
+                gridTemplateColumns: '1fr',
+              } : undefined}
+            >
+              <PaneHeaderToolbar>
+                <SearchFormControl className="form-control form-control--outlined no-margin">
+                  <SearchInput
+                    autoFocus
+                    type="text"
+                    placeholder="Filter..."
+                    onChange={event =>
+                      submit({
+                        ...Object.fromEntries(searchParams.entries()),
+                        filter: event.target.value,
+                      })
+                    }
+                    className="no-margin"
+                  />
+                  <span
+                    style={{
+                      fontSize: 'var(--font-size-xs)',
+                      position: 'absolute',
+                      right: 'var(--padding-sm)',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                    }}
+                    className="fa fa-search"
+                  />
+                </SearchFormControl>
+                <div style={{ display: 'flex' }}>
                   <DashboardSortDropdown
                     value={sortOrder}
                     onSelect={sortOrder => {
@@ -993,6 +996,7 @@ const ProjectRoute: FC = () => {
                       <StyledDropdownButton
                         disableHoverBehavior={false}
                         removePaddings={false}
+                        size="medium"
                       >
                         <i className="fa fa-plus" /> Create{' '}
                         <i className="fa fa-caret-down pad-left-sm" />
@@ -1049,49 +1053,46 @@ const ProjectRoute: FC = () => {
                       </DropdownItem>
                     </DropdownSection>
                   </Dropdown>
-                </PaneHeaderToolbar>
-              </PaneHeader>
-              <PaneBody>
-                {hasWorkspaces && (
-                  <CardsContainer>
-                    {workspaces.map(workspace => (
-                      <WorkspaceCard
-                        {...workspace}
-                        projects={projects}
-                        key={workspace.apiSpec._id}
-                        activeProject={activeProject}
-                        onSelect={() =>
-                          navigate(
-                            `/organization/${organizationId}/project/${
-                              activeProject._id
-                            }/workspace/${workspace.workspace._id}/${
-                              workspace.workspace.scope === 'design'
-                                ? ACTIVITY_SPEC
-                                : ACTIVITY_DEBUG
-                            }`
-                          )
-                        }
-                        filter={filter}
-                      />
-                    ))}
-                  </CardsContainer>
-                )}
-                {filter && !hasWorkspaces && (
+                </div>
+
+              </PaneHeaderToolbar>
+              {hasWorkspaces && workspaces.map(workspace => (
+                <WorkspaceCard
+                  {...workspace}
+                  projects={projects}
+                  key={workspace.apiSpec._id}
+                  activeProject={activeProject}
+                  onSelect={() =>
+                    navigate(
+                      `/organization/${organizationId}/project/${
+                        activeProject._id
+                      }/workspace/${workspace.workspace._id}/${
+                        workspace.workspace.scope === 'design'
+                          ? ACTIVITY_SPEC
+                          : ACTIVITY_DEBUG
+                      }`
+                    )
+                  }
+                  filter={filter}
+                />
+              ))}
+              {filter && !hasWorkspaces && (
+                <div>
                   <p className="notice subtle">
                     No documents found for <strong>{filter}</strong>
                   </p>
-                )}
-                {!filter && !hasWorkspaces && (
-                  <EmptyStatePane
-                    createRequestCollection={createNewCollection}
-                    createDesignDocument={createNewDocument}
-                    importFromFile={importFromFile}
-                    importFromURL={importFromURL}
-                    importFromClipboard={importFromClipboard}
-                    importFromGit={importFromGit}
-                  />
-                )}
-              </PaneBody>
+                </div>
+              )}
+              {!filter && !hasWorkspaces && (
+                <EmptyStatePane
+                  createRequestCollection={createNewCollection}
+                  createDesignDocument={createNewDocument}
+                  importFromFile={importFromFile}
+                  importFromURL={importFromURL}
+                  importFromClipboard={importFromClipboard}
+                  importFromGit={importFromGit}
+                />
+              )}
             </Pane>
           }
         />

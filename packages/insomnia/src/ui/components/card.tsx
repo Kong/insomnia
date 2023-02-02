@@ -14,7 +14,6 @@ const StyledCard = styled.div({
   flexDirection: 'column',
   flexGrow: '0',
   flexShrink: '0',
-  margin: '0 var(--padding-md) var(--padding-md) 0',
   color: 'var(--font-dark)',
   borderRadius: 'var(--radius-md)',
 

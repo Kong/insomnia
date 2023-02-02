@@ -21,6 +21,11 @@ const verticalStyles = {
     gridColumnStart: '4',
     gridColumnEnd: 'span 3',
     gridRowStart: '1',
+    gridRowEnd: 'span 2',
+  },
+
+  // Expand the .pane-one if it has a sibling .pane-two
+  '.pane-one:has(~.pane-two)': {
     gridRowEnd: 'span 1',
   },
 
