@@ -122,7 +122,6 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
   const allEvents = useWebSocketConnectionEvents({ responseId: response._id });
   const handleSelection = (event: WebSocketEvent) => {
     setSelectedEvent((selected: WebSocketEvent | null) => selected?._id === event._id ? null : event);
-    console.log({ event: event._id, select: selectedEvent._id });
   };
 
   const events = allEvents.filter(event => {
