@@ -51,7 +51,7 @@ test('Clone Repo with bad values', async ({ page }) => {
   await expect(page.locator('.app')).toContainText('Error Pushing Repository');
 });
 
-test('Clone an empty repository', async ({ page }) => {
+test('Clone an empty repository - Kong/insomnia#5740', async ({ page }) => {
   // Clone an empty repository
   await page.click('[data-testid="project"] >> text=Insomnia');
   await page.getByRole('button', { name: 'Create' }).click();
