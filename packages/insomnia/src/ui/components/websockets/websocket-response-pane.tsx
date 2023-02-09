@@ -122,6 +122,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
   const allEvents = useWebSocketConnectionEvents({ responseId: response._id });
   const handleSelection = (event: WebSocketEvent) => {
     setSelectedEvent((selected: WebSocketEvent | null) => selected?._id === event._id ? null : event);
+    console.log({ event: event._id, select: selectedEvent._id });
   };
 
   const events = allEvents.filter(event => {
@@ -253,6 +254,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
                 {selectedEvent && (
                   <EventViewWrapper>
                     <EventView
+                      key={selectedEvent._id}
                       requestId={requestId}
                       event={selectedEvent}
                     />
