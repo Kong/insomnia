@@ -1,6 +1,7 @@
 import React, { Key, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useParams } from 'react-router-dom';
+import styled from 'styled-components';
 
 import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
@@ -16,6 +17,12 @@ import { showAlert } from '..';
 import { CustomRepositorySettingsFormGroup } from './custom-repository-settings-form-group';
 import { GitHubRepositorySetupFormGroup } from './github-repository-settings-form-group';
 import { GitLabRepositorySetupFormGroup } from './gitlab-repository-settings-form-group';
+
+const TabPill = styled.div({
+  display: 'flex',
+  gap: 'var(--padding-xs)',
+  alignItems: 'center',
+});
 
 export const GitRepositorySettingsModal = (props: ModalProps & {
   gitRepository?: GitRepository;
@@ -90,7 +97,7 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
               selectedKey={selectedTab}
               onSelectionChange={(key: Key) => setTab(key as OauthProviderName)}
             >
-              <TabItem key='github' title={<><i className="fa fa-github" /> GitHub</>}>
+              <TabItem key='github' title={<TabPill><i className="fa fa-github" /> GitHub</TabPill>}>
                 <PanelContainer className="pad pad-top-sm">
                   <GitHubRepositorySetupFormGroup
                     uri={gitRepository?.uri}
@@ -98,7 +105,7 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
                   />
                 </PanelContainer>
               </TabItem>
-              <TabItem key='gitlab' title={<><i className="fa fa-gitlab" /> GitLab</>}>
+              <TabItem key='gitlab' title={<TabPill><i className="fa fa-gitlab" /> GitLab</TabPill>}>
                 <PanelContainer className="pad pad-top-sm">
                   <GitLabRepositorySetupFormGroup
                     uri={gitRepository?.uri}
@@ -106,7 +113,7 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
                   />
                 </PanelContainer>
               </TabItem>
-              <TabItem key='custom' title={<><i className="fa fa-code-fork" /> Git</>}>
+              <TabItem key='custom' title={<TabPill><i className="fa fa-code-fork" /> Git</TabPill>}>
                 <PanelContainer className="pad pad-top-sm">
                   <CustomRepositorySettingsFormGroup
                     gitRepository={gitRepository}
