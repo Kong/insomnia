@@ -399,6 +399,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               ref={dropdownRef}
               aria-label="Request Options"
               onClose={handleSendDropdownHide}
+              closeOnSelect={false}
               triggerButton={
                 <StyledDropdownButton
                   className="urlbar__send-context"

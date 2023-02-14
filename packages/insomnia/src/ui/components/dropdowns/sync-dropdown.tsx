@@ -408,6 +408,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         style={{ marginLeft: 'var(--padding-md)' }}
         className="wide tall"
         onOpen={() => refreshVCSAndRefetchRemote()}
+        closeOnSelect={false}
         isDisabled={initializing}
         triggerButton={
           currentBranch === null ?
