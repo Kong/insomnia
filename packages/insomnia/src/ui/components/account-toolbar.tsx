@@ -5,7 +5,6 @@ import {
   AriaButtonProps,
   DismissButton,
   useButton,
-  useDialog,
 } from 'react-aria';
 import { useOverlayTrigger } from 'react-aria';
 import { useOverlayTriggerState } from 'react-stately';
@@ -48,6 +47,7 @@ export const AccountToolbar = () => {
   console.log('user: ', user);
   const userInTrialWithoutCreditCard = true; // user?.isTrialing && user?.isPaymentRequired;
   const userInIndividualPlan = false; // user?.planId === '';
+  const trialDaysLeft = user?.trialEnd ? differenceInDays(new Date(user?.trialEnd), new Date()) : null;
 
   return (
     <Toolbar>
@@ -101,7 +101,7 @@ export const AccountToolbar = () => {
           </SignUpButton>
         </Fragment>
       )}
-      {userInIndividualPlan && (
+      {(
         <PopoverTrigger
           label={
             <div>
@@ -171,14 +171,14 @@ export const AccountToolbar = () => {
                 variant='contained'
                 bg="surprise"
                 onPress={() =>
-                  clickLink('https://app.insomnia.rest/app/subscriptions')
+                  clickLink('https://app.insomnia.rest/app/subscribe')
                 }
               >
                 Upgrade
               </ButtonWithPress>
               <span>or</span>
               <ExternalLink
-                href="https://app.insomnia.rest/app/subscriptions"
+                href="https://app.insomnia.rest/app/subscribe"
               >
                 Manage Billing
               </ExternalLink>
@@ -186,7 +186,7 @@ export const AccountToolbar = () => {
           </div>
         </PopoverTrigger>
       )}
-      {userInTrialWithoutCreditCard && (
+      {false && (
         <PopoverTrigger
           label={
             <div>
@@ -214,7 +214,9 @@ export const AccountToolbar = () => {
                 paddingTop: 'var(--padding-md)',
               }}
             >
-              Your free trial is expiring in {differenceInDays(new Date(user?.trialEnd), new Date())} days.
+              {trialDaysLeft && trialDaysLeft > 1 ? (
+                `Your free trial is expiring in ${trialDaysLeft} days.`
+              ) : 'Your free trial has expired.'}
             </p>
             <div
               style={{
@@ -228,14 +230,14 @@ export const AccountToolbar = () => {
                 variant='contained'
                 bg="surprise"
                 onPress={() =>
-                  clickLink('https://app.insomnia.rest/app/subscriptions')
+                  clickLink('https://app.insomnia.rest/app/subscribe')
                 }
               >
                 Complete subscription
               </ButtonWithPress>
               <span>or</span>
               <ExternalLink
-                href="https://app.insomnia.rest/app/subscriptions"
+                href="https://app.insomnia.rest/app/subscribe"
               >
                 Change plan
               </ExternalLink>
