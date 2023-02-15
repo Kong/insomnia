@@ -7,7 +7,7 @@ import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonN
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { Maybe } from 'graphql-language-service';
 import prettier from 'prettier';
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useSelector } from 'react-redux';
 import { useLocalStorage } from 'react-use';
@@ -210,30 +210,37 @@ export const GraphQLEditor: FC<Props> = ({
   const [schemaIsFetching, setSchemaIsFetching] = useState<boolean | null>(null);
   const [schemaLastFetchTime, setSchemaLastFetchTime] = useState<number>(0);
   const editorRef = useRef<CodeEditorHandle>(null);
+  const mounted = useRef(false);
+
+  const handleSchemaResponse = useCallback((response: any) => {
+    if (!mounted.current) {
+      return;
+    }
+    setSchemaFetchError(response?.schemaFetchError);
+    response?.schema && setSchema(response.schema);
+    response?.schema && setSchemaLastFetchTime(Date.now());
+    setSchemaIsFetching(false);
+  }, [mounted]);
+
+  const fetchSchema = useCallback(async () => {
+    setSchemaIsFetching(true);
+    fetchGraphQLSchemaForRequest({
+      requestId: request._id,
+      environmentId,
+      url: request.url,
+    }).then(handleSchemaResponse);
+  }, [environmentId, handleSchemaResponse, request._id, request.url]);
 
   useEffect(() => {
+    mounted.current = true;
     if (!automaticFetch) {
       return;
     }
-    let isMounted = true;
-    const init = async () => {
-      setSchemaIsFetching(true);
-      const newState = await fetchGraphQLSchemaForRequest({
-        requestId: request._id,
-        environmentId,
-        url: request.url,
-      });
-
-      isMounted && setSchemaFetchError(newState?.schemaFetchError);
-      isMounted && newState?.schema && setSchema(newState.schema);
-      isMounted && newState?.schema && setSchemaLastFetchTime(Date.now());
-      isMounted && setSchemaIsFetching(false);
-    };
-    init();
+    fetchSchema();
     return () => {
-      isMounted = false;
+      mounted.current = false;
     };
-  }, [automaticFetch, environmentId, request._id, request.url, workspaceId]);
+  }, [automaticFetch, environmentId, fetchSchema, request._id, request.url, workspaceId]);
 
   const { editorIndentWithTabs, editorIndentSize } = useSelector(selectSettings);
   const beautifyRequestBody = () => {
@@ -497,13 +504,7 @@ export const GraphQLEditor: FC<Props> = ({
                   // First, "forget" preference to hide errors so they always show
                   // again after a refresh
                   setState(state => ({ ...state, hideSchemaFetchErrors: false }));
-                  setSchemaIsFetching(true);
-                  await fetchGraphQLSchemaForRequest({
-                    requestId: request._id,
-                    environmentId,
-                    url: request.url,
-                  });
-                  setSchemaIsFetching(false);
+                  await fetchSchema();
                 }}
               />
             </DropdownItem>
