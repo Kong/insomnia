@@ -56,6 +56,7 @@ export const Shortcuts: FC = () => {
                 <td className="text-right options" style={{ verticalAlign: 'middle' }}>
                   <Dropdown
                     aria-label='Select a mode'
+                    closeOnSelect={false}
                     triggerButton={
                       <DropdownButton
                         removePaddings={false}
