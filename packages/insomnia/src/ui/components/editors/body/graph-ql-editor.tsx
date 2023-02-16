@@ -207,7 +207,7 @@ export const GraphQLEditor: FC<Props> = ({
     message: string;
     response?: ResponsePatch | null;
   } | undefined>();
-  const [schemaIsFetching, setSchemaIsFetching] = useState<boolean | null>(null);
+  const [schemaIsFetching, setSchemaIsFetching] = useState<boolean>(false);
   const [schemaLastFetchTime, setSchemaLastFetchTime] = useState<number>(0);
   const editorRef = useRef<CodeEditorHandle>(null);
   const mounted = useRef(false);
@@ -500,6 +500,7 @@ export const GraphQLEditor: FC<Props> = ({
                 stayOpenAfterClick
                 icon={`refresh ${schemaIsFetching ? 'fa-spin' : ''}`}
                 label="Refresh Schema"
+                isDisabled={schemaIsFetching}
                 onClick={async () => {
                   // First, "forget" preference to hide errors so they always show
                   // again after a refresh
