@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-plugin-kong-declarative-config",
-  "version": "3.13.0-beta.2",
+  "version": "3.13.0-beta.3",
   "main": "index.js",
   "author": "Kong <office@konghq.com>",
   "license": "Apache-2.0",
@@ -19,7 +19,7 @@
     "unlisted": true
   },
   "dependencies": {
-    "openapi-2-kong": "^3.13.0-beta.2",
+    "openapi-2-kong": "^3.13.0-beta.3",
     "yaml": "^1.8.3"
   }
 }
