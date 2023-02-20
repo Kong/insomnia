@@ -9,6 +9,7 @@ import {
   useGridList,
   useGridListItem,
 } from 'react-aria';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   LoaderFunction,
   redirect,
@@ -33,16 +34,16 @@ import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
-  DashboardSortOrder,
 } from '../../common/constants';
 import { clickLink } from '../../common/electron-helpers';
 import { ForceToWorkspace } from '../../common/import';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
-import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
+import { descendingNumberSort } from '../../common/sorting';
 import { strings } from '../../common/strings';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { sortProjects } from '../../models/helpers/project';
+import { sortWorkspaces } from '../../models/helpers/workspace-operations';
 import {
   DEFAULT_ORGANIZATION_ID,
   defaultOrganization,
@@ -73,6 +74,8 @@ import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button/button';
 import { WorkspaceCard } from '../components/workspace-card';
 import { importClipBoard, importFile, importUri } from '../import';
+import { setDashboardSortOrder } from '../redux/modules/global';
+import { selectDashboardSortOrder } from '../redux/selectors';
 import { RootLoaderData } from './root';
 
 const StyledDropdownButton = styled(DropdownButton).attrs({
@@ -637,7 +640,6 @@ export const loader: LoaderFunction = async ({
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'projectId parameter is required');
 
-  const sortOrder = search.get('sortOrder') || 'modified-desc';
   const filter = search.get('filter') || '';
   const scope = search.get('scope') || '';
   const projectName = search.get('projectName') || '';
@@ -738,41 +740,6 @@ export const loader: LoaderFunction = async ({
     return filter ? Boolean(matchResults?.indexes) : true;
   };
 
-  function sortWorkspaces(
-    workspaceWithMetaA: WorkspaceWithMetadata,
-    workspaceWithMetaB: WorkspaceWithMetadata
-  ) {
-    switch (sortOrder) {
-      case 'modified-desc':
-        return sortMethodMap['modified-desc'](
-          workspaceWithMetaA,
-          workspaceWithMetaB
-        );
-      case 'name-asc':
-        return sortMethodMap['name-asc'](
-          workspaceWithMetaA.workspace,
-          workspaceWithMetaB.workspace
-        );
-      case 'name-desc':
-        return sortMethodMap['name-desc'](
-          workspaceWithMetaA.workspace,
-          workspaceWithMetaB.workspace
-        );
-      case 'created-asc':
-        return sortMethodMap['created-asc'](
-          workspaceWithMetaA.workspace,
-          workspaceWithMetaB.workspace
-        );
-      case 'created-desc':
-        return sortMethodMap['created-desc'](
-          workspaceWithMetaA.workspace,
-          workspaceWithMetaB.workspace
-        );
-      default:
-        throw new Error(`Invalid sort order: ${sortOrder}`);
-    }
-  }
-
   // Fetch all workspace meta data in parallel
   const workspacesWithMetaData = await Promise.all(
     projectWorkspaces.map(getWorkspaceMetaData)
@@ -780,8 +747,7 @@ export const loader: LoaderFunction = async ({
 
   const workspaces = workspacesWithMetaData
     .filter(w => (scope ? w.workspace.scope === scope : true))
-    .filter(filterWorkspace)
-    .sort(sortWorkspaces);
+    .filter(filterWorkspace);
 
   const allProjects = await models.project.all();
 
@@ -815,7 +781,7 @@ export const loader: LoaderFunction = async ({
 
 const ProjectRoute: FC = () => {
   const {
-    workspaces,
+    workspaces:unsortedWorkspaces,
     activeProject,
     projects,
     organization,
@@ -827,14 +793,14 @@ const ProjectRoute: FC = () => {
   const [searchParams] = useSearchParams();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
-
+  const sortOrder = useSelector(selectDashboardSortOrder);
   const fetcher = useFetcher();
   const { revalidate } = useRevalidator();
   const submit = useSubmit();
   const navigate = useNavigate();
+  const dispatch  = useDispatch();
   const filter = searchParams.get('filter') || '';
-  const sortOrder =
-    (searchParams.get('sortOrder') as DashboardSortOrder) || 'modified-desc';
+  const workspaces = sortWorkspaces(sortOrder, unsortedWorkspaces);
 
   const createNewCollection = () => {
     showPrompt({
@@ -978,10 +944,7 @@ const ProjectRoute: FC = () => {
                   <DashboardSortDropdown
                     value={sortOrder}
                     onSelect={sortOrder => {
-                      submit({
-                        ...Object.fromEntries(searchParams.entries()),
-                        sortOrder,
-                      });
+                      dispatch(setDashboardSortOrder(sortOrder));
                     }}
                   />
                   {isRemoteProject(activeProject) && (
