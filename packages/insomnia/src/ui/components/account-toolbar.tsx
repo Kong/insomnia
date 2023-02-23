@@ -1,11 +1,7 @@
 import { Overlay, usePopover } from '@react-aria/overlays';
 import { differenceInDays } from 'date-fns/esm';
 import React, { Fragment, RefObject, useRef } from 'react';
-import {
-  AriaButtonProps,
-  DismissButton,
-  useButton,
-} from 'react-aria';
+import { AriaButtonProps, DismissButton, useButton } from 'react-aria';
 import { useOverlayTrigger } from 'react-aria';
 import { useOverlayTriggerState } from 'react-stately';
 import styled from 'styled-components';
@@ -41,13 +37,193 @@ const SignUpButton = styled(Button)({
   },
 });
 
+interface Plan {
+  id: string;
+  name: string;
+  features: string[];
+  comingSoonFeatures: string[];
+}
+
+const plans: Plan[] = [
+  {
+    id: 'individual',
+    name: 'Individual',
+    features: [
+      'Unlimited cloud projects',
+      'End-to-end encryption across individual projects',
+    ],
+    comingSoonFeatures: ['Cloud backup for 7 days'],
+  },
+  {
+    id: 'team',
+    name: 'Team',
+    features: [
+      'Organizations up to 50 seats',
+      'End-to-end encryption across organizations',
+      'User management',
+    ],
+    comingSoonFeatures: ['Cloud backup for 14 days'],
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    features: [
+      'Unlimited seats',
+      '24/5/365 support from Kong Inc.',
+      'Custom payment options',
+    ],
+    comingSoonFeatures: [
+      'Enterprise SSO',
+      'Enterprise RBAC',
+      'Cloud backup for 1 year',
+    ],
+  },
+];
+
+// Enterprise - No upgrade
+// Free - Upgrade to Individual
+// Individual - Upgrade to Team...
+
+const Checkmark = (props: React.SVGProps<SVGSVGElement>) => {
+  return (
+    <svg
+      aria-hidden="true"
+      data-prefix="far"
+      data-icon="circle-check"
+      className="svg-inline--fa fa-circle-check fa-sm"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 512 512"
+      width="1em"
+      height="1em"
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        d="M243.8 339.8c-10.9 10.9-28.7 10.9-39.6 0l-64-64c-10.9-10.9-10.9-28.7 0-39.6 10.9-10.9 28.7-10.9 39.6 0l44.2 44.2 108.2-108.2c10.9-10.9 28.7-10.9 39.6 0 10.9 10.9 10.9 28.7 0 39.6l-128 128zM512 256c0 141.4-114.6 256-256 256S0 397.4 0 256 114.6 0 256 0s256 114.6 256 256zM256 48C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48z"
+      />
+    </svg>
+  );
+};
+
+const PlanView = (props: { plan: Plan; currentPlan: Plan }) => {
+  const { plan, currentPlan } = props;
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--padding-sm)',
+        boxSizing: 'border-box',
+      }}
+    >
+      <h3
+        style={{
+          margin: 0,
+        }}
+      >
+        Upgrade to {plan.name} Plan
+      </h3>
+      <p
+        style={{
+          margin: 0,
+          paddingTop: 'var(--padding-md)',
+          paddingBottom: 'var(--padding-xs)',
+          fontWeight: 'bold',
+          color: 'var(--hl)',
+        }}
+      >
+        Everything in {currentPlan.name} plus:
+      </p>
+      <ul
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--padding-xs)',
+        }}
+      >
+        {plan.features.map(feature => (
+          <li
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--padding-xs)',
+              color: 'var(--hl)',
+              overflow: 'hidden',
+              wordBreak: 'break-word',
+              padding: 'var(--padding-xs)',
+            }}
+            key={feature}
+          >
+            <Checkmark color="var(--color-surprise)" />
+            {feature}
+          </li>
+        ))}
+      </ul>
+      <div
+        style={{
+          marginTop: 'var(--padding-md)',
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            padding: 'var(--padding-xs)',
+            textTransform: 'uppercase',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'var(--hl-sm)',
+            fontSize: 'var(--font-size-xs)',
+            display: 'inline-block',
+            textAlign: 'center',
+            alignItems: 'center',
+            verticalAlign: 'middle',
+          }}
+        >
+          Coming soon
+        </p>
+      </div>
+      <ul
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--padding-sm)',
+        }}
+      >
+        {plan.comingSoonFeatures.map(feature => (
+          <li
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              padding: 'var(--padding-xxs)',
+              gap: 'var(--padding-xs)',
+              color: 'var(--hl-xl)',
+              overflow: 'hidden',
+              wordBreak: 'break-word',
+            }}
+            key={feature}
+          >
+            <i
+              style={{
+                fontSize: '6px',
+              }}
+              className="fa fa-circle fa-xs"
+            /> {feature}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 export const AccountToolbar = () => {
   const isLoggedIn = session.isLoggedIn();
   const user = session.getSession();
   console.log('user: ', user);
   const userInTrialWithoutCreditCard = true; // user?.isTrialing && user?.isPaymentRequired;
   const userInIndividualPlan = false; // user?.planId === '';
-  const trialDaysLeft = user?.trialEnd ? differenceInDays(new Date(user?.trialEnd), new Date()) : null;
+  const trialDaysLeft = user?.trialEnd
+    ? differenceInDays(new Date(user?.trialEnd), new Date())
+    : null;
 
   return (
     <Toolbar>
@@ -101,91 +277,56 @@ export const AccountToolbar = () => {
           </SignUpButton>
         </Fragment>
       )}
-      {(
-        <PopoverTrigger
-          label={
-            <div>
-              {/* <i className="fa fa-circle-exclamation" /> */}
-              Upgrade
-            </div>
-          }
-        >
+      {
+        <PopoverTrigger label={<div>Upgrade</div>}>
           <div
             style={{
               width: '100%',
               padding: 'var(--padding-md)',
               color: 'var(--color-font)',
+              boxSizing: 'border-box',
             }}
           >
-            <h3
-              style={{
-                margin: 0,
-              }}
-            >
-              Individual Plan
-            </h3>
-            <p
-              style={{
-                margin: 0,
-                paddingTop: 'var(--padding-md)',
-                paddingBottom: 'var(--padding-md)',
-              }}
-            >
-              Upgrade to get access to:
-            </p>
-            <ul
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'var(--padding-sm)',
-              }}
-            >
-              <li>
-                <i
-                  style={{
-                    color: 'var(--color-success)',
-                  }}
-                  className="fa fa-check"
-                />{' '}
-                Collaboration features
-              </li>
-              <li>
-                <i
-                  style={{
-                    color: 'var(--color-success)',
-                  }}
-                  className="fa fa-check"
-                />{' '}
-                Organization with up to 50 members
-              </li>
-            </ul>
             <div
               style={{
-                paddingTop: 'var(--padding-lg)',
+                paddingTop: 'var(--padding-sm)',
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 gap: 'var(--padding-md)',
               }}
             >
-              <ButtonWithPress
-                variant='contained'
-                bg="surprise"
-                onPress={() =>
-                  clickLink('https://app.insomnia.rest/app/subscribe')
-                }
+              <PlanView plan={plans[1]} currentPlan={plans[0]} />
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 'var(--padding-md)',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  width: '100%',
+                }}
               >
-                Upgrade
-              </ButtonWithPress>
-              <span>or</span>
-              <ExternalLink
-                href="https://app.insomnia.rest/app/subscribe"
-              >
-                Manage Billing
-              </ExternalLink>
+                <ButtonWithPress
+                  variant="contained"
+                  bg="surprise"
+                  style={{
+                    fontWeight: 'bold',
+                  }}
+                  onPress={() =>
+                    clickLink('https://app.insomnia.rest/app/subscribe')
+                  }
+                >
+                  Upgrade
+                </ButtonWithPress>
+                <span>or</span>
+                <ExternalLink href="https://app.insomnia.rest/app/subscribe">
+                  Manage Billing
+                </ExternalLink>
+              </div>
             </div>
           </div>
         </PopoverTrigger>
-      )}
+      }
       {false && (
         <PopoverTrigger
           label={
@@ -214,9 +355,9 @@ export const AccountToolbar = () => {
                 paddingTop: 'var(--padding-md)',
               }}
             >
-              {trialDaysLeft && trialDaysLeft > 1 ? (
-                `Your free trial is expiring in ${trialDaysLeft} days.`
-              ) : 'Your free trial has expired.'}
+              {trialDaysLeft && trialDaysLeft > 1
+                ? `Your free trial is expiring in ${trialDaysLeft} days.`
+                : 'Your free trial has expired.'}
             </p>
             <div
               style={{
@@ -227,7 +368,7 @@ export const AccountToolbar = () => {
               }}
             >
               <ButtonWithPress
-                variant='contained'
+                variant="contained"
                 bg="surprise"
                 onPress={() =>
                   clickLink('https://app.insomnia.rest/app/subscribe')
@@ -236,9 +377,7 @@ export const AccountToolbar = () => {
                 Complete subscription
               </ButtonWithPress>
               <span>or</span>
-              <ExternalLink
-                href="https://app.insomnia.rest/app/subscribe"
-              >
+              <ExternalLink href="https://app.insomnia.rest/app/subscribe">
                 Change plan
               </ExternalLink>
             </div>
@@ -282,6 +421,7 @@ const Popover = ({ children, state, offset = 8, ...props }) => {
           backgroundColor: 'var(--color-bg)',
           border: '1px solid var(--hl-sm)',
           borderRadius: 'var(--radius-sm)',
+          boxSizing: 'border-box',
         }}
       >
         <DismissButton onDismiss={state.close} />
