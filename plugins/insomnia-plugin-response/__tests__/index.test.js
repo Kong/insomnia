@@ -427,6 +427,64 @@ describe('Response tag', () => {
     });
   });
 
+  describe('Cookie', () => {
+    const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+    const _genResponse = ({ cookies }) => ({
+      _id: 'res_1',
+      parentId: 'req_1',
+      statusCode: 200,
+      contentType: '',
+      headers: [...cookies.map((value) => ({ name: 'Set-Cookie', value }))],
+    });
+
+    it('basic "cookie" query', async () => {
+      const responses = [_genResponse({ cookies: ['foo=1;', 'bar=2;'] })];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'cookie', 'req_1', 'foo')).toBe('1');
+      expect(await tag.run(context, 'cookie', 'req_1', 'bar')).toBe('2');
+    });
+
+    it('fails on empty cookies', async () => {
+      const responses = [_genResponse({ cookies: [] })];
+      const context = _genTestContext(requests, responses);
+
+      try {
+        await tag.run(context, 'cookie', 'req_1', 'missing');
+        fail('should have failed');
+      } catch (err) {
+        expect(err.message).toBe('No cookies set for response');
+      }
+    });
+
+    it('fails on missing cookie', async () => {
+      const responses = [_genResponse({ cookies: ['foo=1;', 'bar=2;'] })];
+      const context = _genTestContext(requests, responses);
+
+      try {
+        await tag.run(context, 'cookie', 'req_1', 'missing');
+        fail('should have failed');
+      } catch (err) {
+        expect(err.message).toBe(
+          'No cookie with name "missing".\n' +
+            'Choices are [\n\t"foo",\n\t"bar"\n]'
+        );
+      }
+    });
+
+    it('fails on empty filter', async () => {
+      const responses = [_genResponse({ cookies: [] })];
+      const context = _genTestContext(requests, responses);
+
+      try {
+        await tag.run(context, 'cookie', 'req_1', '');
+        fail('Should have failed');
+      } catch (err) {
+        expect(err.message).toContain('No cookie filter specified');
+      }
+    });
+  });
+
   describe('Raw', () => {
     it('renders basic response', async () => {
       const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
