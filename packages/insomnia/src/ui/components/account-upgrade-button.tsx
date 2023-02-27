@@ -16,9 +16,12 @@ import {
 import styled from 'styled-components';
 
 import { SessionData } from '../../account/session';
+import { getAppWebsiteBaseURL } from '../../common/constants';
 import { clickLink } from '../../common/electron-helpers';
 import { Link as ExternalLink } from './base/link';
 import { Button, ButtonProps } from './themed-button';
+
+const WebsiteURL = getAppWebsiteBaseURL();
 
 const ButtonWithPress = (
   props: ButtonProps &
@@ -157,10 +160,6 @@ const plans: Record<string, Plan> = {
   },
 };
 
-// Enterprise - No upgrade
-// Free - Upgrade to Individual
-// Individual - Upgrade to Team...
-
 const Checkmark = (props: React.SVGProps<SVGSVGElement>) => {
   return (
     <svg
@@ -284,8 +283,8 @@ const PlanView = (props: { upgradePlan: Plan; currentPlan: Plan }) => {
   );
 };
 
-function getUserPlan(user: SessionData): Plan {
-  const planName = user.planName.toLowerCase();
+function getUserPlan(user: Partial<SessionData>): Plan {
+  const planName = user.planName?.toLowerCase() || '';
   if (planName.includes('teams')) {
     return plans.team;
   }
@@ -368,14 +367,14 @@ export const UpgradeAccountButton = ({ user }: { user: Partial<SessionData> }) =
               bg="surprise"
               onPress={() =>
                 clickLink(
-                  'https://app.insomnia.rest/app/subscribe?intent=complete_subscription'
+                  `${WebsiteURL}/app/subscribe?intent=complete_subscription`
                 )
               }
             >
               Complete subscription
             </ButtonWithPress>
             <span>or</span>
-            <ExternalLink href="https://app.insomnia.rest/app/subscribe?intent=change_plan">
+            <ExternalLink href={`${WebsiteURL}/app/subscribe?intent=change_plan`}>
               Change plan
             </ExternalLink>
           </div>
@@ -421,14 +420,14 @@ export const UpgradeAccountButton = ({ user }: { user: Partial<SessionData> }) =
               }}
               onPress={() =>
                 clickLink(
-                  'https://app.insomnia.rest/app/subscribe?intent=upgrade'
+                  upgradePlan.id === 'enterprise' ? 'https://insomnia.rest/pricing/contact?intent=upgrade' : `${WebsiteURL}/app/subscribe?intent=upgrade`
                 )
               }
             >
               Upgrade
             </ButtonWithPress>
             <span>or</span>
-            <ExternalLink href="https://app.insomnia.rest/app/subscribe?intent=manage_billing">
+            <ExternalLink href={`${WebsiteURL}/app/subscribe?intent=manage_billing`}>
               Manage Billing
             </ExternalLink>
           </div>

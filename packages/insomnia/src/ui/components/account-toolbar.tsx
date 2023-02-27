@@ -3,6 +3,7 @@ import React, { Fragment } from 'react';
 import styled from 'styled-components';
 
 import * as session from '../../account/session';
+import { getAppWebsiteBaseURL } from '../../common/constants';
 import { clickLink } from '../../common/electron-helpers';
 import { UpgradeAccountButton } from './account-upgrade-button';
 import {
@@ -15,6 +16,8 @@ import { Link as ExternalLink } from './base/link';
 import { showLoginModal } from './modals/login-modal';
 import { SvgIcon } from './svg-icon';
 import { Button } from './themed-button';
+
+const WebsiteURL = getAppWebsiteBaseURL();
 
 const Toolbar = styled.div({
   display: 'flex',
@@ -60,7 +63,7 @@ export const AccountToolbar = () => {
               label="Account Settings"
               stayOpenAfterClick
               onClick={() =>
-                clickLink('https://app.insomnia.rest/app/account/')
+                clickLink(`${WebsiteURL}/app/account/`)
               }
             />
           </DropdownItem>
@@ -80,7 +83,7 @@ export const AccountToolbar = () => {
             Login
           </Button>
           <SignUpButton
-            href="https://app.insomnia.rest/app/signup/"
+            href={`${WebsiteURL}/app/signup/`}
             as={ExternalLink}
             size="small"
             variant="contained"
