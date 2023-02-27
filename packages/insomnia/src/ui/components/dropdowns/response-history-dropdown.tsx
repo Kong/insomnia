@@ -177,6 +177,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
       ref={dropdownRef}
       aria-label="Response history dropdown"
       key={activeResponse ? activeResponse._id : 'n/a'}
+      closeOnSelect={false}
       className={className}
       triggerButton={
         <DropdownButton className="btn btn--super-compact tall" title="Response history">

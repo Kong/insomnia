@@ -253,6 +253,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
                 {selectedEvent && (
                   <EventViewWrapper>
                     <EventView
+                      key={selectedEvent._id}
                       requestId={requestId}
                       event={selectedEvent}
                     />

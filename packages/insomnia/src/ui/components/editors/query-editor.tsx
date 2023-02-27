@@ -3,7 +3,7 @@ import styled from 'styled-components';
 export const QueryEditorContainer = styled.div({
   display: 'grid',
   height: '100%',
-  gridTemplateRows: 'auto auto 1fr',
+  gridTemplateRows: 'auto minmax(0,1fr)',
   gridTemplateColumns: '100%',
 });
 

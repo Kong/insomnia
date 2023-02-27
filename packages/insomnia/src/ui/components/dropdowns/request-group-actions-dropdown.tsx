@@ -138,6 +138,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
       ref={dropdownRef}
       onOpen={onOpen}
       dataTestId={`Dropdown-${toKebabCase(requestGroup.name)}`}
+      closeOnSelect={false}
       triggerButton={
         <DropdownButton>
           <i className="fa fa-caret-down" />

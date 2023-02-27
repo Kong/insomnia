@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import querystring from 'querystring';
 
+import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParameter } from '../../models/request';
@@ -95,8 +96,10 @@ export const getOAuth2Token = async (
     ].forEach(p => p.value && authCodeUrl.searchParams.append(p.name, p.value));
     const redirectedTo = await window.main.authorizeUserInWindow({
       url: authCodeUrl.toString(),
-      urlSuccessRegex: /(code=)/,
-      urlFailureRegex: /(error=)/,
+      urlSuccessRegex: authentication.redirectUrl ?
+        new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]code=)`, 'i') : /([?&]code=)/i,
+      urlFailureRegex: authentication.redirectUrl ?
+        new RegExp(`${escapeRegex(authentication.redirectUrl)}.*([?&]error=)`, 'i') : /([?&]error=)/i,
       sessionId: getOAuthSession(),
     });
     console.log('[oauth2] Detected redirect ' + redirectedTo);
