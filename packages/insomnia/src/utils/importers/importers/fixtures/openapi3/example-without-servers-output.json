@@ -15,7 +15,7 @@
       "_id": "__BASE_ENVIRONMENT_ID__",
       "_type": "environment",
       "data": {
-        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+        "base_url": "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}"
       },
       "name": "Base environment",
       "parentId": "__WORKSPACE_ID__"
@@ -41,7 +41,7 @@
       "name": "List API versions",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/"
+      "url": "{{ _.base_url }}/"
     },
     {
       "_id": "req___WORKSPACE_ID__4dd01204",
@@ -53,7 +53,7 @@
       "name": "Show API version details",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/v2"
+      "url": "{{ _.base_url }}/v2"
     }
   ]
 }

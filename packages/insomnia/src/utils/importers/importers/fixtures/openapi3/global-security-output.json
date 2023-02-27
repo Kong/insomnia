@@ -15,7 +15,7 @@
       "parentId": "__WORKSPACE_ID__",
       "name": "Base environment",
       "data": {
-        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+        "base_url": "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}"
       },
       "_type": "environment",
       "_id": "__BASE_ENVIRONMENT_ID__"
@@ -40,7 +40,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "/global",
-      "url": "{{ base_url }}/global",
+      "url": "{{ _.base_url }}/global",
       "body": {},
       "method": "GET",
       "parameters": [],
@@ -48,13 +48,13 @@
         {
           "name": "x-api_key",
           "disabled": false,
-          "value": "{{ xApiKey }}"
+          "value": "{{ _.xApiKey }}"
         }
       ],
       "authentication": {
         "type": "basic",
-        "username": "{{ httpUsername }}",
-        "password": "{{ httpPassword }}"
+        "username": "{{ _.httpUsername }}",
+        "password": "{{ _.httpPassword }}"
       },
       "_type": "request",
       "_id": "req___WORKSPACE_ID__21946b60"
@@ -62,7 +62,7 @@
     {
       "parentId": "__WORKSPACE_ID__",
       "name": "/override",
-      "url": "{{ base_url }}/override",
+      "url": "{{ _.base_url }}/override",
       "body": {},
       "method": "GET",
       "parameters": [],
@@ -71,7 +71,7 @@
         "addTo": "query",
         "key": "apiKeyHere",
         "type": "apikey",
-        "value": "{{ apiKeyHere }}"
+        "value": "{{ _.apiKeyHere }}"
       },
       "_type": "request",
       "_id": "req___WORKSPACE_ID__b410454b"
