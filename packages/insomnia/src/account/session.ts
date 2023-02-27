@@ -65,8 +65,9 @@ export async function absorbKey(sessionId: string, key: string) {
   setSessionData({
     ...whoamiResponse,
     sessionId,
-    isTrialing: true,
     id: sessionId,
+    encPrivateKey: JSON.parse(whoamiResponse.encPrivateKey),
+    publicKey: JSON.parse(whoamiResponse.publicKey),
     symmetricKey: JSON.parse(symmetricKeyStr),
   });
 
