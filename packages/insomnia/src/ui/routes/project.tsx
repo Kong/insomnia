@@ -49,7 +49,6 @@ import {
   Organization,
 } from '../../models/organization';
 import {
-  isDefaultProject,
   isRemoteProject,
   Project,
 } from '../../models/project';
@@ -248,7 +247,7 @@ const OrganizationProjectsSidebar: FC<{
   title: string;
   projects: Project[];
   workspaces: Workspace[];
-  activeProject: Project;
+  activeProject: Project | null;
   organizationId: string;
   allFilesCount: number;
   documentsCount: number;
@@ -333,7 +332,7 @@ const OrganizationProjectsSidebar: FC<{
           variant="text"
           size="small"
           onClick={() => {
-            if (activeProject.remoteId) {
+            if (activeProject?.remoteId) {
               showAlert({
                 title: 'This capability is coming soon',
                 okLabel: 'Close',
@@ -398,7 +397,7 @@ const OrganizationProjectsSidebar: FC<{
             <li key={proj._id} className="sidebar__row">
               <div
                 className={`sidebar__item sidebar__item--request ${
-                  activeProject._id === proj._id ? 'sidebar__item--active' : ''
+                  activeProject?._id === proj._id ? 'sidebar__item--active' : ''
                 }`}
               >
                 <button
@@ -418,28 +417,26 @@ const OrganizationProjectsSidebar: FC<{
                   }
                   className="wide"
                 >
-                  {isRemoteProject(activeProject) ? (
+                  {activeProject && isRemoteProject(activeProject) ? (
                     <i className="fa fa-globe" />
                   ) : (
                     <i className="fa fa-laptop" />
                   )}{' '}
                   {proj.name}
                 </button>
-                {!isDefaultProject(proj) && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      height: '100%',
-                      alignItems: 'center',
-                      padding: '0 var(--padding-md)',
-                    }}
-                  >
-                    <ProjectDropdown
-                      organizationId={organizationId}
-                      project={proj}
-                    />
-                  </div>
-                )}
+                <div
+                  style={{
+                    display: 'flex',
+                    height: '100%',
+                    alignItems: 'center',
+                    padding: '0 var(--padding-md)',
+                  }}
+                >
+                  <ProjectDropdown
+                    organizationId={organizationId}
+                    project={proj}
+                  />
+                </div>
               </div>
             </li>
           );
@@ -623,7 +620,7 @@ interface LoaderData {
   allFilesCount: number;
   documentsCount: number;
   collectionsCount: number;
-  activeProject: Project;
+  activeProject: Project | null;
   projects: Project[];
   organization: Organization;
 }
@@ -644,9 +641,7 @@ export const loader: LoaderFunction = async ({
 
   const project = await models.project.getById(projectId);
 
-  invariant(project, 'Project was not found');
-
-  const projectWorkspaces = await models.workspace.findByParentId(project._id);
+  const projectWorkspaces = await models.workspace.findByParentId(project?._id || '');
 
   const getWorkspaceMetaData = async (workspace: Workspace) => {
     const apiSpec = await models.apiSpec.getByParentId(workspace._id);
@@ -788,7 +783,7 @@ export const loader: LoaderFunction = async ({
   const organizationProjects =
     organizationId === DEFAULT_ORGANIZATION_ID
       ? allProjects.filter(proj => !isRemoteProject(proj))
-      : [project];
+      : project ? [project] : [];
 
   const projects = sortProjects(organizationProjects).filter(p => p.name.toLowerCase().includes(projectName.toLowerCase()));
 
@@ -823,7 +818,7 @@ const ProjectRoute: FC = () => {
     collectionsCount,
     documentsCount,
   } = useLoaderData() as LoaderData;
-  const { organizationId } = useParams() as { organizationId: string };
+  const { organizationId, projectId } = useParams() as { organizationId: string; projectId?: string };
   const [searchParams] = useSearchParams();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
@@ -850,7 +845,7 @@ const ProjectRoute: FC = () => {
             scope: 'collection',
           },
           {
-            action: `/organization/${organization._id}/project/${activeProject._id}/workspace/new`,
+            action: `/organization/${organization._id}/project/${projectId}/workspace/new`,
             method: 'post',
           }
         );
@@ -872,7 +867,7 @@ const ProjectRoute: FC = () => {
             scope: 'design',
           },
           {
-            action: `/organization/${organization._id}/project/${activeProject._id}/workspace/new`,
+            action: `/organization/${organization._id}/project/${projectId}/workspace/new`,
             method: 'post',
           }
         );
@@ -881,6 +876,7 @@ const ProjectRoute: FC = () => {
   };
 
   const importFromURL = useCallback(() => {
+    activeProject &&
     showPrompt({
       title: 'Import document from URL',
       submitName: 'Fetch and Import',
@@ -899,6 +895,7 @@ const ProjectRoute: FC = () => {
   }, [activeProject, projects, revalidate, workspaces]);
 
   const importFromClipboard = useCallback(() => {
+    activeProject &&
     importClipBoard({
       activeProjectWorkspaces: workspaces.map(w => w.workspace),
       activeProject,
@@ -909,6 +906,7 @@ const ProjectRoute: FC = () => {
   }, [activeProject, projects, revalidate, workspaces]);
 
   const importFromFile = useCallback(() => {
+    activeProject &&
     importFile({
       activeProjectWorkspaces: workspaces.map(w => w.workspace),
       activeProject,
@@ -943,157 +941,163 @@ const ProjectRoute: FC = () => {
             />
           }
           renderPaneOne={
-            <Pane
-              style={!hasWorkspaces ? {
-                gridTemplateRows: 'auto 1fr',
-                gridTemplateColumns: '1fr',
-              } : undefined}
-            >
-              <PaneHeaderToolbar>
-                <SearchFormControl className="form-control form-control--outlined no-margin">
-                  <SearchInput
-                    autoFocus
-                    type="text"
-                    placeholder="Filter..."
-                    onChange={event =>
-                      submit({
-                        ...Object.fromEntries(searchParams.entries()),
-                        filter: event.target.value,
-                      })
-                    }
-                    className="no-margin"
-                  />
-                  <span
-                    style={{
-                      fontSize: 'var(--font-size-xs)',
-                      position: 'absolute',
-                      right: 'var(--padding-sm)',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                    }}
-                    className="fa fa-search"
-                  />
-                </SearchFormControl>
-                <div style={{ display: 'flex' }}>
-                  <DashboardSortDropdown
-                    value={sortOrder}
-                    onSelect={sortOrder => {
-                      submit({
-                        ...Object.fromEntries(searchParams.entries()),
-                        sortOrder,
-                      });
-                    }}
-                  />
-                  {isRemoteProject(activeProject) && (
-                    <RemoteWorkspacesDropdown
-                      key={activeProject._id}
-                      project={activeProject}
+            activeProject ? (
+              <Pane
+                style={!hasWorkspaces ? {
+                  gridTemplateRows: 'auto 1fr',
+                  gridTemplateColumns: '1fr',
+                } : undefined}
+              >
+                <PaneHeaderToolbar>
+                  <SearchFormControl className="form-control form-control--outlined no-margin">
+                    <SearchInput
+                      autoFocus
+                      type="text"
+                      placeholder="Filter..."
+                      onChange={event =>
+                        submit({
+                          ...Object.fromEntries(searchParams.entries()),
+                          filter: event.target.value,
+                        })
+                      }
+                      className="no-margin"
                     />
-                  )}
-                  <Dropdown
-                    aria-label="Create New Dropdown"
-                    triggerButton={
-                      <StyledDropdownButton
-                        disableHoverBehavior={false}
-                        removePaddings={false}
-                        size="medium"
-                      >
-                        <i className="fa fa-plus" /> Create{' '}
-                        <i className="fa fa-caret-down pad-left-sm" />
-                      </StyledDropdownButton>
-                    }
-                  >
-                    <DropdownSection aria-label="New Section" title="New">
-                      <DropdownItem aria-label="Request Collection">
-                        <ItemContent
-                          icon="bars"
-                          label="Request Collection"
-                          onClick={createNewCollection}
-                        />
-                      </DropdownItem>
-                      <DropdownItem aria-label="Design Document">
-                        <ItemContent
-                          icon="file-o"
-                          label="Design Document"
-                          onClick={createNewDocument}
-                        />
-                      </DropdownItem>
-                    </DropdownSection>
-                    <DropdownSection
-                      aria-label="Import From"
-                      title="Import From"
+                    <span
+                      style={{
+                        fontSize: 'var(--font-size-xs)',
+                        position: 'absolute',
+                        right: 'var(--padding-sm)',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                      }}
+                      className="fa fa-search"
+                    />
+                  </SearchFormControl>
+                  <div style={{ display: 'flex' }}>
+                    <DashboardSortDropdown
+                      value={sortOrder}
+                      onSelect={sortOrder => {
+                        submit({
+                          ...Object.fromEntries(searchParams.entries()),
+                          sortOrder,
+                        });
+                      }}
+                    />
+                    {isRemoteProject(activeProject) && (
+                      <RemoteWorkspacesDropdown
+                        key={activeProject._id}
+                        project={activeProject}
+                      />
+                    )}
+                    <Dropdown
+                      aria-label="Create New Dropdown"
+                      triggerButton={
+                        <StyledDropdownButton
+                          disableHoverBehavior={false}
+                          removePaddings={false}
+                          size="medium"
+                        >
+                          <i className="fa fa-plus" /> Create{' '}
+                          <i className="fa fa-caret-down pad-left-sm" />
+                        </StyledDropdownButton>
+                      }
                     >
-                      <DropdownItem aria-label="File">
-                        <ItemContent
-                          icon="plus"
-                          label="File"
-                          onClick={importFromFile}
-                        />
-                      </DropdownItem>
-                      <DropdownItem aria-label="URL">
-                        <ItemContent
-                          icon="link"
-                          label="URL"
-                          onClick={importFromURL}
-                        />
-                      </DropdownItem>
-                      <DropdownItem aria-label="Clipboard">
-                        <ItemContent
-                          icon="clipboard"
-                          label="Clipboard"
-                          onClick={importFromClipboard}
-                        />
-                      </DropdownItem>
-                      <DropdownItem aria-label="Git Clone">
-                        <ItemContent
-                          icon="code-fork"
-                          label="Git Clone"
-                          onClick={importFromGit}
-                        />
-                      </DropdownItem>
-                    </DropdownSection>
-                  </Dropdown>
-                </div>
+                      <DropdownSection aria-label="New Section" title="New">
+                        <DropdownItem aria-label="Request Collection">
+                          <ItemContent
+                            icon="bars"
+                            label="Request Collection"
+                            onClick={createNewCollection}
+                          />
+                        </DropdownItem>
+                        <DropdownItem aria-label="Design Document">
+                          <ItemContent
+                            icon="file-o"
+                            label="Design Document"
+                            onClick={createNewDocument}
+                          />
+                        </DropdownItem>
+                      </DropdownSection>
+                      <DropdownSection
+                        aria-label="Import From"
+                        title="Import From"
+                      >
+                        <DropdownItem aria-label="File">
+                          <ItemContent
+                            icon="plus"
+                            label="File"
+                            onClick={importFromFile}
+                          />
+                        </DropdownItem>
+                        <DropdownItem aria-label="URL">
+                          <ItemContent
+                            icon="link"
+                            label="URL"
+                            onClick={importFromURL}
+                          />
+                        </DropdownItem>
+                        <DropdownItem aria-label="Clipboard">
+                          <ItemContent
+                            icon="clipboard"
+                            label="Clipboard"
+                            onClick={importFromClipboard}
+                          />
+                        </DropdownItem>
+                        <DropdownItem aria-label="Git Clone">
+                          <ItemContent
+                            icon="code-fork"
+                            label="Git Clone"
+                            onClick={importFromGit}
+                          />
+                        </DropdownItem>
+                      </DropdownSection>
+                    </Dropdown>
+                  </div>
 
-              </PaneHeaderToolbar>
-              {hasWorkspaces && workspaces.map(workspace => (
-                <WorkspaceCard
-                  {...workspace}
-                  projects={projects}
-                  key={workspace.apiSpec._id}
-                  activeProject={activeProject}
-                  onSelect={() =>
-                    navigate(
-                      `/organization/${organizationId}/project/${
-                        activeProject._id
-                      }/workspace/${workspace.workspace._id}/${
-                        workspace.workspace.scope === 'design'
-                          ? ACTIVITY_SPEC
-                          : ACTIVITY_DEBUG
-                      }`
-                    )
-                  }
-                  filter={filter}
-                />
-              ))}
-              {filter && !hasWorkspaces && (
-                <div>
-                  <p className="notice subtle">
-                    No documents found for <strong>{filter}</strong>
-                  </p>
-                </div>
-              )}
-              {!filter && !hasWorkspaces && (
-                <EmptyStatePane
-                  createRequestCollection={createNewCollection}
-                  createDesignDocument={createNewDocument}
-                  importFromFile={importFromFile}
-                  importFromURL={importFromURL}
-                  importFromClipboard={importFromClipboard}
-                  importFromGit={importFromGit}
-                />
-              )}
-            </Pane>
+                </PaneHeaderToolbar>
+                {hasWorkspaces && workspaces.map(workspace => (
+                  <WorkspaceCard
+                    {...workspace}
+                    projects={projects}
+                    key={workspace.apiSpec._id}
+                    activeProject={activeProject}
+                    onSelect={() =>
+                      navigate(
+                        `/organization/${organizationId}/project/${
+                          activeProject._id
+                        }/workspace/${workspace.workspace._id}/${
+                          workspace.workspace.scope === 'design'
+                            ? ACTIVITY_SPEC
+                            : ACTIVITY_DEBUG
+                        }`
+                      )
+                    }
+                    filter={filter}
+                  />
+                ))}
+                {filter && !hasWorkspaces && (
+                  <div>
+                    <p className="notice subtle">
+                      No documents found for <strong>{filter}</strong>
+                    </p>
+                  </div>
+                )}
+                {!filter && !hasWorkspaces && (
+                  <EmptyStatePane
+                    createRequestCollection={createNewCollection}
+                    createDesignDocument={createNewDocument}
+                    importFromFile={importFromFile}
+                    importFromURL={importFromURL}
+                    importFromClipboard={importFromClipboard}
+                    importFromGit={importFromGit}
+                  />
+                )}
+              </Pane>
+            ) : (
+              <Pane>
+                <div />
+              </Pane>
+            )
           }
         />
         {isGitRepositoryCloneModalOpen && (

@@ -52,7 +52,7 @@ initializeLogging();
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
-let locationHistoryEntry = `/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`;
+let locationHistoryEntry = `/organization/${DEFAULT_ORGANIZATION_ID}`;
 const prevLocationHistoryEntry = localStorage.getItem('locationHistoryEntry');
 
 if (prevLocationHistoryEntry && matchPath({ path: '/organization/:organizationId', end: false }, prevLocationHistoryEntry)) {
@@ -459,7 +459,6 @@ function updateReduxNavigationState(store: Store, pathname: string) {
 
 async function renderApp() {
   await database.initClient();
-  await models.project.seed();
 
   await initPlugins();
 

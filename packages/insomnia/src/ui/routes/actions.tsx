@@ -67,7 +67,11 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
 
   trackSegmentEvent(SegmentEvent.projectLocalDelete);
 
-  return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`);
+  if (projectId !== DEFAULT_PROJECT_ID) {
+    return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`);
+  } else {
+    return redirect(`/organization/${organizationId}`);
+  }
 };
 
 // Workspace
