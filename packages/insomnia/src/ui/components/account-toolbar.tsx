@@ -92,7 +92,7 @@ export const AccountToolbar = () => {
           </SignUpButton>
         </Fragment>
       )}
-      {user && <UpgradeAccountButton user={user} />}
+      {(isLoggedIn && user) && <UpgradeAccountButton user={user} />}
     </Toolbar>
   );
 };
