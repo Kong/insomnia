@@ -450,6 +450,7 @@ const OrganizationProjectsSidebar: FC<{
 
       <ProjectListContainer>
         <List
+          aria-label='Files'
           selectionMode="single"
           selectionBehavior="toggle"
           selectedKeys={[searchParams.get('scope') || '']}

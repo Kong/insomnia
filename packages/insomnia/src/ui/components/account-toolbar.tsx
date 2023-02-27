@@ -1,13 +1,23 @@
+
 import React, { Fragment } from 'react';
 import styled from 'styled-components';
 
 import * as session from '../../account/session';
+import { getAppWebsiteBaseURL } from '../../common/constants';
 import { clickLink } from '../../common/electron-helpers';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
+import { UpgradeAccountButton } from './account-upgrade-button';
+import {
+  Dropdown,
+  DropdownButton,
+  DropdownItem,
+  ItemContent,
+} from './base/dropdown';
 import { Link as ExternalLink } from './base/link';
 import { showLoginModal } from './modals/login-modal';
 import { SvgIcon } from './svg-icon';
 import { Button } from './themed-button';
+
+const WebsiteURL = getAppWebsiteBaseURL();
 
 const Toolbar = styled.div({
   display: 'flex',
@@ -29,7 +39,7 @@ const SignUpButton = styled(Button)({
 
 export const AccountToolbar = () => {
   const isLoggedIn = session.isLoggedIn();
-
+  const user = session.getSession();
   return (
     <Toolbar>
       {isLoggedIn ? (
@@ -41,25 +51,23 @@ export const AccountToolbar = () => {
               removePaddings={false}
               disableHoverBehavior={false}
             >
-              <SvgIcon icon='user' />{session.getFirstName()} {session.getLastName()}<i className="fa fa-caret-down" />
+              <SvgIcon icon="user" />
+              {user?.firstName} {user?.lastName}
+              <i className="fa fa-caret-down" />
             </DropdownButton>
           }
         >
-          <DropdownItem
-            key="account-settings"
-            aria-label="Account settings"
-          >
+          <DropdownItem key="account-settings" aria-label="Account settings">
             <ItemContent
               icon="gear"
-              label='Account Settings'
+              label="Account Settings"
               stayOpenAfterClick
-              onClick={() => clickLink('https://app.insomnia.rest/app/account/')}
+              onClick={() =>
+                clickLink(`${WebsiteURL}/app/account/`)
+              }
             />
           </DropdownItem>
-          <DropdownItem
-            key="logout"
-            aria-label='logout'
-          >
+          <DropdownItem key="logout" aria-label="logout">
             <ItemContent
               icon="sign-out"
               label="Logout"
@@ -71,14 +79,20 @@ export const AccountToolbar = () => {
         </Dropdown>
       ) : (
         <Fragment>
-          <Button variant='outlined' size="small" onClick={showLoginModal}>
+          <Button variant="outlined" size="small" onClick={showLoginModal}>
             Login
           </Button>
-          <SignUpButton href="https://app.insomnia.rest/app/signup/" as={ExternalLink} size="small" variant='contained'>
+          <SignUpButton
+            href={`${WebsiteURL}/app/signup/`}
+            as={ExternalLink}
+            size="small"
+            variant="contained"
+          >
             Sign Up
           </SignUpButton>
         </Fragment>
       )}
+      {(isLoggedIn && user) && <UpgradeAccountButton user={user} />}
     </Toolbar>
   );
 };
