@@ -6,6 +6,7 @@ import {
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   FLEXIBLE_URL_REGEX,
+  getContentTypeName,
   isValidActivity,
   isWorkspaceActivity,
 } from '../constants';
@@ -62,5 +63,26 @@ describe('isValidActivity', () => {
     expect(isValidActivity(null)).toBe(false);
     // @ts-expect-error intentionally invalid
     expect(isValidActivity(undefined)).toBe(false);
+  });
+});
+
+describe('getContentTypeName', () => {
+  it('should return empty content type name', () => {
+    expect(getContentTypeName()).toBe('');
+  });
+  it('should return content type name', () => {
+    expect(getContentTypeName('application/json')).toBe('JSON');
+    expect(getContentTypeName('application/json; charset=utf-8')).toBe('JSON');
+    expect(getContentTypeName('text/plain')).toBe('Plain');
+    expect(getContentTypeName('application/xml')).toBe('XML');
+    expect(getContentTypeName('text/yaml')).toBe('YAML');
+    expect(getContentTypeName('application/edn')).toBe('EDN');
+    expect(getContentTypeName('application/x-www-form-urlencoded')).toBe('Form');
+    expect(getContentTypeName('multipart/form-data')).toBe('Multipart');
+    expect(getContentTypeName('application/graphql')).toBe('GraphQL');
+    expect(getContentTypeName('application/octet-stream')).toBe('File');
+  });
+  it('should return unknown content type as other content type name name', () => {
+    expect(getContentTypeName('unknown')).toBe('Other');
   });
 });
