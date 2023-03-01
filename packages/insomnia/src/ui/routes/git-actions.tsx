@@ -17,15 +17,12 @@ import {
 } from '../../models/workspace';
 import { fsClient } from '../../sync/git/fs-client';
 import { gitRollback } from '../../sync/git/git-rollback';
-import {
-  getGitVCS,
+import GitVCS, {
   GIT_CLONE_DIR,
   GIT_INSOMNIA_DIR,
   GIT_INSOMNIA_DIR_NAME,
   GIT_INTERNAL_DIR,
   GitLogEntry,
-  GitVCS,
-  setGitVCS,
 } from '../../sync/git/git-vcs';
 import { MemClient } from '../../sync/git/mem-client';
 import { NeDBClient } from '../../sync/git/ne-db-client';
@@ -89,12 +86,10 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
       [GIT_INTERNAL_DIR]: gitDataClient,
     });
 
-    const vcs = new GitVCS();
-
     // Init VCS
     const { credentials, uri } = gitRepository;
     if (gitRepository.needsFullClone) {
-      await vcs.initFromClone({
+      await GitVCS.initFromClone({
         url: uri,
         gitCredentials: credentials,
         directory: GIT_CLONE_DIR,
@@ -106,7 +101,7 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
         needsFullClone: false,
       });
     } else {
-      await vcs.init({
+      await GitVCS.init({
         directory: GIT_CLONE_DIR,
         fs: routableFS,
         gitDirectory: GIT_INTERNAL_DIR,
@@ -115,22 +110,20 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
 
     // Configure basic info
     const { author, uri: gitUri } = gitRepository;
-    await vcs.setAuthor(author.name, author.email);
-    await vcs.addRemote(gitUri);
+    await GitVCS.setAuthor(author.name, author.email);
+    await GitVCS.addRemote(gitUri);
 
     try {
-      await vcs.fetch(false, 1, gitRepository?.credentials);
+      await GitVCS.fetch(true, 1, gitRepository?.credentials);
     } catch (e) {
       console.warn('Error fetching from remote');
     }
 
-    setGitVCS(vcs);
-
     return {
-      branch: await vcs.getBranch(),
-      log: await vcs.log() || [],
-      branches: await vcs.listBranches(),
-      remoteBranches: await vcs.listRemoteBranches(),
+      branch: await GitVCS.getBranch(),
+      log: await GitVCS.log() || [],
+      branches: await GitVCS.listBranches(),
+      remoteBranches: await GitVCS.listRemoteBranches(),
       gitRepository: gitRepository,
     };
   } catch (e) {
@@ -164,11 +157,9 @@ export const gitChangesLoader: LoaderFunction = async ({ params }): Promise<GitC
 
   invariant(gitRepository, 'Git Repository not found');
 
-  const vcs = getGitVCS();
+  const branch = await GitVCS.getBranch();
 
-  const branch = await vcs.getBranch();
-
-  const { changes, statusNames } = await getGitChanges(vcs, workspace);
+  const { changes, statusNames } = await getGitChanges(GitVCS, workspace);
 
   return {
     branch,
@@ -525,10 +516,8 @@ export const commitToGitRepoAction: ActionFunction = async ({
   const allModified = Boolean(formData.get('allModified'));
   const allUnversioned = Boolean(formData.get('allUnversioned'));
 
-  const vcs = getGitVCS();
-
   try {
-    const { changes } = await getGitChanges(vcs, workspace);
+    const { changes } = await getGitChanges(GitVCS, workspace);
 
     const changesToCommit = changes.filter(change => {
       if (allModified && !change.added) {
@@ -540,10 +529,10 @@ export const commitToGitRepoAction: ActionFunction = async ({
     });
 
     for (const item of changesToCommit) {
-      item.status.includes('deleted') ? await vcs.remove(item.path) : await vcs.add(item.path);
+      item.status.includes('deleted') ? await GitVCS.remove(item.path) : await GitVCS.add(item.path);
     }
 
-    await vcs.commit(message);
+    await GitVCS.commit(message);
 
     const providerName = getOauth2FormatName(repo?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'commit'), providerName });
@@ -579,11 +568,9 @@ export const createNewGitBranchAction: ActionFunction = async ({ request, params
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch name is required');
 
-  const vcs = getGitVCS();
-
   try {
     const providerName = getOauth2FormatName(repo?.credentials);
-    await vcs.checkout(branch);
+    await GitVCS.checkout(branch);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'create_branch'), providerName });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Something went wrong while creating a new branch';
@@ -623,18 +610,10 @@ export const checkoutGitBranchAction: ActionFunction = async ({
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch name is required');
 
-  const vcs = getGitVCS();
-
-  try {
-    await vcs.fetch(false, 1, repo?.credentials);
-  } catch (e) {
-    console.warn('Error fetching from remote');
-  }
   const bufferId = await database.bufferChanges();
   try {
-    await vcs.checkout(branch);
-    // Fetch the last 20 commits for the branch
-    await vcs.fetch(true, 20, repo?.credentials);
+    await GitVCS.checkout(branch);
+    await GitVCS.fetch(true, 1, repo?.credentials);
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : err;
     return {
@@ -643,7 +622,7 @@ export const checkoutGitBranchAction: ActionFunction = async ({
   }
 
   if (workspaceMeta) {
-    const log = (await vcs.log()) || [];
+    const log = (await GitVCS.log()) || [];
 
     const author = log[0] ? log[0].commit.author : null;
     const cachedGitLastCommitTime = author ? author.timestamp * 1000 : null;
@@ -681,19 +660,17 @@ export const mergeGitBranchAction: ActionFunction = async ({ request, params }):
   const repo = await models.gitRepository.getById(repoId);
   invariant(repo, 'Git Repository not found');
 
-  const vcs = getGitVCS();
-
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch name is required');
 
   try {
     const providerName = getOauth2FormatName(repo?.credentials);
-    await vcs.merge(branch);
+    await GitVCS.merge(branch);
     // Apparently merge doesn't update the working dir so need to checkout too
     const bufferId = await database.bufferChanges();
 
-    await vcs.checkout(branch);
+    await GitVCS.checkout(branch);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'checkout_branch'), providerName });
     await database.flushChanges(bufferId, true);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'merge_branch'), providerName });
@@ -726,8 +703,6 @@ export const deleteGitBranchAction: ActionFunction = async ({ request, params })
   const repo = await models.gitRepository.getById(repoId);
   invariant(repo, 'Git Repository not found');
 
-  const vcs = getGitVCS();
-
   const formData = await request.formData();
 
   const branch = formData.get('branch');
@@ -735,7 +710,7 @@ export const deleteGitBranchAction: ActionFunction = async ({ request, params })
 
   try {
     const providerName = getOauth2FormatName(repo?.credentials);
-    await vcs.deleteBranch(branch);
+    await GitVCS.deleteBranch(branch);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'delete_branch'), providerName });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -772,12 +747,10 @@ export const pushToGitRemoteAction: ActionFunction = async ({
 
   invariant(gitRepository, 'Git Repository not found');
 
-  const vcs = getGitVCS();
-
   // Check if there is anything to push
   let canPush = false;
   try {
-    canPush = await vcs.canPush(gitRepository.credentials);
+    canPush = await GitVCS.canPush(gitRepository.credentials);
   } catch (err) {
     return { errors: ['Error Pushing Repository'] };
   }
@@ -791,7 +764,7 @@ export const pushToGitRemoteAction: ActionFunction = async ({
   const bufferId = await database.bufferChanges();
   const providerName = getOauth2FormatName(gitRepository.credentials);
   try {
-    await vcs.push(gitRepository.credentials);
+    await GitVCS.push(gitRepository.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push'), providerName });
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
@@ -836,20 +809,18 @@ export const pullFromGitRemoteAction: ActionFunction = async ({
 
   invariant(gitRepository, 'Git Repository not found');
 
-  const vcs = getGitVCS();
-
   const bufferId = await database.bufferChanges();
 
   const providerName = getOauth2FormatName(gitRepository.credentials);
 
   try {
-    await vcs.fetch(false, 1, gitRepository?.credentials);
+    await GitVCS.fetch(true, 1, gitRepository?.credentials);
   } catch (e) {
     console.warn('Error fetching from remote');
   }
 
   try {
-    await vcs.pull(gitRepository.credentials);
+    await GitVCS.pull(gitRepository.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'pull'), providerName });
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
@@ -874,7 +845,7 @@ export interface GitChange {
   editable: boolean;
 }
 
-async function getGitVCSPaths(vcs: GitVCS) {
+async function getGitVCSPaths(vcs: typeof GitVCS) {
   const gitFS = vcs.getFs();
 
   const fs = 'promises' in gitFS ? gitFS.promises : gitFS;
@@ -897,7 +868,7 @@ async function getGitVCSPaths(vcs: GitVCS) {
   return Array.from(uniquePaths).sort();
 }
 
-async function getGitChanges(vcs: GitVCS, workspace: Workspace) {
+async function getGitChanges(vcs: typeof GitVCS, workspace: Workspace) {
   // Cache status names
   const docs = await database.withDescendants(workspace);
   const allPaths = await getGitVCSPaths(vcs);
@@ -910,6 +881,7 @@ async function getGitChanges(vcs: GitVCS, workspace: Workspace) {
   // Create status items
   const items: Record<string, GitChange> = {};
   const log = (await vcs.log(1)) || [];
+
   for (const gitPath of allPaths) {
     const status = await vcs.status(gitPath);
     if (status === 'unmodified') {
@@ -977,14 +949,12 @@ export const gitRollbackChangesAction: ActionFunction = async ({ params, request
 
   invariant(gitRepository, 'Git Repository not found');
 
-  const vcs = getGitVCS();
-
   const formData = await request.formData();
 
   const paths = [...formData.getAll('paths')] as string[];
   const changeType = formData.get('changeType') as string;
   try {
-    const { changes } = await getGitChanges(vcs, workspace);
+    const { changes } = await getGitChanges(GitVCS, workspace);
 
     const files = changes
       .filter(i => changeType === 'modified' ? !i.status.includes('added') : i.status.includes('added'))
@@ -997,7 +967,7 @@ export const gitRollbackChangesAction: ActionFunction = async ({ params, request
         status: i.status,
       }));
 
-    await gitRollback(vcs, files);
+    await gitRollback(GitVCS, files);
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while rolling back changes';
     return {

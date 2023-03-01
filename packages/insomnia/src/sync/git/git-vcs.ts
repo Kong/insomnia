@@ -423,9 +423,4 @@ export class GitVCS {
   }
 }
 
-let gitVCSInstance = new GitVCS();
-
-export const getGitVCS = () => gitVCSInstance;
-export const setGitVCS = (gitVCS: GitVCS) => {
-  gitVCSInstance = gitVCS;
-};
+export default new GitVCS();

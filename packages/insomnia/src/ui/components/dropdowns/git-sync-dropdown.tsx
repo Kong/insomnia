@@ -128,7 +128,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
       id: 3,
       isDisabled: log.length === 0,
       icon: 'clock-o',
-      label: <span>History ({log.length})</span>,
+      label: <span>History</span>,
       onClick: () => setIsGitLogModalOpen(true),
     },
   ];
