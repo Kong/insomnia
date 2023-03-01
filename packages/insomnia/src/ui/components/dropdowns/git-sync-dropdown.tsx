@@ -101,7 +101,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
   const isLoading = gitRepoDataFetcher.state === 'loading';
   const isButton = !gitRepository || (isLoading && !gitRepoDataFetcher.data) || (gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data);
 
-  const { log, branches, branch: currentBranch, remoteBranches } = (gitRepoDataFetcher.data && 'log' in gitRepoDataFetcher.data) ? gitRepoDataFetcher.data : { log: [], branches: [], branch: '', remoteBranches: [] };
+  const { branches, branch: currentBranch } = (gitRepoDataFetcher.data && 'branches' in gitRepoDataFetcher.data) ? gitRepoDataFetcher.data : { branches: [], branch: '' };
 
   let dropdown: React.ReactNode = null;
 
@@ -126,22 +126,19 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
     },
     {
       id: 3,
-      isDisabled: log.length === 0,
       icon: 'clock-o',
       label: <span>History</span>,
       onClick: () => setIsGitLogModalOpen(true),
     },
   ];
 
-  if (log.length > 0) {
-    currentBranchActions.splice(1, 0, {
-      id: 4,
-      stayOpenAfterClick: true,
-      icon: loadingPush ? 'refresh fa-spin' : 'cloud-upload',
-      label: 'Push',
-      onClick: () => handlePush({ force: false }),
-    });
-  }
+  currentBranchActions.splice(1, 0, {
+    id: 4,
+    stayOpenAfterClick: true,
+    icon: loadingPush ? 'refresh fa-spin' : 'cloud-upload',
+    label: 'Push',
+    onClick: () => handlePush({ force: false }),
+  });
 
   if (isButton) {
     dropdown = (
@@ -262,14 +259,13 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
       {isGitRepoSettingsModalOpen && <GitRepositorySettingsModal gitRepository={gitRepository ?? undefined} onHide={() => setIsGitRepoSettingsModalOpen(false)} />}
       {isGitBranchesModalOpen &&
         <GitBranchesModal
-          gitRepository={gitRepository}
           branches={branches}
-          remoteBranches={remoteBranches}
+          gitRepository={gitRepository}
           activeBranch={currentBranch}
           onHide={() => setIsGitBranchesModalOpen(false)}
         />
       }
-      {isGitLogModalOpen && <GitLogModal branch={currentBranch} logs={log} onHide={() => setIsGitLogModalOpen(false)} />}
+      {isGitLogModalOpen && <GitLogModal branch={currentBranch} logs={[]} onHide={() => setIsGitLogModalOpen(false)} />}
       {isGitStagingModalOpen &&
         <GitStagingModal
           onHide={() => setIsGitStagingModalOpen(false)}

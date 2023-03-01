@@ -39,9 +39,7 @@ import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../a
 // Loaders
 export type GitRepoLoaderData = {
   branch: string;
-  log: GitLogEntry[];
   branches: string[];
-  remoteBranches: string[];
   gitRepository: GitRepository | null;
 } | {
   errors: string[];
@@ -105,6 +103,7 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
         directory: GIT_CLONE_DIR,
         fs: routableFS,
         gitDirectory: GIT_INTERNAL_DIR,
+        gitCredentials: credentials,
       });
     }
 
@@ -113,17 +112,15 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
     await GitVCS.setAuthor(author.name, author.email);
     await GitVCS.addRemote(gitUri);
 
-    try {
-      await GitVCS.fetch(true, 1, gitRepository?.credentials);
-    } catch (e) {
-      console.warn('Error fetching from remote');
-    }
+    // try {
+    //   await GitVCS.fetch(true, 1, gitRepository?.credentials);
+    // } catch (e) {
+    //   console.warn('Error fetching from remote');
+    // }
 
     return {
       branch: await GitVCS.getBranch(),
-      log: await GitVCS.log() || [],
       branches: await GitVCS.listBranches(),
-      remoteBranches: await GitVCS.listRemoteBranches(),
       gitRepository: gitRepository,
     };
   } catch (e) {
@@ -132,6 +129,70 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
       errors: [errorMessage],
     };
   }
+};
+
+export type GitBranchesLoaderData = {
+  branches: string[];
+  remoteBranches: string[];
+} | {
+  errors: string[];
+};
+
+export const gitBranchesLoader: LoaderFunction = async ({ params }): Promise<GitBranchesLoaderData> => {
+  const { workspaceId, projectId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === 'string', 'Project Id is required');
+
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  if (!workspaceMeta?.gitRepositoryId) {
+    return {
+      errors: ['Workspace is not linked to a git repository'],
+    };
+  }
+
+  const gitRepository = await models.gitRepository.getById(workspaceMeta?.gitRepositoryId);
+  invariant(gitRepository, 'Git Repository not found');
+
+  const branches = await GitVCS.listBranches();
+
+  const remoteBranches = await GitVCS.fetchRemoteBranches();
+
+  return {
+    branches,
+    remoteBranches,
+  };
+};
+
+export type GitLogLoaderData = {
+  log: GitLogEntry[];
+} | {
+  errors: string[];
+};
+
+export const gitLogLoader: LoaderFunction = async ({ params }): Promise<GitLogLoaderData> => {
+  const { workspaceId, projectId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === 'string', 'Project Id is required');
+
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  if (!workspaceMeta?.gitRepositoryId) {
+    return {
+      errors: ['Workspace is not linked to a git repository'],
+    };
+  }
+
+  const gitRepository = await models.gitRepository.getById(workspaceMeta?.gitRepositoryId);
+  invariant(gitRepository, 'Git Repository not found');
+
+  const log = await GitVCS.log();
+
+  return {
+    log,
+  };
 };
 
 export interface GitChangesLoaderData {

@@ -260,6 +260,14 @@ const router = createMemoryRouter(
                                   action: async (...args) => (await import('./routes/git-actions')).commitToGitRepoAction(...args),
                                 },
                                 {
+                                  path: 'branches',
+                                  loader: async (...args) => (await import('./routes/git-actions')).gitBranchesLoader(...args),
+                                },
+                                {
+                                  path: 'log',
+                                  loader: async (...args) => (await import('./routes/git-actions')).gitLogLoader(...args),
+                                },
+                                {
                                   path: 'branch',
                                   children: [
                                     {
