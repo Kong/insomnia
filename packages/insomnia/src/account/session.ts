@@ -27,8 +27,7 @@ export interface WhoamiResponse {
   maxTeamMembers: number;
 }
 
-export type SessionData = {
-  sessionId: string;
+export interface SessionData {
   accountId: string;
   id: string;
   email: string;
@@ -37,7 +36,7 @@ export type SessionData = {
   symmetricKey: JsonWebKey;
   publicKey: JsonWebKey;
   encPrivateKey: crypt.AESMessage;
-} & WhoamiResponse;
+}
 
 const loginCallbacks: LoginCallback[] = [];
 
@@ -59,17 +58,27 @@ export function onLoginLogout(loginCallback: LoginCallback) {
 /** Creates a session from a sessionId and derived symmetric key. */
 export async function absorbKey(sessionId: string, key: string) {
   // Get and store some extra info (salts and keys)
-  const whoamiResponse = await _whoami(sessionId);
-  const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(whoamiResponse.encSymmetricKey));
+  const {
+    publicKey,
+    encPrivateKey,
+    encSymmetricKey,
+    email,
+    accountId,
+    firstName,
+    lastName,
+  } = await _whoami(sessionId);
+  const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
   // Store the information for later
-  setSessionData({
-    ...whoamiResponse,
+  setSessionData(
     sessionId,
-    id: sessionId,
-    encPrivateKey: JSON.parse(whoamiResponse.encPrivateKey),
-    publicKey: JSON.parse(whoamiResponse.publicKey),
-    symmetricKey: JSON.parse(symmetricKeyStr),
-  });
+    accountId,
+    firstName,
+    lastName,
+    email,
+    JSON.parse(symmetricKeyStr),
+    JSON.parse(publicKey),
+    JSON.parse(encPrivateKey),
+  );
 
   _callCallbacks();
 }
@@ -120,11 +129,11 @@ export function sendPasswordChangeCode() {
 }
 
 export function getPublicKey() {
-  return getSession()?.publicKey;
+  return _getSessionData()?.publicKey;
 }
 
 export function getPrivateKey() {
-  const sessionData = getSession();
+  const sessionData = _getSessionData();
 
   if (!sessionData) {
     throw new Error("Can't get private key: session is blank.");
@@ -149,19 +158,19 @@ export function getCurrentSessionId() {
 }
 
 export function getAccountId() {
-  return getSession()?.accountId;
+  return _getSessionData()?.accountId;
 }
 
 export function getEmail() {
-  return getSession()?.email;
+  return _getSessionData()?.email;
 }
 
 export function getFirstName() {
-  return getSession()?.firstName;
+  return _getSessionData()?.firstName;
 }
 
 export function getLastName() {
-  return getSession()?.lastName;
+  return _getSessionData()?.lastName;
 }
 
 export function getFullName() {
@@ -189,11 +198,30 @@ export async function logout() {
 }
 
 /** Set data for the new session and store it encrypted with the sessionId */
-export function setSessionData(sessionData: SessionData) {
+export function setSessionData(
+  sessionId: string,
+  accountId: string,
+  firstName: string,
+  lastName: string,
+  email: string,
+  symmetricKey: JsonWebKey,
+  publicKey: JsonWebKey,
+  encPrivateKey: crypt.AESMessage,
+) {
+  const sessionData: SessionData = {
+    id: sessionId,
+    accountId: accountId,
+    symmetricKey: symmetricKey,
+    publicKey: publicKey,
+    encPrivateKey: encPrivateKey,
+    email: email,
+    firstName: firstName,
+    lastName: lastName,
+  };
   const dataStr = JSON.stringify(sessionData);
-  window.localStorage.setItem(_getSessionKey(sessionData.sessionId), dataStr);
+  window.localStorage.setItem(_getSessionKey(sessionId), dataStr);
   // NOTE: We're setting this last because the stuff above might fail
-  window.localStorage.setItem('currentSessionId', sessionData.sessionId);
+  window.localStorage.setItem('currentSessionId', sessionId);
 }
 export async function listTeams() {
   return fetch.get('/api/teams', getCurrentSessionId());
@@ -203,7 +231,7 @@ export async function listTeams() {
 // Helper Functions //
 // ~~~~~~~~~~~~~~~~ //
 function _getSymmetricKey() {
-  return getSession()?.symmetricKey;
+  return _getSessionData()?.symmetricKey;
 }
 
 function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
@@ -220,7 +248,7 @@ function _getAuthSalts(email: string) {
   );
 }
 
-export const getSession = (): Partial<SessionData> | null => {
+const _getSessionData = (): Partial<SessionData> | null => {
   const sessionId = getCurrentSessionId();
 
   if (!sessionId || !window) {
