@@ -40,6 +40,8 @@ export const GitStagingModal: FC<ModalProps> = ({
   const gitCommitFetcher = useFetcher<CommitToGitRepoResult>();
   const rollbackFetcher = useFetcher<GitRollbackChangesResult>();
 
+  const isLoadingGitChanges = gitChangesFetcher.state !== 'idle';
+
   useEffect(() => {
     modalRef.current?.show();
   }, []);
@@ -313,7 +315,9 @@ export const GitStagingModal: FC<ModalProps> = ({
                 )}
               </>
             ) : (
-              <>No changes to commit.</>
+              <>
+                {isLoadingGitChanges ? 'Loading list of changes.' : 'No changes to commit.'}
+              </>
             )}
           </gitCommitFetcher.Form>
         </ModalBody>
