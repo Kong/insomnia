@@ -66,6 +66,7 @@ interface InitOptions {
   gitDirectory?: string;
   gitCredentials?: GitCredentials | null;
   uri?: string;
+  repoId: string;
 }
 
 interface InitFromCloneOptions {
@@ -74,6 +75,7 @@ interface InitFromCloneOptions {
   directory: string;
   fs: git.FsClient;
   gitDirectory: string;
+  repoId: string;
 }
 
 /**
@@ -99,19 +101,16 @@ interface BaseOpts {
   onAuthSuccess: git.AuthSuccessCallback;
   onAuth: git.AuthCallback;
   uri: string;
+  repoId: string;
 }
 
 export class GitVCS {
   // @ts-expect-error -- TSCONVERSION not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
-  initialized: boolean;
+  initializedRepoId = '';
 
-  constructor() {
-    this.initialized = false;
-  }
-
-  async init({ directory, fs, gitDirectory, gitCredentials, uri = '' }: InitOptions) {
+  async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       dir: directory,
@@ -120,6 +119,7 @@ export class GitVCS {
       fs,
       http: httpClient,
       uri,
+      repoId,
     };
 
     if (await this.repoExists()) {
@@ -143,8 +143,6 @@ export class GitVCS {
 
       await git.init({ ...this._baseOpts, defaultBranch });
     }
-
-    this.initialized = true;
   }
 
   async getRemoteOriginURI() {
@@ -162,6 +160,7 @@ export class GitVCS {
   }
 
   async initFromClone({
+    repoId,
     url,
     gitCredentials,
     directory,
@@ -175,6 +174,7 @@ export class GitVCS {
       gitdir: gitDirectory,
       fs,
       http: httpClient,
+      repoId,
     };
     await git.clone({
       ...this._baseOpts,
@@ -182,11 +182,10 @@ export class GitVCS {
       singleBranch: true,
     });
     console.log(`[git] Clones repo to ${gitDirectory} from ${url}`);
-    this.initialized = true;
   }
 
-  isInitialized() {
-    return this.initialized;
+  isInitializedForRepo(id: string) {
+    return this._baseOpts.repoId === id;
   }
 
   async listFiles() {

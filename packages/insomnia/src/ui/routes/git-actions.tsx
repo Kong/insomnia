@@ -63,55 +63,58 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
     const gitRepository = await models.gitRepository.getById(workspaceMeta?.gitRepositoryId);
     invariant(gitRepository, 'Git Repository not found');
 
-    // Create FS client
-    const baseDir = path.join(
-      process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-      `version-control/git/${gitRepository._id}`,
-    );
+    if (!GitVCS.isInitializedForRepo(gitRepository._id)) {
+      const baseDir = path.join(
+        process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+        `version-control/git/${gitRepository._id}`,
+      );
 
-    // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
-    const neDbClient = NeDBClient.createClient(workspaceId, projectId);
+      // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
+      const neDbClient = NeDBClient.createClient(workspaceId, projectId);
 
-    // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
-    const gitDataClient = fsClient(baseDir);
+      // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
+      const gitDataClient = fsClient(baseDir);
 
-    // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
-    const otherDatClient = fsClient(path.join(baseDir, 'other'));
+      // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
+      const otherDatClient = fsClient(path.join(baseDir, 'other'));
 
-    // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
-    const routableFS = routableFSClient(otherDatClient, {
-      [GIT_INSOMNIA_DIR]: neDbClient,
-      [GIT_INTERNAL_DIR]: gitDataClient,
-    });
-
-    // Init VCS
-    const { credentials, uri } = gitRepository;
-    if (gitRepository.needsFullClone) {
-      await GitVCS.initFromClone({
-        url: uri,
-        gitCredentials: credentials,
-        directory: GIT_CLONE_DIR,
-        fs: routableFS,
-        gitDirectory: GIT_INTERNAL_DIR,
+      // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
+      const routableFS = routableFSClient(otherDatClient, {
+        [GIT_INSOMNIA_DIR]: neDbClient,
+        [GIT_INTERNAL_DIR]: gitDataClient,
       });
 
-      await models.gitRepository.update(gitRepository, {
-        needsFullClone: false,
-      });
-    } else {
-      await GitVCS.init({
-        uri,
-        directory: GIT_CLONE_DIR,
-        fs: routableFS,
-        gitDirectory: GIT_INTERNAL_DIR,
-        gitCredentials: credentials,
-      });
+      // Init VCS
+      const { credentials, uri } = gitRepository;
+      if (gitRepository.needsFullClone) {
+        await GitVCS.initFromClone({
+          repoId: gitRepository._id,
+          url: uri,
+          gitCredentials: credentials,
+          directory: GIT_CLONE_DIR,
+          fs: routableFS,
+          gitDirectory: GIT_INTERNAL_DIR,
+        });
+
+        await models.gitRepository.update(gitRepository, {
+          needsFullClone: false,
+        });
+      } else {
+        await GitVCS.init({
+          repoId: gitRepository._id,
+          uri,
+          directory: GIT_CLONE_DIR,
+          fs: routableFS,
+          gitDirectory: GIT_INTERNAL_DIR,
+          gitCredentials: credentials,
+        });
+      }
+
+      // Configure basic info
+      const { author, uri: gitUri } = gitRepository;
+      await GitVCS.setAuthor(author.name, author.email);
+      await GitVCS.addRemote(gitUri);
     }
-
-    // Configure basic info
-    const { author, uri: gitUri } = gitRepository;
-    await GitVCS.setAuthor(author.name, author.email);
-    await GitVCS.addRemote(gitUri);
 
     return {
       branch: await GitVCS.getBranch(),
