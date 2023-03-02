@@ -25,7 +25,7 @@ interface GitCredentialsOAuth {
    * Supported OAuth formats.
    * This is needed by isomorphic-git to be able to push/pull using an oauth2 token.
    * https://isomorphic-git.org/docs/en/authentication.html
-  */
+   */
   oauth2format?: 'github' | 'gitlab';
   username: string;
   token: string;
@@ -33,7 +33,9 @@ interface GitCredentialsOAuth {
 
 export type GitCredentials = GitCredentialsBase | GitCredentialsOAuth;
 
-export const isGitCredentialsOAuth = (credentials: GitCredentials): credentials is GitCredentialsOAuth => {
+export const isGitCredentialsOAuth = (
+  credentials: GitCredentials
+): credentials is GitCredentialsOAuth => {
   return 'oauth2format' in credentials;
 };
 
@@ -62,6 +64,9 @@ interface InitOptions {
   directory: string;
   fs: git.FsClient;
   gitDirectory?: string;
+  gitCredentials?: GitCredentials | null;
+  uri?: string;
+  repoId: string;
 }
 
 interface InitFromCloneOptions {
@@ -70,6 +75,7 @@ interface InitFromCloneOptions {
   directory: string;
   fs: git.FsClient;
   gitDirectory: string;
+  repoId: string;
 }
 
 /**
@@ -94,38 +100,77 @@ interface BaseOpts {
   onAuthFailure: git.AuthFailureCallback;
   onAuthSuccess: git.AuthSuccessCallback;
   onAuth: git.AuthCallback;
+  uri: string;
+  repoId: string;
 }
 
 export class GitVCS {
   // @ts-expect-error -- TSCONVERSION not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
-  initialized: boolean;
+  initializedRepoId = '';
 
-  constructor() {
-    this.initialized = false;
-  }
-
-  async init({ directory, fs, gitDirectory }: InitOptions) {
+  async init({ directory, fs, gitDirectory, gitCredentials, uri = '', repoId }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       dir: directory,
+      ...gitCallbacks(gitCredentials),
       gitdir: gitDirectory,
       fs,
       http: httpClient,
+      uri,
+      repoId,
     };
 
     if (await this.repoExists()) {
       console.log(`[git] Opened repo for ${gitDirectory}`);
     } else {
       console.log(`[git] Initialized repo in ${gitDirectory}`);
-      await git.init(this._baseOpts);
-    }
+      let defaultBranch = 'main';
 
-    this.initialized = true;
+      try {
+        const url = await this.getRemoteOriginURI();
+        if (!url) {
+          throw new Error('No remote origin URL');
+        }
+        const [mainRef] = await git.listServerRefs({
+          ...this._baseOpts,
+          url,
+          prefix: 'HEAD',
+          symrefs: true,
+        });
+
+        defaultBranch = mainRef?.target?.replace('refs/heads/', '') || 'main';
+      } catch (err) {
+        // Ignore error
+      }
+
+      await git.init({ ...this._baseOpts, defaultBranch });
+    }
   }
 
-  async initFromClone({ url, gitCredentials, directory, fs, gitDirectory }: InitFromCloneOptions) {
+  async getRemoteOriginURI() {
+    try {
+      const remoteOriginURI = await git.getConfig({
+        ...this._baseOpts,
+        path: 'remote.origin.url',
+      });
+
+      return remoteOriginURI;
+    } catch (err) {
+      // Ignore error
+      return this._baseOpts.uri || '';
+    }
+  }
+
+  async initFromClone({
+    repoId,
+    url,
+    gitCredentials,
+    directory,
+    fs,
+    gitDirectory,
+  }: InitFromCloneOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
@@ -133,21 +178,26 @@ export class GitVCS {
       gitdir: gitDirectory,
       fs,
       http: httpClient,
+      repoId,
     };
-    const cloneParams = { ...this._baseOpts, url, singleBranch: true };
-    await git.clone(cloneParams);
+    await git.clone({
+      ...this._baseOpts,
+      url,
+      singleBranch: true,
+    });
     console.log(`[git] Clones repo to ${gitDirectory} from ${url}`);
-    this.initialized = true;
   }
 
-  isInitialized() {
-    return this.initialized;
+  isInitializedForRepo(id: string) {
+    return this._baseOpts.repoId === id;
   }
 
   async listFiles() {
     console.log('[git] List files');
     const repositoryFiles = await git.listFiles({ ...this._baseOpts });
-    const insomniaFiles = repositoryFiles.filter(file => file.startsWith(GIT_INSOMNIA_DIR_NAME)).map(convertToOsSep);
+    const insomniaFiles = repositoryFiles
+      .filter(file => file.startsWith(GIT_INSOMNIA_DIR_NAME))
+      .map(convertToOsSep);
     return insomniaFiles;
   }
 
@@ -170,17 +220,48 @@ export class GitVCS {
       branches.push(branch);
     }
 
+    console.log(
+      `[git] Local branches: ${branches.join(', ')} (current: ${branch})`
+    );
+
     return GitVCS.sortBranches(branches);
   }
 
   async listRemoteBranches() {
-    const branches = await git.listBranches({ ...this._baseOpts, remote: 'origin' });
+    const branches = await git.listBranches({
+      ...this._baseOpts,
+      remote: 'origin',
+    });
     // Don't care about returning remote HEAD
     return GitVCS.sortBranches(branches.filter(b => b !== 'HEAD'));
   }
 
+  async fetchRemoteBranches() {
+    const uri = await this.getRemoteOriginURI();
+    try {
+      const branches = await git.listServerRefs({
+        ...this._baseOpts,
+        prefix: 'refs/heads/',
+        url: uri,
+      });
+      console.log({ branches });
+      // Don't care about returning remote HEAD
+      return GitVCS.sortBranches(
+        branches
+          .filter(b => b.ref !== 'HEAD')
+          .map(b => b.ref.replace('refs/heads/', ''))
+      );
+    } catch (e) {
+      console.log(`[git] Failed to list remote branches for ${uri}`, e);
+      return [];
+    }
+  }
+
   async status(filepath: string) {
-    return git.status({ ...this._baseOpts, filepath: convertToPosixSep(filepath) });
+    return git.status({
+      ...this._baseOpts,
+      filepath: convertToPosixSep(filepath),
+    });
   }
 
   async add(relPath: string) {
@@ -197,7 +278,12 @@ export class GitVCS {
 
   async addRemote(url: string) {
     console.log(`[git] Add Remote url=${url}`);
-    await git.addRemote({ ...this._baseOpts, remote: 'origin', url, force: true });
+    await git.addRemote({
+      ...this._baseOpts,
+      remote: 'origin',
+      url,
+      force: true,
+    });
     const config = await this.getRemote('origin');
 
     if (config === null) {
@@ -213,7 +299,10 @@ export class GitVCS {
 
   async getAuthor() {
     const name = await git.getConfig({ ...this._baseOpts, path: 'user.name' });
-    const email = await git.getConfig({ ...this._baseOpts, path: 'user.email' });
+    const email = await git.getConfig({
+      ...this._baseOpts,
+      path: 'user.email',
+    });
     return {
       name: name || '',
       email: email || '',
@@ -222,7 +311,11 @@ export class GitVCS {
 
   async setAuthor(name: string, email: string) {
     await git.setConfig({ ...this._baseOpts, path: 'user.name', value: name });
-    await git.setConfig({ ...this._baseOpts, path: 'user.email', value: email });
+    await git.setConfig({
+      ...this._baseOpts,
+      path: 'user.email',
+      value: email,
+    });
   }
 
   async getRemote(name: string): Promise<GitRemoteConfig | null> {
@@ -257,7 +350,7 @@ export class GitVCS {
       forPush: true,
       url: remote.url,
     });
-    const logs = (await this.log(1)) || [];
+    const logs = (await this.log({ depth: 1 })) || [];
     const localHead = logs[0].oid;
     const remoteRefs = remoteInfo.refs || {};
     const remoteHeads = remoteRefs.heads || {};
@@ -286,7 +379,7 @@ export class GitVCS {
       // @ts-expect-error -- TSCONVERSION git errors are not handled correctly
       const errorsString = JSON.stringify(response.errors);
       throw new Error(
-        `Push rejected with errors: ${errorsString}.\n\nGo to View > Toggle DevTools > Console for more information.`,
+        `Push rejected with errors: ${errorsString}.\n\nGo to View > Toggle DevTools > Console for more information.`
       );
     }
   }
@@ -311,28 +404,48 @@ export class GitVCS {
     });
   }
 
-  async fetch(
-    singleBranch: boolean,
-    depth?: number,
-    gitCredentials?: GitCredentials | null,
-  ) {
+  async fetch({
+    singleBranch,
+    depth,
+    credentials,
+    relative = false,
+  }: {
+    singleBranch: boolean;
+    depth?: number;
+    credentials?: GitCredentials | null;
+    relative?: boolean;
+  }) {
     console.log('[git] Fetch remote=origin');
     return git.fetch({
       ...this._baseOpts,
-      ...gitCallbacks(gitCredentials),
+      ...gitCallbacks(credentials),
       singleBranch,
       remote: 'origin',
+      relative,
       depth,
       prune: true,
       pruneTags: true,
+
     });
   }
 
-  async log(depth?: number) {
+  async log(input: {depth?: number} = {}) {
+    const { depth = 35 } = input;
     try {
+      const remoteOriginURI = await this.getRemoteOriginURI();
+      if (remoteOriginURI) {
+        await git.fetch({
+          ...this._baseOpts,
+          remote: 'origin',
+          depth,
+          singleBranch: true,
+          tags: false,
+        });
+      }
+
       return await git.log({ ...this._baseOpts, depth });
-    } catch (error) {
-      if (error.code === 'NotFoundError') {
+    } catch (error: unknown) {
+      if (error instanceof git.Errors.NotFoundError) {
         return [];
       }
 
@@ -341,8 +454,18 @@ export class GitVCS {
   }
 
   async branch(branch: string, checkout = false) {
-    // @ts-expect-error -- TSCONVERSION remote doesn't exist as an option
-    await git.branch({ ...this._baseOpts, ref: branch, checkout, remote: 'origin' });
+    console.log('[git] Branch', {
+      branch,
+      checkout,
+    });
+
+    await git.branch({
+      ...this._baseOpts,
+      ref: branch,
+      checkout,
+      // @ts-expect-error -- TSCONVERSION remote doesn't exist as an option
+      remote: 'origin',
+    });
   }
 
   async deleteBranch(branch: string) {
@@ -354,19 +477,39 @@ export class GitVCS {
       branch,
     });
     const localBranches = await this.listBranches();
-    const remoteBranches = await this.listRemoteBranches();
-    const branches = [...localBranches, ...remoteBranches];
+    const syncedBranches = await this.listRemoteBranches();
+    const remoteBranches = await this.fetchRemoteBranches();
+    const branches = [...localBranches, ...syncedBranches, ...remoteBranches];
+    console.log('[git] Checkout branches', { branches, branch });
 
     if (branches.includes(branch)) {
+      try {
+        if (!syncedBranches.includes(branch)) {
+          console.log('[git] Fetching branch', branch);
+          // Try to fetch the branch from the remote if it doesn't exist locally;
+          await git.fetch({
+            ...this._baseOpts,
+            remote: 'origin',
+            depth: 1,
+            ref: branch,
+            singleBranch: true,
+            tags: false,
+          });
+        }
+      } catch (e) {
+        console.log('[git] Fetch failed', e);
+      }
+
       await git.checkout({
         ...this._baseOpts,
         ref: branch,
         remote: 'origin',
       });
+      const branches = await this.listBranches();
+      console.log('[git] Checkout branches', { branches });
     } else {
       await this.branch(branch, true);
     }
-
   }
 
   async undoPendingChanges(fileFilter?: string[]) {
@@ -423,9 +566,4 @@ export class GitVCS {
   }
 }
 
-let gitVCSInstance = new GitVCS();
-
-export const getGitVCS = () => gitVCSInstance;
-export const setGitVCS = (gitVCS: GitVCS) => {
-  gitVCSInstance = gitVCS;
-};
+export default new GitVCS();

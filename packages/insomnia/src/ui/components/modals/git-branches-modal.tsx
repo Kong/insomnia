@@ -4,7 +4,7 @@ import { OverlayContainer } from 'react-aria';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { GitRepository } from '../../../models/git-repository';
-import { CreateNewGitBranchResult } from '../../routes/git-actions';
+import { CreateNewGitBranchResult, GitBranchesLoaderData } from '../../routes/git-actions';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -13,10 +13,9 @@ import { PromptButton } from '../base/prompt-button';
 import { showAlert } from '.';
 
 type Props = ModalProps & {
-  branches: string[];
-  remoteBranches: string[];
   activeBranch: string;
   gitRepository: GitRepository | null;
+  branches: string[];
 };
 
 export interface GitBranchesModalOptions {
@@ -24,10 +23,9 @@ export interface GitBranchesModalOptions {
 }
 
 export const GitBranchesModal: FC<Props> = (({
-  onHide,
   branches,
+  onHide,
   activeBranch,
-  remoteBranches,
 }) => {
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string};
   const modalRef = useRef<ModalHandle>(null);
@@ -36,12 +34,24 @@ export const GitBranchesModal: FC<Props> = (({
     modalRef.current?.show();
   }, []);
 
+  const branchesFetcher = useFetcher<GitBranchesLoaderData>();
   const checkoutBranchFetcher = useFetcher();
   const mergeBranchFetcher = useFetcher();
   const newBranchFetcher = useFetcher<CreateNewGitBranchResult>();
   const deleteBranchFetcher = useFetcher();
 
-  const remoteOnlyBranches = remoteBranches.filter(b => !branches.includes(b));
+  // const errors = branchesFetcher.data && 'errors' in branchesFetcher.data ? branchesFetcher.data.errors : [];
+  const { remoteBranches, branches: localBranches } = branchesFetcher.data && 'branches' in branchesFetcher.data ? branchesFetcher.data : { branches: [], remoteBranches: [] };
+
+  const fetchedBranches = localBranches.length > 0 ? localBranches : branches;
+  const remoteOnlyBranches = remoteBranches.filter(b => !fetchedBranches.includes(b));
+  const isFetchingRemoteBranches = branchesFetcher.state !== 'idle';
+
+  useEffect(() => {
+    if (branchesFetcher.state === 'idle' && !branchesFetcher.data) {
+      branchesFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/branches`);
+    }
+  }, [branchesFetcher, organizationId, projectId, workspaceId]);
 
   useEffect(() => {
     if (newBranchFetcher.data?.errors?.length) {
@@ -55,7 +65,7 @@ export const GitBranchesModal: FC<Props> = (({
   return (
     <OverlayContainer>
       <Modal ref={modalRef} onHide={onHide}>
-        <ModalHeader>Branches</ModalHeader>
+        <ModalHeader><i className={`fa fa-code-fork space-left ${isFetchingRemoteBranches ? 'fa-fade' : ''}`} /> Branches</ModalHeader>
         <ModalBody className="pad">
           <newBranchFetcher.Form
             method="post"
@@ -91,7 +101,7 @@ export const GitBranchesModal: FC<Props> = (({
                 </tr>
               </thead>
               <tbody>
-                {branches.map(branch => (
+                {fetchedBranches.map(branch => (
                   <tr key={branch} className="table--no-outline-row">
                     <td>
                       <span
@@ -157,12 +167,20 @@ export const GitBranchesModal: FC<Props> = (({
               </tbody>
             </table>
           </div>
+          {Boolean(isFetchingRemoteBranches && !remoteOnlyBranches.length) && (
+            <div className="pad-top">
+              <div className="txt-sm faint italic">
+                <i className="fa fa-spinner fa-spin space-right" />
+                Fetching remote branches...
+              </div>
+            </div>
+          )}
           {remoteOnlyBranches.length > 0 && (
             <div className="pad-top">
               <table className="table--fancy table--outlined">
                 <thead>
                   <tr>
-                    <th className="text-left">Remote Branches</th>
+                    <th className="text-left">Remote Branches {isFetchingRemoteBranches && <i className="fa fa-spinner fa-spin space-right" />}</th>
                     <th className="text-right">&nbsp;</th>
                   </tr>
                 </thead>

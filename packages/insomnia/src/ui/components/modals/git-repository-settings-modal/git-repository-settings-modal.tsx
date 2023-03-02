@@ -1,6 +1,7 @@
 import React, { Key, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useParams } from 'react-router-dom';
+import styled from 'styled-components';
 
 import { docsGitSync } from '../../../../common/documentation';
 import type { GitRepository, OauthProviderName } from '../../../../models/git-repository';
@@ -16,6 +17,12 @@ import { showAlert } from '..';
 import { CustomRepositorySettingsFormGroup } from './custom-repository-settings-form-group';
 import { GitHubRepositorySetupFormGroup } from './github-repository-settings-form-group';
 import { GitLabRepositorySetupFormGroup } from './gitlab-repository-settings-form-group';
+
+const TabPill = styled.div({
+  display: 'flex',
+  gap: 'var(--padding-xs)',
+  alignItems: 'center',
+});
 
 export const GitRepositorySettingsModal = (props: ModalProps & {
   gitRepository?: GitRepository;
@@ -58,9 +65,9 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
     );
   };
 
-  const isSubmitting = updateGitRepositoryFetcher.state === 'submitting';
+  const isLoading = updateGitRepositoryFetcher.state !== 'idle';
+  const hasGitRepository = Boolean(gitRepository);
   const errors = updateGitRepositoryFetcher.data?.errors as (Error | string)[];
-  const isDisabled = isSubmitting || Boolean(gitRepository);
 
   useEffect(() => {
     if (errors && errors.length) {
@@ -85,12 +92,12 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
         <ModalBody>
           <ErrorBoundary>
             <Tabs
-              isDisabled={isDisabled}
+              isDisabled={isLoading || hasGitRepository}
               aria-label="Git repository settings tabs"
               selectedKey={selectedTab}
               onSelectionChange={(key: Key) => setTab(key as OauthProviderName)}
             >
-              <TabItem key='github' title={<><i className="fa fa-github" /> GitHub</>}>
+              <TabItem key='github' title={<TabPill><i className="fa fa-github" /> GitHub</TabPill>}>
                 <PanelContainer className="pad pad-top-sm">
                   <GitHubRepositorySetupFormGroup
                     uri={gitRepository?.uri}
@@ -98,7 +105,7 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
                   />
                 </PanelContainer>
               </TabItem>
-              <TabItem key='gitlab' title={<><i className="fa fa-gitlab" /> GitLab</>}>
+              <TabItem key='gitlab' title={<TabPill><i className="fa fa-gitlab" /> GitLab</TabPill>}>
                 <PanelContainer className="pad pad-top-sm">
                   <GitLabRepositorySetupFormGroup
                     uri={gitRepository?.uri}
@@ -106,7 +113,7 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
                   />
                 </PanelContainer>
               </TabItem>
-              <TabItem key='custom' title={<><i className="fa fa-code-fork" /> Git</>}>
+              <TabItem key='custom' title={<TabPill><i className="fa fa-code-fork" /> Git</TabPill>}>
                 <PanelContainer className="pad pad-top-sm">
                   <CustomRepositorySettingsFormGroup
                     gitRepository={gitRepository}
@@ -136,9 +143,26 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
             >
               Reset
             </button>
-            <button type="submit" disabled={isDisabled} form={selectedTab} className="btn" data-testid="git-repository-settings-modal__sync-btn">
-              Sync
-            </button>
+            {hasGitRepository ? (
+              <button
+                type="button"
+                onClick={() => modalRef.current?.hide()}
+                className="btn"
+                data-testid="git-repository-settings-modal__sync-btn-close"
+              >
+                Close
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={isLoading}
+                form={selectedTab}
+                className="btn"
+                data-testid="git-repository-settings-modal__sync-btn"
+              >
+                Sync
+              </button>
+            )}
           </div>
         </ModalFooter>
       </Modal>

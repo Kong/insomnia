@@ -3,7 +3,7 @@ import path from 'path';
 
 import type { FileWithStatus } from '../git-rollback';
 import { gitRollback } from '../git-rollback';
-import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GitVCS } from '../git-vcs';
+import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR } from '../git-vcs';
 import { MemClient } from '../mem-client';
 import { setupDateMocks } from './util';
 
@@ -13,7 +13,7 @@ describe('git rollback', () => {
     const unlinkMock = jest.fn().mockResolvedValue(undefined);
     const undoPendingChangesMock = jest.fn().mockResolvedValue(undefined);
 
-    let vcs: Partial<GitVCS> = {};
+    let vcs: Partial<typeof GitVCS> = {};
 
     beforeEach(() => {
       jest.resetAllMocks();
@@ -126,8 +126,10 @@ describe('git rollback', () => {
       await fsClient.promises.writeFile(fooTxt, 'foo');
       await fsClient.promises.writeFile(barTxt, 'bar');
       await fsClient.promises.writeFile(bazTxt, originalContent);
-      const vcs = new GitVCS();
+      const vcs = GitVCS;
       await vcs.init({
+        uri: '',
+        repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
       });

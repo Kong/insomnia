@@ -40,6 +40,8 @@ export const GitStagingModal: FC<ModalProps> = ({
   const gitCommitFetcher = useFetcher<CommitToGitRepoResult>();
   const rollbackFetcher = useFetcher<GitRollbackChangesResult>();
 
+  const isLoadingGitChanges = gitChangesFetcher.state !== 'idle';
+
   useEffect(() => {
     modalRef.current?.show();
   }, []);
@@ -313,7 +315,11 @@ export const GitStagingModal: FC<ModalProps> = ({
                 )}
               </>
             ) : (
-              <>No changes to commit.</>
+              <div className="txt-sm faint italic">
+                {isLoadingGitChanges ? <>
+                  <i className="fa fa-spinner fa-spin space-right" />
+                  Loading changes...</> : 'No changes to commit.'}
+              </div>
             )}
           </gitCommitFetcher.Form>
         </ModalBody>
@@ -329,8 +335,9 @@ export const GitStagingModal: FC<ModalProps> = ({
               type="submit"
               form="git-staging-form"
               className="btn"
-              disabled={gitCommitFetcher.state === 'submitting' || !hasChanges}
+              disabled={gitCommitFetcher.state !== 'idle' || !hasChanges}
             >
+              <i className={`fa ${gitCommitFetcher.state === 'idle' ? 'fa-check' : 'fa-spinner fa-spin'} space-right`} />
               Commit
             </button>
           </div>

@@ -17,15 +17,12 @@ import {
 } from '../../models/workspace';
 import { fsClient } from '../../sync/git/fs-client';
 import { gitRollback } from '../../sync/git/git-rollback';
-import {
-  getGitVCS,
+import GitVCS, {
   GIT_CLONE_DIR,
   GIT_INSOMNIA_DIR,
   GIT_INSOMNIA_DIR_NAME,
   GIT_INTERNAL_DIR,
   GitLogEntry,
-  GitVCS,
-  setGitVCS,
 } from '../../sync/git/git-vcs';
 import { MemClient } from '../../sync/git/mem-client';
 import { NeDBClient } from '../../sync/git/ne-db-client';
@@ -42,9 +39,7 @@ import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../a
 // Loaders
 export type GitRepoLoaderData = {
   branch: string;
-  log: GitLogEntry[];
   branches: string[];
-  remoteBranches: string[];
   gitRepository: GitRepository | null;
 } | {
   errors: string[];
@@ -68,69 +63,62 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
     const gitRepository = await models.gitRepository.getById(workspaceMeta?.gitRepositoryId);
     invariant(gitRepository, 'Git Repository not found');
 
-    // Create FS client
-    const baseDir = path.join(
-      process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-      `version-control/git/${gitRepository._id}`,
-    );
+    if (!GitVCS.isInitializedForRepo(gitRepository._id)) {
+      const baseDir = path.join(
+        process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+        `version-control/git/${gitRepository._id}`,
+      );
 
-    // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
-    const neDbClient = NeDBClient.createClient(workspaceId, projectId);
+      // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
+      const neDbClient = NeDBClient.createClient(workspaceId, projectId);
 
-    // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
-    const gitDataClient = fsClient(baseDir);
+      // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
+      const gitDataClient = fsClient(baseDir);
 
-    // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
-    const otherDatClient = fsClient(path.join(baseDir, 'other'));
+      // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
+      const otherDatClient = fsClient(path.join(baseDir, 'other'));
 
-    // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
-    const routableFS = routableFSClient(otherDatClient, {
-      [GIT_INSOMNIA_DIR]: neDbClient,
-      [GIT_INTERNAL_DIR]: gitDataClient,
-    });
-
-    const vcs = new GitVCS();
-
-    // Init VCS
-    const { credentials, uri } = gitRepository;
-    if (gitRepository.needsFullClone) {
-      await vcs.initFromClone({
-        url: uri,
-        gitCredentials: credentials,
-        directory: GIT_CLONE_DIR,
-        fs: routableFS,
-        gitDirectory: GIT_INTERNAL_DIR,
+      // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
+      const routableFS = routableFSClient(otherDatClient, {
+        [GIT_INSOMNIA_DIR]: neDbClient,
+        [GIT_INTERNAL_DIR]: gitDataClient,
       });
 
-      await models.gitRepository.update(gitRepository, {
-        needsFullClone: false,
-      });
-    } else {
-      await vcs.init({
-        directory: GIT_CLONE_DIR,
-        fs: routableFS,
-        gitDirectory: GIT_INTERNAL_DIR,
-      });
+      // Init VCS
+      const { credentials, uri } = gitRepository;
+      if (gitRepository.needsFullClone) {
+        await GitVCS.initFromClone({
+          repoId: gitRepository._id,
+          url: uri,
+          gitCredentials: credentials,
+          directory: GIT_CLONE_DIR,
+          fs: routableFS,
+          gitDirectory: GIT_INTERNAL_DIR,
+        });
+
+        await models.gitRepository.update(gitRepository, {
+          needsFullClone: false,
+        });
+      } else {
+        await GitVCS.init({
+          repoId: gitRepository._id,
+          uri,
+          directory: GIT_CLONE_DIR,
+          fs: routableFS,
+          gitDirectory: GIT_INTERNAL_DIR,
+          gitCredentials: credentials,
+        });
+      }
+
+      // Configure basic info
+      const { author, uri: gitUri } = gitRepository;
+      await GitVCS.setAuthor(author.name, author.email);
+      await GitVCS.addRemote(gitUri);
     }
-
-    // Configure basic info
-    const { author, uri: gitUri } = gitRepository;
-    await vcs.setAuthor(author.name, author.email);
-    await vcs.addRemote(gitUri);
-
-    try {
-      await vcs.fetch(false, 1, gitRepository?.credentials);
-    } catch (e) {
-      console.warn('Error fetching from remote');
-    }
-
-    setGitVCS(vcs);
 
     return {
-      branch: await vcs.getBranch(),
-      log: await vcs.log() || [],
-      branches: await vcs.listBranches(),
-      remoteBranches: await vcs.listRemoteBranches(),
+      branch: await GitVCS.getBranch(),
+      branches: await GitVCS.listBranches(),
       gitRepository: gitRepository,
     };
   } catch (e) {
@@ -139,6 +127,96 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
       errors: [errorMessage],
     };
   }
+};
+
+export type GitBranchesLoaderData = {
+  branches: string[];
+  remoteBranches: string[];
+} | {
+  errors: string[];
+};
+
+export const gitBranchesLoader: LoaderFunction = async ({ params }): Promise<GitBranchesLoaderData> => {
+  const { workspaceId, projectId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === 'string', 'Project Id is required');
+
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  if (!workspaceMeta?.gitRepositoryId) {
+    return {
+      errors: ['Workspace is not linked to a git repository'],
+    };
+  }
+
+  const gitRepository = await models.gitRepository.getById(workspaceMeta?.gitRepositoryId);
+  invariant(gitRepository, 'Git Repository not found');
+
+  const branches = await GitVCS.listBranches();
+
+  const remoteBranches = await GitVCS.fetchRemoteBranches();
+
+  return {
+    branches,
+    remoteBranches,
+  };
+};
+
+export type GitFetchLoaderData = {
+  errors: string[];
+} | {};
+
+export const gitFetchAction: ActionFunction = async ({ params }): Promise<GitFetchLoaderData> => {
+  const { workspaceId, projectId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === 'string', 'Project Id is required');
+
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  if (!workspaceMeta?.gitRepositoryId) {
+    return {
+      errors: ['Workspace is not linked to a git repository'],
+    };
+  }
+
+  const gitRepository = await models.gitRepository.getById(workspaceMeta?.gitRepositoryId);
+  invariant(gitRepository, 'Git Repository not found');
+
+  await GitVCS.fetch({ singleBranch: true, depth: 1, credentials: gitRepository?.credentials });
+
+  return {};
+};
+
+export type GitLogLoaderData = {
+  log: GitLogEntry[];
+} | {
+  errors: string[];
+};
+
+export const gitLogLoader: LoaderFunction = async ({ params }): Promise<GitLogLoaderData> => {
+  const { workspaceId, projectId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === 'string', 'Project Id is required');
+
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  if (!workspaceMeta?.gitRepositoryId) {
+    return {
+      errors: ['Workspace is not linked to a git repository'],
+    };
+  }
+
+  const gitRepository = await models.gitRepository.getById(workspaceMeta?.gitRepositoryId);
+  invariant(gitRepository, 'Git Repository not found');
+
+  const log = await GitVCS.log({ depth: 35 });
+
+  return {
+    log,
+  };
 };
 
 export interface GitChangesLoaderData {
@@ -164,11 +242,9 @@ export const gitChangesLoader: LoaderFunction = async ({ params }): Promise<GitC
 
   invariant(gitRepository, 'Git Repository not found');
 
-  const vcs = getGitVCS();
+  const branch = await GitVCS.getBranch();
 
-  const branch = await vcs.getBranch();
-
-  const { changes, statusNames } = await getGitChanges(vcs, workspace);
+  const { changes, statusNames } = await getGitChanges(GitVCS, workspace);
 
   return {
     branch,
@@ -302,82 +378,95 @@ export const cloneGitRepoAction: ActionFunction = async ({
     );
     return rootDirs.includes(models.workspace.type);
   };
-  // If no workspace exists, user should be prompted to create a document
+
+  // Stop the DB from pushing updates to the UI temporarily
+  const bufferId = await database.bufferChanges();
+  let workspaceId = '';
+  // If no workspace exists we create a new one
   if (!(await containsInsomniaWorkspaceDir(fsClient))) {
+    // Create a new workspace
+    const workspace = await models.workspace.create({
+      name: repoSettingsPatch.uri.split('/').pop(),
+      scope: WorkspaceScopeKeys.design,
+      parentId: project._id,
+      description: `Insomnia Workspace for ${repoSettingsPatch.uri}}`,
+    });
     trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
       ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
       providerName,
     });
-    return {
-      errors: ['No insomnia directory found in repository'],
-    };
-  }
 
-  const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-  const workspaces = await fsClient.promises.readdir(workspaceBase);
+    workspaceId = workspace._id;
 
-  if (workspaces.length === 0) {
-    trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-      ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'),
-      providerName,
-    });
+    // Store GitRepository settings and set it as active
+    await createGitRepository(workspace._id, repoSettingsPatch);
+  } else {
+    // Clone all entities from the repository
+    const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
+    const workspaces = await fsClient.promises.readdir(workspaceBase);
 
-    return {
-      errors: ['No workspaces found in repository'],
-    };
-  }
+    if (workspaces.length === 0) {
+      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+        ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'),
+        providerName,
+      });
 
-  if (workspaces.length > 1) {
-    trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-      ...vcsSegmentEventProperties('git', 'clone', 'multiple workspaces found'),
-      providerName,
-    });
-
-    return {
-      errors: ['Multiple workspaces found in repository. Expected one.'],
-    };
-  }
-
-  // Only one workspace
-  const workspacePath = path.join(workspaceBase, workspaces[0]);
-  const workspaceJson = await fsClient.promises.readFile(workspacePath);
-  const workspace = YAML.parse(workspaceJson.toString());
-  // Check if the workspace already exists
-  const existingWorkspace = await models.workspace.getById(workspace._id);
-
-  if (existingWorkspace) {
-    trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-      ...vcsSegmentEventProperties('git', 'clone', 'workspace already exists'),
-      providerName,
-    });
-    return {
-      errors: [`Workspace ${existingWorkspace.name} already exists. Please delete it before cloning.`],
-    };
-  }
-
-  // Stop the DB from pushing updates to the UI temporarily
-  const bufferId = await database.bufferChanges();
-
-  // Loop over all model folders in root
-  for (const modelType of await fsClient.promises.readdir(GIT_INSOMNIA_DIR)) {
-    const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
-
-    // Loop over all documents in model folder and save them
-    for (const docFileName of await fsClient.promises.readdir(modelDir)) {
-      const docPath = path.join(modelDir, docFileName);
-      const docYaml = await fsClient.promises.readFile(docPath);
-      const doc: models.BaseModel = YAML.parse(docYaml.toString());
-      if (isWorkspace(doc)) {
-        // @ts-expect-error parentId can be string or null for a workspace
-        doc.parentId = project?._id || null;
-        doc.scope = WorkspaceScopeKeys.design;
-      }
-      await database.upsert(doc);
+      return {
+        errors: ['No workspaces found in repository'],
+      };
     }
-  }
 
-  // Store GitRepository settings and set it as active
-  await createGitRepository(workspace._id, repoSettingsPatch);
+    if (workspaces.length > 1) {
+      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+        ...vcsSegmentEventProperties('git', 'clone', 'multiple workspaces found'),
+        providerName,
+      });
+
+      return {
+        errors: ['Multiple workspaces found in repository. Expected one.'],
+      };
+    }
+
+    // Only one workspace
+    const workspacePath = path.join(workspaceBase, workspaces[0]);
+    const workspaceJson = await fsClient.promises.readFile(workspacePath);
+    const workspace = YAML.parse(workspaceJson.toString());
+    // Check if the workspace already exists
+    const existingWorkspace = await models.workspace.getById(workspace._id);
+
+    if (existingWorkspace) {
+      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+        ...vcsSegmentEventProperties('git', 'clone', 'workspace already exists'),
+        providerName,
+      });
+      return {
+        errors: [`Workspace ${existingWorkspace.name} already exists. Please delete it before cloning.`],
+      };
+    }
+
+    // Loop over all model folders in root
+    for (const modelType of await fsClient.promises.readdir(GIT_INSOMNIA_DIR)) {
+      const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
+
+      // Loop over all documents in model folder and save them
+      for (const docFileName of await fsClient.promises.readdir(modelDir)) {
+        const docPath = path.join(modelDir, docFileName);
+        const docYaml = await fsClient.promises.readFile(docPath);
+        const doc: models.BaseModel = YAML.parse(docYaml.toString());
+        if (isWorkspace(doc)) {
+          doc.parentId = project._id;
+          doc.scope = WorkspaceScopeKeys.design;
+          const workspace = await database.upsert(doc);
+          workspaceId = workspace._id;
+        } else {
+          await database.upsert(doc);
+        }
+      }
+    }
+
+    // Store GitRepository settings and set it as active
+    await createGitRepository(workspace._id, repoSettingsPatch);
+  }
 
   // Flush DB changes
   await database.flushChanges(bufferId);
@@ -386,7 +475,9 @@ export const cloneGitRepoAction: ActionFunction = async ({
     providerName,
   });
 
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${ACTIVITY_SPEC}`);
+  invariant(workspaceId, 'Workspace ID is required');
+
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}`);
 };
 
 export const updateGitRepoAction: ActionFunction = async ({
@@ -525,10 +616,8 @@ export const commitToGitRepoAction: ActionFunction = async ({
   const allModified = Boolean(formData.get('allModified'));
   const allUnversioned = Boolean(formData.get('allUnversioned'));
 
-  const vcs = getGitVCS();
-
   try {
-    const { changes } = await getGitChanges(vcs, workspace);
+    const { changes } = await getGitChanges(GitVCS, workspace);
 
     const changesToCommit = changes.filter(change => {
       if (allModified && !change.added) {
@@ -540,10 +629,10 @@ export const commitToGitRepoAction: ActionFunction = async ({
     });
 
     for (const item of changesToCommit) {
-      item.status.includes('deleted') ? await vcs.remove(item.path) : await vcs.add(item.path);
+      item.status.includes('deleted') ? await GitVCS.remove(item.path) : await GitVCS.add(item.path);
     }
 
-    await vcs.commit(message);
+    await GitVCS.commit(message);
 
     const providerName = getOauth2FormatName(repo?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'commit'), providerName });
@@ -579,11 +668,9 @@ export const createNewGitBranchAction: ActionFunction = async ({ request, params
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch name is required');
 
-  const vcs = getGitVCS();
-
   try {
     const providerName = getOauth2FormatName(repo?.credentials);
-    await vcs.checkout(branch);
+    await GitVCS.checkout(branch);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'create_branch'), providerName });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Something went wrong while creating a new branch';
@@ -623,18 +710,9 @@ export const checkoutGitBranchAction: ActionFunction = async ({
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch name is required');
 
-  const vcs = getGitVCS();
-
-  try {
-    await vcs.fetch(false, 1, repo?.credentials);
-  } catch (e) {
-    console.warn('Error fetching from remote');
-  }
   const bufferId = await database.bufferChanges();
   try {
-    await vcs.checkout(branch);
-    // Fetch the last 20 commits for the branch
-    await vcs.fetch(true, 20, repo?.credentials);
+    await GitVCS.checkout(branch);
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : err;
     return {
@@ -643,7 +721,7 @@ export const checkoutGitBranchAction: ActionFunction = async ({
   }
 
   if (workspaceMeta) {
-    const log = (await vcs.log()) || [];
+    const log = (await GitVCS.log({ depth: 1 })) || [];
 
     const author = log[0] ? log[0].commit.author : null;
     const cachedGitLastCommitTime = author ? author.timestamp * 1000 : null;
@@ -681,19 +759,17 @@ export const mergeGitBranchAction: ActionFunction = async ({ request, params }):
   const repo = await models.gitRepository.getById(repoId);
   invariant(repo, 'Git Repository not found');
 
-  const vcs = getGitVCS();
-
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch name is required');
 
   try {
     const providerName = getOauth2FormatName(repo?.credentials);
-    await vcs.merge(branch);
+    await GitVCS.merge(branch);
     // Apparently merge doesn't update the working dir so need to checkout too
     const bufferId = await database.bufferChanges();
 
-    await vcs.checkout(branch);
+    await GitVCS.checkout(branch);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'checkout_branch'), providerName });
     await database.flushChanges(bufferId, true);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'merge_branch'), providerName });
@@ -726,8 +802,6 @@ export const deleteGitBranchAction: ActionFunction = async ({ request, params })
   const repo = await models.gitRepository.getById(repoId);
   invariant(repo, 'Git Repository not found');
 
-  const vcs = getGitVCS();
-
   const formData = await request.formData();
 
   const branch = formData.get('branch');
@@ -735,7 +809,7 @@ export const deleteGitBranchAction: ActionFunction = async ({ request, params })
 
   try {
     const providerName = getOauth2FormatName(repo?.credentials);
-    await vcs.deleteBranch(branch);
+    await GitVCS.deleteBranch(branch);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'delete_branch'), providerName });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -772,12 +846,10 @@ export const pushToGitRemoteAction: ActionFunction = async ({
 
   invariant(gitRepository, 'Git Repository not found');
 
-  const vcs = getGitVCS();
-
   // Check if there is anything to push
   let canPush = false;
   try {
-    canPush = await vcs.canPush(gitRepository.credentials);
+    canPush = await GitVCS.canPush(gitRepository.credentials);
   } catch (err) {
     return { errors: ['Error Pushing Repository'] };
   }
@@ -791,7 +863,7 @@ export const pushToGitRemoteAction: ActionFunction = async ({
   const bufferId = await database.bufferChanges();
   const providerName = getOauth2FormatName(gitRepository.credentials);
   try {
-    await vcs.push(gitRepository.credentials);
+    await GitVCS.push(gitRepository.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push'), providerName });
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
@@ -836,20 +908,18 @@ export const pullFromGitRemoteAction: ActionFunction = async ({
 
   invariant(gitRepository, 'Git Repository not found');
 
-  const vcs = getGitVCS();
-
   const bufferId = await database.bufferChanges();
 
   const providerName = getOauth2FormatName(gitRepository.credentials);
 
   try {
-    await vcs.fetch(false, 1, gitRepository?.credentials);
+    await GitVCS.fetch({ singleBranch: true, depth: 1, credentials: gitRepository?.credentials });
   } catch (e) {
     console.warn('Error fetching from remote');
   }
 
   try {
-    await vcs.pull(gitRepository.credentials);
+    await GitVCS.pull(gitRepository.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'pull'), providerName });
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
@@ -874,7 +944,7 @@ export interface GitChange {
   editable: boolean;
 }
 
-async function getGitVCSPaths(vcs: GitVCS) {
+async function getGitVCSPaths(vcs: typeof GitVCS) {
   const gitFS = vcs.getFs();
 
   const fs = 'promises' in gitFS ? gitFS.promises : gitFS;
@@ -897,7 +967,7 @@ async function getGitVCSPaths(vcs: GitVCS) {
   return Array.from(uniquePaths).sort();
 }
 
-async function getGitChanges(vcs: GitVCS, workspace: Workspace) {
+async function getGitChanges(vcs: typeof GitVCS, workspace: Workspace) {
   // Cache status names
   const docs = await database.withDescendants(workspace);
   const allPaths = await getGitVCSPaths(vcs);
@@ -909,7 +979,8 @@ async function getGitChanges(vcs: GitVCS, workspace: Workspace) {
   }
   // Create status items
   const items: Record<string, GitChange> = {};
-  const log = (await vcs.log(1)) || [];
+  const log = (await vcs.log({ depth: 1 })) || [];
+
   for (const gitPath of allPaths) {
     const status = await vcs.status(gitPath);
     if (status === 'unmodified') {
@@ -977,14 +1048,12 @@ export const gitRollbackChangesAction: ActionFunction = async ({ params, request
 
   invariant(gitRepository, 'Git Repository not found');
 
-  const vcs = getGitVCS();
-
   const formData = await request.formData();
 
   const paths = [...formData.getAll('paths')] as string[];
   const changeType = formData.get('changeType') as string;
   try {
-    const { changes } = await getGitChanges(vcs, workspace);
+    const { changes } = await getGitChanges(GitVCS, workspace);
 
     const files = changes
       .filter(i => changeType === 'modified' ? !i.status.includes('added') : i.status.includes('added'))
@@ -997,7 +1066,7 @@ export const gitRollbackChangesAction: ActionFunction = async ({ params, request
         status: i.status,
       }));
 
-    await gitRollback(vcs, files);
+    await gitRollback(GitVCS, files);
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : 'Error while rolling back changes';
     return {
