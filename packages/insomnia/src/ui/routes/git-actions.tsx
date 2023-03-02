@@ -100,6 +100,7 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
       });
     } else {
       await GitVCS.init({
+        uri,
         directory: GIT_CLONE_DIR,
         fs: routableFS,
         gitDirectory: GIT_INTERNAL_DIR,
@@ -111,12 +112,6 @@ export const gitRepoLoader: LoaderFunction = async ({ params }): Promise<GitRepo
     const { author, uri: gitUri } = gitRepository;
     await GitVCS.setAuthor(author.name, author.email);
     await GitVCS.addRemote(gitUri);
-
-    // try {
-    //   await GitVCS.fetch(true, 1, gitRepository?.credentials);
-    // } catch (e) {
-    //   console.warn('Error fetching from remote');
-    // }
 
     return {
       branch: await GitVCS.getBranch(),
@@ -165,6 +160,32 @@ export const gitBranchesLoader: LoaderFunction = async ({ params }): Promise<Git
   };
 };
 
+export type GitFetchLoaderData = {
+  errors: string[];
+} | {};
+
+export const gitFetchAction: ActionFunction = async ({ params }): Promise<GitFetchLoaderData> => {
+  const { workspaceId, projectId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  invariant(typeof projectId === 'string', 'Project Id is required');
+
+  const workspace = await models.workspace.getById(workspaceId);
+  invariant(workspace, 'Workspace not found');
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  if (!workspaceMeta?.gitRepositoryId) {
+    return {
+      errors: ['Workspace is not linked to a git repository'],
+    };
+  }
+
+  const gitRepository = await models.gitRepository.getById(workspaceMeta?.gitRepositoryId);
+  invariant(gitRepository, 'Git Repository not found');
+
+  await GitVCS.fetch({ singleBranch: true, depth: 1, credentials: gitRepository?.credentials });
+
+  return {};
+};
+
 export type GitLogLoaderData = {
   log: GitLogEntry[];
 } | {
@@ -188,7 +209,7 @@ export const gitLogLoader: LoaderFunction = async ({ params }): Promise<GitLogLo
   const gitRepository = await models.gitRepository.getById(workspaceMeta?.gitRepositoryId);
   invariant(gitRepository, 'Git Repository not found');
 
-  const log = await GitVCS.log();
+  const log = await GitVCS.log({ depth: 35 });
 
   return {
     log,
@@ -354,82 +375,95 @@ export const cloneGitRepoAction: ActionFunction = async ({
     );
     return rootDirs.includes(models.workspace.type);
   };
-  // If no workspace exists, user should be prompted to create a document
+
+  // Stop the DB from pushing updates to the UI temporarily
+  const bufferId = await database.bufferChanges();
+  let workspaceId = '';
+  // If no workspace exists we create a new one
   if (!(await containsInsomniaWorkspaceDir(fsClient))) {
+    // Create a new workspace
+    const workspace = await models.workspace.create({
+      name: repoSettingsPatch.uri.split('/').pop(),
+      scope: WorkspaceScopeKeys.design,
+      parentId: project._id,
+      description: `Insomnia Workspace for ${repoSettingsPatch.uri}}`,
+    });
     trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
       ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
       providerName,
     });
-    return {
-      errors: ['No insomnia directory found in repository'],
-    };
-  }
 
-  const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-  const workspaces = await fsClient.promises.readdir(workspaceBase);
+    workspaceId = workspace._id;
 
-  if (workspaces.length === 0) {
-    trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-      ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'),
-      providerName,
-    });
+    // Store GitRepository settings and set it as active
+    await createGitRepository(workspace._id, repoSettingsPatch);
+  } else {
+    // Clone all entities from the repository
+    const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
+    const workspaces = await fsClient.promises.readdir(workspaceBase);
 
-    return {
-      errors: ['No workspaces found in repository'],
-    };
-  }
+    if (workspaces.length === 0) {
+      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+        ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'),
+        providerName,
+      });
 
-  if (workspaces.length > 1) {
-    trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-      ...vcsSegmentEventProperties('git', 'clone', 'multiple workspaces found'),
-      providerName,
-    });
-
-    return {
-      errors: ['Multiple workspaces found in repository. Expected one.'],
-    };
-  }
-
-  // Only one workspace
-  const workspacePath = path.join(workspaceBase, workspaces[0]);
-  const workspaceJson = await fsClient.promises.readFile(workspacePath);
-  const workspace = YAML.parse(workspaceJson.toString());
-  // Check if the workspace already exists
-  const existingWorkspace = await models.workspace.getById(workspace._id);
-
-  if (existingWorkspace) {
-    trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-      ...vcsSegmentEventProperties('git', 'clone', 'workspace already exists'),
-      providerName,
-    });
-    return {
-      errors: [`Workspace ${existingWorkspace.name} already exists. Please delete it before cloning.`],
-    };
-  }
-
-  // Stop the DB from pushing updates to the UI temporarily
-  const bufferId = await database.bufferChanges();
-
-  // Loop over all model folders in root
-  for (const modelType of await fsClient.promises.readdir(GIT_INSOMNIA_DIR)) {
-    const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
-
-    // Loop over all documents in model folder and save them
-    for (const docFileName of await fsClient.promises.readdir(modelDir)) {
-      const docPath = path.join(modelDir, docFileName);
-      const docYaml = await fsClient.promises.readFile(docPath);
-      const doc: models.BaseModel = YAML.parse(docYaml.toString());
-      if (isWorkspace(doc)) {
-        // @ts-expect-error parentId can be string or null for a workspace
-        doc.parentId = project?._id || null;
-        doc.scope = WorkspaceScopeKeys.design;
-      }
-      await database.upsert(doc);
+      return {
+        errors: ['No workspaces found in repository'],
+      };
     }
-  }
 
-  // Store GitRepository settings and set it as active
-  await createGitRepository(workspace._id, repoSettingsPatch);
+    if (workspaces.length > 1) {
+      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+        ...vcsSegmentEventProperties('git', 'clone', 'multiple workspaces found'),
+        providerName,
+      });
+
+      return {
+        errors: ['Multiple workspaces found in repository. Expected one.'],
+      };
+    }
+
+    // Only one workspace
+    const workspacePath = path.join(workspaceBase, workspaces[0]);
+    const workspaceJson = await fsClient.promises.readFile(workspacePath);
+    const workspace = YAML.parse(workspaceJson.toString());
+    // Check if the workspace already exists
+    const existingWorkspace = await models.workspace.getById(workspace._id);
+
+    if (existingWorkspace) {
+      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
+        ...vcsSegmentEventProperties('git', 'clone', 'workspace already exists'),
+        providerName,
+      });
+      return {
+        errors: [`Workspace ${existingWorkspace.name} already exists. Please delete it before cloning.`],
+      };
+    }
+
+    // Loop over all model folders in root
+    for (const modelType of await fsClient.promises.readdir(GIT_INSOMNIA_DIR)) {
+      const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
+
+      // Loop over all documents in model folder and save them
+      for (const docFileName of await fsClient.promises.readdir(modelDir)) {
+        const docPath = path.join(modelDir, docFileName);
+        const docYaml = await fsClient.promises.readFile(docPath);
+        const doc: models.BaseModel = YAML.parse(docYaml.toString());
+        if (isWorkspace(doc)) {
+          doc.parentId = project._id;
+          doc.scope = WorkspaceScopeKeys.design;
+          const workspace = await database.upsert(doc);
+          workspaceId = workspace._id;
+        } else {
+          await database.upsert(doc);
+        }
+      }
+    }
+
+    // Store GitRepository settings and set it as active
+    await createGitRepository(workspace._id, repoSettingsPatch);
+  }
 
   // Flush DB changes
   await database.flushChanges(bufferId);
@@ -438,7 +472,9 @@ export const cloneGitRepoAction: ActionFunction = async ({
     providerName,
   });
 
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${ACTIVITY_SPEC}`);
+  invariant(workspaceId, 'Workspace ID is required');
+
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}`);
 };
 
 export const updateGitRepoAction: ActionFunction = async ({
@@ -674,7 +710,6 @@ export const checkoutGitBranchAction: ActionFunction = async ({
   const bufferId = await database.bufferChanges();
   try {
     await GitVCS.checkout(branch);
-    await GitVCS.fetch(true, 1, repo?.credentials);
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : err;
     return {
@@ -683,7 +718,7 @@ export const checkoutGitBranchAction: ActionFunction = async ({
   }
 
   if (workspaceMeta) {
-    const log = (await GitVCS.log()) || [];
+    const log = (await GitVCS.log({ depth: 1 })) || [];
 
     const author = log[0] ? log[0].commit.author : null;
     const cachedGitLastCommitTime = author ? author.timestamp * 1000 : null;
@@ -875,7 +910,7 @@ export const pullFromGitRemoteAction: ActionFunction = async ({
   const providerName = getOauth2FormatName(gitRepository.credentials);
 
   try {
-    await GitVCS.fetch(true, 1, gitRepository?.credentials);
+    await GitVCS.fetch({ singleBranch: true, depth: 1, credentials: gitRepository?.credentials });
   } catch (e) {
     console.warn('Error fetching from remote');
   }
@@ -941,7 +976,7 @@ async function getGitChanges(vcs: typeof GitVCS, workspace: Workspace) {
   }
   // Create status items
   const items: Record<string, GitChange> = {};
-  const log = (await vcs.log(1)) || [];
+  const log = (await vcs.log({ depth: 1 })) || [];
 
   for (const gitPath of allPaths) {
     const status = await vcs.status(gitPath);

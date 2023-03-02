@@ -65,6 +65,7 @@ interface InitOptions {
   fs: git.FsClient;
   gitDirectory?: string;
   gitCredentials?: GitCredentials | null;
+  uri: string;
 }
 
 interface InitFromCloneOptions {
@@ -97,6 +98,7 @@ interface BaseOpts {
   onAuthFailure: git.AuthFailureCallback;
   onAuthSuccess: git.AuthSuccessCallback;
   onAuth: git.AuthCallback;
+  uri: string;
 }
 
 export class GitVCS {
@@ -109,7 +111,7 @@ export class GitVCS {
     this.initialized = false;
   }
 
-  async init({ directory, fs, gitDirectory, gitCredentials }: InitOptions) {
+  async init({ directory, fs, gitDirectory, gitCredentials, uri }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       dir: directory,
@@ -117,6 +119,7 @@ export class GitVCS {
       gitdir: gitDirectory,
       fs,
       http: httpClient,
+      uri,
     };
 
     if (await this.repoExists()) {
@@ -149,7 +152,8 @@ export class GitVCS {
       ...this._baseOpts,
       path: 'remote.origin.url',
     });
-    return remoteOriginURI;
+
+    return remoteOriginURI || this._baseOpts.uri;
   }
 
   async initFromClone({
@@ -171,7 +175,6 @@ export class GitVCS {
       ...this._baseOpts,
       url,
       singleBranch: true,
-      ref: 'HEAD',
     });
     console.log(`[git] Clones repo to ${gitDirectory} from ${url}`);
     this.initialized = true;
@@ -339,7 +342,7 @@ export class GitVCS {
       forPush: true,
       url: remote.url,
     });
-    const logs = (await this.log(1)) || [];
+    const logs = (await this.log({ depth: 1 })) || [];
     const localHead = logs[0].oid;
     const remoteRefs = remoteInfo.refs || {};
     const remoteHeads = remoteRefs.heads || {};
@@ -393,24 +396,32 @@ export class GitVCS {
     });
   }
 
-  async fetch(
-    singleBranch: boolean,
-    depth?: number,
-    gitCredentials?: GitCredentials | null
-  ) {
+  async fetch({
+    singleBranch,
+    depth,
+    credentials,
+    relative = false,
+  }: {
+    singleBranch: boolean;
+    depth?: number;
+    credentials?: GitCredentials | null;
+    relative?: boolean;
+  }) {
     console.log('[git] Fetch remote=origin');
     return git.fetch({
       ...this._baseOpts,
-      ...gitCallbacks(gitCredentials),
+      ...gitCallbacks(credentials),
       singleBranch,
       remote: 'origin',
+      relative,
       depth,
       prune: true,
       pruneTags: true,
+
     });
   }
 
-  async log(depth?: number) {
+  async log({ depth = 35 }:{depth?: number}) {
     try {
       return await git.log({ ...this._baseOpts, depth });
     } catch (error) {
@@ -448,8 +459,10 @@ export class GitVCS {
     const localBranches = await this.listBranches();
     const remoteBranches = await this.listRemoteBranches();
     const branches = [...localBranches, ...remoteBranches];
+    console.log('[git] Checkout branches', { branches, branch });
     try {
       if (!branches.includes(branch)) {
+        console.log('[git] Fetching branch', branch);
         // Try to fetch the branch from the remote if it doesn't exist locally;
         await git.fetch({
           ...this._baseOpts,

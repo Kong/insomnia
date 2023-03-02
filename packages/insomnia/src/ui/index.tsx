@@ -268,6 +268,10 @@ const router = createMemoryRouter(
                                   loader: async (...args) => (await import('./routes/git-actions')).gitLogLoader(...args),
                                 },
                                 {
+                                  path: 'fetch',
+                                  action: async (...args) => (await import('./routes/git-actions')).gitFetchAction(...args),
+                                },
+                                {
                                   path: 'branch',
                                   children: [
                                     {

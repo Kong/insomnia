@@ -315,9 +315,11 @@ export const GitStagingModal: FC<ModalProps> = ({
                 )}
               </>
             ) : (
-              <>
-                {isLoadingGitChanges ? 'Loading list of changes.' : 'No changes to commit.'}
-              </>
+              <div className="txt-sm faint italic">
+                {isLoadingGitChanges ? <>
+                  <i className="fa fa-spinner fa-spin space-right" />
+                  Loading changes...</> : 'No changes to commit.'}
+              </div>
             )}
           </gitCommitFetcher.Form>
         </ModalBody>

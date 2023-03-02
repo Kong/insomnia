@@ -1,7 +1,8 @@
 import React, { FC, useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
+import { useFetcher, useParams } from 'react-router-dom';
 
-import type { GitLogEntry } from '../../../sync/git/git-vcs';
+import { GitLogLoaderData } from '../../routes/git-actions';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -10,23 +11,40 @@ import { TimeFromNow } from '../time-from-now';
 import { Tooltip } from '../tooltip';
 
 type Props = ModalProps & {
-  logs: GitLogEntry[];
   branch: string;
 };
 
-export const GitLogModal: FC<Props> = ({ branch, logs, onHide }) => {
+export const GitLogModal: FC<Props> = ({ branch, onHide }) => {
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
   const modalRef = useRef<ModalHandle>(null);
+  const gitLogFetcher = useFetcher<GitLogLoaderData>();
 
+  const isLoading = gitLogFetcher.state !== 'idle';
+  useEffect(() => {
+    if (gitLogFetcher.state === 'idle' && !gitLogFetcher.data) {
+      gitLogFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/log`);
+    }
+  }, [organizationId, projectId, workspaceId, gitLogFetcher]);
   useEffect(() => {
     modalRef.current?.show();
   }, []);
 
+  const { log } = gitLogFetcher.data && 'log' in gitLogFetcher.data ? gitLogFetcher.data : { log: [] };
+
   return (
     <OverlayContainer>
       <Modal ref={modalRef} onHide={onHide}>
-        <ModalHeader>Git History ({logs.length})</ModalHeader>
+        <ModalHeader>Git History</ModalHeader>
         <ModalBody className="pad">
-          <table className="table--fancy table--striped">
+          {isLoading && <div className="txt-sm faint italic">
+            <i className="fa fa-spinner fa-spin space-right" />
+            Loading git log...
+          </div>}
+          {!isLoading && <table className="table--fancy table--striped">
             <thead>
               <tr>
                 <th className="text-left">Message</th>
@@ -34,7 +52,7 @@ export const GitLogModal: FC<Props> = ({ branch, logs, onHide }) => {
                 <th className="text-left">Author</th>
               </tr>
             </thead>
-            <tbody>{logs.map(entry => {
+            <tbody>{log.map(entry => {
               const {
                 commit: { author, message },
                 oid,
@@ -57,7 +75,7 @@ export const GitLogModal: FC<Props> = ({ branch, logs, onHide }) => {
                 </tr>
               );
             })}</tbody>
-          </table>
+          </table>}
         </ModalBody>
         <ModalFooter>
           <div className="margin-left italic txt-sm">

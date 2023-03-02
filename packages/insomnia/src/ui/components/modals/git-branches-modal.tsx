@@ -167,7 +167,7 @@ export const GitBranchesModal: FC<Props> = (({
               </tbody>
             </table>
           </div>
-          {isFetchingRemoteBranches && (
+          {Boolean(isFetchingRemoteBranches && !remoteOnlyBranches.length) && (
             <div className="pad-top">
               <div className="txt-sm faint italic">
                 <i className="fa fa-spinner fa-spin space-right" />
@@ -175,12 +175,12 @@ export const GitBranchesModal: FC<Props> = (({
               </div>
             </div>
           )}
-          {!isFetchingRemoteBranches && remoteOnlyBranches.length > 0 && (
+          {remoteOnlyBranches.length > 0 && (
             <div className="pad-top">
               <table className="table--fancy table--outlined">
                 <thead>
                   <tr>
-                    <th className="text-left">Remote Branches</th>
+                    <th className="text-left">Remote Branches {isFetchingRemoteBranches && <i className="fa fa-spinner fa-spin space-right" />}</th>
                     <th className="text-right">&nbsp;</th>
                   </tr>
                 </thead>
