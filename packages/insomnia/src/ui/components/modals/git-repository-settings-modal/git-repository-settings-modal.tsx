@@ -65,9 +65,9 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
     );
   };
 
-  const isSubmitting = updateGitRepositoryFetcher.state === 'submitting';
+  const isLoading = updateGitRepositoryFetcher.state !== 'idle';
+  const hasGitRepository = Boolean(gitRepository);
   const errors = updateGitRepositoryFetcher.data?.errors as (Error | string)[];
-  const isDisabled = isSubmitting || Boolean(gitRepository);
 
   useEffect(() => {
     if (errors && errors.length) {
@@ -92,7 +92,7 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
         <ModalBody>
           <ErrorBoundary>
             <Tabs
-              isDisabled={isDisabled}
+              isDisabled={isLoading || hasGitRepository}
               aria-label="Git repository settings tabs"
               selectedKey={selectedTab}
               onSelectionChange={(key: Key) => setTab(key as OauthProviderName)}
@@ -143,9 +143,26 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
             >
               Reset
             </button>
-            <button type="submit" disabled={isDisabled} form={selectedTab} className="btn" data-testid="git-repository-settings-modal__sync-btn">
-              Sync
-            </button>
+            {hasGitRepository ? (
+              <button
+                type="button"
+                onClick={() => modalRef.current?.hide()}
+                className="btn"
+                data-testid="git-repository-settings-modal__sync-btn-close"
+              >
+                Close
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={isLoading}
+                form={selectedTab}
+                className="btn"
+                data-testid="git-repository-settings-modal__sync-btn"
+              >
+                Sync
+              </button>
+            )}
           </div>
         </ModalFooter>
       </Modal>
