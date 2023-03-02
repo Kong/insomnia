@@ -429,6 +429,14 @@ export class GitVCS {
   async log(input: {depth?: number} = {}) {
     const { depth = 35 } = input;
     try {
+      await git.fetch({
+        ...this._baseOpts,
+        remote: 'origin',
+        depth,
+        singleBranch: true,
+        tags: false,
+      });
+
       return await git.log({ ...this._baseOpts, depth });
     } catch (error) {
       if (error.code === 'NotFoundError') {
@@ -467,24 +475,25 @@ export class GitVCS {
     const remoteBranches = await this.fetchRemoteBranches();
     const branches = [...localBranches, ...syncedBranches, ...remoteBranches];
     console.log('[git] Checkout branches', { branches, branch });
-    try {
-      if (!syncedBranches.includes(branch)) {
-        console.log('[git] Fetching branch', branch);
-        // Try to fetch the branch from the remote if it doesn't exist locally;
-        await git.fetch({
-          ...this._baseOpts,
-          remote: 'origin',
-          depth: 1,
-          ref: branch,
-          singleBranch: true,
-          tags: false,
-        });
-      }
-    } catch (e) {
-      console.log('[git] Fetch failed', e);
-    }
 
     if (branches.includes(branch)) {
+      try {
+        if (!syncedBranches.includes(branch)) {
+          console.log('[git] Fetching branch', branch);
+          // Try to fetch the branch from the remote if it doesn't exist locally;
+          await git.fetch({
+            ...this._baseOpts,
+            remote: 'origin',
+            depth: 1,
+            ref: branch,
+            singleBranch: true,
+            tags: false,
+          });
+        }
+      } catch (e) {
+        console.log('[git] Fetch failed', e);
+      }
+
       await git.checkout({
         ...this._baseOpts,
         ref: branch,
