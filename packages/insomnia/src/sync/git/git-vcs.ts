@@ -65,7 +65,7 @@ interface InitOptions {
   fs: git.FsClient;
   gitDirectory?: string;
   gitCredentials?: GitCredentials | null;
-  uri: string;
+  uri?: string;
 }
 
 interface InitFromCloneOptions {
@@ -111,7 +111,7 @@ export class GitVCS {
     this.initialized = false;
   }
 
-  async init({ directory, fs, gitDirectory, gitCredentials, uri }: InitOptions) {
+  async init({ directory, fs, gitDirectory, gitCredentials, uri = '' }: InitOptions) {
     this._baseOpts = {
       ...this._baseOpts,
       dir: directory,
@@ -148,12 +148,17 @@ export class GitVCS {
   }
 
   async getRemoteOriginURI() {
-    const remoteOriginURI = await git.getConfig({
-      ...this._baseOpts,
-      path: 'remote.origin.url',
-    });
+    try {
+      const remoteOriginURI = await git.getConfig({
+        ...this._baseOpts,
+        path: 'remote.origin.url',
+      });
 
-    return remoteOriginURI || this._baseOpts.uri;
+      return remoteOriginURI;
+    } catch (err) {
+      // Ignore error
+      return this._baseOpts.uri || '';
+    }
   }
 
   async initFromClone({
@@ -421,7 +426,8 @@ export class GitVCS {
     });
   }
 
-  async log({ depth = 35 }:{depth?: number}) {
+  async log(input: {depth?: number} = {}) {
+    const { depth = 35 } = input;
     try {
       return await git.log({ ...this._baseOpts, depth });
     } catch (error) {
@@ -457,11 +463,12 @@ export class GitVCS {
       branch,
     });
     const localBranches = await this.listBranches();
-    const remoteBranches = await this.listRemoteBranches();
-    const branches = [...localBranches, ...remoteBranches];
+    const syncedBranches = await this.listRemoteBranches();
+    const remoteBranches = await this.fetchRemoteBranches();
+    const branches = [...localBranches, ...syncedBranches, ...remoteBranches];
     console.log('[git] Checkout branches', { branches, branch });
     try {
-      if (!branches.includes(branch)) {
+      if (!syncedBranches.includes(branch)) {
         console.log('[git] Fetching branch', branch);
         // Try to fetch the branch from the remote if it doesn't exist locally;
         await git.fetch({
