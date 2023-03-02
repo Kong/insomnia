@@ -335,8 +335,9 @@ export const GitStagingModal: FC<ModalProps> = ({
               type="submit"
               form="git-staging-form"
               className="btn"
-              disabled={gitCommitFetcher.state === 'submitting' || !hasChanges}
+              disabled={gitCommitFetcher.state !== 'idle' || !hasChanges}
             >
+              <i className={`fa ${gitCommitFetcher.state === 'idle' ? 'fa-check' : 'fa-spinner fa-spin'} space-right`} />
               Commit
             </button>
           </div>
