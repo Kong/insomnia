@@ -24,6 +24,8 @@ describe('Git-VCS', () => {
       const fsClient = MemClient.createClient();
 
       await GitVCS.init({
+        uri: '',
+        repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
       });
@@ -46,6 +48,8 @@ describe('Git-VCS', () => {
       await fsClient.promises.writeFile('/other.txt', 'other');
 
       await GitVCS.init({
+        uri: '',
+        repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
       });
@@ -64,6 +68,8 @@ describe('Git-VCS', () => {
       const fsClient = MemClient.createClient();
 
       await GitVCS.init({
+        uri: '',
+        repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
       });
@@ -79,6 +85,8 @@ describe('Git-VCS', () => {
       await fsClient.promises.writeFile('other.txt', 'should be ignored');
 
       await GitVCS.init({
+        uri: '',
+        repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
       });
@@ -133,6 +141,8 @@ First commit!
       await fsClient.promises.writeFile(barTxt, 'bar');
 
       await GitVCS.init({
+        uri: '',
+        repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
       });
@@ -145,7 +155,7 @@ First commit!
       await GitVCS.add(barTxt);
       await GitVCS.commit('Second commit!');
       expect((await GitVCS.log()).length).toBe(2);
-      await GitVCS.checkout('master');
+      await GitVCS.checkout('main');
       expect((await GitVCS.log()).length).toBe(1);
     });
   });
@@ -175,6 +185,8 @@ First commit!
       await fsClient.promises.writeFile(folderBarTxt, originalContent);
 
       await GitVCS.init({
+        uri: '',
+        repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
       });
@@ -209,6 +221,8 @@ First commit!
       await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
 
       await GitVCS.init({
+        uri: '',
+        repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
       });
@@ -244,6 +258,8 @@ First commit!
       await fsClient.promises.writeFile(dirFooTxt, 'foo');
 
       await GitVCS.init({
+        uri: '',
+        repoId: '',
         directory: GIT_CLONE_DIR,
         fs: fsClient,
       });

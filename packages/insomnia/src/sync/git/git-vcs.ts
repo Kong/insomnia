@@ -129,9 +129,13 @@ export class GitVCS {
       let defaultBranch = 'main';
 
       try {
+        const url = await this.getRemoteOriginURI();
+        if (!url) {
+          throw new Error('No remote origin URL');
+        }
         const [mainRef] = await git.listServerRefs({
           ...this._baseOpts,
-          url: await this.getRemoteOriginURI(),
+          url,
           prefix: 'HEAD',
           symrefs: true,
         });
@@ -428,17 +432,20 @@ export class GitVCS {
   async log(input: {depth?: number} = {}) {
     const { depth = 35 } = input;
     try {
-      await git.fetch({
-        ...this._baseOpts,
-        remote: 'origin',
-        depth,
-        singleBranch: true,
-        tags: false,
-      });
+      const remoteOriginURI = await this.getRemoteOriginURI();
+      if (remoteOriginURI) {
+        await git.fetch({
+          ...this._baseOpts,
+          remote: 'origin',
+          depth,
+          singleBranch: true,
+          tags: false,
+        });
+      }
 
       return await git.log({ ...this._baseOpts, depth });
-    } catch (error) {
-      if (error.code === 'NotFoundError') {
+    } catch (error: unknown) {
+      if (error instanceof git.Errors.NotFoundError) {
         return [];
       }
 
