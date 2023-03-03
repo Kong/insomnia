@@ -38,13 +38,15 @@ describe('curl', () => {
     });
 
     it('handles & correctly', () => {
-      const rawData = `curl ${method} ${url} ${header} --data a=1\\&b=2 --data-urlencode c=3\\&d=4`;
+      const rawData = `curl ${method} ${url} ${header} --data a=1\\&b=2 --data-urlencode c=3\\&d=4 --data-urlencode 'response_type=code'`;
       expect(convert(rawData)).toMatchObject([{
         body: {
           params: [
             { name: 'a', value: '1' },
             { name: 'b', value: '2' },
-            { name: 'c=3&d=4', value: '' },
+            { name: 'c', value: '3' },
+            { name: 'd', value: '4' },
+            { name: 'response_type', value: 'code' },
           ],
         },
       }]);
