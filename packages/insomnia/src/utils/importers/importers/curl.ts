@@ -171,8 +171,20 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   for (const paramName of paramNames) {
     const pair = pairsByName[paramName];
 
-    if (pair && pair.length) {
-      textBodyParams = textBodyParams.concat(paramName === 'data-urlencode' ? pair.map(item => encodeURIComponent(item)) : pair);
+    if (!pair || pair.length === 0) {
+      continue;
+    }
+
+    switch (paramName) {
+      case 'data-urlencode':
+        const encodedKeyValuePairs =
+          pair.flatMap(item => item.toString().split('&')).map(item => dataUrlEncode(item));
+
+        textBodyParams = textBodyParams.concat(encodedKeyValuePairs);
+        break;
+      default:
+        textBodyParams = textBodyParams.concat(pair);
+        break;
     }
   }
 
@@ -258,6 +270,31 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     authentication,
     body,
   };
+};
+
+/**
+ * Handles cURL data-urlencode argument
+ *
+ * docs: https://curl.se/docs/manpage.html#--data-urlencode
+ */
+const dataUrlEncode = (argument: Pair): string => {
+  if (typeof argument === 'boolean') {
+    return encodeURIComponent(argument);
+  }
+
+  if (argument.startsWith('=')) {
+    return encodeURIComponent(argument.slice(1));
+  } else if (argument.includes('=')) {
+    const [name, value] = argument.split('=');
+
+    if (!value || value.length === 0) {
+      return encodeURIComponent(argument);
+    }
+
+    return `${name}=${encodeURIComponent(value ?? '')}`;
+  } else {
+    return encodeURIComponent(argument);
+  }
 };
 
 const getPairValue = <T extends string | boolean>(
