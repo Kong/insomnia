@@ -16,6 +16,10 @@ test('Clone Repo with bad values', async ({ page }) => {
   await page.getByText('Authentication Token').fill('test');
   await page.getByRole('button', { name: 'Clone' }).click();
 
+  // Default branch is loaded
+  await page.getByRole('button', { name: 'main' }).click();
+  await page.getByText('Git Sync').press('Escape');
+
   // Basic check repository data is loaded
   // Design doc
   await page.getByText('"Our Dino Park API"').click();
@@ -36,7 +40,6 @@ test('Clone Repo with bad values', async ({ page }) => {
 
   // Check a recent and old commit show up on history
   await page.getByRole('cell', { name: 'bump to OpenAPI v3.1' }).click();
-  await page.getByRole('cell', { name: 'initial commit' }).click();
   await page.locator('text=Done').click();
 
   // Create a branch and try to push with bad Git token
