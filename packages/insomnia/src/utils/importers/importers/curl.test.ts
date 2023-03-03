@@ -1,8 +1,8 @@
 import { describe, expect, it } from '@jest/globals';
 import { quote } from 'shell-quote';
 
-import { convert } from './curl';
 import { Parameter } from '../entities';
+import { convert } from './curl';
 
 describe('curl', () => {
   describe('cURL --data flags', () => {
