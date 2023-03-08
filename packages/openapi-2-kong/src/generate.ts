@@ -47,12 +47,13 @@ export const generateFromSpec = async (
   api: OpenApi3Spec,
   type: ConversionResultType,
   tags: string[] = [],
+  legacy: Boolean = true
 ) => {
   const allTags = [...defaultTags, ...tags];
 
   switch (type) {
     case 'kong-declarative-config':
-      return await generateDeclarativeConfigFromSpec(api, allTags);
+      return await generateDeclarativeConfigFromSpec(api, allTags, legacy);
 
     case 'kong-for-kubernetes':
       return generateKongForKubernetesConfigFromSpec(api);
@@ -66,15 +67,17 @@ export const generateFromString = async (
   specStr: string,
   type: ConversionResultType,
   tags: string[] = [],
+  legacy: Boolean = true,
 ) => {
   const api = await parseSpec(specStr);
-  return generateFromSpec(api, type, tags);
+  return generateFromSpec(api, type, tags, legacy);
 };
 
 export const generate = (
   filePath: string,
   type: ConversionResultType,
   tags: string[] = [],
+  legacy: Boolean = true,
 ) => new Promise<ConversionResult>((resolve, reject) => {
   fs.readFile(path.resolve(filePath), 'utf8', (err, contents) => {
     if (err != null) {
@@ -84,6 +87,6 @@ export const generate = (
 
     const fileSlug = path.basename(filePath);
     const allTags = [`OAS3file_${fileSlug}`, ...tags];
-    resolve(generateFromString(contents, type, allTags));
+    resolve(generateFromString(contents, type, allTags, legacy));
   });
 });

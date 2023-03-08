@@ -10,6 +10,8 @@ import {
   formatOptions,
   generateConfig,
   GenerateConfigOptions,
+  KongVersion,
+  kongVersionOptions,
 } from './commands/generate-config';
 import type { LintSpecificationOptions } from './commands/lint-specification';
 import { lintSpecification } from './commands/lint-specification';
@@ -33,6 +35,7 @@ const makeGenerateCommand = (commandCreator: CreateCommand) => {
   const command = commandCreator('generate').description('Code generation utilities');
   const defaultType: ConversionOption = 'declarative';
   const defaultFormat: FormatOption = 'yaml';
+  const defaultKongVersion: KongVersion = 'legacy';
 
   // inso generate config -t kubernetes config.yaml
   command
@@ -45,6 +48,10 @@ const makeGenerateCommand = (commandCreator: CreateCommand) => {
     .option(
       '-f, --format <value>',
       `format of configuration to generate, options are [${formatOptions.join(', ')}] (default: ${defaultFormat})`,
+    )
+    .option(
+      '-k, --kongVersion <value>',
+      `version of target Kong instance, options are [${kongVersionOptions.join(', ')}] (default: ${defaultKongVersion})`,
     )
     .option('--tags <tags>', 'comma separated list of tags to apply to each entity')
     .option('-o, --output <path>', 'save the generated config to a file')

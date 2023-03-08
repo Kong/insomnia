@@ -17,6 +17,12 @@ export const conversionOptions: ConversionOption[] = [
 ];
 
 export type FormatOption = 'yaml' | 'json';
+export type KongVersion = 'legacy' | '3';
+
+export const kongVersionOptions: KongVersion[] = [
+  'legacy',
+  '3',
+];
 
 export const formatOptions: FormatOption[] = [
   'yaml',
@@ -33,6 +39,7 @@ export type GenerateConfigOptions = GlobalOptions & {
   output?: string;
   format?: FormatOption;
   skipAnnotations?: boolean;
+  kongVersion?: KongVersion;
 
   /** a comma-separated list of tags */
   tags?: string;
@@ -58,7 +65,7 @@ export const generateConfig = async (
     return false;
   }
 
-  const { type, output, tags, appDataDir, workingDir, ci, src, format } = options;
+  const { type, output, tags, appDataDir, workingDir, ci, src, format, kongVersion } = options;
   const db = await loadDb({
     workingDir,
     appDataDir,
@@ -73,6 +80,7 @@ export const generateConfig = async (
 
   const generationTags = tags?.split(',');
   const conversionType = conversionTypeMap[type];
+  const legacy = kongVersion !== '3';
   try {
     if (specFromDb?.contents) {
       logger.trace('Generating config from database contents');
@@ -80,6 +88,7 @@ export const generateConfig = async (
         specFromDb.contents,
         conversionType,
         generationTags,
+        legacy,
       );
     } else if (identifier) {
       // try load as a file
@@ -87,7 +96,7 @@ export const generateConfig = async (
         ? identifier
         : path.join(workingDir || process.cwd(), identifier);
       logger.trace(`Generating config from file \`${fileName}\``);
-      result = await generate(fileName, conversionType, generationTags);
+      result = await generate(fileName, conversionType, generationTags, legacy);
     }
   } catch (error) {
     throw new InsoError('There was an error while generating configuration', error);
