@@ -85,6 +85,7 @@ describe('generateConfig()', () => {
       expect.stringMatching(/.+/),
       conversionTypeMap.kubernetes,
       ['first', 'second'],
+      true
     );
     expect(logger.__getLogs().log).toEqual(['a\n---\nb\n']);
   });
