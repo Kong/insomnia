@@ -100,7 +100,9 @@ describe('Response tag', () => {
         await tag.run(context, 'body', 'req_1', '$.foo');
         fail('JSON should have failed');
       } catch (err) {
-        expect(err.message).toContain('Invalid JSON: Unexpected end of JSON input');
+        expect(err.message).toContain(
+          'Invalid JSON: Unexpected end of JSON input'
+        );
       }
     });
 
@@ -165,7 +167,6 @@ describe('Response tag', () => {
 
       const context = _genTestContext(requests, responses);
 
-
       const result = await tag.run(context, 'body', 'req_1', '$.array');
       expect(result).toBe('["bar","baz"]');
     });
@@ -184,7 +185,6 @@ describe('Response tag', () => {
       ];
 
       const context = _genTestContext(requests, responses);
-
 
       const result = await tag.run(context, 'body', 'req_1', '$.array');
       expect(result).toBe('[1,2]');
@@ -262,7 +262,12 @@ describe('Response tag', () => {
       ];
 
       const context = _genTestContext(requests, responses);
-      const result = await tag.run(context, 'body', 'req_1', 'substring(/foo/bar, 7)');
+      const result = await tag.run(
+        context,
+        'body',
+        'req_1',
+        'substring(/foo/bar, 7)'
+      );
 
       expect(result).toBe('World!');
     });
@@ -379,12 +384,18 @@ describe('Response tag', () => {
 
       const context = _genTestContext(requests, responses);
 
-      expect(await tag.run(context, 'header', 'req_1', 'content-type')).toBe('application/json');
-      expect(await tag.run(context, 'header', 'req_1', 'Content-Type')).toBe('application/json');
-      expect(await tag.run(context, 'header', 'req_1', 'CONTENT-type')).toBe('application/json');
-      expect(await tag.run(context, 'header', 'req_1', 'CONTENT-type    ')).toBe(
-        'application/json',
+      expect(await tag.run(context, 'header', 'req_1', 'content-type')).toBe(
+        'application/json'
       );
+      expect(await tag.run(context, 'header', 'req_1', 'Content-Type')).toBe(
+        'application/json'
+      );
+      expect(await tag.run(context, 'header', 'req_1', 'CONTENT-type')).toBe(
+        'application/json'
+      );
+      expect(
+        await tag.run(context, 'header', 'req_1', 'CONTENT-type    ')
+      ).toBe('application/json');
     });
 
     it('no results on missing header', async () => {
@@ -410,7 +421,7 @@ describe('Response tag', () => {
       } catch (err) {
         expect(err.message).toBe(
           'No header with name "missing".\n' +
-            'Choices are [\n\t"Content-Type",\n\t"Content-Length"\n]',
+            'Choices are [\n\t"Content-Type",\n\t"Content-Length"\n]'
         );
       }
     });
@@ -442,7 +453,9 @@ describe('Response tag', () => {
       const responses = [];
       const context = _genTestContext(requests, responses);
 
-      expect(await tag.run(context, 'raw', 'req_1', '', 'always')).toBe('Response res_1');
+      expect(await tag.run(context, 'raw', 'req_1', '', 'always')).toBe(
+        'Response res_1'
+      );
     });
 
     it('sends when behavior=always and some responses', async () => {
@@ -458,7 +471,9 @@ describe('Response tag', () => {
       ];
       const context = _genTestContext(requests, responses);
 
-      expect(await tag.run(context, 'raw', 'req_1', '', 'always')).toBe('Response res_2');
+      expect(await tag.run(context, 'raw', 'req_1', '', 'always')).toBe(
+        'Response res_2'
+      );
     });
 
     it('sends when behavior=no-history and no responses', async () => {
@@ -466,7 +481,9 @@ describe('Response tag', () => {
       const responses = [];
       const context = _genTestContext(requests, responses);
 
-      expect(await tag.run(context, 'raw', 'req_1', '', 'no-history')).toBe('Response res_1');
+      expect(await tag.run(context, 'raw', 'req_1', '', 'no-history')).toBe(
+        'Response res_1'
+      );
     });
 
     it('does not send when behavior=no-history and some responses', async () => {
@@ -483,7 +500,7 @@ describe('Response tag', () => {
       const context = _genTestContext(requests, responses);
 
       expect(await tag.run(context, 'raw', 'req_1', '', 'no-history')).toBe(
-        'Response res_existing',
+        'Response res_existing'
       );
     });
 
@@ -492,7 +509,9 @@ describe('Response tag', () => {
       const responses = [];
       const context = _genTestContext(requests, responses);
 
-      expect(await tag.run(context, 'raw', 'req_1', '', 'when-expired', 60)).toBe('Response res_1');
+      expect(
+        await tag.run(context, 'raw', 'req_1', '', 'when-expired', 60)
+      ).toBe('Response res_1');
     });
 
     it('sends when behavior=when-expired and response is old', async () => {
@@ -504,7 +523,9 @@ describe('Response tag', () => {
       ];
       const context = _genTestContext(requests, responses);
 
-      expect(await tag.run(context, 'raw', 'req_1', '', 'when-expired', 30)).toBe('Response res_2');
+      expect(
+        await tag.run(context, 'raw', 'req_1', '', 'when-expired', 30)
+      ).toBe('Response res_2');
     });
 
     it('does not send when behavior=when-expired and response is new', async () => {
@@ -521,9 +542,9 @@ describe('Response tag', () => {
       ];
       const context = _genTestContext(requests, responses);
 
-      expect(await tag.run(context, 'raw', 'req_1', '', 'when-expired', 90)).toBe(
-        'Response res_existing',
-      );
+      expect(
+        await tag.run(context, 'raw', 'req_1', '', 'when-expired', 90)
+      ).toBe('Response res_existing');
     });
 
     it('does not send when behavior=never and no responses', async () => {
@@ -532,7 +553,9 @@ describe('Response tag', () => {
       const context = _genTestContext(requests, responses);
 
       try {
-        expect(await tag.run(context, 'raw', 'req_1', '', 'never')).toBe('Response res_1');
+        expect(await tag.run(context, 'raw', 'req_1', '', 'never')).toBe(
+          'Response res_1'
+        );
       } catch (err) {
         expect(err.message).toBe('No responses for request');
         return;
@@ -554,13 +577,17 @@ describe('Response tag', () => {
       ];
       const context = _genTestContext(requests, responses);
 
-      expect(await tag.run(context, 'raw', 'req_1', '', 'never')).toBe('Response res_existing');
+      expect(await tag.run(context, 'raw', 'req_1', '', 'never')).toBe(
+        'Response res_existing'
+      );
     });
 
     it('does not resend if request has already sent in recursive chain', async () => {
       const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
       const responses = [];
-      const context = _genTestContext(requests, responses, { requestChain: ['req_1']});
+      const context = _genTestContext(requests, responses, {
+        requestChain: ['req_1'],
+      });
 
       try {
         await tag.run(context, 'raw', 'req_1', '', 'always');
@@ -570,22 +597,24 @@ describe('Response tag', () => {
       }
 
       throw new Error('Running tag should have thrown exception');
+    });
+
+    it('does send if request has not been sent in recursive chain', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [];
+
+      const context = _genTestContext(requests, responses, {
+        requestChain: ['req_2'],
+      });
+
+      const response = await tag.run(context, 'raw', 'req_1', '', 'always');
+      expect(response).toBe('Response res_1');
+    });
   });
-
-  it('does send if request has not been sent in recursive chain', async () => {
-    const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
-    const responses = [];
-
-    const context = _genTestContext(requests, responses, { requestChain: ['req_2']});
-
-    const response = await tag.run(context, 'raw', 'req_1', '', 'always');
-      expect(response).toBe('Response res_1')
-  });
-});
 
   describe('Max Age', () => {
     const maxAgeArg = tag.args[4];
-    const toValueObj = value => ({ value });
+    const toValueObj = (value) => ({ value });
 
     it('should ensure fourth argument is maxAge', () => {
       expect(maxAgeArg.displayName).toBe('Max age (seconds)');
@@ -664,9 +693,9 @@ function _genTestContext(requests, responses, extraInfoRoot) {
       },
     },
     store: {
-      hasItem: key => Object.prototype.hasOwnProperty.call(store, key),
-      getItem: key => store[key],
-      removeItem: key => {
+      hasItem: (key) => Object.prototype.hasOwnProperty.call(store, key),
+      getItem: (key) => store[key],
+      removeItem: (key) => {
         delete store[key];
       },
       setItem: (key, value) => {
@@ -677,12 +706,12 @@ function _genTestContext(requests, responses, extraInfoRoot) {
       models: {
         request: {
           getById(requestId) {
-            return requests.find(r => r._id === requestId) || null;
+            return requests.find((r) => r._id === requestId) || null;
           },
         },
         response: {
           getLatestForRequestId(requestId, environmentId) {
-            return responses.find(r => r.parentId === requestId) || null;
+            return responses.find((r) => r.parentId === requestId) || null;
           },
           getBodyBuffer(response) {
             const strOrBuffer = bodies[response._id];
