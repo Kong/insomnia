@@ -27,7 +27,7 @@ test.describe('Plugins', async () => {
 
     // Open declarative config
     await page.getByRole('button', { name: 'New Document' }).click();
-    await page.getByRole('menuitem', { name: 'Declarative Config' }).click();
+    await page.getByRole('menuitem', { name: 'Declarative Config (Legacy)' }).click();
     // Check for declarative config contents
     await page.click('text=/.*"_format_version".*/');
 
