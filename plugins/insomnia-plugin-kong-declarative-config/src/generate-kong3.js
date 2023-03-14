@@ -1,7 +1,7 @@
 const o2k = require('openapi-2-kong');
 
 module.exports = {
-  label: 'Declarative Config (Legacy)',
+  label: 'Declarative Config (Kong 3.x)',
   docsLink: 'https://docs.insomnia.rest/insomnia/declarative-config',
   generate: async ({ contents, formatVersion }) => {
     const isSupported = formatVersion && formatVersion.match(/^3./);
@@ -14,7 +14,7 @@ module.exports = {
     }
 
     try {
-      const result = await o2k.generateFromString(contents, 'kong-declarative-config');
+      const result = await o2k.generateFromString(contents, 'kong-declarative-config', [], false);
       // We know for certain the result.documents has only one entry for declarative config: packages/openapi-2-kong/src/declarative-config/generate.ts#L20
       const declarativeConfig = result.documents?.[0]
       return {

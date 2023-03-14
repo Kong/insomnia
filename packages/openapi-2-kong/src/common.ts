@@ -65,13 +65,20 @@ export function generateSlug(str: string, options: SlugifyOptions = {}) {
 /** characters in curly braces not immediately followed by `://`, e.g. `{foo}` will match but `{foo}://` will not. */
 const pathVariableSearchValue = /{([^}]+)}(?!:\/\/)/g;
 
-export function pathVariablesToRegex(p: string) {
+export function pathVariablesToRegex(p: string, legacy: Boolean = true) {
   // escape URL special characters except the curly braces
   p = p.replace(/[$()]/g, '\\$&');
   // match anything except whitespace and '/'
-  const result = p.replace(pathVariableSearchValue, '(?<$1>[^/]+)');
+  let result = p.replace(pathVariableSearchValue, '(?<$1>[^/]+)');
   // add a line ending because it is a regex
+
+  // Prepend ~ to regex for Kong 3.X
+  if (!legacy && !result.startsWith('~')) {
+    result = '~' + result;
+  }
+
   return result + '$';
+
 }
 
 export function getPluginNameFromKey(key: string) {

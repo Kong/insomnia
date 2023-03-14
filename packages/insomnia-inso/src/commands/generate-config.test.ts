@@ -69,7 +69,7 @@ describe('generateConfig()', () => {
 
     await generateConfig(filePath, { type: 'kubernetes', tags: 'tag' });
 
-    expect(generate).toHaveBeenCalledWith(`${path.join(process.cwd(), filePath)}`, conversionTypeMap.kubernetes, ['tag']);
+    expect(generate).toHaveBeenCalledWith(`${path.join(process.cwd(), filePath)}`, conversionTypeMap.kubernetes, ['tag'], true);
     expect(logger.__getLogs().log).toEqual(['a\n---\nb\n']);
   });
 
@@ -85,6 +85,7 @@ describe('generateConfig()', () => {
       expect.stringMatching(/.+/),
       conversionTypeMap.kubernetes,
       ['first', 'second'],
+      true
     );
     expect(logger.__getLogs().log).toEqual(['a\n---\nb\n']);
   });
@@ -135,7 +136,8 @@ describe('generateConfig()', () => {
     expect(generate).toHaveBeenCalledWith(
       path.normalize('test/dir/file.yaml'),
       conversionTypeMap.kubernetes,
-      undefined
+      undefined,
+      true
     );
     expect(logger.__getLogs().log).toEqual([
       `Configuration generated to "${outputPath}".`,
@@ -158,7 +160,8 @@ describe('generateConfig()', () => {
     expect(generate).toHaveBeenCalledWith(
       absolutePath,
       conversionTypeMap.kubernetes,
-      undefined
+      undefined,
+      true
     );
     expect(logger.__getLogs().log).toEqual([
       `Configuration generated to "${outputPath}".`,
