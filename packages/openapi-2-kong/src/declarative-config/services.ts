@@ -19,7 +19,7 @@ import {
 import { generateSecurityPlugins } from './security-plugins';
 import { appendUpstreamToName } from './upstreams';
 
-export async function generateServices(api: OpenApi3Spec, tags: string[]) {
+export async function generateServices(api: OpenApi3Spec, tags: string[], legacy: Boolean = true) {
   const servers = getAllServers(api);
 
   if (servers.length === 0) {
@@ -27,11 +27,11 @@ export async function generateServices(api: OpenApi3Spec, tags: string[]) {
   }
 
   // only support one service for now
-  const service = await generateService(servers[0], api, tags);
+  const service = await generateService(servers[0], api, tags, legacy);
   return [service];
 }
 
-export async function generateService(server: OA3Server, api: OpenApi3Spec, tags: string[]) {
+export async function generateService(server: OA3Server, api: OpenApi3Spec, tags: string[], legacy: Boolean = true) {
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
   const parsedUrl = parseUrl(serverUrl);
@@ -110,7 +110,7 @@ export async function generateService(server: OA3Server, api: OpenApi3Spec, tags
       }
 
       // Create the base route object
-      const fullPathRegex = pathVariablesToRegex(routePath);
+      const fullPathRegex = pathVariablesToRegex(routePath, legacy);
       const route: DCRoute = {
         ...routeDefaultsOperation as DCRoute,
         tags,

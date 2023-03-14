@@ -8,11 +8,13 @@ import { generateUpstreams } from './upstreams';
 export async function generateDeclarativeConfigFromSpec(
   api: OpenApi3Spec,
   tags: string[],
+  legacy: Boolean = true
 ) {
   try {
+    const formatVersion = legacy ? '1.1' : '3.0';
     const document: DeclarativeConfig = {
-      _format_version: '1.1',
-      services: await generateServices(api, tags),
+      _format_version: formatVersion,
+      services: await generateServices(api, tags, legacy),
     };
 
     if (hasUpstreams(api)) {
