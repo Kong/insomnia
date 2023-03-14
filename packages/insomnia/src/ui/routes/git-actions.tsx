@@ -184,7 +184,14 @@ export const gitFetchAction: ActionFunction = async ({ params }): Promise<GitFet
   const gitRepository = await models.gitRepository.getById(workspaceMeta?.gitRepositoryId);
   invariant(gitRepository, 'Git Repository not found');
 
-  await GitVCS.fetch({ singleBranch: true, depth: 1, credentials: gitRepository?.credentials });
+  try {
+    await GitVCS.fetch({ singleBranch: true, depth: 1, credentials: gitRepository?.credentials });
+  } catch (e) {
+    console.error(e);
+    return {
+      errors: ['Failed to fetch from remote'],
+    };
+  }
 
   return {};
 };
