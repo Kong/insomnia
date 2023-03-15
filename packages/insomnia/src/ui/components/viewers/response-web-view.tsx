@@ -2,11 +2,10 @@ import React, { FC, useEffect, useRef } from 'react';
 
 interface Props {
   body: string;
-  contentType: string;
   url: string;
   webpreferences: string;
 }
-export const ResponseWebView: FC<Props> = ({ webpreferences, body, contentType, url }) => {
+export const ResponseWebView: FC<Props> = ({ webpreferences, body, url }) => {
   const webviewRef = useRef<Electron.WebviewTag>(null);
 
   useEffect(() => {
@@ -15,7 +14,7 @@ export const ResponseWebView: FC<Props> = ({ webpreferences, body, contentType, 
       if (webview) {
         webview.removeEventListener('dom-ready', handleDOMReady);
         const bodyWithBase = body.replace('<head>', `<head><base href="${url}">`);
-        webview.loadURL(`data:${contentType},${encodeURIComponent(bodyWithBase)}`);
+        webview.loadURL(`data:text/html; charset=utf-8,${encodeURIComponent(bodyWithBase)}`);
       }
     };
     if (webview) {
@@ -26,7 +25,7 @@ export const ResponseWebView: FC<Props> = ({ webpreferences, body, contentType, 
         webview.removeEventListener('dom-ready', handleDOMReady);
       }
     };
-  }, [body, contentType, url]);
+  }, [body, url]);
   return (
     <webview
       data-testid="ResponseWebView"
