@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { render } from '@testing-library/react';
+import iconv from 'iconv-lite';
 import React from 'react';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
@@ -85,5 +86,19 @@ describe('<ResponseViewer />', () => {
 
     expect(responseWebView).toBeInTheDocument();
     expect(mockRenderWithProps).not.toHaveBeenCalledWith();
+  });
+
+  it('should decode ISO-8859-1 HTML content and render encoded in UTF-8', async () => {
+    const TEST_STRING = 'Viel Glück';
+    const responseWebView = await getResponseViewerChild({
+      contentType: 'text/html; charset=iso-8859-1',
+      getBody: () => Buffer.from(iconv.encode(TEST_STRING, 'iso-8859-1')),
+    }, 'ResponseWebView');
+
+    Object.assign(responseWebView, { loadURL: (url: string) => {
+      expect(url).toEqual(`data:text/html; charset=utf-8,${encodeURIComponent(TEST_STRING)}`);
+    } });
+
+    responseWebView.dispatchEvent(new Event('dom-ready'));
   });
 });

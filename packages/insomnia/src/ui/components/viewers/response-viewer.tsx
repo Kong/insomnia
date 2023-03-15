@@ -253,7 +253,6 @@ export const ResponseViewer = ({
     return (
       <ResponseWebView
         body={getBodyAsString()}
-        contentType={contentType}
         key={disableHtmlPreviewJs ? 'no-js' : 'yes-js'}
         url={url}
         webpreferences={`disableDialogs=true, javascript=${disableHtmlPreviewJs ? 'no' : 'yes'
