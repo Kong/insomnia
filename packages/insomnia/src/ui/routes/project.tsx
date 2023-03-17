@@ -1071,6 +1071,7 @@ const ProjectRoute: FC = () => {
           <ImportModal
             onHide={() => setIsImportModalOpen(false)}
             from={isImportModalOpen}
+            organizationId={organizationId}
             projects={projects}
             defaultProjectId={activeProject._id}
           />

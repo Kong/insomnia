@@ -23,6 +23,7 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 
 interface ImportModalProps extends ModalProps {
+  organizationId: string;
   defaultProjectId: string;
   defaultWorkspaceId?: string;
   projects: Project[];
@@ -169,6 +170,7 @@ export const ImportModal: FC<ImportModalProps> = ({
   projects,
   defaultProjectId,
   defaultWorkspaceId,
+  organizationId,
   from,
   ...modalProps
 }) => {
@@ -191,9 +193,9 @@ export const ImportModal: FC<ImportModalProps> = ({
   useEffect(() => {
     modalRef.current?.show();
     if (defaultProjectId && state === 'idle' && !data) {
-      load(`/project/${defaultProjectId}`);
+      load(`/organization/${organizationId}/project/${defaultProjectId}`);
     }
-  }, [data, defaultProjectId, load, state]);
+  }, [data, defaultProjectId, load, organizationId, state]);
 
   return (
     <Modal {...modalProps} ref={modalRef}>
