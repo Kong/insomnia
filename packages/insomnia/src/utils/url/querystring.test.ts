@@ -120,6 +120,15 @@ describe('querystring', () => {
 
       expect(str).toBe('foo=bar%3F%3F&hello=&hi%20there=bar%3F%3F&=bar%3F%3F&=');
     });
+
+    it('builds from params handle escaped %', () => {
+      const str = buildQueryStringFromParams([
+        { name: 'foo', value: '\\%30\\%' },
+        { name: 'bar', value: '%30\\%' },
+      ]);
+
+      expect(str).toBe('foo=%2530%25&bar=%30%25');
+    });
   });
 
   describe('deconstructToParams()', () => {
