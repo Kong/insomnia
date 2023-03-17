@@ -208,7 +208,6 @@ export const ImportModal: FC<ImportModalProps> = ({
               method: 'post',
               action:`/import/${importFrom}`,
             });
-            modalRef.current?.hide();
           }}
           method="post"
           action={`/import/${importFrom}`}
@@ -328,7 +327,7 @@ export const ImportModal: FC<ImportModalProps> = ({
               </Fieldset>
             </Fragment>
           )}
-          {<div />}
+          <input hidden name="organizationId" value={organizationId} />
         </form>
       </ModalBody>
       <ModalFooter>

@@ -20,11 +20,10 @@ function guard<T>(condition: any, value: any): asserts value is T {
   }
 }
 
-export const importFileAction: ActionFunction = async ({ request, params }) => {
-  const { organizationId } = params;
-  invariant(typeof organizationId === 'string', 'OrganizationId is required.');
+export const importFileAction: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
 
+  const organizationId = formData.get('organizationId');
   const workspaceId = formData.get('workspaceId');
   const projectId = formData.get('projectId');
   const scope = formData.get('scope');
@@ -33,6 +32,7 @@ export const importFileAction: ActionFunction = async ({ request, params }) => {
   invariant(typeof projectId === 'string', 'ProjectId is required.');
   invariant(typeof workspaceId === 'string', 'WorkspaceId is required.');
   invariant(typeof scope === 'string', 'Scope is required.');
+  invariant(typeof organizationId === 'string', 'OrganizationId is required.');
   guard<WorkspaceScope>(scope === 'design' || scope === 'collection', scope);
   guard<string[]>(typeof filePaths[0] === 'string', filePaths);
 
@@ -55,7 +55,7 @@ export const importFileAction: ActionFunction = async ({ request, params }) => {
       scope,
       parentId: projectId,
     });
-    await models.workspace.ensureChildren(workspace);
+
     await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
     await database.flushChanges(flushId);
@@ -113,16 +113,16 @@ export const importFileAction: ActionFunction = async ({ request, params }) => {
   return redirect(`/organization/${organizationId}/project/${project._id}/workspace/${workspace._id}/${scope === 'design' ? ACTIVITY_SPEC : ACTIVITY_DEBUG}`);
 };
 
-export const importUriAction: ActionFunction = async ({ request, params }) => {
-  const { organizationId } = params;
-  invariant(typeof organizationId === 'string', 'OrganizationId is required.');
+export const importUriAction: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
 
-  const uri = formData.get('uri');
-  const workspaceId = formData.get('workspaceId');
+  const organizationId = formData.get('organizationId');
   const projectId = formData.get('projectId');
+  const workspaceId = formData.get('workspaceId');
+  const uri = formData.get('uri');
   const scope = formData.get('scope');
 
+  invariant(typeof organizationId === 'string', 'OrganizationId is required.');
   invariant(typeof uri === 'string', 'URI is required.');
   invariant(typeof projectId === 'string', 'ProjectId is required.');
   invariant(typeof workspaceId === 'string', 'WorkspaceId is required.');
@@ -171,9 +171,8 @@ export const importUriAction: ActionFunction = async ({ request, params }) => {
   return redirect(`/organization/${organizationId}/project/${project._id}/workspace/${workspace._id}/${scope === 'design' ? ACTIVITY_SPEC : ACTIVITY_DEBUG}`);
 };
 
-export const importClipboardAction: ActionFunction = async ({ request, params }) => {
-  const { organizationId } = params;
-  invariant(typeof organizationId === 'string', 'OrganizationId is required.');
+export const importClipboardAction: ActionFunction = async ({ request }) => {
+
   const schema = clipboard.readText();
   if (!schema) {
     throw new Error('Clipboard does not contain a valid specification');
@@ -181,10 +180,12 @@ export const importClipboardAction: ActionFunction = async ({ request, params })
 
   const formData = await request.formData();
 
-  const workspaceId = formData.get('workspaceId');
+  const organizationId = formData.get('organizationId');
   const projectId = formData.get('projectId');
+  const workspaceId = formData.get('workspaceId');
   const scope = formData.get('scope');
 
+  invariant(typeof organizationId === 'string', 'OrganizationId is required.');
   invariant(typeof projectId === 'string', 'ProjectId is required.');
   invariant(typeof workspaceId === 'string', 'WorkspaceId is required.');
   invariant(typeof scope === 'string', 'Scope is required.');
