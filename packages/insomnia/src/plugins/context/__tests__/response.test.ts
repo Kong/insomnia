@@ -54,7 +54,7 @@ describe('response.*', () => {
     expect(result.response.getStatusCode()).toBe(200);
     expect(result.response.getBytesRead()).toBe(123);
     expect(result.response.getTime()).toBe(321);
-    expect(result.response.getBody().toString()).toBe('Hello World!');
+    expect(result.response.getBody()?.toString()).toBe('Hello World!');
   });
 
   it('works for basic and empty response', async () => {
@@ -63,7 +63,7 @@ describe('response.*', () => {
     expect(result.response.getStatusCode()).toBe(0);
     expect(result.response.getBytesRead()).toBe(0);
     expect(result.response.getTime()).toBe(0);
-    expect(result.response.getBody().length).toBe(0);
+    expect(result.response.getBody()?.length).toBe(0);
   });
 
   it('works for getting headers', () => {
