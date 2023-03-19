@@ -92,7 +92,7 @@ describe('init()', () => {
   });
 
   it('fails to initialize without request', () => {
-    expect(() => plugin.init()).toThrowError('contexts.request initialized without request');
+    expect(() => plugin.init(null, {})).toThrowError('contexts.request initialized without request');
   });
 });
 

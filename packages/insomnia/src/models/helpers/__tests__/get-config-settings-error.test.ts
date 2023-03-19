@@ -14,7 +14,7 @@ describe('getConfigSettings error', () => {
     };
 
     const readFileSyncSpy = jest.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(invalidConfig));
-    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation();
+    const consoleErrorMock = jest.spyOn(console, 'error');
 
     // Act
     const result = getConfigSettings();

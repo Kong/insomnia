@@ -57,7 +57,7 @@ describe('pullBackendProject()', () => {
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
-      expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
+      expect(workspace).toStrictEqual(expect.objectContaining({
         _id: backendProject.rootDocumentId,
         name: backendProject.name,
         parentId: project._id,
@@ -76,7 +76,7 @@ describe('pullBackendProject()', () => {
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
-      expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
+      expect(workspace).toStrictEqual(expect.objectContaining({
         _id: backendProject.rootDocumentId,
         name: backendProject.name,
         parentId: project?._id,
@@ -97,7 +97,7 @@ describe('pullBackendProject()', () => {
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
-      expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
+      expect(workspace).toStrictEqual(expect.objectContaining({
         _id: backendProject.rootDocumentId,
         name: backendProject.name,
         parentId: project?._id,
@@ -123,7 +123,7 @@ describe('pullBackendProject()', () => {
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
-      expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
+      expect(workspace).toStrictEqual(expect.objectContaining({
         _id: backendProject.rootDocumentId,
         name: backendProject.name,
         parentId: project?._id,

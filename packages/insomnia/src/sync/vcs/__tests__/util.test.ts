@@ -429,7 +429,7 @@ describe('util', () => {
     it('works with empty state', () => {
       const state = [];
       const dsrd = [DA1];
-      expect(getStagable(state, dsrd)).toEqual<StageEntry[]>([
+      expect(getStagable(state, dsrd)).toEqual([
         {
           blobContent: HA1.content,
           blobId: HA1.hash,

@@ -33,7 +33,7 @@ describe('selectors', () => {
       const state = await reduxStateForTest({ activeProjectId: 'some-other-project' });
 
       const project = selectActiveProject(state);
-      expect(project).toStrictEqual(expect.objectContaining<Partial<Project>>({ _id: DEFAULT_PROJECT_ID }));
+      expect(project).toStrictEqual(expect.objectContaining({ _id: DEFAULT_PROJECT_ID }));
     });
 
     it('should return default project if no active project', async () => {
@@ -45,7 +45,7 @@ describe('selectors', () => {
       const state = await reduxStateForTest({ activeProjectId: undefined });
 
       const project = selectActiveProject(state);
-      expect(project).toStrictEqual(expect.objectContaining<Partial<Project>>({ _id: DEFAULT_PROJECT_ID }));
+      expect(project).toStrictEqual(expect.objectContaining({ _id: DEFAULT_PROJECT_ID }));
     });
   });
 

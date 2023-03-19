@@ -23,7 +23,7 @@ describe('initializeProjectFromTeam', () => {
 
     // Assert
     expect(isRemoteProject(project)).toBe(true);
-    expect(project).toMatchObject<Partial<Project>>({
+    expect(project).toMatchObject({
       _id:`${models.project.prefix}_${team.id}`,
       remoteId: team.id,
       name: team.name,
@@ -44,7 +44,7 @@ describe('initializeWorkspaceFromProject', () => {
 
     // Assert
     expect(isCollection(workspace)).toBe(true);
-    expect(workspace).toMatchObject<Partial<Workspace>>({
+    expect(workspace).toMatchObject({
       _id: backendProject.rootDocumentId,
       name: backendProject.name,
       parentId: project._id,

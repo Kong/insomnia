@@ -38,7 +38,7 @@ describe('app.alert()', () => {
   it('does not show alert when not sending', async () => {
     modals.showAlert = jest.fn();
     const result = plugin.init();
-    result.app.alert();
+    result.app.alert('');
     // Make sure it passes correct arguments
     expect(modals.showAlert.mock.calls).toEqual([]);
   });
@@ -72,7 +72,7 @@ describe('app.prompt()', () => {
   it('does not show prompt when not sending', async () => {
     modals.showPrompt = jest.fn();
     const result = plugin.init();
-    result.app.prompt();
+    result.app.prompt('');
     // Make sure it passes correct arguments
     expect(modals.showPrompt.mock.calls).toEqual([]);
   });
