@@ -30,7 +30,7 @@ describe('exit()', () => {
   it.only('should exit 1 and print to console if rejected', async () => {
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
     const error = new Error('message');
-    await exit(new Promise((resolve, reject) => reject(error)));
+    await exit(new Promise((_resolve, reject) => reject(error)));
 
     const logs = logger.__getLogs();
 
@@ -57,7 +57,7 @@ describe('exit()', () => {
   it('should exit 1 and print to console and if rejected with InsoError without cause', async () => {
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
     const insoError = new InsoError('inso error');
-    await exit(new Promise((resolve, reject) => reject(insoError)));
+    await exit(new Promise((_resolve, reject) => reject(insoError)));
 
     const logs = logger.__getLogs();
 
