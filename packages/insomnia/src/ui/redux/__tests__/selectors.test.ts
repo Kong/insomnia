@@ -4,7 +4,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import { ACTIVITY_DEBUG, ACTIVITY_HOME } from '../../../common/constants';
 import * as models from '../../../models';
-import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
+import { DEFAULT_PROJECT_ID } from '../../../models/project';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 import { selectActiveApiSpec, selectActiveProject, selectActiveWorkspaceName, selectWorkspacesWithResolvedNameForActiveProject } from '../selectors';
 
