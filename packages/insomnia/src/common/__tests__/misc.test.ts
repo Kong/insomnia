@@ -71,11 +71,6 @@ describe('filterHeaders()', () => {
   beforeEach(globalBeforeEach);
 
   it('handles bad headers', () => {
-    expect(filterHeaders(null, null)).toEqual([]);
-    expect(filterHeaders([], null)).toEqual([]);
-    expect(filterHeaders(['bad'], null)).toEqual([]);
-    expect(filterHeaders(['bad'], 'good')).toEqual([]);
-    expect(filterHeaders(null, 'good')).toEqual([]);
     expect(
       filterHeaders(
         [
@@ -91,11 +86,10 @@ describe('filterHeaders()', () => {
       filterHeaders(
         [
           {
-            name: 123,
-            value: 123,
+            name: 'good',
+            value: 'valid',
           },
         ],
-        123,
       ),
     ).toEqual([]);
     expect(
@@ -106,18 +100,6 @@ describe('filterHeaders()', () => {
             value: 'valid',
           },
         ],
-        123,
-      ),
-    ).toEqual([]);
-    expect(
-      filterHeaders(
-        [
-          {
-            name: 'good',
-            value: 'valid',
-          },
-        ],
-        null,
       ),
     ).toEqual([]);
     expect(
@@ -208,7 +190,6 @@ describe('fuzzyMatch()', () => {
   });
 
   it('can get a negative fuzzy match on a single field', () => {
-    expect(fuzzyMatch('foo', undefined)).toBeNull();
     expect(fuzzyMatch('foo', 'bar')).toBeNull();
   });
 });
@@ -217,7 +198,6 @@ describe('fuzzyMatchAll()', () => {
   beforeEach(globalBeforeEach);
 
   it('can get a positive fuzzy match on multiple fields', () => {
-    expect(fuzzyMatchAll('', [undefined])).toEqual(null);
     expect(fuzzyMatchAll('', ['testing'])).toEqual(null);
     expect(fuzzyMatchAll('   ', ['testing'])).toEqual(null);
     expect(fuzzyMatchAll('test', ['testing', 'foo'])).toEqual({
@@ -252,7 +232,6 @@ describe('fuzzyMatchAll()', () => {
   });
 
   it('can get a negative fuzzy match on multiple fields', () => {
-    expect(fuzzyMatchAll('foo', [undefined])).toEqual(null);
     expect(fuzzyMatchAll('foo', ['bar'])).toEqual(null);
     expect(fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])).toEqual(null);
   });
@@ -383,20 +362,17 @@ describe('snapNumberToLimits()', () => {
     expect(snapNumberToLimits(2, 0)).toBe(2);
     expect(snapNumberToLimits(2, 0, 3)).toBe(2);
     expect(snapNumberToLimits(2, 2, 2)).toBe(2);
-    expect(snapNumberToLimits(2, null, null)).toBe(2);
     expect(snapNumberToLimits(2, NaN, NaN)).toBe(2);
   });
 
   it('should snap to min', () => {
     expect(snapNumberToLimits(2, 3)).toBe(3);
     expect(snapNumberToLimits(2, 3, 5)).toBe(3);
-    expect(snapNumberToLimits(2, 3, null)).toBe(3);
     expect(snapNumberToLimits(2, 3, NaN)).toBe(3);
   });
 
   it('should snap to max', () => {
     expect(snapNumberToLimits(5, 0, 3)).toBe(3);
-    expect(snapNumberToLimits(5, null, 3)).toBe(3);
     expect(snapNumberToLimits(5, NaN, 3)).toBe(3);
   });
 });

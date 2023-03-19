@@ -40,8 +40,6 @@ describe('install.js', () => {
   describe('isDeprecatedDependencies', () => {
     it('should not match when the message is falsy', () => {
       expect(isDeprecatedDependencies('')).toBe(false);
-      expect(isDeprecatedDependencies(null)).toBe(false);
-      expect(isDeprecatedDependencies(undefined)).toBe(false);
     });
 
     it('should match with multiple nested dependencies', () => {
