@@ -48,8 +48,8 @@ describe('store', () => {
         expect(await s.getItem('json')).toEqual({
           hi: 'there',
         });
-        expect((await s._driver.getItem('buff')).toString('utf8')).toEqual('{"hi": "there"}');
-        expect((await s._driver.getItem('json')).toString('utf8')).toEqual('{\n  "hi": "there"\n}');
+        expect((await s._driver.getItem('buff'))?.toString('utf8')).toEqual('{"hi": "there"}');
+        expect((await s._driver.getItem('json'))?.toString('utf8')).toEqual('{\n  "hi": "there"\n}');
       });
     });
   }
@@ -65,7 +65,7 @@ describe('store', () => {
     await s.setItem('foo', {
       Hello: 'World!',
     });
-    expect((await s._driver.getItem('foo')).toString('utf8')).toBe('{\n  "Hello": "WORLD!"\n}');
+    expect((await s._driver.getItem('foo'))?.toString('utf8')).toBe('{\n  "Hello": "WORLD!"\n}');
     expect(await s.getItem('foo')).toEqual({
       Hello: 'World!',
     });

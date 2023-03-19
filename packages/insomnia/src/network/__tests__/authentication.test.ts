@@ -103,8 +103,8 @@ describe('OAuth 1.0', () => {
       authentication,
     };
     const header = await getAuthHeader(request, 'https://insomnia.rest/');
-    expect(header.name).toBe('Authorization');
-    expect(header.value).toMatch(
+    expect(header?.name).toBe('Authorization');
+    expect(header?.value).toMatch(
       new RegExp(
         [
           'OAuth ' + 'oauth_consumer_key="consumerKey"',
