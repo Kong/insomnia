@@ -10,7 +10,7 @@ import { RequestGroup } from '../request-group';
 import { Workspace } from '../workspace';
 
 // move into fluent-builder
-const toSchema = <T>(obj: T): Schema<T> => {
+const toSchema = <T extends {}>(obj: T): Schema<T> => {
   const cloned = clone(obj);
   const output: Partial<Schema<T>> = {};
 

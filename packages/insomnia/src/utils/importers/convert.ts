@@ -8,7 +8,7 @@ export interface ConvertResultType {
   description: string;
 }
 
-export interface ConvertResult<T = {}> {
+export interface ConvertResult<T extends {} = {}> {
   type: ConvertResultType;
   data: {
     _type: 'export';
