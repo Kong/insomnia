@@ -1,1 +1,3 @@
-export const getSendRequestCallbackMemDb = jest.fn().mockResolvedValue(jest.fn());
+import { jest } from '@jest/globals';
+
+export const getSendRequestCallbackMemDb = jest.fn().mockResolvedValue(jest.fn())

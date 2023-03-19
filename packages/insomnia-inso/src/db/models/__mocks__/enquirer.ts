@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 const __constructorMock = jest.fn();
 
 let returnValue = 'test';
