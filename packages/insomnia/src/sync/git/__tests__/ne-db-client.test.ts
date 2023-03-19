@@ -189,7 +189,6 @@ describe('NeDBClient', () => {
 
       // @ts-expect-error not sure why scope is being typed as never
       const workspaceInFile = workspaceBuilder.scope('collection').build();
-      // @ts-expect-error not sure why scope is being typed as never
       const workspaceInDb = workspaceBuilder.scope('design').build();
 
       const filePath = path.join(GIT_INSOMNIA_DIR, models.workspace.type, `${workspaceId}.yml`);

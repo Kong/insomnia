@@ -468,7 +468,6 @@ const generateParameterExample = (
       if (properties) {
         ancestors.push(parameter);
         Object.keys(properties).forEach(propertyName => {
-          // @ts-expect-error there's no way, so far as I'm aware, for TypeScript to know what's actually going on here.
           example[propertyName] = generateParameterExample(
             properties[propertyName],
             ancestors,

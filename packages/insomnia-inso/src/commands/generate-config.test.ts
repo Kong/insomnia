@@ -18,7 +18,6 @@ const generateFromString = _generateFromString as MockedFunction<typeof _generat
 const writeFileWithCliOptions = _writeFileWithCliOptions as MockedFunction<typeof _writeFileWithCliOptions>;
 
 const mockConversionResult: KongForKubernetesResult = {
-  // @ts-expect-error -- TSCONVERSION the tests seem to suggest that this is valid, yet it is not allowed by the types.
   documents: ['a', 'b'],
   type: 'kong-for-kubernetes',
   label: '',
@@ -178,7 +177,6 @@ describe('generateConfig()', () => {
   });
 
   it('should warn if no valid spec can be found', async () => {
-    // @ts-expect-error intentionally passing in a bad value
     generate.mockResolvedValue({});
     const result = await generateConfig(filePath, { type: 'kubernetes' });
     expect(result).toBe(false);

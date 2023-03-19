@@ -103,10 +103,8 @@ export function encryptAESBuffer(jwkOrKey: string | JsonWebKey, buff: Buffer, ad
   cipher.finish();
   return {
     iv: forge.util.bytesToHex(iv),
-    // @ts-expect-error -- TSCONVERSION needs to be converted to string
     t: forge.util.bytesToHex(cipher.mode.tag as unknown as string),
     ad: forge.util.bytesToHex(additionalData),
-    // @ts-expect-error -- TSCONVERSION needs to be converted to string
     d: forge.util.bytesToHex(cipher.output as unknown as string),
   };
 }

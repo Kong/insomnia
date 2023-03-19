@@ -146,7 +146,6 @@ class Curl extends EventEmitter {
       );
       this.emit('data', data);
 
-      // @ts-expect-error -- TSCONVERSION
       this._options.WRITEFUNCTION(data);
 
       process.nextTick(() => {

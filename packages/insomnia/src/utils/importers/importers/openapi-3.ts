@@ -564,7 +564,6 @@ const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => {
  * Generate example value of parameter based on it's schema.
  * Returns example / default value of the parameter, if any of those are defined. If not, returns value based on parameter type.
  */
-// @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
 const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
   const typeExamples = {
     string: () => 'string',
@@ -590,9 +589,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
 
       return example;
     },
-    // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
     array: (schema: OpenAPIV2.ItemsObject) => {
-      // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
       const value = generateParameterExample(schema.items as OpenAPIV3.SchemaObject);
 
       if (schema.collectionFormat === 'csv') {
@@ -604,7 +601,6 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
   } as unknown as { [key: string]: Function };
 
   if (typeof schema === 'string') {
-    // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
     return typeExamples[schema];
   }
 
@@ -623,7 +619,6 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
       return defaultValue;
     }
 
-    // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
     const factory = typeExamples[`${type}_${format}`] || (type !== undefined && typeExamples[type]);
 
     if (!factory) {
