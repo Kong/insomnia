@@ -46,3 +46,5 @@ global.console.log = (...args) => {
     log(...args);
   }
 };
+
+export {};
