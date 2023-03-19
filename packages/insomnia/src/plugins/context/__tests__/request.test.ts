@@ -4,6 +4,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
 import * as models from '../../../models';
 import * as plugin from '../request';
+import { RenderedRequest } from '../../../common/render';
 
 const CONTEXT = {
   user_key: 'my_user_key',
@@ -31,7 +32,7 @@ describe('init()', () => {
   });
 
   it('initializes correctly', async () => {
-    const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
+    const result = plugin.init(await models.request.getById('req_1') as RenderedRequest, CONTEXT);
     expect(Object.keys(result)).toEqual(['request']);
     expect(Object.keys(result.request).sort()).toEqual([
       'addHeader',
@@ -217,7 +218,7 @@ describe('request.*', () => {
   });
 
   it('works for cookies', async () => {
-    const request = await models.request.getById('req_1');
+    const request = await models.request.getById('req_1') as RenderedRequest;
     request.cookies = []; // Because the plugin technically needs a RenderedRequest
 
     const result = plugin.init(request, CONTEXT);
@@ -232,7 +233,7 @@ describe('request.*', () => {
   });
 
   it('works for environment', async () => {
-    const request = await models.request.getById('req_1');
+    const request = await models.request.getById('req_1') as RenderedRequest;
     request.cookies = []; // Because the plugin technically needs a RenderedRequest
 
     const result = plugin.init(request, CONTEXT);
@@ -260,7 +261,7 @@ describe('request.*', () => {
   });
 
   it('works for authentication', async () => {
-    const request = await models.request.getById('req_1');
+    const request = await models.request.getById('req_1') as RenderedRequest;
     request.authentication = {}; // Because the plugin technically needs a RenderedRequest
 
     const result = plugin.init(request, CONTEXT);

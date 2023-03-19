@@ -12,36 +12,36 @@ jest.mock('enquirer');
 describe('Unit Test Suite', () => {
   let db: Database = emptyDb();
 
-  const workspace: Partial<Workspace> = {
+  const workspace = {
     _id: 'wrk_1234567890',
     name: 'workspace name',
-  };
+  } as Workspace;
 
-  const spec: Partial<ApiSpec> = {
+  const spec = {
     _id: 'spc_1234567890',
     fileName: 'spec name',
     parentId: workspace._id,
-  };
+  } as ApiSpec;
 
-  const suite1: Partial<UnitTestSuite> = {
+  const suite1 = {
     _id: 'uts_1234567890',
     name: 'suite one',
     parentId: workspace._id,
-  };
+  } as UnitTestSuite;
 
-  const suite2: Partial<UnitTestSuite> = {
+  const suite2 = {
     _id: 'uts_987654321',
     name: 'suite two',
     parentId: workspace._id,
-  };
+  } as UnitTestSuite;
 
   beforeEach(() => {
     db = emptyDb();
-    const dummySuite: Partial<UnitTestSuite> = {
+    const dummySuite = {
       _id: 'uts_dummy',
       name: 'dummy suite',
       parentId: 'dummy parent',
-    };
+    } as UnitTestSuite;
     db.Workspace.push(workspace);
     db.ApiSpec.push(spec);
     db.UnitTestSuite.push(suite1);

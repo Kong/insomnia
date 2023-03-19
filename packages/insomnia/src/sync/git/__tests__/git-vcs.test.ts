@@ -162,7 +162,7 @@ First commit!
 
   describe('push()', () => {
     it('should throw an exception when push response contains errors', async () => {
-      git.push.mockReturnValue({
+      (git.push as jest.Mock).mockReturnValue({
         ok: ['unpack'],
         errors: ['refs/heads/master pre-receive hook declined'],
       });

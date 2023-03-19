@@ -185,7 +185,7 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
   }
 
   const rootSecurity = document.security;
-  const securitySchemes = document.components?.securitySchemes as OpenAPIV3.SecuritySchemeObject | undefined;
+  const securitySchemes = document.components?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject;
   const defaultParent = WORKSPACE_ID;
 
   const endpointsSchemas: ({
@@ -345,10 +345,9 @@ const parseSecurity = (
 
   const supportedSchemes = security
     .flatMap(securityPolicy => {
-      return Object.keys(securityPolicy).map((securityRequirement: string | number) => {
+      return Object.keys(securityPolicy).map((securityRequirement: string) => {
         return {
-          // @ts-expect-error the base types do not include an index but from what I can tell, they should
-          schemeDetails: securitySchemes[securityRequirement],
+          schemeDetails: (securitySchemes as any)[securityRequirement],
           securityScopes: securityPolicy[securityRequirement],
         };
       });
@@ -584,7 +583,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
       if (properties) {
         for (const propertyName of Object.keys(properties)) {
           example[propertyName] = generateParameterExample(
-            properties[propertyName] as OpenAPIV3.SchemaObject,
+            properties[propertyName] as OpenAPIV3.SchemaObject
           );
         }
       }
@@ -594,7 +593,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
     // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
     array: (schema: OpenAPIV2.ItemsObject) => {
       // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
-      const value = generateParameterExample(schema.items);
+      const value = generateParameterExample(schema.items as OpenAPIV3.SchemaObject);
 
       if (schema.collectionFormat === 'csv') {
         return value;
@@ -602,7 +601,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
         return [value];
       }
     },
-  };
+  } as unknown as { [key: string]: Function };
 
   if (typeof schema === 'string') {
     // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
@@ -625,7 +624,7 @@ const generateParameterExample = (schema: OpenAPIV3.SchemaObject | string) => {
     }
 
     // @ts-expect-error -- ran out of time during TypeScript conversion to handle this particular recursion
-    const factory = typeExamples[`${type}_${format}`] || typeExamples[type];
+    const factory = typeExamples[`${type}_${format}`] || (type !== undefined && typeExamples[type]);
 
     if (!factory) {
       return null;

@@ -10,9 +10,9 @@ import { EventEmitter } from 'events';
 import fs from 'fs';
 
 class Curl extends EventEmitter {
-  _options = {};
-  _meta = {};
-  _features = {};
+  _options = {} as any;
+  _meta = {} as Record<string, string>;
+  _features = {} as Record<string, boolean>;
 
   static info = {
     COOKIELIST: 'COOKIELIST',
@@ -69,11 +69,11 @@ class Curl extends EventEmitter {
     return 'libcurl/7.54.0 LibreSSL/2.0.20 zlib/1.2.11 nghttp2/1.24.0';
   }
 
-  enable(name) {
+  enable(name: string) {
     this._features[name] = true;
   }
 
-  setOpt(name, value) {
+  setOpt(name: string, value: any) {
     if (!name) {
       throw new Error(`Invalid option ${name} ${value}`);
     }
@@ -116,7 +116,7 @@ class Curl extends EventEmitter {
     }
   }
 
-  getInfo(name) {
+  getInfo(name: string) {
     switch (name) {
       case Curl.info.COOKIELIST:
         return [`#HttpOnly_.insomnia.rest\tTRUE\t/url/path\tTRUE\t${Date.now() / 1000}\tfoo\tbar`];
@@ -179,7 +179,7 @@ class Curl extends EventEmitter {
  * ```
  * We only want the named members (non-number ones)
  */
-const getTsEnumOnlyWithNamedMembers = enumObj => {
+const getTsEnumOnlyWithNamedMembers = (enumObj: typeof CurlAuth | typeof CurlCode | typeof CurlInfoDebug | typeof CurlFeature | typeof CurlNetrc | typeof CurlHttpVersion) => {
   let obj = {};
 
   for (const member in enumObj) {

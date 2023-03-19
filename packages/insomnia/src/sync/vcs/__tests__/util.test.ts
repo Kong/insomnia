@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 
 import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
 import { branchSchema, mergeConflictSchema, statusCandidateSchema } from '../../__schemas__/type-schemas';
-import { StageEntry } from '../../types';
+import { SnapshotState, SnapshotStateEntry, StatusCandidate } from '../../types';
 import {
   combinedMapKeys,
   compareBranches,
@@ -318,7 +318,7 @@ describe('util', () => {
     });
 
     it('works with no root state', () => {
-      const root = [];
+      const root: SnapshotStateEntry[] = [];
       const trunk = [A1, C1];
       const other = [A1, B2];
       expect(threeWayMerge(root, trunk, other)).toEqual({
@@ -328,7 +328,7 @@ describe('util', () => {
     });
 
     it('works with no root state and conflict', () => {
-      const root = [];
+      const root: SnapshotState = [];
       const trunk = [A1];
       const other = [A2];
       expect(threeWayMerge(root, trunk, other)).toEqual({
@@ -385,7 +385,7 @@ describe('util', () => {
     });
 
     it('adds an entry', () => {
-      const base = [];
+      const base: SnapshotState = [];
       const dsrd = [B1];
       expect(stateDelta(base, dsrd)).toEqual({
         add: [B1],
@@ -396,7 +396,7 @@ describe('util', () => {
 
     it('deletes an entry', () => {
       const base = [A1];
-      const dsrd = [];
+      const dsrd: SnapshotState = [];
       expect(stateDelta(base, dsrd)).toEqual({
         add: [],
         update: [],
@@ -427,7 +427,7 @@ describe('util', () => {
 
   describe('getStagable()', () => {
     it('works with empty state', () => {
-      const state = [];
+      const state: SnapshotState = [];
       const dsrd = [DA1];
       expect(getStagable(state, dsrd)).toEqual([
         {
@@ -476,7 +476,7 @@ describe('util', () => {
 
     it('deletes a document', () => {
       const state = [B1];
-      const dsrd = [];
+      const dsrd: StatusCandidate[] = [];
       expect(getStagable(state, dsrd)).toEqual([
         {
           key: B1.key,
@@ -633,7 +633,7 @@ describe('util', () => {
     it('candidate does not exist but trunk and other do', () => {
       const trunk = [A1];
       const other = [A1];
-      const cands = [];
+      const cands: StatusCandidate[] = [];
       expect(preMergeCheck(trunk, other, cands)).toEqual({
         conflicts: [],
         dirty: [],
@@ -642,7 +642,7 @@ describe('util', () => {
 
     it('candidate different than trunk and other does not exist', () => {
       const trunk = [A1];
-      const other = [];
+      const other: SnapshotState = [];
       const cands = [DA2];
       expect(preMergeCheck(trunk, other, cands)).toEqual({
         conflicts: [DA2],
@@ -651,7 +651,7 @@ describe('util', () => {
     });
 
     it('candidate different than other and trunk does not exist', () => {
-      const trunk = [];
+      const trunk: SnapshotState = [];
       const other = [A1];
       const cands = [DA2];
       expect(preMergeCheck(trunk, other, cands)).toEqual({
@@ -692,7 +692,7 @@ describe('util', () => {
 
     it('candidate not same as trunk and not in other', () => {
       const trunk = [A1];
-      const other = [];
+      const other: SnapshotState = [];
       const cands = [DA2];
       expect(preMergeCheck(trunk, other, cands)).toEqual({
         conflicts: [DA2],
@@ -970,7 +970,7 @@ describe('util', () => {
   });
 });
 
-function newSnapshot(n, state) {
+function newSnapshot(n: number, state: { key: any; blob: any; name: string }[]) {
   return {
     id: `snapshot_${n}`,
     created: new Date(),
@@ -982,7 +982,7 @@ function newSnapshot(n, state) {
   };
 }
 
-function newStateEntry(key, blob) {
+function newStateEntry(key: string, blob: string) {
   return {
     key,
     blob,

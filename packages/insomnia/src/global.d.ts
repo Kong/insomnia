@@ -9,10 +9,9 @@ declare global {
     app: Pick<Electron.App, 'getPath' | 'getAppPath'>;
     shell: Pick<Electron.Shell, 'showItemInFolder'>;
   }
+    // eslint-disable-next-line no-var
+    var __DEV__: boolean;
 }
-
-declare const __DEV__: boolean;
-
 declare namespace NodeJS {
   interface Global {
     __DEV__: boolean;

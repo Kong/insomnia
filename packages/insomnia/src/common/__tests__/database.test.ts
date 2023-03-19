@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals
 import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models';
 import { data as fixtures } from '../__fixtures__/nestedfolders';
-import { _repairDatabase, database as db } from '../database';
+import { _repairDatabase, ChangeBufferEvent, database as db } from '../database';
 
 function loadFixture() {
   const promises: Promise<models.BaseModel>[] = [];
@@ -39,9 +39,9 @@ describe('onChange()', () => {
       parentId: 'nothing',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent[]) => {
       changesSeen.push(change);
     };
 
@@ -70,9 +70,9 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent[]) => {
       changesSeen.push(change);
     };
 
@@ -107,9 +107,9 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent[]) => {
       changesSeen.push(change);
     };
 
@@ -134,9 +134,9 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent[]) => {
       changesSeen.push(change);
     };
 
@@ -164,9 +164,9 @@ describe('bufferChangesIndefinitely()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Function[] = [];
+    const changesSeen: ChangeBufferEvent[][] = [];
 
-    const callback = change => {
+    const callback = (change: ChangeBufferEvent[]) => {
       changesSeen.push(change);
     };
 
@@ -669,7 +669,7 @@ describe('duplicate()', () => {
 
   it('should overwrite appropriate fields on the parent when duplicating', async () => {
     const date = 1478795580200;
-    Date.now = jest.fn().mockReturnValue(date);
+    Date.now = jest.fn().mockReturnValue(date) as jest.Mocked<typeof Date.now>;
     const workspace = await models.workspace.create({
       name: 'Test Workspace',
     });

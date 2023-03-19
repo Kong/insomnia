@@ -9,11 +9,11 @@ import { setupDateMocks } from './util';
 
 describe('git rollback', () => {
   describe('mocked', () => {
-    const removeMock = jest.fn().mockResolvedValue(undefined);
-    const unlinkMock = jest.fn().mockResolvedValue(undefined);
-    const undoPendingChangesMock = jest.fn().mockResolvedValue(undefined);
+    const removeMock = (jest.fn() as any).mockResolvedValue(undefined);
+    const unlinkMock = (jest.fn() as any).mockResolvedValue(undefined);
+    const undoPendingChangesMock = (jest.fn() as any).mockResolvedValue(undefined);
 
-    let vcs: Partial<typeof GitVCS> = {};
+    let vcs: typeof GitVCS;
 
     beforeEach(() => {
       jest.resetAllMocks();
@@ -26,7 +26,7 @@ describe('git rollback', () => {
         getFs: jest.fn().mockReturnValue(fsMock),
         remove: removeMock,
         undoPendingChanges: undoPendingChangesMock,
-      };
+      } as unknown as typeof GitVCS
     });
 
     it('should remove and delete added and *added files', async () => {

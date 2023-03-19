@@ -40,7 +40,7 @@ describe('app.alert()', () => {
     const result = plugin.init();
     result.app.alert('');
     // Make sure it passes correct arguments
-    expect(modals.showAlert.mock.calls).toEqual([]);
+    expect((modals.showAlert as jest.Mock).mock.calls).toEqual([]);
   });
 
   it('shows alert with message when sending', async () => {
@@ -50,7 +50,7 @@ describe('app.alert()', () => {
     expect(result.app.alert('Title')).toBe('dummy-return-value');
     expect(result.app.alert('Title', 'Message')).toBe('dummy-return-value');
     // Make sure it passes correct arguments
-    expect(modals.showAlert.mock.calls).toEqual([
+    expect((modals.showAlert as jest.Mock).mock.calls).toEqual([
       [
         {
           title: 'Title',

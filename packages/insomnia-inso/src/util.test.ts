@@ -5,6 +5,7 @@ import { InsoError } from './errors';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
 import { exit, getDefaultProductName, getVersion, logErrorExit1, noop } from './util';
+import { Mock } from 'jest-mock';
 
 describe('exit()', () => {
   beforeAll(() => {
@@ -16,19 +17,19 @@ describe('exit()', () => {
   });
 
   it('should exit 0 if successful result', async () => {
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+    const exitSpy = (jest.spyOn(process, 'exit') as Mock).mockImplementation(() => {});
     await exit(new Promise(resolve => resolve(true)));
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 
   it('should exit 1 if unsuccessful result', async () => {
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+    const exitSpy = (jest.spyOn(process, 'exit') as Mock).mockImplementation(() => {});
     await exit(new Promise(resolve => resolve(false)));
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
   it.only('should exit 1 and print to console if rejected', async () => {
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+    const exitSpy = (jest.spyOn(process, 'exit') as Mock).mockImplementation(() => {});
     const error = new Error('message');
     await exit(new Promise((_resolve, reject) => reject(error)));
 
@@ -41,10 +42,10 @@ describe('exit()', () => {
   });
 
   it('should exit 1 and print to console if rejected with InsoError', async () => {
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+    const exitSpy = (jest.spyOn(process, 'exit') as Mock).mockImplementation(() => {});
     const cause = new Error('message');
     const insoError = new InsoError('inso error', cause);
-    await exit(new Promise((resolve, reject) => reject(insoError)));
+    await exit(new Promise((_resolve, reject) => reject(insoError)));
 
     const logs = logger.__getLogs();
 
@@ -55,7 +56,7 @@ describe('exit()', () => {
   });
 
   it('should exit 1 and print to console and if rejected with InsoError without cause', async () => {
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+    const exitSpy = (jest.spyOn(process, 'exit') as Mock).mockImplementation(() => {});
     const insoError = new InsoError('inso error');
     await exit(new Promise((_resolve, reject) => reject(insoError)));
 
@@ -78,7 +79,7 @@ describe('logErrorExit1()', () => {
   });
 
   it('should exit 1 and print error to console', async () => {
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+    const exitSpy = (jest.spyOn(process, 'exit') as Mock).mockImplementation(() => {});
     const error = new Error('message');
     await logErrorExit1(error);
 
@@ -90,7 +91,7 @@ describe('logErrorExit1()', () => {
   });
 
   it('should exit 1', async () => {
-    const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+    const exitSpy = (jest.spyOn(process, 'exit') as Mock).mockImplementation(() => {});
     await logErrorExit1();
 
     const logs = logger.__getLogs();

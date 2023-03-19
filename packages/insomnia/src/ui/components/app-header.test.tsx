@@ -41,11 +41,7 @@ describe('<AppHeader />', () => {
 
     render(
       <Provider store={store}>
-        <AppHeader
-          breadcrumbProps={{
-            crumbs: [],
-          }}
-        />
+        <AppHeader />
       </Provider>, { container },
     );
 
@@ -58,11 +54,7 @@ describe('<AppHeader />', () => {
 
     render(
       <Provider store={store}>
-        <AppHeader
-          breadcrumbProps={{
-            crumbs: [],
-          }}
-        />
+        <AppHeader />
       </Provider>, { container },
     );
 

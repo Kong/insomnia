@@ -1,6 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 
 import { AUTH_API_KEY, AUTH_OAUTH_1 } from '../../common/constants';
+import { RenderedRequest } from '../../common/render';
 import {
   _buildBearerHeader,
   getAuthHeader,
@@ -24,7 +25,7 @@ describe('OAuth 1.0', () => {
       url: 'https://insomnia.rest/',
       method: 'GET',
       authentication,
-    };
+    } as unknown as RenderedRequest;
     const header = await getAuthHeader(request, 'https://insomnia.rest/');
     expect(header).toEqual({
       name: 'Authorization',
@@ -73,7 +74,7 @@ describe('OAuth 1.0', () => {
       url: 'https://insomnia.rest/',
       method: 'GET',
       authentication,
-    };
+    } as unknown as RenderedRequest;
     const header = await getAuthHeader(request, 'https://insomnia.rest/');
     expect(header).toEqual({
       name: 'Authorization',
@@ -101,7 +102,7 @@ describe('OAuth 1.0', () => {
       url: 'https://insomnia.rest/',
       method: 'GET',
       authentication,
-    };
+    } as unknown as RenderedRequest;
     const header = await getAuthHeader(request, 'https://insomnia.rest/');
     expect(header?.name).toBe('Authorization');
     expect(header?.value).toMatch(
@@ -161,7 +162,7 @@ describe('API Key', () => {
         url: 'https://insomnia.rest/',
         method: 'GET',
         authentication,
-      };
+      } as unknown as RenderedRequest;
       const header = await getAuthHeader(request, 'https://insomnia.rest/');
       expect(header).toEqual({
         'name': 'x-api-key',
@@ -180,7 +181,7 @@ describe('API Key', () => {
         url: 'https://insomnia.rest/',
         method: 'GET',
         authentication,
-      };
+      } as unknown as RenderedRequest;
       const header = await getAuthHeader(request, 'https://insomnia.rest/');
       expect(header).toEqual({
         'name': 'Cookie',

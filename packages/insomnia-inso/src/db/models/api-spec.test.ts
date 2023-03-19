@@ -12,14 +12,14 @@ jest.mock('enquirer');
 describe('apiSpec', () => {
   let db: Database = emptyDb();
 
-  const spec: Partial<ApiSpec> = {
+  const spec = {
     _id: 'spc_1234567890',
     fileName: 'fileName',
   } as ApiSpec;
 
   beforeEach(() => {
     db = emptyDb();
-    const dummySpec: Partial<ApiSpec> = {
+    const dummySpec = {
       _id: 'spc_dummy',
       fileName: 'dummy spec',
     } as ApiSpec;

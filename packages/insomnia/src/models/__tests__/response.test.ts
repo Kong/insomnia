@@ -6,6 +6,7 @@ import zlib from 'zlib';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { getDataDirectory } from '../../common/electron-helpers';
 import * as models from '../../models';
+import { BaseResponse } from '../response';
 
 describe('migrate()', () => {
   beforeEach(globalBeforeEach);
@@ -15,8 +16,9 @@ describe('migrate()', () => {
     fs.writeFileSync(bodyPath, zlib.gzipSync('Hello World!'));
     const response = await models.initModel(models.response.type, {
       bodyPath,
-    });
-    const body = await models.response.getBodyBuffer(response).toString();
+    }) as unknown as BaseResponse;
+
+    const body = await models.response.getBodyBuffer(response)?.toString();
     expect(response.bodyCompression).toBe('zip');
     expect(body).toBe('Hello World!');
   });
@@ -27,7 +29,7 @@ describe('migrate()', () => {
         await models.initModel(models.response.type, {
           bodyPath: '/foo/bar',
           bodyCompression: null,
-        })
+        }) as unknown as BaseResponse
       ).bodyCompression,
     ).toBe(null);
   });
@@ -37,7 +39,7 @@ describe('migrate()', () => {
       (
         await models.initModel(models.response.type, {
           bodyPath: '/foo/bar',
-        })
+        }) as unknown as BaseResponse
       ).bodyCompression,
     ).toBe('zip');
   });
@@ -48,7 +50,7 @@ describe('migrate()', () => {
         await models.initModel(models.response.type, {
           bodyPath: '/foo/bar',
           bodyCompression: 'zip',
-        })
+        }) as unknown as BaseResponse
       ).bodyCompression,
     ).toBe('zip');
   });

@@ -11,15 +11,15 @@ const mockCallCancel = jest.fn();
 export const status = grpcJs.status;
 
 class MockCall extends EventEmitter {
-  write(...args) {
+  write(...args: any[]) {
     mockCallWrite(...args);
   }
 
-  end(...args) {
+  end(...args: any[]) {
     mockCallEnd(...args);
   }
 
-  cancel(...args) {
+  cancel(...args: any[]) {
     mockCallCancel(...args);
   }
 }
@@ -55,29 +55,29 @@ export const grpcMocks = {
 };
 
 class MockGrpcClient {
-  constructor(...args) {
+  constructor(...args: any) {
     mockConstructor(...args);
   }
 
-  makeUnaryRequest(...args) {
+  makeUnaryRequest(...args: any[]) {
     mockMakeUnaryRequest(...args);
     makeMockCall();
     return getMockCall();
   }
 
-  makeClientStreamRequest(...args) {
+  makeClientStreamRequest(...args: any[]) {
     mockMakeClientStreamRequest(...args);
     makeMockCall();
     return getMockCall();
   }
 
-  makeServerStreamRequest(...args) {
+  makeServerStreamRequest(...args: any[]) {
     mockMakeServerStreamRequest(...args);
     makeMockCall();
     return getMockCall();
   }
 
-  makeBidiStreamRequest(...args) {
+  makeBidiStreamRequest(...args: any[]) {
     mockMakeBidiStreamRequest(...args);
     makeMockCall();
     return getMockCall();

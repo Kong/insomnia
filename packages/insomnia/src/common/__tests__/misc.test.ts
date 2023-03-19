@@ -176,8 +176,8 @@ describe('debounce()', () => {
 
   it('debounces correctly', () => {
     jest.useFakeTimers();
-    const resultList = [];
-    const fn = debounce((...args) => {
+    const resultList: any[] = [];
+    const fn = debounce((...args: any) => {
       resultList.push(args);
     }, 100);
     fn('foo');

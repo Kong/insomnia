@@ -36,7 +36,7 @@ describe('crypt', () => {
         key_ops: ['encrypt', 'decrypt'],
         k: '5hs1f2xuiNPHUp11i6SWlsqYpWe_hWPcEKucZlwBfFE',
       };
-      const source = buffer.Buffer.from('Hello World!', 'utf8');
+      const source = buffer.Buffer.from('Hello World!', 'utf8') as unknown as Buffer;
       const resultEncrypted = crypt.encryptAESBuffer(key, source);
       const resultDecrypted = crypt.decryptAESToBuffer(key, resultEncrypted);
       expect(resultDecrypted.toString()).toEqual(source.toString());

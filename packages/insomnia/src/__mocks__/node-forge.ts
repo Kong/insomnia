@@ -63,11 +63,15 @@ module.exports = {
   cipher: {
     createCipher() {
       return {
-        start(config) {
+        _config: {} as any,
+        _data: {} as any,
+        mode: {} as any,
+        output: {} as any,
+        start(config: any) {
           this._config = config;
         },
 
-        update(buffer) {
+        update(buffer: any) {
           this._data = buffer;
         },
 
@@ -82,11 +86,13 @@ module.exports = {
 
     createDecipher() {
       return {
-        start(config) {
+        _config: {} as any,
+        output: {} as any,
+        start(config: any) {
           this._config = config;
         },
 
-        update(buffer) {
+        update(buffer: any) {
           this.output = buffer;
         },
 

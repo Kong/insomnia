@@ -462,7 +462,7 @@ const generateParameterExample = (
         return {};
       }
 
-      const example = {};
+      const example = {} as { [key: string]: OpenAPIV2.Parameter };
 
       const { properties } = parameter;
       if (properties) {

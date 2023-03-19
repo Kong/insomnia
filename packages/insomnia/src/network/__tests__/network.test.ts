@@ -15,9 +15,9 @@ import {
   getAppVersion,
 } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
-import { getRenderedRequestAndContext } from '../../common/render';
+import { RenderedRequest, getRenderedRequestAndContext } from '../../common/render';
 import { HttpVersions } from '../../common/settings';
-import { _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
+import { ResponsePatch, _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
 import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
 import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';
 import * as models from '../../models';
@@ -39,6 +39,9 @@ describe('sendCurlAndWriteTimeline()', () => {
     const settings = await models.settings.getOrCreate();
     const cookies = [
       {
+        id: '',
+        secure: false,
+        httpOnly: false,
         creation: new Date('2016-10-05T04:40:49.505Z'),
         key: 'foo',
         value: 'barrrrr',
@@ -49,6 +52,9 @@ describe('sendCurlAndWriteTimeline()', () => {
         lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
       {
+        id: '',
+        secure: false,
+        httpOnly: false,
         creation: new Date('2016-10-05T04:40:49.505Z'),
         key: 'foo',
         value: 'bar',
@@ -99,14 +105,14 @@ describe('sendCurlAndWriteTimeline()', () => {
         username: 'user',
         password: 'pass',
       },
-    });
+    }) as unknown as RenderedRequest;
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
       null,
       settings,
-    );
+    ) as ResponsePatch;
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
@@ -175,14 +181,14 @@ describe('sendCurlAndWriteTimeline()', () => {
         ],
       },
       url: 'http://localhost',
-    });
+    }) as RenderedRequest;
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
       null,
       settings,
-    );
+    ) as ResponsePatch;
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
@@ -219,6 +225,9 @@ describe('sendCurlAndWriteTimeline()', () => {
     const settings = await models.settings.getOrCreate();
     const cookies = [
       {
+        id: '',
+        secure: false,
+        httpOnly: false,
         creation: new Date('2016-10-05T04:40:49.505Z'),
         key: 'foo',
         value: 'barrrrr',
@@ -229,6 +238,9 @@ describe('sendCurlAndWriteTimeline()', () => {
         lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
       {
+        id: '',
+        secure: false,
+        httpOnly: false,
         creation: new Date('2016-10-05T04:40:49.505Z'),
         key: 'foo',
         value: 'barrrrr',
@@ -276,14 +288,14 @@ describe('sendCurlAndWriteTimeline()', () => {
       },
       settingStoreCookies: false,
       settingSendCookies: false,
-    });
+    }) as unknown as RenderedRequest;
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
       null,
       settings,
-    );
+    ) as ResponsePatch;
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
@@ -337,14 +349,14 @@ describe('sendCurlAndWriteTimeline()', () => {
         mimeType: CONTENT_TYPE_FILE,
         fileName,
       },
-    });
+    }) as RenderedRequest;
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
       null,
       settings,
-    );
+    ) as ResponsePatch;
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
@@ -418,14 +430,14 @@ describe('sendCurlAndWriteTimeline()', () => {
           },
         ],
       },
-    });
+    }) as RenderedRequest;
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
       null,
       settings,
-    );
+    ) as ResponsePatch;
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
@@ -480,14 +492,14 @@ describe('sendCurlAndWriteTimeline()', () => {
       parentId: workspace._id,
       url: 'http://unix:/my/socket:/my/path',
       method: 'GET',
-    });
+    }) as RenderedRequest;
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
       null,
-      settings,
-    );
+      settings
+    ) as ResponsePatch;
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
@@ -521,14 +533,14 @@ describe('sendCurlAndWriteTimeline()', () => {
       parentId: workspace._id,
       url: 'http://localhost:3000/foo/bar',
       method: 'HEAD',
-    });
+    }) as RenderedRequest;
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
       null,
       settings,
-    );
+    ) as ResponsePatch;
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
@@ -561,14 +573,14 @@ describe('sendCurlAndWriteTimeline()', () => {
       parentId: workspace._id,
       url: 'http://unix:3000/my/path',
       method: 'GET',
-    });
+    }) as RenderedRequest;
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
       null,
       settings,
-    );
+    ) as ResponsePatch;
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
@@ -602,14 +614,14 @@ describe('sendCurlAndWriteTimeline()', () => {
       authentication: {
         type: AUTH_NETRC,
       },
-    });
+    }) as unknown as RenderedRequest;
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
       null,
       settings,
-    );
+    ) as ResponsePatch;
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
@@ -640,6 +652,9 @@ describe('sendCurlAndWriteTimeline()', () => {
     const settings = await models.settings.getOrCreate();
     const cookies = [
       {
+        id: '',
+        secure: false,
+        httpOnly: false,
         creation: new Date('2016-10-05T04:40:49.505Z'),
         key: 'foo',
         value: 'barrrrr',
@@ -650,6 +665,9 @@ describe('sendCurlAndWriteTimeline()', () => {
         lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
       },
       {
+        id: '',
+        secure: false,
+        httpOnly: false,
         creation: new Date('2016-10-05T04:40:49.505Z'),
         key: 'foo',
         value: 'bar',
@@ -700,14 +718,14 @@ describe('sendCurlAndWriteTimeline()', () => {
         username: 'user',
         password: 'pass',
       },
-    });
+    }) as unknown as RenderedRequest;
     const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils.sendCurlAndWriteTimeline(
       renderedRequest,
       [],
       null,
       { ...settings, validateSSL: false },
-    );
+    ) as ResponsePatch;
     const bodyBuffer = models.response.getBodyBuffer(response);
     const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
@@ -753,12 +771,12 @@ describe('sendCurlAndWriteTimeline()', () => {
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
-    });
+    }) as RenderedRequest;
     const renderedRequest = await getRenderedRequest({ request });
     const responseV1 = await networkUtils.sendCurlAndWriteTimeline(renderedRequest, [], null, {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
-    });
+    }) as ResponsePatch;
     expect(JSON.parse(String(models.response.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
     expect(getHttpVersion(HttpVersions.V1_0).curlHttpVersion).toBe(CurlHttpVersion.V1_0);
     expect(getHttpVersion(HttpVersions.V1_1).curlHttpVersion).toBe(CurlHttpVersion.V1_1);
@@ -993,7 +1011,7 @@ describe('_parseHeaders', () => {
 
 describe('getSetCookiesFromResponseHeaders', () => {
   it('defaults to empty array', () => {
-    const headers = [];
+    const headers: any[] = [];
     expect(getSetCookiesFromResponseHeaders(headers)).toEqual([]);
   });
   it('gets set-cookies', () => {
@@ -1007,7 +1025,7 @@ describe('getSetCookiesFromResponseHeaders', () => {
 });
 describe('getCurrentUrl for tough-cookie', () => {
   it('defaults to finalUrl', () => {
-    const headerResults = [];
+    const headerResults: never[] = [];
     const finalUrl = 'http://mergemyshit.dev';
     expect(networkUtils.getCurrentUrl({ headerResults, finalUrl })).toEqual(finalUrl);
   });

@@ -8,6 +8,7 @@ import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../../../common/constants';
 import * as models from '../../../../models';
 import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT, SET_ACTIVE_WORKSPACE } from '../global';
 import { activateWorkspace } from '../workspace';
+import { AnyAction } from 'redux';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../ui/analytics');
@@ -21,7 +22,7 @@ describe('workspace', () => {
     it('should do nothing if workspace cannot be found', async () => {
       const store = mockStore(await reduxStateForTest({ activeProjectId: 'abc', activeWorkspaceId: 'def' }));
 
-      await store.dispatch(activateWorkspace({ workspaceId: 'DOES_NOT_EXIST' }));
+      await store.dispatch(activateWorkspace({ workspaceId: 'DOES_NOT_EXIST' }) as unknown as AnyAction);
 
       expect(store.getActions()).toEqual([]);
     });
@@ -31,7 +32,7 @@ describe('workspace', () => {
       const workspace = await models.workspace.create({ scope: 'design', parentId: project._id });
       const store = mockStore(await reduxStateForTest({ activeProjectId: 'abc', activeWorkspaceId: 'def' }));
 
-      await store.dispatch(activateWorkspace({ workspaceId: workspace._id }));
+      await store.dispatch(activateWorkspace({ workspaceId: workspace._id }) as unknown as AnyAction);
 
       expect(store.getActions()).toEqual([
         {
@@ -54,7 +55,7 @@ describe('workspace', () => {
       const workspace = await models.workspace.create({ scope: 'design', parentId: project._id });
       const store = mockStore(await reduxStateForTest({ activeProjectId: 'abc', activeWorkspaceId: 'def' }));
 
-      await store.dispatch(activateWorkspace({ workspace }));
+      await store.dispatch(activateWorkspace({ workspace }) as unknown as AnyAction);
 
       expect(store.getActions()).toEqual([
         {
@@ -77,7 +78,7 @@ describe('workspace', () => {
       const workspace = await models.workspace.create({ scope: 'design', parentId: project._id });
       const store = mockStore(await reduxStateForTest({ activeProjectId: project._id, activeWorkspaceId: workspace._id }));
 
-      await store.dispatch(activateWorkspace({ workspace }));
+      await store.dispatch(activateWorkspace({ workspace }) as unknown as AnyAction);
 
       expect(store.getActions()).toEqual([
         {
@@ -100,7 +101,7 @@ describe('workspace', () => {
       const workspace = await models.workspace.create({ scope: 'design', parentId: project._id });
       const store = mockStore(await reduxStateForTest({ activeProjectId: project._id, activeWorkspaceId: workspace._id, activeActivity }));
 
-      await store.dispatch(activateWorkspace({ workspace }));
+      await store.dispatch(activateWorkspace({ workspace }) as unknown as AnyAction);
 
       expect(store.getActions()).toEqual([
         {
@@ -119,7 +120,7 @@ describe('workspace', () => {
       const workspace = await models.workspace.create({ scope: 'collection', parentId: project._id });
       const store = mockStore(await reduxStateForTest({ activeProjectId: project._id, activeWorkspaceId: workspace._id }));
 
-      await store.dispatch(activateWorkspace({ workspace }));
+      await store.dispatch(activateWorkspace({ workspace }) as unknown as AnyAction);
 
       expect(store.getActions()).toEqual([
         {
