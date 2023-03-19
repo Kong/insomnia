@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { InsomniaConfig } from '.';
+import { InsomniaConfig } from './entities';
 import { ingest, validate } from './validate';
 
 describe('ingest', () => {
