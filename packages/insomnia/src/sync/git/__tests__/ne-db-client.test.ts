@@ -1,4 +1,4 @@
-import { Schema, createBuilder } from '@develohpanda/fluent-builder';
+import { createBuilder, Schema } from '@develohpanda/fluent-builder';
 import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import path from 'path';
 import YAML from 'yaml';
@@ -8,10 +8,10 @@ import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
 import { DEFAULT_PROJECT_ID } from '../../../models/project';
+import { DesignWorkspace } from '../../../models/workspace';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';
 import { NeDBClient } from '../ne-db-client';
 import { assertAsyncError, setupDateMocks } from './util';
-import { DesignWorkspace } from '../../../models/workspace';
 
 const workspaceBuilder = createBuilder(workspaceModelSchema as Schema<DesignWorkspace>);
 

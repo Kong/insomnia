@@ -17,7 +17,6 @@ describe('convertToPosixSep()', () => {
   });
 });
 
-
 describe.each(['win32', 'posix'])('convertToOsSep() where os is %s', (osType: keyof PlatformPath) => {
   beforeAll(() => (path as any).__mockPath(osType));
 

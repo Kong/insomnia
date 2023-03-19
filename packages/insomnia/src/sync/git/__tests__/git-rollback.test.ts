@@ -26,7 +26,7 @@ describe('git rollback', () => {
         getFs: jest.fn().mockReturnValue(fsMock),
         remove: removeMock,
         undoPendingChanges: undoPendingChangesMock,
-      } as unknown as typeof GitVCS
+      } as unknown as typeof GitVCS;
     });
 
     it('should remove and delete added and *added files', async () => {

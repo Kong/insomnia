@@ -15,7 +15,6 @@ describe('Git-VCS', () => {
     barTxt = path.join(GIT_INSOMNIA_DIR, 'bar.txt');
   });
 
-
   beforeEach(setupDateMocks);
 
   describe('common operations', () => {

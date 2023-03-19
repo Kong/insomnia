@@ -15,9 +15,9 @@ import {
   getAppVersion,
 } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
-import { RenderedRequest, getRenderedRequestAndContext } from '../../common/render';
+import { getRenderedRequestAndContext, RenderedRequest } from '../../common/render';
 import { HttpVersions } from '../../common/settings';
-import { ResponsePatch, _parseHeaders, getHttpVersion } from '../../main/network/libcurl-promise';
+import { _parseHeaders, getHttpVersion, ResponsePatch } from '../../main/network/libcurl-promise';
 import { DEFAULT_BOUNDARY } from '../../main/network/multipart';
 import { _getAwsAuthHeaders } from '../../main/network/parse-header-strings';
 import * as models from '../../models';

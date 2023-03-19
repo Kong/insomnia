@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
+import { RenderedRequest } from '../../../common/render';
 import * as models from '../../../models';
 import * as plugin from '../request';
-import { RenderedRequest } from '../../../common/render';
 
 const CONTEXT = {
   user_key: 'my_user_key',

@@ -1,9 +1,9 @@
 import { describe, expect, it } from '@jest/globals';
 
 import * as models from '../../../models';
+import { ApiSpec } from '../../api-spec';
 import { Workspace, WorkspaceScopeKeys } from '../../workspace';
 import getWorkspaceName from '../get-workspace-name';
-import { ApiSpec } from '../../api-spec';
 
 describe('getWorkspaceName', () => {
   it('returns workspace name', () => {

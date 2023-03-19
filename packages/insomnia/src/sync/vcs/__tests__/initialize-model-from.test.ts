@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
-import { isRemoteProject, Project } from '../../../models/project';
-import { isCollection, Workspace, WorkspaceScopeKeys } from '../../../models/workspace';
+import { isRemoteProject } from '../../../models/project';
+import { isCollection, WorkspaceScopeKeys } from '../../../models/workspace';
 import { projectSchema, teamSchema } from '../../__schemas__/type-schemas';
 import { initializeProjectFromTeam, initializeWorkspaceFromBackendProject } from '../initialize-model-from';
 

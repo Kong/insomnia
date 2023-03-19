@@ -2,10 +2,10 @@ import { describe, expect, it, jest } from '@jest/globals';
 import { renderHook } from '@testing-library/react';
 import React, { FC, PropsWithChildren } from 'react';
 
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import { NunjucksEnabledProvider } from '../nunjucks-enabled-context';
 import { useGatedNunjucks } from '../use-gated-nunjucks';
 import { useNunjucks } from '../use-nunjucks';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 jest.mock('../use-nunjucks', () => {
   const funcs: ReturnType<typeof useNunjucks> = {

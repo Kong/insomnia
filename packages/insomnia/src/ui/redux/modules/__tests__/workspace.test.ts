@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { AnyAction } from 'redux';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
@@ -8,7 +9,6 @@ import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../../../common/constants';
 import * as models from '../../../../models';
 import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT, SET_ACTIVE_WORKSPACE } from '../global';
 import { activateWorkspace } from '../workspace';
-import { AnyAction } from 'redux';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../ui/analytics');

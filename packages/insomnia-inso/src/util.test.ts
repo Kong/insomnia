@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { Mock } from 'jest-mock';
 
 import * as packageJson from '../package.json';
 import { InsoError } from './errors';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
 import { exit, getDefaultProductName, getVersion, logErrorExit1, noop } from './util';
-import { Mock } from 'jest-mock';
 
 describe('exit()', () => {
   beforeAll(() => {
