@@ -10,7 +10,7 @@
     "url": "https://github.com/kong/insomnia/issues"
   },
   "homepage": "https://github.com/kong/insomnia#readme",
-  "engines":{
+  "engines": {
     "node": ">=16.17 <17",
     "npm": ">=8.15.0"
   },
