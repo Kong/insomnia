@@ -451,16 +451,19 @@ const OrganizationProjectsSidebar: FC<{
       <ProjectListContainer>
         <List
           selectionMode="single"
-          selectionBehavior="toggle"
-          selectedKeys={[searchParams.get('scope') || '']}
+          selectedKeys={[searchParams.get('scope') || 'all']}
           onSelectionChange={selection => {
-            submit({
-              ...Object.fromEntries(searchParams.entries()),
-              scope: [...selection][0].toString(),
-            });
+            const scope = [...selection]?.[0]?.toString();
+
+            if (scope) {
+              submit({
+                ...Object.fromEntries(searchParams.entries()),
+                scope,
+              });
+            }
           }}
         >
-          <Item key="" aria-label="All Files">
+          <Item key="all" aria-label="All Files">
             <SidebarListItemContent level={1}>
               <SidebarListItemTitle
                 icon="folder"
@@ -639,7 +642,7 @@ export const loader: LoaderFunction = async ({
 
   const sortOrder = search.get('sortOrder') || 'modified-desc';
   const filter = search.get('filter') || '';
-  const scope = search.get('scope') || '';
+  const scope = search.get('scope') || 'all';
   const projectName = search.get('projectName') || '';
 
   const project = await models.project.getById(projectId);
@@ -779,7 +782,7 @@ export const loader: LoaderFunction = async ({
   );
 
   const workspaces = workspacesWithMetaData
-    .filter(w => (scope ? w.workspace.scope === scope : true))
+    .filter(w => (scope !== 'all' ? w.workspace.scope === scope : true))
     .filter(filterWorkspace)
     .sort(sortWorkspaces);
 
