@@ -450,7 +450,9 @@ const OrganizationProjectsSidebar: FC<{
 
       <ProjectListContainer>
         <List
+          key="files-list"
           selectionMode="single"
+          disallowEmptySelection
           selectedKeys={[searchParams.get('scope') || 'all']}
           onSelectionChange={selection => {
             const scope = [...selection]?.[0]?.toString();
