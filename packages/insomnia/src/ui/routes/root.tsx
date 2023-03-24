@@ -67,9 +67,7 @@ const Layout = styled.div({
 const Root = () => {
   const { revalidate } = useRevalidator();
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
-  console.log({
-    workspaceData,
-  });
+
   useEffect(() => {
     onLoginLogout(() => {
       revalidate();

@@ -1,10 +1,6 @@
 import electron, { OpenDialogOptions } from 'electron';
 
 import {
-  askToImportIntoProject,
-  askToImportIntoWorkspace,
-  askToSetWorkspaceScope,
-  ForceToWorkspace,
   importRaw,
   importUri as _importUri,
 } from '../common/import';
@@ -17,7 +13,6 @@ import { AlertModal } from './components/modals/alert-modal';
 export interface ImportOptions {
   workspaceId?: string;
   forceToProject?: 'active' | 'prompt';
-  forceToWorkspace?: ForceToWorkspace;
   forceToScope?: WorkspaceScope;
   onComplete?: () => void;
   activeProject?: Project;
@@ -67,33 +62,33 @@ export const importFile = async (
     return;
   }
   // Let's import all the files!
-  for (const filePath of filePaths) {
-    try {
-      const uri = `file://${filePath}`;
-      const config = {
-        getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-        getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }),
-        // Currently, just return the active project instead of prompting for which project to import into
-        getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject?._id || DEFAULT_PROJECT_ID),
-      };
-      const { error, summary } = await _importUri(uri, config);
-      if (!error) {
-        models.stats.incrementRequestStats({ createdRequests: summary[models.request.type].length + summary[models.grpcRequest.type].length });
-      }
-      if (error) {
-        showError({
-          title: 'Import Failed',
-          message: 'The file does not contain a valid specification.',
-          error,
-        });
-      }
-    } catch (err) {
-      showModal(AlertModal, {
-        title: 'Import Failed',
-        message: err + '',
-      });
-    }
-  }
+  // for (const filePath of filePaths) {
+  //   try {
+  //     const uri = `file://${filePath}`;
+  //     const config = {
+  //       getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
+  //       getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }),
+  //       // Currently, just return the active project instead of prompting for which project to import into
+  //       getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject?._id || DEFAULT_PROJECT_ID),
+  //     };
+  //     const { error, summary } = await _importUri(uri, config);
+  //     if (!error) {
+  //       models.stats.incrementRequestStats({ createdRequests: summary[models.request.type].length + summary[models.grpcRequest.type].length });
+  //     }
+  //     if (error) {
+  //       showError({
+  //         title: 'Import Failed',
+  //         message: 'The file does not contain a valid specification.',
+  //         error,
+  //       });
+  //     }
+  //   } catch (err) {
+  //     showModal(AlertModal, {
+  //       title: 'Import Failed',
+  //       message: err + '',
+  //     });
+  //   }
+  // }
 
   onComplete?.();
 };

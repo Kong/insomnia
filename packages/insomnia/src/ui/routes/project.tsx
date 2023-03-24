@@ -501,7 +501,7 @@ const OrganizationProjectsSidebar: FC<{
 
       <List
         onAction={key => {
-          clickLink(key);
+          clickLink(key.toString());
         }}
       >
         <Item
@@ -987,34 +987,13 @@ const ProjectRoute: FC = () => {
                     </DropdownSection>
                     <DropdownSection
                       aria-label="Import From"
-                      title="Import From"
+                      title=""
                     >
                       <DropdownItem aria-label="File">
                         <ItemContent
-                          icon="plus"
-                          label="File"
+                          icon="file-import"
+                          label="Import"
                           onClick={() => setIsImportModalOpen('file')}
-                        />
-                      </DropdownItem>
-                      <DropdownItem aria-label="URL">
-                        <ItemContent
-                          icon="link"
-                          label="URL"
-                          onClick={() => setIsImportModalOpen('uri')}
-                        />
-                      </DropdownItem>
-                      <DropdownItem aria-label="Clipboard">
-                        <ItemContent
-                          icon="clipboard"
-                          label="Clipboard"
-                          onClick={() => setIsImportModalOpen('clipboard')}
-                        />
-                      </DropdownItem>
-                      <DropdownItem aria-label="Git Clone">
-                        <ItemContent
-                          icon="code-fork"
-                          label="Git Clone"
-                          onClick={importFromGit}
                         />
                       </DropdownItem>
                     </DropdownSection>

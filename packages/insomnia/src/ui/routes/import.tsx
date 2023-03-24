@@ -5,7 +5,7 @@ import { ActionFunction, redirect } from 'react-router-dom';
 import { isLoggedIn } from '../../account/session';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
-import { importRaw, importUri } from '../../common/import';
+import { fetchImportContentFromURI, importRaw, importResources, importUri, scanResources } from '../../common/import';
 import * as models from '../../models';
 import { isRemoteProject } from '../../models/project';
 import { isCollection, isWorkspace, WorkspaceScope } from '../../models/workspace';
@@ -26,7 +26,7 @@ export const importFileAction: ActionFunction = async ({ request }) => {
   const organizationId = formData.get('organizationId');
   const workspaceId = formData.get('workspaceId');
   const projectId = formData.get('projectId');
-  const scope = formData.get('scope');
+  const scope = formData.get('scope') || 'design';
   const filePaths = formData.getAll('filePath');
 
   invariant(typeof projectId === 'string', 'ProjectId is required.');
@@ -120,7 +120,7 @@ export const importUriAction: ActionFunction = async ({ request }) => {
   const projectId = formData.get('projectId');
   const workspaceId = formData.get('workspaceId');
   const uri = formData.get('uri');
-  const scope = formData.get('scope');
+  const scope = formData.get('scope') || 'design';
 
   invariant(typeof organizationId === 'string', 'OrganizationId is required.');
   invariant(typeof uri === 'string', 'URI is required.');
@@ -183,7 +183,7 @@ export const importClipboardAction: ActionFunction = async ({ request }) => {
   const organizationId = formData.get('organizationId');
   const projectId = formData.get('projectId');
   const workspaceId = formData.get('workspaceId');
-  const scope = formData.get('scope');
+  const scope = formData.get('scope') || 'design';
 
   invariant(typeof organizationId === 'string', 'OrganizationId is required.');
   invariant(typeof projectId === 'string', 'ProjectId is required.');
@@ -228,4 +228,84 @@ export const importClipboardAction: ActionFunction = async ({ request }) => {
 
   console.log(summary[models.workspace.type].filter(isWorkspace));
   return redirect(`/organization/${organizationId}/project/${project._id}/workspace/${workspace._id}/${scope === 'design' ? ACTIVITY_SPEC : ACTIVITY_DEBUG}`);
+};
+
+export const scanForResourcesAction: ActionFunction = async ({ request }) => {
+  const formData = await request.formData();
+
+  const source = formData.get('importFrom');
+  invariant(typeof source === 'string', 'Source is required.');
+  guard<'file' | 'uri' | 'clipboard'>(source, ['file', 'uri', 'clipboard'].includes(source));
+
+  let content = '';
+  if (source === 'uri') {
+    const uri = formData.get('uri');
+    invariant(typeof uri === 'string', 'URI is required.');
+
+    content = await fetchImportContentFromURI({
+      uri,
+    });
+  } else if (source === 'file') {
+    const filePath = formData.get('filePath');
+    invariant(typeof filePath === 'string', 'URI is required.');
+    const uri = `file://${filePath}`;
+
+    content = await fetchImportContentFromURI({
+      uri,
+    });
+  } else {
+    content = clipboard.readText();
+  }
+
+  if (!content) {
+    throw new Error('The URI does not contain a valid specification.');
+  }
+
+  const result = await scanResources({ content });
+
+  return result;
+};
+
+export const importResourcesAction: ActionFunction = async ({ request }) => {
+  const formData = await request.formData();
+
+  const resourceIds = formData.getAll('resourceId') as string[];
+
+  const organizationId = formData.get('organizationId');
+  const projectId = formData.get('projectId');
+  const workspaceId = formData.get('workspaceId');
+  const scope = formData.get('scope') || 'design';
+
+  console.log({ resourceIds });
+
+  invariant(typeof organizationId === 'string', 'OrganizationId is required.');
+  invariant(typeof projectId === 'string', 'ProjectId is required.');
+  invariant(typeof workspaceId === 'string', 'WorkspaceId is required.');
+  invariant(typeof scope === 'string', 'Scope is required.');
+
+  guard<WorkspaceScope>(scope === 'design' || scope === 'collection', scope);
+
+  const project = await models.project.getById(projectId);
+  invariant(project, 'Project not found.');
+  let workspace = await models.workspace.getById(workspaceId);
+
+  if (!workspace && workspaceId === 'create-new-workspace-id') {
+    const name = formData.get('name');
+    invariant(typeof name === 'string', 'Name is required.');
+    workspace = await models.workspace.create({
+      name,
+      scope,
+      parentId: projectId,
+    });
+  }
+
+  invariant(workspace, 'Workspace not found.');
+
+  const result = await importResources({
+    resourceIds,
+    projectId: project._id,
+    workspaceId: workspace._id,
+  });
+
+  return result;
 };

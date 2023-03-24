@@ -61,54 +61,33 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', marginTop: 'var(--padding-md)' }}>
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 'var(--padding-md)', gap: 'var(--padding-md)' }}>
           <Button
+            style={{
+              gap: 'var(--padding-xs)',
+            }}
             onClick={createRequestCollection}
           >
-            New Collection
+            <i className='fa fa-bars' /> New Collection
           </Button>
           <Button
+            style={{
+              gap: 'var(--padding-xs)',
+            }}
             onClick={createDesignDocument}
           >
-            New Document
+            <i className='fa fa-file-o' /> New Document
           </Button>
         </div>
         <Divider>or</Divider>
-        <Dropdown
-          aria-label='Import From Dropdown'
-          triggerButton={
-            <DropdownButton style={{ width: '100%', alignSelf: 'stretch' }}>
-              Import From <i className="fa fa-caret-down pad-left-sm" />
-            </DropdownButton>
-          }
+        <Button
+          style={{
+            gap: 'var(--padding-xs)',
+          }}
+          onClick={() => {
+            importFromFile();
+          }}
         >
-          <DropdownItem aria-label='File'>
-            <ItemContent
-              icon="plus"
-              label="File"
-              onClick={importFromFile}
-            />
-          </DropdownItem>
-          <DropdownItem aria-label='URL'>
-            <ItemContent
-              icon="link"
-              label="URL"
-              onClick={importFromURL}
-            />
-          </DropdownItem>
-          <DropdownItem aria-label='Clipboard'>
-            <ItemContent
-              icon="clipboard"
-              label="Clipboard"
-              onClick={importFromClipboard}
-            />
-          </DropdownItem>
-          <DropdownItem aria-label='Git Clone'>
-            <ItemContent
-              icon="code-fork"
-              label="Git Clone"
-              onClick={importFromGit}
-            />
-          </DropdownItem>
-        </Dropdown>
+          <i className='fa fa-file-import' /> Import
+        </Button>
       </div>
     </Wrapper>
   );

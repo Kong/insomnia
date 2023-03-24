@@ -1,16 +1,24 @@
 import fs from 'fs';
+import { readFile } from 'fs/promises';
 
 import type { ApiSpec } from '../models/api-spec';
+import { BaseEnvironment } from '../models/environment';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
 import { Project } from '../models/project';
 import { isRequest } from '../models/request';
-import { isWorkspace, Workspace, WorkspaceScope, WorkspaceScopeKeys } from '../models/workspace';
+import {
+  isWorkspace,
+  Workspace,
+  WorkspaceScope,
+  WorkspaceScopeKeys,
+} from '../models/workspace';
 import { SegmentEvent, trackSegmentEvent } from '../ui/analytics';
 import { AskModal } from '../ui/components/modals/ask-modal';
 import { showModal } from '../ui/components/modals/index';
 import { showSelectModal } from '../ui/components/modals/select-modal';
 import { convert, ConvertResultType } from '../utils/importers/convert';
+import { invariant } from '../utils/invariant';
 import {
   BASE_ENVIRONMENT_ID_KEY,
   CONTENT_TYPE_GRAPHQL,
@@ -21,16 +29,10 @@ import { database as db } from './database';
 import { diffPatchObj, fnOrString, generateId } from './misc';
 import { strings } from './strings';
 
-export interface ImportResult {
-  source: string;
-  error: Error | null;
-  summary: Record<string, BaseModel[]>;
-}
-
 interface ConvertResult {
   type: ConvertResultType;
   data: {
-    resources: Record<string, any>[];
+    resources: BaseModel[];
   };
 }
 
@@ -84,7 +86,7 @@ export async function importRaw(
     enableDiffBasedPatching,
     enableDiffDeep,
     bypassDiffProps,
-  }: ImportRawConfig,
+  }: ImportRawConfig
 ) {
   let results: ConvertResult;
 
@@ -99,13 +101,19 @@ export async function importRaw(
     return importResult;
   }
 
+  console.log({
+    results,
+  });
+
   const { data, type: resultsType } = results;
   // Generate all the ids we may need
   const generatedIds: Record<string, string | ((...args: any[]) => any)> = {};
 
   for (const r of data.resources) {
     for (const key of r._id.match(REPLACE_ID_REGEX) || []) {
-      generatedIds[key] = generateId(models.MODELS_BY_EXPORT_TYPE[r._type].prefix);
+      generatedIds[key] = generateId(
+        models.MODELS_BY_EXPORT_TYPE[r._type].prefix
+      );
     }
   }
 
@@ -123,7 +131,9 @@ export async function importRaw(
   // Contains the ID of the base environment to be used with the import
   generatedIds[BASE_ENVIRONMENT_ID_KEY] = async () => {
     const parentId = await fnOrString(generatedIds[WORKSPACE_ID_KEY]);
-    const baseEnvironment = await models.environment.getOrCreateForParentId(parentId);
+    const baseEnvironment = await models.environment.getOrCreateForParentId(
+      parentId
+    );
     // Update this fn so it doesn't run again
     generatedIds[BASE_ENVIRONMENT_ID_KEY] = baseEnvironment._id;
     return baseEnvironment._id;
@@ -142,163 +152,29 @@ export async function importRaw(
 
   // Add a workspace to the resources if it doesn't exist
   // NOTE: The workspace should be the last item of the resources
-  if (!data.resources.some(resource => resource._type === EXPORT_TYPE_WORKSPACE)) {
-    data.resources.push({
-      _id: WORKSPACE_ID_KEY,
-      _type: EXPORT_TYPE_WORKSPACE,
-    });
-  }
+  checkForWorkspace(data);
 
   for (const resource of data.resources) {
-    // Buffer DB changes
-    // NOTE: Doing it inside here so it's more "scalable"
-    await db.bufferChanges(100);
-
-    // Replace null parentIds with current workspace
-    if (!resource.parentId && resource._type !== EXPORT_TYPE_WORKSPACE) {
-      resource.parentId = WORKSPACE_ID_KEY;
-    }
-
-    // Replace ID placeholders (eg. __WORKSPACE_ID__) with generated values
-    for (const key of Object.keys(generatedIds)) {
-      const { parentId, _id } = resource;
-
-      if (parentId?.includes(key)) {
-        resource.parentId = parentId.replace(key, await fnOrString(generatedIds[key]));
-      }
-
-      if (_id && _id.includes(key)) {
-        resource._id = _id.replace(key, await fnOrString(generatedIds[key]));
-      }
-    }
-
-    const model = models.MODELS_BY_EXPORT_TYPE[resource._type];
-
-    if (!model) {
-      console.warn('Unknown doc type for import', resource._type);
-      continue;
-    }
-
-    // Hack to switch to GraphQL based on finding `graphql` in the URL path
-    // TODO: Support this in a better way
-    if (
-      isRequest(model) &&
-      resource.body &&
-      typeof resource.body.text === 'string' &&
-      typeof resource.url === 'string' &&
-      resource.body.text.includes('"query"') &&
-      resource.url.includes('graphql')
-    ) {
-      resource.body.mimeType = CONTENT_TYPE_GRAPHQL;
-    }
-
-    // Try adding Content-Type JSON if no Content-Type exists
-    if (
-      isRequest(model) &&
-      resource.body &&
-      typeof resource.body.text === 'string' &&
-      Array.isArray(resource.headers) &&
-      !resource.headers.find(h => h.name.toLowerCase() === 'content-type')
-    ) {
-      try {
-        JSON.parse(resource.body.text);
-        resource.headers.push({
-          name: 'Content-Type',
-          value: 'application/json',
-        });
-      } catch (err) {
-        // Not JSON
-      }
-    }
-
-    const existingDoc = await db.get(model.type, resource._id);
-    let newDoc: BaseModel;
-
-    if (existingDoc) {
-      let updateDoc = resource;
-
-      // Do differential patching when enabled
-      if (enableDiffBasedPatching) {
-        updateDoc = diffPatchObj(resource, existingDoc, enableDiffDeep);
-      }
-
-      // Bypass differential update for urls when enabled
-      if (bypassDiffProps?.url && updateDoc.url) {
-        updateDoc.url = resource.url;
-      }
-
-      // If workspace preserve the scope and parentId of the existing workspace while importing
-      if (isWorkspace(model)) {
-        (updateDoc as Workspace).scope = (existingDoc as Workspace).scope;
-        (updateDoc as Workspace).parentId = (existingDoc as Workspace).parentId;
-      }
-
-      newDoc = await db.docUpdate(existingDoc, updateDoc);
-    } else {
-      // If workspace, check and set the scope and parentId while importing a new workspace
-      if (isWorkspace(model)) {
-        // Set the workspace scope if creating a new workspace during import
-        //  IF is creating a new workspace
-        //  AND imported resource has no preset scope property OR scope is null
-        //  AND we have a function to get scope
-        if ((!resource.hasOwnProperty('scope') || resource.scope === null) && getWorkspaceScope) {
-          const workspaceName = resource.name;
-          let specName;
-
-          // If is from insomnia v4 and the spec has contents, add to the name when prompting
-          if (isInsomniaV4Import(resultsType)) {
-            const spec: ApiSpec | null = await models.apiSpec.getByParentId(resource._id);
-
-            if (spec && spec.contents.trim()) {
-              specName = spec.fileName;
-            }
-          }
-
-          const nameToPrompt = specName ? `${specName} / ${workspaceName}` : workspaceName;
-          resource.scope = await getWorkspaceScope(nameToPrompt);
-        }
-        // If the workspace doesn't have a name, update the default name based on it's scope
-        if (!resource.name) {
-          const name =
-            (resource as Workspace).scope === 'collection'
-              ? `My ${strings.collection.singular}`
-              : `My ${strings.document.singular}`;
-
-          resource.name = name;
-        }
-
-        if (getProjectId) {
-          // Set the workspace parent if creating a new workspace during import
-          resource.parentId = await getProjectId();
-        }
-      }
-
-      newDoc = await db.docCreate(model.type, resource);
-
-      // Mark as not seen if we created a new workspace from sync
-      if (isWorkspace(newDoc)) {
-        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newDoc._id);
-        await models.workspaceMeta.update(workspaceMeta, {
-          hasSeen: false,
-        });
-      }
-    }
-
-    importedDocs[newDoc.type].push(newDoc);
+    mapResource(resource, generatedIds);
   }
 
   // Store spec under workspace if it's OpenAPI
   for (const workspace of importedDocs[models.workspace.type]) {
     if (isApiSpecImport(resultsType)) {
-      const spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
-        contents: rawContent,
-        contentType: 'yaml',
-      });
+      const spec = await models.apiSpec.updateOrCreateForParentId(
+        workspace._id,
+        {
+          contents: rawContent,
+          contentType: 'yaml',
+        }
+      );
       importedDocs[spec.type].push(spec);
     }
 
     // Set active environment when none is currently selected and one exists
-    const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+    const meta = await models.workspaceMeta.getOrCreateByParentId(
+      workspace._id
+    );
     const envs = importedDocs[models.environment.type];
 
     if (!meta.activeEnvironmentId && envs.length > 0) {
@@ -310,124 +186,168 @@ export async function importRaw(
   await db.flushChanges();
   trackSegmentEvent(SegmentEvent.dataImport, { type: resultsType.id });
   const importRequest: ImportResult = {
-    source: resultsType && typeof resultsType.id === 'string' ? resultsType.id : 'unknown',
+    source:
+      resultsType && typeof resultsType.id === 'string'
+        ? resultsType.id
+        : 'unknown',
     summary: importedDocs,
     error: null,
   };
   return importRequest;
 }
 
-export const isApiSpecImport = ({ id }: Pick<ConvertResultType, 'id'>) => (
-  id === 'openapi3' || id === 'swagger2'
-);
+export const isApiSpecImport = ({ id }: Pick<ConvertResultType, 'id'>) =>
+  id === 'openapi3' || id === 'swagger2';
 
-export const isInsomniaV4Import = ({ id }: Pick<ConvertResultType, 'id'>) => (
-  id === 'insomnia-4'
-);
+export const isInsomniaV4Import = ({ id }: Pick<ConvertResultType, 'id'>) =>
+  id === 'insomnia-4';
 
-export enum ForceToWorkspace {
-  new = 'new',
-  current = 'current',
-  existing = 'existing'
+export async function fetchImportContentFromURI({
+  uri,
+}: {
+  uri: string;
+}) {
+  const url = new URL(uri);
+
+  if (url.origin === 'https://github.com') {
+    uri = uri
+      .replace('https://github.com', 'https://raw.githubusercontent.com')
+      .replace('blob/', '');
+  }
+
+  if (uri.match(/^(http|https):\/\//)) {
+    const response = await fetch(uri);
+    const content = await response.text();
+
+    return content;
+  } else if (uri.match(/^(file):\/\//)) {
+    const path = uri.replace(/^(file):\/\//, '');
+    const content = await readFile(path, 'utf8');
+
+    return content;
+  } else {
+    // Treat everything else as raw text
+    const content =  decodeURIComponent(uri);
+
+    return content;
+  }
 }
 
-export type SelectExistingWorkspacePrompt = Promise<string | null>;
+export interface ScanResult {
+  resources: BaseModel[];
+  workspace?: Workspace;
+  environments?: BaseEnvironment[];
+  apiSpec?: ApiSpec;
+  type?: ConvertResultType;
+  errors: Error[];
+}
 
-// Returning null instead of a string will create a new workspace
-export type ImportToWorkspacePrompt = () => null | string | Promise<null | string>;
-export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }: { workspaceId?: string; forceToWorkspace?: ForceToWorkspace; activeProjectWorkspaces?: Workspace[] }): ImportToWorkspacePrompt {
-  return function() {
-    switch (forceToWorkspace) {
-      case ForceToWorkspace.new: {
-        return null;
-      }
+let ResourceCache: {
+  content: string;
+  resources: BaseModel[];
+  type: ConvertResultType;
+} | null = null;
 
-      case ForceToWorkspace.current: {
-        if (!workspaceId) {
-          return null;
-        }
+export async function scanResources({
+  content,
+}: {
+  content: string;
+}): Promise<ScanResult> {
+  let results: ConvertResult;
 
-        return workspaceId;
-      }
+  try {
+    results = (await convert(content)) as unknown as ConvertResult;
+  } catch (err: unknown) {
+    return {
+      resources: [],
+      errors: [err as Error],
+    };
+  }
 
-      case ForceToWorkspace.existing: {
-        // Return null if there are no available workspaces to chose from.
-        if (activeProjectWorkspaces?.length) {
-          return null;
-        }
-      }
+  const { data, type } = results;
 
-      default: {
-        if (!workspaceId) {
-          return null;
-        }
+  ResourceCache = {
+    resources: data.resources,
+    type,
+    content,
+  };
 
-        return new Promise(resolve => {
-          showModal(AskModal, {
-            title: 'Import',
-            message: 'Do you want to import into the current workspace or a new one?',
-            yesText: 'Current',
-            noText: 'New Workspace',
-            onDone: async (yes: boolean) => {
-              resolve(yes ? workspaceId : null);
-            },
-          });
-        });
-      }
-    }
+  return {
+    resources: data.resources,
+    type,
+    workspace: data.resources.find(r => r._type === EXPORT_TYPE_WORKSPACE),
+    environments: data.resources.filter(r => r._type === 'environment'),
+    apiSpec: data.resources.find(r => r._type === 'api_spec'),
+    errors: [],
   };
 }
 
-export type SetWorkspaceScopePrompt = (name?: string) => WorkspaceScope | Promise<WorkspaceScope>;
-export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScopePrompt {
-  return name => {
-    switch (scope) {
-      case WorkspaceScopeKeys.collection:
-      case WorkspaceScopeKeys.design:
-        return scope;
+export async function importResources({
+  resourceIds,
+  workspaceId,
+  projectId,
+}: {
+  resourceIds: string[];
+  workspaceId?: string;
+  projectId?: string;
+}) {
+  console.log({
+    resourceIds,
+    workspaceId,
+    projectId,
+  });
+  invariant(ResourceCache, 'No resources to import');
 
-      default:
-        return new Promise(resolve => {
-          const message = name
-            ? `How would you like to import "${name}"?`
-            : 'Do you want to import as a Request Collection or a Design Document?';
+  const resources = ResourceCache.resources;
 
-          showModal(AskModal, {
-            title: 'Import As',
-            message,
-            noText: 'Request Collection',
-            yesText: 'Design Document',
-            onDone: async (yes: boolean) => {
-              resolve(yes ? WorkspaceScopeKeys.design : WorkspaceScopeKeys.collection);
-            },
-          });
-        });
-    }
-  };
-}
+  let workspace: Workspace;
 
-export type SetProjectIdPrompt = () => Promise<string>;
-export function askToImportIntoProject({ projects, activeProject }: { projects?: Project[]; activeProject?: Project }): SetProjectIdPrompt {
-  return function() {
-    return new Promise(resolve => {
-      // If only one project exists, return that
-      if (projects?.length === 1) {
-        return resolve(projects[0]._id);
-      }
+  if (workspaceId) {
+    const existingWorkspace = await models.workspace.getById(workspaceId);
 
-      const options = projects?.map(project => ({ name: project.name, value: project._id })) || [];
-      const defaultValue = activeProject?._id || null;
+    invariant(
+      existingWorkspace,
+      `Could not find workspace with id ${workspaceId}`
+    );
 
-      showSelectModal({
-        title: 'Import',
-        message: `Select a ${strings.project.singular.toLowerCase()} to import into`,
-        options,
-        value: defaultValue,
-        onDone: selectedProjectId => {
-          // @ts-expect-error onDone can send null as an argument; why/how?
-          resolve(selectedProjectId);
-        },
-      });
+    workspace = existingWorkspace;
+  } else {
+    workspace = await models.workspace.create({
+      name: 'Imported',
+      parentId: projectId,
     });
+  }
+
+  const bufferId = await db.bufferChanges();
+
+  if (isApiSpecImport(ResourceCache?.type)) {
+    await models.apiSpec.updateOrCreateForParentId(
+      workspace._id,
+      {
+        contents: ResourceCache.content,
+        contentType: 'yaml',
+      }
+    );
+  }
+
+  // Map new IDs
+  const ResourceIdMap = new Map();
+  ResourceIdMap.set(workspaceId, workspace._id);
+
+  for (const resource of resources) {
+    const model = models.MODELS_BY_EXPORT_TYPE[resource._type];
+    ResourceIdMap.set(resource._id, generateId(model.prefix));
+  }
+
+  for (const resource of resources) {
+    const model = models.MODELS_BY_EXPORT_TYPE[resource._type];
+    await db.docCreate(model.type, { ...resource, _id: ResourceIdMap.get(resource._id), parentId: ResourceIdMap.get(resource.parentId) });
+  }
+
+  await db.flushChanges(bufferId);
+
+  return {
+    resources,
+    workspace,
   };
 }

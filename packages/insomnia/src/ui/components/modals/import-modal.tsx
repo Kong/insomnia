@@ -7,9 +7,11 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { useDrop } from 'react-aria';
 import { useFetcher } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { ScanResult } from '../../../common/import';
 import { strings } from '../../../common/strings';
 import {
   isDefaultProject,
@@ -17,10 +19,10 @@ import {
   Project,
 } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
+import coreLogo from '../../images/insomnia-logo.svg';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
-import { ModalBody } from '../base/modal-body';
-import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
+import { Button } from '../themed-button';
 
 interface ImportModalProps extends ModalProps {
   organizationId: string;
@@ -29,6 +31,16 @@ interface ImportModalProps extends ModalProps {
   projects: Project[];
   from: 'file' | 'uri' | 'clipboard';
 }
+
+const Pill = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 'var(--padding-xs)',
+  padding: 'var(--padding-sm)',
+  borderRadius: 'var(--radius-md)',
+  // border: '1px solid var(--hl-md)',
+  fontSize: 'var(--font-size-xs)',
+});
 
 const RadioGroup = styled.div({
   display: 'flex',
@@ -113,21 +125,40 @@ const FileInputLabel = styled.label({
 
 const FileView = styled.div({
   backgroundColor: 'var(--color-bg)',
-  padding: 'var(--padding-xs)',
   borderRadius: 'var(--radius-md)',
   textOverflow: 'ellipsis',
   overflow: 'hidden',
   whiteSpace: 'nowrap',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 'var(--padding-md)',
+  gap: 'var(--padding-sm)',
+  width: '100%',
 });
 
 const FileField: FC = () => {
   const id = useId();
-  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
+  const dropRef = useRef<HTMLLabelElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | undefined>();
+  const {
+    isDropTarget,
+    dropProps,
+  } = useDrop({
+    ref: dropRef,
+    onDrop: async event => {
+      const file = event.items[0].kind === 'file' ? await event.items[0].getFile() : undefined;
 
+      if (file) {
+        setSelectedFile(file);
+      }
+    },
+  });
   return (
     <div>
       <FileInput
-        onChange={e => setSelectedFiles(e.currentTarget.files)}
+        onChange={e => setSelectedFile(e.currentTarget.files?.[0])}
         accept={[
           '',
           'sh',
@@ -143,25 +174,199 @@ const FileField: FC = () => {
         ].join(',')}
         id={id}
         type="file"
-        multiple
       />
-      <FileInputLabel htmlFor={id}>
-        <Fragment>
-          {selectedFiles?.length
-            ? [...selectedFiles].map(file => {
-              return (
-                <Fragment key={file.name}>
-                  <FileView key={file.path}>
-                    <i className="fa fa-file" />
-                    {file.name}
-                  </FileView>
-                  <input type="hidden" name="filePath" value={file.path} />
-                </Fragment>
-              );
-            })
-            : 'Choose Files'}
-        </Fragment>
+      <FileInputLabel
+        {...dropProps}
+        style={{
+          border: isDropTarget ? '1px solid var(--color-surprise)' : undefined,
+        }}
+        htmlFor={id}
+      >
+        {!selectedFile && <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 'var(--padding-md)',
+            gap: 'var(--padding-sm)',
+            width: '100%',
+          }}
+        >
+          <div>
+            <i className="fa fa-upload fa-xl" />
+          </div>
+          <div>
+            Drag and Drop or{' '}
+            <span
+              style={{
+                color: 'var(--color-surprise)',
+              }}
+            >
+              Choose a File
+            </span>{' '}
+            to import
+          </div>
+        </div>}
+        {selectedFile && (
+          <Fragment key={selectedFile.name}>
+            <FileView key={selectedFile.path}>
+              <div>
+                <i className="fa fa-file fa-xl" />
+              </div>
+              {selectedFile.name}
+            </FileView>
+            <input type="hidden" name="filePath" value={selectedFile.path} />
+          </Fragment>
+        )}
       </FileInputLabel>
+    </div>
+  );
+};
+
+const PostmanIcon = props => {
+  return (
+    <svg
+      width={18}
+      height={18}
+      viewBox="0 0 32 32"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M18.038.13a16 16 0 10-4.076 31.74A16 16 0 0018.038.13z"
+        fill="#FF6C37"
+      />
+      <path
+        d="M11.567 17.011a.06.06 0 00.07.032l2.56-.552-1.076-1.091-1.534 1.534a.06.06 0 00-.02.077zM23.555 6.02a2.386 2.386 0 101.005 4.55l-1.623-1.623a.2.2 0 010-.283l2.12-2.118a2.386 2.386 0 00-1.502-.527z"
+        fill="#fff"
+      />
+      <path
+        d="M25.348 6.82L23.361 8.8l1.558 1.558a2.4 2.4 0 00.429-3.538zM21.372 10.474h-.035a.621.621 0 00-.123.01h-.015a.938.938 0 00-.13.04l-.034.015a.627.627 0 00-.093.048l-.035.023a.833.833 0 00-.11.09l-5.892 5.894.73.73 6.24-5.478a.727.727 0 00.096-.102l.027-.035a.87.87 0 00.11-.234c0-.019.011-.038.016-.057a.934.934 0 00.016-.12v-.053-.086c0-.03 0-.039-.008-.058a.778.778 0 00-.61-.613h-.03a.835.835 0 00-.12-.014zM13.396 15.117l1.21 1.203 5.909-5.909c.192-.188.442-.305.71-.331-1.045-.8-2.184-.59-7.829 5.037zM22.207 12.077l-.072.07-6.24 5.475 1.061 1.06c2.63-2.488 4.965-4.858 5.252-6.605zM6.643 24.904a.058.058 0 00.051.041l2.72.188-1.525-1.525-1.233 1.232a.061.061 0 00-.013.064zM8.174 23.325l1.608 1.608a.122.122 0 00.152.02.12.12 0 00.062-.139l-.27-1.155a.346.346 0 01.177-.386c2.82-1.412 5.093-2.867 6.762-4.32l-1.12-1.12-2.4.517-4.971 4.975zM15.201 17.494l-.601-.601-.832.83a.04.04 0 000 .051.038.038 0 00.046.021l1.387-.3z"
+        fill="#fff"
+      />
+      <path
+        d="M25.404 8.11a.185.185 0 10-.33.16.557.557 0 01-.07.602.185.185 0 00.285.237.926.926 0 00.115-.998z"
+        fill="#FF6C37"
+      />
+    </svg>
+  );
+};
+
+const SwaggerIcon = props => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18px"
+      height="18px"
+      viewBox="0 0 256 256"
+      {...props}
+    >
+      <path
+        fill="#85EA2D"
+        d="M127.999 249.895c-67.215 0-121.9-54.68-121.9-121.896C6.1 60.782 60.785 6.102 128 6.102c67.214 0 121.899 54.685 121.899 121.9 0 67.214-54.685 121.893-121.9 121.893z"
+      />
+      <path
+        fill="#173647"
+        d="M127.999 12.202c63.954 0 115.797 51.842 115.797 115.797 0 63.952-51.843 115.797-115.797 115.797-63.952 0-115.797-51.845-115.797-115.797S64.047 12.202 127.999 12.202m0-12.202C57.419 0 0 57.42 0 127.999s57.42 127.998 127.999 127.998S256 198.577 256 128C256 57.419 198.578 0 127.999 0z"
+      />
+      <path
+        fill="#173647"
+        d="M80.598 86.619c-.394 4.38.146 8.909-.146 13.338-.345 4.431-.887 8.811-1.773 13.192-1.23 6.25-5.12 10.976-10.482 14.914 10.436 6.793 11.616 17.324 12.304 28.006.345 5.76.197 11.567.788 17.276.443 4.429 2.165 5.562 6.745 5.708 1.87.048 3.786 0 5.956 0v13.683c-13.535 2.313-24.708-1.525-27.467-12.992-.887-4.184-1.478-8.467-1.673-12.798-.297-4.578.195-9.155-.148-13.732-.985-12.553-2.61-16.785-14.618-17.376v-15.602a23.714 23.714 0 012.608-.443c6.596-.345 9.4-2.364 10.828-8.86.69-3.641 1.084-7.333 1.23-11.074.494-7.136.297-14.42 1.525-21.507C67.997 68.163 74.3 63.24 84.785 62.65c2.952-.149 5.955 0 9.35 0v13.98c-1.427.1-2.658.294-3.937.294-8.515-.297-8.96 2.607-9.6 9.695zm16.39 32.386h-.196c-4.923-.245-9.155 3.593-9.403 8.515-.246 4.972 3.592 9.206 8.515 9.45h.59c4.875.296 9.056-3.447 9.352-8.319v-.491c.1-4.971-3.886-9.055-8.857-9.155zm30.862 0c-4.774-.148-8.763 3.593-8.909 8.318 0 .297 0 .543.051.837 0 5.365 3.641 8.812 9.155 8.812 5.414 0 8.812-3.544 8.812-9.106-.051-5.366-3.646-8.91-9.109-8.86zm31.602 0c-5.02-.1-9.206 3.89-9.352 8.91a9.03 9.03 0 009.055 9.054h.1c4.528.788 9.106-3.592 9.402-8.858.243-4.874-4.186-9.106-9.205-9.106zm43.363.737c-5.711-.245-8.567-2.164-9.992-7.581a54.874 54.874 0 01-1.624-10.582c-.395-6.596-.346-13.241-.789-19.837-1.033-15.651-12.352-21.114-28.794-18.41V76.92c2.607 0 4.626 0 6.645.049 3.495.048 6.153 1.379 6.496 5.268.345 3.543.345 7.136.69 10.73.692 7.139 1.083 14.372 2.314 21.41 1.085 5.809 5.07 10.14 10.04 13.684-8.71 5.857-11.27 14.223-11.714 23.626-.245 6.448-.394 12.944-.736 19.443-.297 5.905-2.362 7.824-8.318 7.972-1.674.05-3.298.198-5.169.297v13.93c3.495 0 6.694.196 9.892 0 9.942-.592 15.947-5.415 17.918-15.063a125.582 125.582 0 001.476-16.045c.343-4.923.297-9.894.788-14.766.737-7.63 4.232-10.78 11.862-11.27.739-.1 1.427-.246 2.118-.492v-15.604c-1.282-.149-2.17-.295-3.103-.346z"
+      />
+    </svg>
+  );
+};
+
+const OpenAPIIcon = props => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={17}
+      height={17}
+      viewBox="0 0 512 512"
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        d="M.204 294.376l135.073-.002a91.735 91.735 0 008.452 30.17L27.94 394.298C12.75 368.103 3.166 334.783.204 294.376zm131.802 196.803l51.407-124.841a91.475 91.475 0 01-14.938-9.955l-95.47 95.472c19.49 17.557 39.562 30.71 59.001 39.324zm-65.604-45.647l95.284-95.286c-4.933-4.963-9.482-10.85-13.667-17.616L32.512 402.213c10.491 17.069 22.148 31.847 33.89 43.319zm313.997 6.327l-95.53-95.525a91.813 91.813 0 01-3.184 2.466l69.71 115.72c9.73-6.055 19.39-13.823 29.004-22.66zm-36.74 27.532l-69.565-115.479c-25.964 14.5-53.318 17.553-82.406 6.337l-51.301 124.583c70.2 28.467 142.961 20.313 203.272-15.441zM171.713 211.67L102.005 95.95c-10.164 6.523-19.819 14.106-29.006 22.66l95.527 95.527a135.39 135.39 0 013.187-2.467zM0 285.236l134.762-.002c.291-23.838 8.71-45.682 26.928-65.006l-95.287-95.287C22.416 171.553.512 225.056 0 285.236zm226.694-91.938L226.7 58.54c-44.728.274-84.005 12.326-116.96 32.539l69.563 115.48c13.077-7.677 28.664-12.98 47.39-13.26zm186.404-37.118l-99.449 99.452a93.73 93.73 0 014.453 20.46h135.09c-.883-40.98-14.404-80.939-40.094-119.912zm40.28 129.052H318.631c-.468 25.24-9.9 48.244-26.924 65.014l95.29 95.286c43.82-43.123 65.122-96.948 66.381-160.3zM235.84 58.74l-.006 135.087c7.082.802 13.883 2.342 20.466 4.455l99.415-99.415c-35.132-24.575-76.54-38.362-119.875-40.127zM430.95 2.597c-39.165 11.457-55.533 55.183-38.782 88.672L254.808 228.63c-32.407-16.157-74.902-1.57-87.795 36.034-15.716 45.84 24.243 91.802 71.754 82.533 42.01-8.196 62.31-54.188 44.466-90.01L420.722 119.7c34.66 17.226 79.533-1.065 89.396-41.654 11.43-47.037-32.658-89.054-79.168-75.449z"
+      />
+    </svg>
+  );
+};
+
+const CurlIcon = props => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={18}
+      height={18}
+      viewBox="0 0 123.184 102.926"
+      {...props}
+    >
+      <defs>
+        <symbol overflow="visible">
+          <path
+            d="M73.36 0v-84.172H13.233V0zm-9.626-78.156L43.297-47.5 22.844-78.156zm3.61 66.734L46.89-42.094 67.344-72.75zm-44.5 5.406l20.453-30.656L63.734-6.016zm-3.61-66.734l20.453 30.656-20.453 30.672zm0 0"
+            stroke="none"
+          />
+        </symbol>
+        <symbol overflow="visible">
+          <path
+            d="M15.031-26.813c0 7.094 1.328 10.579 6.86 15.141l8.53 7.11C35.829-.125 38.595 0 45.329 0H63.61c3.844 0 7.938-.844 7.938-5.766 0-5.062-4.563-5.78-7.938-5.78H43.297c-2.297 0-4.578-1.204-6.625-2.892l-6.969-5.89c-1.812-1.438-3.125-2.64-3.125-4.922v-14.313c0-2.28 1.313-3.484 3.125-4.937l6.969-5.89c2.047-1.672 4.328-2.876 6.625-2.876h20.312c3.375 0 7.938-.734 7.938-5.78 0-4.923-4.094-5.767-7.938-5.767H45.33c-6.735 0-9.5.126-14.907 4.563l-8.531 7.094c-5.532 4.578-6.86 8.062-6.86 15.156zm0 0"
+            stroke="none"
+          />
+        </symbol>
+        <symbol overflow="visible">
+          <path
+            d="M71.547-56.875c0-3.969-.844-7.938-5.766-7.938-4.937 0-5.781 3.97-5.781 7.938v33.547L43.047-12.625c-1.078.719-2.281 1.078-3.61 1.078h-3.843c-2.766 0-5.766-.719-6.735-2.406-.968-1.672-1.078-4.813-1.203-7.453l-1.203-35.469c-.125-3.734-.719-7.938-5.656-7.938-5.281 0-5.89 4.454-5.766 8.657l1.203 36.312c.235 6.25.125 11.188 5.297 15.64C25.375-.968 28.984 0 32.234 0h8.532c3.125 0 6.25-1.438 9.984-3.844l9.375-6.14v1.921c0 3.97.844 8.063 5.766 8.063 6.14 0 5.656-5.89 5.656-8.531zm0 0"
+            stroke="none"
+          />
+        </symbol>
+        <symbol overflow="visible">
+          <path
+            d="M15.031-7.938c0 3.97.844 7.938 5.766 7.938 4.937 0 5.781-3.969 5.781-7.938v-29.218L42.688-50.5c2.046-1.688 3.609-2.766 5.765-2.766h3.375c2.766 0 5.531 0 6.969 2.047C60-49.547 60-48.094 60-46.172c0 3.719 1.688 7.094 5.89 7.094 4.938 0 5.657-4.094 5.657-8.063 0-5.28-1.328-9.25-5.172-13.109-3.125-3.125-6.844-4.563-11.297-4.563h-9.266c-3.609 0-6.968 2.282-10.218 4.922l-9.016 7.47v-4.704c0-3.844-1.203-7.688-5.781-7.688-5.281 0-5.766 4.329-5.766 8.532zm0 0"
+            stroke="none"
+          />
+        </symbol>
+        <symbol overflow="visible">
+          <path
+            d="M49.297-80.563c0-6.859-1.922-8.062-8.531-8.062H28.625c-3.86 0-7.938.844-7.938 5.766 0 5.062 4.563 5.78 7.938 5.78h9.14v65.532h-9.14c-3.86 0-7.938.844-7.938 5.781C20.688-.719 25.25 0 28.625 0h29.328c3.375 0 7.938-.719 7.938-5.766 0-4.937-4.079-5.78-7.938-5.78h-8.656zm0 0"
+            stroke="none"
+          />
+        </symbol>
+      </defs>
+      <path
+        d="M114.102 14.043a4.96 4.96 0 01-4.961-4.961 4.958 4.958 0 014.96-4.96 4.96 4.96 0 110 9.921M64.833 98.805a4.96 4.96 0 01-4.96-4.961 4.958 4.958 0 014.96-4.961 4.957 4.957 0 014.957 4.96 4.96 4.96 0 01-4.957 4.962M114.102 0a9.082 9.082 0 00-9.082 9.082c0 1.07.27 2.066.609 3.02L63.023 85.125c-4.117.863-7.273 4.344-7.273 8.719a9.082 9.082 0 009.082 9.082c5.012 0 9.078-4.067 9.078-9.082 0-1.008-.27-1.93-.57-2.836l42.82-73.262c3.992-.957 7.024-4.379 7.024-8.664A9.082 9.082 0 00114.102 0"
+        fill="#0c544c"
+        fillOpacity={1}
+        fillRule="nonzero"
+        stroke="none"
+      />
+      <path
+        d="M76.941 14.043a4.96 4.96 0 01-4.96-4.961 4.958 4.958 0 014.96-4.96 4.957 4.957 0 014.957 4.96 4.96 4.96 0 01-4.957 4.961M27.668 98.805a4.96 4.96 0 110-9.922 4.958 4.958 0 014.96 4.96 4.96 4.96 0 01-4.96 4.962M76.941 0a9.08 9.08 0 00-9.082 9.082c0 1.07.27 2.066.61 3.02L25.863 85.125c-4.12.863-7.277 4.344-7.277 8.719a9.082 9.082 0 0018.164 0c0-1.008-.27-1.93-.57-2.836L79 17.746c3.992-.957 7.023-4.379 7.023-8.664 0-5.016-4.07-9.082-9.082-9.082M9.082 29.227a4.963 4.963 0 014.961 4.96 4.96 4.96 0 11-4.96-4.96M9.081 43.27a9.082 9.082 0 009.082-9.082c0-1.004-.273-1.93-.574-2.836-1.203-3.606-4.5-6.247-8.508-6.247-.64 0-1.203.239-1.809.368C3.156 26.332 0 29.813 0 34.188a9.082 9.082 0 009.082 9.082M4.121 65.922a4.96 4.96 0 119.922 0 4.96 4.96 0 01-4.961 4.957 4.96 4.96 0 01-4.96-4.957m14.042 0c0-1.008-.273-1.93-.574-2.836-1.203-3.606-4.496-6.246-8.508-6.246-.64 0-1.203.238-1.809.363C3.156 58.066 0 61.547 0 65.922c0 5.012 4.066 9.082 9.082 9.082 5.016 0 9.082-4.07 9.082-9.082"
+        fill="#073551"
+        fillOpacity={1}
+        fillRule="nonzero"
+        stroke="none"
+      />
+    </svg>
+  );
+};
+
+const HARFileIcon = () => {
+  return (
+    <div>
+      <i className="fa-regular fa-file" />
+    </div>
+  );
+};
+
+const WSDLFileIcon = () => {
+  return (
+    <div>
+      <i className="fa-regular fa-file" />
     </div>
   );
 };
@@ -175,166 +380,358 @@ export const ImportModal: FC<ImportModalProps> = ({
   ...modalProps
 }) => {
   const modalRef = useRef<ModalHandle>(null);
-  const { data, state, submit, load } = useFetcher();
+  const { data, submit } = useFetcher<ScanResult>();
+
+  const [importFrom, setImportFrom] = useState(from || 'uri');
+
+  useEffect(() => {
+    modalRef.current?.show();
+  });
+
+  return (
+    <Modal {...modalProps} ref={modalRef}>
+      <ModalHeader>Import to Insomnia</ModalHeader>
+      <div>
+        {data?.resources?.length ? (
+          <ImportResourcesForm
+            organizationId={organizationId}
+            defaultProjectId={defaultProjectId}
+            defaultWorkspaceId={defaultWorkspaceId}
+            resources={data}
+            projects={projects}
+          />
+        ) : (
+          <Fragment>
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                submit(e.currentTarget, {
+                  method: 'post',
+                  action: '/import/scan',
+                });
+              }}
+              method="post"
+              action={`/import/${importFrom}`}
+              id="workspace-import-form"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--padding-sm)',
+              }}
+            >
+              <Fieldset>
+                <RadioGroup>
+                  <Radio
+                    onChange={() => setImportFrom('file')}
+                    name="importFrom"
+                    value="file"
+                    checked={importFrom === 'file'}
+                  >
+                    <i className="fa fa-plus" />
+                    File
+                  </Radio>
+                  <Radio
+                    onChange={() => setImportFrom('uri')}
+                    name="importFrom"
+                    value="uri"
+                    checked={importFrom === 'uri'}
+                  >
+                    <i className="fa fa-link" />
+                    Url
+                  </Radio>
+                  <Radio
+                    onChange={() => setImportFrom('clipboard')}
+                    name="importFrom"
+                    value="clipboard"
+                    checked={importFrom === 'clipboard'}
+                  >
+                    <i className="fa fa-clipboard" />
+                    Clipboard
+                  </Radio>
+                </RadioGroup>
+              </Fieldset>
+              {importFrom === 'file' && <FileField />}
+              {importFrom === 'uri' && (
+                <div className="form-control form-control--outlined">
+                  <label>
+                    Url:
+                    <input
+                      type="text"
+                      name="uri"
+                      placeholder="https://website.com/insomnia-import.json"
+                    />
+                  </label>
+                </div>
+              )}
+            </form>
+          </Fragment>
+        )}
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          gap: 'var(--padding-sm)',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+        }}
+      >
+        <div
+          style={{
+            opacity: data?.resources?.length ? 0 : 1,
+          }}
+        >
+          <div
+            style={{
+              paddingBottom: 'var(--padding-sm)',
+            }}
+          >
+            Supported Formats
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              gap: 'var(--padding-sm)',
+            }}
+          >
+            <Pill>
+              <PostmanIcon />
+              Postman
+            </Pill>
+            <Pill>
+              <SwaggerIcon />
+              Swagger
+            </Pill>
+            <Pill>
+              <OpenAPIIcon />
+              OpenAPI
+            </Pill>
+            <Pill>
+              <WSDLFileIcon />
+              WSDL
+            </Pill>
+            <Pill>
+              <HARFileIcon />
+              HAR
+            </Pill>
+            <Pill>
+              <CurlIcon />
+              cURL
+            </Pill>
+          </div>
+        </div>
+        <Button
+          variant="contained"
+          bg="surprise"
+          type="submit"
+          style={{
+            height: '40px',
+            gap: 'var(--padding-sm)',
+          }}
+          form={
+            data?.resources?.length
+              ? 'import-resources-form'
+              : 'workspace-import-form'
+          }
+          className="btn"
+        >
+          <i className="fa fa-file-import" />{' '}
+          {data?.resources?.length ? 'Import' : 'Scan'}
+        </Button>
+      </div>
+    </Modal>
+  );
+};
+
+const ImportResourcesForm = ({
+  resources,
+  defaultProjectId,
+  defaultWorkspaceId,
+  organizationId,
+  projects,
+}: {
+  resources: ScanResult;
+  organizationId: string;
+  defaultProjectId?: string;
+  defaultWorkspaceId?: string;
+  projects: Project[];
+}) => {
+  const importFetcher = useFetcher();
+  const workspacesFetcher = useFetcher<{ workspaces: Workspace[] }>();
 
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(
     defaultWorkspaceId || 'create-new-workspace-id'
   );
 
-  const [importFrom, setImportFrom] = useState(from || 'uri');
-
-  const newWorkspace = {
-    _id: 'create-new-workspace-id',
-    name: '+ Create New Workspace',
-  };
-
-  const workspaces: Workspace[] = [...(data?.workspaces ?? []), newWorkspace];
-
   useEffect(() => {
-    modalRef.current?.show();
-    if (defaultProjectId && state === 'idle' && !data) {
-      load(`/organization/${organizationId}/project/${defaultProjectId}`);
+    if (workspacesFetcher.state === 'idle' && !workspacesFetcher.data) {
+      workspacesFetcher.load(
+        `/organization/${organizationId}/project/${defaultProjectId}`
+      );
     }
-  }, [data, defaultProjectId, load, organizationId, state]);
+  }, [
+    defaultProjectId,
+    organizationId,
+    selectedWorkspaceId,
+    workspacesFetcher,
+  ]);
+
+  const workspaces: Partial<Workspace>[] = [
+    ...(workspacesFetcher?.data?.workspaces || []),
+    {
+      _id: 'create-new-workspace-id',
+      name: '+ Create New Workspace',
+    },
+  ];
+
+  const requests = resources.resources.filter(resource =>
+    ['request'].includes(resource._type)
+  );
 
   return (
-    <Modal {...modalProps} ref={modalRef}>
-      <ModalHeader>{'Import to Insomnia'}</ModalHeader>
-      <ModalBody className="wide">
-        <form
-          onSubmit={e => {
-            e.preventDefault();
-            submit(e.currentTarget, {
-              method: 'post',
-              action:`/import/${importFrom}`,
-            });
-          }}
-          method="post"
-          action={`/import/${importFrom}`}
-          id="workspace-import-form"
-          className="wide pad"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 'var(--padding-sm)',
-          }}
-        >
-          <Fieldset>
-            <legend>
-              <strong>Import from:</strong>
-            </legend>
-            <RadioGroup>
-              <Radio
-                onChange={() => setImportFrom('file')}
-                name="importFrom"
-                value="file"
-                checked={importFrom === 'file'}
-              >
-                <i className="fa fa-plus" />
-                File
-              </Radio>
-              <Radio
-                onChange={() => setImportFrom('uri')}
-                name="importFrom"
-                value="uri"
-                checked={importFrom === 'uri'}
-              >
-                <i className="fa fa-link" />
-                Url
-              </Radio>
-              <Radio
-                onChange={() => setImportFrom('clipboard')}
-                name="importFrom"
-                value="clipboard"
-                checked={importFrom === 'clipboard'}
-              >
-                <i className="fa fa-clipboard" />
-                Clipboard
-              </Radio>
-            </RadioGroup>
-          </Fieldset>
-          {importFrom === 'file' && <FileField />}
-          {importFrom === 'uri' && (
+    <Fragment>
+      <div
+        style={{
+          display: 'flex',
+          gap: 'var(--padding-sm)',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+        }}
+      >
+        {resources.type?.id.includes('insomnia') && (
+          <div>
+            <img width="18px" src={coreLogo} />
+          </div>
+        )}
+        {resources.type?.id.includes('postman') && (
+          <PostmanIcon />
+        )}
+        {resources.type?.id.includes('swagger') && (
+          <SwaggerIcon />
+        )}
+        {resources.type?.id.includes('openapi') && (
+          <OpenAPIIcon />
+        )}
+        {resources.type?.id.includes('wsdl') && (
+          <WSDLFileIcon />
+        )}
+        {resources.type?.id.includes('har') && (
+          <HARFileIcon />
+        )}
+        {resources.type?.id.includes('curl') && (
+          <CurlIcon />
+        )}
+        <i className="fa fa-arrow-right" />
+        <div>
+          <img width="18px" src={coreLogo} />
+        </div>
+      </div>
+      <table className="table--fancy table--outlined margin-top-sm">
+        <thead>
+          <tr className="table--no-outline-row">
+            <th>Resources to be imported:</th>
+          </tr>
+        </thead>
+        <tbody>
+          {resources.workspace && (
+            <tr
+              key={resources.workspace._id}
+              className="table--no-outline-row"
+            >
+              <td>
+                Collection with {requests.length}{' '}
+                {requests.length === 1 ? 'Request' : 'Requests'}
+              </td>
+            </tr>
+          )}
+          {resources.apiSpec && (
+            <tr key={resources.apiSpec._id} className="table--no-outline-row">
+              <td>
+                OpenAPI Spec:{' '}
+                {resources.apiSpec.name || resources.apiSpec.fileName}
+              </td>
+            </tr>
+          )}
+          {resources.environments && resources.environments.length > 0 && (
+            <tr className="table--no-outline-row">
+              <td>
+                {resources.environments.length}{' '}
+                {resources.environments.length === 1
+                  ? 'Environment'
+                  : 'Environments'}
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          importFetcher.submit(e.currentTarget, {
+            method: 'post',
+            action: '/import/resources',
+          });
+        }}
+        method="post"
+        action="/import/resources"
+        id="import-resources-form"
+      >
+        <div className="form-control form-control--outlined">
+          <label>
+            {strings.project.singular}:
+            <select
+              onChange={e =>
+                workspacesFetcher.load(
+                  `/organization/${organizationId}/project/${e.currentTarget.value}`
+                )
+              }
+              defaultValue={defaultProjectId}
+              name="projectId"
+            >
+              {projects.map(project => (
+                <option key={project._id} value={project._id}>
+                  {project.name} (
+                  {isDefaultProject(project)
+                    ? strings.defaultProject.singular
+                    : isLocalProject(project)
+                      ? strings.localProject.singular
+                      : strings.remoteProject.singular}
+                  )
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="form-control form-control--outlined">
+          <label>
+            {strings.workspace.singular}:
+            <select
+              onChange={e => {
+                setSelectedWorkspaceId(e.currentTarget.value);
+              }}
+              defaultValue={selectedWorkspaceId}
+              name="workspaceId"
+            >
+              {workspaces.map(workspace => (
+                <option key={workspace._id} value={workspace._id}>
+                  {workspace.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        {selectedWorkspaceId === 'create-new-workspace-id' && (
+          <Fragment>
             <div className="form-control form-control--outlined">
               <label>
-                Url:
-                <input type="text" name="uri" placeholder='https://website.com/insomnia-import.json' />
+                {strings.workspace.singular} Name:
+                <input type="text" name="name" defaultValue="New Workspace" />
               </label>
             </div>
-          )}
-          <div className="form-control form-control--outlined">
-            <label>
-              {strings.project.singular}:
-              <select
-                onChange={e => load(`/project/${e.currentTarget.value}`)}
-                defaultValue={defaultProjectId}
-                name="projectId"
-              >
-                {projects.map(project => (
-                  <option key={project._id} value={project._id}>
-                    {project.name} (
-                    {isDefaultProject(project)
-                      ? strings.defaultProject.singular
-                      : isLocalProject(project)
-                        ? strings.localProject.singular
-                        : strings.remoteProject.singular}
-                    )
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="form-control form-control--outlined">
-            <label>
-              {strings.workspace.singular}:
-              <select
-                onChange={e => {
-                  setSelectedWorkspaceId(e.currentTarget.value);
-                }}
-                defaultValue={selectedWorkspaceId}
-                name="workspaceId"
-              >
-                {workspaces.map(workspace => (
-                  <option key={workspace._id} value={workspace._id}>
-                    {workspace.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          {selectedWorkspaceId === 'create-new-workspace-id' && (
-            <Fragment>
-              <div className="form-control form-control--outlined">
-                <label>
-                  {strings.workspace.singular} Name:
-                  <input type="text" name="name" defaultValue="New Workspace" />
-                </label>
-              </div>
-              <Fieldset>
-                <legend>
-                  <strong>Import as:</strong>
-                </legend>
-                <RadioGroup>
-                  <Radio defaultChecked name="scope" value="collection">
-                    <i className="fa fa-bars" />
-                    Collection
-                  </Radio>
-                  <Radio name="scope" value="design">
-                    <i className="fa fa-file-o" />
-                    Document
-                  </Radio>
-                </RadioGroup>
-              </Fieldset>
-            </Fragment>
-          )}
-          <input hidden name="organizationId" value={organizationId} />
-        </form>
-      </ModalBody>
-      <ModalFooter>
-        <button type="submit" form="workspace-import-form" className="btn">
-          Import
-        </button>
-      </ModalFooter>
-    </Modal>
+          </Fragment>
+        )}
+        <input hidden name="organizationId" value={organizationId} />
+      </form>
+    </Fragment>
   );
 };
