@@ -12,7 +12,6 @@ import { useDrop } from 'react-aria';
 import { useFetcher } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { ScanResult } from '../../../common/import';
 import { strings } from '../../../common/strings';
 import {
   isDefaultProject,
@@ -20,6 +19,7 @@ import {
   Project,
 } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
+import { ImportResourcesActionResult, ScanForResourcesActionResult } from '../../routes/import';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalHeader } from '../base/modal-header';
 import { Button } from '../themed-button';
@@ -238,17 +238,17 @@ const InsomniaIcon = props => {
     >
       <path
         d="M16 31.186c8.387 0 15.186-6.799 15.186-15.186S24.387.814 16 .814.814 7.613.814 16 7.613 31.186 16 31.186z"
-        fill="var(--color-font)"
+        fill="var(--color-bg)"
       />
       <path
         d="M16 0C7.163 0 0 7.163 0 16s7.163 16 16 16 16-7.163 16-16S24.837 0 16 0zm0 1.627c7.938 0 14.373 6.435 14.373 14.373S23.938 30.373 16 30.373 1.627 23.938 1.627 16 8.062 1.627 16 1.627z"
-        fill="var(--color-bg)"
+        fill="var(--color-font)"
       />
       <path
         fillRule="evenodd"
         clipRule="evenodd"
         d="M16.18 4.61c6.291 0 11.39 5.1 11.39 11.39 0 6.29-5.099 11.39-11.39 11.39-6.29 0-11.39-5.1-11.39-11.39 0-1.537.305-3.004.858-4.342a4.43 4.43 0 106.192-6.192 11.357 11.357 0 014.34-.856z"
-        fill="var(--color-bg)"
+        fill="var(--color-font)"
       />
       <defs>
         <linearGradient
@@ -414,25 +414,6 @@ const WSDLFileIcon = () => {
   );
 };
 
-const ConnectionIcon = () => {
-  return (
-    <svg
-      width="64"
-      height="32"
-      viewBox="0 0 60 32"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="currentColor"
-    >
-      <path
-        d="M0 16h60"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeDasharray="4 4"
-      />
-    </svg>
-  );
-};
-
 export const ImportModal: FC<ImportModalProps> = ({
   projects,
   defaultProjectId,
@@ -442,30 +423,22 @@ export const ImportModal: FC<ImportModalProps> = ({
   ...modalProps
 }) => {
   const modalRef = useRef<ModalHandle>(null);
-  const { data, submit } = useFetcher<ScanResult>();
-  const importFetcher = useFetcher();
+  const scanResourcesFetcher = useFetcher<ScanForResourcesActionResult>();
+  const importFetcher = useFetcher<ImportResourcesActionResult>();
 
   useEffect(() => {
     modalRef.current?.show();
-  });
-
-  useEffect(() => {
-    if (data?.resources?.length) {
-      modalRef.current?.hide();
-    }
   }, []);
-
-  const hasResources = typeof data?.resources?.length !== 'undefined';
 
   return (
     <Modal {...modalProps} ref={modalRef}>
       <ModalHeader>Import to Insomnia</ModalHeader>
-      {hasResources ? (
+      {scanResourcesFetcher.data ? (
         <ImportResourcesForm
           organizationId={organizationId}
           defaultProjectId={defaultProjectId}
           defaultWorkspaceId={defaultWorkspaceId}
-          resources={data}
+          scanResult={scanResourcesFetcher.data}
           projects={projects}
           onSubmit={e => {
             importFetcher.submit(e.currentTarget, {
@@ -479,7 +452,7 @@ export const ImportModal: FC<ImportModalProps> = ({
           from={from}
           onSubmit={e => {
             e.preventDefault();
-            submit(e.currentTarget, {
+            scanResourcesFetcher.submit(e.currentTarget, {
               method: 'post',
               action: '/import/scan',
             });
@@ -628,15 +601,21 @@ const ScanResourcesForm = ({
   );
 };
 
+const ImportTypeTitle = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 'var(--padding-sm)',
+});
+
 const ImportResourcesForm = ({
-  resources,
+  scanResult,
   defaultProjectId,
   defaultWorkspaceId,
   organizationId,
   projects,
   onSubmit,
 }: {
-  resources: ScanResult;
+  scanResult: ScanForResourcesActionResult;
   organizationId: string;
   defaultProjectId?: string;
   defaultWorkspaceId?: string;
@@ -667,93 +646,15 @@ const ImportResourcesForm = ({
     ...(workspacesFetcher?.data?.workspaces || []),
     {
       _id: 'create-new-workspace-id',
-      name: '+ Create New Workspace',
+      name: '+ Create New File',
     },
   ];
 
-  const requests = resources.resources.filter(resource =>
-    ['request'].includes(resource._type)
-  );
-
   const id = useId();
-  const isImporting = isPending; // importFetcher.state !== 'idle';
-  console.log({ workspaces });
+
   return (
     <Fragment>
       <div>
-        <div
-          style={{
-            display: 'flex',
-            gap: 'var(--padding-sm)',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%',
-            padding: 'var(--padding-md)',
-          }}
-        >
-          {resources.type?.id.includes('insomnia') && (
-            <div>
-              <InsomniaIcon width={32} height={32} />
-            </div>
-          )}
-          {resources.type?.id.includes('postman') && (
-            <PostmanIcon width={32} height={32} />
-          )}
-          {resources.type?.id.includes('swagger') && (
-            <SwaggerIcon width={32} height={32} />
-          )}
-          {resources.type?.id.includes('openapi') && (
-            <OpenAPIIcon width={32} height={32} />
-          )}
-          {resources.type?.id.includes('wsdl') && (
-            <WSDLFileIcon width={32} height={32} />
-          )}
-          {resources.type?.id.includes('har') && (
-            <HARFileIcon width={32} height={32} />
-          )}
-          {resources.type?.id.includes('curl') && (
-            <CurlIcon width={32} height={32} />
-          )}
-          <ConnectionIcon />
-          <div>
-            <InsomniaIcon width={32} height={32} />
-          </div>
-        </div>
-        <table className="table--fancy table--outlined margin-top-sm">
-          <thead>
-            <tr className="table--no-outline-row">
-              <th>Resources to be imported:</th>
-            </tr>
-          </thead>
-          <tbody>
-            {resources.workspace && (
-              <tr key={resources.workspace._id} className="table--no-outline-row">
-                <td>
-                  Collection with {requests.length}{' '}
-                  {requests.length === 1 ? 'Request' : 'Requests'}
-                </td>
-              </tr>
-            )}
-            {resources.apiSpec && (
-              <tr key={resources.apiSpec._id} className="table--no-outline-row">
-                <td>
-                  OpenAPI Spec:{' '}
-                  {resources.apiSpec.name || resources.apiSpec.fileName}
-                </td>
-              </tr>
-            )}
-            {resources.environments && resources.environments.length > 0 && (
-              <tr className="table--no-outline-row">
-                <td>
-                  {resources.environments.length}{' '}
-                  {resources.environments.length === 1
-                    ? 'Environment'
-                    : 'Environments'}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
         <form
           onSubmit={e => {
             e.preventDefault();
@@ -766,10 +667,35 @@ const ImportResourcesForm = ({
           action="/import/resources"
           id={id}
         >
-          <div className="form-control form-control--outlined">
-            <label>
-              {strings.project.singular}:
+          <div
+            style={{
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: '500',
+              paddingBottom: 'var(--padding-sm)',
+            }}
+          >
+            Import to:
+          </div>
+          <div
+            style={{
+              border: '1px solid var(--hl-sm)',
+              borderRadius: 'var(--radius-md)',
+              overflow: 'hidden',
+              display: 'flex',
+            }}
+          >
+            <div
+              style={{
+                margin: 0,
+              }}
+              className="form-control form-control--outlined"
+            >
               <select
+                style={{
+                  border: 'none',
+                  borderRadius: 0,
+                  margin: 0,
+                }}
                 onChange={e =>
                   workspacesFetcher.load(
                     `/organization/${organizationId}/project/${e.currentTarget.value}`
@@ -790,12 +716,19 @@ const ImportResourcesForm = ({
                   </option>
                 ))}
               </select>
-            </label>
-          </div>
-          <div className="form-control form-control--outlined">
-            <label>
-              {strings.workspace.singular}:
+            </div>
+            <div
+              style={{
+                margin: 0,
+              }}
+              className="form-control form-control--outlined"
+            >
               <select
+                style={{
+                  border: 'none',
+                  borderRadius: 0,
+                  margin: 0,
+                }}
                 onChange={e => {
                   setSelectedWorkspaceId(e.target.value);
                 }}
@@ -808,20 +741,119 @@ const ImportResourcesForm = ({
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
+            {selectedWorkspaceId === 'create-new-workspace-id' && (
+              <Fragment>
+                <div
+                  style={{
+                    margin: 0,
+                  }}
+                  className="form-control form-control--outlined"
+                >
+                  <input
+                    style={{
+                      border: 'none',
+                      margin: 0,
+                    }}
+                    autoFocus
+                    type="text"
+                    name="name"
+                    defaultValue="Untitled"
+                  />
+                </div>
+              </Fragment>
+            )}
           </div>
-          {selectedWorkspaceId === 'create-new-workspace-id' && (
-            <Fragment>
-              <div className="form-control form-control--outlined">
-                <label>
-                  {strings.workspace.singular} Name:
-                  <input type="text" name="name" defaultValue="New Workspace" />
-                </label>
-              </div>
-            </Fragment>
-          )}
           <input hidden name="organizationId" readOnly value={organizationId} />
         </form>
+        <table className="table--fancy table--outlined margin-top-sm">
+          <thead>
+            <tr className="table--no-outline-row">
+              <th>
+                <ImportTypeTitle>
+                  {scanResult.type?.id.includes('insomnia') && (
+                    <Fragment>
+                      <InsomniaIcon width={24} height={24} />
+                      Insomnia
+                    </Fragment>
+                  )}
+                  {scanResult.type?.id.includes('postman') && (
+                    <Fragment>
+                      <PostmanIcon width={24} height={24} />
+                      Postman
+                    </Fragment>
+                  )}
+                  {scanResult.type?.id.includes('swagger') && (
+                    <Fragment>
+                      <SwaggerIcon width={24} height={24} />
+                      Swagger
+                    </Fragment>
+                  )}
+                  {scanResult.type?.id.includes('openapi') && (
+                    <Fragment>
+                      <OpenAPIIcon width={24} height={24} />
+                      OpenAPI
+                    </Fragment>
+                  )}
+                  {scanResult.type?.id.includes('wsdl') && (
+                    <Fragment>
+                      <WSDLFileIcon width={24} height={24} />
+                      WSDL
+                    </Fragment>
+                  )}
+                  {scanResult.type?.id.includes('har') && (
+                    <Fragment>
+                      <HARFileIcon width={24} height={24} />
+                      HAR
+                    </Fragment>
+                  )}
+                  {scanResult.type?.id.includes('curl') && (
+                    <Fragment>
+                      <CurlIcon width={24} height={24} />
+                      cURL
+                    </Fragment>
+                  )}
+                  {' '} resources to be imported:
+                </ImportTypeTitle>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {scanResult.workspace && (
+              <tr key={scanResult.workspace._id} className="table--no-outline-row">
+                <td>
+                  Collection with {scanResult.requests?.length}{' '}
+                  {scanResult.requests?.length === 1 ? 'Request' : 'Requests'}
+                </td>
+              </tr>
+            )}
+            {!scanResult.workspace && (
+              <tr key={scanResult.requests?.[0]?._id} className="table--no-outline-row">
+                <td>
+                  {scanResult.requests?.length === 1 ? 'Request' : 'Requests'}
+                </td>
+              </tr>
+            )}
+            {scanResult.apiSpec && (
+              <tr key={scanResult.apiSpec._id} className="table--no-outline-row">
+                <td>
+                  OpenAPI Spec:{' '}
+                  {scanResult.apiSpec.name || scanResult.apiSpec.fileName}
+                </td>
+              </tr>
+            )}
+            {scanResult.environments && scanResult.environments.length > 0 && (
+              <tr className="table--no-outline-row">
+                <td>
+                  {scanResult.environments.length}{' '}
+                  {scanResult.environments.length === 1
+                    ? 'Environment'
+                    : 'Environments'}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
       <div
         style={{
@@ -836,7 +868,7 @@ const ImportResourcesForm = ({
           variant="contained"
           bg="surprise"
           type="submit"
-          disabled={isImporting}
+          disabled={isPending}
           style={{
             height: '40px',
             gap: 'var(--padding-sm)',
@@ -844,7 +876,7 @@ const ImportResourcesForm = ({
           form={id}
           className="btn"
         >
-          {isImporting ? <div><i className="fa fa-spinner fa-spin" /> Importing</div> : <div><i className="fa fa-file-import" /> Import</div>}
+          {isPending ? <div><i className="fa fa-spinner fa-spin" /> Importing</div> : <div><i className="fa fa-file-import" /> Import</div>}
         </Button>
       </div>
     </Fragment>

@@ -498,7 +498,6 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({
   await importResources({
     projectId,
     workspaceId,
-    resourceIds: [],
   });
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_DEBUG}`);

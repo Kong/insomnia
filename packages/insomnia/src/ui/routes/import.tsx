@@ -1,8 +1,9 @@
 // Import
 import { clipboard } from 'electron';
-import { ActionFunction } from 'react-router-dom';
+import { ActionFunction, redirect } from 'react-router-dom';
 
-import { fetchImportContentFromURI, importResources, scanResources } from '../../common/import';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
+import { fetchImportContentFromURI, importResources, scanResources, ScanResult } from '../../common/import';
 import * as models from '../../models';
 import { WorkspaceScope } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
@@ -13,7 +14,9 @@ function guard<T>(condition: any, value: any): asserts value is T {
   }
 }
 
-export const scanForResourcesAction: ActionFunction = async ({ request }) => {
+export interface ScanForResourcesActionResult extends ScanResult {}
+
+export const scanForResourcesAction: ActionFunction = async ({ request }): Promise<ScanForResourcesActionResult> => {
   const formData = await request.formData();
 
   const source = formData.get('importFrom');
@@ -30,7 +33,7 @@ export const scanForResourcesAction: ActionFunction = async ({ request }) => {
     });
   } else if (source === 'file') {
     const filePath = formData.get('filePath');
-    invariant(typeof filePath === 'string', 'URI is required.');
+    invariant(typeof filePath === 'string', 'File path is required.');
     const uri = `file://${filePath}`;
 
     content = await fetchImportContentFromURI({
@@ -41,7 +44,9 @@ export const scanForResourcesAction: ActionFunction = async ({ request }) => {
   }
 
   if (!content) {
-    throw new Error('The URI does not contain a valid specification.');
+    return {
+      errors: ['No content to import'],
+    };
   }
 
   const result = await scanResources({ content });
@@ -49,10 +54,12 @@ export const scanForResourcesAction: ActionFunction = async ({ request }) => {
   return result;
 };
 
-export const importResourcesAction: ActionFunction = async ({ request }) => {
-  const formData = await request.formData();
+export interface ImportResourcesActionResult {
+  errors?: string[];
+}
 
-  const resourceIds = formData.getAll('resourceId') as string[];
+export const importResourcesAction: ActionFunction = async ({ request }): Promise<ImportResourcesActionResult | Response> => {
+  const formData = await request.formData();
 
   const organizationId = formData.get('organizationId');
   const projectId = formData.get('projectId');
@@ -61,8 +68,6 @@ export const importResourcesAction: ActionFunction = async ({ request }) => {
   const name = formData.get('name');
 
   const workspaceName = typeof name === 'string' ? name : 'Untitled';
-
-  console.log({ resourceIds, workspaceId });
 
   invariant(typeof organizationId === 'string', 'OrganizationId is required.');
   invariant(typeof projectId === 'string', 'ProjectId is required.');
@@ -75,11 +80,14 @@ export const importResourcesAction: ActionFunction = async ({ request }) => {
   invariant(project, 'Project not found.');
 
   const result = await importResources({
-    resourceIds,
     projectId: project._id,
     workspaceId,
     workspaceName,
   });
 
-  return result;
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${result.workspace._id}/${
+    result.workspace.scope === 'design'
+      ? ACTIVITY_SPEC
+      : ACTIVITY_DEBUG
+  }`);
 };

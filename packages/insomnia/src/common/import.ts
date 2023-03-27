@@ -1,25 +1,26 @@
 import { readFile } from 'fs/promises';
 
-import type { ApiSpec } from '../models/api-spec';
-import { BaseEnvironment } from '../models/environment';
-import type { BaseModel } from '../models/index';
+import { ApiSpec, isApiSpec } from '../models/api-spec';
+import { BaseEnvironment, isEnvironment } from '../models/environment';
+import { BaseModel, getModel } from '../models/index';
 import * as models from '../models/index';
-import {
-  Workspace,
-} from '../models/workspace';
+import { isRequest, Request } from '../models/request';
+import { isWorkspace, Workspace } from '../models/workspace';
 // import { SegmentEvent, trackSegmentEvent } from '../ui/analytics';
 import { convert, ConvertResultType } from '../utils/importers/convert';
 import { invariant } from '../utils/invariant';
-import {
-  EXPORT_TYPE_WORKSPACE,
-} from './constants';
+import { EXPORT_TYPE_WORKSPACE } from './constants';
 import { database as db } from './database';
 import { generateId } from './misc';
+
+export interface ExportedModel extends BaseModel {
+  _type: string;
+}
 
 interface ConvertResult {
   type: ConvertResultType;
   data: {
-    resources: BaseModel[];
+    resources: ExportedModel[];
   };
 }
 
@@ -29,11 +30,7 @@ export const isApiSpecImport = ({ id }: Pick<ConvertResultType, 'id'>) =>
 export const isInsomniaV4Import = ({ id }: Pick<ConvertResultType, 'id'>) =>
   id === 'insomnia-4';
 
-export async function fetchImportContentFromURI({
-  uri,
-}: {
-  uri: string;
-}) {
+export async function fetchImportContentFromURI({ uri }: { uri: string }) {
   const url = new URL(uri);
 
   if (url.origin === 'https://github.com') {
@@ -54,19 +51,19 @@ export async function fetchImportContentFromURI({
     return content;
   } else {
     // Treat everything else as raw text
-    const content =  decodeURIComponent(uri);
+    const content = decodeURIComponent(uri);
 
     return content;
   }
 }
 
 export interface ScanResult {
-  resources: BaseModel[];
+  requests?: Request[];
   workspace?: Workspace;
   environments?: BaseEnvironment[];
   apiSpec?: ApiSpec;
   type?: ConvertResultType;
-  errors: Error[];
+  errors: string[];
 }
 
 let ResourceCache: {
@@ -85,37 +82,48 @@ export async function scanResources({
   try {
     results = (await convert(content)) as unknown as ConvertResult;
   } catch (err: unknown) {
-    return {
-      resources: [],
-      errors: [err as Error],
-    };
+    if (err instanceof Error) {
+      return {
+        errors: [err.message],
+      };
+    }
   }
+
+  if (!results) {}
 
   const { data, type } = results;
 
+  const resources = data.resources.map(r => {
+    const { _type, ...model } = r;
+    return { ...model, type: models.MODELS_BY_EXPORT_TYPE[_type].type };
+  });
+
   ResourceCache = {
-    resources: data.resources,
+    resources,
     type,
     content,
   };
 
+  const requests = resources.filter(isRequest);
+  const environments = resources.filter(isEnvironment);
+  const apiSpec = resources.find(isApiSpec);
+  const workspace = resources.find(isWorkspace);
+
   return {
-    resources: data.resources,
     type,
-    workspace: data.resources.find(r => r._type === EXPORT_TYPE_WORKSPACE),
-    environments: data.resources.filter(r => r._type === 'environment'),
-    apiSpec: data.resources.find(r => r._type === 'api_spec'),
+    requests,
+    workspace,
+    environments,
+    apiSpec,
     errors: [],
   };
 }
 
 export async function importResources({
-  resourceIds,
   workspaceId,
   projectId,
   workspaceName,
 }: {
-  resourceIds: string[];
   workspaceId?: string;
   workspaceName?: string;
   projectId?: string;
@@ -148,10 +156,12 @@ export async function importResources({
     });
   }
 
-  const resourcesWorkspace = resources.find(r => r._type === EXPORT_TYPE_WORKSPACE);
+  const resourcesWorkspace = resources.find(
+    r => r.type === EXPORT_TYPE_WORKSPACE
+  );
 
   resources = resources.filter(r => {
-    if (resourcesWorkspace && r._type === EXPORT_TYPE_WORKSPACE) {
+    if (resourcesWorkspace && r.type === EXPORT_TYPE_WORKSPACE) {
       return false;
     }
     return true;
@@ -160,28 +170,38 @@ export async function importResources({
   const bufferId = await db.bufferChanges();
 
   if (isApiSpecImport(ResourceCache?.type)) {
-    await models.apiSpec.updateOrCreateForParentId(
-      workspace._id,
-      {
-        contents: ResourceCache.content,
-        contentType: 'yaml',
-      }
-    );
+    await models.apiSpec.updateOrCreateForParentId(workspace._id, {
+      contents: ResourceCache.content,
+      contentType: 'yaml',
+    });
   }
 
   // Map new IDs
   const ResourceIdMap = new Map();
   ResourceIdMap.set(workspaceId, workspace._id);
-  resourcesWorkspace && ResourceIdMap.set(resourcesWorkspace._id, workspace._id);
+  ResourceIdMap.set('__WORKSPACE_ID__', workspace._id);
+  resourcesWorkspace &&
+    ResourceIdMap.set(resourcesWorkspace._id, workspace._id);
 
   for (const resource of resources) {
-    const model = models.MODELS_BY_EXPORT_TYPE[resource._type];
-    ResourceIdMap.set(resource._id, generateId(model.prefix));
+    const model = getModel(resource.type);
+    if (model) {
+      ResourceIdMap.set(resource._id, generateId(model.prefix));
+    } else {
+      console.log('[Import Scan] Could not find model for type', resource.type);
+    }
   }
 
   for (const resource of resources) {
-    const model = models.MODELS_BY_EXPORT_TYPE[resource._type];
-    await db.docCreate(model.type, { ...resource, _id: ResourceIdMap.get(resource._id), parentId: ResourceIdMap.get(resource.parentId) });
+    const model = getModel(resource.type);
+
+    if (model) {
+      await db.docCreate(model.type, {
+        ...resource,
+        _id: ResourceIdMap.get(resource._id),
+        parentId: ResourceIdMap.get(resource.parentId),
+      });
+    }
   }
 
   await db.flushChanges(bufferId);
