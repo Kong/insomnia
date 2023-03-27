@@ -6,7 +6,7 @@ import { ActionFunction, redirect } from 'react-router-dom';
 import * as session from '../../account/session';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
-import { importRaw } from '../../common/import';
+import { importResources, scanResources } from '../../common/import';
 import * as models from '../../models';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
@@ -491,13 +491,14 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({
     throw new Error('Error Generating Configuration');
   }
 
-  await importRaw(apiSpec.contents, {
-    getWorkspaceId: () => Promise.resolve(workspaceId),
-    enableDiffBasedPatching: true,
-    enableDiffDeep: true,
-    bypassDiffProps: {
-      url: true,
-    },
+  await scanResources({
+    content: apiSpec.contents,
+  });
+
+  await importResources({
+    projectId,
+    workspaceId,
+    resourceIds: [],
   });
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_DEBUG}`);

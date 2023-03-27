@@ -579,6 +579,7 @@ const SidebarListItemTitle = ({ icon, label }: SidebarListItemTitleProps) => {
 };
 
 interface WorkspaceWithMetadata {
+  _id: string;
   hasUnsavedChanges: boolean;
   lastModifiedTimestamp: number;
   modifiedLocally: number;
@@ -695,6 +696,7 @@ export const loader: LoaderFunction = async ({
     );
 
     return {
+      _id: workspace._id,
       hasUnsavedChanges,
       lastModifiedTimestamp,
       modifiedLocally,

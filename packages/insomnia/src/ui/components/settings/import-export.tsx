@@ -10,7 +10,6 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { isRequestGroup } from '../../../models/request-group';
 import { importers } from '../../../utils/importers/importers';
-import { importClipBoard, importFile, importUri } from '../../import';
 import { selectActiveProject, selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName, selectProjects, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject, selectWorkspacesWithResolvedNameForActiveProject } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
@@ -44,13 +43,13 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: (uri: string) => {
         window.localStorage.setItem('insomnia.lastUsedImportUri', uri);
-        importUri(uri, {
-          activeProjectWorkspaces,
-          activeProject,
-          projects,
-          workspaceId: activeWorkspace?._id,
-          forceToWorkspace, onComplete: revalidate });
-        hideSettingsModal();
+        // importUri(uri, {
+        //   activeProjectWorkspaces,
+        //   activeProject,
+        //   projects,
+        //   workspaceId: activeWorkspace?._id,
+        //   forceToWorkspace, onComplete: revalidate });
+        // hideSettingsModal();
       },
       ...defaultValue,
     });
@@ -74,23 +73,23 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   }, [hideSettingsModal, projectName, workspacesForActiveProject]);
 
   const handleImportFile = useCallback(() => {
-    importFile({
-      activeProjectWorkspaces,
-      activeProject,
-      projects,
-      workspaceId: activeWorkspace?._id,
-      forceToWorkspace, onComplete: revalidate });
-    hideSettingsModal();
+    // importFile({
+    //   activeProjectWorkspaces,
+    //   activeProject,
+    //   projects,
+    //   workspaceId: activeWorkspace?._id,
+    //   forceToWorkspace, onComplete: revalidate });
+    // hideSettingsModal();
   }, [activeProjectWorkspaces, activeProject, projects, activeWorkspace?._id, forceToWorkspace, revalidate, hideSettingsModal]);
 
   const handleImportClipBoard = useCallback(() => {
-    importClipBoard({
-      activeProjectWorkspaces,
-      activeProject,
-      projects,
-      workspaceId: activeWorkspace?._id,
-      forceToWorkspace, onComplete: revalidate });
-    hideSettingsModal();
+    // importClipBoard({
+    //   activeProjectWorkspaces,
+    //   activeProject,
+    //   projects,
+    //   workspaceId: activeWorkspace?._id,
+    //   forceToWorkspace, onComplete: revalidate });
+    // hideSettingsModal();
   }, [activeProjectWorkspaces, activeProject, projects, activeWorkspace?._id, forceToWorkspace, revalidate, hideSettingsModal]);
 
   const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
