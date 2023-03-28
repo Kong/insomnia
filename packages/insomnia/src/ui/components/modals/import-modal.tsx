@@ -16,21 +16,13 @@ import { strings } from '../../../common/strings';
 import {
   isDefaultProject,
   isLocalProject,
-  Project,
 } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
 import { ImportResourcesActionResult, ScanForResourcesActionResult } from '../../routes/import';
+import { ProjectLoaderData } from '../../routes/project';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalHeader } from '../base/modal-header';
 import { Button } from '../themed-button';
-
-interface ImportModalProps extends ModalProps {
-  organizationId: string;
-  defaultProjectId: string;
-  defaultWorkspaceId?: string;
-  projects: Project[];
-  from: 'file' | 'uri' | 'clipboard';
-}
 
 const Pill = styled.div({
   display: 'flex',
@@ -38,7 +30,6 @@ const Pill = styled.div({
   gap: 'var(--padding-xs)',
   padding: 'var(--padding-sm)',
   borderRadius: 'var(--radius-md)',
-  // border: '1px solid var(--hl-md)',
   fontSize: 'var(--font-size-xs)',
 });
 
@@ -226,7 +217,7 @@ const FileField: FC = () => {
   );
 };
 
-const InsomniaIcon = props => {
+const InsomniaIcon = (props: React.SVGProps<SVGSVGElement>) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -267,7 +258,7 @@ const InsomniaIcon = props => {
   );
 };
 
-const PostmanIcon = props => {
+const PostmanIcon = (props: React.SVGProps<SVGSVGElement>) => {
   return (
     <svg
       width={18}
@@ -297,7 +288,7 @@ const PostmanIcon = props => {
   );
 };
 
-const SwaggerIcon = props => {
+const SwaggerIcon = (props: React.SVGProps<SVGSVGElement>) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -322,7 +313,7 @@ const SwaggerIcon = props => {
   );
 };
 
-const OpenAPIIcon = props => {
+const OpenAPIIcon = (props: React.SVGProps<SVGSVGElement>) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -339,7 +330,7 @@ const OpenAPIIcon = props => {
   );
 };
 
-const CurlIcon = props => {
+const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -414,8 +405,14 @@ const WSDLFileIcon = () => {
   );
 };
 
+interface ImportModalProps extends ModalProps {
+  organizationId: string;
+  defaultProjectId: string;
+  defaultWorkspaceId?: string;
+  from: 'file' | 'uri' | 'clipboard';
+}
+
 export const ImportModal: FC<ImportModalProps> = ({
-  projects,
   defaultProjectId,
   defaultWorkspaceId,
   organizationId,
@@ -433,13 +430,13 @@ export const ImportModal: FC<ImportModalProps> = ({
   return (
     <Modal {...modalProps} ref={modalRef}>
       <ModalHeader>Import to Insomnia</ModalHeader>
-      {scanResourcesFetcher.data ? (
+      {(scanResourcesFetcher.data && scanResourcesFetcher.data.errors.length === 0) ? (
         <ImportResourcesForm
           organizationId={organizationId}
           defaultProjectId={defaultProjectId}
           defaultWorkspaceId={defaultWorkspaceId}
           scanResult={scanResourcesFetcher.data}
-          projects={projects}
+          errors={importFetcher.data?.errors}
           onSubmit={e => {
             importFetcher.submit(e.currentTarget, {
               method: 'post',
@@ -450,6 +447,7 @@ export const ImportModal: FC<ImportModalProps> = ({
       ) : (
         <ScanResourcesForm
           from={from}
+          errors={scanResourcesFetcher.data?.errors}
           onSubmit={e => {
             e.preventDefault();
             scanResourcesFetcher.submit(e.currentTarget, {
@@ -466,9 +464,11 @@ export const ImportModal: FC<ImportModalProps> = ({
 const ScanResourcesForm = ({
   onSubmit,
   from,
+  errors,
 }: {
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   from?: 'file' | 'uri' | 'clipboard';
+  errors?: string[];
 }) => {
   const id = useId();
   const [importFrom, setImportFrom] = useState(from || 'uri');
@@ -530,6 +530,16 @@ const ScanResourcesForm = ({
           </div>
         )}
       </form>
+      <div>
+        {(errors && errors.length > 0) && (
+          <div className="notice error margin-top-sm">
+            <p>
+              <strong>Error while scanning for resources to import:</strong>
+              {errors[0]}
+            </p>
+          </div>
+        )}
+      </div>
       <div
         style={{
           display: 'flex',
@@ -612,26 +622,26 @@ const ImportResourcesForm = ({
   defaultProjectId,
   defaultWorkspaceId,
   organizationId,
-  projects,
   onSubmit,
+  errors,
 }: {
   scanResult: ScanForResourcesActionResult;
   organizationId: string;
   defaultProjectId?: string;
   defaultWorkspaceId?: string;
-  projects: Project[];
+  errors?: string[];
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
 }) => {
   const [isPending, startTransition] = useTransition();
-  const workspacesFetcher = useFetcher<{ workspaces: Workspace[] }>();
+  const projectFetcher = useFetcher<ProjectLoaderData>();
 
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(
     defaultWorkspaceId || 'create-new-workspace-id'
   );
 
   useEffect(() => {
-    if (workspacesFetcher.state === 'idle' && !workspacesFetcher.data) {
-      workspacesFetcher.load(
+    if (projectFetcher.state === 'idle' && !projectFetcher.data) {
+      projectFetcher.load(
         `/organization/${organizationId}/project/${defaultProjectId}`
       );
     }
@@ -639,22 +649,30 @@ const ImportResourcesForm = ({
     defaultProjectId,
     organizationId,
     selectedWorkspaceId,
-    workspacesFetcher,
+    projectFetcher,
   ]);
 
   const workspaces: Partial<Workspace>[] = [
-    ...(workspacesFetcher?.data?.workspaces || []),
+    ...(projectFetcher?.data?.workspaces || []),
     {
       _id: 'create-new-workspace-id',
       name: '+ Create New File',
     },
   ];
 
+  const projects = projectFetcher?.data?.projects || [];
+
   const id = useId();
 
   return (
     <Fragment>
-      <div>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--padding-md)',
+        }}
+      >
         <form
           onSubmit={e => {
             e.preventDefault();
@@ -697,7 +715,7 @@ const ImportResourcesForm = ({
                   margin: 0,
                 }}
                 onChange={e =>
-                  workspacesFetcher.load(
+                  projectFetcher.load(
                     `/organization/${organizationId}/project/${e.currentTarget.value}`
                   )
                 }
@@ -797,13 +815,13 @@ const ImportResourcesForm = ({
                   )}
                   {scanResult.type?.id.includes('wsdl') && (
                     <Fragment>
-                      <WSDLFileIcon width={24} height={24} />
+                      <WSDLFileIcon />
                       WSDL
                     </Fragment>
                   )}
                   {scanResult.type?.id.includes('har') && (
                     <Fragment>
-                      <HARFileIcon width={24} height={24} />
+                      <HARFileIcon />
                       HAR
                     </Fragment>
                   )}
@@ -819,18 +837,10 @@ const ImportResourcesForm = ({
             </tr>
           </thead>
           <tbody>
-            {scanResult.workspace && (
-              <tr key={scanResult.workspace._id} className="table--no-outline-row">
+            {scanResult.requests && scanResult.requests?.length > 0 && (
+              <tr key={scanResult.requests[0]._id} className="table--no-outline-row">
                 <td>
-                  Collection with {scanResult.requests?.length}{' '}
-                  {scanResult.requests?.length === 1 ? 'Request' : 'Requests'}
-                </td>
-              </tr>
-            )}
-            {!scanResult.workspace && (
-              <tr key={scanResult.requests?.[0]?._id} className="table--no-outline-row">
-                <td>
-                  {scanResult.requests?.length === 1 ? 'Request' : 'Requests'}
+                  {scanResult.requests.length} {scanResult.requests.length === 1 ? 'Request' : 'Requests'}
                 </td>
               </tr>
             )}
@@ -855,6 +865,18 @@ const ImportResourcesForm = ({
           </tbody>
         </table>
       </div>
+
+      <div>
+        {(errors && errors.length > 0) && (
+          <div className="notice error margin-top-sm">
+            <p>
+              <strong>Error while importing to Insomnia:</strong>
+              {errors[0]}
+            </p>
+          </div>
+        )}
+      </div>
+
       <div
         style={{
           display: 'flex',

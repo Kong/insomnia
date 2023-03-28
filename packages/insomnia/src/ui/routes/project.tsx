@@ -615,7 +615,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   return;
 };
 
-interface LoaderData {
+export interface ProjectLoaderData {
   workspaces: WorkspaceWithMetadata[];
   allFilesCount: number;
   documentsCount: number;
@@ -628,7 +628,7 @@ interface LoaderData {
 export const loader: LoaderFunction = async ({
   params,
   request,
-}): Promise<LoaderData> => {
+}): Promise<ProjectLoaderData> => {
   const search = new URL(request.url).searchParams;
   const { projectId, organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
@@ -822,7 +822,7 @@ const ProjectRoute: FC = () => {
     allFilesCount,
     collectionsCount,
     documentsCount,
-  } = useLoaderData() as LoaderData;
+  } = useLoaderData() as ProjectLoaderData;
   const { organizationId } = useParams() as { organizationId: string };
   const [searchParams] = useSearchParams();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =

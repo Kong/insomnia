@@ -1,8 +1,6 @@
 import { exportWorkspacesData, exportWorkspacesHAR } from '../../common/export';
-// import type { ImportRawConfig } from '../../common/import';
-// import { importRaw, importUri } from '../../common/import';
+import { importResources, scanResources } from '../../common/import';
 import * as models from '../../models';
-import { DEFAULT_PROJECT_ID } from '../../models/project';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
 
 interface PluginImportOptions {
@@ -17,14 +15,6 @@ interface InsomniaExport {
 }
 
 type HarExport = Omit<InsomniaExport, 'format'>;
-
-// const buildImportRawConfig = (options: PluginImportOptions, activeProjectId: string): ImportRawConfig => ({
-//   getWorkspaceId: () => Promise.resolve(options.workspaceId || null),
-//   getWorkspaceScope: options.scope && (() => (
-//     Promise.resolve<WorkspaceScope>(options.scope as WorkspaceScope))
-//   ),
-//   getProjectId: () => Promise.resolve(activeProjectId),
-// });
 
 const getWorkspaces = (activeProjectId?: string) => {
   if (activeProjectId) {
@@ -43,9 +33,25 @@ export const init = (activeProjectId?: string) => ({
     import: {
       uri: async (uri: string, options: PluginImportOptions = {}) => {
         // await importUri(uri, buildImportRawConfig(options, activeProjectId || DEFAULT_PROJECT_ID));
+        const content = await fetch(uri).then(res => res.text());
+        await scanResources({
+          content,
+        });
+
+        await importResources({
+          projectId: activeProjectId,
+          workspaceId: options.workspaceId,
+        });
       },
-      raw: async (text: string, options: PluginImportOptions = {}) => {
-        // await importRaw(text, buildImportRawConfig(options, activeProjectId || DEFAULT_PROJECT_ID));
+      raw: async (content: string, options: PluginImportOptions = {}) => {
+        await scanResources({
+          content,
+        });
+
+        await importResources({
+          projectId: activeProjectId,
+          workspaceId: options.workspaceId,
+        });
       },
     },
     export: {

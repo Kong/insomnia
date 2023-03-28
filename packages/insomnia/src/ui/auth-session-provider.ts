@@ -34,5 +34,5 @@ export async function submitAuthCode(code: string) {
 
 export async function getLoginUrl() {
   const loginKey = await encodeBase64(sessionKeyPair.publicKey);
-  return `${getAppWebsiteBaseURL()}/account/oauth/insomnia/authorize/?loginKey=${encodeURIComponent(loginKey)}`;
+  return `${getAppWebsiteBaseURL()}/app/auth-app/?loginKey=${encodeURIComponent(loginKey)}`;
 }
