@@ -133,6 +133,7 @@ export async function importResources({
   projectId: string;
 }) {
   invariant(ResourceCache, 'No resources to import');
+  const bufferId = await db.bufferChanges();
 
   const resources = ResourceCache.resources;
   const resourcesWorkspace = resources.find(
@@ -178,8 +179,6 @@ export async function importResources({
     return true;
   });
 
-  const bufferId = await db.bufferChanges();
-
   if (isApiSpecImport(ResourceCache?.type) && workspace.scope === 'design') {
     await models.apiSpec.updateOrCreateForParentId(workspace._id, {
       fileName: workspaceName,
@@ -203,8 +202,6 @@ export async function importResources({
       console.log('[Import Scan] Could not find model for type', resource.type);
     }
   }
-
-  console.log('[Import Scan]', resources.length);
 
   for (const resource of resourcesWithoutWorkspace) {
     const model = getModel(resource.type);

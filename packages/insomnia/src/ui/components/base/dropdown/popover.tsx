@@ -1,10 +1,8 @@
-import { AriaPopoverProps, DismissButton, Overlay, usePopover } from '@react-aria/overlays';
-import { StyleProps } from '@react-types/shared';
 import React, { FC, ReactNode, useRef } from 'react';
-import { useOverlayTrigger } from 'react-aria';
+import { AriaPopoverProps, DismissButton, Overlay, useOverlayTrigger, usePopover } from 'react-aria';
 import { OverlayTriggerState } from 'react-stately';
 
-interface Props extends Omit<AriaPopoverProps, 'popoverRef' | 'maxHeight'>, StyleProps {
+interface Props extends Omit<AriaPopoverProps, 'popoverRef' | 'maxHeight'> {
   children: ReactNode;
   state: OverlayTriggerState;
 }

@@ -989,7 +989,7 @@ const ProjectRoute: FC = () => {
                     </DropdownSection>
                     <DropdownSection
                       aria-label="Import From"
-                      title=""
+                      title="Import"
                     >
                       <DropdownItem aria-label="Import">
                         <ItemContent
@@ -1000,7 +1000,7 @@ const ProjectRoute: FC = () => {
                       </DropdownItem>
                       <DropdownItem aria-label="Git Clone">
                         <ItemContent
-                          icon="git"
+                          icon="code-fork"
                           label="Git Clone"
                           onClick={importFromGit}
                         />

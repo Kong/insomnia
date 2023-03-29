@@ -12,6 +12,8 @@ function guard<T>(condition: any, value: any): asserts value is T {
   if (!condition) {
     throw new Error('Guard failed');
   }
+
+  return value;
 }
 
 export interface ScanForResourcesActionResult extends ScanResult {}

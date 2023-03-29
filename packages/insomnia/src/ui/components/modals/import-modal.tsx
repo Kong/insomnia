@@ -8,7 +8,7 @@ import React, {
   useState,
   useTransition,
 } from 'react';
-import { useDrop } from 'react-aria';
+import { OverlayContainer, useDrop } from 'react-aria';
 import { useFetcher } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -412,36 +412,38 @@ export const ImportModal: FC<ImportModalProps> = ({
   }, []);
 
   return (
-    <Modal {...modalProps} ref={modalRef}>
-      <ModalHeader>Import to Insomnia</ModalHeader>
-      {(scanResourcesFetcher.data && scanResourcesFetcher.data.errors.length === 0) ? (
-        <ImportResourcesForm
-          organizationId={organizationId}
-          defaultProjectId={defaultProjectId}
-          defaultWorkspaceId={defaultWorkspaceId}
-          scanResult={scanResourcesFetcher.data}
-          errors={importFetcher.data?.errors}
-          onSubmit={e => {
-            importFetcher.submit(e.currentTarget, {
-              method: 'post',
-              action: '/import/resources',
-            });
-          }}
-        />
-      ) : (
-        <ScanResourcesForm
-          from={from}
-          errors={scanResourcesFetcher.data?.errors}
-          onSubmit={e => {
-            e.preventDefault();
-            scanResourcesFetcher.submit(e.currentTarget, {
-              method: 'post',
-              action: '/import/scan',
-            });
-          }}
-        />
-      )}
-    </Modal>
+    <OverlayContainer>
+      <Modal {...modalProps} ref={modalRef}>
+        <ModalHeader>Import to Insomnia</ModalHeader>
+        {(scanResourcesFetcher.data && scanResourcesFetcher.data.errors.length === 0) ? (
+          <ImportResourcesForm
+            organizationId={organizationId}
+            defaultProjectId={defaultProjectId}
+            defaultWorkspaceId={defaultWorkspaceId}
+            scanResult={scanResourcesFetcher.data}
+            errors={importFetcher.data?.errors}
+            onSubmit={e => {
+              importFetcher.submit(e.currentTarget, {
+                method: 'post',
+                action: '/import/resources',
+              });
+            }}
+          />
+        ) : (
+          <ScanResourcesForm
+            from={from}
+            errors={scanResourcesFetcher.data?.errors}
+            onSubmit={e => {
+              e.preventDefault();
+              scanResourcesFetcher.submit(e.currentTarget, {
+                method: 'post',
+                action: '/import/scan',
+              });
+            }}
+          />
+        )}
+      </Modal>
+    </OverlayContainer>
   );
 };
 

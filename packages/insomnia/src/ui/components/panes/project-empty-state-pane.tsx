@@ -56,10 +56,11 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
     <Wrapper>
       <Title>This is an empty project, to get started create your first resource:</Title>
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', marginTop: 'var(--padding-md)' }}>
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 'var(--padding-md)', gap: 'var(--padding-md)' }}>
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 'var(--padding-md)', gap: 'var(--padding-md)' }}>
           <Button
             style={{
               gap: 'var(--padding-xs)',
+              flex: 1,
             }}
             onClick={createRequestCollection}
           >
@@ -68,6 +69,7 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
           <Button
             style={{
               gap: 'var(--padding-xs)',
+              flex: 1,
             }}
             onClick={createDesignDocument}
           >
@@ -75,10 +77,11 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
           </Button>
         </div>
         <Divider>or</Divider>
-        <div>
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 'var(--padding-md)' }}>
           <Button
             style={{
               gap: 'var(--padding-xs)',
+              flex: 1,
             }}
             onClick={importFrom}
           >
@@ -87,10 +90,11 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
           <Button
             style={{
               gap: 'var(--padding-xs)',
+              flex: 1,
             }}
             onClick={cloneFromGit}
           >
-            <i className='fa fa-fork' /> Git Clone
+            <i className='fa fa-code-fork' /> Git Clone
           </Button>
         </div>
       </div>
