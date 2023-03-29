@@ -1041,10 +1041,8 @@ const ProjectRoute: FC = () => {
                 <EmptyStatePane
                   createRequestCollection={createNewCollection}
                   createDesignDocument={createNewDocument}
-                  importFromFile={() => setIsImportModalOpen('file')}
-                  importFromURL={() => setIsImportModalOpen('uri')}
-                  importFromClipboard={() => setIsImportModalOpen('clipboard')}
-                  importFromGit={importFromGit}
+                  importFrom={() => setIsImportModalOpen('file')}
+                  cloneFromGit={importFromGit}
                 />
               )}
             </Pane>
@@ -1060,7 +1058,6 @@ const ProjectRoute: FC = () => {
             onHide={() => setIsImportModalOpen(false)}
             from={isImportModalOpen}
             organizationId={organizationId}
-            projects={projects}
             defaultProjectId={activeProject._id}
           />
         )}

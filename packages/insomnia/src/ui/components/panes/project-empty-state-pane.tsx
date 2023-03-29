@@ -1,7 +1,6 @@
 import React, { FC } from 'react';
 import styled from 'styled-components';
 
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { Button } from '../themed-button';
 
 const Wrapper = styled.div({
@@ -48,13 +47,11 @@ const Title = styled.div({
 interface Props {
   createRequestCollection: () => void;
   createDesignDocument: () => void;
-  importFromFile: () => void;
-  importFromURL: () => void;
-  importFromClipboard: () => void;
-  importFromGit: () => void;
+  importFrom: () => void;
+  cloneFromGit: () => void;
 }
 
-export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, importFromFile, importFromURL, importFromClipboard, importFromGit }) => {
+export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, importFrom, cloneFromGit }) => {
   return (
     <Wrapper>
       <Title>This is an empty project, to get started create your first resource:</Title>
@@ -78,16 +75,24 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
           </Button>
         </div>
         <Divider>or</Divider>
-        <Button
-          style={{
-            gap: 'var(--padding-xs)',
-          }}
-          onClick={() => {
-            importFromFile();
-          }}
-        >
-          <i className='fa fa-file-import' /> Import
-        </Button>
+        <div>
+          <Button
+            style={{
+              gap: 'var(--padding-xs)',
+            }}
+            onClick={importFrom}
+          >
+            <i className='fa fa-file-import' /> Import
+          </Button>
+          <Button
+            style={{
+              gap: 'var(--padding-xs)',
+            }}
+            onClick={cloneFromGit}
+          >
+            <i className='fa fa-fork' /> Git Clone
+          </Button>
+        </div>
       </div>
     </Wrapper>
   );

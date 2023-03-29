@@ -204,6 +204,8 @@ export async function importResources({
     }
   }
 
+  console.log('[Import Scan]', resources.length);
+
   for (const resource of resourcesWithoutWorkspace) {
     const model = getModel(resource.type);
 
