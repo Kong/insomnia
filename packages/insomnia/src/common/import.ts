@@ -135,6 +135,9 @@ export async function importResources({
   invariant(ResourceCache, 'No resources to import');
 
   const resources = ResourceCache.resources;
+  const resourcesWorkspace = resources.find(
+    r => r.type === 'Workspace'
+  );
 
   let workspace: Workspace;
 
@@ -156,14 +159,10 @@ export async function importResources({
     workspace = existingWorkspace;
   } else {
     workspace = await models.workspace.create({
-      name: workspaceName || 'Imported',
+      name: workspaceName || resourcesWorkspace?.name || 'Untitled',
       parentId: projectId,
     });
   }
-
-  const resourcesWorkspace = resources.find(
-    r => r.type === EXPORT_TYPE_WORKSPACE || r.type === 'Workspace'
-  );
 
   const resourcesWithoutWorkspace = resources.filter(r => {
     // If the resource is a Workspace don't import it
@@ -172,9 +171,10 @@ export async function importResources({
     }
 
     // If the resource is an ApiSpec and the workspace is a collection, don't import it
-    if ((r.type === 'ApiSpec' && workspace.scope === 'collection') || workspaceId !== 'create-new-workspace-id') {
+    if (r.type === 'ApiSpec' && (workspace.scope === 'collection' || workspaceId !== 'create-new-workspace-id')) {
       return false;
     }
+
     return true;
   });
 

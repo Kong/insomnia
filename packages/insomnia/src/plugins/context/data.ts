@@ -1,5 +1,5 @@
 import { exportWorkspacesData, exportWorkspacesHAR } from '../../common/export';
-import { importResources, scanResources } from '../../common/import';
+import { fetchImportContentFromURI, importResources, scanResources } from '../../common/import';
 import * as models from '../../models';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
 
@@ -32,10 +32,14 @@ export const init = (activeProjectId?: string) => ({
   data: {
     import: {
       uri: async (uri: string, options: PluginImportOptions = {}) => {
-        const content = await fetch(uri).then(res => res.text());
         if (!activeProjectId) {
           return;
         }
+
+        const content = await fetchImportContentFromURI({
+          uri,
+        });
+
         await scanResources({
           content,
         });
