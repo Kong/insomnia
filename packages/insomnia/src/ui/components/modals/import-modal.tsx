@@ -23,6 +23,7 @@ import { ProjectLoaderData } from '../../routes/project';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalHeader } from '../base/modal-header';
 import { Button } from '../themed-button';
+import { hideAllModals } from '.';
 
 const Pill = styled.div({
   display: 'flex',
@@ -411,6 +412,12 @@ export const ImportModal: FC<ImportModalProps> = ({
     modalRef.current?.show();
   }, []);
 
+  useEffect(() => {
+    if (importFetcher.state === 'loading') {
+      hideAllModals();
+    }
+  }, [importFetcher.state]);
+
   return (
     <OverlayContainer>
       <Modal {...modalProps} ref={modalRef}>
@@ -662,7 +669,6 @@ const ImportResourcesForm = ({
         <form
           onSubmit={e => {
             e.preventDefault();
-            console.log('submitting form');
             startTransition(() => {
               onSubmit?.(e);
             });
