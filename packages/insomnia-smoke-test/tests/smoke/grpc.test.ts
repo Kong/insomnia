@@ -16,8 +16,13 @@ test('can send gRPC requests with reflection', async ({ app, page }) => {
   const text = await loadFixture('grpc.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-  await page.getByRole('menuitem', { name: 'Clipboard' }).click();
-  await page.click('text=CollectionPreRelease gRPCjust now');
+  await page.getByRole('menuitem', { name: 'Import' }).click();
+  await page.getByText('Clipboard').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('button', { name: 'Import' }).click();
+
+  await page.getByRole('link', { name: 'Debug' }).click();
+
   await page.getByRole('button', { name: 'Route Guide Example' }).click();
 
   await page.getByRole('button', { name: 'UnaryWithOutProtoFile' }).click();

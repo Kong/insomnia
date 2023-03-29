@@ -15,9 +15,12 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
   // Import from clipboard
-  await page.getByRole('menuitem', { name: 'Clipboard' }).click();
-  // Open the new collection workspace
-  await page.click('text=CollectionSmoke GraphQLjust now');
+  await page.getByRole('menuitem', { name: 'Import' }).click();
+  await page.getByText('Clipboard').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('button', { name: 'Import' }).click();
+
+  await page.getByRole('link', { name: 'Debug' }).click();
   // Open the graphql request
   await page.getByRole('button', { name: 'GraphQL request' }).click();
   // Assert the schema is fetched after switching to GraphQL request
@@ -52,8 +55,12 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
 
   const text = await loadFixture('graphql.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-  await page.getByRole('menuitem', { name: 'Clipboard' }).click();
-  await page.click('text=CollectionSmoke GraphQLjust now');
+  await page.getByRole('menuitem', { name: 'Import' }).click();
+  await page.getByText('Clipboard').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('button', { name: 'Import' }).click();
+
+  await page.getByRole('link', { name: 'Debug' }).click();
   await page.getByRole('button', { name: 'GraphQL request' }).click();
 
   // Edit and prettify query

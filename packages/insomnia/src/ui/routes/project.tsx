@@ -991,11 +991,18 @@ const ProjectRoute: FC = () => {
                       aria-label="Import From"
                       title=""
                     >
-                      <DropdownItem aria-label="File">
+                      <DropdownItem aria-label="Import">
                         <ItemContent
                           icon="file-import"
                           label="Import"
                           onClick={() => setIsImportModalOpen('file')}
+                        />
+                      </DropdownItem>
+                      <DropdownItem aria-label="Git Clone">
+                        <ItemContent
+                          icon="git"
+                          label="Git Clone"
+                          onClick={importFromGit}
                         />
                       </DropdownItem>
                     </DropdownSection>

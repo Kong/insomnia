@@ -32,8 +32,10 @@ export const init = (activeProjectId?: string) => ({
   data: {
     import: {
       uri: async (uri: string, options: PluginImportOptions = {}) => {
-        // await importUri(uri, buildImportRawConfig(options, activeProjectId || DEFAULT_PROJECT_ID));
         const content = await fetch(uri).then(res => res.text());
+        if (!activeProjectId) {
+          return;
+        }
         await scanResources({
           content,
         });
@@ -44,6 +46,9 @@ export const init = (activeProjectId?: string) => ({
         });
       },
       raw: async (content: string, options: PluginImportOptions = {}) => {
+        if (!activeProjectId) {
+          return;
+        }
         await scanResources({
           content,
         });

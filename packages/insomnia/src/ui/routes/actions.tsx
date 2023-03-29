@@ -466,6 +466,7 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({
 }) => {
   const { organizationId, projectId, workspaceId } = params;
 
+  invariant(typeof projectId === 'string', 'Project ID is required');
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   const apiSpec = await models.apiSpec.getByParentId(workspaceId);

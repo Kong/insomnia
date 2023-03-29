@@ -389,22 +389,6 @@ const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => {
   );
 };
 
-const HARFileIcon = () => {
-  return (
-    <div>
-      <i className="fa-regular fa-file fa-lg" />
-    </div>
-  );
-};
-
-const WSDLFileIcon = () => {
-  return (
-    <div>
-      <i className="fa-regular fa-file fa-lg" />
-    </div>
-  );
-};
-
 interface ImportModalProps extends ModalProps {
   organizationId: string;
   defaultProjectId: string;
@@ -584,11 +568,11 @@ const ScanResourcesForm = ({
               cURL
             </Pill>
             <Pill>
-              <HARFileIcon />
+              <i className="fa-regular fa-file fa-lg" />
               HAR
             </Pill>
             <Pill>
-              <WSDLFileIcon />
+              <i className="fa-regular fa-file fa-lg" />
               WSDL
             </Pill>
           </div>
@@ -815,13 +799,13 @@ const ImportResourcesForm = ({
                   )}
                   {scanResult.type?.id.includes('wsdl') && (
                     <Fragment>
-                      <WSDLFileIcon />
+                      <i className="fa-regular fa-file fa-lg" />
                       WSDL
                     </Fragment>
                   )}
                   {scanResult.type?.id.includes('har') && (
                     <Fragment>
-                      <HARFileIcon />
+                      <i className="fa-regular fa-file fa-lg" />
                       HAR
                     </Fragment>
                   )}

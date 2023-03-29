@@ -8,8 +8,12 @@ test.describe('Cookie editor', async () => {
     await page.getByRole('button', { name: 'Create' }).click();
     const text = await loadFixture('simple.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-    await page.getByRole('menuitem', { name: 'Clipboard' }).click();
-    await page.click('text=Collectionsimplejust now');
+    await page.getByRole('menuitem', { name: 'Import' }).click();
+    await page.getByText('Clipboard').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('button', { name: 'Import' }).click();
+
+    await page.getByRole('link', { name: 'Debug' }).click();
   });
 
   test('create and send a cookie', async ({ page }) => {

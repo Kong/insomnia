@@ -73,18 +73,6 @@ const router = createMemoryRouter(
           path: 'import',
           children: [
             {
-              path: 'file',
-              action: async (...args) => (await import('./routes/import')).importFileAction(...args),
-            },
-            {
-              path: 'uri',
-              action: async (...args) => (await import('./routes/import')).importUriAction(...args),
-            },
-            {
-              path: 'clipboard',
-              action: async (...args) => (await import('./routes/import')).importClipboardAction(...args),
-            },
-            {
               path: 'scan',
               action: async (...args) => (await import('./routes/import')).scanForResourcesAction(...args),
             },

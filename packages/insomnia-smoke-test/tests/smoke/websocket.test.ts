@@ -16,8 +16,12 @@ test('can make websocket connection', async ({ app, page }) => {
   const text = await loadFixture('websockets.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-  await page.getByRole('menuitem', { name: 'Clipboard' }).click();
-  await page.click('text=CollectionWebSocketsjust now');
+  await page.getByRole('menuitem', { name: 'Import' }).click();
+  await page.getByText('Clipboard').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('button', { name: 'Import' }).click();
+
+  await page.getByRole('link', { name: 'Debug' }).click();
 
   await page.getByRole('button', { name: 'localhost:4010' }).click();
   await expect(page.locator('.app')).toContainText('ws://localhost:4010');

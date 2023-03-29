@@ -17,8 +17,12 @@ test.describe('gRPC interactions', () => {
     const text = await loadFixture('grpc.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-    await page.getByRole('menuitem', { name: 'Clipboard' }).click();
-    await page.click('text=CollectionPreRelease gRPCjust now');
+    await page.getByRole('menuitem', { name: 'Import' }).click();
+    await page.getByText('Clipboard').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('button', { name: 'Import' }).click();
+
+    await page.getByRole('link', { name: 'Debug' }).click();
     statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
       has: page.locator('.CodeMirror-activeline'),
