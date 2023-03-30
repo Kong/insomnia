@@ -1,10 +1,18 @@
 import { readFile } from 'fs/promises';
 
 import { ApiSpec, isApiSpec } from '../models/api-spec';
+import { CookieJar, isCookieJar } from '../models/cookie-jar';
 import { BaseEnvironment, isEnvironment } from '../models/environment';
+import { GrpcRequest, isGrpcRequest } from '../models/grpc-request';
 import { BaseModel, getModel } from '../models/index';
 import * as models from '../models/index';
 import { isRequest, Request } from '../models/request';
+import { isUnitTest, UnitTest } from '../models/unit-test';
+import { isUnitTestSuite, UnitTestSuite } from '../models/unit-test-suite';
+import {
+  isWebSocketRequest,
+  WebSocketRequest,
+} from '../models/websocket-request';
 import { isWorkspace, Workspace } from '../models/workspace';
 // import { SegmentEvent, trackSegmentEvent } from '../ui/analytics';
 import { convert, ConvertResultType } from '../utils/importers/convert';
@@ -57,10 +65,13 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
 }
 
 export interface ScanResult {
-  requests?: Request[];
+  requests?: (Request | WebSocketRequest | GrpcRequest)[];
   workspace?: Workspace;
   environments?: BaseEnvironment[];
   apiSpec?: ApiSpec;
+  cookieJar?: CookieJar;
+  unitTests?: UnitTest[];
+  unitTestSuites?: UnitTestSuite[];
   type?: ConvertResultType;
   errors: string[];
 }
@@ -96,10 +107,12 @@ export async function scanResources({
 
   const { type, data } = results;
 
-  const resources = data.resources.filter(r => r._type).map(r => {
-    const { _type, ...model } = r;
-    return { ...model, type: models.MODELS_BY_EXPORT_TYPE[_type].type };
-  });
+  const resources = data.resources
+    .filter(r => r._type)
+    .map(r => {
+      const { _type, ...model } = r;
+      return { ...model, type: models.MODELS_BY_EXPORT_TYPE[_type].type };
+    });
 
   ResourceCache = {
     resources,
@@ -107,20 +120,51 @@ export async function scanResources({
     content,
   };
 
+  console.log({
+    resources,
+  });
+
   const requests = resources.filter(isRequest);
+  const websocketRequests = resources.filter(isWebSocketRequest);
+  const grpcRequests = resources.filter(isGrpcRequest);
   const environments = resources.filter(isEnvironment);
+  const unitTests = resources.filter(isUnitTest);
+  const unitTestSuites = resources.filter(isUnitTestSuite);
   const apiSpec = resources.find(isApiSpec);
   const workspace = resources.find(isWorkspace);
+  const cookieJar = resources.find(isCookieJar);
 
   return {
     type,
-    requests,
+    unitTests,
+    unitTestSuites,
+    requests: [...requests, ...websocketRequests, ...grpcRequests],
     workspace,
     environments,
     apiSpec,
+    cookieJar,
     errors: [],
   };
 }
+
+// On a new Workspace we import everything
+
+// On an existing Workspace we dont import these:
+// EXPORT_TYPE_WORKSPACE,
+// EXPORT_TYPE_API_SPEC,
+// EXPORT_TYPE_COOKIE_JAR,
+// EXPORT_TYPE_ENVIRONMENT
+
+// But import these:
+// EXPORT_TYPE_GRPC_REQUEST,
+// EXPORT_TYPE_PROTO_DIRECTORY,
+// EXPORT_TYPE_PROTO_FILE,
+// EXPORT_TYPE_REQUEST,
+// EXPORT_TYPE_REQUEST_GROUP,
+// EXPORT_TYPE_UNIT_TEST,
+// EXPORT_TYPE_UNIT_TEST_SUITE,
+// EXPORT_TYPE_WEBSOCKET_PAYLOAD,
+// EXPORT_TYPE_WEBSOCKET_REQUEST,
 
 export async function importResources({
   workspaceId,
@@ -135,32 +179,11 @@ export async function importResources({
   const bufferId = await db.bufferChanges();
 
   const resources = ResourceCache.resources;
-  const resourcesWorkspace = resources.find(isWorkspace);
-  const resourcesApiSpec = resources.find(isApiSpec);
+  const workspace = resources.find(isWorkspace);
 
-  let workspace: Workspace;
-
-  if (workspaceId === 'create-new-workspace-id') {
-    const scope = (isApiSpecImport(ResourceCache?.type) || Boolean(resources.find(r => r.type === 'ApiSpec'))) ? 'design' : 'collection';
-    workspace = await models.workspace.create({
-      name: workspaceName,
-      scope,
-      parentId: projectId,
-    });
-
-    if (resourcesApiSpec) {
-      await models.apiSpec.updateOrCreateForParentId(workspace._id, { ...resourcesApiSpec, fileName: workspaceName });
-    }
-
-    if (isApiSpecImport(ResourceCache?.type) && workspace.scope === 'design') {
-      await models.apiSpec.updateOrCreateForParentId(workspace._id, {
-        fileName: workspaceName,
-        contents: ResourceCache.content,
-        contentType: 'yaml',
-      });
-    }
-
-  } else if (workspaceId) {
+  const ResourceIdMap = new Map();
+  // If we're importing into an existing workspace
+  if (workspaceId && workspaceId !== 'create-new-workspace-id') {
     const existingWorkspace = await models.workspace.getById(workspaceId);
 
     invariant(
@@ -168,48 +191,121 @@ export async function importResources({
       `Could not find workspace with id ${workspaceId}`
     );
 
-    workspace = existingWorkspace;
+    // If we're importing into a new workspace
+    // Map new IDs
+    ResourceIdMap.set(workspaceId, existingWorkspace._id);
+    ResourceIdMap.set('__WORKSPACE_ID__', existingWorkspace._id);
+    workspace && ResourceIdMap.set(workspace._id, existingWorkspace._id);
+
+    const filteredResources = resources.filter(
+      resource =>
+        !isWorkspace(resource) &&
+        !isApiSpec(resource) &&
+        !isCookieJar(resource) &&
+        !isEnvironment(resource)
+    );
+
+    for (const resource of filteredResources) {
+      const model = getModel(resource.type);
+      if (model) {
+        ResourceIdMap.set(resource._id, generateId(model.prefix));
+      } else {
+        console.log(
+          '[Import Scan] Could not find model for type',
+          resource.type
+        );
+      }
+    }
+
+    for (const resource of filteredResources) {
+      const model = getModel(resource.type);
+
+      if (model) {
+        await db.docCreate(model.type, {
+          ...resource,
+          _id: ResourceIdMap.get(resource._id),
+          parentId: ResourceIdMap.get(resource.parentId),
+        });
+      }
+    }
+
+    await db.flushChanges(bufferId);
+
+    return {
+      resources,
+      workspace: existingWorkspace,
+    };
   } else {
-    workspace = await models.workspace.create({
-      name: workspaceName || resourcesWorkspace?.name || 'Untitled',
+    const scope =
+      isApiSpecImport(ResourceCache?.type) ||
+      Boolean(resources.find(r => r.type === 'ApiSpec'))
+        ? 'design'
+        : 'collection';
+    const newWorkspace = await models.workspace.create({
+      name: workspaceName,
+      scope,
       parentId: projectId,
     });
-  }
 
-  const resourcesWithoutWorkspaceAndApiSpec = resources.filter(resource => !isWorkspace(resource) && !isApiSpec(resource));
+    const apiSpec = resources.find(isApiSpec);
 
-  // Map new IDs
-  const ResourceIdMap = new Map();
-  ResourceIdMap.set(workspaceId, workspace._id);
-  ResourceIdMap.set('__WORKSPACE_ID__', workspace._id);
-  resourcesWorkspace &&
-    ResourceIdMap.set(resourcesWorkspace._id, workspace._id);
-
-  for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
-    const model = getModel(resource.type);
-    if (model) {
-      ResourceIdMap.set(resource._id, generateId(model.prefix));
-    } else {
-      console.log('[Import Scan] Could not find model for type', resource.type);
-    }
-  }
-
-  for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
-    const model = getModel(resource.type);
-
-    if (model) {
-      await db.docCreate(model.type, {
-        ...resource,
-        _id: ResourceIdMap.get(resource._id),
-        parentId: ResourceIdMap.get(resource.parentId),
+    if (apiSpec) {
+      await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
+        ...apiSpec,
+        fileName: workspaceName,
       });
     }
+
+    if (
+      isApiSpecImport(ResourceCache?.type) &&
+      newWorkspace.scope === 'design'
+    ) {
+      await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
+        fileName: workspaceName,
+        contents: ResourceCache.content,
+        contentType: 'yaml',
+      });
+    }
+
+    // If we're importing into a new workspace
+    // Map new IDs
+    ResourceIdMap.set(workspaceId, newWorkspace._id);
+    ResourceIdMap.set('__WORKSPACE_ID__', newWorkspace._id);
+    workspace && ResourceIdMap.set(workspace._id, newWorkspace._id);
+
+    const resourcesWithoutWorkspaceAndApiSpec = resources.filter(
+      resource => !isWorkspace(resource) && !isApiSpec(resource)
+    );
+
+    for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
+      const model = getModel(resource.type);
+      if (model) {
+        ResourceIdMap.set(resource._id, generateId(model.prefix));
+      } else {
+        console.log(
+          '[Import Scan] Could not find model for type',
+          resource.type
+        );
+      }
+    }
+
+    for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
+      const model = getModel(resource.type);
+
+      if (model) {
+        await db.docCreate(model.type, {
+          ...resource,
+          _id: ResourceIdMap.get(resource._id),
+          parentId: ResourceIdMap.get(resource.parentId),
+        });
+      }
+    }
+
+    await db.flushChanges(bufferId);
+
+    return {
+      resources,
+      workspace: newWorkspace,
+    };
   }
-
-  await db.flushChanges(bufferId);
-
-  return {
-    resources,
-    workspace,
-  };
 }

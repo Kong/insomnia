@@ -13,12 +13,12 @@ import { useFetcher } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { strings } from '../../../common/strings';
-import {
-  isDefaultProject,
-  isLocalProject,
-} from '../../../models/project';
+import { isDefaultProject, isLocalProject } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
-import { ImportResourcesActionResult, ScanForResourcesActionResult } from '../../routes/import';
+import {
+  ImportResourcesActionResult,
+  ScanForResourcesActionResult,
+} from '../../routes/import';
 import { ProjectLoaderData } from '../../routes/project';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalHeader } from '../base/modal-header';
@@ -422,7 +422,7 @@ export const ImportModal: FC<ImportModalProps> = ({
     <OverlayContainer>
       <Modal {...modalProps} ref={modalRef}>
         <ModalHeader>Import to Insomnia</ModalHeader>
-        {(scanResourcesFetcher.data && scanResourcesFetcher.data.errors.length === 0) ? (
+        {scanResourcesFetcher.data && scanResourcesFetcher.data.errors.length === 0 ? (
           <ImportResourcesForm
             organizationId={organizationId}
             defaultProjectId={defaultProjectId}
@@ -524,7 +524,7 @@ const ScanResourcesForm = ({
         )}
       </form>
       <div>
-        {(errors && errors.length > 0) && (
+        {errors && errors.length > 0 && (
           <div className="notice error margin-top-sm">
             <p>
               <strong>Error while scanning for resources to import:</strong>
@@ -632,18 +632,16 @@ const ImportResourcesForm = ({
     defaultWorkspaceId || 'create-new-workspace-id'
   );
 
+  const isCreatingNewWorkspace =
+    selectedWorkspaceId === 'create-new-workspace-id';
+
   useEffect(() => {
     if (projectFetcher.state === 'idle' && !projectFetcher.data) {
       projectFetcher.load(
         `/organization/${organizationId}/project/${defaultProjectId}`
       );
     }
-  }, [
-    defaultProjectId,
-    organizationId,
-    selectedWorkspaceId,
-    projectFetcher,
-  ]);
+  }, [defaultProjectId, organizationId, selectedWorkspaceId, projectFetcher]);
 
   const workspaces: Partial<Workspace>[] = [
     ...(projectFetcher?.data?.workspaces || []),
@@ -752,7 +750,7 @@ const ImportResourcesForm = ({
                 ))}
               </select>
             </div>
-            {selectedWorkspaceId === 'create-new-workspace-id' && (
+            {isCreatingNewWorkspace && (
               <Fragment>
                 <div
                   style={{
@@ -822,35 +820,67 @@ const ImportResourcesForm = ({
                       <CurlIcon width={24} height={24} />
                       cURL
                     </Fragment>
-                  )}
-                  {' '} resources to be imported:
+                  )}{' '}
+                  resources to be imported:
                 </ImportTypeTitle>
               </th>
             </tr>
           </thead>
           <tbody>
             {scanResult.requests && scanResult.requests?.length > 0 && (
-              <tr key={scanResult.requests[0]._id} className="table--no-outline-row">
+              <tr
+                key={scanResult.requests[0]._id}
+                className="table--no-outline-row"
+              >
                 <td>
-                  {scanResult.requests.length} {scanResult.requests.length === 1 ? 'Request' : 'Requests'}
+                  {scanResult.requests.length}{' '}
+                  {scanResult.requests.length === 1 ? 'Request' : 'Requests'}
                 </td>
               </tr>
             )}
-            {scanResult.apiSpec && (
-              <tr key={scanResult.apiSpec._id} className="table--no-outline-row">
+            {isCreatingNewWorkspace && scanResult.apiSpec && (
+              <tr
+                key={scanResult.apiSpec._id}
+                className="table--no-outline-row"
+              >
                 <td>
-                  OpenAPI Spec:{' '}
-                  {scanResult.apiSpec.name || scanResult.apiSpec.fileName}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--padding-md)',
+                    }}
+                  >
+                    OpenAPI Spec:{' '}
+                    {scanResult.apiSpec.name || scanResult.apiSpec.fileName}
+                  </div>
                 </td>
               </tr>
             )}
-            {scanResult.environments && scanResult.environments.length > 0 && (
+            {isCreatingNewWorkspace &&
+              scanResult.environments &&
+              scanResult.environments.length > 0 && (
               <tr className="table--no-outline-row">
                 <td>
                   {scanResult.environments.length}{' '}
                   {scanResult.environments.length === 1
                     ? 'Environment'
                     : 'Environments'}
+                  {scanResult.cookieJar ? ' and a Cookie Jar' : ''}
+                </td>
+              </tr>
+            )}
+            {scanResult.unitTestSuites &&
+              scanResult.unitTestSuites?.length > 0 && (
+              <tr className="table--no-outline-row">
+                <td>
+                  {scanResult.unitTestSuites.length}{' '}
+                  {scanResult.unitTestSuites.length === 1
+                    ? 'Test Suite'
+                    : 'Test Suites'}
+                  {scanResult.unitTests?.length}
+                  {' with'}
+                  {scanResult.unitTests?.length === 1 ? 'Test' : 'Tests'}
                 </td>
               </tr>
             )}
@@ -859,7 +889,7 @@ const ImportResourcesForm = ({
       </div>
 
       <div>
-        {(errors && errors.length > 0) && (
+        {errors && errors.length > 0 && (
           <div className="notice error margin-top-sm">
             <p>
               <strong>Error while importing to Insomnia:</strong>
@@ -890,7 +920,15 @@ const ImportResourcesForm = ({
           form={id}
           className="btn"
         >
-          {isPending ? <div><i className="fa fa-spinner fa-spin" /> Importing</div> : <div><i className="fa fa-file-import" /> Import</div>}
+          {isPending ? (
+            <div>
+              <i className="fa fa-spinner fa-spin" /> Importing
+            </div>
+          ) : (
+            <div>
+              <i className="fa fa-file-import" /> Import
+            </div>
+          )}
         </Button>
       </div>
     </Fragment>
