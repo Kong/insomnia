@@ -4,7 +4,6 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 
 import { isDevelopment } from '../../common/constants';
-// import { askToImportIntoProject, askToImportIntoWorkspace, askToSetWorkspaceScope, importUri } from '../../common/import';
 import * as models from '../../models';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
@@ -54,18 +53,17 @@ export const useAppCommands = () => {
           break;
 
         case 'insomnia://app/import':
-          showModal(AlertModal, {
-            title: 'Confirm Data Import',
-            message: (
-              <span>
-                Do you really want to import {params.name && (<><code>{params.name}</code> from</>)} <code>{params.uri}</code>?
-              </span>
-            ),
-            addCancel: true,
-            onConfirm: async () => {
-              // @TODO @gatzjames - FixME - Move this to a separate hook in the root of the app that opens the import modal
-            },
-          });
+          // @TODO @gatzjames - FixME - Move this to a separate hook in the root of the app that opens the import modal
+          // showModal(AlertModal, {
+          //   title: 'Confirm Data Import',
+          //   message: (
+          //     <span>
+          //       Do you really want to import {params.name && (<><code>{params.name}</code> from</>)} <code>{params.uri}</code>?
+          //     </span>
+          //   ),
+          //   addCancel: true,
+          //   onConfirm: async () => {},
+          // });
           break;
 
         case 'insomnia://plugins/install':
