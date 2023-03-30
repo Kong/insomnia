@@ -52,7 +52,7 @@ export const useAppCommands = () => {
           });
           break;
 
-        case 'insomnia://app/import':
+          // case 'insomnia://app/import':
           // @TODO @gatzjames - FixME - Move this to a separate hook in the root of the app that opens the import modal
           // showModal(AlertModal, {
           //   title: 'Confirm Data Import',
@@ -64,7 +64,7 @@ export const useAppCommands = () => {
           //   addCancel: true,
           //   onConfirm: async () => {},
           // });
-          break;
+          // break;
 
         case 'insomnia://plugins/install':
           showModal(AskModal, {
