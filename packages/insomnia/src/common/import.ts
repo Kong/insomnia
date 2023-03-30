@@ -9,7 +9,6 @@ import { isWorkspace, Workspace } from '../models/workspace';
 // import { SegmentEvent, trackSegmentEvent } from '../ui/analytics';
 import { convert, ConvertResultType } from '../utils/importers/convert';
 import { invariant } from '../utils/invariant';
-import { EXPORT_TYPE_WORKSPACE } from './constants';
 import { database as db } from './database';
 import { generateId } from './misc';
 
@@ -136,9 +135,8 @@ export async function importResources({
   const bufferId = await db.bufferChanges();
 
   const resources = ResourceCache.resources;
-  const resourcesWorkspace = resources.find(
-    r => r.type === 'Workspace'
-  );
+  const resourcesWorkspace = resources.find(isWorkspace);
+  const resourcesApiSpec = resources.find(isApiSpec);
 
   let workspace: Workspace;
 
@@ -149,6 +147,19 @@ export async function importResources({
       scope,
       parentId: projectId,
     });
+
+    if (resourcesApiSpec) {
+      await models.apiSpec.updateOrCreateForParentId(workspace._id, { ...resourcesApiSpec, fileName: workspaceName });
+    }
+
+    if (isApiSpecImport(ResourceCache?.type) && workspace.scope === 'design') {
+      await models.apiSpec.updateOrCreateForParentId(workspace._id, {
+        fileName: workspaceName,
+        contents: ResourceCache.content,
+        contentType: 'yaml',
+      });
+    }
+
   } else if (workspaceId) {
     const existingWorkspace = await models.workspace.getById(workspaceId);
 
@@ -165,27 +176,7 @@ export async function importResources({
     });
   }
 
-  const resourcesWithoutWorkspace = resources.filter(r => {
-    // If the resource is a Workspace don't import it
-    if (resourcesWorkspace && r.type === EXPORT_TYPE_WORKSPACE || r.type === 'Workspace') {
-      return false;
-    }
-
-    // If the resource is an ApiSpec and the workspace is a collection, don't import it
-    if (r.type === 'ApiSpec' && (workspace.scope === 'collection' || workspaceId !== 'create-new-workspace-id')) {
-      return false;
-    }
-
-    return true;
-  });
-
-  if (isApiSpecImport(ResourceCache?.type) && workspace.scope === 'design') {
-    await models.apiSpec.updateOrCreateForParentId(workspace._id, {
-      fileName: workspaceName,
-      contents: ResourceCache.content,
-      contentType: 'yaml',
-    });
-  }
+  const resourcesWithoutWorkspaceAndApiSpec = resources.filter(resource => !isWorkspace(resource) && !isApiSpec(resource));
 
   // Map new IDs
   const ResourceIdMap = new Map();
@@ -194,7 +185,7 @@ export async function importResources({
   resourcesWorkspace &&
     ResourceIdMap.set(resourcesWorkspace._id, workspace._id);
 
-  for (const resource of resourcesWithoutWorkspace) {
+  for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
     const model = getModel(resource.type);
     if (model) {
       ResourceIdMap.set(resource._id, generateId(model.prefix));
@@ -203,7 +194,7 @@ export async function importResources({
     }
   }
 
-  for (const resource of resourcesWithoutWorkspace) {
+  for (const resource of resourcesWithoutWorkspaceAndApiSpec) {
     const model = getModel(resource.type);
 
     if (model) {
