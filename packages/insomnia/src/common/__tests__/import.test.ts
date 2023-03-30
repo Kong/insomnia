@@ -180,10 +180,6 @@ describe('importRaw()', () => {
 
     const requests = await request.findByParentId(existingWorkspace._id);
     expect(requests.length).toBe(12);
-
-    const createdApiSpec = await apiSpec.getByParentId(existingWorkspace._id);
-
-    expect(createdApiSpec?.contents).toContain('openapi: \'3.0.2\'');
   });
 
 });

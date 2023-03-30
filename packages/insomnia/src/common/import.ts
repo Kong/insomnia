@@ -219,7 +219,7 @@ export async function importResources({
         ? 'design'
         : 'collection';
     const newWorkspace = await models.workspace.create({
-      name: workspaceName,
+      name: workspaceName || workspace?.name,
       scope,
       parentId: projectId,
     });
@@ -229,7 +229,7 @@ export async function importResources({
     if (apiSpec) {
       await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
         ...apiSpec,
-        fileName: workspaceName,
+        fileName: workspaceName || workspace?.name,
       });
     }
 
@@ -238,7 +238,7 @@ export async function importResources({
       newWorkspace.scope === 'design'
     ) {
       await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
-        fileName: workspaceName,
+        fileName: workspaceName || workspace?.name,
         contents: ResourceCache.content,
         contentType: 'yaml',
       });
