@@ -63,13 +63,7 @@ export const useAppCommands = () => {
             ),
             addCancel: true,
             onConfirm: async () => {
-              // const activeWorkspaceId = activeWorkspace?._id;
-              // importUri(params.uri, {
-              //   getWorkspaceScope: askToSetWorkspaceScope(),
-              //   getWorkspaceId: askToImportIntoWorkspace({ workspaceId: params.workspaceId || activeWorkspaceId, activeProjectWorkspaces }),
-              //   // Currently, just return the active project instead of prompting for which project to import into
-              //   getProjectId: askToImportIntoProject({ projects, activeProject }),
-              // });
+              // @TODO @gatzjames - FixME - Move this to a separate hook in the root of the app that opens the import modal
             },
           });
           break;
