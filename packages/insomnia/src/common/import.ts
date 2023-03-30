@@ -120,10 +120,6 @@ export async function scanResources({
     content,
   };
 
-  console.log({
-    resources,
-  });
-
   const requests = resources.filter(isRequest);
   const websocketRequests = resources.filter(isWebSocketRequest);
   const grpcRequests = resources.filter(isGrpcRequest);
@@ -146,25 +142,6 @@ export async function scanResources({
     errors: [],
   };
 }
-
-// On a new Workspace we import everything
-
-// On an existing Workspace we dont import these:
-// EXPORT_TYPE_WORKSPACE,
-// EXPORT_TYPE_API_SPEC,
-// EXPORT_TYPE_COOKIE_JAR,
-// EXPORT_TYPE_ENVIRONMENT
-
-// But import these:
-// EXPORT_TYPE_GRPC_REQUEST,
-// EXPORT_TYPE_PROTO_DIRECTORY,
-// EXPORT_TYPE_PROTO_FILE,
-// EXPORT_TYPE_REQUEST,
-// EXPORT_TYPE_REQUEST_GROUP,
-// EXPORT_TYPE_UNIT_TEST,
-// EXPORT_TYPE_UNIT_TEST_SUITE,
-// EXPORT_TYPE_WEBSOCKET_PAYLOAD,
-// EXPORT_TYPE_WEBSOCKET_REQUEST,
 
 export async function importResources({
   workspaceId,
