@@ -829,7 +829,6 @@ const ProjectRoute: FC = () => {
     useState(false);
 
   const fetcher = useFetcher();
-  // const { revalidate } = useRevalidator();
   const submit = useSubmit();
   const navigate = useNavigate();
   const filter = searchParams.get('filter') || '';
