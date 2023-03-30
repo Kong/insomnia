@@ -93,7 +93,14 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             </Dropdown>) : (<Button onClick={handleExportAllToFile}>Export all</Button>)
           }
         &nbsp;&nbsp;
-          <Button onClick={() => setIsImportModalOpen(true)}>
+          <Button
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--padding-sm)',
+            }}
+            onClick={() => setIsImportModalOpen(true)}
+          >
             <i className="fa fa-file-import" />
             Import
           </Button>
