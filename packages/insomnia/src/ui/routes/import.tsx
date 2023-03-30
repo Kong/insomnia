@@ -28,14 +28,22 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
   let content = '';
   if (source === 'uri') {
     const uri = formData.get('uri');
-    invariant(typeof uri === 'string', 'URI is required.');
+    if (typeof uri !== 'string' || uri === '') {
+      return {
+        errors: ['URI is required'],
+      };
+    }
 
     content = await fetchImportContentFromURI({
       uri,
     });
   } else if (source === 'file') {
     const filePath = formData.get('filePath');
-    invariant(typeof filePath === 'string', 'File path is required.');
+    if (typeof filePath !== 'string' || filePath === '') {
+      return {
+        errors: ['File is required'],
+      };
+    }
     const uri = `file://${filePath}`;
 
     content = await fetchImportContentFromURI({
