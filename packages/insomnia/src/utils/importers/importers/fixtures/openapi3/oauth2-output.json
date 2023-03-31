@@ -15,7 +15,7 @@
       "_id": "__BASE_ENVIRONMENT_ID__",
       "_type": "environment",
       "data": {
-        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+        "base_url": "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}"
       },
       "name": "Base environment",
       "parentId": "__WORKSPACE_ID__"
@@ -38,12 +38,12 @@
       "_id": "req___WORKSPACE_ID__028b5fb7",
       "_type": "request",
       "authentication": {
-          "clientId": "{{ oauth2ClientId }}",
-          "clientSecret": "{{ oauth2ClientSecret }}",
+          "clientId": "{{ _.oauth2ClientId }}",
+          "clientSecret": "{{ _.oauth2ClientSecret }}",
           "accessTokenUrl": "https://api.server.test/v1/token",
           "authorizationUrl": "https://api.server.test/v1/auth",
           "grantType": "authorization_code",
-          "redirectUrl": "{{ oauth2RedirectUrl }}",
+          "redirectUrl": "{{ _.oauth2RedirectUrl }}",
           "scope": "",
           "type": "oauth2"
       },
@@ -53,18 +53,18 @@
       "name": "/oauth2/authorization-code",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/oauth2/authorization-code"
+      "url": "{{ _.base_url }}/oauth2/authorization-code"
     },
     {
       "_id": "req___WORKSPACE_ID__cbd0a0fa",
       "_type": "request",
       "authentication": {
-        "clientId": "{{ oauth2ClientId }}",
-        "clientSecret": "{{ oauth2ClientSecret }}",
+        "clientId": "{{ _.oauth2ClientId }}",
+        "clientSecret": "{{ _.oauth2ClientSecret }}",
         "accessTokenUrl": "https://api.server.test/v1/token",
         "authorizationUrl": "https://api.server.test/v1/auth",
         "grantType": "authorization_code",
-        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "redirectUrl": "{{ _.oauth2RedirectUrl }}",
         "scope": "read:something",
         "type": "oauth2"
       },
@@ -74,18 +74,18 @@
       "name": "/oauth2/authorization-code-read",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/oauth2/authorization-code-read"
+      "url": "{{ _.base_url }}/oauth2/authorization-code-read"
     },
     {
       "_id": "req___WORKSPACE_ID__d7972b84",
       "_type": "request",
       "authentication": {
-        "clientId": "{{ oauth2ClientId }}",
-        "clientSecret": "{{ oauth2ClientSecret }}",
+        "clientId": "{{ _.oauth2ClientId }}",
+        "clientSecret": "{{ _.oauth2ClientSecret }}",
         "accessTokenUrl": "https://api.server.test/v1/token",
         "authorizationUrl": "https://api.server.test/v1/auth",
         "grantType": "authorization_code",
-        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "redirectUrl": "{{ _.oauth2RedirectUrl }}",
         "scope": "read:something write:something",
         "type": "oauth2"
       },
@@ -95,7 +95,7 @@
       "name": "/oauth2/authorization-code-read-write",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/oauth2/authorization-code-read-write"
+      "url": "{{ _.base_url }}/oauth2/authorization-code-read-write"
     }
   ]
 }

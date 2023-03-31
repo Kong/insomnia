@@ -15,7 +15,7 @@
       "_id": "__BASE_ENVIRONMENT_ID__",
       "_type": "environment",
       "data": {
-        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+        "base_url": "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}"
       },
       "name": "Base environment",
       "parentId": "__WORKSPACE_ID__"
@@ -60,7 +60,7 @@
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ client_id }}",
+        "clientId": "{{ _.client_id }}",
         "disabled": false,
         "grantType": "authorization_code",
         "scope": "write:pets read:pets",
@@ -82,14 +82,14 @@
       "name": "Add a new pet to the store",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ base_url }}/pet"
+      "url": "{{ _.base_url }}/pet"
     },
     {
       "_id": "updatePet",
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ client_id }}",
+        "clientId": "{{ _.client_id }}",
         "disabled": false,
         "grantType": "authorization_code",
         "scope": "write:pets read:pets",
@@ -111,14 +111,14 @@
       "name": "Update an existing pet",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ base_url }}/pet"
+      "url": "{{ _.base_url }}/pet"
     },
     {
       "_id": "findPetsByStatus",
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ client_id }}",
+        "clientId": "{{ _.client_id }}",
         "disabled": false,
         "grantType": "authorization_code",
         "scope": "write:pets read:pets",
@@ -137,14 +137,14 @@
         }
       ],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ base_url }}/pet/findByStatus"
+      "url": "{{ _.base_url }}/pet/findByStatus"
     },
     {
       "_id": "findPetsByTags",
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ client_id }}",
+        "clientId": "{{ _.client_id }}",
         "disabled": false,
         "grantType": "authorization_code",
         "scope": "write:pets read:pets",
@@ -163,7 +163,7 @@
         }
       ],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ base_url }}/pet/findByTags"
+      "url": "{{ _.base_url }}/pet/findByTags"
     },
     {
       "_id": "getPetById",
@@ -175,21 +175,21 @@
         {
           "disabled": false,
           "name": "api_key",
-          "value": "{{ api_key }}"
+          "value": "{{ _.api_key }}"
         }
       ],
       "method": "GET",
       "name": "Find pet by ID",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ base_url }}/pet/{{ petId }}"
+      "url": "{{ _.base_url }}/pet/{{ _.petId }}"
     },
     {
       "_id": "updatePetWithForm",
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ client_id }}",
+        "clientId": "{{ _.client_id }}",
         "disabled": false,
         "grantType": "authorization_code",
         "scope": "write:pets read:pets",
@@ -222,14 +222,14 @@
       "name": "Updates a pet in the store with form data",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ base_url }}/pet/{{ petId }}"
+      "url": "{{ _.base_url }}/pet/{{ _.petId }}"
     },
     {
       "_id": "deletePet",
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ client_id }}",
+        "clientId": "{{ _.client_id }}",
         "disabled": false,
         "grantType": "authorization_code",
         "scope": "write:pets read:pets",
@@ -248,14 +248,14 @@
       "name": "Deletes a pet",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ base_url }}/pet/{{ petId }}"
+      "url": "{{ _.base_url }}/pet/{{ _.petId }}"
     },
     {
       "_id": "uploadFile",
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ client_id }}",
+        "clientId": "{{ _.client_id }}",
         "disabled": false,
         "grantType": "authorization_code",
         "scope": "write:pets read:pets",
@@ -288,7 +288,7 @@
       "name": "uploads an image",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ base_url }}/pet/{{ petId }}/uploadImage"
+      "url": "{{ _.base_url }}/pet/{{ _.petId }}/uploadImage"
     },
     {
       "_id": "getInventory",
@@ -300,14 +300,14 @@
         {
           "disabled": false,
           "name": "api_key",
-          "value": "{{ api_key }}"
+          "value": "{{ _.api_key }}"
         }
       ],
       "method": "GET",
       "name": "Returns pet inventories by status",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__3a21295d",
-      "url": "{{ base_url }}/store/inventory"
+      "url": "{{ _.base_url }}/store/inventory"
     },
     {
       "_id": "placeOrder",
@@ -320,7 +320,7 @@
       "name": "Place an order for a pet",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__3a21295d",
-      "url": "{{ base_url }}/store/order"
+      "url": "{{ _.base_url }}/store/order"
     },
     {
       "_id": "getOrderById",
@@ -333,7 +333,7 @@
       "name": "Find purchase order by ID",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__3a21295d",
-      "url": "{{ base_url }}/store/order/{{ orderId }}"
+      "url": "{{ _.base_url }}/store/order/{{ _.orderId }}"
     },
     {
       "_id": "deleteOrder",
@@ -346,7 +346,7 @@
       "name": "Delete purchase order by ID",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__3a21295d",
-      "url": "{{ base_url }}/store/order/{{ orderId }}"
+      "url": "{{ _.base_url }}/store/order/{{ _.orderId }}"
     },
     {
       "_id": "createUser",
@@ -359,7 +359,7 @@
       "name": "Create user",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ base_url }}/user"
+      "url": "{{ _.base_url }}/user"
     },
     {
       "_id": "createUsersWithArrayInput",
@@ -372,7 +372,7 @@
       "name": "Creates list of users with given input array",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ base_url }}/user/createWithArray"
+      "url": "{{ _.base_url }}/user/createWithArray"
     },
     {
       "_id": "createUsersWithListInput",
@@ -385,7 +385,7 @@
       "name": "Creates list of users with given input array",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ base_url }}/user/createWithList"
+      "url": "{{ _.base_url }}/user/createWithList"
     },
     {
       "_id": "loginUser",
@@ -409,7 +409,7 @@
         }
       ],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ base_url }}/user/login"
+      "url": "{{ _.base_url }}/user/login"
     },
     {
       "_id": "logoutUser",
@@ -422,7 +422,7 @@
       "name": "Logs out current logged in user session",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ base_url }}/user/logout"
+      "url": "{{ _.base_url }}/user/logout"
     },
     {
       "_id": "getUserByName",
@@ -435,7 +435,7 @@
       "name": "Get user by user name",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ base_url }}/user/{{ username }}"
+      "url": "{{ _.base_url }}/user/{{ _.username }}"
     },
     {
       "_id": "updateUser",
@@ -448,7 +448,7 @@
       "name": "Updated user",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ base_url }}/user/{{ username }}"
+      "url": "{{ _.base_url }}/user/{{ _.username }}"
     },
     {
       "_id": "deleteUser",
@@ -461,7 +461,7 @@
       "name": "Delete user",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__12dea96f",
-      "url": "{{ base_url }}/user/{{ username }}"
+      "url": "{{ _.base_url }}/user/{{ _.username }}"
     }
   ]
 }

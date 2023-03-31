@@ -15,7 +15,7 @@
       "_id": "__BASE_ENVIRONMENT_ID__",
       "_type": "environment",
       "data": {
-        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+        "base_url": "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}"
       },
       "name": "Base environment",
       "parentId": "__WORKSPACE_ID__"
@@ -39,9 +39,9 @@
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ oauth2ClientId }}",
+        "clientId": "{{ _.oauth2ClientId }}",
         "grantType": "implicit",
-        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "redirectUrl": "{{ _.oauth2RedirectUrl }}",
         "scope": "write:pets read:pets",
         "type": "oauth2"
       },
@@ -54,16 +54,16 @@
       "name": "Add a new pet to the store",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/pet"
+      "url": "{{ _.base_url }}/pet"
     },
     {
       "_id": "req___WORKSPACE_ID__74a7a059",
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ oauth2ClientId }}",
+        "clientId": "{{ _.oauth2ClientId }}",
         "grantType": "implicit",
-        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "redirectUrl": "{{ _.oauth2RedirectUrl }}",
         "scope": "write:pets read:pets",
         "type": "oauth2"
       },
@@ -76,16 +76,16 @@
       "name": "Update an existing pet",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/pet"
+      "url": "{{ _.base_url }}/pet"
     },
     {
       "_id": "req___WORKSPACE_ID__80ab0d08",
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ oauth2ClientId }}",
+        "clientId": "{{ _.oauth2ClientId }}",
         "grantType": "implicit",
-        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "redirectUrl": "{{ _.oauth2RedirectUrl }}",
         "scope": "write:pets read:pets",
         "type": "oauth2"
       },
@@ -101,16 +101,16 @@
         }
       ],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/pet/findByStatus"
+      "url": "{{ _.base_url }}/pet/findByStatus"
     },
     {
       "_id": "req___WORKSPACE_ID__42a17980",
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ oauth2ClientId }}",
+        "clientId": "{{ _.oauth2ClientId }}",
         "grantType": "implicit",
-        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "redirectUrl": "{{ _.oauth2RedirectUrl }}",
         "scope": "write:pets read:pets",
         "type": "oauth2"
       },
@@ -126,7 +126,7 @@
         }
       ],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/pet/findByTags"
+      "url": "{{ _.base_url }}/pet/findByTags"
     },
     {
       "_id": "req___WORKSPACE_ID__3d1a51d3",
@@ -135,7 +135,7 @@
         "addTo": "header",
         "key": "api_key",
         "type": "apikey",
-        "value": "{{ apiKey }}"
+        "value": "{{ _.apiKey }}"
       },
       "body": {},
       "headers": [],
@@ -143,16 +143,16 @@
       "name": "Find pet by ID",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/pet/{{ petId }}"
+      "url": "{{ _.base_url }}/pet/{{ _.petId }}"
     },
     {
       "_id": "req___WORKSPACE_ID__a4608701",
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ oauth2ClientId }}",
+        "clientId": "{{ _.oauth2ClientId }}",
         "grantType": "implicit",
-        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "redirectUrl": "{{ _.oauth2RedirectUrl }}",
         "scope": "write:pets read:pets",
         "type": "oauth2"
       },
@@ -164,16 +164,16 @@
       "name": "Updates a pet in the store with form data",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/pet/{{ petId }}"
+      "url": "{{ _.base_url }}/pet/{{ _.petId }}"
     },
     {
       "_id": "req___WORKSPACE_ID__e804bd05",
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ oauth2ClientId }}",
+        "clientId": "{{ _.oauth2ClientId }}",
         "grantType": "implicit",
-        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "redirectUrl": "{{ _.oauth2RedirectUrl }}",
         "scope": "write:pets read:pets",
         "type": "oauth2"
       },
@@ -189,16 +189,16 @@
       "name": "Deletes a pet",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/pet/{{ petId }}"
+      "url": "{{ _.base_url }}/pet/{{ _.petId }}"
     },
     {
       "_id": "req___WORKSPACE_ID__8081fb6f",
       "_type": "request",
       "authentication": {
         "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-        "clientId": "{{ oauth2ClientId }}",
+        "clientId": "{{ _.oauth2ClientId }}",
         "grantType": "implicit",
-        "redirectUrl": "{{ oauth2RedirectUrl }}",
+        "redirectUrl": "{{ _.oauth2RedirectUrl }}",
         "scope": "write:pets read:pets",
         "type": "oauth2"
       },
@@ -210,7 +210,7 @@
       "name": "uploads an image",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/pet/{{ petId }}/uploadImage"
+      "url": "{{ _.base_url }}/pet/{{ _.petId }}/uploadImage"
     },
     {
       "_id": "req___WORKSPACE_ID__443ac9e7",
@@ -219,7 +219,7 @@
         "addTo": "header",
         "key": "api_key",
         "type": "apikey",
-        "value": "{{ apiKey }}"
+        "value": "{{ _.apiKey }}"
       },
       "body": {},
       "headers": [],
@@ -227,7 +227,7 @@
       "name": "Returns pet inventories by status",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/store/inventory"
+      "url": "{{ _.base_url }}/store/inventory"
     },
     {
       "_id": "req___WORKSPACE_ID__e24a4f9e",
@@ -239,7 +239,7 @@
       "name": "Place an order for a pet",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/store/order"
+      "url": "{{ _.base_url }}/store/order"
     },
     {
       "_id": "req___WORKSPACE_ID__f021bcd3",
@@ -251,7 +251,7 @@
       "name": "Find purchase order by ID",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/store/order/{{ orderId }}"
+      "url": "{{ _.base_url }}/store/order/{{ _.orderId }}"
     },
     {
       "_id": "req___WORKSPACE_ID__15e47538",
@@ -263,7 +263,7 @@
       "name": "Delete purchase order by ID",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/store/order/{{ orderId }}"
+      "url": "{{ _.base_url }}/store/order/{{ _.orderId }}"
     },
     {
       "_id": "req___WORKSPACE_ID__fe3d55d0",
@@ -275,7 +275,7 @@
       "name": "Create user",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/user"
+      "url": "{{ _.base_url }}/user"
     },
     {
       "_id": "req___WORKSPACE_ID__4cb83333",
@@ -287,7 +287,7 @@
       "name": "Creates list of users with given input array",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/user/createWithArray"
+      "url": "{{ _.base_url }}/user/createWithArray"
     },
     {
       "_id": "req___WORKSPACE_ID__e94a615f",
@@ -299,7 +299,7 @@
       "name": "Creates list of users with given input array",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/user/createWithList"
+      "url": "{{ _.base_url }}/user/createWithList"
     },
     {
       "_id": "req___WORKSPACE_ID__00ac9da2",
@@ -322,7 +322,7 @@
         }
       ],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/user/login"
+      "url": "{{ _.base_url }}/user/login"
     },
     {
       "_id": "req___WORKSPACE_ID__740025cb",
@@ -334,7 +334,7 @@
       "name": "Logs out current logged in user session",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/user/logout"
+      "url": "{{ _.base_url }}/user/logout"
     },
     {
       "_id": "req___WORKSPACE_ID__74f1d1d1",
@@ -346,7 +346,7 @@
       "name": "Get user by user name",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/user/{{ username }}"
+      "url": "{{ _.base_url }}/user/{{ _.username }}"
     },
     {
       "_id": "req___WORKSPACE_ID__6d74493f",
@@ -358,7 +358,7 @@
       "name": "Updated user",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/user/{{ username }}"
+      "url": "{{ _.base_url }}/user/{{ _.username }}"
     },
     {
       "_id": "req___WORKSPACE_ID__38e8e88f",
@@ -370,7 +370,7 @@
       "name": "Delete user",
       "parameters": [],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/user/{{ username }}"
+      "url": "{{ _.base_url }}/user/{{ _.username }}"
     }
   ]
 }

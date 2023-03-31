@@ -15,7 +15,7 @@
       "_id": "__BASE_ENVIRONMENT_ID__",
       "_type": "environment",
       "data": {
-        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+        "base_url": "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}"
       },
       "name": "Base environment",
       "parentId": "__WORKSPACE_ID__"
@@ -51,24 +51,24 @@
         {
           "disabled": false,
           "name": "X-API-KEY",
-          "value": "{{ xApiKey }}"
+          "value": "{{ _.xApiKey }}"
         },
         {
           "disabled": false,
           "name": "X-APP-ID",
-          "value": "{{ xAppId }}"
+          "value": "{{ _.xAppId }}"
         },
         {
           "disabled": false,
           "name": "X-APP-SECRET",
-          "value": "{{ xAppSecret }}"
+          "value": "{{ _.xAppSecret }}"
         }
       ],
       "method": "POST",
       "name": "Add a new pet to the store",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ base_url }}/pet"
+      "url": "{{ _.base_url }}/pet"
     },
     {
       "_id": "req___WORKSPACE_ID__80ab0d08",
@@ -79,17 +79,17 @@
         {
           "disabled": false,
           "name": "X-API-KEY",
-          "value": "{{ xApiKey }}"
+          "value": "{{ _.xApiKey }}"
         },
         {
           "disabled": false,
           "name": "X-APP-ID",
-          "value": "{{ xAppId }}"
+          "value": "{{ _.xAppId }}"
         },
         {
           "disabled": false,
           "name": "X-APP-SECRET",
-          "value": "{{ xAppSecret }}"
+          "value": "{{ _.xAppSecret }}"
         }
       ],
       "method": "GET",
@@ -102,7 +102,7 @@
         }
       ],
       "parentId": "fld___WORKSPACE_ID__1b034c38",
-      "url": "{{ base_url }}/pet/findByStatus"
+      "url": "{{ _.base_url }}/pet/findByStatus"
     }
   ]
 }

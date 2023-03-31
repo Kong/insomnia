@@ -15,7 +15,7 @@
       "_id": "__BASE_ENVIRONMENT_ID__",
       "_type": "environment",
       "data": {
-        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+        "base_url": "{{ _.scheme }}://{{ _.host }}{{ _.base_path }}"
       },
       "name": "Base environment",
       "parentId": "__WORKSPACE_ID__"
@@ -55,7 +55,7 @@
         }
       ],
       "parentId": "fld___WORKSPACE_ID__a8acce24",
-      "url": "{{ base_url }}/pets"
+      "url": "{{ _.base_url }}/pets"
     },
     {
       "_id": "req___WORKSPACE_ID__26e3ae981",
@@ -73,7 +73,7 @@
         }
       ],
       "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/pets"
+      "url": "{{ _.base_url }}/pets"
     },
     {
       "_id": "req___WORKSPACE_ID__09e1157b",
@@ -85,7 +85,7 @@
       "name": "Create a pet",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__a8acce24",
-      "url": "{{ base_url }}/pets"
+      "url": "{{ _.base_url }}/pets"
     },
     {
       "_id": "req___WORKSPACE_ID__3b13e39c",
@@ -97,7 +97,7 @@
       "name": "Info for a specific pet",
       "parameters": [],
       "parentId": "fld___WORKSPACE_ID__a8acce24",
-      "url": "{{ base_url }}/pets/{{ petId }}"
+      "url": "{{ _.base_url }}/pets/{{ _.petId }}"
     }
   ]
 }

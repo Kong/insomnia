@@ -274,7 +274,7 @@ const importFolderItem = (parentId: string) => (
  * I.e. "/foo/:bar" => "/foo/{{ bar }}"
  */
 const pathWithParamsAsVariables = (path?: string) =>
-  path?.replace(VARIABLE_SEARCH_VALUE, '{{ $1 }}') ?? '';
+  path?.replace(VARIABLE_SEARCH_VALUE, '{{ _.$1 }}') ?? '';
 
 /**
  * Return Insomnia request
@@ -299,7 +299,7 @@ const importRequest = (
     parentId: parentId,
     name,
     method: endpointSchema.method?.toUpperCase(),
-    url: `{{ base_url }}${pathWithParamsAsVariables(endpointSchema.path)}`,
+    url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path)}`,
     body: prepareBody(endpointSchema),
     headers: [...paramHeaders, ...securityHeaders],
     authentication: authentication as Authentication,
@@ -366,14 +366,14 @@ const parseSecurity = (
       return {
         name: scheme.schemeDetails.name,
         disabled: false,
-        value: `{{ ${variableName} }}`,
+        value: `{{ _.${variableName} }}`,
       };
     });
   const apiKeyCookies = apiKeySchemes
     .filter(scheme => scheme.schemeDetails.in === 'cookie')
     .map(scheme => {
       const variableName = camelCase(scheme.schemeDetails.name);
-      return `${scheme.schemeDetails.name}={{ ${variableName} }}`;
+      return `${scheme.schemeDetails.name}={{ _.${variableName} }}`;
     });
   const apiKeyCookieHeader = {
     name: 'Cookie',
@@ -387,7 +387,7 @@ const parseSecurity = (
       return {
         name: scheme.schemeDetails.name,
         disabled: false,
-        value: `{{ ${variableName} }}`,
+        value: `{{ _.${variableName} }}`,
       };
     });
 
@@ -665,14 +665,14 @@ const parseHttpAuth = (scheme: string) => {
     case HTTP_AUTH_SCHEME.BASIC:
       return {
         type: 'basic',
-        username: '{{ httpUsername }}',
-        password: '{{ httpPassword }}',
+        username: '{{ _.httpUsername }}',
+        password: '{{ _.httpPassword }}',
       };
 
     case HTTP_AUTH_SCHEME.BEARER:
       return {
         type: 'bearer',
-        token: '{{bearerToken}}',
+        token: '{{ _.bearerToken }}',
         prefix: '',
       };
 
@@ -686,7 +686,7 @@ const parseApiKeyAuth = (schemeDetails: OpenAPIV3.ApiKeySecurityScheme) => {
   return {
     type: SECURITY_TYPE.API_KEY.toLowerCase(),
     key: schemeDetails.name,
-    value: `{{ ${variableName} }}`,
+    value: `{{ _.${variableName} }}`,
     addTo: schemeDetails.in,
   };
 };
@@ -732,7 +732,7 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme, selectedScopes: str
   }
 
   const base = {
-    clientId: '{{ oauth2ClientId }}',
+    clientId: '{{ _.oauth2ClientId }}',
     grantType: mapOAuth2GrantType(grantType),
     scope: parseOAuth2Scopes(flow, selectedScopes),
     type: 'oauth2',
@@ -742,8 +742,8 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme, selectedScopes: str
     case OAUTH_FLOWS.AUTHORIZATION_CODE:
       return {
         ...base,
-        clientSecret: '{{ oauth2ClientSecret }}',
-        redirectUrl: '{{ oauth2RedirectUrl }}',
+        clientSecret: '{{ _.oauth2ClientSecret }}',
+        redirectUrl: '{{ _.oauth2RedirectUrl }}',
         accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.AUTHORIZATION_CODE])?.tokenUrl,
         authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.AUTHORIZATION_CODE])?.authorizationUrl,
       };
@@ -751,23 +751,23 @@ const parseOAuth2 = (scheme: OpenAPIV3.OAuth2SecurityScheme, selectedScopes: str
     case OAUTH_FLOWS.CLIENT_CREDENTIALS:
       return {
         ...base,
-        clientSecret: '{{ oauth2ClientSecret }}',
+        clientSecret: '{{ _.oauth2ClientSecret }}',
         accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.CLIENT_CREDENTIALS])?.tokenUrl,
       };
 
     case OAUTH_FLOWS.IMPLICIT:
       return {
         ...base,
-        redirectUrl: '{{ oauth2RedirectUrl }}',
+        redirectUrl: '{{ _.oauth2RedirectUrl }}',
         authorizationUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.IMPLICIT])?.authorizationUrl,
       };
 
     case OAUTH_FLOWS.PASSWORD:
       return {
         ...base,
-        clientSecret: '{{ oauth2ClientSecret }}',
-        username: '{{ oauth2Username }}',
-        password: '{{ oauth2Password }}',
+        clientSecret: '{{ _.oauth2ClientSecret }}',
+        username: '{{ _.oauth2Username }}',
+        password: '{{ _.oauth2Password }}',
         accessTokenUrl: (flow as OpenAPIV3.OAuth2SecurityScheme['flows'][typeof OAUTH_FLOWS.PASSWORD])?.tokenUrl,
       };
 
@@ -812,7 +812,7 @@ export const convert: Converter = async rawData => {
     parentId: WORKSPACE_ID,
     name: 'Base environment',
     data: {
-      base_url: '{{ scheme }}://{{ host }}{{ base_path }}',
+      base_url: '{{ _.scheme }}://{{ _.host }}{{ _.base_path }}',
     },
   };
 
