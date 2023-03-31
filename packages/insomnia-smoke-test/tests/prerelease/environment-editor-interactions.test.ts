@@ -19,12 +19,6 @@ test.describe('Environment Editor', async () => {
   test('create a new environment', async ({ page }) => {
     // Create the environment
 
-    // ------
-    // TODO(INS-2504) - exported current environment not properly imported
-    await page.getByRole('button', { name: 'No Environment' }).click();
-    await page.getByText('ExampleB').click();
-    // ------
-
     await page.getByText('ExampleB').click();
     await page.getByRole('menuitem', { name: 'Manage Environments' }).click();
     await page.getByTestId('CreateEnvironmentDropdown').click();
@@ -48,12 +42,6 @@ test.describe('Environment Editor', async () => {
   test('Rename an existing environment', async ({ page }) => {
     // Rename the environment
 
-    // ------
-    // TODO(INS-2504) - exported current environment not properly imported
-    await page.getByRole('button', { name: 'No Environment' }).click();
-    await page.getByText('ExampleB').click();
-    // ------
-
     await page.getByText('ExampleB').click();
     await page.getByRole('menuitem', { name: 'Manage Environments' }).click();
     await page.getByRole('button', { name: 'ExampleA' }).click();
@@ -75,12 +63,6 @@ test.describe('Environment Editor', async () => {
 
   test('Add new variables to an existing environment', async ({ page }) => {
     // Rename the environment
-
-    // ------
-    // TODO(INS-2504) - exported current environment not properly imported
-    await page.getByRole('button', { name: 'No Environment' }).click();
-    await page.getByText('ExampleB').click();
-    // ------
 
     await page.getByText('ExampleB').click();
     await page.getByRole('menuitem', { name: 'Manage Environments' }).click();
