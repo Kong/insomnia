@@ -168,7 +168,6 @@ export async function importResources({
       `Could not find workspace with id ${workspaceId}`
     );
 
-    // If we're importing into a new workspace
     // Map new IDs
     ResourceIdMap.set(workspaceId, existingWorkspace._id);
     ResourceIdMap.set('__WORKSPACE_ID__', existingWorkspace._id);
@@ -234,7 +233,7 @@ export async function importResources({
   } else {
     const scope =
       isApiSpecImport(ResourceCache?.type) ||
-        Boolean(resources.find(r => r.type === 'ApiSpec'))
+      Boolean(resources.find(r => r.type === 'ApiSpec'))
         ? 'design'
         : 'collection';
     const newWorkspace = await models.workspace.create({
@@ -248,6 +247,7 @@ export async function importResources({
     if (apiSpec) {
       await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
         ...apiSpec,
+        _id: generateId(models.apiSpec.prefix),
         fileName: workspaceName || workspace?.name,
       });
     }
@@ -307,7 +307,25 @@ export async function importResources({
       }
     }
 
-    console.log({ resourcesWithoutWorkspaceAndApiSpec });
+    // Use the first environment as the active one
+    const subEnvironments =
+      resources.filter(isEnvironment).filter(env => env.parentId.startsWith(models.environment.prefix)) || [];
+
+    console.log({ subEnvironments });
+
+    if (subEnvironments.length > 0) {
+      const firstSubEnvironment = subEnvironments[0];
+
+      if (firstSubEnvironment) {
+        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
+          newWorkspace._id
+        );
+
+        await models.workspaceMeta.update(workspaceMeta, {
+          activeEnvironmentId: ResourceIdMap.get(firstSubEnvironment._id),
+        });
+      }
+    }
 
     await db.flushChanges(bufferId);
 
