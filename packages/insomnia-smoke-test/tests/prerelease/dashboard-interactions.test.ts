@@ -48,7 +48,7 @@ test.describe('Dashboard', async () => {
     });
   });
   test.describe('Interactions', async () => { // Not sure about the name here
-    // TODO(INS-2504)
+    // TODO(INS-2504) - we don't support importing multiple collections at this time
     test.skip('Can filter through multiple collections', async ({ app, page }) => {
       await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');

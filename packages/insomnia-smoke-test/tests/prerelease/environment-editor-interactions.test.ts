@@ -18,6 +18,13 @@ test.describe('Environment Editor', async () => {
 
   test('create a new environment', async ({ page }) => {
     // Create the environment
+
+    // ------
+    // TODO(INS-2504) - exported current environment not properly imported
+    await page.getByRole('button', { name: 'No Environment' }).click();
+    await page.getByText('ExampleB').click();
+    // ------
+
     await page.getByText('ExampleB').click();
     await page.getByRole('menuitem', { name: 'Manage Environments' }).click();
     await page.getByTestId('CreateEnvironmentDropdown').click();
@@ -40,6 +47,13 @@ test.describe('Environment Editor', async () => {
   // rename an existing environment
   test('Rename an existing environment', async ({ page }) => {
     // Rename the environment
+
+    // ------
+    // TODO(INS-2504) - exported current environment not properly imported
+    await page.getByRole('button', { name: 'No Environment' }).click();
+    await page.getByText('ExampleB').click();
+    // ------
+
     await page.getByText('ExampleB').click();
     await page.getByRole('menuitem', { name: 'Manage Environments' }).click();
     await page.getByRole('button', { name: 'ExampleA' }).click();
@@ -61,6 +75,13 @@ test.describe('Environment Editor', async () => {
 
   test('Add new variables to an existing environment', async ({ page }) => {
     // Rename the environment
+
+    // ------
+    // TODO(INS-2504) - exported current environment not properly imported
+    await page.getByRole('button', { name: 'No Environment' }).click();
+    await page.getByText('ExampleB').click();
+    // ------
+
     await page.getByText('ExampleB').click();
     await page.getByRole('menuitem', { name: 'Manage Environments' }).click();
 
@@ -95,7 +116,10 @@ test.describe('Environment Editor', async () => {
     await page.getByRole('tab', { name: 'Timeline' }).click();
 
     // FIXME(filipe) - adding variables to request body can be so fast they don't get picked up when sending request
+
     await page.locator('pre').filter({ hasText: '| 9000' }).click();
+
+    // NOTE - Test fails due to actual bug - the variables are not being added to the request body when the request is sent
     await page.locator('pre').filter({ hasText: '| Gandalf' }).click();
 
   });
