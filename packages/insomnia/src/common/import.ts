@@ -297,6 +297,13 @@ export async function importResources({
             protoFileId: ResourceIdMap.get(resource.protoFileId),
             parentId: ResourceIdMap.get(resource.parentId),
           });
+        } else if (isUnitTest(resource)) {
+          await db.docCreate(model.type, {
+            ...resource,
+            _id: ResourceIdMap.get(resource._id),
+            requestId: ResourceIdMap.get(resource.requestId),
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
         } else {
           await db.docCreate(model.type, {
             ...resource,

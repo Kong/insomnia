@@ -17,12 +17,6 @@ test.describe('Design interactions', async () => {
     await expect(true).toBeTruthy();
   });
 
-  test.fixme('[INS-567] Requests are not duplicated when switching between tabs', async ({ page }) => {
-    // TODO(filipe) implement in another PR
-    await page.getByTestId('project').click();
-    await expect(true).toBeTruthy();
-  });
-
   test('Unit Test interactions', async ({ app, page }) => {
     // Setup
     await page.getByTestId('project').click();
@@ -51,7 +45,10 @@ test.describe('Design interactions', async () => {
     // Add a new test
     await page.locator('text=New Test').nth(1).click();
     await page.click('div[role="dialog"] button:has-text("New Test")');
-    await page.locator('select[name="request"]').selectOption('req_17ca8bbd46374144a089f891e32842d6');
+    const label = await page.locator('option', { hasText: 'Request A' }).textContent() || '';
+    await page.locator('select[name="request"]').selectOption({
+      label,
+    });
 
     await page.click('#wrapper >> text=Run Tests');
     await expect(page.locator('.app')).toContainText('Tests Passed 1/1');
