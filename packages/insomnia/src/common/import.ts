@@ -198,11 +198,30 @@ export async function importResources({
       const model = getModel(resource.type);
 
       if (model) {
-        await db.docCreate(model.type, {
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          parentId: ResourceIdMap.get(resource.parentId),
-        });
+        // Make sure we point to the new proto file
+        if (isGrpcRequest(resource)) {
+          await db.docCreate(model.type, {
+            ...resource,
+            _id: ResourceIdMap.get(resource._id),
+            protoFileId: ResourceIdMap.get(resource.protoFileId),
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
+
+          // Make sure we point unit test to the new request
+        } else if (isUnitTest(resource)) {
+          await db.docCreate(model.type, {
+            ...resource,
+            _id: ResourceIdMap.get(resource._id),
+            requestId: ResourceIdMap.get(resource.requestId),
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
+        } else {
+          await db.docCreate(model.type, {
+            ...resource,
+            _id: ResourceIdMap.get(resource._id),
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
+        }
       }
     }
 
@@ -215,7 +234,7 @@ export async function importResources({
   } else {
     const scope =
       isApiSpecImport(ResourceCache?.type) ||
-      Boolean(resources.find(r => r.type === 'ApiSpec'))
+        Boolean(resources.find(r => r.type === 'ApiSpec'))
         ? 'design'
         : 'collection';
     const newWorkspace = await models.workspace.create({
@@ -270,13 +289,25 @@ export async function importResources({
       const model = getModel(resource.type);
 
       if (model) {
-        await db.docCreate(model.type, {
-          ...resource,
-          _id: ResourceIdMap.get(resource._id),
-          parentId: ResourceIdMap.get(resource.parentId),
-        });
+        // Make sure we point to the new proto file
+        if (isGrpcRequest(resource)) {
+          await db.docCreate(model.type, {
+            ...resource,
+            _id: ResourceIdMap.get(resource._id),
+            protoFileId: ResourceIdMap.get(resource.protoFileId),
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
+        } else {
+          await db.docCreate(model.type, {
+            ...resource,
+            _id: ResourceIdMap.get(resource._id),
+            parentId: ResourceIdMap.get(resource.parentId),
+          });
+        }
       }
     }
+
+    console.log({ resourcesWithoutWorkspaceAndApiSpec });
 
     await db.flushChanges(bufferId);
 
