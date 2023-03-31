@@ -158,26 +158,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   }
 
   /// /////// Body (Text or Blob) //////////
-  let textBodyParams: Pair[] = [];
-  const paramNames = [
-    'd',
-    'data',
-    'data-raw',
-    'data-urlencode',
-    'data-binary',
-    'data-ascii',
-  ];
-
-  for (const paramName of paramNames) {
-    const pair = pairsByName[paramName];
-
-    if (pair && pair.length) {
-      textBodyParams = textBodyParams.concat(paramName === 'data-urlencode' ? pair.map(item => encodeURIComponent(item)) : pair);
-    }
-  }
-
-  // join params to make body
-  const textBody = textBodyParams.join('&');
+  const dataParameters = pairsToDataParameters(pairsByName);
   const contentTypeHeader = headers.find(
     header => header.name.toLowerCase() === 'content-type',
   );
@@ -210,25 +191,18 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   const body: PostData = mimeType ? { mimeType } : {};
   const bodyAsGET = getPairValue(pairsByName, false, ['G', 'get']);
 
-  if (textBody && bodyAsGET) {
-    const bodyParams = textBody.split('&').map(v => {
-      const [name, value] = v.split('=');
+  if (dataParameters.length !== 0 && bodyAsGET) {
+    parameters.push(...dataParameters);
+  } else if (dataParameters && mimeType === 'application/x-www-form-urlencoded') {
+    body.params = dataParameters.map(parameter => {
       return {
-        name: name || '',
-        value: value || '',
+        ...parameter,
+        name: decodeURIComponent(parameter.name || ''),
+        value: decodeURIComponent(parameter.value || ''),
       };
     });
-    parameters.push(...bodyParams);
-  } else if (textBody && mimeType === 'application/x-www-form-urlencoded') {
-    body.params = textBody.split('&').map(v => {
-      const [name, value] = v.split('=');
-      return {
-        name: decodeURIComponent(name || ''),
-        value: decodeURIComponent(value || ''),
-      };
-    });
-  } else if (textBody) {
-    body.text = textBody;
+  } else if (dataParameters.length !== 0) {
+    body.text = dataParameters.map(parameter => `${parameter.name}${parameter.value}`).join('&');
     body.mimeType = mimeType || '';
   } else if (formDataParams.length) {
     body.params = formDataParams;
@@ -258,6 +232,110 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     authentication,
     body,
   };
+};
+
+/**
+ * cURL supported -d, and --date[suffix] flags.
+ */
+const dataFlags = [
+  /**
+   * https://curl.se/docs/manpage.html#-d
+   */
+  'd',
+  'data',
+
+  /**
+   * https://curl.se/docs/manpage.html#--data-raw
+   */
+  'data-raw',
+
+  /**
+   * https://curl.se/docs/manpage.html#--data-urlencode
+   */
+  'data-urlencode',
+
+  /**
+   * https://curl.se/docs/manpage.html#--data-binary
+   */
+  'data-binary',
+
+  /**
+   * https://curl.se/docs/manpage.html#--data-ascii
+   */
+  'data-ascii',
+];
+
+/**
+ * Parses pairs supporting only flags dictated by {@link dataFlags}
+ *
+ * @param keyedPairs pairs with cURL flags as keys.
+ */
+const pairsToDataParameters = (keyedPairs: PairsByName): Parameter[] => {
+  let dataParameters: Parameter[] = [];
+
+  for (const flagName of dataFlags) {
+    const pairs = keyedPairs[flagName];
+
+    if (!pairs || pairs.length === 0) {
+      continue;
+    }
+
+    switch (flagName) {
+      case 'd':
+      case 'data':
+      case 'data-ascii':
+      case 'data-binary':
+        dataParameters = dataParameters.concat(pairs.flatMap(pair => pairToParameters(pair, true)));
+        break;
+      case 'data-raw':
+        dataParameters = dataParameters.concat(pairs.flatMap(pair => pairToParameters(pair)));
+        break;
+      case 'data-urlencode':
+        dataParameters = dataParameters.concat(pairs.flatMap(pair => pairToParameters(pair, true))
+          .map(parameter => {
+            if (parameter.type === 'file') {
+              return parameter;
+            }
+
+            return {
+              ...parameter,
+              value: encodeURIComponent(parameter.value ?? ''),
+            };
+          }));
+        break;
+      default:
+        throw new Error(`unhandled data flag ${flagName}`);
+    }
+  }
+
+  return dataParameters;
+};
+
+/**
+ * Converts pairs (that could include multiple via `&`) into {@link Parameter}s. This
+ * method supports both `@filename` and `name@filename`.
+ *
+ * @param pair command line value
+ * @param allowFiles whether to allow the `@` to support include files
+ */
+const pairToParameters = (pair: Pair, allowFiles = false): Parameter[] => {
+  if (typeof pair === 'boolean') {
+    return [{ name: '', value: pair.toString() }];
+  }
+
+  return pair.split('&').map(pair => {
+    if (pair.includes('@') && allowFiles) {
+      const [name, fileName] = pair.split('@');
+      return { name, fileName, type: 'file' };
+    }
+
+    const [name, value] = pair.split('=');
+    if (!value || !pair.includes('=')) {
+      return { name: '', value: pair };
+    }
+
+    return { name, value };
+  });
 };
 
 const getPairValue = <T extends string | boolean>(
