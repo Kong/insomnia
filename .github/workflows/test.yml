@@ -1,6 +1,7 @@
 name: Test
 
 on:
+  merge_group:
   workflow_dispatch:
   push:
     branches:
@@ -28,7 +29,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
 
       - name: Bootstrap packages
         run: npm run bootstrap
@@ -50,7 +51,7 @@ jobs:
 
       - name: Build app for smoke tests
         env:
-          NODE_OPTIONS: '--max_old_space_size=6144'
+          NODE_OPTIONS: "--max_old_space_size=6144"
         run: npm run app-build
 
       - name: Run Smoke tests (CI)
