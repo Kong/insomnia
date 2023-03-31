@@ -10,8 +10,12 @@ test.describe('Debug-Sidebar', async () => {
     await page.getByRole('button', { name: 'Create' }).click();
     const text = await loadFixture('simple.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-    await page.getByRole('menuitem', { name: 'Clipboard' }).click();
-    await page.click('text=Collectionsimplejust now');
+    await page.getByRole('menuitem', { name: 'Import' }).click();
+    await page.getByText('Clipboard').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('button', { name: 'Import' }).click();
+
+    await page.getByRole('link', { name: 'Debug' }).click();
   });
 
   test.describe('Interact with sidebar', async () => {
@@ -59,9 +63,9 @@ test.describe('Debug-Sidebar', async () => {
     });
 
     test('Open properties of the collection', async ({ page }) => {
-      await page.getByRole('button', { name: 'simple' }).click();
-      await page.getByRole('menuitem', { name: 'Collection Settings' }).click();
-      await expect(page.locator('.app')).toContainText('Collection Settings wrk');
+      await page.getByRole('button', { name: 'Untitled' }).click();
+      await page.getByRole('menuitem', { name: 'Document Settings' }).click();
+      await page.getByText('Document Settings').click();
     });
 
     test('Filter by request name', async ({ page }) => {

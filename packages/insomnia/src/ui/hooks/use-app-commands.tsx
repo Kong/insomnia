@@ -4,7 +4,6 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 
 import { isDevelopment } from '../../common/constants';
-import { askToImportIntoProject, askToImportIntoWorkspace, askToSetWorkspaceScope, importUri } from '../../common/import';
 import * as models from '../../models';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
@@ -53,26 +52,19 @@ export const useAppCommands = () => {
           });
           break;
 
-        case 'insomnia://app/import':
-          showModal(AlertModal, {
-            title: 'Confirm Data Import',
-            message: (
-              <span>
-                Do you really want to import {params.name && (<><code>{params.name}</code> from</>)} <code>{params.uri}</code>?
-              </span>
-            ),
-            addCancel: true,
-            onConfirm: async () => {
-              const activeWorkspaceId = activeWorkspace?._id;
-              importUri(params.uri, {
-                getWorkspaceScope: askToSetWorkspaceScope(),
-                getWorkspaceId: askToImportIntoWorkspace({ workspaceId: params.workspaceId || activeWorkspaceId, activeProjectWorkspaces }),
-                // Currently, just return the active project instead of prompting for which project to import into
-                getProjectId: askToImportIntoProject({ projects, activeProject }),
-              });
-            },
-          });
-          break;
+          // case 'insomnia://app/import':
+          // @TODO @gatzjames - FixME - Move this to a separate hook in the root of the app that opens the import modal
+          // showModal(AlertModal, {
+          //   title: 'Confirm Data Import',
+          //   message: (
+          //     <span>
+          //       Do you really want to import {params.name && (<><code>{params.name}</code> from</>)} <code>{params.uri}</code>?
+          //     </span>
+          //   ),
+          //   addCancel: true,
+          //   onConfirm: async () => {},
+          // });
+          // break;
 
         case 'insomnia://plugins/install':
           showModal(AskModal, {

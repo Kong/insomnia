@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { apiSpec, request, requestGroup, workspace } from '../../models';
+import { request, requestGroup, workspace } from '../../models';
 import { DEFAULT_PROJECT_ID } from '../../models/project';
 import * as importUtil from '../import';
 
@@ -37,18 +37,18 @@ describe('importRaw()', () => {
 
   it('should import a curl request to a new workspace', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
-    const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
+    const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const importConfig: importUtil.ImportRawConfig = {
-      getWorkspaceId: () => null,
-      getProjectId: async () => DEFAULT_PROJECT_ID,
-      getWorkspaceScope: () => 'design',
-    };
+    const scanResult = await importUtil.scanResources({
+      content,
+    });
 
-    const { source, error } = await importUtil.importRaw(
-      rawFixture,
-      importConfig
-    );
+    expect(scanResult.type.id).toBe('curl');
+    expect(scanResult.errors.length).toBe(0);
+
+    await importUtil.importResources({
+      projectId: DEFAULT_PROJECT_ID,
+    });
 
     const workspacesCount = await workspace.count();
     const projectWorkspaces = await workspace.findByParentId(
@@ -56,9 +56,6 @@ describe('importRaw()', () => {
     );
 
     const curlRequests = await request.findByParentId(projectWorkspaces[0]._id);
-
-    expect(source).toBe('curl');
-    expect(error).toBe(null);
 
     expect(workspacesCount).toBe(1);
 
@@ -71,29 +68,26 @@ describe('importRaw()', () => {
 
   it('should import a curl request to an existing workspace', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
-    const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
+    const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
     const existingWorkspace = await workspace.create();
 
-    const importConfig: importUtil.ImportRawConfig = {
-      getWorkspaceId: () => existingWorkspace._id,
-      getProjectId: async () => DEFAULT_PROJECT_ID,
-      getWorkspaceScope: () => 'design',
-    };
+    const scanResult = await importUtil.scanResources({
+      content,
+    });
 
-    const { source, error } = await importUtil.importRaw(
-      rawFixture,
-      importConfig
-    );
+    expect(scanResult.type?.id).toBe('curl');
+    expect(scanResult.errors.length).toBe(0);
+
+    await importUtil.importResources({
+      workspaceId: existingWorkspace._id,
+      projectId: existingWorkspace.parentId,
+    });
 
     const workspacesCount = await workspace.count();
+    expect(workspacesCount).toBe(1);
 
     const curlRequests = await request.findByParentId(existingWorkspace._id);
-
-    expect(source).toBe('curl');
-    expect(error).toBe(null);
-
-    expect(workspacesCount).toBe(1);
 
     expect(curlRequests[0]).toMatchObject({
       body: {
@@ -104,18 +98,18 @@ describe('importRaw()', () => {
 
   it('should import a postman collection to a new workspace', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'postman', 'aws-signature-auth-v2_0-input.json');
-    const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
+    const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
-    const importConfig: importUtil.ImportRawConfig = {
-      getWorkspaceId: () => null,
-      getProjectId: async () => DEFAULT_PROJECT_ID,
-      getWorkspaceScope: () => 'design',
-    };
+    const scanResult = await importUtil.scanResources({
+      content,
+    });
 
-    const { source, error } = await importUtil.importRaw(
-      rawFixture,
-      importConfig
-    );
+    expect(scanResult.type.id).toBe('postman');
+    expect(scanResult.errors.length).toBe(0);
+
+    await importUtil.importResources({
+      projectId: DEFAULT_PROJECT_ID,
+    });
 
     const workspacesCount = await workspace.count();
     const projectWorkspaces = await workspace.findByParentId(
@@ -124,9 +118,6 @@ describe('importRaw()', () => {
 
     const requestGroups = await requestGroup.findByParentId(projectWorkspaces[0]._id);
     const requests = await request.findByParentId(requestGroups[0]._id);
-
-    expect(source).toBe('postman');
-    expect(error).toBe(null);
 
     expect(workspacesCount).toBe(1);
 
@@ -137,28 +128,26 @@ describe('importRaw()', () => {
 
   it('should import a postman collection to an existing workspace', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'postman', 'aws-signature-auth-v2_0-input.json');
-    const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
+    const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
     const existingWorkspace = await workspace.create();
 
-    const importConfig: importUtil.ImportRawConfig = {
-      getWorkspaceId: () => existingWorkspace._id,
-      getProjectId: async () => DEFAULT_PROJECT_ID,
-      getWorkspaceScope: () => 'design',
-    };
+    const scanResult = await importUtil.scanResources({
+      content,
+    });
 
-    const { source, error } = await importUtil.importRaw(
-      rawFixture,
-      importConfig
-    );
+    expect(scanResult.type?.id).toBe('postman');
+    expect(scanResult.errors.length).toBe(0);
+
+    await importUtil.importResources({
+      workspaceId: existingWorkspace._id,
+      projectId: existingWorkspace.parentId,
+    });
 
     const workspacesCount = await workspace.count();
 
     const requestGroups = await requestGroup.findByParentId(existingWorkspace._id);
     const requests = await request.findByParentId(requestGroups[0]._id);
-
-    expect(source).toBe('postman');
-    expect(error).toBe(null);
 
     expect(workspacesCount).toBe(1);
 
@@ -169,23 +158,21 @@ describe('importRaw()', () => {
 
   it('should import an openapi collection to an existing workspace with scope design', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
-    const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
+    const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
     const existingWorkspace = await workspace.create({ scope: 'design' });
 
-    const importConfig: importUtil.ImportRawConfig = {
-      getWorkspaceId: () => existingWorkspace._id,
-      getProjectId: async () => DEFAULT_PROJECT_ID,
-      getWorkspaceScope: () => 'design',
-    };
+    const scanResult = await importUtil.scanResources({
+      content,
+    });
 
-    const { source, error } = await importUtil.importRaw(
-      rawFixture,
-      importConfig
-    );
+    expect(scanResult.type?.id).toBe('openapi3');
+    expect(scanResult.errors.length).toBe(0);
 
-    expect(source).toBe('openapi3');
-    expect(error).toBe(null);
+    await importUtil.importResources({
+      workspaceId: existingWorkspace._id,
+      projectId: existingWorkspace.parentId,
+    });
 
     const workspacesCount = await workspace.count();
 
@@ -193,10 +180,6 @@ describe('importRaw()', () => {
 
     const requests = await request.findByParentId(existingWorkspace._id);
     expect(requests.length).toBe(12);
-
-    const createdApiSpec = await apiSpec.getByParentId(existingWorkspace._id);
-
-    expect(createdApiSpec?.contents).toContain('openapi: \'3.0.2\'');
   });
 
 });

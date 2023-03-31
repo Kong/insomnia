@@ -1,4 +1,4 @@
-import React, { FC, Fragment, useCallback, useRef, useState } from 'react';
+import React, { FC, Fragment, useRef, useState } from 'react';
 import {
   AriaButtonProps,
   AriaGridListItemOptions,
@@ -16,17 +16,11 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
-  useRevalidator,
   useRouteLoaderData,
   useSearchParams,
   useSubmit,
 } from 'react-router-dom';
-import {
-  Item,
-  ListProps,
-  ListState,
-  useListState,
-} from 'react-stately';
+import { Item, ListProps, ListState, useListState } from 'react-stately';
 import styled from 'styled-components';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
@@ -36,7 +30,6 @@ import {
   DashboardSortOrder,
 } from '../../common/constants';
 import { clickLink } from '../../common/electron-helpers';
-import { ForceToWorkspace } from '../../common/import';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
@@ -68,11 +61,11 @@ import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspa
 import { ErrorBoundary } from '../components/error-boundary';
 import { showAlert, showPrompt } from '../components/modals';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
+import { ImportModal } from '../components/modals/import-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button/button';
 import { WorkspaceCard } from '../components/workspace-card';
-import { importClipBoard, importFile, importUri } from '../import';
 import { RootLoaderData } from './root';
 
 const StyledDropdownButton = styled(DropdownButton).attrs({
@@ -308,21 +301,23 @@ const OrganizationProjectsSidebar: FC<{
       </SidebarTitle>
       <SidebarSection>
         <SidebarSectionTitle>Projects ({projects.length})</SidebarSectionTitle>
-        {shouldShowSearch && <Button
-          style={{
-            padding: 'var(--padding-sm)',
-            minWidth: 'auto',
-            width: 'unset',
-            flex: 0,
-          }}
-          variant="text"
-          size="small"
-          onClick={() => {
-            setSearchOpen(!isSearchOpen);
-          }}
-        >
-          <i data-testid="SearchProjectsButton" className="fa fa-search" />
-        </Button>}
+        {shouldShowSearch && (
+          <Button
+            style={{
+              padding: 'var(--padding-sm)',
+              minWidth: 'auto',
+              width: 'unset',
+              flex: 0,
+            }}
+            variant="text"
+            size="small"
+            onClick={() => {
+              setSearchOpen(!isSearchOpen);
+            }}
+          >
+            <i data-testid="SearchProjectsButton" className="fa fa-search" />
+          </Button>
+        )}
         <Button
           style={{
             padding: 'var(--padding-sm)',
@@ -390,9 +385,7 @@ const OrganizationProjectsSidebar: FC<{
           </SearchFormControl>
         </SearchFormContainer>
       )}
-      <ProjectListContainer
-        className="sidebar__list sidebar__list-root theme--sidebar__list"
-      >
+      <ProjectListContainer className="sidebar__list sidebar__list-root theme--sidebar__list">
         {projects.map(proj => {
           return (
             <li key={proj._id} className="sidebar__row">
@@ -409,12 +402,10 @@ const OrganizationProjectsSidebar: FC<{
                     gap: 'var(--padding-sm)',
                   }}
                   onClick={() =>
-                    navigate(
-                      {
-                        pathname: `/organization/${organizationId}/project/${proj._id}`,
-                        search: searchParams.toString(),
-                      },
-                    )
+                    navigate({
+                      pathname: `/organization/${organizationId}/project/${proj._id}`,
+                      search: searchParams.toString(),
+                    })
                   }
                   className="wide"
                 >
@@ -510,7 +501,7 @@ const OrganizationProjectsSidebar: FC<{
 
       <List
         onAction={key => {
-          clickLink(key);
+          clickLink(key.toString());
         }}
       >
         <Item
@@ -588,6 +579,7 @@ const SidebarListItemTitle = ({ icon, label }: SidebarListItemTitleProps) => {
 };
 
 interface WorkspaceWithMetadata {
+  _id: string;
   hasUnsavedChanges: boolean;
   lastModifiedTimestamp: number;
   modifiedLocally: number;
@@ -623,7 +615,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   return;
 };
 
-interface LoaderData {
+export interface ProjectLoaderData {
   workspaces: WorkspaceWithMetadata[];
   allFilesCount: number;
   documentsCount: number;
@@ -636,7 +628,7 @@ interface LoaderData {
 export const loader: LoaderFunction = async ({
   params,
   request,
-}): Promise<LoaderData> => {
+}): Promise<ProjectLoaderData> => {
   const search = new URL(request.url).searchParams;
   const { projectId, organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
@@ -704,6 +696,7 @@ export const loader: LoaderFunction = async ({
     );
 
     return {
+      _id: workspace._id,
       hasUnsavedChanges,
       lastModifiedTimestamp,
       modifiedLocally,
@@ -795,7 +788,9 @@ export const loader: LoaderFunction = async ({
       ? allProjects.filter(proj => !isRemoteProject(proj))
       : [project];
 
-  const projects = sortProjects(organizationProjects).filter(p => p.name.toLowerCase().includes(projectName.toLowerCase()));
+  const projects = sortProjects(organizationProjects).filter(p =>
+    p.name.toLowerCase().includes(projectName.toLowerCase())
+  );
 
   return {
     organization:
@@ -827,20 +822,21 @@ const ProjectRoute: FC = () => {
     allFilesCount,
     collectionsCount,
     documentsCount,
-  } = useLoaderData() as LoaderData;
+  } = useLoaderData() as ProjectLoaderData;
   const { organizationId } = useParams() as { organizationId: string };
   const [searchParams] = useSearchParams();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
 
   const fetcher = useFetcher();
-  const { revalidate } = useRevalidator();
   const submit = useSubmit();
   const navigate = useNavigate();
   const filter = searchParams.get('filter') || '';
   const sortOrder =
     (searchParams.get('sortOrder') as DashboardSortOrder) || 'modified-desc';
-
+  const [isImportModalOpen, setIsImportModalOpen] = useState<
+    'uri' | 'file' | 'clipboard' | false
+  >(false);
   const createNewCollection = () => {
     showPrompt({
       title: 'Create New Request Collection',
@@ -885,44 +881,6 @@ const ProjectRoute: FC = () => {
     });
   };
 
-  const importFromURL = useCallback(() => {
-    showPrompt({
-      title: 'Import document from URL',
-      submitName: 'Fetch and Import',
-      label: 'URL',
-      placeholder: 'https://website.com/insomnia-import.json',
-      onComplete: uri => {
-        importUri(uri, {
-          activeProjectWorkspaces: workspaces.map(w => w.workspace),
-          activeProject,
-          projects,
-          forceToWorkspace: ForceToWorkspace.existing,
-          onComplete: revalidate,
-        });
-      },
-    });
-  }, [activeProject, projects, revalidate, workspaces]);
-
-  const importFromClipboard = useCallback(() => {
-    importClipBoard({
-      activeProjectWorkspaces: workspaces.map(w => w.workspace),
-      activeProject,
-      projects,
-      forceToWorkspace: ForceToWorkspace.existing,
-      onComplete: revalidate,
-    });
-  }, [activeProject, projects, revalidate, workspaces]);
-
-  const importFromFile = useCallback(() => {
-    importFile({
-      activeProjectWorkspaces: workspaces.map(w => w.workspace),
-      activeProject,
-      projects,
-      forceToWorkspace: ForceToWorkspace.existing,
-      onComplete: revalidate,
-    });
-  }, [activeProject, projects, revalidate, workspaces]);
-
   const importFromGit = () => {
     setIsGitRepositoryCloneModalOpen(true);
   };
@@ -949,10 +907,14 @@ const ProjectRoute: FC = () => {
           }
           renderPaneOne={
             <Pane
-              style={!hasWorkspaces ? {
-                gridTemplateRows: 'auto 1fr',
-                gridTemplateColumns: '1fr',
-              } : undefined}
+              style={
+                !hasWorkspaces
+                  ? {
+                    gridTemplateRows: 'auto 1fr',
+                    gridTemplateColumns: '1fr',
+                  }
+                  : undefined
+              }
             >
               <PaneHeaderToolbar>
                 <SearchFormControl className="form-control form-control--outlined no-margin">
@@ -1026,27 +988,13 @@ const ProjectRoute: FC = () => {
                     </DropdownSection>
                     <DropdownSection
                       aria-label="Import From"
-                      title="Import From"
+                      title="Import"
                     >
-                      <DropdownItem aria-label="File">
+                      <DropdownItem aria-label="Import">
                         <ItemContent
-                          icon="plus"
-                          label="File"
-                          onClick={importFromFile}
-                        />
-                      </DropdownItem>
-                      <DropdownItem aria-label="URL">
-                        <ItemContent
-                          icon="link"
-                          label="URL"
-                          onClick={importFromURL}
-                        />
-                      </DropdownItem>
-                      <DropdownItem aria-label="Clipboard">
-                        <ItemContent
-                          icon="clipboard"
-                          label="Clipboard"
-                          onClick={importFromClipboard}
+                          icon="file-import"
+                          label="Import"
+                          onClick={() => setIsImportModalOpen('file')}
                         />
                       </DropdownItem>
                       <DropdownItem aria-label="Git Clone">
@@ -1059,28 +1007,28 @@ const ProjectRoute: FC = () => {
                     </DropdownSection>
                   </Dropdown>
                 </div>
-
               </PaneHeaderToolbar>
-              {hasWorkspaces && workspaces.map(workspace => (
-                <WorkspaceCard
-                  {...workspace}
-                  projects={projects}
-                  key={workspace.apiSpec._id}
-                  activeProject={activeProject}
-                  onSelect={() =>
-                    navigate(
-                      `/organization/${organizationId}/project/${
-                        activeProject._id
-                      }/workspace/${workspace.workspace._id}/${
-                        workspace.workspace.scope === 'design'
-                          ? ACTIVITY_SPEC
-                          : ACTIVITY_DEBUG
-                      }`
-                    )
-                  }
-                  filter={filter}
-                />
-              ))}
+              {hasWorkspaces &&
+                workspaces.map(workspace => (
+                  <WorkspaceCard
+                    {...workspace}
+                    projects={projects}
+                    key={workspace.apiSpec._id}
+                    activeProject={activeProject}
+                    onSelect={() =>
+                      navigate(
+                        `/organization/${organizationId}/project/${
+                          activeProject._id
+                        }/workspace/${workspace.workspace._id}/${
+                          workspace.workspace.scope === 'design'
+                            ? ACTIVITY_SPEC
+                            : ACTIVITY_DEBUG
+                        }`
+                      )
+                    }
+                    filter={filter}
+                  />
+                ))}
               {filter && !hasWorkspaces && (
                 <div>
                   <p className="notice subtle">
@@ -1092,10 +1040,8 @@ const ProjectRoute: FC = () => {
                 <EmptyStatePane
                   createRequestCollection={createNewCollection}
                   createDesignDocument={createNewDocument}
-                  importFromFile={importFromFile}
-                  importFromURL={importFromURL}
-                  importFromClipboard={importFromClipboard}
-                  importFromGit={importFromGit}
+                  importFrom={() => setIsImportModalOpen('file')}
+                  cloneFromGit={importFromGit}
                 />
               )}
             </Pane>
@@ -1104,6 +1050,14 @@ const ProjectRoute: FC = () => {
         {isGitRepositoryCloneModalOpen && (
           <GitRepositoryCloneModal
             onHide={() => setIsGitRepositoryCloneModalOpen(false)}
+          />
+        )}
+        {isImportModalOpen && (
+          <ImportModal
+            onHide={() => setIsImportModalOpen(false)}
+            from={isImportModalOpen}
+            organizationId={organizationId}
+            defaultProjectId={activeProject._id}
           />
         )}
       </Fragment>

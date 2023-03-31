@@ -45,12 +45,9 @@ describe('app.import.*', () => {
     const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
     await data.import.uri(`file://${filename}`);
     const allWorkspaces = await db.all(models.workspace.type);
-    expect(allWorkspaces).toEqual([
+    expect(allWorkspaces).toMatchObject([
       workspace,
       {
-        _id: 'wrk_imported_1',
-        created: 888,
-        modified: 999,
         description: '',
         name: 'New',
         parentId: project._id,
@@ -58,21 +55,23 @@ describe('app.import.*', () => {
         scope: WorkspaceScopeKeys.collection,
       },
     ]);
-    expect(await db.all(models.request.type)).toEqual([
+
+    const importedWorkspace = allWorkspaces.find(w => w.name === 'New');
+
+    expect(importedWorkspace).toBeDefined();
+
+    expect(await db.all(models.request.type)).toMatchObject([
       {
-        _id: 'req_imported_1',
         isPrivate: false,
         authentication: {},
         body: {},
-        created: 111,
         description: '',
         headers: [],
         metaSortKey: 0,
         method: 'GET',
-        modified: 222,
         name: 'Test',
         parameters: [],
-        parentId: 'wrk_imported_1',
+        parentId: importedWorkspace._id,
         settingDisableRenderRequestBody: false,
         settingEncodeUrl: true,
         settingSendCookies: true,
@@ -93,12 +92,9 @@ describe('app.import.*', () => {
     const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
     await data.import.raw(fs.readFileSync(filename, 'utf8'));
     const allWorkspaces = await db.all(models.workspace.type);
-    expect(allWorkspaces).toEqual([
+    expect(allWorkspaces).toMatchObject([
       workspace,
       {
-        _id: 'wrk_imported_1',
-        created: 888,
-        modified: 999,
         description: '',
         name: 'New',
         parentId: project._id,
@@ -106,21 +102,21 @@ describe('app.import.*', () => {
         scope: WorkspaceScopeKeys.collection,
       },
     ]);
-    expect(await db.all(models.request.type)).toEqual([
+
+    const importedWorkspace = allWorkspaces.find(w => w.name === 'New');
+    expect(importedWorkspace).toBeDefined();
+    expect(await db.all(models.request.type)).toMatchObject([
       {
-        _id: 'req_imported_1',
         isPrivate: false,
         authentication: {},
         body: {},
-        created: 111,
         description: '',
         headers: [],
         metaSortKey: 0,
         method: 'GET',
-        modified: 222,
         name: 'Test',
         parameters: [],
-        parentId: 'wrk_imported_1',
+        parentId: importedWorkspace._id,
         settingDisableRenderRequestBody: false,
         settingEncodeUrl: true,
         settingSendCookies: true,

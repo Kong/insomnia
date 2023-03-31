@@ -1,7 +1,6 @@
 import React, { FC } from 'react';
 import styled from 'styled-components';
 
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { Button } from '../themed-button';
 
 const Wrapper = styled.div({
@@ -48,67 +47,56 @@ const Title = styled.div({
 interface Props {
   createRequestCollection: () => void;
   createDesignDocument: () => void;
-  importFromFile: () => void;
-  importFromURL: () => void;
-  importFromClipboard: () => void;
-  importFromGit: () => void;
+  importFrom: () => void;
+  cloneFromGit: () => void;
 }
 
-export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, importFromFile, importFromURL, importFromClipboard, importFromGit }) => {
+export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, importFrom, cloneFromGit }) => {
   return (
     <Wrapper>
       <Title>This is an empty project, to get started create your first resource:</Title>
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', marginTop: 'var(--padding-md)' }}>
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 'var(--padding-md)', gap: 'var(--padding-md)' }}>
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 'var(--padding-md)', gap: 'var(--padding-md)' }}>
           <Button
+            style={{
+              gap: 'var(--padding-xs)',
+              flex: 1,
+            }}
             onClick={createRequestCollection}
           >
-            New Collection
+            <i className='fa fa-bars' /> New Collection
           </Button>
           <Button
+            style={{
+              gap: 'var(--padding-xs)',
+              flex: 1,
+            }}
             onClick={createDesignDocument}
           >
-            New Document
+            <i className='fa fa-file-o' /> New Document
           </Button>
         </div>
         <Divider>or</Divider>
-        <Dropdown
-          aria-label='Import From Dropdown'
-          triggerButton={
-            <DropdownButton style={{ width: '100%', alignSelf: 'stretch' }}>
-              Import From <i className="fa fa-caret-down pad-left-sm" />
-            </DropdownButton>
-          }
-        >
-          <DropdownItem aria-label='File'>
-            <ItemContent
-              icon="plus"
-              label="File"
-              onClick={importFromFile}
-            />
-          </DropdownItem>
-          <DropdownItem aria-label='URL'>
-            <ItemContent
-              icon="link"
-              label="URL"
-              onClick={importFromURL}
-            />
-          </DropdownItem>
-          <DropdownItem aria-label='Clipboard'>
-            <ItemContent
-              icon="clipboard"
-              label="Clipboard"
-              onClick={importFromClipboard}
-            />
-          </DropdownItem>
-          <DropdownItem aria-label='Git Clone'>
-            <ItemContent
-              icon="code-fork"
-              label="Git Clone"
-              onClick={importFromGit}
-            />
-          </DropdownItem>
-        </Dropdown>
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 'var(--padding-md)' }}>
+          <Button
+            style={{
+              gap: 'var(--padding-xs)',
+              flex: 1,
+            }}
+            onClick={importFrom}
+          >
+            <i className='fa fa-file-import' /> Import
+          </Button>
+          <Button
+            style={{
+              gap: 'var(--padding-xs)',
+              flex: 1,
+            }}
+            onClick={cloneFromGit}
+          >
+            <i className='fa fa-code-fork' /> Git Clone
+          </Button>
+        </div>
       </div>
     </Wrapper>
   );

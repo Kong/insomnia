@@ -23,8 +23,12 @@ test('can make oauth2 requests', async ({ app, page }) => {
   const text = await loadFixture('oauth.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-  await page.getByRole('menuitem', { name: 'Clipboard' }).click();
-  await page.locator('text=CollectionOauth Testingjust now').click();
+  await page.getByRole('menuitem', { name: 'Import' }).click();
+  await page.getByText('Clipboard').click();
+  await page.getByRole('button', { name: 'Scan' }).click();
+  await page.getByRole('button', { name: 'Import' }).click();
+
+  await page.getByRole('link', { name: 'Debug' }).click();
 
   // Authorization code
   await projectView.getByRole('button', { name: 'Authorization Code' }).click();

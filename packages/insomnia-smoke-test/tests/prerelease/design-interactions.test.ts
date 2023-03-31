@@ -17,9 +17,10 @@ test.describe('Design interactions', async () => {
     await page.getByRole('button', { name: 'Create' }).click();
     const text = await loadFixture('openapi3.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-    await page.getByRole('menuitem', { name: 'Clipboard' }).click();
-    await page.click('div[role="dialog"] >> text=Design Document');
-    await page.click('text=DocumentSmoke Test API server 1.0.0v1.0.0OpenAPI 3.0.0just now');
+    await page.getByRole('menuitem', { name: 'Import' }).click();
+    await page.getByText('Clipboard').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('button', { name: 'Import' }).click();
 
     // Renders the spec code
     const codeEditor = page.locator('.pane-one');

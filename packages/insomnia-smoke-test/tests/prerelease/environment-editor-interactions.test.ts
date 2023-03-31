@@ -8,8 +8,12 @@ test.describe('Environment Editor', async () => {
     await page.getByRole('button', { name: 'Create' }).click();
     const text = await loadFixture('environments.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-    await page.getByRole('menuitem', { name: 'Clipboard' }).click();
-    await page.click('text=Collectionenvironmentsjust now');
+    await page.getByRole('menuitem', { name: 'Import' }).click();
+    await page.getByText('Clipboard').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('button', { name: 'Import' }).click();
+
+    await page.getByRole('link', { name: 'Debug' }).click();
   });
 
   test('create a new environment', async ({ page }) => {
