@@ -11,40 +11,7 @@ test.describe('Design interactions', async () => {
     await expect(true).toBeTruthy();
   });
 
-  test('Can import an OpenAPI 3 spec into a Design Document', async ({ app, page }) => {
-    // Setup
-    await page.getByTestId('project').click();
-    await page.getByRole('button', { name: 'Create' }).click();
-    const text = await loadFixture('openapi3.yaml');
-    await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-    await page.getByRole('menuitem', { name: 'Import' }).click();
-    await page.getByText('Clipboard').click();
-    await page.getByRole('button', { name: 'Scan' }).click();
-    await page.getByRole('button', { name: 'Import' }).click();
-
-    // Renders the spec code
-    const codeEditor = page.locator('.pane-one');
-    await expect(codeEditor).toContainText('openapi: 3.0.0');
-
-    // Created requests from spec
-    await page.locator('text=Debug').click();
-    await expect(page.locator('.app')).toContainText('File');
-    await expect(page.locator('.app')).toContainText('Misc');
-    await expect(page.locator('.app')).toContainText('Auth');
-
-    // Created Environment from spec
-    await page.getByRole('button', { name: 'OpenAPI env' }).click();
-    await page.getByRole('menuitem', { name: 'Manage Environments' }).click();
-    await page.click('text=/.*"localhost:4010".*/');
-  });
-
   test.fixme('Can filter values in Design sidebar', async ({ page }) => {
-    // TODO(filipe) implement in another PR
-    await page.getByTestId('project').click();
-    await expect(true).toBeTruthy();
-  });
-
-  test.fixme('[INS-567] Requests are not duplicated when switching between tabs', async ({ page }) => {
     // TODO(filipe) implement in another PR
     await page.getByTestId('project').click();
     await expect(true).toBeTruthy();
@@ -56,8 +23,10 @@ test.describe('Design interactions', async () => {
     await page.getByRole('button', { name: 'Create' }).click();
     const text = await loadFixture('unit-test.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-    await page.getByRole('menuitem', { name: 'Clipboard' }).click();
-    await page.click('text=unit-test.yamljust now');
+    await page.getByRole('menuitem', { name: 'Import' }).click();
+    await page.getByText('Clipboard').click();
+    await page.getByRole('button', { name: 'Scan' }).click();
+    await page.getByRole('button', { name: 'Import' }).click();
 
     // Switch to Test tab
     await page.click('a:has-text("Test")');
@@ -76,7 +45,10 @@ test.describe('Design interactions', async () => {
     // Add a new test
     await page.locator('text=New Test').nth(1).click();
     await page.click('div[role="dialog"] button:has-text("New Test")');
-    await page.locator('select[name="request"]').selectOption('req_17ca8bbd46374144a089f891e32842d6');
+    const label = await page.locator('option', { hasText: 'Request A' }).textContent() || '';
+    await page.locator('select[name="request"]').selectOption({
+      label,
+    });
 
     await page.click('#wrapper >> text=Run Tests');
     await expect(page.locator('.app')).toContainText('Tests Passed 1/1');

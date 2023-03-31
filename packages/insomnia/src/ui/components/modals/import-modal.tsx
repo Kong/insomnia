@@ -878,9 +878,9 @@ const ImportResourcesForm = ({
                   {scanResult.unitTestSuites.length === 1
                     ? 'Test Suite'
                     : 'Test Suites'}
+                  {' with '}
                   {scanResult.unitTests?.length}
-                  {' with'}
-                  {scanResult.unitTests?.length === 1 ? 'Test' : 'Tests'}
+                  {scanResult.unitTests?.length === 1 ? ' Test' : ' Tests'}
                 </td>
               </tr>
             )}

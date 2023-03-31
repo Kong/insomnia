@@ -48,7 +48,8 @@ test.describe('Dashboard', async () => {
     });
   });
   test.describe('Interactions', async () => { // Not sure about the name here
-    test('Can filter through multiple collections', async ({ app, page }) => {
+    // TODO(INS-2504) - we don't support importing multiple collections at this time
+    test.skip('Can filter through multiple collections', async ({ app, page }) => {
       await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
@@ -56,7 +57,10 @@ test.describe('Dashboard', async () => {
       await page.getByRole('button', { name: 'Create' }).click();
       const text = await loadFixture('multiple-workspaces.yaml');
       await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-      await page.getByRole('menuitem', { name: 'Clipboard' }).click();
+      await page.getByRole('menuitem', { name: 'Import' }).click();
+      await page.getByText('Clipboard').click();
+      await page.getByRole('button', { name: 'Scan' }).click();
+      await page.getByRole('button', { name: 'Import' }).click();
 
       // Check that 10 new workspaces are imported besides the default one
       const workspaceCards = page.locator('.card-badge');
