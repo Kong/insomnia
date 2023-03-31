@@ -36,7 +36,7 @@ test('Clone Repo with bad values', async ({ page }) => {
 
   // Check a recent and old commit show up on history
   await page.getByRole('cell', { name: 'bump to OpenAPI v3.1' }).click();
-  await page.getByRole('cell', { name: 'initial commit' }).click();
+  await page.getByRole('cell', { name: 'Fix environments' }).click();
   await page.locator('text=Done').click();
 
   // Create a branch and try to push with bad Git token
