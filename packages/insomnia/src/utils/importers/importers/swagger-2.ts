@@ -358,11 +358,13 @@ const prepareBody = (
 ) => {
   const mimeTypes = endpointSchema.consumes || globalMimeTypes || [];
 
-  const supportedMimeType = SUPPORTED_MIME_TYPES.find(mimeType =>
-    mimeTypes.includes(mimeType),
-  );
+  const supportedMimeType = mimeTypes.find(reqMimeType => {
+    return SUPPORTED_MIME_TYPES.some(supportedMimeType => {
+      return reqMimeType.includes(supportedMimeType);
+    });
+  });
 
-  if (supportedMimeType === MIMETYPE_JSON) {
+  if (supportedMimeType && supportedMimeType.includes(MIMETYPE_JSON)) {
     const parameters = endpointSchema.parameters || [];
     const bodyParameter = parameters.find(
       parameter => (parameter as OpenAPIV2.Parameter).in === 'body',
@@ -394,10 +396,7 @@ const prepareBody = (
     };
   }
 
-  if (
-    supportedMimeType === MIMETYPE_URLENCODED ||
-    supportedMimeType === MIMETYPE_MULTIPART
-  ) {
+  if (supportedMimeType && (supportedMimeType.includes(MIMETYPE_URLENCODED) || supportedMimeType.includes(MIMETYPE_MULTIPART))) {
     const parameters = endpointSchema.parameters || [];
     const formDataParameters = ((parameters as unknown) as OpenAPIV2.Parameter[]).filter(
       parameter => parameter.in === 'formData',

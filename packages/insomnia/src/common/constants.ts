@@ -383,9 +383,10 @@ export function getContentTypeName(contentType?: string | null, useLong = false)
   if (typeof contentType !== 'string') {
     return '';
   }
-
-  if (contentTypesMap.hasOwnProperty(contentType)) {
-    return useLong ? contentTypesMap[contentType][1] : contentTypesMap[contentType][0];
+  for (const contentTypeKey in contentTypesMap) {
+    if (contentType.includes(contentTypeKey) && contentTypeKey.length > 0) {
+      return useLong ? contentTypesMap[contentTypeKey][1] : contentTypesMap[contentTypeKey][0];
+    }
   }
 
   return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
