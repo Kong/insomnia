@@ -76,6 +76,17 @@ Options:
   -h, --help             display help for command"
 `;
 
+exports[`Snapshot for "inso export spec -h" 2`] = `
+"Usage: inso export spec [options] [identifier]
+
+Export an API Specification to a file
+
+Options:
+  -o, --output <path>    save the generated config to a file
+  -s, --skipAnnotations  remove all \\"x-kong-\\" annotations  (default: false)
+  -h, --help             display help for command"
+`;
+
 exports[`Snapshot for "inso generate -h" 1`] = `
 "Usage: inso generate [options] [command]
 

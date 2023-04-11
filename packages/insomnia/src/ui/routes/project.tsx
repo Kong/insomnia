@@ -9,6 +9,7 @@ import {
   useGridList,
   useGridListItem,
 } from 'react-aria';
+import { useSelector } from 'react-redux';
 import {
   LoaderFunction,
   redirect,
@@ -66,6 +67,7 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button/button';
 import { WorkspaceCard } from '../components/workspace-card';
+import { selectSettings } from '../redux/selectors';
 import { RootLoaderData } from './root';
 
 const StyledDropdownButton = styled(DropdownButton).attrs({
@@ -268,6 +270,7 @@ const OrganizationProjectsSidebar: FC<{
 
   // Only show the search in the default organization (local data) since other organizations (remote data) only have one project
   const shouldShowSearch = organizationId === DEFAULT_ORGANIZATION_ID;
+  const { disablePaidFeatureAds } = useSelector(selectSettings);
 
   return (
     <Sidebar
@@ -499,7 +502,7 @@ const OrganizationProjectsSidebar: FC<{
 
       <SidebarDivider />
 
-      <List
+      {!disablePaidFeatureAds && <List
         onAction={key => {
           clickLink(key.toString());
         }}
@@ -515,7 +518,7 @@ const OrganizationProjectsSidebar: FC<{
             />
           </SidebarListItemContent>
         </Item>
-      </List>
+      </List>}
     </Sidebar>
   );
 };
