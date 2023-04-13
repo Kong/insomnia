@@ -216,13 +216,13 @@ export function compressObject(obj: any) {
   return compressed.toString('base64');
 }
 
-export function decompressObject(input: string | null): any {
+export function decompressObject<ObjectType>(input: string | null): ObjectType | null {
   if (typeof input !== 'string') {
     return null;
   }
 
   const jsonBuffer = zlib.gunzipSync(Buffer.from(input, 'base64'));
-  return JSON.parse(jsonBuffer.toString('utf8'));
+  return JSON.parse(jsonBuffer.toString('utf8')) as ObjectType;
 }
 
 export function resolveHomePath(p: string) {

@@ -4,7 +4,9 @@ import { useSelector } from 'react-redux';
 
 import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
+import { isRequest, Request } from '../../../models/request';
 import { Response } from '../../../models/response';
+import { WebSocketRequest } from '../../../models/websocket-request';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
@@ -119,7 +121,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
     const requestVersion = requestVersions.find(({ _id }) => _id === response.requestVersionId);
-    const request = requestVersion ? decompressObject(requestVersion.compressedRequest) : null;
+    const request = requestVersion ? decompressObject<Request | WebSocketRequest>(requestVersion.compressedRequest) : null;
 
     return (
       <DropdownItem
@@ -140,8 +142,8 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
               />
               <URLTag
                 small
-                url={request.url}
-                method={request ? request.method : ''}
+                url={request?.url || ''}
+                method={request && isRequest(request) ? request.method : ''}
                 tooltipDelay={1000}
               />
               <TimeTag milliseconds={response.elapsedTime} small tooltipDelay={1000} />
