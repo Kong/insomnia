@@ -33,7 +33,7 @@ const FIELDS_TO_IGNORE = [
   'description',
   'parentId',
   'name',
-];
+] as const;
 
 export const isRequestVersion = (model: Pick<BaseModel, 'type'>): model is RequestVersion => (
   model.type === type
@@ -61,7 +61,7 @@ export async function create(request: Request | WebSocketRequest | GrpcRequest) 
   const parentId = request._id;
   const latestRequestVersion: RequestVersion | null = await getLatestByParentId(parentId);
   const latestRequest = latestRequestVersion
-    ? decompressObject(latestRequestVersion.compressedRequest)
+    ? decompressObject<Request | WebSocketRequest>(latestRequestVersion.compressedRequest)
     : null;
 
   const hasChanged = _diffRequests(latestRequest, request);
@@ -91,7 +91,12 @@ export async function restore(requestVersionId: string) {
     return null;
   }
 
-  const requestPatch = decompressObject(requestVersion.compressedRequest);
+  const requestPatch = decompressObject<Request | WebSocketRequest | GrpcRequest>(requestVersion.compressedRequest);
+
+  if (!requestPatch) {
+    return null;
+  }
+
   const originalRequest = await requestOperations.getById(requestPatch._id);
 
   if (!originalRequest) {
@@ -100,7 +105,9 @@ export async function restore(requestVersionId: string) {
 
   // Only restore fields that aren't blacklisted
   for (const field of FIELDS_TO_IGNORE) {
-    delete requestPatch[field];
+    if (field in requestPatch) {
+      delete requestPatch[field];
+    }
   }
 
   return requestOperations.update(originalRequest, requestPatch);
@@ -112,7 +119,7 @@ function _diffRequests(rOld: Request | WebSocketRequest | null, rNew: Request | 
 
   for (const key of Object.keys(rOld) as (keyof typeof rOld)[]) {
     // Skip fields that aren't useful
-    if (FIELDS_TO_IGNORE.includes(key)) {
+    if (FIELDS_TO_IGNORE.find(field => field === key)) {
       continue;
     }
     if (!deepEqual(rOld[key], rNew[key])) {
