@@ -598,6 +598,12 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
 
+  const prevOrganizationLocation = localStorage.getItem(`locationHistoryEntry:${organizationId}`);
+
+  if (prevOrganizationLocation) {
+    return redirect(prevOrganizationLocation);
+  }
+
   if (models.organization.DEFAULT_ORGANIZATION_ID === organizationId) {
     const localProjects = (await models.project.all()).filter(
       proj => !isRemoteProject(proj)
