@@ -177,6 +177,7 @@ const Header = styled.header`
   align-items: center;
   flex-grow: 0;
   justify-content: space-between;
+
   border: 1px solid var(--hl-sm);
   border-left: 0;
   border-right: 0;
@@ -248,6 +249,9 @@ export const NoticeTable = <T extends Notice>({
             style={{ marginLeft: 'var(--padding-xs)' }}
             icon={collapsed ? IconEnum.chevronUp : IconEnum.chevronDown}
           />
+        </Button>
+        <Button className='btn btn--compact' onClick={onCollapse}>
+          Show Preview
         </Button>
       </Header>
       {!collapsed && (
