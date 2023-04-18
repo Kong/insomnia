@@ -1,7 +1,6 @@
 import { IpcRendererEvent } from 'electron/renderer';
 import { useEffect } from 'react';
 import React from 'react';
-import { useSelector } from 'react-redux';
 
 import { isDevelopment } from '../../common/constants';
 import * as models from '../../models';
@@ -20,13 +19,8 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../components/modals/settings-modal';
-import { selectActiveProject, selectActiveWorkspace, selectProjects, selectWorkspacesWithResolvedNameForActiveProject } from '../redux/selectors';
 
 export const useAppCommands = () => {
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeProject = useSelector(selectActiveProject);
-  const activeProjectWorkspaces = useSelector(selectWorkspacesWithResolvedNameForActiveProject);
-  const projects = useSelector(selectProjects);
   useEffect(() => {
     return window.main.on('shell:open', async (_: IpcRendererEvent, url: string) => {
       // Get the url without params
@@ -158,5 +152,5 @@ export const useAppCommands = () => {
         }
       }
     });
-  }, [activeProject, activeProjectWorkspaces, activeWorkspace?._id, projects]);
+  }, []);
 };
