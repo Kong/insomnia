@@ -284,8 +284,8 @@ export const GraphQLEditor: FC<Props> = ({
         const operationNameWasChanged = !operations.includes(state.body.operationName);
         if (operationsChanged && operationNameWasChanged) {
           // preserve selection during name change or fallback to first operation
-          const oldPostion = state.operations.indexOf(state.body.operationName);
-          operationName = operations[oldPostion] || operations[0] || '';
+          const oldPosition = state.operations.indexOf(state.body.operationName);
+          operationName = operations[oldPosition] || operations[0] || '';
         }
       }
 

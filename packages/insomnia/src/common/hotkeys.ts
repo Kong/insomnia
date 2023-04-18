@@ -274,12 +274,12 @@ export function constructKeyCombinationDisplay(
   };
 
   if (isMac()) {
-    // Note: on Mac the cannonical order is Control, Option (i.e. Alt), Shift, Command (i.e. Meta)
+    // Note: on Mac the canonical order is Control, Option (i.e. Alt), Shift, Command (i.e. Meta)
     // see: https://developer.apple.com/design/human-interface-guidelines/macos/user-interaction/keyboard
     addModifierKeys(['ctrl', 'alt', 'shift', 'meta']);
   } else {
     // Note: on Windows the observed oreder (as in, if you just try to make a shortcut with all modifiers) is Windows (i.e. Super/Meta), Ctrl, Alt, Shift.
-    // No such standard really exists, but at least on Ubunut it follows the Windows ordering.
+    // No such standard really exists, but at least on Ubuntu it follows the Windows ordering.
     addModifierKeys(['meta', 'ctrl', 'alt', 'shift']);
   }
 

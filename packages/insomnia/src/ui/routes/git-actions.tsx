@@ -644,7 +644,7 @@ export const commitToGitRepoAction: ActionFunction = async ({
     const providerName = getOauth2FormatName(repo?.credentials);
     trackSegmentEvent(SegmentEvent.vcsAction, { ...vcsSegmentEventProperties('git', 'commit'), providerName });
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Error while commiting changes';
+    const message = e instanceof Error ? e.message : 'Error while committing changes';
     return { errors: [message] };
   }
 

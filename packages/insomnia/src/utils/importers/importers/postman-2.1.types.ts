@@ -626,7 +626,7 @@ export interface ProtocolProfileBehavior {
   [k: string]: unknown;
 }
 /**
- * One of the primary goals of Postman is to organize the development of APIs. To this end, it is necessary to be able to group requests together. This can be achived using 'Folders'. A folder just is an ordered set of requests.
+ * One of the primary goals of Postman is to organize the development of APIs. To this end, it is necessary to be able to group requests together. This can be achieved using 'Folders'. A folder just is an ordered set of requests.
  */
 export interface Folder {
   /**

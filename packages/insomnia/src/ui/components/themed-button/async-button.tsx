@@ -8,7 +8,7 @@ function isPromise(obj: unknown) {
   return (
     !!obj &&
     (typeof obj === 'object' || typeof obj === 'function') &&
-    // @ts-expect-error -- not updating because this came direclty from the npm
+    // @ts-expect-error -- not updating because this came directly from the npm
     typeof obj.then === 'function'
   );
 }

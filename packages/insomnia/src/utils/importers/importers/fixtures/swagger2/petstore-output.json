@@ -142,7 +142,7 @@
     {
       "parentId": "fld___WORKSPACE_ID__1b034c38",
       "name": "Finds Pets by tags",
-      "description": "Muliple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.",
+      "description": "Multiple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.",
       "url": "{{ _.base_url }}/pet/findByTags",
       "body": {},
       "method": "GET",

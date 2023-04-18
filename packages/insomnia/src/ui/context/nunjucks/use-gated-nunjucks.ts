@@ -3,7 +3,7 @@ import { useNunjucks } from './use-nunjucks';
 
 /**
  * Gated access to functions useful for Nunjucks rendering. Access is only granted if:
- *  1. Nunjucks is not diabled via the hook props
+ *  1. Nunjucks is not disabled via the hook props
  *  2. Nunjucks is not disabled by the last NunjucksEnabledProvider in the React tree
  *
  * For ungated access, use `useNunjucksRenderFunctions` instead
