@@ -11,6 +11,7 @@ import {
 } from 'react-aria';
 import {
   LoaderFunction,
+  matchPath,
   redirect,
   useFetcher,
   useLoaderData,
@@ -601,7 +602,17 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   const prevOrganizationLocation = localStorage.getItem(`locationHistoryEntry:${organizationId}`);
 
   if (prevOrganizationLocation) {
-    return redirect(prevOrganizationLocation);
+    const match = matchPath(
+      {
+        path: '/organization/:organizationId/project/:projectId',
+        end: false,
+      },
+      prevOrganizationLocation
+    );
+
+    if (match && match.params.organizationId && match.params.projectId) {
+      return redirect(`/organization/${match?.params.organizationId}/project/${match?.params.projectId}`);
+    }
   }
 
   if (models.organization.DEFAULT_ORGANIZATION_ID === organizationId) {
