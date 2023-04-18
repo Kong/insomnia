@@ -11,6 +11,7 @@ import {
 } from 'react-aria';
 import {
   LoaderFunction,
+  matchPath,
   redirect,
   useFetcher,
   useLoaderData,
@@ -597,6 +598,22 @@ interface WorkspaceWithMetadata {
 export const indexLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
+
+  const prevOrganizationLocation = localStorage.getItem(`locationHistoryEntry:${organizationId}`);
+
+  if (prevOrganizationLocation) {
+    const match = matchPath(
+      {
+        path: '/organization/:organizationId/project/:projectId',
+        end: false,
+      },
+      prevOrganizationLocation
+    );
+
+    if (match && match.params.organizationId && match.params.projectId) {
+      return redirect(`/organization/${match?.params.organizationId}/project/${match?.params.projectId}`);
+    }
+  }
 
   if (models.organization.DEFAULT_ORGANIZATION_ID === organizationId) {
     const localProjects = (await models.project.all()).filter(

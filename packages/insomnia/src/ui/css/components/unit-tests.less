@@ -22,9 +22,9 @@
     li {
       display: flex;
       color: var(--hl);
+      border-left: var(--padding-xxs) solid transparent;
 
       &:first-child {
-        width: 100%;
         align-items: center;
       }
 
@@ -49,6 +49,7 @@
       &.active {
         background-color: var(--hl-xs);
         color: var(--color-font);
+        border-left: var(--padding-xxs) solid var(--color-surprise);
       }
 
       button {
