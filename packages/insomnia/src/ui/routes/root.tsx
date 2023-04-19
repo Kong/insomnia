@@ -43,7 +43,7 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
   const remoteOrgs = allProjects.filter(isRemoteProject).map(({ _id, name }) => ({
     _id,
     name,
-  }));
+  })).sort((a, b) => a.name.localeCompare(b.name));
 
   return {
     organizations: [defaultOrganization, ...remoteOrgs],

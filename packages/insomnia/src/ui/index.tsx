@@ -395,7 +395,16 @@ const router = createMemoryRouter(
 
 // Store the last location in local storage
 router.subscribe(({ location }) => {
+  const match = matchPath(
+    {
+      path: '/organization/:organizationId',
+      end: false,
+    },
+    location.pathname
+  );
+
   localStorage.setItem('locationHistoryEntry', location.pathname);
+  match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, location.pathname);
 });
 
 function updateReduxNavigationState(store: Store, pathname: string) {
