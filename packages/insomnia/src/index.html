@@ -1,52 +1,114 @@
 <!DOCTYPE html>
 <html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="font-src 'self' data:; connect-src * data:; default-src * insomnia://*; img-src blob: data: * insomnia://*; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src blob: data: mediastream: * insomnia://*;"
+    />
+    <link rel="stylesheet" href="./ui/css/index.less" />
+  </head>
 
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="Content-Security-Policy"
-    content="font-src 'self' data:; connect-src * data:; default-src * insomnia://*; img-src blob: data: * insomnia://*; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src blob: data: mediastream: * insomnia://*;" />
-  <link rel="stylesheet" href="./ui/css/index.less" />
-</head>
-
-<body>
-  <div id="root">
-    <div
-      id="app-loading-indicator"
-      style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        width: 100%;
-      "
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <path d="M16 31.1864C24.3873 31.1864 31.1865 24.3872 31.1865 16C31.1865 7.61276 24.3873 0.813559 16 0.813559C7.6128 0.813559 0.813599 7.61276 0.813599 16C0.813599 24.3872 7.6128 31.1864 16 31.1864Z" fill="white"/>
-        <path d="M16 0C7.16344 0 0 7.16344 0 16C0 24.8366 7.16344 32 16 32C24.8366 32 32 24.8366 32 16C32 7.16344 24.8366 0 16 0ZM16 1.62712C23.9379 1.62712 30.3729 8.06208 30.3729 16C30.3729 23.9379 23.9379 30.3729 16 30.3729C8.06208 30.3729 1.62712 23.9379 1.62712 16C1.62712 8.06208 8.06208 1.62712 16 1.62712Z" fill="#4000BF"/>
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M16.1807 4.61017C22.4712 4.61017 27.5706 9.70957 27.5706 16C27.5706 22.2904 22.4712 27.3898 16.1807 27.3898C9.89029 27.3898 4.79089 22.2904 4.79089 16C4.79089 14.4627 5.09547 12.9965 5.64758 11.6584C6.45373 12.7562 7.75377 13.4689 9.22027 13.4689C11.6666 13.4689 13.6496 11.4858 13.6496 9.03955C13.6496 7.57305 12.937 6.27301 11.8391 5.46687C13.1772 4.91475 14.6434 4.61017 16.1807 4.61017Z" fill="url(#paint0_linear)"/>
-        <defs>
-          <linearGradient id="paint0_linear" x1="16.1807" y1="27.3898" x2="16.1807" y2="4.61017" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#7400E1"/>
-            <stop offset="1" stop-color="#4000BF"/>
-          </linearGradient>
-        </defs>
-      </svg>
+  <body>
+    <div id="root">
+      <div
+        id="app-loading-indicator"
+        style="
+          position: fixed;
+          top: 0;
+          left: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          width: 100%;
+        "
+      >
+        <div style="position: relative">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="38"
+            height="38"
+            viewBox="0 0 32 32"
+            fill="none"
+            style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+            "
+          >
+            <path
+              d="M16 31.186c8.387 0 15.186-6.799 15.186-15.186S24.387.814 16 .814.814 7.613.814 16 7.613 31.186 16 31.186z"
+              fill="#fff"
+            ></path>
+            <path
+              d="M16 0C7.163 0 0 7.163 0 16s7.163 16 16 16 16-7.163 16-16S24.837 0 16 0zm0 1.627c7.938 0 14.373 6.435 14.373 14.373S23.938 30.373 16 30.373 1.627 23.938 1.627 16 8.062 1.627 16 1.627z"
+              fill="#4000BF"
+            ></path>
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M16.18 4.61c6.291 0 11.39 5.1 11.39 11.39 0 6.29-5.099 11.39-11.39 11.39-6.29 0-11.39-5.1-11.39-11.39 0-1.537.305-3.004.858-4.342a4.43 4.43 0 106.192-6.192 11.357 11.357 0 014.34-.856z"
+              fill="url(#paint0_linear)"
+            ></path>
+            <defs>
+              <linearGradient
+                id="paint0_linear"
+                x1="16.1807"
+                y1="27.3898"
+                x2="16.1807"
+                y2="4.61017"
+                gradientUnits="userSpaceOnUse"
+              >
+                <stop stop-color="#7400E1"></stop>
+                <stop offset="1" stop-color="#4000BF"></stop>
+              </linearGradient>
+            </defs></svg
+          ><svg
+            width="76"
+            height="76"
+            viewBox="0 0 38 38"
+            xmlns="http://www.w3.org/2000/svg"
+            stroke="#fff"
+          >
+            <g fill="none" fill-rule="evenodd">
+              <g transform="translate(1 1)" stroke-width="2">
+                <circle
+                  stroke="#fff"
+                  stroke-opacity=".1"
+                  cx="18"
+                  cy="18"
+                  r="18"
+                ></circle>
+                <path d="M36 18c0-9.94-8.06-18-18-18" stroke="#fff9">
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from="0 18 18"
+                    to="360 18 18"
+                    dur="0.8s"
+                    repeatCount="indefinite"
+                  ></animateTransform>
+                </path>
+              </g>
+            </g>
+          </svg>
+        </div>
+      </div>
     </div>
-  </div>
-  <div id="dropdowns-container" style="
+    <div
+      id="dropdowns-container"
+      style="
         z-index: 99999;
         position: fixed;
         right: -90000px;
         top: -90000px;
         width: 100vw;
         height: 100vh;
-      ">
-  </div>
-  <div id="graphql-explorer-container"></div>
-  <script src="./renderer.ts" type="module"></script>
-</body>
-
+      "
+    ></div>
+    <div id="graphql-explorer-container"></div>
+    <script src="./renderer.ts" type="module"></script>
+  </body>
 </html>
