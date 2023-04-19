@@ -21,8 +21,8 @@ export const AppLoadingIndicator = () => (
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        width={32}
-        height={32}
+        width={38}
+        height={38}
         viewBox="0 0 32 32"
         fill="none"
         style={{
@@ -70,7 +70,7 @@ export const AppLoadingIndicator = () => (
         <g fill="none" fillRule="evenodd">
           <g transform="translate(1 1)" strokeWidth="2">
             <circle stroke="#fff" strokeOpacity=".1" cx="18" cy="18" r="18" />
-            <path d="M36 18c0-9.94-8.06-18-18-18" stroke="#fff">
+            <path d="M36 18c0-9.94-8.06-18-18-18" stroke="#fff9">
               <animateTransform
                 attributeName="transform"
                 type="rotate"
