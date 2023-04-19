@@ -395,6 +395,7 @@ interface ImportModalProps extends ModalProps {
   defaultProjectId: string;
   defaultWorkspaceId?: string;
   from: 'file' | 'uri' | 'clipboard';
+  defaultUri?: string;
 }
 
 export const ImportModal: FC<ImportModalProps> = ({
@@ -402,6 +403,7 @@ export const ImportModal: FC<ImportModalProps> = ({
   defaultWorkspaceId,
   organizationId,
   from,
+  defaultUri,
   ...modalProps
 }) => {
   const modalRef = useRef<ModalHandle>(null);
@@ -415,6 +417,7 @@ export const ImportModal: FC<ImportModalProps> = ({
   useEffect(() => {
     if (importFetcher.state === 'loading') {
       hideAllModals();
+      modalRef.current?.hide();
     }
   }, [importFetcher.state]);
 
@@ -439,6 +442,7 @@ export const ImportModal: FC<ImportModalProps> = ({
         ) : (
           <ScanResourcesForm
             from={from}
+            defaultUri={defaultUri}
             errors={scanResourcesFetcher.data?.errors}
             onSubmit={e => {
               e.preventDefault();
@@ -457,10 +461,12 @@ export const ImportModal: FC<ImportModalProps> = ({
 const ScanResourcesForm = ({
   onSubmit,
   from,
+  defaultUri,
   errors,
 }: {
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   from?: 'file' | 'uri' | 'clipboard';
+  defaultUri?: string;
   errors?: string[];
 }) => {
   const id = useId();
@@ -517,6 +523,7 @@ const ScanResourcesForm = ({
               <input
                 type="text"
                 name="uri"
+                defaultValue={defaultUri}
                 placeholder="https://website.com/insomnia-import.json"
               />
             </label>
