@@ -417,9 +417,9 @@ export const ImportModal: FC<ImportModalProps> = ({
   useEffect(() => {
     if (importFetcher.state === 'loading') {
       hideAllModals();
-      modalRef.current?.hide();
+      modalProps.onHide?.();
     }
-  }, [importFetcher.state]);
+  }, [importFetcher.state, modalProps]);
 
   return (
     <OverlayContainer>
