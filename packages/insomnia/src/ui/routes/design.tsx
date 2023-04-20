@@ -10,7 +10,9 @@ import {
   useParams,
 } from 'react-router-dom';
 import styled from 'styled-components';
+import { SwaggerUIBundle } from 'swagger-ui-dist';
 
+import { parseApiSpec } from '../../common/api-specs';
 import { ACTIVITY_SPEC } from '../../common/constants';
 import { debounce } from '../../common/misc';
 import { ApiSpec } from '../../models/api-spec';
@@ -145,7 +147,16 @@ const Design: FC = () => {
 
   const updateApiSpecFetcher = useFetcher();
   const generateRequestCollectionFetcher = useFetcher();
-
+  useEffect(() => {
+    let spec = {};
+    try {
+      spec = parseApiSpec(apiSpec.contents).contents || {};
+    } catch (err) {}
+    SwaggerUIBundle({
+      spec,
+      dom_id: '#swagger-ui',
+    });
+  }, [apiSpec.contents]);
   useEffect(() => {
     CodeMirror.registerHelper('lint', 'openapi', async function(contents: string) {
       const diagnostics = await window.main.spectralRun({
@@ -239,6 +250,7 @@ const Design: FC = () => {
           <EmptySpaceHelper>A spec navigator will render here</EmptySpaceHelper>
         )
       }
+      renderPaneTwo={<div id="swagger-ui" style={{ overflowY: 'auto', height:'100%', background:'#FFF' }}/>}
       renderPaneOne={
         apiSpec ? (
           <div className="column tall theme--pane__body">
