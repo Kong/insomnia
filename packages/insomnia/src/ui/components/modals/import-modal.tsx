@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 import { OverlayContainer, useDrop } from 'react-aria';
 import { useFetcher } from 'react-router-dom';
+import { usePrevious } from 'react-use';
 import styled from 'styled-components';
 
 import { strings } from '../../../common/strings';
@@ -409,17 +410,18 @@ export const ImportModal: FC<ImportModalProps> = ({
   const modalRef = useRef<ModalHandle>(null);
   const scanResourcesFetcher = useFetcher<ScanForResourcesActionResult>();
   const importFetcher = useFetcher<ImportResourcesActionResult>();
+  const prevImportFetcherState = usePrevious(importFetcher.state);
 
   useEffect(() => {
     modalRef.current?.show();
   }, []);
 
   useEffect(() => {
-    if (importFetcher.state === 'loading') {
+    if (prevImportFetcherState === 'loading' && importFetcher.state === 'idle') {
       hideAllModals();
       modalProps.onHide?.();
     }
-  }, [importFetcher.state, modalProps]);
+  }, [importFetcher.state, modalProps, prevImportFetcherState]);
 
   return (
     <OverlayContainer>
