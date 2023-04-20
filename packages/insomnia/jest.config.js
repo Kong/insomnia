@@ -18,4 +18,11 @@ module.exports = {
     'styled-components': '<rootDir>/node_modules/styled-components',
     'jsonpath-plus': '<rootDir>/node_modules/jsonpath-plus/dist/index-node-cjs.cjs',
   },
+  collectCoverage: true,
+  collectCoverageFrom: ['src/**/*.ts', 'src/**/*.tsx'],
+  coverageThreshold: {
+    global: {
+      lines: 35,
+    },
+  },
 };
