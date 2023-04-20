@@ -395,8 +395,17 @@ interface ImportModalProps extends ModalProps {
   organizationId: string;
   defaultProjectId: string;
   defaultWorkspaceId?: string;
-  from: 'file' | 'uri' | 'clipboard';
-  defaultUri?: string;
+  from:
+    | {
+        type: 'file';
+      }
+    | {
+        type: 'uri';
+        defaultValue?: string;
+      }
+    | {
+        type: 'clipboard';
+      };
 }
 
 export const ImportModal: FC<ImportModalProps> = ({
@@ -404,7 +413,6 @@ export const ImportModal: FC<ImportModalProps> = ({
   defaultWorkspaceId,
   organizationId,
   from,
-  defaultUri,
   ...modalProps
 }) => {
   const modalRef = useRef<ModalHandle>(null);
@@ -417,7 +425,10 @@ export const ImportModal: FC<ImportModalProps> = ({
   }, []);
 
   useEffect(() => {
-    if (prevImportFetcherState === 'loading' && importFetcher.state === 'idle') {
+    if (
+      prevImportFetcherState === 'loading' &&
+      importFetcher.state === 'idle'
+    ) {
       hideAllModals();
       modalProps.onHide?.();
     }
@@ -444,7 +455,6 @@ export const ImportModal: FC<ImportModalProps> = ({
         ) : (
           <ScanResourcesForm
             from={from}
-            defaultUri={defaultUri}
             errors={scanResourcesFetcher.data?.errors}
             onSubmit={e => {
               e.preventDefault();
@@ -463,16 +473,20 @@ export const ImportModal: FC<ImportModalProps> = ({
 const ScanResourcesForm = ({
   onSubmit,
   from,
-  defaultUri,
   errors,
 }: {
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
-  from?: 'file' | 'uri' | 'clipboard';
-  defaultUri?: string;
+  from?:
+    | { type: 'file' }
+    | {
+        type: 'uri';
+        defaultValue?: string;
+      }
+    | { type: 'clipboard' };
   errors?: string[];
 }) => {
   const id = useId();
-  const [importFrom, setImportFrom] = useState(from || 'uri');
+  const [importFrom, setImportFrom] = useState(from?.type || 'uri');
 
   return (
     <Fragment>
@@ -525,7 +539,7 @@ const ScanResourcesForm = ({
               <input
                 type="text"
                 name="uri"
-                defaultValue={defaultUri}
+                defaultValue={from?.type === 'uri' ? from.defaultValue : undefined}
                 placeholder="https://website.com/insomnia-import.json"
               />
             </label>

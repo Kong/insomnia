@@ -259,8 +259,7 @@ const Root = () => {
               organizationId={organizationId}
               defaultProjectId={projectId || ''}
               defaultWorkspaceId={workspaceId}
-              defaultUri={importUri}
-              from="uri"
+              from={{ type: 'uri', defaultValue: importUri }}
             />
           )}
           <Layout>
