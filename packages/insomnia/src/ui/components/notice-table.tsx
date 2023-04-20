@@ -108,6 +108,7 @@ export interface NoticeTableProps<T extends Notice> {
   notices: T[];
   onClick: (notice: T) => void;
   onVisibilityToggle?: (expanded: boolean) => any;
+  toggleRightPane: () => void;
   compact?: boolean;
   className?: string;
 }
@@ -189,7 +190,7 @@ const NoticeRow = <T extends Notice>({
   onClick: propsOnClick,
 }: PropsWithChildren<{
   notice: T;
-  onClick:(notice: T) => void;
+  onClick: (notice: T) => void;
 }>) => {
   const onClick = useCallback(() => {
     propsOnClick?.(notice);
@@ -216,6 +217,7 @@ export const NoticeTable = <T extends Notice>({
   compact,
   onClick,
   onVisibilityToggle,
+  toggleRightPane,
 }: PropsWithChildren<NoticeTableProps<T>>) => {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -244,14 +246,14 @@ export const NoticeTable = <T extends Notice>({
           )}
         </div>
         <Button className='btn btn--compact' onClick={onCollapse}>
-          {collapsed ? 'Show' : 'Hide'} Details
+          Toggle Warnings
           <SvgIcon
             style={{ marginLeft: 'var(--padding-xs)' }}
             icon={collapsed ? IconEnum.chevronUp : IconEnum.chevronDown}
           />
         </Button>
-        <Button className='btn btn--compact' onClick={onCollapse}>
-          Show Preview
+        <Button className='btn btn--compact' onClick={toggleRightPane}>
+          Toggle Preview
         </Button>
       </Header>
       {!collapsed && (

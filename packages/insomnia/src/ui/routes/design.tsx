@@ -9,6 +9,7 @@ import {
   useLoaderData,
   useParams,
 } from 'react-router-dom';
+import { useToggle } from 'react-use';
 import styled from 'styled-components';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 
@@ -132,6 +133,24 @@ export const loader: LoaderFunction = async ({
   };
 };
 
+const SwaggerUIDiv = ({ text }: { text: string }) => {
+  useEffect(() => {
+    let spec = {};
+    try {
+      spec = parseApiSpec(text).contents || {};
+    } catch (err) { }
+    SwaggerUIBundle({ spec, dom_id: '#swagger-ui' });
+  }, [text]);
+  return <div
+    id="swagger-ui"
+    style={{
+      overflowY: 'auto',
+      height: '100%',
+      background: '#FFF',
+    }}
+  />;
+};
+
 interface LintMessage extends Notice {
   range: IRuleResult['range'];
 }
@@ -147,18 +166,10 @@ const Design: FC = () => {
 
   const updateApiSpecFetcher = useFetcher();
   const generateRequestCollectionFetcher = useFetcher();
+  const [showRightPane, toggleRightPane] = useToggle(true);
+
   useEffect(() => {
-    let spec = {};
-    try {
-      spec = parseApiSpec(apiSpec.contents).contents || {};
-    } catch (err) {}
-    SwaggerUIBundle({
-      spec,
-      dom_id: '#swagger-ui',
-    });
-  }, [apiSpec.contents]);
-  useEffect(() => {
-    CodeMirror.registerHelper('lint', 'openapi', async function(contents: string) {
+    CodeMirror.registerHelper('lint', 'openapi', async (contents: string) => {
       const diagnostics = await window.main.spectralRun({
         contents,
         rulesetPath,
@@ -250,7 +261,7 @@ const Design: FC = () => {
           <EmptySpaceHelper>A spec navigator will render here</EmptySpaceHelper>
         )
       }
-      renderPaneTwo={<div id="swagger-ui" style={{ overflowY: 'auto', height:'100%', background:'#FFF' }}/>}
+      renderPaneTwo={showRightPane && <SwaggerUIDiv text={apiSpec.contents} />}
       renderPaneOne={
         apiSpec ? (
           <div className="column tall theme--pane__body">
@@ -286,6 +297,7 @@ const Design: FC = () => {
               <NoticeTable
                 notices={lintMessages}
                 onClick={handleScrollToLintMessage}
+                toggleRightPane={toggleRightPane}
               />
             )}
             {apiSpec.contents ? (
