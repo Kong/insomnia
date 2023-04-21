@@ -10,7 +10,6 @@ import { requestMeta } from '../../../models';
 import { selectResponsePreviewMode } from '../../redux/selectors';
 import { CodeEditor } from '../codemirror/code-editor';
 import { showError } from '../modals';
-import { printEventData } from './event-utils';
 import { WebSocketPreviewModeDropdown } from './websocket-preview-dropdown';
 
 interface Props<T extends WebSocketEvent> {
@@ -40,7 +39,21 @@ const PreviewPaneContents = styled.div({
 
 export const MessageEventView: FC<Props<WebSocketMessageEvent>> = ({ event, requestId }) => {
 
-  const raw = printEventData(event);
+  let raw = event.data.toString('utf-8');
+
+  if (typeof event.data === 'object') {
+    raw = JSON.stringify(event.data);
+  }
+
+  // Best effort to parse the binary data as a string
+  try {
+    if ('data' in event && typeof event.data === 'object' && 'data' in event.data && Array.isArray(event.data.data)) {
+      raw = Buffer.from(event.data.data).toString('utf-8');
+    }
+  } catch (err) {
+    // Ignore
+    console.error('Failed to parse event data to string, defaulting to JSON.stringify', err);
+  }
 
   const handleDownloadResponseBody = useCallback(async () => {
     const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
