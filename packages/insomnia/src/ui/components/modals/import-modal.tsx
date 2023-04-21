@@ -423,7 +423,7 @@ export const ImportModal: FC<ImportModalProps> = ({
     modalRef.current?.show();
   }, []);
 
-  // Hack to close modal when import is complete
+  // Hack to close modal when import is complete until useFetcher provides a better API https://github.com/remix-run/react-router/discussions/10013
   const prevImportFetcherState = usePrevious(importFetcher.state);
   useEffect(() => {
     if (
