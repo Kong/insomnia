@@ -6,7 +6,7 @@ import styled from 'styled-components';
 
 import { WebSocketEvent } from '../../../main/network/websocket';
 import { SvgIcon, SvgIconProps } from '../svg-icon';
-import { rawEventData } from './event-utils';
+import { getEventType, printEventData } from './event-utils';
 
 const Timestamp: FC<{ time: Date | number }> = ({ time }) => {
   const date = format(time, 'HH:mm:ss');
@@ -115,7 +115,10 @@ const EventMessageCell = styled('div')({
 const getMessage = (event: WebSocketEvent): string => {
   switch (event.type) {
     case 'message': {
-      return rawEventData(event);
+      if (getEventType(event) === 'Binary') {
+        return 'Binary data';
+      }
+      return printEventData(event);
     }
     case 'open': {
       return 'Connected successfully';
