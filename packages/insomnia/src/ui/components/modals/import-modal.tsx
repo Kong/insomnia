@@ -396,16 +396,16 @@ interface ImportModalProps extends ModalProps {
   defaultProjectId: string;
   defaultWorkspaceId?: string;
   from:
-    | {
-        type: 'file';
-      }
-    | {
-        type: 'uri';
-        defaultValue?: string;
-      }
-    | {
-        type: 'clipboard';
-      };
+  | {
+    type: 'file';
+  }
+  | {
+    type: 'uri';
+    defaultValue?: string;
+  }
+  | {
+    type: 'clipboard';
+  };
 }
 
 export const ImportModal: FC<ImportModalProps> = ({
@@ -418,12 +418,13 @@ export const ImportModal: FC<ImportModalProps> = ({
   const modalRef = useRef<ModalHandle>(null);
   const scanResourcesFetcher = useFetcher<ScanForResourcesActionResult>();
   const importFetcher = useFetcher<ImportResourcesActionResult>();
-  const prevImportFetcherState = usePrevious(importFetcher.state);
 
   useEffect(() => {
     modalRef.current?.show();
   }, []);
 
+  // Hack to close modal when import is complete
+  const prevImportFetcherState = usePrevious(importFetcher.state);
   useEffect(() => {
     if (
       prevImportFetcherState === 'loading' &&
@@ -476,13 +477,7 @@ const ScanResourcesForm = ({
   errors,
 }: {
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
-  from?:
-    | { type: 'file' }
-    | {
-        type: 'uri';
-        defaultValue?: string;
-      }
-    | { type: 'clipboard' };
+  from?: ImportModalProps['from'];
   errors?: string[];
 }) => {
   const id = useId();
