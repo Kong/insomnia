@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 import { OverlayContainer, useDrop } from 'react-aria';
 import { useFetcher } from 'react-router-dom';
+import { usePrevious } from 'react-use';
 import styled from 'styled-components';
 
 import { strings } from '../../../common/strings';
@@ -394,7 +395,17 @@ interface ImportModalProps extends ModalProps {
   organizationId: string;
   defaultProjectId: string;
   defaultWorkspaceId?: string;
-  from: 'file' | 'uri' | 'clipboard';
+  from:
+  | {
+    type: 'file';
+  }
+  | {
+    type: 'uri';
+    defaultValue?: string;
+  }
+  | {
+    type: 'clipboard';
+  };
 }
 
 export const ImportModal: FC<ImportModalProps> = ({
@@ -412,11 +423,17 @@ export const ImportModal: FC<ImportModalProps> = ({
     modalRef.current?.show();
   }, []);
 
+  // Hack to close modal when import is complete until useFetcher provides a better API https://github.com/remix-run/react-router/discussions/10013
+  const prevImportFetcherState = usePrevious(importFetcher.state);
   useEffect(() => {
-    if (importFetcher.state === 'loading') {
+    if (
+      prevImportFetcherState === 'loading' &&
+      importFetcher.state === 'idle'
+    ) {
       hideAllModals();
+      modalProps.onHide?.();
     }
-  }, [importFetcher.state]);
+  }, [importFetcher.state, modalProps, prevImportFetcherState]);
 
   return (
     <OverlayContainer>
@@ -460,11 +477,11 @@ const ScanResourcesForm = ({
   errors,
 }: {
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
-  from?: 'file' | 'uri' | 'clipboard';
+  from?: ImportModalProps['from'];
   errors?: string[];
 }) => {
   const id = useId();
-  const [importFrom, setImportFrom] = useState(from || 'uri');
+  const [importFrom, setImportFrom] = useState(from?.type || 'uri');
 
   return (
     <Fragment>
@@ -517,6 +534,7 @@ const ScanResourcesForm = ({
               <input
                 type="text"
                 name="uri"
+                defaultValue={from?.type === 'uri' ? from.defaultValue : undefined}
                 placeholder="https://website.com/insomnia-import.json"
               />
             </label>

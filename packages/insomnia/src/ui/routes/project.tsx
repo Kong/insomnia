@@ -851,9 +851,9 @@ const ProjectRoute: FC = () => {
   const filter = searchParams.get('filter') || '';
   const sortOrder =
     (searchParams.get('sortOrder') as DashboardSortOrder) || 'modified-desc';
-  const [isImportModalOpen, setIsImportModalOpen] = useState<
-    'uri' | 'file' | 'clipboard' | false
-  >(false);
+  const [importModalType, setImportModalType] = useState<
+    'uri' | 'file' | 'clipboard' | null
+  >(null);
   const createNewCollection = () => {
     showPrompt({
       title: 'Create New Request Collection',
@@ -1011,7 +1011,7 @@ const ProjectRoute: FC = () => {
                         <ItemContent
                           icon="file-import"
                           label="Import"
-                          onClick={() => setIsImportModalOpen('file')}
+                          onClick={() => setImportModalType('file')}
                         />
                       </DropdownItem>
                       <DropdownItem aria-label="Git Clone">
@@ -1057,7 +1057,7 @@ const ProjectRoute: FC = () => {
                 <EmptyStatePane
                   createRequestCollection={createNewCollection}
                   createDesignDocument={createNewDocument}
-                  importFrom={() => setIsImportModalOpen('file')}
+                  importFrom={() => setImportModalType('file')}
                   cloneFromGit={importFromGit}
                 />
               )}
@@ -1069,10 +1069,10 @@ const ProjectRoute: FC = () => {
             onHide={() => setIsGitRepositoryCloneModalOpen(false)}
           />
         )}
-        {isImportModalOpen && (
+        {importModalType && (
           <ImportModal
-            onHide={() => setIsImportModalOpen(false)}
-            from={isImportModalOpen}
+            onHide={() => setImportModalType(null)}
+            from={{ type: importModalType }}
             organizationId={organizationId}
             defaultProjectId={activeProject._id}
           />

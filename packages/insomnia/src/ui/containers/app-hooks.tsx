@@ -1,7 +1,6 @@
 import { ipcRenderer } from 'electron';
 import { FC, useEffect } from 'react';
 
-import { useAppCommands } from '../hooks/use-app-commands';
 import { useGlobalKeyboardShortcuts } from '../hooks/use-global-keyboard-shortcuts';
 import { useSettingsSideEffects } from '../hooks/use-settings-side-effects';
 import { useSyncMigration } from '../hooks/use-sync-migration';
@@ -12,7 +11,6 @@ export const AppHooks: FC = () => {
   useSettingsSideEffects();
   useGlobalKeyboardShortcuts();
   useThemeChange();
-  useAppCommands();
   // Give it a bit before letting the backend know it's ready
   useEffect(() => {
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
