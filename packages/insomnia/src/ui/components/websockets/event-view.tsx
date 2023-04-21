@@ -10,6 +10,7 @@ import { requestMeta } from '../../../models';
 import { selectResponsePreviewMode } from '../../redux/selectors';
 import { CodeEditor } from '../codemirror/code-editor';
 import { showError } from '../modals';
+import { rawEventData } from './event-utils';
 import { WebSocketPreviewModeDropdown } from './websocket-preview-dropdown';
 
 interface Props<T extends WebSocketEvent> {
@@ -38,8 +39,8 @@ const PreviewPaneContents = styled.div({
 });
 
 export const MessageEventView: FC<Props<WebSocketMessageEvent>> = ({ event, requestId }) => {
-  // TODO: Handle non-string data.
-  const raw = event.data.toString('utf-8');
+
+  const raw = rawEventData(event);
 
   const handleDownloadResponseBody = useCallback(async () => {
     const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
