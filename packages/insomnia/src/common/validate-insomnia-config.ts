@@ -46,7 +46,7 @@ export const validateInsomniaConfig = (): Result => {
       errors,
     ].join('\n');
   } else {
-    title = 'An unexpected error occured while parsing Insomnia Config';
+    title = 'An unexpected error occurred while parsing Insomnia Config';
     message = JSON.stringify(configSettings);
   }
 

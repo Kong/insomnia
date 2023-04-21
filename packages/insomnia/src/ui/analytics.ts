@@ -72,7 +72,7 @@ interface SegmentEventProperties {
   action: string;
 
   /**
-   * a description of an error that occured as a result of the user action
+   * a description of an error that occurred as a result of the user action
    * */
   error?: string;
 }

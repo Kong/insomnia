@@ -216,7 +216,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
     }
   }
 
-  // @ts-expect-error -- TSCONVERSION not sure why this error is occuring
+  // @ts-expect-error -- TSCONVERSION not sure why this error is occurring
   return migratedDoc;
 }
 

@@ -114,7 +114,7 @@ export function getMethodAnnotationName(method: HttpMethodType) {
 const protocolToPort = (protocol: unknown) => protocol === 'https:' ? '443' : protocol === 'http:' ? '80' : '';
 
 export function parseUrl(urlStr: string) {
-  // fallback to locahost: https://swagger.io/docs/specification/api-host-and-base-path/#relative-urls
+  // fallback to localhost: https://swagger.io/docs/specification/api-host-and-base-path/#relative-urls
   const { port, protocol, hostname, pathname } = new URL(urlStr, 'http://localhost');
   // fallback to protocol derived port
   const updatedPort = port || protocolToPort(protocol);

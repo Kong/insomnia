@@ -26,7 +26,7 @@ export const getOAuth2Token = async (
   authentication: AuthTypeOAuth2,
   forceRefresh = false,
 ): Promise<OAuth2Token | null> => {
-  const oAuth2Token = await getExisingAccessTokenAndRefreshIfExpired(requestId, authentication, forceRefresh);
+  const oAuth2Token = await getExistingAccessTokenAndRefreshIfExpired(requestId, authentication, forceRefresh);
   if (oAuth2Token) {
     return oAuth2Token;
   }
@@ -156,7 +156,7 @@ export const getOAuth2Token = async (
 // 2. if expired, and no refresh token return null
 // 3. run refresh token query and return new token or null if it fails
 
-async function getExisingAccessTokenAndRefreshIfExpired(
+async function getExistingAccessTokenAndRefreshIfExpired(
   requestId: string,
   authentication: AuthTypeOAuth2,
   forceRefresh: boolean,

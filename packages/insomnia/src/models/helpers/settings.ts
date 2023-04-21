@@ -243,7 +243,7 @@ export const getControlledStatus = (userSettings: Settings) => (setting: keyof S
 
   if (isControlledByConfig(setting)) {
 
-    // note that the raw config settings are being passed here (rathern than `settings` alone), because we must verify that the controller does not itself also have a specification in the config
+    // note that the raw config settings are being passed here (rather than `settings` alone), because we must verify that the controller does not itself also have a specification in the config
     const controllerSetting = isControlledByAnotherSetting(configSettings)(setting);
 
     // TLDR; the config always wins

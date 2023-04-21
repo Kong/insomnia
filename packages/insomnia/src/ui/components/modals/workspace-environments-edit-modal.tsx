@@ -189,8 +189,8 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     if (realEnvironment) {
       const updated = await models.environment.update(realEnvironment, patch);
       // reload the root environment if it changed since its not updated by redux
-      const isBaseEnvironement = realEnvironment?.parentId === workspace?._id;
-      if (isBaseEnvironement) {
+      const isBaseEnvironment = realEnvironment?.parentId === workspace?._id;
+      if (isBaseEnvironment) {
         setState({ ...state, baseEnvironment: updated });
       }
     }

@@ -737,8 +737,8 @@ describe('sendCurlAndWriteTimeline()', () => {
         POSTFIELDS: 'foo=bar',
         POST: 1,
         PROXY: '',
-        SSL_VERIFYHOST: 0, // should disbale SSL
-        SSL_VERIFYPEER: 0, // should disbale SSL
+        SSL_VERIFYHOST: 0, // should disable SSL
+        SSL_VERIFYPEER: 0, // should disable SSL
         TIMEOUT_MS: 30000,
         URL: 'http://localhost/?foo%20bar=hello%26world',
         USERAGENT: `insomnia/${getAppVersion()}`,

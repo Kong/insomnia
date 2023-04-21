@@ -371,7 +371,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
 const closeReadFunction = (fd: number, isMultipart: boolean, path?: string) => {
   fs.closeSync(fd);
   // NOTE: multipart files are combined before sending, so this file is deleted after
-  // alt implemention to send one part at a time https://github.com/JCMais/node-libcurl/blob/develop/examples/04-multi.js
+  // alt implementation to send one part at a time https://github.com/JCMais/node-libcurl/blob/develop/examples/04-multi.js
   if (isMultipart && path) {
     fs.unlink(path, () => { });
   }

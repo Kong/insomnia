@@ -68,7 +68,7 @@ describe('validateInsomniaConfig', () => {
     const result = validateInsomniaConfig();
 
     // Assert
-    expect(result.error?.title).toBe('An unexpected error occured while parsing Insomnia Config');
+    expect(result.error?.title).toBe('An unexpected error occurred while parsing Insomnia Config');
     expect(result.error?.message).toMatchSnapshot();
   });
 

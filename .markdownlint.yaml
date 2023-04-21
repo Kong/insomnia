@@ -12,7 +12,7 @@ MD004:
   style: dash
 
 # MD013 - Line length
-# We do not want to artificially limit line lengh in a language like markdown because of the nature of the language's handling of whitespace.  Line wrapping is just a fact of life in markdown and trying to impose the conventions of other languages on markdown is an impedance mismatch that leads to people thinking that whitespace in markdown is more representative of the rendered HTML than it really is.
+# We do not want to artificially limit line length in a language like markdown because of the nature of the language's handling of whitespace.  Line wrapping is just a fact of life in markdown and trying to impose the conventions of other languages on markdown is an impedance mismatch that leads to people thinking that whitespace in markdown is more representative of the rendered HTML than it really is.
 MD013: false
 
 # MD033 - Inline HTML

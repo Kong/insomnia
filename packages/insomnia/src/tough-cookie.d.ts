@@ -42,7 +42,7 @@ declare module 'tough-cookie' {
   export function domainMatch(str: string, domStr: string, canonicalize?: boolean): boolean;
 
   /**
-    * Given a current request/response path, gives the Path apropriate for storing in a cookie.
+    * Given a current request/response path, gives the Path appropriate for storing in a cookie.
     * This is basically the "directory" of a "file" in the path, but is specified by Section 5.1.4 of the RFC.
     *
     * The path parameter MUST be only the pathname part of a URI (i.e. excludes the hostname, query, fragment, etc.).

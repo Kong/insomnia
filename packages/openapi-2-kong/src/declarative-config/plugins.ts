@@ -190,12 +190,12 @@ function resolveRefSchemaRecursively(
   return Object.entries(source)
     .reduce<Map<string, unknown>>((acc, [key, value]: Entry<Map<string, unknown>>) => {
       if (typeof value === 'string') {
-        // the responsiblity of this function is only really concerning `$ref`s, so if the end value is not a `$ref` we can skip it
+        // the responsibility of this function is only really concerning `$ref`s, so if the end value is not a `$ref` we can skip it
         if (key !== '$ref') {
           return acc;
         }
 
-        // the accumulator alreadly having this `$ref` value indicates that we have already visited this ref, and as such we should exit early to prevent an infinite loop since circular `$ref`s are valid in OpenAPI.
+        // the accumulator already having this `$ref` value indicates that we have already visited this ref, and as such we should exit early to prevent an infinite loop since circular `$ref`s are valid in OpenAPI.
         if (acc.has(value)) {
           return acc;
         }
@@ -239,7 +239,7 @@ function resolveRefSchemaRecursively(
 
 /**
  * Build components reference object with nested paths
- * @param mapObject Map object that keeps all the ref keys and valuese to be transformed into the final object product with nested paths
+ * @param mapObject Map object that keeps all the ref keys and values to be transformed into the final object product with nested paths
  * @returns final object product with nested paths
  */
 function buildComponentsObjectFromMap(mapObject: Map<string, unknown>): Record<string, unknown> {

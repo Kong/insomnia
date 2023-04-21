@@ -420,7 +420,7 @@ paths:
           $ref: '#/components/responses/200BasicAuth'
         '404':
           description: >-
-            Unautorized (the username and password used for Basic auth do not
+            Unauthorized (the username and password used for Basic auth do not
             match those in the URL path.)
 
   /bearer:
@@ -581,7 +581,7 @@ paths:
               value: '*'
       responses:
         '200':
-          description: Neigher If-Modified-Since nor If-None-Match header is provided
+          description: Neither If-Modified-Since nor If-None-Match header is provided
         '304':
           description: If-Modified-Since or If-None-Match header is provided
 
