@@ -41,7 +41,7 @@
     "@types/mkdirp": "^1.0.1",
     "@types/oidc-provider": "^7.8.1",
     "@types/uuid": "^8.3.4",
-    "@types/ws": "^8.5.3",
+    "@types/ws": "^8.5.4",
     "concurrently": "^7.0.0",
     "cross-env": "^7.0.3",
     "esbuild-runner": "2.2.1",
@@ -56,7 +56,7 @@
     "mkdirp": "^1.0.4",
     "oidc-provider": "^7.10.6",
     "uuid": "^8.3.2",
-    "ws": "^8.8.1",
+    "ws": "^8.13.0",
     "xvfb-maybe": "^0.2.1"
   }
 }
