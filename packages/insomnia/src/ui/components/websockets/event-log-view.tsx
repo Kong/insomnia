@@ -117,7 +117,7 @@ const getMessage = (event: WebSocketEvent): string => {
       if ('data' in event && typeof event.data === 'object') {
         return 'Binary data';
       }
-      return event.data.toString('utf-8');
+      return event.data.toString();
     }
     case 'open': {
       return 'Connected successfully';

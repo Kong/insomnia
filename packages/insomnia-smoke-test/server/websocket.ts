@@ -33,7 +33,7 @@ const handleConnection = (ws: WebSocket, req: IncomingMessage) => {
 
     // Returns binary data
     if (req.url === '/binary') {
-      ws.send(Buffer.from(message.toString(), 'utf8'));
+      ws.send(Buffer.from(message));
       return;
     }
 
