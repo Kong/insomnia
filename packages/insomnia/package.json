@@ -155,7 +155,7 @@
     "@types/tough-cookie": "^2.3.7",
     "@types/uuid": "^8.3.4",
     "@types/vkbeautify": "^0.99.2",
-    "@types/ws": "^8.5.3",
+    "@types/ws": "^8.5.4",
     "@types/xmldom": "0.1.30",
     "@types/yaml": "^1.9.7",
     "@vitejs/plugin-react": "^2.2.0",
@@ -208,7 +208,7 @@
     "typescript-json-schema": "^0.50.1",
     "vite": "^3.2.3",
     "vkbeautify": "^0.99.1",
-    "ws": "^8.8.1",
+    "ws": "^8.13.0",
     "xmldom": "^0.5.0",
     "xpath": "0.0.32"
   },

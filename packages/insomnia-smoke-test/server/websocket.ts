@@ -30,6 +30,16 @@ const handleConnection = (ws: WebSocket, req: IncomingMessage) => {
       ws.send(message);
       return;
     }
+
+    // Returns binary data
+    if (req.url === '/binary') {
+      ws.send(Buffer.alloc(0));
+      ws.send(Buffer.from('test'));
+      ws.send(message);
+      ws.send(message.toString());
+      return;
+    }
+
     if (message.toString() === 'close') {
       ws.close(1003, 'Invalid message type');
     }

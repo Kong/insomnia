@@ -114,6 +114,9 @@ const EventMessageCell = styled('div')({
 const getMessage = (event: WebSocketEvent): string => {
   switch (event.type) {
     case 'message': {
+      if ('data' in event && typeof event.data === 'object') {
+        return 'Binary data';
+      }
       return event.data.toString();
     }
     case 'open': {
