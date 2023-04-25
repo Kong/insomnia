@@ -556,6 +556,8 @@ export const updateGitRepoAction: ActionFunction = async ({
   await models.workspaceMeta.updateByParentId(workspaceId, {
     gitRepositoryId,
   });
+
+  return null;
 };
 
 export const resetGitRepoAction: ActionFunction = async ({
@@ -590,6 +592,8 @@ export const resetGitRepoAction: ActionFunction = async ({
 
   await models.gitRepository.remove(repo);
   await database.flushChanges(flushId);
+
+  return null;
 };
 
 export interface CommitToGitRepoResult {

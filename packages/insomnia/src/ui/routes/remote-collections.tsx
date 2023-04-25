@@ -38,6 +38,8 @@ export const pullRemoteCollectionAction: ActionFunction = async ({ request }) =>
   await newVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
 
   await pullBackendProject({ vcs: newVCS, backendProject, remoteProjects });
+
+  return null;
 };
 
 export interface RemoteCollectionsLoaderData {
