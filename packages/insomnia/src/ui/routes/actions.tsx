@@ -53,6 +53,8 @@ export const renameProjectAction: ActionFunction = async ({
   );
 
   await models.project.update(project, { name });
+
+  return null;
 };
 
 export const deleteProjectAction: ActionFunction = async ({ params }) => {
@@ -242,6 +244,8 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
     name,
     description: description || workspace.description,
   });
+
+  return null;
 };
 
 // Test Suite
@@ -343,6 +347,8 @@ export const renameTestSuiteAction: ActionFunction = async ({ request, params })
   invariant(unitTestSuite, 'Test Suite not found');
 
   await models.unitTestSuite.update(unitTestSuite, { name });
+
+  return null;
 };
 
 // Unit Test
@@ -362,6 +368,8 @@ expect(response1.status).to.equal(200);`,
   });
 
   trackSegmentEvent(SegmentEvent.unitTestCreate);
+
+  return null;
 };
 
 export const deleteTestAction: ActionFunction = async ({ params }) => {
@@ -376,6 +384,8 @@ export const deleteTestAction: ActionFunction = async ({ params }) => {
 
   await models.unitTest.remove(unitTest);
   trackSegmentEvent(SegmentEvent.unitTestDelete);
+
+  return null;
 };
 
 export const updateTestAction: ActionFunction = async ({ request, params }) => {
@@ -398,6 +408,8 @@ export const updateTestAction: ActionFunction = async ({ request, params }) => {
   invariant(unitTest, 'Test not found');
 
   await models.unitTest.update(unitTest, { name, code, requestId: requestId || null });
+
+  return null;
 };
 
 export const runTestAction: ActionFunction = async ({ params }) => {
@@ -459,6 +471,8 @@ export const updateApiSpecAction: ActionFunction = async ({
     created: fromSync ? Date.now() : apiSpec.created,
     contents,
   }, fromSync);
+
+  return null;
 };
 
 export const generateCollectionFromApiSpecAction: ActionFunction = async ({
