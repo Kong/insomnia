@@ -226,7 +226,6 @@ export const GraphQLEditor: FC<Props> = ({
         environmentId,
         url: request.url,
       });
-      console.log(newState?.schema, newState?.schemaFetchError);
       isMounted && setSchemaFetchError(newState?.schemaFetchError);
       isMounted && newState?.schema && setSchema(newState.schema);
       isMounted && newState?.schema && setSchemaLastFetchTime(Date.now());
