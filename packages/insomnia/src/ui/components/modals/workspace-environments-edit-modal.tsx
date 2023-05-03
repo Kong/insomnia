@@ -1,6 +1,8 @@
 import classnames from 'classnames';
 import React, { FC, forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
+import { ListDropTargetDelegate, ListKeyboardDelegate, mergeProps, useDraggableCollection, useDraggableItem, useDropIndicator, useDroppableCollection, useDroppableItem, useFocusRing, useListBox, useOption } from 'react-aria';
 import { useSelector } from 'react-redux';
+import { Item, useDraggableCollectionState, useDroppableCollectionState, useListData, useListState } from 'react-stately';
 
 import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
@@ -89,6 +91,165 @@ const SidebarListItem: FC<SidebarListItemProps> = ({
       )}
     </div>
   </li>);
+};
+
+// @ts-expect-error props any
+const DropIndicator = props => {
+  const ref = React.useRef(null);
+  const { dropIndicatorProps, isHidden, isDropTarget } =
+    useDropIndicator(props, props.dropState, ref);
+  if (isHidden) {
+    return null;
+  }
+
+  return (
+    <li
+      {...dropIndicatorProps}
+      role="option"
+      ref={ref}
+      style={{
+        width: '100%',
+        height: '2px',
+        outline: 'none',
+        marginBottom: '-2px',
+        marginLeft: 0,
+        background: isDropTarget ? 'var(--hl)' : '0 0',
+      }}
+    />
+  );
+};
+
+const ReorderableOption = ({ item, state, dragState, dropState }): JSX.Element => {
+  const ref = React.useRef(null);
+  const { optionProps } = useOption({ key: item.key }, state, ref);
+  const { isFocusVisible, focusProps } = useFocusRing();
+
+  // Register the item as a drop target.
+  const { dropProps, isDropTarget } = useDroppableItem(
+    {
+      target: { type: 'item', key: item.key, dropPosition: 'on' },
+    },
+    dropState,
+    ref
+  );
+  // Register the item as a drag source.
+  const { dragProps } = useDraggableItem({
+    key: item.key,
+  }, dragState);
+
+  return (
+    <>
+      <DropIndicator
+        target={{
+          type: 'item',
+          key: item.key,
+          dropPosition: 'before',
+        }}
+        dropState={dropState}
+      />
+      <li
+        {...mergeProps(
+          optionProps,
+          dragProps,
+          dropProps,
+          focusProps
+        )}
+        ref={ref}
+        className={`option ${
+          isFocusVisible ? 'focus-visible' : ''
+        } ${isDropTarget ? 'drop-target' : ''}`}
+      >
+        {item.rendered}
+      </li>
+      {state.collection.getKeyAfter(item.key) == null &&
+        (
+          <DropIndicator
+            target={{
+              type: 'item',
+              key: item.key,
+              dropPosition: 'after',
+            }}
+            dropState={dropState}
+          />
+        )}
+    </>
+  );
+};
+
+// @ts-expect-error props any
+const ReorderableListBox = props => {
+  // See useListBox docs for more details.
+  const state = useListState(props);
+  const ref = React.useRef(null);
+  const { listBoxProps } = useListBox(
+    {
+      ...props,
+      shouldSelectOnPressUp: true,
+    },
+    state,
+    ref
+  );
+
+  const dropState = useDroppableCollectionState({
+    ...props,
+    collection: state.collection,
+    selectionManager: state.selectionManager,
+  });
+
+  const { collectionProps } = useDroppableCollection(
+    {
+      ...props,
+      keyboardDelegate: new ListKeyboardDelegate(
+        state.collection,
+        state.disabledKeys,
+        ref
+      ),
+      dropTargetDelegate: new ListDropTargetDelegate(
+        state.collection,
+        ref
+      ),
+    },
+    dropState,
+    ref
+  );
+
+  // Setup drag state for the collection.
+  const dragState = useDraggableCollectionState({
+    ...props,
+    // Collection and selection manager come from list state.
+    collection: state.collection,
+    selectionManager: state.selectionManager,
+    // Provide data for each dragged item. This function could
+    // also be provided by the user of the component.
+    getItems: props.getItems || (keys => {
+      return [...keys].map(key => {
+        const item = state.collection.getItem(key);
+
+        return {
+          'text/plain': item.textValue,
+        };
+      });
+    }),
+  });
+
+  useDraggableCollection(props, dragState, ref);
+
+  return (
+    <ul
+      {...mergeProps(listBoxProps, collectionProps)}
+      ref={ref}
+    >
+      {[...state.collection].map(item => (
+        <ReorderableOption
+          key={item.key}
+          item={item}
+          state={state}
+          dragState={dragState}
+          dropState={dropState}
+        />
+      ))}
+    </ul>
+  );
 };
 
 const SidebarList: FC<SidebarListProps> =
@@ -205,12 +366,35 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   if (inputRef.current && selectedEnvironmentColor) {
     inputRef.current.value = selectedEnvironmentColor;
   }
+
+  // const envs = useListData({
+  //   initialItems: environments,
+  // });
+
+  const envs = useListData({
+    initialItems: [
+      { id: 1, name: 'Cat' },
+      { id: 2, name: 'Dog' },
+      { id: 3, name: 'Kangaroo' },
+      { id: 4, name: 'Panda' },
+      { id: 5, name: 'Snake' },
+    ],
+  });
+
+  const onReorder = e => {
+    if (e.target.dropPosition === 'before') {
+      envs.moveBefore(e.target.key, e.keys);
+    } else if (e.target.dropPosition === 'after') {
+      envs.moveAfter(e.target.key, e.keys);
+    }
+  };
+
   return (
     <Modal ref={modalRef} wide tall {...props}>
       <ModalHeader>Manage Environments</ModalHeader>
       <ModalBody noScroll className="env-modal">
         <div className="env-modal__sidebar">
-          <li
+          <div
             className={classnames('env-modal__sidebar-root-item', {
               'env-modal__sidebar-item--active': selectedEnvironmentId === baseEnvironment?._id,
             })}
@@ -222,7 +406,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 sub-environment is active. Useful for storing default or fallback values.
               </HelpTooltip>
             </button>
-          </li>
+          </div>
           <div className="pad env-modal__sidebar-heading">
             <h3 className="no-margin">Sub Environments</h3>
             <Dropdown
@@ -274,12 +458,16 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               </DropdownItem>
             </Dropdown>
           </div>
-          <SidebarList
+          {/* <SidebarList
             environments={environments.filter(e => e.parentId === baseEnvironment?._id)}
             selectedEnvironmentId={selectedEnvironmentId}
             showEnvironment={handleShowEnvironment}
             changeEnvironmentName={(environment, name) => updateEnvironment(environment._id, { name })}
-          />
+          /> */}
+
+          <ReorderableListBox items={envs.items} onReorder={onReorder} selectionMode="multiple" selectionBehavior="replace">
+            {environment => <Item key={environment._id }>{environment.name}</Item>}
+          </ReorderableListBox>
         </div>
         <div className="env-modal__main">
           <div className="env-modal__main__header">
