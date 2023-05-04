@@ -341,14 +341,16 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     : environments.filter(e => e.parentId === baseEnvironment?._id).find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
   const selectedEnvironmentName = selectedEnvironment?.name || '';
   const selectedEnvironmentColor = selectedEnvironment?.color || null;
+  const subEnvironments = environments
+    .filter(environment => environment.parentId === (baseEnvironment && baseEnvironment._id))
+    .sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
   if (inputRef.current && selectedEnvironmentColor) {
     inputRef.current.value = selectedEnvironmentColor;
   }
-  let envs = environments.filter(e => e.parentId === baseEnvironment?._id);
 
   function onReorder(e) {
-    const reorderedEnv = envs.filter(evt => evt._id === [...e.keys][0])[0];
-    const targetEnv = envs.filter(evt => evt._id === e.target.key)[0];
+    const reorderedEnv = subEnvironments.filter(evt => evt._id === [...e.keys][0])[0];
+    const targetEnv = subEnvironments.filter(evt => evt._id === e.target.key)[0];
     const dropPosition = e.target.dropPosition;
     if (dropPosition === 'before') {
       reorderedEnv.metaSortKey = targetEnv.metaSortKey - 1;
@@ -357,7 +359,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     }
     console.log('reorderedEnv', reorderedEnv.metaSortKey, 'targetEnv', targetEnv.metaSortKey);
     updateEnvironment(reorderedEnv._id, { metaSortKey: reorderedEnv.metaSortKey });
-    envs = envs.sort((a, b) => a.metaSortKey - b.metaSortKey);
   }
 
   return (
@@ -436,7 +437,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
             changeEnvironmentName={(environment, name) => updateEnvironment(environment._id, { name })}
           /> */}
 
-          <ReorderableListBox items={envs} onReorder={onReorder} selectionMode="multiple" selectionBehavior="replace">
+          <ReorderableListBox items={subEnvironments} onReorder={onReorder} selectionMode="multiple" selectionBehavior="replace">
             {environment => <Item key={environment._id }>{environment.name}</Item>}
           </ReorderableListBox>
         </div>
