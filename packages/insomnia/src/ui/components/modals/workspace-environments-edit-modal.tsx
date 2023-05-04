@@ -251,28 +251,6 @@ const ReorderableListBox = props => {
     </ul>
   );
 };
-
-const SidebarList: FC<SidebarListProps> =
-  ({
-    changeEnvironmentName,
-    environments,
-    selectedEnvironmentId,
-    showEnvironment,
-  }: SidebarListProps) => {
-    return (
-      <ul>
-        {environments.map(environment =>
-          (<SidebarListItem
-            changeEnvironmentName={changeEnvironmentName}
-            environment={environment}
-            key={environment._id}
-            selectedEnvironmentId={selectedEnvironmentId}
-            showEnvironment={showEnvironment}
-          />
-          )
-        )}
-      </ul>);
-  };
 interface State {
   baseEnvironment: Environment | null;
   selectedEnvironmentId: string | null;
@@ -366,16 +344,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   if (inputRef.current && selectedEnvironmentColor) {
     inputRef.current.value = selectedEnvironmentColor;
   }
-  const envs = environments.filter(e => e.parentId === baseEnvironment?._id);
-
-  console.log('envs', envs);
-  // const envsForListData = environments.filter(e => e.parentId === baseEnvironment?._id);
-  // const envs = useListData({
-  //   initialItems: environments,
-  // });
-  // console.log('first', environments);
-  // console.log('envsForListData', envsForListData);
-  // console.log('envs', envs);
+  let envs = environments.filter(e => e.parentId === baseEnvironment?._id);
 
   function onReorder(e) {
     const reorderedEnv = envs.filter(evt => evt._id === [...e.keys][0])[0];
@@ -387,6 +356,8 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
       reorderedEnv.metaSortKey = targetEnv.metaSortKey + 1;
     }
     console.log('reorderedEnv', reorderedEnv.metaSortKey, 'targetEnv', targetEnv.metaSortKey);
+    updateEnvironment(reorderedEnv._id, { metaSortKey: reorderedEnv.metaSortKey });
+    envs = envs.sort((a, b) => a.metaSortKey - b.metaSortKey);
   }
 
   return (
