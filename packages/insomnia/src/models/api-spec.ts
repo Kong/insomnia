@@ -10,7 +10,7 @@ export const prefix = 'spc';
 
 export const canDuplicate = true;
 
-export const canSync = false;
+export const canSync = true;
 
 export interface BaseApiSpec {
   fileName: string;

@@ -46,8 +46,8 @@ export const WorkspaceHeader: FC<{
     <Fragment>
       <Breadcrumb crumbs={crumbs} />
       {isDesign(activeWorkspace) && <ActivityToggle />}
-      {isDesign(activeWorkspace) && <GitSyncDropdown gitRepository={gitRepository} />}
-      {isCollection(activeWorkspace) && isRemoteProject(activeProject) && vcs && <SyncDropdown key={workspaceId} workspace={activeWorkspace} project={activeProject} vcs={vcs} />}
+      {/* {isDesign(activeWorkspace) && <GitSyncDropdown gitRepository={gitRepository} />} */}
+      {isRemoteProject(activeProject) && vcs && <SyncDropdown key={workspaceId} workspace={activeWorkspace} project={activeProject} vcs={vcs} />}
     </Fragment>
   );
 };
