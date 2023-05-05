@@ -21,76 +21,61 @@ import { HelpTooltip } from '../help-tooltip';
 import { Tooltip } from '../tooltip';
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
-interface SidebarListProps {
-  environments: Environment[];
-  changeEnvironmentName: (environment: Environment, name?: string) => void;
-  selectedEnvironmentId: string | null;
-  showEnvironment: (id: string) => void;
-}
 interface SidebarListItemProps {
   environment: Environment;
-  changeEnvironmentName: (environment: Environment, name?: string) => void;
   selectedEnvironmentId: string | null;
-  showEnvironment: (id: string) => void;
 }
+
 const SidebarListItem: FC<SidebarListItemProps> = ({
-  changeEnvironmentName,
   environment,
   selectedEnvironmentId,
-  showEnvironment,
 }: SidebarListItemProps) => {
-  const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  // const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
 
-  return (<li
-    key={environment._id}
-    className={classnames({
-      'env-modal__sidebar-item': true,
-      'env-modal__sidebar-item--active': selectedEnvironmentId === environment._id,
-      // Specify theme because dragging will pull it out to <body>
-      'theme--dialog': true,
-    })}
-  >
-    <button onClick={() => showEnvironment(environment._id)}>
-      {environment.color ? (
-        <i
-          className="space-right fa fa-circle"
-          style={{
-            color: environment.color,
-          }}
-        />
-      ) : (
-        <i className="space-right fa fa-empty" />
-      )}
+  return (
+    <div
+      className={classnames({
+        'env-modal__sidebar-item': true,
+        'env-modal__sidebar-item--active': selectedEnvironmentId === environment._id,
+      })}
+    >
+      {environment.name}
+      {/* <div>
+        {environment.color ? (
+          <i
+            className="space-right fa fa-circle"
+            style={{
+              color: environment.color,
+            }}
+          />
+        ) : (
+          <i className="space-right fa fa-empty" />
+        )}
 
-      {environment.isPrivate && (
-        <Tooltip position="top" message="Environment will not be exported or synced">
-          <i className="fa fa-eye-slash faint space-right" />
-        </Tooltip>
-      )}
-
-      <Editable
-        className="inline-block"
-        onSubmit={name => changeEnvironmentName(environment, name)}
-        value={environment.name}
-      />
-    </button>
-    <div className="env-status">
-      {environment._id === workspaceMeta?.activeEnvironmentId ? (
-        <i className="fa fa-square active" title="Active Environment" />
-      ) : (
-        <button
-          onClick={() => {
-            if (environment && environment._id !== workspaceMeta?.activeEnvironmentId && workspaceMeta) {
-              models.workspaceMeta.update(workspaceMeta, { activeEnvironmentId: environment._id });
-              showEnvironment(environment._id);
-            }
-          }}
-        >
-          <i className="fa fa-square-o inactive" title="Click to activate Environment" />
-        </button>
-      )}
-    </div>
-  </li>);
+        {environment.isPrivate && (
+          <Tooltip position="top" message="Environment will not be exported or synced">
+            <i className="fa fa-eye-slash faint space-right" />
+          </Tooltip>
+        )}
+        <>{environment.name}</>
+      </div>
+      <div className="env-status">
+        {environment._id === workspaceMeta?.activeEnvironmentId ? (
+          <i className="fa fa-square active" title="Active Environment" />
+        ) : (<></>
+        // <button
+        //   onClick={() => {
+        //     if (environment && environment._id !== workspaceMeta?.activeEnvironmentId && workspaceMeta) {
+        //       models.workspaceMeta.update(workspaceMeta, { activeEnvironmentId: environment._id });
+        //       showEnvironment(environment._id);
+        //     }
+        //   }}
+        // >
+        //   <i className="fa fa-square-o inactive" title="Click to activate Environment" />
+        // </button>
+        )}
+      </div> */}
+    </div>);
 };
 
 // @ts-expect-error props any
@@ -155,9 +140,10 @@ const ReorderableOption = ({ item, state, dragState, dropState }): JSX.Element =
           focusProps
         )}
         ref={ref}
-        className={`option ${
-          isFocusVisible ? 'focus-visible' : ''
-        } ${isDropTarget ? 'drop-target' : ''}`}
+        className={classnames({
+          'env-modal__sidebar-item': true,
+          // 'env-modal__sidebar-item--active': selectedEnvironmentId === environment._id,
+        })}
       >
         {item.rendered}
       </li>
@@ -301,6 +287,12 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     }
   }
 
+  function handleShowEnvironmentFromList(e: unknown) {
+    // Don't allow switching if the current one has errors
+    console.log(e):
+    // TODO: Fix this
+  }
+
   async function handleDeleteEnvironment(environmentId: string | null) {
     // Don't delete the root environment
     if (!environmentId || environmentId === state.baseEnvironment?._id) {
@@ -430,15 +422,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               </DropdownItem>
             </Dropdown>
           </div>
-          {/* <SidebarList
-            environments={environments.filter(e => e.parentId === baseEnvironment?._id)}
-            selectedEnvironmentId={selectedEnvironmentId}
-            showEnvironment={handleShowEnvironment}
-            changeEnvironmentName={(environment, name) => updateEnvironment(environment._id, { name })}
-          /> */}
-
-          <ReorderableListBox items={subEnvironments} onReorder={onReorder} selectionMode="multiple" selectionBehavior="replace">
-            {environment => <Item key={environment._id }>{environment.name}</Item>}
+          <ReorderableListBox items={subEnvironments} onSelectionChange={handleShowEnvironmentFromList} onReorder={onReorder} selectionMode="multiple" selectionBehavior="replace">
+            {environment =>
+              <Item key={environment._id}>{environment.name}</Item>
+            }
           </ReorderableListBox>
         </div>
         <div className="env-modal__main">
