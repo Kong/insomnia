@@ -115,7 +115,8 @@ const ReorderableOption = ({ item, state, dragState, dropState }): JSX.Element =
       <li
         style={{ gap: '1rem',
           display: 'flex',
-          padding: '5px' }}
+          padding: '5px',
+          outlineStyle: 'none' }}
         {...mergeProps(
           optionProps,
           dragProps,
