@@ -1,5 +1,6 @@
 import React, { FC, forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useRevalidator } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { ACTIVITY_HOME } from '../../../common/constants';
@@ -57,6 +58,7 @@ const CertificateField: FC<{
     </span>
   );
 };
+
 export interface WorkspaceSettingsModalOptions {
   showAddCertificateForm: boolean;
   host: string;
@@ -86,6 +88,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
     defaultPreviewMode: false,
   });
 
+  const { revalidate } = useRevalidator();
   const workspace = useSelector(selectActiveWorkspace);
   const apiSpec = useSelector(selectActiveApiSpec);
   const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
@@ -223,6 +226,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
     showDescription,
     defaultPreviewMode,
   } = state;
+
   return (
     <Modal ref={modalRef}>
       {workspace ?
@@ -489,6 +493,39 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                     </div>
                   </form>
                 )}
+              </PanelContainer>
+            </TabItem>
+            <TabItem key="git-sybc" title="Git Sync">
+              <PanelContainer className="pad">
+                <div className="form-control form-control--outlined">
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--padding-xs)',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={Boolean(workspace?.gitSync)}
+                      onChange={async () => {
+                        if (workspace?.gitSync) {
+                          await models.workspace.update(workspace, { gitSync: false });
+                        } else {
+                          await models.workspace.update(workspace, {
+                            gitSync: true,
+                          });
+                        }
+
+                        revalidate();
+                      }}
+                    />
+                    Enable Git Sync
+                  </label>
+                  <p>
+                    By enabling Git Sync, you can sync your workspace with a Git repository. This will disable the ability to sync with Insomnia Sync.
+                  </p>
+                </div>
               </PanelContainer>
             </TabItem>
           </Tabs>

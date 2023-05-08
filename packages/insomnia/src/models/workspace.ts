@@ -44,6 +44,7 @@ export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
   description: '',
   scope: WorkspaceScopeKeys.collection,
+  gitSync: false,
 });
 
 export function migrate(doc: Workspace) {

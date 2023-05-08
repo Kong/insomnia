@@ -149,7 +149,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
     gitPushFetcher.state === 'loading' ||
     gitPullFetcher.state === 'loading';
   const isButton =
-    !gitRepository ||
+    !gitRepository || !gitRepository.uri ||
     (isLoading && !gitRepoDataFetcher.data) ||
     (gitRepoDataFetcher.data && 'errors' in gitRepoDataFetcher.data);
 
