@@ -287,10 +287,17 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     }
   }
 
-  function handleShowEnvironmentFromList(e: unknown) {
+  function handleShowEnvironmentFromList(e) {
     // Don't allow switching if the current one has errors
-    console.log(e):
-    // TODO: Fix this
+    console.log('handleShowEnvironmentFromList', e);
+    if (e.anchorKey) {
+      const environment = subEnvironments.filter(evt => evt._id === e.anchorKey)[0];
+      console.log('test1', environment);
+      setState(state => ({
+        ...state,
+        selectedEnvironmentId: environment._id || null,
+      }));
+    }
   }
 
   async function handleDeleteEnvironment(environmentId: string | null) {
