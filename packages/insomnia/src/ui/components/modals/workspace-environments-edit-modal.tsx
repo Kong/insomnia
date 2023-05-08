@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import React, { FC, forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
 import { ListDropTargetDelegate, ListKeyboardDelegate, mergeProps, useDraggableCollection, useDraggableItem, useDropIndicator, useDroppableCollection, useDroppableItem, useFocusRing, useListBox, useOption } from 'react-aria';
 import { useSelector } from 'react-redux';
-import { Item, useDraggableCollectionState, useDroppableCollectionState, useListData, useListState } from 'react-stately';
+import { DraggableCollectionState, DroppableCollectionState, Item, ListState, useDraggableCollectionState, useDroppableCollectionState, useListState } from 'react-stately';
 
 import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
@@ -82,13 +82,14 @@ const DropIndicator = props => {
   );
 };
 
-const ReorderableOption = ({ item, state, dragState, dropState }): JSX.Element => {
+// @ts-expect-error Node not generic?
+const ReorderableOption = ({ item, state, dragState, dropState }: {item: Node<Environment>; state: ListState<Node<Environment>>; dragState: DraggableCollectionState; dropState: DroppableCollectionState}): JSX.Element => {
   const ref = React.useRef(null);
   const { optionProps } = useOption({ key: item.key }, state, ref);
-  const { isFocusVisible, focusProps } = useFocusRing();
+  const { focusProps } = useFocusRing();
 
   // Register the item as a drop target.
-  const { dropProps, isDropTarget } = useDroppableItem(
+  const { dropProps } = useDroppableItem(
     {
       target: { type: 'item', key: item.key, dropPosition: 'on' },
     },
@@ -100,8 +101,8 @@ const ReorderableOption = ({ item, state, dragState, dropState }): JSX.Element =
     key: item.key,
   }, dragState);
 
-  const environment = item.value;
-  const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const environment = item.value as unknown as Environment;
+
   return (
     <>
       <DropIndicator
@@ -128,7 +129,7 @@ const ReorderableOption = ({ item, state, dragState, dropState }): JSX.Element =
           'env-modal__sidebar-item': true,
         })}
       >
-        <SidebarListItem environment={environment} />
+        <SidebarListItem environment={environment} selectedEnvironmentId={null} />
       </li>
       {state.collection.getKeyAfter(item.key) == null &&
         (
@@ -270,7 +271,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     }
   }
 
-  function handleShowEnvironmentFromList(e) {
+  function handleShowEnvironmentFromList(e: any) {
     // Don't allow switching if the current one has errors
     if (e.anchorKey) {
       const environment = subEnvironments.filter(evt => evt._id === e.anchorKey)[0];
@@ -328,7 +329,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     inputRef.current.value = selectedEnvironmentColor;
   }
 
-  function onReorder(e) {
+  function onReorder(e: any) {
     const reorderedEnv = subEnvironments.filter(evt => evt._id === [...e.keys][0])[0];
     const targetEnv = subEnvironments.filter(evt => evt._id === e.target.key)[0];
     const dropPosition = e.target.dropPosition;
@@ -411,7 +412,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
             </Dropdown>
           </div>
           <ReorderableListBox items={subEnvironments} onSelectionChange={handleShowEnvironmentFromList} onReorder={onReorder} selectionMode="multiple" selectionBehavior="replace">
-            {environment =>
+            {(environment: any) =>
               <Item key={environment._id}>
                 {environment.name}
               </Item>
