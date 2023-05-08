@@ -19,6 +19,7 @@ import { PromptButton } from '../base/prompt-button';
 import { EnvironmentEditor, EnvironmentEditorHandle } from '../editors/environment-editor';
 import { HelpTooltip } from '../help-tooltip';
 import { Tooltip } from '../tooltip';
+
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
 interface SidebarListItemProps {
@@ -28,53 +29,30 @@ interface SidebarListItemProps {
 
 const SidebarListItem: FC<SidebarListItemProps> = ({
   environment,
-  selectedEnvironmentId,
 }: SidebarListItemProps) => {
-  // const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
-
   return (
     <div
       className={classnames({
         'env-modal__sidebar-item': true,
-        'env-modal__sidebar-item--active': selectedEnvironmentId === environment._id,
       })}
     >
-      {environment.name}
-      {/* <div>
-        {environment.color ? (
-          <i
-            className="space-right fa fa-circle"
-            style={{
-              color: environment.color,
-            }}
-          />
-        ) : (
-          <i className="space-right fa fa-empty" />
-        )}
+      {environment.color ? (
+        <i
+          className="space-right fa fa-circle"
+          style={{
+            color: environment.color,
+          }}
+        />
+      ) : (
+        <i className="space-right fa fa-empty" />
+      )}
 
-        {environment.isPrivate && (
-          <Tooltip position="top" message="Environment will not be exported or synced">
-            <i className="fa fa-eye-slash faint space-right" />
-          </Tooltip>
-        )}
-        <>{environment.name}</>
-      </div>
-      <div className="env-status">
-        {environment._id === workspaceMeta?.activeEnvironmentId ? (
-          <i className="fa fa-square active" title="Active Environment" />
-        ) : (<></>
-        // <button
-        //   onClick={() => {
-        //     if (environment && environment._id !== workspaceMeta?.activeEnvironmentId && workspaceMeta) {
-        //       models.workspaceMeta.update(workspaceMeta, { activeEnvironmentId: environment._id });
-        //       showEnvironment(environment._id);
-        //     }
-        //   }}
-        // >
-        //   <i className="fa fa-square-o inactive" title="Click to activate Environment" />
-        // </button>
-        )}
-      </div> */}
+      {environment.isPrivate && (
+        <Tooltip position="top" message="Environment will not be exported or synced">
+          <i className="fa fa-eye-slash faint space-right" />
+        </Tooltip>
+      )}
+      <>{environment.name}</>
     </div>);
 };
 
@@ -122,6 +100,8 @@ const ReorderableOption = ({ item, state, dragState, dropState }): JSX.Element =
     key: item.key,
   }, dragState);
 
+  const environment = item.value;
+  const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
   return (
     <>
       <DropIndicator
@@ -133,6 +113,9 @@ const ReorderableOption = ({ item, state, dragState, dropState }): JSX.Element =
         dropState={dropState}
       />
       <li
+        style={{ gap: '1rem',
+          display: 'flex',
+          padding: '5px' }}
         {...mergeProps(
           optionProps,
           dragProps,
@@ -142,10 +125,9 @@ const ReorderableOption = ({ item, state, dragState, dropState }): JSX.Element =
         ref={ref}
         className={classnames({
           'env-modal__sidebar-item': true,
-          // 'env-modal__sidebar-item--active': selectedEnvironmentId === environment._id,
         })}
       >
-        {item.rendered}
+        <SidebarListItem environment={environment} />
       </li>
       {state.collection.getKeyAfter(item.key) == null &&
         (
@@ -289,10 +271,8 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
   function handleShowEnvironmentFromList(e) {
     // Don't allow switching if the current one has errors
-    console.log('handleShowEnvironmentFromList', e);
     if (e.anchorKey) {
       const environment = subEnvironments.filter(evt => evt._id === e.anchorKey)[0];
-      console.log('test1', environment);
       setState(state => ({
         ...state,
         selectedEnvironmentId: environment._id || null,
@@ -431,7 +411,9 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
           </div>
           <ReorderableListBox items={subEnvironments} onSelectionChange={handleShowEnvironmentFromList} onReorder={onReorder} selectionMode="multiple" selectionBehavior="replace">
             {environment =>
-              <Item key={environment._id}>{environment.name}</Item>
+              <Item key={environment._id}>
+                {environment.name}
+              </Item>
             }
           </ReorderableListBox>
         </div>
