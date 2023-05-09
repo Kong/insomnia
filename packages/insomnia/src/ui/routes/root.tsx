@@ -41,7 +41,6 @@ import { StatusBar } from '../components/statusbar';
 import { Toast } from '../components/toast';
 import { WorkspaceHeader } from '../components/workspace-header';
 import { AppHooks } from '../containers/app-hooks';
-import withDragDropContext from '../context/app/drag-drop-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import Modals from './modals';
 import { WorkspaceLoaderData } from './workspace';
@@ -283,4 +282,4 @@ const Root = () => {
   );
 };
 
-export default withDragDropContext(Root);
+export default Root;

@@ -1,6 +1,5 @@
 import classnames from 'classnames';
-import React, { FC, forwardRef, MouseEvent, ReactElement, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
+import React, { FC, forwardRef, MouseEvent, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
@@ -26,7 +25,6 @@ import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { WebSocketTag } from '../tags/websocket-tag';
 import { ConnectionCircle } from '../websockets/action-bar';
-import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 
 interface RawProps {
   disableDragAndDrop?: boolean;
@@ -37,32 +35,11 @@ interface RawProps {
   requestGroup?: RequestGroup;
 }
 
-type Props = RawProps & DnDProps;
-
-const dragSource: DragSourceSpec<Props, DragObject> = {
-  beginDrag({ request }) {
-    return {
-      item: request,
-    };
-  },
-};
-
-const dragTarget: DropTargetSpec<Props> = {
-  drop: dropHandleCreator<Props>({
-    getParentId: props => props.requestGroup?._id || props.request?.parentId,
-    getTargetId: props => props.request?._id,
-  }),
-  hover: hoverHandleCreator<Props>(),
-};
+type Props = RawProps;
 
 export const _SidebarRequestRow: FC<Props> = forwardRef(({
-  connectDragSource,
-  connectDropTarget,
-  disableDragAndDrop,
   filter,
   isActive,
-  isDragging,
-  isDraggingOver,
   isPinned,
   request,
   requestGroup,
@@ -73,7 +50,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const activeWorkspaceId = activeWorkspace?._id;
-  const [dragDirection, setDragDirection] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const handleSetActiveRequest = useCallback(() => {
     if (!request || isActive) {
@@ -116,7 +92,6 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
 
   const nodeRef = useRef<HTMLLIElement>(null);
   useImperativeHandle(ref, () => ({
-    setDragDirection,
     node: nodeRef.current,
   }));
 
@@ -217,16 +192,9 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
 
   }, [handleRender, request, request?.url]);
 
-  let node: ReactElement<HTMLLIElement> | null = null;
-  const classes = classnames('sidebar__row', {
-    'sidebar__row--dragging': isDragging,
-    'sidebar__row--dragging-above': isDraggingOver && dragDirection > 0,
-    'sidebar__row--dragging-below': isDraggingOver && dragDirection < 0,
-  });
-
   if (!request) {
-    node = (
-      <li ref={nodeRef} className={classes}>
+    return (
+      <li ref={nodeRef} className="sidebar__row">
         <div className="sidebar__item">
           <button className="sidebar__clickable" onClick={handleRequestCreateFromEmpty}>
             <em className="faded">click to add first request...</em>
@@ -246,8 +214,8 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       methodTag = <MethodTag method={request.method} override={methodOverrideValue} />;
     }
 
-    node = (
-      <li ref={nodeRef} className={classes}>
+    return (
+      <li ref={nodeRef} className="sidebar__row">
         <div
           className={classnames('sidebar__item', 'sidebar__item--request', {
             'sidebar__item--active': isActive,
@@ -312,20 +280,11 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       </li>
     );
   }
-
-  if (disableDragAndDrop) {
-    return node;
-  } else if (!isEditing) {
-    return connectDragSource(connectDropTarget(node));
-  } else {
-    return connectDropTarget(node);
-  }
 });
 
 _SidebarRequestRow.displayName = 'SidebarRequestRow';
 
-const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(_SidebarRequestRow);
-export const SidebarRequestRow = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
+export const SidebarRequestRow = _SidebarRequestRow;
 
 const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useWSReadyState(requestId);

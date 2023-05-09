@@ -189,8 +189,6 @@
     "openapi-types": "^7.0.1",
     "react": "^18.2.0",
     "react-aria": "^3.23.1",
-    "react-dnd": "^7.4.5",
-    "react-dnd-html5-backend": "^7.4.4",
     "react-dom": "^18.2.0",
     "react-redux": "^7.2.6",
     "react-router-dom": "^6.4.2",

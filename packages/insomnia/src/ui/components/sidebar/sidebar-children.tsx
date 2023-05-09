@@ -1,5 +1,4 @@
 import classnames from 'classnames';
-import { Environment } from 'nunjucks';
 import React, { FC, Fragment } from 'react';
 import { ListDropTargetDelegate, ListKeyboardDelegate, mergeProps, useDraggableCollection, useDraggableItem, useDropIndicator, useDroppableCollection, useDroppableItem, useFocusRing, useListBox, useOption } from 'react-aria';
 import ReactDOM from 'react-dom';
@@ -18,7 +17,6 @@ import { SidebarRequestGroupRow } from './sidebar-request-group-row';
 import { SidebarRequestRow } from './sidebar-request-row';
 
 // TODO
-// remove old dnd behavior
 // rename the child type to sometihng less collision-y
 // decide the best way to pass filters down the tree
 
@@ -98,21 +96,22 @@ const RecursiveSidebarRows = ({
       console.log(e);
     }}
     onReorder={e => {
-      console.log('onReorder', e);
       const source = [...e.keys][0];
       const sourceRow = rows.find(evt => evt.doc._id === source);
       const targetRow = rows.find(evt => evt.doc._id === e.target.key);
       if (!sourceRow || !targetRow) {
         return;
       }
-      const dropPosition = e.target.dropPosition;
-      if (dropPosition === 'before') {
-        sourceRow.doc.metaSortKey = targetRow.doc.metaSortKey - 1;
-      }
-      if (dropPosition === 'after') {
-        sourceRow.doc.metaSortKey = targetRow.doc.metaSortKey + 1;
-      }
-      update(sourceRow.doc, { metaSortKey: sourceRow.doc.metaSortKey });
+      const dropPosition: 'before' | 'after' = e.target.dropPosition;
+
+      const position = {
+        'before': -1,
+        'after': 1,
+      };
+      console.log('onReorder', targetRow.doc.metaSortKey, position[dropPosition]);
+
+      // TODO: reassign parentId here if target is folder
+      update(sourceRow.doc, { metaSortKey: targetRow.doc.metaSortKey + position[dropPosition] });
     }}
     onAction={e => {
       console.log('onAction', e);
