@@ -264,19 +264,9 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     },
   }), [workspace, workspaceMeta?.activeEnvironmentId]);
 
-  function handleShowEnvironment(environmentId: string | null) {
-    // Don't allow switching if the current one has errors
-    if (environmentEditorRef.current?.isValid() && environmentId !== selectedEnvironmentId) {
-      setState(state => ({
-        ...state,
-        selectedEnvironmentId: environmentId || null,
-      }));
-    }
-  }
-
-  function handleShowEnvironmentFromList(e: any) {
-    // Don't allow switching if the current one has errors
-    if (e.anchorKey) {
+  function onSelectionChange(e: any) {
+    // Only switch if valid
+    if (environmentEditorRef.current?.isValid() && e.anchorKey) {
       const environment = subEnvironments.filter(evt => evt._id === e.anchorKey)[0];
       setState(state => ({
         ...state,
@@ -336,16 +326,20 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   }
 
   function onReorder(e: any) {
-    const reorderedEnv = subEnvironments.filter(evt => evt._id === [...e.keys][0])[0];
-    const targetEnv = subEnvironments.filter(evt => evt._id === e.target.key)[0];
+    const source = [...e.keys][0];
+    const sourceEnv = subEnvironments.find(evt => evt._id === source);
+    const targetEnv = subEnvironments.find(evt => evt._id === e.target.key);
+    if (!sourceEnv || !targetEnv) {
+      return;
+    }
     const dropPosition = e.target.dropPosition;
     if (dropPosition === 'before') {
-      reorderedEnv.metaSortKey = targetEnv.metaSortKey - 1;
-    } else if (dropPosition === 'after') {
-      reorderedEnv.metaSortKey = targetEnv.metaSortKey + 1;
+      sourceEnv.metaSortKey = targetEnv.metaSortKey - 1;
     }
-    console.log('reorderedEnv', reorderedEnv.metaSortKey, 'targetEnv', targetEnv.metaSortKey);
-    updateEnvironment(reorderedEnv._id, { metaSortKey: reorderedEnv.metaSortKey });
+    if (dropPosition === 'after') {
+      sourceEnv.metaSortKey = targetEnv.metaSortKey + 1;
+    }
+    updateEnvironment(sourceEnv._id, { metaSortKey: sourceEnv.metaSortKey });
   }
 
   return (
@@ -358,7 +352,16 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               'env-modal__sidebar-item--active': selectedEnvironmentId === baseEnvironment?._id,
             })}
           >
-            <button onClick={() => handleShowEnvironment(baseEnvironment?._id || null)}>
+            <button
+              onClick={() => {
+                if (environmentEditorRef.current?.isValid() && selectedEnvironmentId === baseEnvironment?._id) {
+                  setState(state => ({
+                    ...state,
+                    selectedEnvironmentId: baseEnvironment?._id,
+                  }));
+                }
+              }}
+            >
               {ROOT_ENVIRONMENT_NAME}
               <HelpTooltip className="space-left">
                 The variables in this environment are always available, regardless of which
@@ -417,7 +420,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               </DropdownItem>
             </Dropdown>
           </div>
-          <ReorderableListBox items={subEnvironments} onSelectionChange={handleShowEnvironmentFromList} onReorder={onReorder} selectionMode="multiple" selectionBehavior="replace">
+          <ReorderableListBox items={subEnvironments} onSelectionChange={onSelectionChange} onReorder={onReorder} selectionMode="multiple" selectionBehavior="replace">
             {(environment: any) =>
               <Item key={environment._id}>
                 {environment.name}
