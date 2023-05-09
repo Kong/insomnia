@@ -119,7 +119,7 @@ const ReorderableOption = ({ item, state, dragState, dropState }: { item: Node<E
           gap: '1rem',
           display: 'flex',
           padding: '5px',
-          outlineStyle: 'none'
+          outlineStyle: 'none',
         }}
         {...mergeProps(
           optionProps,
@@ -282,6 +282,9 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
         ...state,
         selectedEnvironmentId: environment._id || null,
       }));
+      if (workspaceMeta?.activeEnvironmentId !== environment._id && workspaceMeta) {
+        models.workspaceMeta.update(workspaceMeta, { activeEnvironmentId: environment._id });
+      }
     }
   }
 
