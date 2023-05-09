@@ -18,12 +18,12 @@
       align-items: center;
       padding: var(--padding-sm) var(--padding-sm) 0;
 
-      & > * {
+      &>* {
         height: 100%;
         padding: 0;
       }
 
-      & > *:first-child {
+      &>*:first-child {
         width: 100%;
         padding: var(--padding-sm) 0 var(--padding-sm) var(--padding-sm);
       }
@@ -64,7 +64,7 @@
     }
 
     h1,
-    h1 > * {
+    h1>* {
       padding: 0;
       font-size: var(--font-size-xl);
       width: 100%;
@@ -75,66 +75,21 @@
 // These are at the top-level because sorting pulls the row out into <body>
 .env-modal__sidebar-root-item,
 .env-modal__sidebar-item {
-  z-index: 100000;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: var(--line-height-xs);
+  display: flex;
   color: var(--hl);
 
-  & > button {
-    padding: 0 var(--padding-md) 0 var(--padding-md);
-    width: 100%;
 
-    &:first-child {
-      padding-right: 0;
-    }
+  padding: var(--padding-sm) 0;
 
-    position: relative;
 
-    .editable {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: block;
-      padding-right: var(--padding-xs);
-      box-sizing: border-box;
-      width: 100%;
-      line-height: var(--line-height-xs);
-    }
-  }
-
-  .env-status {
-    padding: 0 var(--padding-sm) 0 var(--padding-sm);
-    align-self: center;
-
-    .active {
-      color: var(--hl-xl);
-    }
-
-    .inactive {
-      color: var(--hl-xl);
-      opacity: 0;
-    }
-  }
 
   &:hover {
     background-color: var(--hl-xs);
   }
 
-  &:hover .inactive {
-    opacity: 1;
-  }
-
-  &:hover .inactive:hover {
-    color: var(--color-font);
-  }
 }
 
-.env-modal__sidebar-item {
-  & > button {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding-left: var(--padding-md);
-  }
+.env-modal__sidebar-item--active {
+  color: var(--color-font);
+
 }

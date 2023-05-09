@@ -1,6 +1,8 @@
 import classnames from 'classnames';
 import React, { FC, forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
+import { ListDropTargetDelegate, ListKeyboardDelegate, mergeProps, useDraggableCollection, useDraggableItem, useDropIndicator, useDroppableCollection, useDroppableItem, useFocusRing, useListBox, useOption } from 'react-aria';
 import { useSelector } from 'react-redux';
+import { DraggableCollectionState, DroppableCollectionState, Item, ListState, useDraggableCollectionState, useDroppableCollectionState, useListState } from 'react-stately';
 
 import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
@@ -17,38 +19,24 @@ import { PromptButton } from '../base/prompt-button';
 import { EnvironmentEditor, EnvironmentEditorHandle } from '../editors/environment-editor';
 import { HelpTooltip } from '../help-tooltip';
 import { Tooltip } from '../tooltip';
+
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
-interface SidebarListProps {
-  environments: Environment[];
-  changeEnvironmentName: (environment: Environment, name?: string) => void;
-  selectedEnvironmentId: string | null;
-  showEnvironment: (id: string) => void;
-}
 interface SidebarListItemProps {
   environment: Environment;
-  changeEnvironmentName: (environment: Environment, name?: string) => void;
-  selectedEnvironmentId: string | null;
-  showEnvironment: (id: string) => void;
 }
+
 const SidebarListItem: FC<SidebarListItemProps> = ({
-  changeEnvironmentName,
   environment,
-  selectedEnvironmentId,
-  showEnvironment,
 }: SidebarListItemProps) => {
   const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
-
-  return (<li
-    key={environment._id}
-    className={classnames({
-      'env-modal__sidebar-item': true,
-      'env-modal__sidebar-item--active': selectedEnvironmentId === environment._id,
-      // Specify theme because dragging will pull it out to <body>
-      'theme--dialog': true,
-    })}
-  >
-    <button onClick={() => showEnvironment(environment._id)}>
+  return (
+    <div
+      className={classnames({
+        'env-modal__sidebar-item': true,
+        'env-modal__sidebar-item--active': workspaceMeta?.activeEnvironmentId === environment._id,
+      })}
+    >
       {environment.color ? (
         <i
           className="space-right fa fa-circle"
@@ -65,53 +53,177 @@ const SidebarListItem: FC<SidebarListItemProps> = ({
           <i className="fa fa-eye-slash faint space-right" />
         </Tooltip>
       )}
-
-      <Editable
-        className="inline-block"
-        onSubmit={name => changeEnvironmentName(environment, name)}
-        value={environment.name}
-      />
-    </button>
-    <div className="env-status">
-      {environment._id === workspaceMeta?.activeEnvironmentId ? (
-        <i className="fa fa-square active" title="Active Environment" />
-      ) : (
-        <button
-          onClick={() => {
-            if (environment && environment._id !== workspaceMeta?.activeEnvironmentId && workspaceMeta) {
-              models.workspaceMeta.update(workspaceMeta, { activeEnvironmentId: environment._id });
-              showEnvironment(environment._id);
-            }
-          }}
-        >
-          <i className="fa fa-square-o inactive" title="Click to activate Environment" />
-        </button>
-      )}
-    </div>
-  </li>);
+      <>{environment.name}</>
+    </div>);
 };
 
-const SidebarList: FC<SidebarListProps> =
-  ({
-    changeEnvironmentName,
-    environments,
-    selectedEnvironmentId,
-    showEnvironment,
-  }: SidebarListProps) => {
-    return (
-      <ul>
-        {environments.map(environment =>
-          (<SidebarListItem
-            changeEnvironmentName={changeEnvironmentName}
-            environment={environment}
-            key={environment._id}
-            selectedEnvironmentId={selectedEnvironmentId}
-            showEnvironment={showEnvironment}
-          />
-          )
+// @ts-expect-error props any
+const DropIndicator = props => {
+  const ref = React.useRef(null);
+  const { dropIndicatorProps, isHidden, isDropTarget } =
+    useDropIndicator(props, props.dropState, ref);
+  if (isHidden) {
+    return null;
+  }
+
+  return (
+    <li
+      {...dropIndicatorProps}
+      role="option"
+      ref={ref}
+      style={{
+        width: '100%',
+        height: '2px',
+        outline: 'none',
+        marginBottom: '-2px',
+        marginLeft: 0,
+        background: isDropTarget ? 'var(--hl)' : '0 0',
+      }}
+    />
+  );
+};
+
+// @ts-expect-error Node not generic?
+const ReorderableOption = ({ item, state, dragState, dropState }: { item: Node<Environment>; state: ListState<Node<Environment>>; dragState: DraggableCollectionState; dropState: DroppableCollectionState }): JSX.Element => {
+  const ref = React.useRef(null);
+  const { optionProps } = useOption({ key: item.key }, state, ref);
+  const { focusProps } = useFocusRing();
+
+  // Register the item as a drop target.
+  const { dropProps } = useDroppableItem(
+    {
+      target: { type: 'item', key: item.key, dropPosition: 'on' },
+    },
+    dropState,
+    ref
+  );
+  // Register the item as a drag source.
+  const { dragProps } = useDraggableItem({
+    key: item.key,
+  }, dragState);
+
+  const environment = item.value as unknown as Environment;
+
+  return (
+    <>
+      <DropIndicator
+        target={{
+          type: 'item',
+          key: item.key,
+          dropPosition: 'before',
+        }}
+        dropState={dropState}
+      />
+      <li
+        style={{
+          gap: '1rem',
+          display: 'flex',
+          padding: '5px',
+          outlineStyle: 'none',
+        }}
+        {...mergeProps(
+          optionProps,
+          dragProps,
+          dropProps,
+          focusProps
         )}
-      </ul>);
-  };
+        ref={ref}
+        className={classnames({
+          'env-modal__sidebar-item': true,
+        })}
+      >
+        <SidebarListItem environment={environment} />
+      </li>
+      {state.collection.getKeyAfter(item.key) == null &&
+        (
+          <DropIndicator
+            target={{
+              type: 'item',
+              key: item.key,
+              dropPosition: 'after',
+            }}
+            dropState={dropState}
+          />
+        )}
+    </>
+  );
+};
+
+// @ts-expect-error props any
+const ReorderableListBox = props => {
+  // See useListBox docs for more details.
+  const state = useListState(props);
+  const ref = React.useRef(null);
+  const { listBoxProps } = useListBox(
+    {
+      ...props,
+      shouldSelectOnPressUp: true,
+    },
+    state,
+    ref
+  );
+
+  const dropState = useDroppableCollectionState({
+    ...props,
+    collection: state.collection,
+    selectionManager: state.selectionManager,
+  });
+
+  const { collectionProps } = useDroppableCollection(
+    {
+      ...props,
+      keyboardDelegate: new ListKeyboardDelegate(
+        state.collection,
+        state.disabledKeys,
+        ref
+      ),
+      dropTargetDelegate: new ListDropTargetDelegate(
+        state.collection,
+        ref
+      ),
+    },
+    dropState,
+    ref
+  );
+
+  // Setup drag state for the collection.
+  const dragState = useDraggableCollectionState({
+    ...props,
+    // Collection and selection manager come from list state.
+    collection: state.collection,
+    selectionManager: state.selectionManager,
+    // Provide data for each dragged item. This function could
+    // also be provided by the user of the component.
+    getItems: props.getItems || (keys => {
+      return [...keys].map(key => {
+        const item = state.collection.getItem(key);
+
+        return {
+          'text/plain': item.textValue,
+        };
+      });
+    }),
+  });
+
+  useDraggableCollection(props, dragState, ref);
+
+  return (
+    <ul
+      {...mergeProps(listBoxProps, collectionProps)}
+      ref={ref}
+    >
+      {[...state.collection].map(item => (
+        <ReorderableOption
+          key={item.key}
+          item={item}
+          state={state}
+          dragState={dragState}
+          dropState={dropState}
+        />
+      ))}
+    </ul>
+  );
+};
 interface State {
   baseEnvironment: Environment | null;
   selectedEnvironmentId: string | null;
@@ -152,13 +264,17 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     },
   }), [workspace, workspaceMeta?.activeEnvironmentId]);
 
-  function handleShowEnvironment(environmentId: string | null) {
-    // Don't allow switching if the current one has errors
-    if (environmentEditorRef.current?.isValid() && environmentId !== selectedEnvironmentId) {
+  function onSelectionChange(e: any) {
+    // Only switch if valid
+    if (environmentEditorRef.current?.isValid() && e.anchorKey) {
+      const environment = subEnvironments.filter(evt => evt._id === e.anchorKey)[0];
       setState(state => ({
         ...state,
-        selectedEnvironmentId: environmentId || null,
+        selectedEnvironmentId: environment._id || null,
       }));
+      if (workspaceMeta?.activeEnvironmentId !== environment._id && workspaceMeta) {
+        models.workspaceMeta.update(workspaceMeta, { activeEnvironmentId: environment._id });
+      }
     }
   }
 
@@ -202,27 +318,57 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     : environments.filter(e => e.parentId === baseEnvironment?._id).find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
   const selectedEnvironmentName = selectedEnvironment?.name || '';
   const selectedEnvironmentColor = selectedEnvironment?.color || null;
+  const subEnvironments = environments
+    .filter(environment => environment.parentId === (baseEnvironment && baseEnvironment._id))
+    .sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
   if (inputRef.current && selectedEnvironmentColor) {
     inputRef.current.value = selectedEnvironmentColor;
   }
+
+  function onReorder(e: any) {
+    const source = [...e.keys][0];
+    const sourceEnv = subEnvironments.find(evt => evt._id === source);
+    const targetEnv = subEnvironments.find(evt => evt._id === e.target.key);
+    if (!sourceEnv || !targetEnv) {
+      return;
+    }
+    const dropPosition = e.target.dropPosition;
+    if (dropPosition === 'before') {
+      sourceEnv.metaSortKey = targetEnv.metaSortKey - 1;
+    }
+    if (dropPosition === 'after') {
+      sourceEnv.metaSortKey = targetEnv.metaSortKey + 1;
+    }
+    updateEnvironment(sourceEnv._id, { metaSortKey: sourceEnv.metaSortKey });
+  }
+
   return (
     <Modal ref={modalRef} wide tall {...props}>
       <ModalHeader>Manage Environments</ModalHeader>
       <ModalBody noScroll className="env-modal">
         <div className="env-modal__sidebar">
-          <li
+          <div
             className={classnames('env-modal__sidebar-root-item', {
               'env-modal__sidebar-item--active': selectedEnvironmentId === baseEnvironment?._id,
             })}
           >
-            <button onClick={() => handleShowEnvironment(baseEnvironment?._id || null)}>
+            <button
+              onClick={() => {
+                if (environmentEditorRef.current?.isValid() && selectedEnvironmentId === baseEnvironment?._id) {
+                  setState(state => ({
+                    ...state,
+                    selectedEnvironmentId: baseEnvironment?._id,
+                  }));
+                }
+              }}
+            >
               {ROOT_ENVIRONMENT_NAME}
               <HelpTooltip className="space-left">
                 The variables in this environment are always available, regardless of which
                 sub-environment is active. Useful for storing default or fallback values.
               </HelpTooltip>
             </button>
-          </li>
+          </div>
           <div className="pad env-modal__sidebar-heading">
             <h3 className="no-margin">Sub Environments</h3>
             <Dropdown
@@ -274,12 +420,20 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               </DropdownItem>
             </Dropdown>
           </div>
-          <SidebarList
-            environments={environments.filter(e => e.parentId === baseEnvironment?._id)}
-            selectedEnvironmentId={selectedEnvironmentId}
-            showEnvironment={handleShowEnvironment}
-            changeEnvironmentName={(environment, name) => updateEnvironment(environment._id, { name })}
-          />
+          <ReorderableListBox
+            items={subEnvironments}
+            onSelectionChange={onSelectionChange}
+            onReorder={onReorder}
+            selectionMode="multiple"
+            selectionBehavior="replace"
+            aria-label="list of subenvironments"
+          >
+            {(environment: any) =>
+              <Item key={environment._id}>
+                {environment.name}
+              </Item>
+            }
+          </ReorderableListBox>
         </div>
         <div className="env-modal__main">
           <div className="env-modal__main__header">
