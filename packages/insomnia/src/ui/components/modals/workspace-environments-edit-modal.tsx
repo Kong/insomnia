@@ -420,7 +420,14 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               </DropdownItem>
             </Dropdown>
           </div>
-          <ReorderableListBox items={subEnvironments} onSelectionChange={onSelectionChange} onReorder={onReorder} selectionMode="multiple" selectionBehavior="replace">
+          <ReorderableListBox
+            items={subEnvironments}
+            onSelectionChange={onSelectionChange}
+            onReorder={onReorder}
+            selectionMode="multiple"
+            selectionBehavior="replace"
+            aria-label="list of subenvironments"
+          >
             {(environment: any) =>
               <Item key={environment._id}>
                 {environment.name}
