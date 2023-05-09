@@ -24,16 +24,17 @@ const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
 interface SidebarListItemProps {
   environment: Environment;
-  selectedEnvironmentId: string | null;
 }
 
 const SidebarListItem: FC<SidebarListItemProps> = ({
   environment,
 }: SidebarListItemProps) => {
+  const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
   return (
     <div
       className={classnames({
         'env-modal__sidebar-item': true,
+        'env-modal__sidebar-item--active': workspaceMeta?.activeEnvironmentId === environment._id,
       })}
     >
       {environment.color ? (
@@ -83,7 +84,7 @@ const DropIndicator = props => {
 };
 
 // @ts-expect-error Node not generic?
-const ReorderableOption = ({ item, state, dragState, dropState }: {item: Node<Environment>; state: ListState<Node<Environment>>; dragState: DraggableCollectionState; dropState: DroppableCollectionState}): JSX.Element => {
+const ReorderableOption = ({ item, state, dragState, dropState }: { item: Node<Environment>; state: ListState<Node<Environment>>; dragState: DraggableCollectionState; dropState: DroppableCollectionState }): JSX.Element => {
   const ref = React.useRef(null);
   const { optionProps } = useOption({ key: item.key }, state, ref);
   const { focusProps } = useFocusRing();
@@ -114,10 +115,12 @@ const ReorderableOption = ({ item, state, dragState, dropState }: {item: Node<En
         dropState={dropState}
       />
       <li
-        style={{ gap: '1rem',
+        style={{
+          gap: '1rem',
           display: 'flex',
           padding: '5px',
-          outlineStyle: 'none' }}
+          outlineStyle: 'none'
+        }}
         {...mergeProps(
           optionProps,
           dragProps,
@@ -129,7 +132,7 @@ const ReorderableOption = ({ item, state, dragState, dropState }: {item: Node<En
           'env-modal__sidebar-item': true,
         })}
       >
-        <SidebarListItem environment={environment} selectedEnvironmentId={null} />
+        <SidebarListItem environment={environment} />
       </li>
       {state.collection.getKeyAfter(item.key) == null &&
         (
