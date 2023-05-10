@@ -17,8 +17,14 @@ import { SidebarRequestGroupRow } from './sidebar-request-group-row';
 import { SidebarRequestRow } from './sidebar-request-row';
 
 // TODO
+// remove comment mess and old implementation
+// show sub requests
+// explore useDragAndDrop hook instead of the collection hooks
 // rename the child type to sometihng less collision-y
 // decide the best way to pass filters down the tree
+// bring back request tags
+// editable requests and request groups
+// right-click for properties/dropdown
 
 export interface Child {
   doc: Request | GrpcRequest | WebSocketRequest | RequestGroup;
@@ -119,6 +125,7 @@ const RecursiveSidebarRows = ({
     items={rows}
     onSelectionChange={e => {
       console.log('onSelectionChange', e);
+      // TODO if folder toggle row.collapsed
     }}
     onReorder={e => {
       console.log('onReorder', e);
@@ -333,6 +340,23 @@ const ReorderableOption = ({ item, state, dragState, dropState }: { item: Node<C
               </div>
             </button>
           </div>
+          <ul className={classnames('sidebar__list', { 'sidebar__list--collapsed': row.collapsed })}>
+            {!row.collapsed &&
+              (<li className="sidebar__row">
+                <div
+                  className={classnames('sidebar__item', 'sidebar__item--request', {
+                    'sidebar__item--active': false, // isActive,
+                  })}
+                >
+                  <button
+                    className="wide"
+                  >
+                    <div className="sidebar__clickable">
+                      {row.doc.name}
+                    </div>
+                  </button>
+                </div></li>)}
+          </ul>
         </li>
       </li>
       {state.collection.getKeyAfter(item.key) == null &&
