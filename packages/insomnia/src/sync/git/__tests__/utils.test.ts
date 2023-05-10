@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { addDotGit, translateSSHtoHTTP } from '../utils';
+import { addDotGit } from '../utils';
 
 const links = {
   scp: {
@@ -20,28 +20,6 @@ const links = {
     dotGit: 'https://github.com/a/b.git',
   },
 };
-
-describe('translateSSHtoHTTP', () => {
-  it('fixes up scp-style', () => {
-    expect(translateSSHtoHTTP(links.scp.bare)).toEqual(links.https.bare);
-    expect(translateSSHtoHTTP(links.scp.dotGit)).toEqual(links.https.dotGit);
-  });
-
-  it('fixes up ssh-style', () => {
-    expect(translateSSHtoHTTP(links.ssh.bare)).toEqual('https://a@github.com/b');
-    expect(translateSSHtoHTTP(links.ssh.dotGit)).toEqual('https://a@github.com/b.git');
-  });
-
-  it('leaves http alone', () => {
-    expect(translateSSHtoHTTP(links.http.bare)).toEqual(links.http.bare);
-    expect(translateSSHtoHTTP(links.http.dotGit)).toEqual(links.http.dotGit);
-  });
-
-  it('leaves https alone', () => {
-    expect(translateSSHtoHTTP(links.https.bare)).toEqual(links.https.bare);
-    expect(translateSSHtoHTTP(links.https.dotGit)).toEqual(links.https.dotGit);
-  });
-});
 
 describe('addDotGit', () => {
   it('adds the .git to bare links', () => {
