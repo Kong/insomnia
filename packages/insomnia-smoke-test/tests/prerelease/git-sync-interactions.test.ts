@@ -51,6 +51,58 @@ test('Clone Repo with bad values', async ({ page }) => {
   await expect(page.locator('.app')).toContainText('Error Pushing Repository');
 });
 
+test('Clone Bitbucket Repo with bad values', async ({ page }) => {
+  await page.click('[data-testid="project"] >> text=Insomnia');
+  await page.getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('menuitem', { name: 'Git Clone' }).click();
+  await page.getByRole('tab', { name: 'Git' }).nth(2).click();
+
+  // Fill in Git Sync details and clone repository
+  await page.getByText('Git URI (https)').fill('https://bitbucket.org/atlassian/bitbucket-example-plugin.git');
+  await page.getByText('Author Name').fill('test');
+  await page.getByText('Author Email').fill('test');
+  await page.getByText('Username').fill('test');
+  await page.getByText('Authentication Token').fill('test');
+  await page.getByRole('button', { name: 'Clone' }).click();
+
+  // Create a branch and try to push with bad Git token
+  await page.getByRole('button', { name: 'master' }).click();
+  await page.getByRole('menuitem', { name: 'Branches' }).click();
+  await page.getByPlaceholder('testing-branch').fill('test123');
+  await page.getByRole('button', { name: '+ Create' }).click();
+  await page.getByRole('cell', { name: 'test123(current)' }).click();
+  await page.getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('button', { name: 'test123' }).click();
+  await page.getByRole('menuitem', { name: 'Push' }).click();
+  await expect(page.locator('.app')).toContainText('Error Pushing Repository');
+});
+
+test('Clone Gitlab Repo with bad values', async ({ page }) => {
+  await page.click('[data-testid="project"] >> text=Insomnia');
+  await page.getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('menuitem', { name: 'Git Clone' }).click();
+  await page.getByRole('tab', { name: 'Git' }).nth(2).click();
+
+  // Fill in Git Sync details and clone repository
+  await page.getByText('Git URI (https)').fill('https://gitlab.com/gitlab-examples/gitlab-examples.gitlab.io.git');
+  await page.getByText('Author Name').fill('test');
+  await page.getByText('Author Email').fill('test');
+  await page.getByText('Username').fill('test');
+  await page.getByText('Authentication Token').fill('test');
+  await page.getByRole('button', { name: 'Clone' }).click();
+
+  // Create a branch and try to push with bad Git token
+  await page.getByRole('button', { name: 'master' }).click();
+  await page.getByRole('menuitem', { name: 'Branches' }).click();
+  await page.getByPlaceholder('testing-branch').fill('test123');
+  await page.getByRole('button', { name: '+ Create' }).click();
+  await page.getByRole('cell', { name: 'test123(current)' }).click();
+  await page.getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('button', { name: 'test123' }).click();
+  await page.getByRole('menuitem', { name: 'Push' }).click();
+  await expect(page.locator('.app')).toContainText('Error Pushing Repository');
+});
+
 // TODO(kreosus): more git sync prerelease tests will be added when gh auth secrets are properly setup for CI use
 
 // TODO(kreosus): more preferences scenarios will be added in the followup iterations of increasing app test coverage

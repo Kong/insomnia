@@ -1,5 +1,5 @@
 import { invariant } from '@remix-run/router';
-import { GitHost } from 'hosted-git-info';
+import { fromUrl } from 'hosted-git-info';
 import { Errors } from 'isomorphic-git';
 import path from 'path';
 import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
@@ -324,7 +324,8 @@ export const cloneGitRepoAction: ActionFunction = async ({
     vcsSegmentEventProperties('git', 'clone')
   );
   repoSettingsPatch.needsFullClone = true;
-  repoSettingsPatch.uri = GitHost.fromUrl(repoSettingsPatch.uri)?.https() || '';
+  repoSettingsPatch.uri = fromUrl(repoSettingsPatch.uri)?.https() || '';
+  console.log(repoSettingsPatch.uri);
   let fsClient = MemClient.createClient();
 
   const providerName = getOauth2FormatName(repoSettingsPatch.credentials);

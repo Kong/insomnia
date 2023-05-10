@@ -68,7 +68,7 @@
     "fs-extra": "^5.0.0",
     "grpc-reflection-js": "github:Kong/grpc-reflection-js#01fcce0",
     "hawk": "9.0.1",
-    "hosted-git-info": "6.1.1",
+    "hosted-git-info": "5.2.1",
     "hkdf": "^0.0.2",
     "html-entities": "^1.2.0",
     "httpsnippet": "^2.0.0",
