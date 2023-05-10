@@ -54,24 +54,49 @@ export const SidebarChildren: FC<Props> = ({
   );
   return (
     <Fragment>
-      <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
-        <RecursiveSidebarRows
-          filter={filter}
-          isInPinnedList={true}
-          rows={pinned}
-        />
-      </ul>
+      <div className="sidebar__list sidebar__list-root theme--sidebar__list" />
       <div
-        className={`sidebar__list-separator${showSeparator ? '' : '--invisible'
-          }`}
+        className={`sidebar__list-separator${showSeparator ? '' : '--invisible'}`}
       />
-      <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
-        <RecursiveSidebarRows
-          filter={filter}
-          isInPinnedList={false}
-          rows={all}
-        />
-      </ul>
+      <div className="sidebar__list sidebar__list-root theme--sidebar__list">
+
+        <ReorderableListBox
+          items={all}
+          onSelectionChange={e => {
+            console.log('onSelectionChange', e);
+          }}
+          onReorder={e => {
+            const source = [...e.keys][0];
+            const sourceRow = all.find(evt => evt.doc._id === source);
+            const targetRow = all.find(evt => evt.doc._id === e.target.key);
+            if (!sourceRow || !targetRow) {
+              return;
+            }
+            const dropPosition: 'before' | 'after' = e.target.dropPosition;
+
+            const position = {
+              'before': -1,
+              'after': 1,
+            };
+            console.log('onReorder', targetRow.doc.metaSortKey, position[dropPosition]);
+            const targetId = isRequestGroup(targetRow.doc) ? targetRow.doc._id : targetRow.doc?.parentId;
+            // TODO: reassign parentId here if target is folder
+            update(sourceRow.doc, { parentId: targetId, metaSortKey: targetRow.doc.metaSortKey + position[dropPosition] });
+          }}
+          onAction={e => {
+            console.log('onAction', e);
+          }}
+          selectionMode="multiple"
+          selectionBehavior="replace"
+          aria-label="tree of requests"
+        >
+          {(item: any) =>
+            <Item key={item.doc._id}>
+              {item.doc.name}
+            </Item>
+          }
+        </ReorderableListBox>
+      </div>
       {contextMenuPortal}
     </Fragment>
   );
@@ -93,25 +118,27 @@ const RecursiveSidebarRows = ({
   return (<ReorderableListBox
     items={rows}
     onSelectionChange={e => {
-      console.log(e);
+      console.log('onSelectionChange', e);
     }}
     onReorder={e => {
-      const source = [...e.keys][0];
-      const sourceRow = rows.find(evt => evt.doc._id === source);
-      const targetRow = rows.find(evt => evt.doc._id === e.target.key);
-      if (!sourceRow || !targetRow) {
-        return;
-      }
-      const dropPosition: 'before' | 'after' = e.target.dropPosition;
+      console.log('onReorder', e);
 
-      const position = {
-        'before': -1,
-        'after': 1,
-      };
-      console.log('onReorder', targetRow.doc.metaSortKey, position[dropPosition]);
+      // const source = [...e.keys][0];
+      // const sourceRow = rows.find(evt => evt.doc._id === source);
+      // const targetRow = rows.find(evt => evt.doc._id === e.target.key);
+      // if (!sourceRow || !targetRow) {
+      //   return;
+      // }
+      // const dropPosition: 'before' | 'after' = e.target.dropPosition;
 
-      // TODO: reassign parentId here if target is folder
-      update(sourceRow.doc, { metaSortKey: targetRow.doc.metaSortKey + position[dropPosition] });
+      // const position = {
+      //   'before': -1,
+      //   'after': 1,
+      // };
+      // console.log('onReorder', targetRow.doc.metaSortKey, position[dropPosition]);
+
+      // // TODO: reassign parentId here if target is folder
+      // update(sourceRow.doc, { metaSortKey: targetRow.doc.metaSortKey + position[dropPosition] });
     }}
     onAction={e => {
       console.log('onAction', e);
@@ -292,32 +319,21 @@ const ReorderableOption = ({ item, state, dragState, dropState }: { item: Node<C
           'env-modal__sidebar-item': true,
         })}
       >
-        {isRequestGroup(row.doc) ?
-          (
-            <SidebarRequestGroupRow
-              key={row.doc._id}
-              filter={filter || ''}
-              isActive={hasActiveChild(row.children, activeRequestId)}
-              isCollapsed={row.collapsed}
-              requestGroup={row.doc}
+        <li className="sidebar__row">
+          <div
+            className={classnames('sidebar__item', 'sidebar__item--request', {
+              'sidebar__item--active': false, // isActive,
+            })}
+          >
+            <button
+              className="wide"
             >
-              {row.children.filter(Boolean).length > 0 ? (
-                <RecursiveSidebarRows
-                  isInPinnedList={isInPinnedList}
-                  rows={row.children}
-                  filter={filter}
-                />
-              ) : null}
-            </SidebarRequestGroupRow>)
-          : (
-            <SidebarRequestRow
-              key={row.doc._id}
-              filter={isInPinnedList ? '' : filter || ''}
-              isActive={row.doc._id === activeRequestId}
-              isPinned={row.pinned}
-              disableDragAndDrop={isInPinnedList}
-              request={row.doc}
-            />)}
+              <div className="sidebar__clickable">
+                {row.doc.name}
+              </div>
+            </button>
+          </div>
+        </li>
       </li>
       {state.collection.getKeyAfter(item.key) == null &&
         (
