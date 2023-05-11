@@ -1,8 +1,9 @@
 import classnames from 'classnames';
 import React, { FC, forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
-import { ListDropTargetDelegate, ListKeyboardDelegate, mergeProps, useDraggableCollection, useDraggableItem, useDropIndicator, useDroppableCollection, useDroppableItem, useFocusRing, useListBox, useOption } from 'react-aria';
+import { DragItem, ListDropTargetDelegate, ListKeyboardDelegate, mergeProps, useDraggableCollection, useDraggableItem, useDropIndicator, useDroppableCollection, useDroppableItem, useFocusRing, useListBox, useOption } from 'react-aria';
+import { GridList, GridListProps, Item, ItemProps, useDragAndDrop } from 'react-aria-components';
 import { useSelector } from 'react-redux';
-import { DraggableCollectionState, DroppableCollectionState, Item, ListState, useDraggableCollectionState, useDroppableCollectionState, useListState } from 'react-stately';
+import { DraggableCollectionState, DroppableCollectionState, ListState, useDraggableCollectionState, useDroppableCollectionState, useListData, useListState } from 'react-stately';
 
 import { docsTemplateTags } from '../../../common/documentation';
 import * as models from '../../../models';
@@ -25,6 +26,26 @@ const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 interface SidebarListItemProps {
   environment: Environment;
 }
+
+const MyItem = ({ children, ...props }: ItemProps) => {
+  const textValue = typeof children === 'string' ? children : undefined;
+  return (
+    <Item textValue={textValue} {...props}>
+      <>
+        {/* Add elements for drag and drop and selection. */}
+        {children}
+      </>
+    </Item>
+  );
+};
+
+const MyGridList = <T extends object>({ children, ...props }: GridListProps<T>) => {
+  return (
+    <GridList {...props}>
+      {children}
+    </GridList>
+  );
+};
 
 const SidebarListItem: FC<SidebarListItemProps> = ({
   environment,
@@ -342,6 +363,19 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     updateEnvironment(sourceEnv._id, { metaSortKey: sourceEnv.metaSortKey });
   }
 
+  const { dragAndDropHooks } = useDragAndDrop({
+    // TODO fix getItems so drag and drop works
+    getItems(e) {
+      console.log(e); return [];
+    },
+    // getItems: keys =>
+    //   [...keys].map(key => ({ 'text/plain': list.getItem(key).name })),
+    onReorder(e) {
+      console.log('reorder', e);
+      onReorder(e);
+    },
+  });
+
   return (
     <Modal ref={modalRef} wide tall {...props}>
       <ModalHeader>Manage Environments</ModalHeader>
@@ -420,7 +454,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
               </DropdownItem>
             </Dropdown>
           </div>
-          <ReorderableListBox
+          {/* <ReorderableListBox
             items={subEnvironments}
             onSelectionChange={onSelectionChange}
             onReorder={onReorder}
@@ -433,7 +467,17 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 {environment.name}
               </Item>
             }
-          </ReorderableListBox>
+          </ReorderableListBox> */}
+
+          <MyGridList
+            aria-label="Reorderable list"
+            selectionMode="multiple"
+            items={subEnvironments}
+            dragAndDropHooks={dragAndDropHooks}
+          >
+            {env => <MyItem key={env._id}>{env.name}</MyItem>}
+          </MyGridList>
+
         </div>
         <div className="env-modal__main">
           <div className="env-modal__main__header">
