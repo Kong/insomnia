@@ -325,7 +325,6 @@ export const cloneGitRepoAction: ActionFunction = async ({
   );
   repoSettingsPatch.needsFullClone = true;
   repoSettingsPatch.uri = fromUrl(repoSettingsPatch.uri)?.https() || '';
-  console.log(repoSettingsPatch.uri);
   let fsClient = MemClient.createClient();
 
   const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
