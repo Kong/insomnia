@@ -246,6 +246,17 @@ describe('common', () => {
     it('escape special characters not present in curly braces', () => {
       expect(pathVariablesToRegex('/foo/bar/$baz')).toBe('/foo/bar/\\$baz$');
     });
+
+    it('prefix ~ to regex path for non legacy Kong', () => {
+      expect(pathVariablesToRegex('/foo/{bar}/{baz}', false)).toBe(
+        '~/foo/(?<bar>[^/]+)/(?<baz>[^/]+)$',
+      );
+    });
+    it('converts illegal chars in regex path variables for non legacy Kong', () => {
+      expect(pathVariablesToRegex('/foo/{bar-test}/{baz-test}', false)).toBe(
+        '~/foo/(?<bar_test>[^/]+)/(?<baz_test>[^/]+)$',
+      );
+    });
   });
 
   describe('getPluginNameFromKey()', () => {

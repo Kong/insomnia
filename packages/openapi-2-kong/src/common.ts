@@ -77,6 +77,15 @@ export function pathVariablesToRegex(p: string, legacy: Boolean = true) {
     result = '~' + result;
   }
 
+  // Remove illegal chars from path-variable name.
+  // see https://github.com/Kong/go-apiops/blob/8842f7b0ecf3654f62f8e0bd867b5b67766794c9/convertoas3/oas3.go#L50
+  if (!legacy) {
+    result = result.replace(/-/g, '_');
+    if (result.startsWith('_')) {
+      result = 'a' + result;
+    }
+  }
+
   return result + '$';
 
 }
