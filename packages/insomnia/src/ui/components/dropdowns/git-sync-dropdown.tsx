@@ -1,13 +1,15 @@
 import classnames from 'classnames';
 import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
 
 import { docsGitSync } from '../../../common/documentation';
+import { workspace } from '../../../models';
 import { GitRepository } from '../../../models/git-repository';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import {
   GitFetchLoaderData,
   GitRepoLoaderData,
+  GitStatusResult,
   PullFromGitRemoteResult,
   PushToGitRemoteResult,
 } from '../../routes/git-actions';
@@ -27,13 +29,15 @@ import { GitLogModal } from '../modals/git-log-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { GitStagingModal } from '../modals/git-staging-modal';
 import { Button } from '../themed-button';
+import { Tooltip } from '../tooltip';
 
 interface Props {
   gitRepository: GitRepository | null;
   className?: string;
+  isInsomniaSyncEnabled: boolean;
 }
 
-export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
+export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomniaSyncEnabled }) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -52,10 +56,12 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
   const gitCheckoutFetcher = useFetcher();
   const gitRepoDataFetcher = useFetcher<GitRepoLoaderData>();
   const gitFetchFetcher = useFetcher<GitFetchLoaderData>();
+  const gitStatusFetcher = useFetcher<GitStatusResult>();
 
   const loadingPush = gitPushFetcher.state === 'loading';
   const loadingPull = gitPullFetcher.state === 'loading';
   const loadingFetch = gitFetchFetcher.state === 'loading';
+  const loadingStatus = gitStatusFetcher.state === 'loading';
 
   useEffect(() => {
     if (
@@ -76,6 +82,20 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
     projectId,
     workspaceId,
   ]);
+
+  useEffect(() => {
+    if (
+      gitRepository?.uri &&
+      gitRepository?._id &&
+      gitStatusFetcher.state === 'idle' &&
+      !gitStatusFetcher.data &&
+      gitRepoDataFetcher.data
+    ) {
+      gitStatusFetcher.load(
+        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/status`
+      );
+    }
+  }, [gitStatusFetcher, gitRepository?.uri, gitRepository?._id, organizationId, projectId, workspaceId, gitRepoDataFetcher.data]);
 
   useEffect(() => {
     const errors = [...(gitPushFetcher.data?.errors ?? [])];
@@ -133,7 +153,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
     );
   }
 
-  let iconClassName = '';
+  let iconClassName = 'fa-brands fa-git-alt';
   const providerName = getOauth2FormatName(gitRepository?.credentials);
   if (providerName === 'github') {
     iconClassName = 'fa fa-github';
@@ -159,6 +179,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
       : { branches: [], branch: '' };
 
   let dropdown: React.ReactNode = null;
+  const { revalidate } = useRevalidator();
 
   const currentBranchActions = [
     {
@@ -212,21 +233,124 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
     },
   ];
 
+  const status = gitStatusFetcher.data?.status;
+
+  const pullToolTipMsg = status?.pull !== undefined
+    ? `There ${status.pull === 1 ? 'is' : 'are'} ${status.pull} commit${status.pull === 1 ? '' : 's'} to pull`
+    : 'No changes to pull';
+  const pushToolTipMsg = status?.push !== undefined
+    ? `There ${status.push === 1 ? 'is' : 'are'} ${status.push} commit${status.push === 1 ? '' : 's'} to push`
+    : 'No changes to push';
+  const commitToolTipMsg = status?.localChanges ? 'Local changes made' : 'No local changes made';
+
   if (isButton) {
     dropdown = (
-      <Button
-        disabled={isLoading}
-        size="small"
-        className="btn--clicky-small btn-sync"
-        onClick={() => setIsGitRepoSettingsModalOpen(true)}
-      >
-        <i
-          className={`fa fa-code-fork space-right ${
-            isLoading ? 'fa-fade' : ''
-          }`}
-        />
-        {isLoading ? 'Loading...' : 'Setup Git Sync'}
-      </Button>
+      <div className={className}>
+        <Dropdown
+          className="wide tall"
+          ref={dropdownRef}
+          onOpen={() => {
+            gitFetchFetcher.submit(
+              {},
+              {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/fetch`,
+                method: 'post',
+              }
+            );
+          }}
+          triggerButton={
+            <DropdownButton
+              size="medium"
+              variant='text'
+              removePaddings={false}
+              removeBorderRadius
+              style={{
+                width: '100%',
+                borderRadius: '0',
+                borderTop: '1px solid var(--hl-md)',
+                justifyContent: 'flex-start !important',
+                height: 'var(--line-height-sm)',
+              }}
+              disabled={isLoading}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  gap: 'var(--padding-xs)',
+                  width: '100%',
+                }}
+              >
+                {iconClassName && (
+                  <i className={classnames('space-right', iconClassName)} />
+                )}
+                <span className="ellipsis">Git Sync</span>
+              </div>
+
+            </DropdownButton>
+          }
+        >
+          {isInsomniaSyncEnabled ? <DropdownSection>
+            <DropdownItem
+              key='gitSync'
+              arial-label='Use Insomnia Sync'
+            >
+              <Button
+                variant='contained'
+                bg='surprise'
+                onClick={async () => {
+                  const currentWorkspace = await workspace.getById(workspaceId);
+                  if (!currentWorkspace) {
+                    return;
+                  }
+                  await workspace.update(currentWorkspace, {
+                    gitSync: false,
+                  });
+
+                  revalidate();
+                }}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 'var(--padding-sm)',
+                  margin: '0 var(--padding-sm)',
+                }}
+              >
+                <i className="fa fa-cloud" /> Use Insomnia Sync
+              </Button>
+            </DropdownItem>
+          </DropdownSection> : null}
+          <DropdownSection
+            title={
+              <span>
+                Git Sync
+                <HelpTooltip>
+                  Sync and collaborate with Git{' '}
+                  <Link href={docsGitSync}>
+                    <span className="no-wrap">
+                      <br />
+                      Documentation <i className="fa fa-external-link" />
+                    </span>
+                  </Link>
+                </HelpTooltip>
+              </span>
+            }
+          >
+            <DropdownItem textValue="Settings">
+              <ItemContent
+                icon="wrench"
+                label="Setup Git Sync"
+                onClick={() => {
+                  setIsGitRepoSettingsModalOpen(true);
+                }}
+              />
+            </DropdownItem>
+          </DropdownSection>
+        </Dropdown>
+      </div>
     );
   } else {
     dropdown = (
@@ -244,19 +368,98 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
             );
           }}
           triggerButton={
-            <DropdownButton className="btn--clicky-small btn-sync">
-              {iconClassName && (
-                <i className={classnames('space-right', iconClassName)} />
-              )}
-              <div className="ellipsis">{currentBranch}</div>
-              <i
-                className={`fa fa-code-fork space-left ${
-                  isLoading ? 'fa-fade' : ''
-                }`}
-              />
+            <DropdownButton
+              size="medium"
+              variant='text'
+              removePaddings={false}
+              removeBorderRadius
+              style={{
+                width: '100%',
+                borderRadius: '0',
+                borderTop: '1px solid var(--hl-md)',
+                justifyContent: 'flex-start !important',
+                height: 'var(--line-height-sm)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  gap: 'var(--padding-xs)',
+                  width: '100%',
+                }}
+              >
+                {iconClassName && (
+                  <i className={classnames('space-right', iconClassName)} />
+                )}
+                <div className="ellipsis">{currentBranch}</div>
+
+                <div
+                  style={{
+                    opacity: loadingStatus ? 0.5 : 1,
+                  }}
+                >
+                  <Tooltip message={commitToolTipMsg}>
+                    <span
+                      style={{
+                        opacity: status?.localChanges ? 1 : 0.5,
+                        color: status?.localChanges ? 'var(--color-notice)' : 'var(--color-hl)',
+                      }}
+                    ><i className="fa fa-cube space-left" /></span>
+                  </Tooltip>
+                  <Tooltip message={pullToolTipMsg}>
+                    <span
+                      style={{
+                        opacity: status?.pull ? 1 : 0.5,
+                      }}
+                    ><i className="fa fa-cloud-download space-left" /></span>
+                  </Tooltip>
+                  <Tooltip message={pushToolTipMsg}>
+                    <span
+                      style={{
+                        opacity: status?.push ? 1 : 0.5,
+                      }}
+                    ><i className="fa fa-cloud-upload space-left" /></span>
+                  </Tooltip>
+                </div>
+              </div>
+
             </DropdownButton>
           }
         >
+          {isInsomniaSyncEnabled ? <DropdownSection>
+            <DropdownItem
+              key='gitSync'
+              arial-label='Use Insomnia Sync'
+            >
+              <Button
+                variant='contained'
+                bg='surprise'
+                onClick={async () => {
+                  const currentWorkspace = await workspace.getById(workspaceId);
+                  if (!currentWorkspace) {
+                    return;
+                  }
+                  await workspace.update(currentWorkspace, {
+                    gitSync: false,
+                  });
+
+                  revalidate();
+                }}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 'var(--padding-sm)',
+                  margin: '0 var(--padding-sm)',
+                }}
+              >
+                <i className="fa fa-cloud" /> Use Insomnia Sync
+              </Button>
+            </DropdownItem>
+          </DropdownSection> : null}
           <DropdownSection
             title={
               <span>

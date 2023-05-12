@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useRevalidator } from 'react-router-dom';
 import { useInterval, useMount } from 'react-use';
 
 import * as session from '../../../account/session';
@@ -29,6 +30,7 @@ import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncDeleteModal } from '../modals/sync-delete-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
 import { SyncStagingModal } from '../modals/sync-staging-modal';
+import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
 
 // TODO: handle refetching logic in one place not here in a component
@@ -81,7 +83,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   const remoteProjects = useSelector(selectRemoteProjects);
   const syncItems = useSelector(selectSyncItems);
   const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
-
+  const { revalidate } = useRevalidator();
   const refetchRemoteBranch = useCallback(async () => {
     if (session.isLoggedIn()) {
       try {
@@ -338,23 +340,65 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     return (
       <div>
         <Dropdown
-          style={{
-            marginLeft: 'var(--padding-md)',
-          }}
           className="wide tall"
           onOpen={() => refreshVCSAndRefetchRemote()}
           aria-label="Select a project to sync with"
           triggerButton={
             <DropdownButton
-              variant='outlined'
+              size="medium"
+              removeBorderRadius
               disableHoverBehavior={false}
               removePaddings={false}
-              className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
+              variant='text'
+              style={{
+                width: '100%',
+                borderRadius: '0',
+                borderTop: '1px solid var(--hl-md)',
+                height: 'var(--line-height-sm)',
+              }}
             >
-              <i className="fa fa-code-fork " /> Setup Sync
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  gap: 'var(--padding-xs)',
+                  width: '100%',
+                }}
+              >
+                <i className="fa fa-code-fork " /> Setup Sync
+              </div>
             </DropdownButton>
           }
         >
+          <DropdownSection>
+            <DropdownItem
+              key='gitSync'
+              arial-label='Setup Git Sync'
+            >
+              <Button
+                variant='contained'
+                bg='surprise'
+                onClick={async () => {
+                  await models.workspace.update(workspace, {
+                    gitSync: true,
+                  });
+
+                  revalidate();
+                }}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--padding-sm)',
+                  margin: '0 var(--padding-sm)',
+                  justifyContent: 'flex-start!important',
+                }}
+              >
+                <i className="fa-brands fa-git-alt" /> Use Git Sync
+              </Button>
+            </DropdownItem>
+          </DropdownSection>
           <DropdownSection
             aria-label='Sync Projects List'
             items={remoteBackendProjects.length === 0 ? emptyDropdownItemsArray : []}
@@ -363,8 +407,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             {p =>
               <DropdownItem
                 key={p.id}
+                textValue={p.name}
               >
-                <ItemContent {...p} />
+                <ItemContent {...p} label={p.name} />
               </DropdownItem>
             }
           </DropdownSection>
@@ -404,9 +449,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   return (
     <div>
       <Dropdown
-        aria-label='Select a branch to sync with'
-        style={{ marginLeft: 'var(--padding-md)' }}
         className="wide tall"
+        aria-label='Select a branch to sync with'
         onOpen={() => refreshVCSAndRefetchRemote()}
         closeOnSelect={false}
         isDisabled={initializing}
@@ -414,56 +458,102 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           currentBranch === null ?
             <Fragment>Sync</Fragment> :
             <DropdownButton
-              variant='outlined'
+              size="medium"
+              removeBorderRadius
               disableHoverBehavior={false}
               removePaddings={false}
-              className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
+              variant='text'
+              style={{
+                width: '100%',
+                borderRadius: '0',
+                borderTop: '1px solid var(--hl-md)',
+                height: 'var(--line-height-sm)',
+              }}
             >
-              <div className="ellipsis">
-                <i className="fa fa-code-fork space-right" />{' '}
-                {initializing ? 'Initializing...' : currentBranch}
-              </div>
-              <div className="flex space-left">
-                <Tooltip message={snapshotToolTipMsg} delay={800} position="bottom">
-                  <i
-                    className={classnames('fa fa-cube fa--fixed-width', {
-                      'super-duper-faint': !canCreateSnapshot,
-                    })}
-                  />
-                </Tooltip>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  gap: 'var(--padding-xs)',
+                  width: '100%',
+                }}
+              >
+                <div className="ellipsis">
+                  <i className="fa fa-code-fork space-right" />{' '}
+                  {initializing ? 'Initializing...' : currentBranch}
+                </div>
+                <div className="flex space-left">
+                  <Tooltip message={snapshotToolTipMsg} delay={800} position="bottom">
+                    <i
+                      className={classnames('fa fa-cube fa--fixed-width', {
+                        'super-duper-faint': !canCreateSnapshot,
+                      })}
+                    />
+                  </Tooltip>
 
-                {/* Only show cloud icons if logged in */}
-                {session.isLoggedIn() && (
-                  <Fragment>
-                    {loadingPull ? (
-                      loadIcon
-                    ) : (
-                      <Tooltip message={pullToolTipMsg} delay={800} position="bottom">
-                        <i
-                          className={classnames('fa fa-cloud-download fa--fixed-width', {
-                            'super-duper-faint': !canPull,
-                          })}
-                        />
-                      </Tooltip>
-                    )}
+                  {/* Only show cloud icons if logged in */}
+                  {session.isLoggedIn() && (
+                    <Fragment>
+                      {loadingPull ? (
+                        loadIcon
+                      ) : (
+                        <Tooltip message={pullToolTipMsg} delay={800} position="bottom">
+                          <i
+                            className={classnames('fa fa-cloud-download fa--fixed-width', {
+                              'super-duper-faint': !canPull,
+                            })}
+                          />
+                        </Tooltip>
+                      )}
 
-                    {loadingPush ? (
-                      loadIcon
-                    ) : (
-                      <Tooltip message={pushToolTipMsg} delay={800} position="bottom">
-                        <i
-                          className={classnames('fa fa-cloud-upload fa--fixed-width', {
-                            'super-duper-faint': !canPush,
-                          })}
-                        />
-                      </Tooltip>
-                    )}
-                  </Fragment>
-                )}
+                      {loadingPush ? (
+                        loadIcon
+                      ) : (
+                        <Tooltip message={pushToolTipMsg} delay={800} position="bottom">
+                          <i
+                            className={classnames('fa fa-cloud-upload fa--fixed-width', {
+                              'super-duper-faint': !canPush,
+                            })}
+                          />
+                        </Tooltip>
+                      )}
+                    </Fragment>
+                  )}
+                </div>
               </div>
+
             </DropdownButton>
         }
       >
+        <DropdownSection>
+          <DropdownItem
+            key='gitSync'
+            arial-label='Setup Git Sync'
+          >
+            <Button
+              variant='contained'
+              bg='surprise'
+              onClick={async () => {
+                await models.workspace.update(workspace, {
+                  gitSync: true,
+                });
+
+                revalidate();
+              }}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--padding-sm)',
+                margin: '0 var(--padding-sm)',
+                justifyContent: 'flex-start!important',
+              }}
+            >
+              <i className="fa-brands fa-git-alt" /> Use Git Sync
+            </Button>
+          </DropdownItem>
+        </DropdownSection>
         <DropdownSection
           aria-label='Sync Branches List'
           title={syncMenuHeader}

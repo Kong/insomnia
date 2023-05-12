@@ -15,6 +15,17 @@ export interface GitRemoteConfig {
   url: string;
 }
 
+interface GetDiffNumberProps {
+  logList: any[];
+  parentOid: string;
+}
+
+interface RevListProps {
+  dir: string;
+  branchName1: string;
+  branchName2: string;
+}
+
 interface GitCredentialsBase {
   username: string;
   password: string;
@@ -209,6 +220,74 @@ export class GitVCS {
     }
 
     return branch;
+  }
+
+  async getDiffNumber({
+    logList,
+    parentOid,
+  }: GetDiffNumberProps) {
+    let diffNum = 0;
+    for (const commit of logList) {
+      const isDec = await git.isDescendent({
+        ...this._baseOpts,
+        oid: parentOid,
+        ancestor: commit.oid,
+        depth: -1,
+      });
+      if (isDec) {
+        // Don't go further down the log tree
+        break;
+      }
+      diffNum++;
+    }
+
+    return diffNum;
+  }
+
+  async diffBranches({
+    branchName1,
+    branchName2,
+  }: RevListProps) {
+    const [branch1Log, branch2Log] = await Promise.all([
+      this.log({
+        depth: 30,
+        ref: branchName1,
+      }),
+      this.log({
+        depth: 30,
+        ref: branchName2,
+      }),
+    ]);
+
+    if (!branch1Log[0]?.oid || !branch2Log[0]?.oid) {
+      return {
+        branch1Diff: 0,
+        branch2Diff: 0,
+      };
+    }
+
+    if (branch1Log[0].oid === branch2Log[0].oid) {
+      return {
+        branch1Diff: 0,
+        branch2Diff: 0,
+      };
+    }
+
+    const [branch1Diff, branch2Diff] = await Promise.all([
+      this.getDiffNumber({
+        logList: branch2Log,
+        parentOid: branch1Log[0]?.oid,
+      }),
+      this.getDiffNumber({
+        logList: branch1Log,
+        parentOid: branch2Log[0]?.oid,
+      }),
+    ]);
+
+    return {
+      branch1Diff,
+      branch2Diff,
+    };
   }
 
   async listBranches() {
@@ -429,7 +508,7 @@ export class GitVCS {
     });
   }
 
-  async log(input: {depth?: number} = {}) {
+  async log(input: {depth?: number; ref?: string} = {}) {
     const { depth = 35 } = input;
     try {
       const remoteOriginURI = await this.getRemoteOriginURI();
@@ -443,7 +522,7 @@ export class GitVCS {
         });
       }
 
-      return await git.log({ ...this._baseOpts, depth });
+      return await git.log({ ...this._baseOpts, depth, ref: input.ref });
     } catch (error: unknown) {
       if (error instanceof git.Errors.NotFoundError) {
         return [];
@@ -510,6 +589,36 @@ export class GitVCS {
     } else {
       await this.branch(branch, true);
     }
+  }
+
+  async pullPushStatus({
+    credentials,
+  }: {
+    credentials?: GitCredentials | null;
+  }) {
+    const currentBranch = await this.getBranch();
+    const remoteBranches = await this.fetchRemoteBranches();
+
+    if (!remoteBranches.includes(currentBranch)) {
+      return {};
+    }
+
+    const result = await git.fetch({
+      ...this._baseOpts,
+      ...gitCallbacks(credentials),
+      singleBranch: true,
+      ref: currentBranch,
+      remote: 'origin',
+    });
+
+    console.log('[git] Fetch result', result);
+
+    const diff = await this.diffBranches({ ...this._baseOpts, branchName1: currentBranch, branchName2: `origin/${currentBranch}` });
+
+    return {
+      push: diff.branch2Diff,
+      pull: diff.branch1Diff,
+    };
   }
 
   async undoPendingChanges(fileFilter?: string[]) {
