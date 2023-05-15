@@ -45,6 +45,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
         <label>
           Git URI (https)
           <input
+            type="url"
             required
             autoFocus
             name="uri"

@@ -1,4 +1,5 @@
 import { invariant } from '@remix-run/router';
+import { fromUrl } from 'hosted-git-info';
 import { Errors } from 'isomorphic-git';
 import path from 'path';
 import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
@@ -32,7 +33,6 @@ import { shallowClone } from '../../sync/git/shallow-clone';
 import {
   addDotGit,
   getOauth2FormatName,
-  translateSSHtoHTTP,
 } from '../../sync/git/utils';
 import { SegmentEvent, trackSegmentEvent, vcsSegmentEventProperties } from '../analytics';
 
@@ -324,7 +324,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
     vcsSegmentEventProperties('git', 'clone')
   );
   repoSettingsPatch.needsFullClone = true;
-  repoSettingsPatch.uri = translateSSHtoHTTP(repoSettingsPatch.uri || '');
+  repoSettingsPatch.uri = fromUrl(repoSettingsPatch.uri)?.https() || '';
   let fsClient = MemClient.createClient();
 
   const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
