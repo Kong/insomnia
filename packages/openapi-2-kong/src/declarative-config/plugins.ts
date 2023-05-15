@@ -2,7 +2,7 @@ import SwaggerParser from '@apidevtools/swagger-parser';
 import { OpenAPIV3 } from 'openapi-types';
 import type { Entry } from 'type-fest';
 
-import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
+import { distinctByProperty, getPluginNameFromKey, isPluginKey, sanitizeRegexCapture } from '../common';
 import { DCPlugin } from '../types/declarative-config';
 import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugin, XKongPluginRequestValidator, xKongPluginRequestValidator } from '../types/kong';
 import type { OA3Operation, OpenApi3Spec } from '../types/openapi3';
@@ -67,6 +67,11 @@ const resolveParameter = ($refs: SwaggerParser.$Refs, parameter: OpenAPIV3.Param
       in: dereferenced?.in || '',
       schema,
     };
+
+    // Remove illegal chars from path-variable name.
+    if (resolvedParam.in === 'path') {
+      resolvedParam.name = sanitizeRegexCapture(resolvedParam.name);
+    }
 
     const components = resolveComponents($refs, resolvedParam);
     return {
