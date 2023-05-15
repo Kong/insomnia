@@ -119,7 +119,10 @@ const fetchGraphQLSchemaForRequest = async ({
     }
     const bodyBuffer = models.response.getBodyBuffer(response);
     if (bodyBuffer) {
-      const { data } = JSON.parse(bodyBuffer.toString());
+      const { data, errors } = JSON.parse(bodyBuffer.toString());
+      if (errors?.length) {
+        return { schemaFetchError: errors[0] };
+      }
       return { schema: buildClientSchema(data) };
     }
     return {
@@ -223,7 +226,6 @@ export const GraphQLEditor: FC<Props> = ({
         environmentId,
         url: request.url,
       });
-
       isMounted && setSchemaFetchError(newState?.schemaFetchError);
       isMounted && newState?.schema && setSchema(newState.schema);
       isMounted && newState?.schema && setSchemaLastFetchTime(Date.now());
