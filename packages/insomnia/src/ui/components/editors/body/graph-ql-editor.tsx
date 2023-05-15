@@ -120,7 +120,7 @@ const fetchGraphQLSchemaForRequest = async ({
     const bodyBuffer = models.response.getBodyBuffer(response);
     if (bodyBuffer) {
       const { data, errors } = JSON.parse(bodyBuffer.toString());
-      if (errors.length) {
+      if (errors?.length) {
         return { schemaFetchError: errors[0] };
       }
       return { schema: buildClientSchema(data) };
