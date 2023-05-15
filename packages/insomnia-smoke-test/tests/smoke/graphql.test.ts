@@ -24,7 +24,7 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   // Open the graphql request
   await page.getByRole('button', { name: 'GraphQL request' }).click();
   // Assert the schema is fetched after switching to GraphQL request
-  await expect(page.locator('.app')).toContainText('schema fetched just now');
+  await expect(page.locator('.graphql-editor__meta')).toContainText('schema fetched just now');
 
   // Assert schema documentation stuff
   await page.getByRole('button', { name: 'schema' }).click();
