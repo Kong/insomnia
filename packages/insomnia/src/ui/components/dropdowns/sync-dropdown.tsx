@@ -486,6 +486,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                 <div className="flex space-left">
                   <Tooltip message={snapshotToolTipMsg} delay={800} position="bottom">
                     <i
+                      style={{
+                        color: canCreateSnapshot ? 'var(--color-notice)' : 'var(--color-hl)',
+                      }}
                       className={classnames('fa fa-cube fa--fixed-width', {
                         'super-duper-faint': !canCreateSnapshot,
                       })}
