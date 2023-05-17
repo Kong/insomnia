@@ -69,19 +69,20 @@ export function pathVariablesToRegex(p: string, legacy: Boolean = true) {
   // escape URL special characters except the curly braces
   p = p.replace(/[$()]/g, '\\$&');
   // match anything except whitespace and '/'
-  let result = p.replace(pathVariableSearchValue, '(?<$1>[^/]+)');
-  // add a line ending because it is a regex
-
-  // Prepend ~ to regex for Kong 3.X
-  if (!legacy && !result.startsWith('~')) {
-    result = '~' + result;
-  }
-
-  if (!legacy) {
-    result = sanitizeRegexCapture(result);
+  let result = '';
+  if (legacy) {
+    result = p.replace(pathVariableSearchValue, '(?<$1>[^/]+)');
+  } else {
+    // If it's not legacy (e.g. Kong 3.0+), first replace path variable with sanitized name
+    result = p.replace(pathVariableSearchValue, sanitizeRegexCapture);
+    // Then replace sanitized name with regex
+    result = result.replace(pathVariableSearchValue, '(?<$1>[^/]+)');
+    // Finally, prepend ~ to regex
+    if (!result.startsWith('~')) {
+      result = '~' + result;
+    }
   }
   return result + '$';
-
 }
 
 // Remove illegal chars from path-variable name.
