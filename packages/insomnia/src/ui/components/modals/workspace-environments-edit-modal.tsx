@@ -355,8 +355,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
             <button
               onClick={() => {
                 if (environmentEditorRef.current?.isValid() && selectedEnvironmentId !== baseEnvironment?._id) {
-                  // @ts-expect-error -- ??
-baseEnvironment?.id && setState(state => ({
+                  baseEnvironment?.id && setState(state => ({
                     ...state,
                     selectedEnvironmentId: baseEnvironment?._id,
                   }));
