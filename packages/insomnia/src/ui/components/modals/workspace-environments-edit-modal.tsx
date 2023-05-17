@@ -354,8 +354,8 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
           >
             <button
               onClick={() => {
-                if (environmentEditorRef.current?.isValid() && selectedEnvironmentId === baseEnvironment?._id) {
-                  setState(state => ({
+                if (environmentEditorRef.current?.isValid() && selectedEnvironmentId !== baseEnvironment?._id) {
+                  baseEnvironment?._id && setState(state => ({
                     ...state,
                     selectedEnvironmentId: baseEnvironment?._id,
                   }));
