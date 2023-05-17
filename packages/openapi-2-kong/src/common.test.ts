@@ -257,6 +257,11 @@ describe('common', () => {
         '~/foo-bar/(?<bar_test>[^/]+)/(?<baz_test>[^/]+)$',
       );
     });
+    it('converts illegal chars in regex with multiple paths and path variables for non legacy Kong', () => {
+      expect(pathVariablesToRegex('/foo-bar/{bar-test}/bar-bar/{bar-bar}/{baz-test}', false)).toBe(
+        '~/foo-bar/(?<bar_test>[^/]+)/bar-bar/(?<bar_bar>[^/]+)/(?<baz_test>[^/]+)$',
+      );
+    });
   });
 
   describe('getPluginNameFromKey()', () => {
