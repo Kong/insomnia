@@ -253,8 +253,13 @@ describe('common', () => {
       );
     });
     it('converts illegal chars in regex path variables for non legacy Kong', () => {
-      expect(pathVariablesToRegex('/foo/{bar-test}/{baz-test}', false)).toBe(
-        '~/foo/(?<bar_test>[^/]+)/(?<baz_test>[^/]+)$',
+      expect(pathVariablesToRegex('/foo-bar/{bar-test}/{baz-test}', false)).toBe(
+        '~/foo-bar/(?<bar_test>[^/]+)/(?<baz_test>[^/]+)$',
+      );
+    });
+    it('converts illegal chars in regex with multiple paths and path variables for non legacy Kong', () => {
+      expect(pathVariablesToRegex('/foo-bar/{bar-test}/bar-bar/{bar-bar}/{baz-test}', false)).toBe(
+        '~/foo-bar/(?<bar_test>[^/]+)/bar-bar/(?<bar_bar>[^/]+)/(?<baz_test>[^/]+)$',
       );
     });
   });
