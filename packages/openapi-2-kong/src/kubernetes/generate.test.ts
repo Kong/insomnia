@@ -305,8 +305,8 @@ describe('index', () => {
     });
 
     it('adds /~ for kong 3.+ non legacy configs', () => {
-      const serverBasePath = '/api/.*';
-      expect(generateServicePath(serverBasePath, '', false)).toBe('/~/api/.*');
+      const serverBasePath = '/api/v1';
+      expect(generateServicePath(serverBasePath, '', false)).toBe('/~/api/v1/.*');
     });
 
     it.each(['/', '/specificPath'])(
