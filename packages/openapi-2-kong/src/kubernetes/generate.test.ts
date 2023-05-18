@@ -304,6 +304,11 @@ describe('index', () => {
       expect(generateServicePath(serverBasePath)).toBe('/api/.*/.*');
     });
 
+    it('adds /~ for kong 3.+ non legacy configs', () => {
+      const serverBasePath = '/api/.*';
+      expect(generateServicePath(serverBasePath, '', false)).toBe('/~/api/.*/.*');
+    });
+
     it.each(['/', '/specificPath'])(
       'does not add closing wildcard if using specific path: [%o]',
       specificPath => {
