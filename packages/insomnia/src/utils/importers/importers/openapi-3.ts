@@ -287,7 +287,24 @@ const importRequest = (
 ): ImportRequest => {
   const name = endpointSchema.summary || endpointSchema.path;
   const id = generateUniqueRequestId(endpointSchema as OpenAPIV3.OperationObject);
-  const paramHeaders = prepareHeaders(endpointSchema);
+  let paramHeaders = prepareHeaders(endpointSchema);
+  const body = prepareBody(endpointSchema);
+  const noContentTypeHeader = !paramHeaders?.find(
+    header => header.name === 'Content-Type',
+  );
+
+  // @ts-expect-error -- ??
+  if (body && body.mimeType  && noContentTypeHeader) {
+    paramHeaders = [
+      {
+        name: 'Content-Type',
+        disabled: false,
+        // @ts-expect-error -- ??
+        value: body.mimeType,
+      },
+      ...paramHeaders,
+    ];
+  }
   const {
     authentication,
     headers: securityHeaders,
@@ -300,7 +317,7 @@ const importRequest = (
     name,
     method: endpointSchema.method?.toUpperCase(),
     url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path)}`,
-    body: prepareBody(endpointSchema),
+    body: body,
     headers: [...paramHeaders, ...securityHeaders],
     authentication: authentication as Authentication,
     parameters: [...prepareQueryParams(endpointSchema), ...securityParams],
@@ -513,11 +530,13 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
   const { content } = (endpointSchema.requestBody || { content: {} }) as OpenAPIV3.RequestBodyObject;
 
   const mimeTypes = Object.keys(content);
-  const supportedMimeType = SUPPORTED_MIME_TYPES.find(mimeType =>
-    mimeTypes.includes(mimeType),
-  );
+  const supportedMimeType = mimeTypes.find(reqMimeType => {
+    return SUPPORTED_MIME_TYPES.some(supportedMimeType => {
+      return reqMimeType.includes(supportedMimeType);
+    });
+  });
 
-  if (supportedMimeType === MIMETYPE_JSON) {
+  if (supportedMimeType && supportedMimeType.includes(MIMETYPE_JSON)) {
     const bodyParameter = content[supportedMimeType];
 
     if (bodyParameter == null) {
