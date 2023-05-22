@@ -13,7 +13,7 @@ interface CustomAnnotations {
   overrideName?: string;
 }
 
-export const generateKongForKubernetesConfigFromSpec = (api: OpenApi3Spec) => {
+export const generateKongForKubernetesConfigFromSpec = (api: OpenApi3Spec, legacy: Boolean = true) => {
   const specName = getSpecName(api);
 
   // Extract global, server, and path plugins upfront
@@ -48,7 +48,7 @@ export const generateKongForKubernetesConfigFromSpec = (api: OpenApi3Spec) => {
 
         const metadata = generateMetadata(api, annotations, increment, specName);
         const tls = generateTLS(serverPlugin.server);
-        const rule = generateIngressRule(serverIndex, serverPlugin.server, specName, [pathPlugin.path]);
+        const rule = generateIngressRule(serverIndex, serverPlugin.server, specName, [pathPlugin.path], legacy);
 
         const doc: K8sIngress = {
           apiVersion: 'networking.k8s.io/v1',
@@ -153,6 +153,7 @@ export const generateIngressRule = (
   server: OA3Server,
   specName: string,
   paths?: string[],
+  legacy: Boolean = true
 ) => {
   // Resolve serverUrl variables and update the source object so it only needs to be done once per server loop.
   server.url = resolveUrlVariables(server.url, server.variables);
@@ -168,7 +169,7 @@ export const generateIngressRule = (
   };
 
   const k8sPaths = pathsToUse.map((pathToUse): K8sHTTPIngressPath => {
-    const path = pathname === null ? null : generateServicePath(pathname, pathToUse);
+    const path = pathname === null ? null : generateServicePath(pathname, pathToUse, legacy);
     return {
       backend,
       ...(path ? { path } : {}),
@@ -245,7 +246,7 @@ export const generateServicePort = (server: OA3Server) => {
   return firstPort || 80;
 };
 
-export const generateServicePath = (serverBasePath: string, specificPath = '') => {
+export const generateServicePath = (serverBasePath: string, specificPath = '', legacy: Boolean = true) => {
   const shouldExtractPath = specificPath || (serverBasePath && serverBasePath !== '/');
 
   if (!shouldExtractPath) {
@@ -254,5 +255,10 @@ export const generateServicePath = (serverBasePath: string, specificPath = '') =
 
   const fullPath = urlJoin(serverBasePath, specificPath, specificPath ? '' : '.*');
   const pathname = pathVariablesToWildcard(fullPath);
+
+  // prepend with /~ if non legacy, e.g. kong 3.0+
+  if (!legacy) {
+    return '/~' + pathname;
+  }
   return pathname;
 };
