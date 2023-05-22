@@ -1,6 +1,7 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
 import { camelCase } from 'change-case';
 import crypto from 'crypto';
+import { constants } from 'fs';
 import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import { parse as urlParse } from 'url';
 import YAML from 'yaml';
@@ -287,24 +288,8 @@ const importRequest = (
 ): ImportRequest => {
   const name = endpointSchema.summary || endpointSchema.path;
   const id = generateUniqueRequestId(endpointSchema as OpenAPIV3.OperationObject);
-  let paramHeaders = prepareHeaders(endpointSchema);
   const body = prepareBody(endpointSchema);
-  const noContentTypeHeader = !paramHeaders?.find(
-    header => header.name === 'Content-Type',
-  );
-
-  // @ts-expect-error -- ??
-  if (body && body.mimeType  && noContentTypeHeader) {
-    paramHeaders = [
-      {
-        name: 'Content-Type',
-        disabled: false,
-        // @ts-expect-error -- ??
-        value: body.mimeType,
-      },
-      ...paramHeaders,
-    ];
-  }
+  const paramHeaders = prepareHeaders(endpointSchema, body);
   const {
     authentication,
     headers: securityHeaders,
@@ -337,11 +322,27 @@ const prepareQueryParams = (endpointSchema: OpenAPIV3.PathItemObject) => {
 /**
  * Imports insomnia definitions of header parameters.
  */
-const prepareHeaders = (endpointSchema: OpenAPIV3.PathItemObject) => {
-  return convertParameters(
+const prepareHeaders = (endpointSchema: OpenAPIV3.PathItemObject, body: any) => {
+  let paramHeaders = convertParameters(
     endpointSchema.parameters?.filter(parameter => (
       (parameter as OpenAPIV3.ParameterObject).in === 'header'
     )) as OpenAPIV3.ParameterObject[]);
+
+  const noContentTypeHeader = !paramHeaders?.find(
+    header => header.name === 'Content-Type',
+  );
+
+  if (body && body.mimeType  && noContentTypeHeader) {
+    paramHeaders = [
+      {
+        name: 'Content-Type',
+        disabled: false,
+        value: body.mimeType,
+      },
+      ...paramHeaders,
+    ];
+  }
+  return paramHeaders;
 };
 
 /**
