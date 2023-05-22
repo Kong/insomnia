@@ -1,7 +1,6 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
 import { camelCase } from 'change-case';
 import crypto from 'crypto';
-import { constants } from 'fs';
 import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import { parse as urlParse } from 'url';
 import YAML from 'yaml';
