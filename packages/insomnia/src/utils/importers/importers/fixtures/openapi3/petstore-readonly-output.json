@@ -57,7 +57,11 @@
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"string\",\n  \"tag\": \"string\"\n}"
       },
-      "headers": [],
+      "headers": [{
+        "disabled": false,
+        "name": "Content-Type",
+        "value": "application/json"
+      }],
       "method": "POST",
       "name": "Create a pet",
       "parameters": [],

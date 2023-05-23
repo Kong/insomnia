@@ -142,7 +142,7 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
   }
 
   const securityVariables = getSecurityEnvVariables(
-      document.components?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject,
+    document.components?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject,
   );
 
   return servers
@@ -287,7 +287,8 @@ const importRequest = (
 ): ImportRequest => {
   const name = endpointSchema.summary || endpointSchema.path;
   const id = generateUniqueRequestId(endpointSchema as OpenAPIV3.OperationObject);
-  const paramHeaders = prepareHeaders(endpointSchema);
+  const body = prepareBody(endpointSchema);
+  const paramHeaders = prepareHeaders(endpointSchema, body);
   const {
     authentication,
     headers: securityHeaders,
@@ -300,7 +301,7 @@ const importRequest = (
     name,
     method: endpointSchema.method?.toUpperCase(),
     url: `{{ _.base_url }}${pathWithParamsAsVariables(endpointSchema.path)}`,
-    body: prepareBody(endpointSchema),
+    body: body,
     headers: [...paramHeaders, ...securityHeaders],
     authentication: authentication as Authentication,
     parameters: [...prepareQueryParams(endpointSchema), ...securityParams],
@@ -320,11 +321,27 @@ const prepareQueryParams = (endpointSchema: OpenAPIV3.PathItemObject) => {
 /**
  * Imports insomnia definitions of header parameters.
  */
-const prepareHeaders = (endpointSchema: OpenAPIV3.PathItemObject) => {
-  return convertParameters(
+const prepareHeaders = (endpointSchema: OpenAPIV3.PathItemObject, body: any) => {
+  let paramHeaders = convertParameters(
     endpointSchema.parameters?.filter(parameter => (
       (parameter as OpenAPIV3.ParameterObject).in === 'header'
     )) as OpenAPIV3.ParameterObject[]);
+
+  const noContentTypeHeader = !paramHeaders?.find(
+    header => header.name === 'Content-Type',
+  );
+
+  if (body && body.mimeType && noContentTypeHeader) {
+    paramHeaders = [
+      {
+        name: 'Content-Type',
+        disabled: false,
+        value: body.mimeType,
+      },
+      ...paramHeaders,
+    ];
+  }
+  return paramHeaders;
 };
 
 /**
@@ -513,11 +530,13 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
   const { content } = (endpointSchema.requestBody || { content: {} }) as OpenAPIV3.RequestBodyObject;
 
   const mimeTypes = Object.keys(content);
-  const supportedMimeType = SUPPORTED_MIME_TYPES.find(mimeType =>
-    mimeTypes.includes(mimeType),
-  );
+  const supportedMimeType = mimeTypes.find(reqMimeType => {
+    return SUPPORTED_MIME_TYPES.some(supportedMimeType => {
+      return reqMimeType.includes(supportedMimeType);
+    });
+  });
 
-  if (supportedMimeType === MIMETYPE_JSON) {
+  if (supportedMimeType && supportedMimeType.includes(MIMETYPE_JSON)) {
     const bodyParameter = content[supportedMimeType];
 
     if (bodyParameter == null) {

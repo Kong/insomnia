@@ -73,7 +73,11 @@
         "mimeType": "application/json",
         "text": "{\n  \"id\": 0,\n  \"category\": {\n    \"id\": 0,\n    \"name\": \"string\"\n  },\n  \"name\": \"doggie\",\n  \"photoUrls\": [\n    \"string\"\n  ],\n  \"tags\": [\n    {\n      \"id\": 0,\n      \"name\": \"string\"\n    }\n  ],\n  \"status\": \"string\"\n}"
       },
-      "headers": [],
+      "headers": [{
+        "disabled": false,
+        "name": "Content-Type",
+        "value": "application/json"
+      }],
       "method": "POST",
       "name": "Add a new pet to the store",
       "parameters": [],
@@ -95,7 +99,11 @@
         "mimeType": "application/json",
         "text": "{\n  \"id\": 0,\n  \"category\": {\n    \"id\": 0,\n    \"name\": \"string\"\n  },\n  \"name\": \"doggie\",\n  \"photoUrls\": [\n    \"string\"\n  ],\n  \"tags\": [\n    {\n      \"id\": 0,\n      \"name\": \"string\"\n    }\n  ],\n  \"status\": \"string\"\n}"
       },
-      "headers": [],
+      "headers": [{
+        "disabled": false,
+        "name": "Content-Type",
+        "value": "application/json"
+      }],
       "method": "PUT",
       "name": "Update an existing pet",
       "parameters": [],
@@ -183,7 +191,11 @@
       "body": {
         "mimeType": "application/x-www-form-urlencoded"
       },
-      "headers": [],
+      "headers": [{
+        "disabled": false,
+        "name": "Content-Type",
+        "value": "application/x-www-form-urlencoded"
+      }],
       "method": "POST",
       "name": "Updates a pet in the store with form data",
       "parameters": [],
@@ -229,7 +241,11 @@
       "body": {
         "mimeType": "multipart/form-data"
       },
-      "headers": [],
+      "headers": [{
+        "disabled": false,
+        "name": "Content-Type",
+        "value": "multipart/form-data"
+      }],
       "method": "POST",
       "name": "uploads an image",
       "parameters": [],
