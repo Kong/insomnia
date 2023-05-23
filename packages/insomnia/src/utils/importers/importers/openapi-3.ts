@@ -142,7 +142,7 @@ const parseEnvs = (baseEnv: ImportRequest, document?: OpenAPIV3.Document | null)
   }
 
   const securityVariables = getSecurityEnvVariables(
-      document.components?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject,
+    document.components?.securitySchemes as unknown as OpenAPIV3.SecuritySchemeObject,
   );
 
   return servers
@@ -331,7 +331,7 @@ const prepareHeaders = (endpointSchema: OpenAPIV3.PathItemObject, body: any) => 
     header => header.name === 'Content-Type',
   );
 
-  if (body && body.mimeType  && noContentTypeHeader) {
+  if (body && body.mimeType && noContentTypeHeader) {
     paramHeaders = [
       {
         name: 'Content-Type',
