@@ -13,4 +13,7 @@
     "*.njson": "ndjson"
   },
   "files.insertFinalNewline": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "modificationsIfAvailable",
+  "editor.defaultFormatter": "vscode.typescript-language-features",
 }
