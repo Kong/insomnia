@@ -19,6 +19,13 @@
   "bin": {
     "inso": "bin/inso"
   },
+  "pkg": {
+    "scripts": "bin/inso",
+    "targets": [
+      "host"
+    ],
+    "output": "binaries/inso"
+  },
   "scripts": {
     "bootstrap": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
@@ -36,8 +43,7 @@
     "build:production": "cross-env NODE_ENV=production npm run build",
     "start": "concurrently --names source,types \"ESBUILD_WATCH=true npm run build:source\" \"npm run build:types -- --watch\"",
     "prepackage": "npm run build:production",
-    "package": "esr src/scripts/pkg.ts",
-    "pkg": "npx -y pkg ./packages/insomnia-inso/ --targets host --output ./packages/insomnia-inso/binaries/inso",
+    "package": "npx -y pkg .",
     "postpackage": "esr src/scripts/verify-pkg.ts",
     "artifacts": "esr src/scripts/artifacts.ts"
   },
