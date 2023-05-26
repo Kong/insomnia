@@ -37,7 +37,7 @@
     "start": "concurrently --names source,types \"ESBUILD_WATCH=true npm run build:source\" \"npm run build:types -- --watch\"",
     "prepackage": "npm run build:production",
     "package": "esr src/scripts/pkg.ts",
-    "pkg": "pkg .",
+    "pkg": "npx pkg ./packages/insomnia-inso/ --targets host --output ./packages/insomnia-inso/binaries/inso --no-bytecode --public-packages \"*\" --public",
     "postpackage": "esr src/scripts/verify-pkg.ts",
     "artifacts": "esr src/scripts/artifacts.ts"
   },
@@ -57,7 +57,6 @@
     "get-bin-path": "^5.1.0",
     "jest": "^28.1.0",
     "jest-mock": "^28.0.2",
-    "pkg": "^5.3.2",
     "rimraf": "^3.0.2"
   },
   "dependencies": {
