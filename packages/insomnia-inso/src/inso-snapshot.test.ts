@@ -20,7 +20,7 @@ describe('Snapshot for', () => {
   ])(
     '"inso %s"',
     async args => {
-      const binPath = path.resolve('../insomnia-inso/binaries/inso');
+      const binPath = path.resolve('../insomnia-inso/bin/inso');
       if (binPath === undefined) {
         throw new Error('unable to get binary path');
       }
