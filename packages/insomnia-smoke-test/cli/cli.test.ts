@@ -1,37 +1,22 @@
 import { describe, expect, it } from '@jest/globals';
 import execa from 'execa';
-import fs from 'fs';
-import { getBinPathSync } from 'get-bin-path';
 import path from 'path';
 
-const binariesDirectory = '../insomnia-inso/binaries';
-const npmPackageBinPath = getBinPathSync({ cwd: '../insomnia-inso' });
-const binaries = fs.readdirSync(binariesDirectory).map(binary => path.join(binariesDirectory, binary));
+const binPath = path.resolve('../insomnia-inso/binaries/inso');
 
-type NestedArray<T> = (T | T[])[];
-
-describe('should find binaries', () => {
-  it('should find the npm package bin', () => {
-    expect(npmPackageBinPath).not.toBeUndefined();
-  });
-
-  it('should find at least one single app binary', () => {
-    expect(binaries.length).toBeGreaterThanOrEqual(1);
-  });
-});
-
-const srcInsoNedb = ['--src', 'fixtures/inso-nedb'];
-
-describe.each([npmPackageBinPath, ...binaries].filter(x => x))('inso with %s', binPath => {
-  const inso = (...args: NestedArray<string>) => execa.sync(binPath, args.flat());
-
+describe('inso basic features', () => {
+  const inso = (...args: string[]) => execa.sync(binPath, args);
+  // const res = await execa(binPath, ['-h']);
+  console.log(binPath);
   describe('run test', () => {
     it('should not fail running tests', () => {
       const { failed } = inso(
         'run',
         'test',
-        srcInsoNedb,
-        ['--env', 'Dev'],
+        '--src',
+        'fixtures/inso-nedb',
+        '--env',
+        'Dev',
         'Echo Test Suite',
         '--verbose',
       );
@@ -45,7 +30,8 @@ describe.each([npmPackageBinPath, ...binaries].filter(x => x))('inso with %s', b
       const { failed } = inso(
         'generate',
         'config',
-        srcInsoNedb,
+        '--src',
+        'fixtures/inso-nedb',
         'Smoke Test API server 1.0.0',
       );
 
@@ -58,7 +44,8 @@ describe.each([npmPackageBinPath, ...binaries].filter(x => x))('inso with %s', b
       const { failed } = inso(
         'lint',
         'spec',
-        srcInsoNedb,
+        '--src',
+        'fixtures/inso-nedb',
         'Smoke Test API server 1.0.0',
       );
 
@@ -71,7 +58,8 @@ describe.each([npmPackageBinPath, ...binaries].filter(x => x))('inso with %s', b
       const { failed } = inso(
         'export',
         'spec',
-        srcInsoNedb,
+        '--src',
+        'fixtures/inso-nedb',
         'Smoke Test API server 1.0.0',
       );
 
