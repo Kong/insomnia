@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { execa } from 'execa';
+import execa from 'execa';
 import path from 'path';
 
 // MAKE SURE YOU BUILD THE PROJECT BEFORE RUNNING THESE TESTS.
