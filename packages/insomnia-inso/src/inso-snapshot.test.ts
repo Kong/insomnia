@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import execa from 'execa';
-import { getBinPathSync } from 'get-bin-path';
+import path from 'path';
 
 // MAKE SURE YOU BUILD THE PROJECT BEFORE RUNNING THESE TESTS.
 // These tests use the executable /bin/inso, which relies on /dist.
@@ -20,7 +20,7 @@ describe('Snapshot for', () => {
   ])(
     '"inso %s"',
     async args => {
-      const binPath = getBinPathSync();
+      const binPath = path.resolve('../insomnia-inso/bin/inso');
       if (binPath === undefined) {
         throw new Error('unable to get binary path');
       }

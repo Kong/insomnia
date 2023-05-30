@@ -50,14 +50,13 @@
     "@types/yaml": "^1.9.7",
     "concurrently": "^7.0.0",
     "cross-env": "^7.0.3",
-    "esbuild": "^0.14.29",
-    "esbuild-node-externals": "^1.4.1",
-    "esbuild-runner": "^2.2.1",
+    "esbuild": "^0.16.0",
+    "esbuild-node-externals": "^1.7.0",
+    "esbuild-runner": "^2.2.2",
     "execa": "^5.0.0",
-    "get-bin-path": "^5.1.0",
     "jest": "^28.1.0",
     "jest-mock": "^28.0.2",
-    "pkg": "^5.3.2",
+    "pkg": "5.3.2",
     "rimraf": "^3.0.2"
   },
   "dependencies": {

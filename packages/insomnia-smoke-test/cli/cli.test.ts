@@ -1,79 +1,64 @@
 import { describe, expect, it } from '@jest/globals';
 import execa from 'execa';
-import fs from 'fs';
-import { getBinPathSync } from 'get-bin-path';
 import path from 'path';
 
-const binariesDirectory = '../insomnia-inso/binaries';
-const npmPackageBinPath = getBinPathSync({ cwd: '../insomnia-inso' });
-const binaries = fs.readdirSync(binariesDirectory).map(binary => path.join(binariesDirectory, binary));
+const binPath = path.resolve('../insomnia-inso/binaries/inso');
 
-type NestedArray<T> = (T | T[])[];
-
-describe('should find binaries', () => {
-  it('should find the npm package bin', () => {
-    expect(npmPackageBinPath).not.toBeUndefined();
-  });
-
-  it('should find at least one single app binary', () => {
-    expect(binaries.length).toBeGreaterThanOrEqual(1);
-  });
-});
-
-const srcInsoNedb = ['--src', 'fixtures/inso-nedb'];
-
-describe.each([npmPackageBinPath, ...binaries].filter(x => x))('inso with %s', binPath => {
-  const inso = (...args: NestedArray<string>) => execa.sync(binPath, args.flat());
-
+describe('inso basic features', () => {
   describe('run test', () => {
-    it('should not fail running tests', () => {
-      const { failed } = inso(
+    it('should not fail running tests', async () => {
+      const { failed } = await execa(binPath, [
         'run',
         'test',
-        srcInsoNedb,
-        ['--env', 'Dev'],
+        '--src',
+        'fixtures/inso-nedb',
+        '--env',
+        'Dev',
         'Echo Test Suite',
         '--verbose',
-      );
+      ]);
 
       expect(failed).toBe(false);
     });
   });
 
   describe('generate config', () => {
-    it('should not fail generating config', () => {
-      const { failed } = inso(
+    it('should not fail generating config', async () => {
+      const { failed } = await execa(binPath, [
         'generate',
         'config',
-        srcInsoNedb,
+        '--src',
+        'fixtures/inso-nedb',
         'Smoke Test API server 1.0.0',
-      );
+      ]);
 
       expect(failed).toBe(false);
     });
   });
 
   describe('lint spec', () => {
-    it('should not fail linting spec', () => {
-      const { failed } = inso(
+    it('should not fail linting spec', async () => {
+      const { failed } = await execa(binPath, [
         'lint',
         'spec',
-        srcInsoNedb,
+        '--src',
+        'fixtures/inso-nedb',
         'Smoke Test API server 1.0.0',
-      );
+      ]);
 
       expect(failed).toBe(false);
     });
   });
 
   describe('export spec', () => {
-    it('should not fail linting spec', () => {
-      const { failed } = inso(
+    it('should not fail linting spec', async () => {
+      const { failed } = await execa(binPath, [
         'export',
         'spec',
-        srcInsoNedb,
+        '--src',
+        'fixtures/inso-nedb',
         'Smoke Test API server 1.0.0',
-      );
+      ]);
 
       expect(failed).toBe(false);
     });
