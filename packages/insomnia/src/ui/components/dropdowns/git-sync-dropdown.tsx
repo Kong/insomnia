@@ -225,7 +225,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository }) => {
             isLoading ? 'fa-fade' : ''
           }`}
         />
-        {isLoading ? 'Loading...' : 'Setup Git Sync'}
+        {isLoading ? 'Loading...' : 'Set up Git Sync'}
       </Button>
     );
   } else {

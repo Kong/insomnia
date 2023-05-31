@@ -10,7 +10,7 @@ test.describe('Dashboard', async () => {
       // Return to Dashboard
       await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');
-      await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
+      await expect(page.locator('.app')).not.toContainText('Set up Git Sync');
 
       // Create new project
       await page.click('[data-testid="CreateProjectButton"]');
@@ -44,7 +44,7 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).not.toContainText('My Project123');
       await expect(page.locator('.app')).toContainText('New Document');
       await expect(page.locator('.app')).toContainText('All Files (1)');
-      await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
+      await expect(page.locator('.app')).not.toContainText('Set up Git Sync');
     });
   });
   test.describe('Interactions', async () => { // Not sure about the name here
@@ -52,7 +52,7 @@ test.describe('Dashboard', async () => {
     test.skip('Can filter through multiple collections', async ({ app, page }) => {
       await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');
-      await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
+      await expect(page.locator('.app')).not.toContainText('Set up Git Sync');
 
       await page.getByRole('button', { name: 'Create' }).click();
       const text = await loadFixture('multiple-workspaces.yaml');
@@ -90,7 +90,7 @@ test.describe('Dashboard', async () => {
     test('Can create, rename and delete a document', async ({ page }) => {
       await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');
-      await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
+      await expect(page.locator('.app')).not.toContainText('Set up Git Sync');
 
       // Create new document
       await page.getByRole('button', { name: 'Create' }).click();
@@ -131,7 +131,7 @@ test.describe('Dashboard', async () => {
     test('Can create, rename and delete a collection', async ({ page }) => {
       await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');
-      await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
+      await expect(page.locator('.app')).not.toContainText('Set up Git Sync');
 
       // Create new collection
       await page.getByRole('button', { name: 'Create' }).click();

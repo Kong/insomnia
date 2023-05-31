@@ -1,7 +1,7 @@
 import { test } from '../../playwright/test';
 
 test('Sign in with GitHub', async ({ app, page }) => {
-  await page.getByRole('button', { name: 'Setup Git Sync' }).click();
+  await page.getByRole('button', { name: 'Set up Git Sync' }).click();
 
   await page.getByRole('tab', { name: 'Github' }).click();
 
