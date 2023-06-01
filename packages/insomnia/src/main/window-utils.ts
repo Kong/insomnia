@@ -302,7 +302,6 @@ export function createWindow() {
     submenu: [
       {
         label: `${MNEMONIC_SYM}New`,
-        accelerator: 'Alt+CmdOrCtrl+N',
         click: () => {
           createWindow();
         },
