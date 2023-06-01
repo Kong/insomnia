@@ -745,8 +745,6 @@ export const loader: LoaderFunction = async ({
   invariant(projectId, 'projectId parameter is required');
   const project = await models.project.getById(projectId);
 
-  const allProjects = await models.project.all();
-
   invariant(project, 'Project was not found');
 
   const projectWorkspaces = await models.workspace.findByParentId(project._id);
@@ -841,8 +839,7 @@ export const loader: LoaderFunction = async ({
     )?.indexes) : true)
     .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
 
-  // const allProjects = await models.project.all();
-
+  const allProjects = await models.project.all();
   const organizationProjects =
     organizationId === DEFAULT_ORGANIZATION_ID
       ? allProjects.filter(proj => !isRemoteProject(proj))
