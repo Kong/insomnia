@@ -164,7 +164,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       ...state,
       loadingProjectPull: true,
     }));
-    const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects });
+    const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects, teamProjectId: project._id });
     if (pulledIntoProject.project._id !== project._id) {
       // If pulled into a different project, reactivate the workspace
       dispatch(activateWorkspace({ workspaceId: workspace._id }));
@@ -185,7 +185,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     try {
       const branch = await vcs.getBranch();
       await interceptAccessError({
-        callback: () => vcs.push(project.remoteId),
+        callback: () => vcs.push(project.parentId, project._id),
         action: 'push',
         resourceName: branch,
         resourceType: 'branch',
@@ -214,7 +214,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     try {
       const branch = await vcs.getBranch();
       const delta = await interceptAccessError({
-        callback: () => vcs.pull(syncItems, project.remoteId),
+        callback: () => vcs.pull(syncItems, project.parentId, project._id),
         action: 'pull',
         resourceName: branch,
         resourceType: 'branch',
