@@ -116,6 +116,9 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(({
                 setError(err);
               }
             }
+            if (!error) {
+              onBlur?.();
+            }
           } catch (err) {
             setError(err.message);
           }
