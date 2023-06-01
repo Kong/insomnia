@@ -24,12 +24,14 @@ import {
 import { Item, ListProps, ListState, useListState } from 'react-stately';
 import styled from 'styled-components';
 
+import { getCurrentSessionId } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
   DashboardSortOrder,
 } from '../../common/constants';
+import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
@@ -45,6 +47,7 @@ import {
   isDefaultProject,
   isRemoteProject,
   Project,
+  RemoteProject,
 } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
@@ -59,7 +62,7 @@ import { DashboardSortDropdown } from '../components/dropdowns/dashboard-sort-dr
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
-import { showAlert, showPrompt } from '../components/modals';
+import { showPrompt } from '../components/modals';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '../components/modals/import-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
@@ -67,6 +70,27 @@ import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button/button';
 import { WorkspaceCard } from '../components/workspace-card';
 import { RootLoaderData } from './root';
+
+async function getAllTeamProjects(teamId: string) {
+  const sessionId = getCurrentSessionId() || '';
+
+  if (!sessionId) {
+    return [];
+  }
+
+  const response = await window.main.insomniaFetch<{
+    data: {
+      id: string;
+      name: string;
+    }[];
+  }>({
+    path: `/v1/teams/${teamId}/team-projects`,
+    method: 'GET',
+    sessionId,
+  });
+
+  return response.data;
+}
 
 const StyledDropdownButton = styled(DropdownButton).attrs({
   variant: 'outlined',
@@ -328,40 +352,24 @@ const OrganizationProjectsSidebar: FC<{
           variant="text"
           size="small"
           onClick={() => {
-            if (activeProject.remoteId) {
-              showAlert({
-                title: 'This capability is coming soon',
-                okLabel: 'Close',
-                message: (
-                  <div>
-                    <p>
-                      At the moment it is not possible to create more cloud
-                      projects within a team in Insomnia.
-                    </p>
-                    <p>🚀 This feature is coming soon!</p>
-                  </div>
+            const defaultValue = `My ${strings.project.singular}`;
+            showPrompt({
+              title: `Create New ${strings.project.singular}`,
+              submitName: 'Create',
+              placeholder: defaultValue,
+              defaultValue,
+              selectText: true,
+              onComplete: async name =>
+                createNewProjectFetcher.submit(
+                  {
+                    name,
+                  },
+                  {
+                    action: `/organization/${organizationId}/project/new`,
+                    method: 'post',
+                  }
                 ),
-              });
-            } else {
-              const defaultValue = `My ${strings.project.singular}`;
-              showPrompt({
-                title: `Create New ${strings.project.singular}`,
-                submitName: 'Create',
-                placeholder: defaultValue,
-                defaultValue,
-                selectText: true,
-                onComplete: async name =>
-                  createNewProjectFetcher.submit(
-                    {
-                      name,
-                    },
-                    {
-                      action: `/organization/${organizationId}/project/new`,
-                      method: 'post',
-                    }
-                  ),
-              });
-            }
+            });
           }}
         >
           <i data-testid="CreateProjectButton" className="fa fa-plus" />
@@ -611,7 +619,15 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     );
 
     if (match && match.params.organizationId && match.params.projectId) {
-      return redirect(`/organization/${match?.params.organizationId}/project/${match?.params.projectId}`);
+      let projectId = match.params.projectId;
+      const projectExists = await models.project.getById(projectId);
+      console.log({ projectExists, projectId, organizationId });
+
+      if (!projectExists) {
+        projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]._id;
+      }
+
+      return redirect(`/organization/${match?.params.organizationId}/project/${projectId}`);
     }
   }
 
@@ -625,8 +641,34 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
       );
     }
   } else {
-    const projectId = organizationId;
-    return redirect(`/organization/${organizationId}/project/${projectId}`);
+    const projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]?._id;
+
+    if (projectId) {
+      return redirect(`/organization/${organizationId}/project/${projectId}`);
+    } else {
+      const remoteProjects = await getAllTeamProjects(organizationId);
+
+      const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
+        id: string;
+        name: string;
+      }) => {
+        const project = await models.initModel<RemoteProject>(
+          models.project.type,
+          {
+            _id: prj.id,
+            remoteId: prj.id,
+            name: prj.name,
+            parentId: organizationId,
+          }
+        );
+
+        return project;
+      }));
+
+      await database.batchModifyDocs({ upsert: projectsToUpdate });
+
+      return redirect(`/organization/${organizationId}/project/${projectsToUpdate[0]._id}`);
+    }
   }
 
   return;
@@ -647,7 +689,8 @@ export const loader: LoaderFunction = async ({
   request,
 }): Promise<ProjectLoaderData> => {
   const search = new URL(request.url).searchParams;
-  const { projectId, organizationId } = params;
+  const { organizationId } = params;
+  let { projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'projectId parameter is required');
 
@@ -656,6 +699,35 @@ export const loader: LoaderFunction = async ({
   const scope = search.get('scope') || 'all';
   const projectName = search.get('projectName') || '';
 
+  if (organizationId !== models.organization.DEFAULT_ORGANIZATION_ID) {
+    console.log('Fetching projects for team', organizationId);
+    const remoteProjects = await getAllTeamProjects(organizationId);
+
+    const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
+      id: string;
+      name: string;
+    }) => {
+      const project = await models.initModel<RemoteProject>(
+        models.project.type,
+        {
+          _id: prj.id,
+          remoteId: prj.id,
+          name: prj.name,
+          parentId: organizationId,
+        }
+      );
+
+      return project;
+    }));
+
+    await database.batchModifyDocs({ upsert: projectsToUpdate });
+
+    if (!projectId || projectId === 'undefined') {
+      projectId = remoteProjects[0].id;
+    }
+  }
+
+  invariant(projectId, 'projectId parameter is required');
   const project = await models.project.getById(projectId);
 
   const allProjects = await models.project.all();
@@ -759,7 +831,7 @@ export const loader: LoaderFunction = async ({
   const organizationProjects =
     organizationId === DEFAULT_ORGANIZATION_ID
       ? allProjects.filter(proj => !isRemoteProject(proj))
-      : [project];
+      : allProjects.filter(proj => proj.parentId === organizationId);
 
   const projects = sortProjects(organizationProjects).filter(p =>
     p.name.toLowerCase().includes(projectName.toLowerCase())

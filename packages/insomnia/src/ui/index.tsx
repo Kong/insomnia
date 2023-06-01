@@ -566,7 +566,7 @@ async function renderApp() {
       const activity = state.global.activeActivity;
 
       const activeProject = selectActiveProject(state);
-      const organizationId = activeProject && isRemoteProject(activeProject) ? activeProject._id : DEFAULT_ORGANIZATION_ID;
+      const organizationId = activeProject && isRemoteProject(activeProject) ? activeProject.parentId : DEFAULT_ORGANIZATION_ID;
 
       if (activity !== currentActivity) {
         currentActivity = activity;
