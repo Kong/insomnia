@@ -4,7 +4,7 @@ import { getApiBaseURL, getClientString } from '../common/constants';
 import { delay } from '../common/misc';
 
 interface FetchConfig {
-  method: 'POST' | 'PUT' | 'GET';
+  method: 'POST' | 'PUT' | 'GET' | 'DELETE' | 'PATCH';
   path: string;
   sessionId: string | null;
   data?: unknown;

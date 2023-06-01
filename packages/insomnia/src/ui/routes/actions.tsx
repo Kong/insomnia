@@ -29,9 +29,28 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   const formData = await request.formData();
   const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
-  const project = await models.project.create({ name });
-  window.main.trackSegmentEvent({ event: SegmentEvent.projectLocalCreate });
-  return redirect(`/organization/${organizationId}/project/${project._id}`);
+
+  if (organizationId !== DEFAULT_ORGANIZATION_ID) {
+    const sessionId = session.getCurrentSessionId();
+    invariant(sessionId, 'User must be logged in to create a project');
+    const response = await window.main.insomniaFetch({
+      path: `/v1/teams/${organizationId}/team-projects`,
+      method: 'POST',
+      data: {
+        name,
+      },
+      sessionId,
+    });
+
+    const newProject = response.data;
+
+    return redirect(`/organization/${organizationId}/project/${newProject.id}`);
+  } else {
+    const project = await models.project.create({ name });
+    window.main.trackSegmentEvent({ event: SegmentEvent.projectLocalCreate });
+    return redirect(`/organization/${organizationId}/project/${project._id}`);
+  }
+
 };
 
 export const renameProjectAction: ActionFunction = async ({
@@ -67,12 +86,37 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  await models.stats.incrementDeletedRequestsForDescendents(project);
-  await models.project.remove(project);
+  if (organizationId !== DEFAULT_ORGANIZATION_ID) {
+    const sessionId = session.getCurrentSessionId();
+    invariant(sessionId, 'User must be logged in to delete a project');
 
-  window.main.trackSegmentEvent({ event: SegmentEvent.projectLocalDelete });
+    try {
+      const deleteProjectResponse = await window.main.insomniaFetch({
+        path: `/v1/teams/${organizationId}/team-projects/${projectId}`,
+        method: 'DELETE',
+        sessionId,
+      });
 
-  return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`);
+      if (deleteProjectResponse.status !== 200) {
+        throw new Error(deleteProjectResponse.statusText);
+      }
+
+      await models.stats.incrementDeletedRequestsForDescendents(project);
+      await models.project.remove(project);
+
+      return redirect(`/organization/${organizationId}`);
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
+  } else {
+    await models.stats.incrementDeletedRequestsForDescendents(project);
+    await models.project.remove(project);
+
+    window.main.trackSegmentEvent({ event: SegmentEvent.projectLocalDelete });
+
+    return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`);
+  }
 };
 
 // Workspace
