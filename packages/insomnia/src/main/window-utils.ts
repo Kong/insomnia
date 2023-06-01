@@ -290,8 +290,13 @@ export function createWindow() {
       {
         label: `Toggle ${MNEMONIC_SYM}DevTools`,
         accelerator: 'Alt+CmdOrCtrl+I',
-        // @ts-expect-error -- TSCONVERSION needs global module augmentation
-        click: () => mainWindow?.toggleDevTools(),
+        click: () => {
+          const window = BrowserWindow.getFocusedWindow();
+          if (window) {
+            // @ts-expect-error -- TSCONVERSION needs global module augmentation
+            window.toggleDevTools();
+          }
+        },
       },
     ],
   };
@@ -440,7 +445,12 @@ export function createWindow() {
       {
         label: `${MNEMONIC_SYM}Reload`,
         accelerator: 'Shift+F5',
-        click: () => newWindow?.reload(),
+        click: () => {
+          const window = BrowserWindow.getFocusedWindow();
+          if (window) {
+            window.reload();
+          }
+        },
       },
       {
         label: `Take ${MNEMONIC_SYM}Screenshot`,
