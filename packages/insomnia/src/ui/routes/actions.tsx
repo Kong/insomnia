@@ -124,8 +124,6 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   await models.stats.incrementDeletedRequestsForDescendents(project);
   await models.project.remove(project);
 
-  window.main.trackSegmentEvent({ event: SegmentEvent.projectLocalDelete });
-
   return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`);
 };
 
