@@ -1,7 +1,6 @@
 import classnames from 'classnames';
 import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useRevalidator } from 'react-router-dom';
 import { useInterval, useMount } from 'react-use';
 
 import * as session from '../../../account/session';
@@ -25,6 +24,7 @@ import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } 
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { showError, showModal } from '../modals';
+import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { LoginModal } from '../modals/login-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncDeleteModal } from '../modals/sync-delete-modal';
@@ -83,7 +83,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   const remoteProjects = useSelector(selectRemoteProjects);
   const syncItems = useSelector(selectSyncItems);
   const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
-  const { revalidate } = useRevalidator();
   const refetchRemoteBranch = useCallback(async () => {
     if (session.isLoggedIn()) {
       try {
@@ -127,6 +126,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     refetchRemoteBranch();
   }, REFRESH_PERIOD);
 
+  const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
+
   useMount(async () => {
     setState(state => ({
       ...state,
@@ -164,10 +165,10 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       loadingProjectPull: true,
     }));
     const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects });
-    if (pulledIntoProject._id !== project._id) {
+    if (pulledIntoProject.project._id !== project._id) {
       // If pulled into a different project, reactivate the workspace
       await dispatch(activateWorkspace({ workspaceId: workspace._id }));
-      logCollectionMovedToProject(workspace, pulledIntoProject);
+      logCollectionMovedToProject(workspace, pulledIntoProject.project);
     }
     await refreshVCSAndRefetchRemote();
     setState(state => ({
@@ -380,11 +381,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                 variant='contained'
                 bg='surprise'
                 onClick={async () => {
-                  await models.workspace.update(workspace, {
-                    gitSync: true,
-                  });
-
-                  revalidate();
+                  setIsGitRepoSettingsModalOpen(true);
                 }}
                 style={{
                   width: '100%',
@@ -432,6 +429,11 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             }
           </DropdownSection>
         </Dropdown>
+        {isGitRepoSettingsModalOpen && (
+          <GitRepositorySettingsModal
+            onHide={() => setIsGitRepoSettingsModalOpen(false)}
+          />
+        )}
       </div>
     );
   }
@@ -538,11 +540,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               variant='contained'
               bg='surprise'
               onClick={async () => {
-                await models.workspace.update(workspace, {
-                  gitSync: true,
-                });
-
-                revalidate();
+                setIsGitRepoSettingsModalOpen(true);
               }}
               style={{
                 width: '100%',
@@ -669,6 +667,11 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           </DropdownItem>
         </DropdownSection>
       </Dropdown>
+      {isGitRepoSettingsModalOpen && (
+        <GitRepositorySettingsModal
+          onHide={() => setIsGitRepoSettingsModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

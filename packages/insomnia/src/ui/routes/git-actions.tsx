@@ -1,4 +1,3 @@
-import { invariant } from '@remix-run/router';
 import { fromUrl } from 'hosted-git-info';
 import { Errors } from 'isomorphic-git';
 import path from 'path';
@@ -34,6 +33,7 @@ import {
   addDotGit,
   getOauth2FormatName,
 } from '../../sync/git/utils';
+import { invariant } from '../../utils/invariant';
 import {
   SegmentEvent,
   trackSegmentEvent,
@@ -633,6 +633,10 @@ export const updateGitRepoAction: ActionFunction = async ({
 
   await models.workspaceMeta.updateByParentId(workspaceId, {
     gitRepositoryId,
+  });
+
+  await models.workspace.update(workspace, {
+    gitSync: true,
   });
 
   return null;
