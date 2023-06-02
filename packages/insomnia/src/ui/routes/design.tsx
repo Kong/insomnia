@@ -257,10 +257,25 @@ const Design: FC = () => {
               apiSpec={apiSpec}
               handleSetSelection={handleScrollToSelection}
             />
-            <WorkspaceSyncDropdown />
+            <div
+              style={{
+                gridRowStart: 6,
+              }}
+            >
+              <WorkspaceSyncDropdown />
+            </div>
           </ErrorBoundary>
         ) : (
-          <EmptySpaceHelper>A spec navigator will render here</EmptySpaceHelper>
+          <Fragment>
+            <EmptySpaceHelper>A spec navigator will render here</EmptySpaceHelper>
+            <div
+              style={{
+                gridRowStart: 6,
+              }}
+            >
+              <WorkspaceSyncDropdown />
+            </div>
+          </Fragment>
         )
       }
       renderPaneTwo={showRightPane && <SwaggerUIDiv text={apiSpec.contents} />}

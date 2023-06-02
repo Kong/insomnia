@@ -161,6 +161,12 @@ const TestRoute: FC = () => {
                 </li>
               ))}
             </ul>
+          </div>
+          <div
+            style={{
+              gridRowStart: 6,
+            }}
+          >
             <WorkspaceSyncDropdown />
           </div>
         </ErrorBoundary>
