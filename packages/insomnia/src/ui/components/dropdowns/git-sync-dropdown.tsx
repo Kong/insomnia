@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
 import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
+import { useInterval } from 'react-use';
 
 import { docsGitSync } from '../../../common/documentation';
 import { workspace } from '../../../models';
@@ -233,6 +234,16 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
     },
   ];
 
+  useInterval(() => {
+    gitFetchFetcher.submit(
+      {},
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/fetch`,
+        method: 'post',
+      }
+    );
+  }, 1000 * 60 * 5);
+
   const status = gitStatusFetcher.data?.status;
 
   const pullToolTipMsg = status?.pull !== undefined
@@ -249,15 +260,9 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
         <Dropdown
           className="wide tall"
           ref={dropdownRef}
-          onOpen={() => {
-            gitFetchFetcher.submit(
-              {},
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/fetch`,
-                method: 'post',
-              }
-            );
-          }}
+          // onOpen={() => {
+
+          // }}
           triggerButton={
             <DropdownButton
               size="medium"
@@ -359,13 +364,13 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
           className="wide tall"
           ref={dropdownRef}
           onOpen={() => {
-            gitFetchFetcher.submit(
-              {},
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/fetch`,
-                method: 'post',
-              }
-            );
+            // gitFetchFetcher.submit(
+            //   {},
+            //   {
+            //     action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/fetch`,
+            //     method: 'post',
+            //   }
+            // );
           }}
           triggerButton={
             <DropdownButton
