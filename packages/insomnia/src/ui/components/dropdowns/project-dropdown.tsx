@@ -37,7 +37,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
             onClick={() => setIsSettingsModalOpen(true)}
           />
         </DropdownItem>
-        <DropdownItem aria-label='Delete'>
+        {!project._id.startsWith('proj_team') && <DropdownItem aria-label='Delete'>
           <ItemContent
             icon="trash-o"
             label="Delete"
@@ -49,7 +49,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
               )
             }
           />
-        </DropdownItem>
+        </DropdownItem>}
       </Dropdown>
       {isSettingsModalOpen && (
         <ProjectSettingsModal

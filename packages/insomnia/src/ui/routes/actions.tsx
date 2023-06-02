@@ -69,14 +69,30 @@ export const renameProjectAction: ActionFunction = async ({
 
   invariant(project, 'Project not found');
 
-  invariant(
-    !isRemoteProject(project),
-    'Cannot rename remote project',
-  );
+  if (isRemoteProject(project)) {
+    try {
+      await axiosRequest({
+        url: `${getApiBaseURL()}/v1/teams/${project.parentId}/team-projects/${projectId}`,
+        method: 'PATCH',
+        headers: {
+          'X-Session-Id': session.getCurrentSessionId() || '',
+        },
+        data: {
+          name,
+        },
+      });
+      await models.project.update(project, { name });
+      return null;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
+  } else {
 
-  await models.project.update(project, { name });
+    await models.project.update(project, { name });
 
-  return null;
+    return null;
+  }
 };
 
 export const deleteProjectAction: ActionFunction = async ({ params }) => {

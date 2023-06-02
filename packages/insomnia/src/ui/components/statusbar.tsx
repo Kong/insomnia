@@ -1,8 +1,9 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 import { SettingsButton } from './buttons/settings-button';
 import { SvgIcon } from './svg-icon';
+import { Tooltip } from './tooltip';
 
 const Bar = styled.div({
   position: 'relative',
@@ -26,10 +27,74 @@ const KongLink = styled.a({
   },
 });
 
+export const NetworkStatus = () => {
+  const [status, setStatus] = useState<'online' | 'offline'>('online');
+
+  useEffect(() => {
+    const handleOnline = () => setStatus('online');
+    const handleOffline = () => setStatus('offline');
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return (
+    <Tooltip
+      delay={1000}
+      position="bottom"
+      message={
+        <>
+          You are {status === 'online' ? 'securely connected to Insomnia Cloud' : 'offline. Connect to sync your data.'}
+        </>
+      }
+    >
+      {
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--padding-xs)',
+          }}
+        >
+          <span
+            style={{
+              backgroundColor: status === 'online' ? 'var(--color-success)' : 'var(--color-danger)',
+              width: '8px',
+              height: '8px',
+              borderRadius: '100%',
+              display: 'inline-block',
+            }}
+          />
+          <span
+            style={{
+              color: 'var(--color-font)',
+              fontSize: 'var(--font-size-xs)',
+            }}
+          >
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </span>
+        </div>
+      }
+    </Tooltip>
+  );
+};
+
 export const StatusBar: FC = () => {
   return (
     <Bar>
-      <SettingsButton />
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--padding-md)',
+        }}
+      >
+        <SettingsButton />
+        <NetworkStatus />
+      </div>
       <KongLink className="made-with-love" href="https://konghq.com/">
         Made with&nbsp; <SvgIcon icon="heart" /> &nbsp;by Kong
       </KongLink>
