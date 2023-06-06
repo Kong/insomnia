@@ -271,7 +271,6 @@ export const RequestPane: FC<Props> = ({
     requestUrlBarRef.current?.focusInput();
   }, [
     request?._id, // happens when the user switches requests
-    settings.hasPromptedAnalytics, // happens when the user dismisses the analytics modal
     uniqueKey,
   ]);
 

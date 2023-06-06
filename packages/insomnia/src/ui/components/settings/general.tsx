@@ -53,13 +53,6 @@ const DevelopmentOnlySettings: FC = () => {
       <h2>Development</h2>
 
       <div className="form-row pad-top-sm">
-        <BooleanSetting
-          label="Has seen analytics prompt"
-          setting="hasPromptedAnalytics"
-        />
-      </div>
-
-      <div className="form-row pad-top-sm">
         <div className="form-control form-control--outlined">
           <label>
             Stats.Launches
