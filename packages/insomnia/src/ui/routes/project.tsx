@@ -647,28 +647,33 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     if (projectId) {
       return redirect(`/organization/${organizationId}/project/${projectId}`);
     } else {
-      const remoteProjects = await getAllTeamProjects(organizationId);
+      try {
+        const remoteProjects = await getAllTeamProjects(organizationId);
 
-      const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
+        const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
         id: string;
         name: string;
       }) => {
-        const project = await models.initModel<RemoteProject>(
-          models.project.type,
-          {
-            _id: prj.id,
-            remoteId: prj.id,
-            name: prj.name,
-            parentId: organizationId,
-          }
-        );
+          const project = await models.initModel<RemoteProject>(
+            models.project.type,
+            {
+              _id: prj.id,
+              remoteId: prj.id,
+              name: prj.name,
+              parentId: organizationId,
+            }
+          );
 
-        return project;
-      }));
+          return project;
+        }));
 
-      await database.batchModifyDocs({ upsert: projectsToUpdate });
+        await database.batchModifyDocs({ upsert: projectsToUpdate });
 
-      return redirect(`/organization/${organizationId}/project/${projectsToUpdate[0]._id}`);
+        return redirect(`/organization/${organizationId}/project/${projectsToUpdate[0]._id}`);
+      } catch (err) {
+        console.log(err);
+        return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${models.project.DEFAULT_PROJECT_ID}`);
+      }
     }
   }
 
@@ -701,30 +706,35 @@ export const loader: LoaderFunction = async ({
   const projectName = search.get('projectName') || '';
 
   if (organizationId !== models.organization.DEFAULT_ORGANIZATION_ID) {
-    console.log('Fetching projects for team', organizationId);
-    const remoteProjects = await getAllTeamProjects(organizationId);
+    try {
+      console.log('Fetching projects for team', organizationId);
+      const remoteProjects = await getAllTeamProjects(organizationId);
 
-    const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
+      const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
       id: string;
       name: string;
     }) => {
-      const project = await models.initModel<RemoteProject>(
-        models.project.type,
-        {
-          _id: prj.id,
-          remoteId: prj.id,
-          name: prj.name,
-          parentId: organizationId,
-        }
-      );
+        const project = await models.initModel<RemoteProject>(
+          models.project.type,
+          {
+            _id: prj.id,
+            remoteId: prj.id,
+            name: prj.name,
+            parentId: organizationId,
+          }
+        );
 
-      return project;
-    }));
+        return project;
+      }));
 
-    await database.batchModifyDocs({ upsert: projectsToUpdate });
+      await database.batchModifyDocs({ upsert: projectsToUpdate });
 
-    if (!projectId || projectId === 'undefined') {
-      projectId = remoteProjects[0].id;
+      if (!projectId || projectId === 'undefined') {
+        projectId = remoteProjects[0].id;
+      }
+    } catch (err) {
+      console.log(err);
+      throw redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${models.project.DEFAULT_PROJECT_ID}`);
     }
   }
 
