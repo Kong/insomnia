@@ -50,6 +50,7 @@ import {
   RemoteProject,
 } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
+import { Team } from '../../sync/types';
 import { invariant } from '../../utils/invariant';
 import {
   Dropdown,
@@ -837,14 +838,47 @@ export const loader: LoaderFunction = async ({
     p.name.toLowerCase().includes(projectName.toLowerCase())
   );
 
-  return {
-    organization:
-      organizationId === DEFAULT_ORGANIZATION_ID
-        ? defaultOrganization
-        : {
-          _id: organizationId,
-          name: projects[0].name,
+  let organization = defaultOrganization;
+
+  if (organizationId !== DEFAULT_ORGANIZATION_ID) {
+    try {
+      const sessionId = getCurrentSessionId();
+
+      const response = await window.main.insomniaFetch<{
+        data: {
+          teams: Team[];
+        };
+      }>({
+        method: 'POST',
+        path: '/graphql',
+        sessionId,
+        data: {
+          query: `
+          query {
+            teams {
+              id
+              name
+            }
+          }
+        `,
+          variables: {},
         },
+      });
+
+      const teams = response.data.teams;
+      const organizations = teams.map(t => ({
+        _id: t.id,
+        name: t.name,
+      }));
+
+      organization = organizations.find(organization => organization._id === organizationId) || defaultOrganization;
+    } catch (err) {
+      console.warn('Failed to fetch organization', err);
+    }
+  }
+
+  return {
+    organization,
     workspaces,
     projects,
     activeProject: project,
