@@ -40,7 +40,7 @@ export function init(): BaseSettings {
     editorIndentWithTabs: true,
     editorKeyMap: 'default',
     editorLineWrapping: true,
-    enableAnalytics: false,
+    enableAnalytics: true,
     showVariableSourceAndValue: false,
     filterResponsesByEnv: false,
     followRedirects: true,
@@ -50,11 +50,6 @@ export function init(): BaseSettings {
     fontVariantLigatures: false,
     forceVerticalLayout: false,
 
-    /**
-     * Only existing users updating from an older version should see the analytics prompt.
-     * So by default this flag is set to false, and is toggled to true during initialization for new users.
-     */
-    hasPromptedAnalytics: false || Boolean(process.env.INSOMNIA_INCOGNITO_MODE),
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',
