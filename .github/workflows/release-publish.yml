@@ -172,8 +172,14 @@ jobs:
           PULP_PASSWORD: ${{ secrets.PULP_PASSWORD }}
           PULP_HOST: ${{ secrets.PULP_HOST }}
         with:
-          entrypoint: python3
-          args: '/usr/src/code/main.py release --file artifacts/ubuntu-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
+          entrypoint: /usr/src/code/entrypoint.sh
+          args: >
+            release
+            --file artifacts/ubuntu-latest-artifacts/insomnia/dist/Insomnia.Core-${{ env.RELEASE_VERSION }}.deb
+            --dist-name ubuntu
+            --dist-version focal
+            --package-type insomnia
+            --publish
 
       - name: Push Inso CLI docker image tags to Docker Hub
         run: |
