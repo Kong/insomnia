@@ -61,6 +61,7 @@ export const generateConfig = async (
   identifier?: string | null,
   options: Partial<GenerateConfigOptions> = {},
 ) => {
+  logger.warn('Kong config generation has been moved to decK CLI, https://github.com/Kong/deck');
   if (!validateOptions(options)) {
     return false;
   }
