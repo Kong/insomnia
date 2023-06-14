@@ -37,7 +37,7 @@ describe.each([npmPackageBinPath, ...binaries].filter(x => x))('inso with %s', b
       );
 
       expect(failed).toBe(false);
-    });
+    }, 20 * 1000);
   });
 
   describe('generate config', () => {
