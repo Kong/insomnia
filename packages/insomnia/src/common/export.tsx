@@ -139,7 +139,7 @@ export async function exportWorkspacesData(
 ) {
   const promises = workspaces.map(getDocWithDescendants(includePrivateDocs));
   const docs = (await Promise.all(promises)).flat();
-  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
+  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc));
   return exportRequestsData(requests, includePrivateDocs, format);
 }
 
