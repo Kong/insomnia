@@ -34,7 +34,7 @@ export const isCaCertificate = (model: Pick<BaseModel, 'type'>): model is CaCert
   model.type === type
 );
 
-export async function migrate(doc: CaCertificate) {
+export function migrate(doc: CaCertificate) {
   return doc;
 }
 

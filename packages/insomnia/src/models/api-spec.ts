@@ -32,7 +32,7 @@ export function init(): BaseApiSpec {
   };
 }
 
-export async function migrate(doc: ApiSpec) {
+export function migrate(doc: ApiSpec) {
   return doc;
 }
 

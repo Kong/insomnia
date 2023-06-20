@@ -50,11 +50,12 @@ export const init = (): BaseWorkspace => ({
   scope: WorkspaceScopeKeys.collection,
 });
 
-export async function migrate(doc: Workspace) {
+export function migrate(doc: Workspace) {
   try {
-    doc = await _migrateExtractClientCertificates(doc);
-    doc = await _migrateEnsureName(doc);
-    await models.apiSpec.getOrCreateForParentId(doc._id, {
+    doc = _migrateExtractClientCertificates(doc);
+    doc = _migrateEnsureName(doc);
+    // TODO: investigate this: Here we add a api spec to every collection on migrate, why?
+    models.apiSpec.getOrCreateForParentId(doc._id, {
       fileName: doc.name,
     });
     doc = _migrateScope(doc);
@@ -96,7 +97,7 @@ export function remove(workspace: Workspace) {
   return db.remove(workspace);
 }
 
-async function _migrateExtractClientCertificates(workspace: Workspace) {
+function _migrateExtractClientCertificates(workspace: Workspace) {
   const certificates = workspace.certificates || null;
 
   if (!Array.isArray(certificates)) {
@@ -105,7 +106,7 @@ async function _migrateExtractClientCertificates(workspace: Workspace) {
   }
 
   for (const cert of certificates) {
-    await models.clientCertificate.create({
+    models.clientCertificate.create({
       parentId: workspace._id,
       host: cert.host || '',
       passphrase: cert.passphrase || null,
@@ -119,7 +120,6 @@ async function _migrateExtractClientCertificates(workspace: Workspace) {
   delete workspace.certificates;
   // This will remove the now-missing `certificates` property
   // NOTE: Using db.update so we don't change things like modified time
-  await db.update(workspace);
   return workspace;
 }
 
@@ -128,7 +128,7 @@ async function _migrateExtractClientCertificates(workspace: Workspace) {
  * this happens (and it causes problems) so this migration will ensure that it is
  * corrected.
  */
-async function _migrateEnsureName(workspace: Workspace) {
+function _migrateEnsureName(workspace: Workspace) {
   if (typeof workspace.name !== 'string') {
     workspace.name = 'My Workspace';
   }
@@ -167,7 +167,6 @@ function _migrateIntoDefaultProject(workspace: Workspace) {
   if (!workspace.parentId) {
     console.log(`No workspace parentId found for ${workspace._id} setting default ${DEFAULT_PROJECT_ID}`);
     workspace.parentId = DEFAULT_PROJECT_ID;
-    models.workspace.update(workspace, { parentId: DEFAULT_PROJECT_ID });
   }
 
   return workspace;

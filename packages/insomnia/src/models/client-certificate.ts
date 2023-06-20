@@ -42,7 +42,7 @@ export const isClientCertificate = (model: Pick<BaseModel, 'type'>): model is Cl
   model.type === type
 );
 
-export async function migrate(doc: ClientCertificate) {
+export function migrate(doc: ClientCertificate) {
   return doc;
 }
 
