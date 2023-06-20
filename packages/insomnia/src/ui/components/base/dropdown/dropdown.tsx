@@ -2,7 +2,7 @@ import { PressResponder } from '@react-aria/interactions';
 import type { AriaMenuProps, MenuTriggerProps } from '@react-types/menu';
 import type { Placement } from '@react-types/overlays';
 import classnames from 'classnames';
-import React, { CSSProperties, forwardRef, ReactNode, useImperativeHandle, useRef } from 'react';
+import React, { CSSProperties, forwardRef, ReactNode, useRef } from 'react';
 import { mergeProps, useMenuTrigger } from 'react-aria';
 import { MenuTriggerState, useMenuTriggerState } from 'react-stately';
 import styled from 'styled-components';
@@ -44,22 +44,13 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
     dataTestId = 'DropdownButton',
     isDisabled = false,
     onOpen,
+    onClose,
   } = props;
 
   const state: MenuTriggerState = useMenuTriggerState({
     ...props,
-    onOpenChange: isOpen => isOpen && onOpen?.(),
+    onOpenChange: isOpen => isOpen ? onOpen?.() : onClose?.(),
   });
-
-  useImperativeHandle(
-    ref,
-    () => ({
-      show: state.open,
-      hide: state.close,
-      toggle: state.toggle,
-    }),
-    [state.close, state.open, state.toggle]
-  );
 
   const triggerRef = useRef<HTMLButtonElement>(ref);
 
