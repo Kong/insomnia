@@ -392,7 +392,7 @@ export const exportAllToFile = (activeProjectName: string, workspacesForActivePr
       }
 
       const fileName = await showSaveExportedFileDialog({
-        exportedFileNamePrefix: 'Insomnia-All',
+        exportedFileNamePrefix: activeProjectName,
         selectedFormat,
       });
 
