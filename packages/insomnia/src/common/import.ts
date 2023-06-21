@@ -66,10 +66,10 @@ export async function fetchImportContentFromURI({ uri }: { uri: string }) {
 
 export interface ScanResult {
   requests?: (Request | WebSocketRequest | GrpcRequest)[];
-  workspace?: Workspace;
+  workspaces?: Workspace[];
   environments?: BaseEnvironment[];
-  apiSpec?: ApiSpec;
-  cookieJar?: CookieJar;
+  apiSpecs?: ApiSpec[];
+  cookieJars?: CookieJar[];
   unitTests?: UnitTest[];
   unitTestSuites?: UnitTestSuite[];
   type?: ConvertResultType;
@@ -126,19 +126,19 @@ export async function scanResources({
   const environments = resources.filter(isEnvironment);
   const unitTests = resources.filter(isUnitTest);
   const unitTestSuites = resources.filter(isUnitTestSuite);
-  const apiSpec = resources.find(isApiSpec);
-  const workspace = resources.find(isWorkspace);
-  const cookieJar = resources.find(isCookieJar);
+  const apiSpecs = resources.filter(isApiSpec);
+  const workspaces = resources.filter(isWorkspace);
+  const cookieJars = resources.filter(isCookieJar);
 
   return {
     type,
     unitTests,
     unitTestSuites,
     requests: [...requests, ...websocketRequests, ...grpcRequests],
-    workspace,
+    workspaces,
     environments,
-    apiSpec,
-    cookieJar,
+    apiSpecs,
+    cookieJars,
     errors: [],
   };
 }

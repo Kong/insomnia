@@ -845,6 +845,17 @@ const ImportResourcesForm = ({
             </tr>
           </thead>
           <tbody>
+            {scanResult.workspaces && scanResult.workspaces?.length > 0 && (
+              <tr
+                key={scanResult.workspaces[0]._id}
+                className="table--no-outline-row"
+              >
+                <td>
+                  {scanResult.workspaces.length}{' '}
+                  {scanResult.workspaces.length === 1 ? 'Workspace' : 'Workspaces'}
+                </td>
+              </tr>
+            )}
             {scanResult.requests && scanResult.requests?.length > 0 && (
               <tr
                 key={scanResult.requests[0]._id}
