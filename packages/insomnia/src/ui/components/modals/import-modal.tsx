@@ -646,30 +646,6 @@ const ImportResourcesForm = ({
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
 }) => {
   const [isPending, startTransition] = useTransition();
-  const projectFetcher = useFetcher<ProjectLoaderData>();
-
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(
-    defaultWorkspaceId || 'create-new-workspace-id'
-  );
-
-  const isCreatingNewWorkspace =
-    selectedWorkspaceId === 'create-new-workspace-id';
-
-  useEffect(() => {
-    if (projectFetcher.state === 'idle' && !projectFetcher.data) {
-      projectFetcher.load(
-        `/organization/${organizationId}/project/${defaultProjectId}`
-      );
-    }
-  }, [defaultProjectId, organizationId, selectedWorkspaceId, projectFetcher]);
-
-  const workspaces: Partial<Workspace>[] = [
-    ...(projectFetcher?.data?.workspaces || []),
-    {
-      _id: 'create-new-workspace-id',
-      name: '+ Create New File',
-    },
-  ];
 
   const id = useId();
 
@@ -693,61 +669,6 @@ const ImportResourcesForm = ({
           action="/import/resources"
           id={id}
         >
-          <div
-            style={{
-              border: '1px solid var(--hl-sm)',
-              borderRadius: 'var(--radius-md)',
-              overflow: 'hidden',
-              display: 'flex',
-            }}
-          >
-            <div
-              style={{
-                margin: 0,
-              }}
-              className="form-control form-control--outlined"
-            >
-              <select
-                style={{
-                  border: 'none',
-                  borderRadius: 0,
-                  margin: 0,
-                }}
-                onChange={e => {
-                  setSelectedWorkspaceId(e.target.value);
-                }}
-                value={selectedWorkspaceId}
-                name="workspaceId"
-              >
-                {workspaces.map(workspace => (
-                  <option key={workspace._id} value={workspace._id}>
-                    {workspace.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {isCreatingNewWorkspace && (
-              <Fragment>
-                <div
-                  style={{
-                    margin: 0,
-                  }}
-                  className="form-control form-control--outlined"
-                >
-                  <input
-                    style={{
-                      border: 'none',
-                      margin: 0,
-                    }}
-                    autoFocus
-                    type="text"
-                    name="name"
-                    defaultValue="Untitled"
-                  />
-                </div>
-              </Fragment>
-            )}
-          </div>
           <input hidden name="organizationId" readOnly value={organizationId} />
         </form>
         <table className="table--fancy table--outlined margin-top-sm">
@@ -825,9 +746,9 @@ const ImportResourcesForm = ({
                 </td>
               </tr>
             )}
-            {isCreatingNewWorkspace && scanResult.apiSpec && (
+            {scanResult.apiSpecs && scanResult.apiSpecs?.length > 0 && (
               <tr
-                key={scanResult.apiSpec._id}
+                key={scanResult.apiSpecs[0]._id}
                 className="table--no-outline-row"
               >
                 <td>
@@ -838,14 +759,13 @@ const ImportResourcesForm = ({
                       gap: 'var(--padding-md)',
                     }}
                   >
-                    OpenAPI Spec:{' '}
-                    {scanResult.apiSpec.name || scanResult.apiSpec.fileName}
+                    {scanResult.apiSpecs.length}{' '}
+                    {scanResult.apiSpecs.length === 1 ? 'OpenAPI Spec' : 'OpenAPI Specs'}
                   </div>
                 </td>
               </tr>
             )}
-            {isCreatingNewWorkspace &&
-              scanResult.environments &&
+            {scanResult.environments &&
               scanResult.environments.length > 0 && (
               <tr className="table--no-outline-row">
                 <td>
@@ -853,7 +773,8 @@ const ImportResourcesForm = ({
                   {scanResult.environments.length === 1
                     ? 'Environment'
                     : 'Environments'}
-                  {scanResult.cookieJar ? ' and a Cookie Jar' : ''}
+                  {scanResult.cookieJars?.length}{' '}
+                  {scanResult.cookieJars?.length === 1 ? 'Cookie Jar' : 'Cookie Jars'}
                 </td>
               </tr>
             )}
