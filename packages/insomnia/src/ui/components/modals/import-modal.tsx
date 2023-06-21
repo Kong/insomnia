@@ -13,14 +13,10 @@ import { useFetcher } from 'react-router-dom';
 import { usePrevious } from 'react-use';
 import styled from 'styled-components';
 
-import { strings } from '../../../common/strings';
-import { isDefaultProject, isLocalProject } from '../../../models/project';
-import { Workspace } from '../../../models/workspace';
 import {
   ImportResourcesActionResult,
   ScanForResourcesActionResult,
 } from '../../routes/import';
-import { ProjectLoaderData } from '../../routes/project';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalHeader } from '../base/modal-header';
 import { Button } from '../themed-button';
@@ -670,6 +666,8 @@ const ImportResourcesForm = ({
           id={id}
         >
           <input hidden name="organizationId" readOnly value={organizationId} />
+          <input hidden name="projectId" readOnly value={defaultProjectId} />
+          <input hidden name="workspaceId" readOnly value={defaultWorkspaceId} />
         </form>
         <table className="table--fancy table--outlined margin-top-sm">
           <thead>
@@ -773,6 +771,7 @@ const ImportResourcesForm = ({
                   {scanResult.environments.length === 1
                     ? 'Environment'
                     : 'Environments'}
+                  {' with '}
                   {scanResult.cookieJars?.length}{' '}
                   {scanResult.cookieJars?.length === 1 ? 'Cookie Jar' : 'Cookie Jars'}
                 </td>
