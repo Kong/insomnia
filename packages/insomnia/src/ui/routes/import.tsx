@@ -71,13 +71,12 @@ export interface ImportResourcesActionResult {
 export const importResourcesAction: ActionFunction = async ({ request }): Promise<ImportResourcesActionResult | Response> => {
   const formData = await request.formData();
 
+  // TODO: get multiple workspaces
   const organizationId = formData.get('organizationId');
   const projectId = formData.get('projectId');
   const workspaceId = formData.get('workspaceId');
+  // Q: why do we need this? for postman imports
   const scope = formData.get('scope') || 'design';
-  const name = formData.get('name');
-
-  const workspaceName = typeof name === 'string' ? name : 'Untitled';
 
   invariant(typeof organizationId === 'string', 'OrganizationId is required.');
   invariant(typeof projectId === 'string', 'ProjectId is required.');
@@ -91,8 +90,7 @@ export const importResourcesAction: ActionFunction = async ({ request }): Promis
 
   const result = await importResources({
     projectId: project._id,
-    workspaceId,
-    workspaceName,
+    workspaceId: workspaceId || 'create-new-workspace-id',
   });
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${result.workspace._id}/${
