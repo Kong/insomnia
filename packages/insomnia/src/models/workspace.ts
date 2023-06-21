@@ -144,21 +144,13 @@ type MigrationWorkspace = Merge<Workspace, { scope: OldScopeTypes | Workspace['s
  * Ensure workspace scope is set to a valid entry
  */
 function _migrateScope(workspace: MigrationWorkspace) {
-  switch (workspace.scope) {
-    case WorkspaceScopeKeys.collection:
-    case WorkspaceScopeKeys.design:
-      break;
-
-    case 'designer':
-    case 'spec':
-      workspace.scope = WorkspaceScopeKeys.design;
-      break;
-
-    case 'debug':
-    case null:
-    default:
-      workspace.scope = WorkspaceScopeKeys.collection;
-      break;
+  if (workspace.scope === WorkspaceScopeKeys.design || workspace.scope === WorkspaceScopeKeys.collection) {
+    return workspace as Workspace;
+  }
+  if (workspace.scope === 'designer' || workspace.scope === 'spec') {
+    workspace.scope = WorkspaceScopeKeys.design;
+  } else {
+    workspace.scope = WorkspaceScopeKeys.collection;
   }
   return workspace as Workspace;
 }
