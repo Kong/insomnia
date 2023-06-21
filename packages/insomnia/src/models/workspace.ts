@@ -54,10 +54,6 @@ export function migrate(doc: Workspace) {
   try {
     doc = _migrateExtractClientCertificates(doc);
     doc = _migrateEnsureName(doc);
-    // TODO: investigate this: Here we add a api spec to every collection on migrate, why?
-    models.apiSpec.getOrCreateForParentId(doc._id, {
-      fileName: doc.name,
-    });
     doc = _migrateScope(doc);
     doc = _migrateIntoDefaultProject(doc);
     return doc;

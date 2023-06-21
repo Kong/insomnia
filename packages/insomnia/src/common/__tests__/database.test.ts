@@ -270,8 +270,6 @@ describe('_repairDatabase()', () => {
       _id: 'w1',
       parentId: project._id,
     });
-    const spec = await models.apiSpec.getByParentId(workspace._id);
-    expect((await db.withDescendants(workspace)).length).toBe(2);
     // Create one set of sub environments
     await models.environment.create({
       _id: 'b1',
@@ -318,8 +316,8 @@ describe('_repairDatabase()', () => {
         foo: '4',
       },
     });
-    // Make sure we have everything
-    expect((await db.withDescendants(workspace)).length).toBe(8);
+    // Make sure we have 6 environments and one workspace
+    expect((await db.withDescendants(workspace)).length).toBe(7);
     const descendants = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
       parentId: d.parentId,
@@ -348,10 +346,6 @@ describe('_repairDatabase()', () => {
         },
         parentId: 'w1',
       },
-      expect.objectContaining({
-        _id: spec?._id,
-        parentId: 'w1',
-      }),
       {
         _id: 'b1_sub1',
         data: {
@@ -407,10 +401,7 @@ describe('_repairDatabase()', () => {
         },
         parentId: 'w1',
       },
-      expect.objectContaining({
-        _id: spec?._id,
-        parentId: 'w1',
-      }), // Extra base environments should have been deleted
+      // Extra base environments should have been deleted
       // {_id: 'b2', data: {foo: 'bar'}, parentId: 'w1'},
       // Sub environments should have been moved to new "master" base environment
       {
@@ -451,8 +442,7 @@ describe('_repairDatabase()', () => {
       _id: 'w1',
       parentId: project._id,
     });
-    const spec = await models.apiSpec.getByParentId(workspace._id);
-    expect((await db.withDescendants(workspace)).length).toBe(2);
+    expect((await db.withDescendants(workspace)).length).toBe(1);
     // Create one set of sub environments
     await models.cookieJar.create({
       _id: 'j1',
@@ -490,8 +480,8 @@ describe('_repairDatabase()', () => {
         },
       ],
     });
-    // Make sure we have everything
-    expect((await db.withDescendants(workspace)).length).toBe(4);
+    // Make sure we have 2 cookie jars and one workspace
+    expect((await db.withDescendants(workspace)).length).toBe(3);
     const descendants = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
       // @ts-expect-error -- TSCONVERSION
@@ -536,10 +526,6 @@ describe('_repairDatabase()', () => {
           },
         ],
       },
-      expect.objectContaining({
-        _id: spec?._id,
-        parentId: 'w1',
-      }),
     ]);
     // Run the fix algorithm
     await _repairDatabase();
@@ -577,10 +563,6 @@ describe('_repairDatabase()', () => {
           },
         ],
       },
-      expect.objectContaining({
-        _id: spec?._id,
-        parentId: 'w1',
-      }),
     ]);
   });
 
