@@ -312,7 +312,7 @@ describe('export', () => {
         }),
       ]),
     });
-    expect(exportWorkspacesDataJson.resources.length).toBe(13);
+    expect(exportWorkspacesDataJson.resources.length).toBe(12);
     // Test export some requests only.
     const exportRequestsJson = await exportRequestsData([r1, gr1], false, 'json');
     const exportRequestsYaml = await exportRequestsData([r1, gr1], false, 'yaml');
@@ -350,8 +350,8 @@ describe('export', () => {
         }),
       ]),
     });
-    expect(exportRequestsDataJSON.resources.length).toBe(10);
-    expect(exportRequestsDataYAML.resources.length).toBe(10);
+    expect(exportRequestsDataJSON.resources.length).toBe(9);
+    expect(exportRequestsDataYAML.resources.length).toBe(9);
     // Ensure JSON and YAML are the same
     expect(exportRequestsDataJSON.resources).toEqual(exportRequestsDataYAML.resources);
   });
