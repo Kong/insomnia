@@ -671,8 +671,6 @@ const ImportResourcesForm = ({
     },
   ];
 
-  const projects = projectFetcher?.data?.projects || [];
-
   const id = useId();
 
   return (
@@ -697,54 +695,12 @@ const ImportResourcesForm = ({
         >
           <div
             style={{
-              fontSize: 'var(--font-size-sm)',
-              fontWeight: '500',
-              paddingBottom: 'var(--padding-sm)',
-            }}
-          >
-            Import to:
-          </div>
-          <div
-            style={{
               border: '1px solid var(--hl-sm)',
               borderRadius: 'var(--radius-md)',
               overflow: 'hidden',
               display: 'flex',
             }}
           >
-            <div
-              style={{
-                margin: 0,
-              }}
-              className="form-control form-control--outlined"
-            >
-              <select
-                style={{
-                  border: 'none',
-                  borderRadius: 0,
-                  margin: 0,
-                }}
-                onChange={e =>
-                  projectFetcher.load(
-                    `/organization/${organizationId}/project/${e.currentTarget.value}`
-                  )
-                }
-                defaultValue={defaultProjectId}
-                name="projectId"
-              >
-                {projects.map(project => (
-                  <option key={project._id} value={project._id}>
-                    {project.name} (
-                    {isDefaultProject(project)
-                      ? strings.defaultProject.singular
-                      : isLocalProject(project)
-                        ? strings.localProject.singular
-                        : strings.remoteProject.singular}
-                    )
-                  </option>
-                ))}
-              </select>
-            </div>
             <div
               style={{
                 margin: 0,
