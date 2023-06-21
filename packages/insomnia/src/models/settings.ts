@@ -78,8 +78,13 @@ export function init(): BaseSettings {
 }
 
 export function migrate(doc: Settings) {
-  doc = migrateEnsureHotKeys(doc);
-  return doc;
+  try {
+    doc = migrateEnsureHotKeys(doc);
+    return doc;
+  } catch (e) {
+    console.log('[db] Error during settings migration', e);
+    throw e;
+  }
 }
 
 export async function all() {

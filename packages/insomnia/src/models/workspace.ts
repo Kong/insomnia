@@ -51,14 +51,19 @@ export const init = (): BaseWorkspace => ({
 });
 
 export async function migrate(doc: Workspace) {
-  doc = await _migrateExtractClientCertificates(doc);
-  doc = await _migrateEnsureName(doc);
-  await models.apiSpec.getOrCreateForParentId(doc._id, {
-    fileName: doc.name,
-  });
-  doc = _migrateScope(doc);
-  doc = _migrateIntoDefaultProject(doc);
-  return doc;
+  try {
+    doc = await _migrateExtractClientCertificates(doc);
+    doc = await _migrateEnsureName(doc);
+    await models.apiSpec.getOrCreateForParentId(doc._id, {
+      fileName: doc.name,
+    });
+    doc = _migrateScope(doc);
+    doc = _migrateIntoDefaultProject(doc);
+    return doc;
+  } catch (e) {
+    console.log('[db] Error during workspace migration', e);
+    throw e;
+  }
 }
 
 export function getById(id?: string) {

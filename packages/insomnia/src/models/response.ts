@@ -84,8 +84,13 @@ export function init(): BaseResponse {
 }
 
 export async function migrate(doc: Response) {
-  doc = await migrateBodyCompression(doc);
-  return doc;
+  try {
+    doc = await migrateBodyCompression(doc);
+    return doc;
+  } catch (e) {
+    console.log('[db] Error during response migration', e);
+    throw e;
+  }
 }
 
 export function hookDatabaseInit(consoleLog: typeof console.log = console.log) {
