@@ -224,10 +224,15 @@ export function newAuth(type: string, oldAuth: RequestAuthentication = {}): Requ
 }
 
 export function migrate(doc: Request): Request {
-  doc = migrateBody(doc);
-  doc = migrateWeirdUrls(doc);
-  doc = migrateAuthType(doc);
-  return doc;
+  try {
+    doc = migrateBody(doc);
+    doc = migrateWeirdUrls(doc);
+    doc = migrateAuthType(doc);
+    return doc;
+  } catch (e) {
+    console.log('[db] Error during request migration', e);
+    throw e;
+  }
 }
 
 export function create(patch: Partial<Request> = {}) {
