@@ -216,8 +216,6 @@ describe('export', () => {
     const w = await models.workspace.create({
       name: 'Workspace',
     });
-    const spec = await models.apiSpec.getByParentId(w._id); // Created by workspace migration
-
     const jar = await models.cookieJar.getOrCreateForParentId(w._id);
     const r1 = await models.request.create({
       name: 'Request 1',
@@ -278,9 +276,6 @@ describe('export', () => {
       resources: expect.arrayContaining([
         expect.objectContaining({
           _id: w._id,
-        }),
-        expect.objectContaining({
-          _id: spec?._id,
         }),
         expect.objectContaining({
           _id: eBase._id,
