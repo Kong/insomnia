@@ -393,6 +393,7 @@ const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => {
 
 interface ImportModalProps extends ModalProps {
   organizationId: string;
+  projectName: string;
   defaultProjectId: string;
   defaultWorkspaceId?: string;
   from:
@@ -409,6 +410,7 @@ interface ImportModalProps extends ModalProps {
 }
 
 export const ImportModal: FC<ImportModalProps> = ({
+  projectName,
   defaultProjectId,
   defaultWorkspaceId,
   organizationId,
@@ -438,7 +440,7 @@ export const ImportModal: FC<ImportModalProps> = ({
   return (
     <OverlayContainer>
       <Modal {...modalProps} ref={modalRef}>
-        <ModalHeader>Import to Insomnia</ModalHeader>
+        <ModalHeader>Import to {projectName}</ModalHeader>
         {scanResourcesFetcher.data && scanResourcesFetcher.data.errors.length === 0 ? (
           <ImportResourcesForm
             organizationId={organizationId}
