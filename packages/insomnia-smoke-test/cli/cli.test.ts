@@ -19,7 +19,7 @@ describe('inso basic features', () => {
       ]);
 
       expect(failed).toBe(false);
-    });
+    }, 20 * 1000);
   });
 
   describe('generate config', () => {

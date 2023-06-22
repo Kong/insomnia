@@ -125,7 +125,6 @@ export interface Settings {
   fontSize: number;
   fontVariantLigatures: boolean;
   forceVerticalLayout: boolean;
-  hasPromptedAnalytics: boolean;
   hotKeyRegistry: HotKeyRegistry;
   httpProxy: string;
   httpsProxy: string;

@@ -5,7 +5,6 @@ import { ErrorBoundary } from '../components/error-boundary';
 import { registerModal } from '../components/modals';
 import { AddKeyCombinationModal } from '../components/modals/add-key-combination-modal';
 import { AlertModal } from '../components/modals/alert-modal';
-import { AnalyticsModal } from '../components/modals/analytics-modal';
 import { AskModal } from '../components/modals/ask-modal';
 import { CodePromptModal } from '../components/modals/code-prompt-modal';
 import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
@@ -53,7 +52,6 @@ const Modals: FC = () => {
   return (
     <div key="modals" className="modals">
       <ErrorBoundary showAlert>
-        <AnalyticsModal />
         <AlertModal ref={instance => registerModal(instance, 'AlertModal')} />
         <ErrorModal ref={instance => registerModal(instance, 'ErrorModal')} />
         <PromptModal

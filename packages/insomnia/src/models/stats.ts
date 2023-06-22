@@ -4,6 +4,7 @@ import type { BaseModel } from './index';
 import { Project } from './project';
 import { isRequest } from './request';
 import type { RequestGroup } from './request-group';
+import { isWebSocketRequest } from './websocket-request';
 import type { Workspace } from './workspace';
 
 export const name = 'Stats';
@@ -112,7 +113,7 @@ export async function incrementExecutedRequests() {
 
 export async function incrementCreatedRequestsForDescendents(doc: Workspace | RequestGroup) {
   const docs = await db.withDescendants(doc);
-  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
+  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc));
   await incrementRequestStats({
     createdRequests: requests.length,
   });
@@ -120,7 +121,7 @@ export async function incrementCreatedRequestsForDescendents(doc: Workspace | Re
 
 export async function incrementDeletedRequestsForDescendents(doc: Workspace | RequestGroup | Project) {
   const docs = await db.withDescendants(doc);
-  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
+  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc) || isWebSocketRequest(doc));
   await incrementRequestStats({
     deletedRequests: requests.length,
   });

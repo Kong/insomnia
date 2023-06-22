@@ -11,6 +11,7 @@ import {
 import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../utils/url/querystring';
+import { exportAllWorkspaces } from './export';
 const { autoUpdater, BrowserWindow, ipcMain } = electron;
 
 async function getUpdateUrl(force: boolean): Promise<string | null> {
@@ -97,8 +98,10 @@ export async function init() {
 
     _sendUpdateStatus('Downloading...');
   });
-  autoUpdater.on('update-downloaded', (_error, _releaseNotes, releaseName) => {
+  autoUpdater.on('update-downloaded', async (_error, _releaseNotes, releaseName) => {
     console.log(`[updater] Downloaded ${releaseName}`);
+
+    await exportAllWorkspaces();
 
     _sendUpdateComplete(true, 'Updated (Restart Required)');
 

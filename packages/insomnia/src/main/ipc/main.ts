@@ -9,6 +9,7 @@ import fs from 'fs';
 
 import { axiosRequest } from '../../network/axios-request';
 import { authorizeUserInWindow } from '../../network/o-auth-2/misc';
+import { exportAllWorkspaces } from '../export';
 import installPlugin from '../install-plugin';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
@@ -16,6 +17,7 @@ import { gRPCBridgeAPI } from './grpc';
 
 export interface MainBridgeAPI {
   restart: () => void;
+  exportAllWorkspaces: () => Promise<void>;
   spectralRun: (options: { contents: string; rulesetPath: string }) => Promise<ISpectralDiagnostic[]>;
   authorizeUserInWindow: typeof authorizeUserInWindow;
   setMenuBarVisibility: (visible: boolean) => void;
@@ -28,6 +30,9 @@ export interface MainBridgeAPI {
   grpc: gRPCBridgeAPI;
 }
 export function registerMainHandlers() {
+  ipcMain.handle('exportAllWorkspaces', async () => {
+    return exportAllWorkspaces();
+  });
   ipcMain.handle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {
     const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
     return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
