@@ -14,7 +14,7 @@ import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../..
 import * as pluginContexts from '../../../plugins/context';
 import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { InsomniaAILogo } from '../insomnia-ai-icon';
+import { InsomniaAI } from '../insomnia-ai-icon';
 import { showError, showModal } from '../modals';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';

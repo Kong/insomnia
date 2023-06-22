@@ -4,7 +4,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 import { isLoggedIn } from '../../../account/session';
 import { SvgIcnWarning } from '../assets/svgr/IcnWarning';
 import { Link } from '../base/link';
-import { InsomniaAILogo } from '../insomnia-ai-icon';
+import { InsomniaAI } from '../insomnia-ai-icon';
 import { hideAllModals, showModal } from '../modals';
 import { LoginModal } from '../modals/login-modal';
 
@@ -49,7 +49,7 @@ export const AI = () => {
           alignItems: 'center',
         }}
       >
-        <h1 className="no-margin-top">Try Insomnia AI <InsomniaAILogo /></h1>
+        <h1 className="no-margin-top">Try Insomnia AI <InsomniaAI /></h1>
         <p
           style={{
             textAlign: 'center',
@@ -99,7 +99,7 @@ export const AI = () => {
             gap: 'var(--padding-xs)',
           }}
         >Insomnia AI is enabled
-          <InsomniaAILogo /> </h1>
+          <InsomniaAI /> </h1>
         <p
           style={{
             textAlign: 'center',

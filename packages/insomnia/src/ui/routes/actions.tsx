@@ -4,6 +4,7 @@ import path from 'path';
 import { ActionFunction, redirect } from 'react-router-dom';
 
 import * as session from '../../account/session';
+import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
 import { importResources, scanResources } from '../../common/import';
@@ -11,7 +12,7 @@ import * as models from '../../models';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
-import { isRequest } from '../../models/request';
+import { isRequest, Request } from '../../models/request';
 import { UnitTest } from '../../models/unit-test';
 import { isCollection } from '../../models/workspace';
 import { axiosRequest } from '../../network/axios-request';
@@ -564,6 +565,22 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
 
   const requests = importedResources.resources.filter(isRequest);
 
+  const spec = parseApiSpec(apiSpec.contents);
+
+  const getMethodInfo = (request: Request) => {
+    const specPaths = Object.keys(spec.contents?.paths) || [];
+
+    const pathMatches = specPaths.filter(path => request.url.endsWith(path));
+
+    const closestPath = pathMatches.sort((a, b) => {
+      return a.length - b.length;
+    })[0];
+
+    const methodInfo = spec.contents?.paths[closestPath][request.method.toLowerCase()];
+
+    return methodInfo;
+  };
+
   const tests: Partial<UnitTest>[] = requests.map(request => {
     return {
       name: `Test: ${request.name}`,
@@ -575,6 +592,13 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
 
   for (const test of tests) {
     try {
+      const request = requests.find(r => r._id === test.requestId);
+      if (!request) {
+        throw new Error('Request not found');
+      }
+
+      const methodInfo = resolveComponentSchemaRefs(spec, getMethodInfo(request));
+
       const response = await axiosRequest({
         method: 'POST',
         url: 'http://localhost:3000/v1/generate-test',
@@ -585,6 +609,7 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
         data: {
           teamId: organizationId,
           request: requests.find(r => r._id === test.requestId),
+          methodInfo,
         },
       });
 

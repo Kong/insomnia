@@ -5,7 +5,7 @@ import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
 
 import type { ApiSpec } from '../../../models/api-spec';
-import { InsomniaAILogo } from '../insomnia-ai-icon';
+import { InsomniaAI } from '../insomnia-ai-icon';
 import { Button } from '../themed-button';
 import { Sidebar } from './sidebar';
 
@@ -74,7 +74,7 @@ export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) =>
             });
           }}
         >
-          <InsomniaAILogo /> <span
+          <InsomniaAI /> <span
             style={{
               marginLeft: 'var(--padding-xs)',
             }}
