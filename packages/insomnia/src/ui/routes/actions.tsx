@@ -11,8 +11,10 @@ import * as models from '../../models';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
+import { isRequest } from '../../models/request';
 import { UnitTest } from '../../models/unit-test';
 import { isCollection } from '../../models/workspace';
+import { axiosRequest } from '../../network/axios-request';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';
@@ -516,4 +518,178 @@ export const generateCollectionFromApiSpecAction: ActionFunction = async ({
   });
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_DEBUG}`);
+};
+
+export const generateCollectionAndTestsAction: ActionFunction = async ({ params }) => {
+  const { organizationId, projectId, workspaceId } = params;
+
+  invariant(typeof organizationId === 'string', 'Organization ID is required');
+  invariant(typeof projectId === 'string', 'Project ID is required');
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+
+  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+
+  invariant(apiSpec, 'API Spec not found');
+
+  const workspace = await models.workspace.getById(workspaceId);
+
+  invariant(workspace, 'Workspace not found');
+
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+
+  const isLintError = (result: IRuleResult) => result.severity === 0;
+  const rulesetPath = path.join(
+    process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+    `version-control/git/${workspaceMeta?.gitRepositoryId}/other/.spectral.yaml`,
+  );
+
+  const results = (await window.main.spectralRun({ contents: apiSpec.contents, rulesetPath })).filter(isLintError);
+  if (apiSpec.contents && results && results.length) {
+    throw new Error('Error Generating Configuration');
+  }
+
+  await scanResources({
+    content: apiSpec.contents,
+  });
+
+  const importedResources = await importResources({
+    projectId,
+    workspaceId,
+  });
+
+  const aiTestSuite = await models.unitTestSuite.create({
+    name: 'AI Generated Tests',
+    parentId: workspaceId,
+  });
+
+  const requests = importedResources.resources.filter(isRequest);
+
+  const tests: Partial<UnitTest>[] = requests.map(request => {
+    return {
+      name: `Test: ${request.name}`,
+      code: '',
+      parentId: aiTestSuite._id,
+      requestId: request._id,
+    };
+  });
+
+  for (const test of tests) {
+    try {
+      const response = await axiosRequest({
+        method: 'POST',
+        url: 'http://localhost:3000/v1/generate-test',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Id': session.getCurrentSessionId(),
+        },
+        data: {
+          teamId: organizationId,
+          request: requests.find(r => r._id === test.requestId),
+        },
+      });
+
+      const aiTest = response.data.test;
+
+      await models.unitTest.create({ ...aiTest, parentId: aiTestSuite._id, requestId: test.requestId });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  return null;
+};
+
+export const generateTestsAction: ActionFunction = async ({ params }) => {
+  const { organizationId, projectId, workspaceId } = params;
+
+  invariant(typeof organizationId === 'string', 'Organization ID is required');
+  invariant(typeof projectId === 'string', 'Project ID is required');
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+
+  const apiSpec = await models.apiSpec.getByParentId(workspaceId);
+
+  invariant(apiSpec, 'API Spec not found');
+
+  const workspace = await models.workspace.getById(workspaceId);
+
+  invariant(workspace, 'Workspace not found');
+
+  const workspaceDescendants = await database.withDescendants(workspace);
+
+  const requests = workspaceDescendants.filter(isRequest);
+
+  const aiTestSuite = await models.unitTestSuite.create({
+    name: 'AI Generated Tests',
+    parentId: workspaceId,
+  });
+
+  // const requests = importedResources.resources.filter(isRequest);
+
+  const tests: Partial<UnitTest>[] = requests.map(request => {
+    return {
+      name: `Test: ${request.name}`,
+      code: '',
+      parentId: aiTestSuite._id,
+      requestId: request._id,
+    };
+  });
+
+  for (const test of tests) {
+    try {
+      const response = await axiosRequest({
+        method: 'POST',
+        url: 'http://localhost:3000/v1/generate-test',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Session-Id': session.getCurrentSessionId(),
+        },
+        data: {
+          teamId: organizationId,
+          request: requests.find(r => r._id === test.requestId),
+        },
+      });
+
+      const aiTest = response.data.test;
+
+      await models.unitTest.create({ ...aiTest, parentId: aiTestSuite._id, requestId: test.requestId });
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  return null;
+};
+
+export const accessAIApiAction: ActionFunction = async ({ params }) => {
+  console.log('AI');
+  const { organizationId, projectId, workspaceId } = params;
+
+  invariant(typeof organizationId === 'string', 'Organization ID is required');
+  invariant(typeof projectId === 'string', 'Project ID is required');
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+
+  try {
+    const response = await axiosRequest({
+      method: 'POST',
+      url: 'http://localhost:3000/v1/access',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Session-Id': session.getCurrentSessionId(),
+      },
+      data: {
+        teamId: organizationId,
+      },
+    });
+
+    const enabled = response.data.enabled;
+
+    console.log('Response:', enabled);
+
+    return {
+      enabled,
+    };
+  } catch (err) {
+    console.log(err);
+    return { enabled: false };
+  }
 };

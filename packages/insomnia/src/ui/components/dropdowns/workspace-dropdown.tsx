@@ -1,6 +1,8 @@
-import React, { FC, useCallback, useRef, useState } from 'react';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams } from 'react-router-dom';
 
+import { isLoggedIn } from '../../../account/session';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
@@ -12,6 +14,7 @@ import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../..
 import * as pluginContexts from '../../../plugins/context';
 import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { InsomniaAILogo } from '../insomnia-ai-icon';
 import { showError, showModal } from '../modals';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
@@ -29,6 +32,30 @@ export const WorkspaceDropdown: FC = () => {
   const [configGeneratorPlugins, setConfigGeneratorPlugins] = useState<ConfigGenerator[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);
+  const {
+    organizationId,
+    projectId,
+    workspaceId,
+  } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+  };
+  const aiAccessFetcher = useFetcher();
+  const aiGenerateFetcher = useFetcher();
+  const loggedIn = isLoggedIn();
+
+  useEffect(() => {
+    if (aiAccessFetcher.state === 'idle' && !aiAccessFetcher.data && loggedIn) {
+      aiAccessFetcher.submit({}, {
+        method: 'post',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/access`,
+      });
+    }
+  }, [aiAccessFetcher, organizationId, projectId, workspaceId, loggedIn]);
+
+  const isAIEnabled = aiAccessFetcher.data?.enabled ?? false;
+  // const isLoading = aiAccessFetcher.state !== 'idle';
 
   const handlePluginClick = useCallback(async ({ action, plugin, label }: WorkspaceAction, workspace: Workspace) => {
     setLoadingActions({ ...loadingActions, [label]: true });
@@ -92,10 +119,13 @@ export const WorkspaceDropdown: FC = () => {
     return null;
   }
 
+  console.log(aiGenerateFetcher.state);
+
   return (
     <Dropdown
       aria-label="Workspace Dropdown"
       ref={dropdownRef}
+      closeOnSelect={false}
       className="wide workspace-dropdown"
       onOpen={handleDropdownOpen}
       triggerButton={
@@ -163,6 +193,33 @@ export const WorkspaceDropdown: FC = () => {
               icon="code"
               label={p.label}
               onClick={() => handleGenerateConfig(p.label)}
+            />
+          </DropdownItem>
+        }
+      </DropdownSection>
+
+      <DropdownSection
+        aria-label='AI'
+        title="Insomnia AI"
+        items={loggedIn && isAIEnabled ? [{
+          label: 'Auto-generate Tests For Collection',
+          key: 'insomnia-ai/generate-test-suite',
+          action: () => {
+            aiGenerateFetcher.submit({}, {
+              method: 'post',
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/generate-tests`,
+            });
+          },
+        }] : []}
+      >
+        {item =>
+          <DropdownItem
+            key={`generateConfig-${item.label}`}
+            aria-label={item.label}
+          >
+            <ItemContent
+              label={item.label}
+              onClick={item.action}
             />
           </DropdownItem>
         }

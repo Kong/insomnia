@@ -7,6 +7,7 @@ import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { Account } from '../settings/account';
+import { AI } from '../settings/ai';
 import { General } from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import { Plugins } from '../settings/plugins';
@@ -23,6 +24,8 @@ export const TAB_INDEX_EXPORT = 'data';
 export const TAB_INDEX_SHORTCUTS = 'keyboard';
 export const TAB_INDEX_THEMES = 'themes';
 export const TAB_INDEX_PLUGINS = 'plugins';
+export const TAB_INDEX_AI = 'ai';
+
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
   const modalRef = useRef<ModalHandle>(null);
@@ -77,6 +80,11 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           <TabItem key="plugins" title="Plugins">
             <PanelContainer className="pad">
               <Plugins />
+            </PanelContainer>
+          </TabItem>
+          <TabItem key="ai" title="AI">
+            <PanelContainer className="pad">
+              <AI />
             </PanelContainer>
           </TabItem>
         </Tabs>

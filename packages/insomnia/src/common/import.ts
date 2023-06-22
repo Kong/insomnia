@@ -225,9 +225,15 @@ export async function importResources({
     }
 
     await db.flushChanges(bufferId);
+    const resourcesWithIds = resources.map(r => ({
+      ...r,
+      _id: ResourceIdMap.get(r._id),
+      parentId: ResourceIdMap.get(r.parentId),
+    }));
 
+    console.log({ resources, resourcesWithIds });
     return {
-      resources,
+      resources: resourcesWithIds,
       workspace: existingWorkspace,
     };
   } else {
@@ -336,8 +342,15 @@ export async function importResources({
 
     await db.flushChanges(bufferId);
 
+    const resourcesWithIds = resources.map(r => ({
+      ...r,
+      _id: ResourceIdMap.get(r._id),
+      parentId: ResourceIdMap.get(r.parentId),
+    }));
+
+    console.log({ resources, resourcesWithIds });
     return {
-      resources,
+      resources: resourcesWithIds,
       workspace: newWorkspace,
     };
   }
