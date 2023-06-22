@@ -183,14 +183,7 @@ export const selectActiveApiSpec = createSelector(
       // There should never be an active api spec without an active workspace
       return undefined;
     }
-    const activeSpec = apiSpecs.find(apiSpec => apiSpec.parentId === activeWorkspace._id);
-
-    if (!activeSpec) {
-      // This case should never be reached; an api spec should always exist for a given workspace.
-      throw new Error(`an api spec not found for the workspace ${activeWorkspace._id} (${activeWorkspace.name})`);
-    }
-
-    return activeSpec;
+    return apiSpecs.find(apiSpec => apiSpec.parentId === activeWorkspace._id);
   }
 );
 

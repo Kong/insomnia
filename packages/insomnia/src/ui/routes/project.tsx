@@ -664,22 +664,21 @@ export const loader: LoaderFunction = async ({
 
   const getWorkspaceMetaData = async (workspace: Workspace) => {
     const apiSpec = await models.apiSpec.getByParentId(workspace._id);
-    invariant(apiSpec, 'ApiSpec should exist for workspace');
 
     let spec: ParsedApiSpec['contents'] = null;
     let specFormat: ParsedApiSpec['format'] = null;
     let specFormatVersion: ParsedApiSpec['formatVersion'] = null;
-
-    try {
-      const result = parseApiSpec(apiSpec.contents);
-      spec = result.contents;
-      specFormat = result.format;
-      specFormatVersion = result.formatVersion;
-    } catch (err) {
+    if (apiSpec) {
+      try {
+        const result = parseApiSpec(apiSpec.contents);
+        spec = result.contents;
+        specFormat = result.format;
+        specFormatVersion = result.formatVersion;
+      } catch (err) {
       // Assume there is no spec
       // TODO: Check for parse errors if it's an invalid spec
+      }
     }
-
     const workspaceMeta = await models.workspaceMeta.getByParentId(
       workspace._id
     );
@@ -691,14 +690,14 @@ export const loader: LoaderFunction = async ({
     const workspaceModified = workspaceMeta?.modified || workspace.modified;
 
     const modifiedLocally = isDesign(workspace)
-      ? apiSpec.modified
+      ? (apiSpec?.modified || 0)
       : workspaceModified;
 
     // Span spec, workspace and sync related timestamps for card last modified label and sort order
     const lastModifiedFrom = [
       workspace?.modified,
       workspaceMeta?.modified,
-      apiSpec.modified,
+      modifiedLocally,
       workspaceMeta?.cachedGitLastCommitTime,
     ];
 
@@ -709,9 +708,9 @@ export const loader: LoaderFunction = async ({
     const hasUnsavedChanges = Boolean(
       isDesign(workspace) &&
         workspaceMeta?.cachedGitLastCommitTime &&
-        apiSpec.modified > workspaceMeta?.cachedGitLastCommitTime
+      modifiedLocally > workspaceMeta?.cachedGitLastCommitTime
     );
-
+    const name = isDesign(workspace) ? (apiSpec?.fileName || '') : workspace.name;
     return {
       _id: workspace._id,
       hasUnsavedChanges,
@@ -722,12 +721,12 @@ export const loader: LoaderFunction = async ({
       lastActiveBranch,
       spec,
       specFormat,
-      name: isDesign(workspace) ? apiSpec.fileName : workspace.name,
+      name,
       apiSpec,
       specFormatVersion,
       workspace: {
         ...workspace,
-        name: isDesign(workspace) ? apiSpec.fileName : workspace.name,
+        name,
       },
     };
   };
@@ -880,8 +879,8 @@ const ProjectRoute: FC = () => {
     showPrompt({
       title: 'Create New Design Document',
       submitName: 'Create',
-      placeholder: 'my-spec.yaml',
-      defaultValue: 'my-spec.yaml',
+      placeholder: 'My Document',
+      defaultValue: 'My Document',
       selectText: true,
       onComplete: async (name: string) => {
         fetcher.submit(
@@ -1030,7 +1029,7 @@ const ProjectRoute: FC = () => {
                   <WorkspaceCard
                     {...workspace}
                     projects={projects}
-                    key={workspace.apiSpec._id}
+                    key={workspace._id}
                     activeProject={activeProject}
                     onSelect={() =>
                       navigate(

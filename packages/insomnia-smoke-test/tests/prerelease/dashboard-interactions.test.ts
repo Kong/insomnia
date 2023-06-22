@@ -99,10 +99,10 @@ test.describe('Dashboard', async () => {
 
       // Return to dashboard
       await page.getByTestId('project').click();
-      await expect(page.locator('.app')).toContainText('my-spec.yaml');
+      await expect(page.locator('.app')).toContainText('My Document');
 
       // Rename document
-      await page.click('text=Documentmy-spec.yamljust now >> button');
+      await page.click('text=DocumentMy Documentjust now >> button');
       await page.getByRole('menuitem', { name: 'Rename' }).click();
       await page.locator('text=Rename DocumentName Rename >> input[type="text"]').fill('test123');
       await page.click('#root button:has-text("Rename")');
