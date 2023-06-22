@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useFetchers, useParams } from 'react-router-dom';
 
 import { isLoggedIn } from '../../../account/session';
 import { database as db } from '../../../common/database';
@@ -44,6 +44,7 @@ export const WorkspaceDropdown: FC = () => {
   const aiAccessFetcher = useFetcher();
   const aiGenerateFetcher = useFetcher();
   const loggedIn = isLoggedIn();
+  const loadingAI = useFetchers().filter(loader => loader.formAction?.includes('/ai/')).some(loader => loader.state !== 'idle');
 
   useEffect(() => {
     if (aiAccessFetcher.state === 'idle' && !aiAccessFetcher.data && loggedIn) {
@@ -218,6 +219,7 @@ export const WorkspaceDropdown: FC = () => {
             aria-label={item.label}
           >
             <ItemContent
+              isDisabled={loadingAI}
               label={item.label}
               onClick={item.action}
             />

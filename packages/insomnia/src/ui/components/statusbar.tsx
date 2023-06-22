@@ -39,7 +39,6 @@ export const StatusBar: FC = () => {
       }}
     >
       <SettingsButton />
-      <AIGenerationStatus />
     </div>
     <KongLink className="made-with-love" href="https://konghq.com/">
       Made with&nbsp; <SvgIcon icon="heart" /> &nbsp;by Kong

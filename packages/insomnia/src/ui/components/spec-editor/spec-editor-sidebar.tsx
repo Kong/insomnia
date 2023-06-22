@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useFetchers, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
@@ -20,6 +20,7 @@ const StyledSpecEditorSidebar = styled.div`
 `;
 
 export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) => {
+
   const {
     organizationId,
     projectId,
@@ -30,6 +31,7 @@ export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) =>
     workspaceId: string;
   };
   const fetcher = useFetcher();
+  const loading = useFetchers().filter(loader => loader.formAction?.includes('/ai/')).some(loader => loader.state !== 'idle');
 
   const onClick = (...itemPath: any[]): void => {
     const scrollPosition = { start: { line: 0, col: 0 }, end: { line: 0, col: 200 } };
@@ -62,11 +64,13 @@ export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) =>
   };
 
   const specJSON = YAML.parse(apiSpec.contents);
+
   return (
     <StyledSpecEditorSidebar>
       <div>
         <Button
           variant="text"
+          disabled={loading}
           onClick={() => {
             fetcher.submit({}, {
               method: 'post',

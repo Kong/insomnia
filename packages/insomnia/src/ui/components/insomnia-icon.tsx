@@ -1,10 +1,21 @@
-import React, { Fragment } from 'react';
-import { useFetchers } from 'react-router-dom';
+import React from 'react';
+import { useFetchers, useRevalidator } from 'react-router-dom';
 
 export const InsomniaAILogo = ({
   ...props
 }: React.SVGProps<SVGSVGElement>) => {
-  const loading = useFetchers().filter(loader => loader.formAction?.includes('/ai/')).some(loader => loader.state === 'submitting');
+  const loading = useFetchers().filter(loader => loader.formAction?.includes('/ai/')).some(loader => loader.state !== 'idle' && loader.formMethod === 'post' && loader.formData);
+
+  const { revalidate } = useRevalidator();
+
+  const prevLoading = React.useRef(loading);
+
+  React.useEffect(() => {
+    if (prevLoading.current !== loading) {
+      revalidate();
+    }
+    prevLoading.current = loading;
+  }, [loading, revalidate]);
 
   return (
     <div
