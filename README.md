@@ -9,8 +9,7 @@ Insomnia is an open-source, cross-platform API client for GraphQL, REST, WebSock
 
 ## Download
 
-Insomnia is available for Mac, Windows, and Linux and can be downloaded
-from the website.
+Insomnia is available for Mac, Windows, and Linux. Users can download Insomnia from the website.
 
 **[https://insomnia.rest/download](https://insomnia.rest/download/)**
 
