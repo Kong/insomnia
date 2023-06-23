@@ -1,6 +1,5 @@
-import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
+import React, { FC, useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useFetcher, useFetchers, useParams } from 'react-router-dom';
 
 import { isLoggedIn } from '../../../account/session';
 import { database as db } from '../../../common/database';
@@ -12,6 +11,7 @@ import { isDesign, Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
+import { useAIContext } from '../../context/app/ai-context';
 import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { InsomniaAI } from '../insomnia-ai-icon';
@@ -32,30 +32,12 @@ export const WorkspaceDropdown: FC = () => {
   const [configGeneratorPlugins, setConfigGeneratorPlugins] = useState<ConfigGenerator[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);
+
   const {
-    organizationId,
-    projectId,
-    workspaceId,
-  } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-  };
-  const aiAccessFetcher = useFetcher();
-  const aiGenerateFetcher = useFetcher();
-  const loggedIn = isLoggedIn();
-  const loadingAI = useFetchers().filter(loader => loader.formAction?.includes('/ai/generate/')).some(loader => loader.state !== 'idle');
-
-  useEffect(() => {
-    if (aiAccessFetcher.state === 'idle' && !aiAccessFetcher.data && loggedIn) {
-      aiAccessFetcher.submit({}, {
-        method: 'post',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/access`,
-      });
-    }
-  }, [aiAccessFetcher, organizationId, projectId, workspaceId, loggedIn]);
-
-  const isAIEnabled = aiAccessFetcher.data?.enabled ?? false;
+    loading,
+    access,
+    generateTests,
+  } = useAIContext();
 
   const handlePluginClick = useCallback(async ({ action, plugin, label }: WorkspaceAction, workspace: Workspace) => {
     setLoadingActions({ ...loadingActions, [label]: true });
@@ -199,15 +181,10 @@ export const WorkspaceDropdown: FC = () => {
       <DropdownSection
         aria-label='AI'
         title="Insomnia AI"
-        items={loggedIn && isAIEnabled && activeWorkspace.scope === 'design' ? [{
+        items={isLoggedIn() && access.enabled && activeWorkspace.scope === 'design' ? [{
           label: 'Auto-generate Tests For Collection',
           key: 'insomnia-ai/generate-test-suite',
-          action: () => {
-            aiGenerateFetcher.submit({}, {
-              method: 'post',
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/generate/tests`,
-            });
-          },
+          action: generateTests,
         }] : []}
       >
         {item =>
@@ -216,16 +193,18 @@ export const WorkspaceDropdown: FC = () => {
             aria-label={item.label}
           >
             <ItemContent
-              icon={<span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  padding: '0 var(--padding-xs)',
-                  width: 'unset',
-                }}
-              ><InsomniaAI />
-              </span>}
-              isDisabled={loadingAI}
+              icon={
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '0 var(--padding-xs)',
+                    width: 'unset',
+                  }}
+                >
+                  <InsomniaAI />
+                </span>}
+              isDisabled={loading}
               label={item.label}
               onClick={item.action}
             />

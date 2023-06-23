@@ -1,7 +1,7 @@
-import React, { Fragment, useCallback, useEffect } from 'react';
-import { useFetcher, useParams } from 'react-router-dom';
+import React, { Fragment, useCallback } from 'react';
 
 import { isLoggedIn } from '../../../account/session';
+import { useAIContext } from '../../context/app/ai-context';
 import { SvgIcnWarning } from '../assets/svgr/IcnWarning';
 import { Link } from '../base/link';
 import { InsomniaAI } from '../insomnia-ai-icon';
@@ -9,16 +9,6 @@ import { hideAllModals, showModal } from '../modals';
 import { LoginModal } from '../modals/login-modal';
 
 export const AI = () => {
-  const {
-    organizationId,
-    projectId,
-    workspaceId,
-  } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-  };
-  const fetcher = useFetcher();
   const loggedIn = isLoggedIn();
 
   const handleLogin = useCallback((event: React.SyntheticEvent<HTMLAnchorElement>) => {
@@ -27,17 +17,12 @@ export const AI = () => {
     showModal(LoginModal);
   }, []);
 
-  useEffect(() => {
-    if (fetcher.state === 'idle' && !fetcher.data && loggedIn) {
-      fetcher.submit({}, {
-        method: 'post',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/access`,
-      });
-    }
-  }, [fetcher, organizationId, projectId, workspaceId, loggedIn]);
-
-  const isAIEnabled = fetcher.data?.enabled ?? false;
-  const isLoading = fetcher.state !== 'idle';
+  const {
+    access: {
+      enabled,
+      loading,
+    },
+  } = useAIContext();
 
   if (!loggedIn) {
     return <Fragment>
@@ -77,11 +62,11 @@ export const AI = () => {
     </Fragment >;
   }
 
-  if (isLoading) {
+  if (loading) {
     return <div>Loading...</div>;
   }
 
-  if (loggedIn && isAIEnabled) {
+  if (loggedIn && enabled) {
     return <Fragment>
       <div
         className="notice pad surprise"
@@ -134,10 +119,10 @@ export const AI = () => {
           alignItems: 'center',
         }}
       >
-        <h1 className="no-margin-top">Try Insomnia Sync!</h1>
+        <h1 className="no-margin-top">Try Insomnia AI <InsomniaAI /></h1>
         <p>
-          Try Insomnia AI!
-          Improve your productivity with Insomnia AI, to automatically perform operations like auto-generating API tests for your collections. This capability is only available as an add-on to Enterprise customers.
+          Improve your productivity with Insomnia AI and perform complex operations in 1-click, like auto-generating API tests for your documents and collections.
+          This capability is an add-on to Enterprise customers only.
         </p>
         <br />
         <div className="pad">

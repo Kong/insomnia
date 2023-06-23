@@ -127,8 +127,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   );
 
   return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${
-      workspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
+    `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${workspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
     }`
   );
 };
@@ -212,8 +211,7 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
   }
 
   return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${newWorkspace._id}/${
-      newWorkspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
+    `/organization/${organizationId}/project/${projectId}/workspace/${newWorkspace._id}/${newWorkspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
     }`
   );
 };
@@ -590,7 +588,7 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
     };
   });
 
-  for (const test of tests) {
+  await Promise.all(tests.map(async test => {
     try {
       const request = requests.find(r => r._id === test.requestId);
       if (!request) {
@@ -619,7 +617,7 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
     } catch (err) {
       console.log(err);
     }
-  }
+  }));
 
   return null;
 };
@@ -648,8 +646,6 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
     parentId: workspaceId,
   });
 
-  // const requests = importedResources.resources.filter(isRequest);
-
   const tests: Partial<UnitTest>[] = requests.map(request => {
     return {
       name: `Test: ${request.name}`,
@@ -659,28 +655,30 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
     };
   });
 
-  for (const test of tests) {
-    try {
-      const response = await axiosRequest({
-        method: 'POST',
-        url: 'http://localhost:3000/v1/generate-test',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-Id': session.getCurrentSessionId(),
-        },
-        data: {
-          teamId: organizationId,
-          request: requests.find(r => r._id === test.requestId),
-        },
-      });
+  await Promise.all(
+    tests.map(async test => {
+      try {
+        const response = await axiosRequest({
+          method: 'POST',
+          url: 'http://localhost:3000/v1/generate-test',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Session-Id': session.getCurrentSessionId(),
+          },
+          data: {
+            teamId: organizationId,
+            request: requests.find(r => r._id === test.requestId),
+          },
+        });
 
-      const aiTest = response.data.test;
+        const aiTest = response.data.test;
 
-      await models.unitTest.create({ ...aiTest, parentId: aiTestSuite._id, requestId: test.requestId });
-    } catch (err) {
-      console.log(err);
+        await models.unitTest.create({ ...aiTest, parentId: aiTestSuite._id, requestId: test.requestId });
+      } catch (err) {
+        console.log(err);
+      }
     }
-  }
+    ));
 
   return null;
 };

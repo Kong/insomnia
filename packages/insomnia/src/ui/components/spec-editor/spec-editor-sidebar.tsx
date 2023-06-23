@@ -1,10 +1,10 @@
 import React, { FC } from 'react';
-import { useFetcher, useFetchers, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
 
 import type { ApiSpec } from '../../../models/api-spec';
+import { useAIContext } from '../../context/app/ai-context';
 import { InsomniaAI } from '../insomnia-ai-icon';
 import { Button } from '../themed-button';
 import { Sidebar } from './sidebar';
@@ -20,19 +20,11 @@ const StyledSpecEditorSidebar = styled.div`
 `;
 
 export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) => {
-
   const {
-    organizationId,
-    projectId,
-    workspaceId,
-  } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-  };
-  const fetcher = useFetcher();
-  const loading = useFetchers().filter(loader => loader.formAction?.includes('/ai/generate/')).some(loader => loader.state !== 'idle');
-
+    loading,
+    generateTestsFromSpec,
+    access,
+  } = useAIContext();
   const onClick = (...itemPath: any[]): void => {
     const scrollPosition = { start: { line: 0, col: 0 }, end: { line: 0, col: 200 } };
 
@@ -68,15 +60,10 @@ export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) =>
   return (
     <StyledSpecEditorSidebar>
       <div>
-        <Button
+        {access.enabled && <Button
           variant="text"
           disabled={loading}
-          onClick={() => {
-            fetcher.submit({}, {
-              method: 'post',
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/generate/collection-and-tests`,
-            });
-          }}
+          onClick={generateTestsFromSpec}
         >
           <InsomniaAI /> <span
             style={{
@@ -84,7 +71,7 @@ export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) =>
             }}
           >
             Auto-generate Tests For Collection</span>
-        </Button>
+        </Button>}
       </div>
       <Sidebar jsonData={specJSON} onClick={onClick} />
     </StyledSpecEditorSidebar>

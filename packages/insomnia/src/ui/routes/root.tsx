@@ -41,6 +41,7 @@ import { StatusBar } from '../components/statusbar';
 import { Toast } from '../components/toast';
 import { WorkspaceHeader } from '../components/workspace-header';
 import { AppHooks } from '../containers/app-hooks';
+import { AIProvider } from '../context/app/ai-context';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import Modals from './modals';
@@ -248,38 +249,40 @@ const Root = () => {
   };
 
   return (
-    <NunjucksEnabledProvider>
-      <AppHooks />
-      <div className="app">
-        <ErrorBoundary showAlert>
-          <Modals />
-          {importUri && (
-            <ImportModal
-              onHide={() => setImportUri('')}
-              organizationId={organizationId}
-              defaultProjectId={projectId || ''}
-              defaultWorkspaceId={workspaceId}
-              from={{ type: 'uri', defaultValue: importUri }}
-            />
-          )}
-          <Layout>
-            <OrganizationsNav />
-            <AppHeader
-              gridCenter={
-                workspaceData ? <WorkspaceHeader {...workspaceData} /> : null
-              }
-              gridRight={<AccountToolbar />}
-            />
-            <Outlet />
-            <StatusBar />
-          </Layout>
-        </ErrorBoundary>
+    <AIProvider>
+      <NunjucksEnabledProvider>
+        <AppHooks />
+        <div className="app">
+          <ErrorBoundary showAlert>
+            <Modals />
+            {importUri && (
+              <ImportModal
+                onHide={() => setImportUri('')}
+                organizationId={organizationId}
+                defaultProjectId={projectId || ''}
+                defaultWorkspaceId={workspaceId}
+                from={{ type: 'uri', defaultValue: importUri }}
+              />
+            )}
+            <Layout>
+              <OrganizationsNav />
+              <AppHeader
+                gridCenter={
+                  workspaceData ? <WorkspaceHeader {...workspaceData} /> : null
+                }
+                gridRight={<AccountToolbar />}
+              />
+              <Outlet />
+              <StatusBar />
+            </Layout>
+          </ErrorBoundary>
 
-        <ErrorBoundary showAlert>
-          <Toast />
-        </ErrorBoundary>
-      </div>
-    </NunjucksEnabledProvider>
+          <ErrorBoundary showAlert>
+            <Toast />
+          </ErrorBoundary>
+        </div>
+      </NunjucksEnabledProvider>
+    </AIProvider>
   );
 };
 
