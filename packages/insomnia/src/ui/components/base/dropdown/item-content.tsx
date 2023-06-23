@@ -63,7 +63,7 @@ const Checkmark = styled(SvgIcon)({
 });
 
 type ItemContentProps = PropsWithChildren<{
-  icon?: string;
+  icon?: string | ReactNode;
   label?: string | ReactNode;
   hint?: PlatformKeyCombinations;
   className?: string;
@@ -82,7 +82,7 @@ export const ItemContent: FC<ItemContentProps> = (props: ItemContentProps) => {
   const content = (
     <>
       <StyledItemContent>
-        {icon && <StyledIcon icon={icon} style={iconStyle} />}
+        {icon && typeof icon === 'string' ? <StyledIcon icon={icon} style={iconStyle} /> : icon}
         {children || label}
       </StyledItemContent>
       {hint && <DropdownHint keyBindings={hint} />}

@@ -28,7 +28,17 @@ const KongLink = styled.a({
 
 export const StatusBar: FC = () => {
   return <Bar>
-    <SettingsButton />
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--padding-xs)',
+        color: 'var(--color-font)',
+        fontSize: 'var(--font-size-xs)',
+      }}
+    >
+      <SettingsButton />
+    </div>
     <KongLink className="made-with-love" href="https://konghq.com/">
       Made with&nbsp; <SvgIcon icon="heart" /> &nbsp;by Kong
     </KongLink>

@@ -833,3 +833,33 @@ strong {
   text-decoration: underline;
 }
 
+@keyframes AIBlockLoading {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes AIfadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.ai-block {
+  animation: AIBlockLoading 1s ease-in-out;
+}
+
+.ai-text {
+  opacity: 0;
+  animation: AIfadeIn 0.5s 0.5s ease-in-out forwards;
+}

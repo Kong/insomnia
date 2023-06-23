@@ -255,6 +255,29 @@ const router = createMemoryRouter(
                               ],
                             },
                             {
+                              path: 'ai',
+                              children: [
+                                {
+                                  path: 'generate',
+                                  children: [
+
+                                    {
+                                      path: 'collection-and-tests',
+                                      action: async (...args) => (await import('./routes/actions')).generateCollectionAndTestsAction(...args),
+                                    },
+                                    {
+                                      path: 'tests',
+                                      action: async (...args) => (await import('./routes/actions')).generateTestsAction(...args),
+                                    },
+                                  ],
+                                },
+                                {
+                                  path: 'access',
+                                  action: async (...args) => (await import('./routes/actions')).accessAIApiAction(...args),
+                                },
+                              ],
+                            },
+                            {
                               path: 'duplicate',
                               action: async (...args) =>
                                 (

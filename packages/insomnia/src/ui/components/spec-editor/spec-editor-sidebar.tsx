@@ -4,6 +4,9 @@ import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
 
 import type { ApiSpec } from '../../../models/api-spec';
+import { useAIContext } from '../../context/app/ai-context';
+import { InsomniaAI } from '../insomnia-ai-icon';
+import { Button } from '../themed-button';
 import { Sidebar } from './sidebar';
 
 interface Props {
@@ -17,6 +20,11 @@ const StyledSpecEditorSidebar = styled.div`
 `;
 
 export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) => {
+  const {
+    generating: loading,
+    generateTestsFromSpec,
+    access,
+  } = useAIContext();
   const onClick = (...itemPath: any[]): void => {
     const scrollPosition = { start: { line: 0, col: 0 }, end: { line: 0, col: 200 } };
 
@@ -24,7 +32,7 @@ export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) =>
       JSON.parse(apiSpec.contents);
       // Account for JSON (as string) line number shift
       scrollPosition.start.line = 1;
-    } catch  {}
+    } catch { }
 
     const sourceMap = new YAMLSourceMap();
     const specMap = sourceMap.index(
@@ -48,8 +56,32 @@ export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) =>
   };
 
   const specJSON = YAML.parse(apiSpec.contents);
+
   return (
     <StyledSpecEditorSidebar>
+      <div>
+        {access.enabled && (
+          <Button
+            variant="text"
+            disabled={loading}
+            style={{
+              width: '100%',
+              justifyContent: 'flex-start!important',
+              gap: 'var(--padding-xs)',
+            }}
+            onClick={generateTestsFromSpec}
+          >
+            <InsomniaAI
+              style={{
+                flex: '0 0 20px',
+              }}
+            />
+            <span>
+              Auto-generate Tests For Collection
+            </span>
+          </Button>
+        )}
+      </div>
       <Sidebar jsonData={specJSON} onClick={onClick} />
     </StyledSpecEditorSidebar>
   );

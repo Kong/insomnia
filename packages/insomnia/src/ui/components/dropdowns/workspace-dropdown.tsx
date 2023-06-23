@@ -1,6 +1,7 @@
 import React, { FC, useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
+import { isLoggedIn } from '../../../account/session';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
@@ -10,8 +11,10 @@ import { isDesign, Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
+import { useAIContext } from '../../context/app/ai-context';
 import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
 import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { InsomniaAI } from '../insomnia-ai-icon';
 import { showError, showModal } from '../modals';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
@@ -29,6 +32,12 @@ export const WorkspaceDropdown: FC = () => {
   const [configGeneratorPlugins, setConfigGeneratorPlugins] = useState<ConfigGenerator[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);
+
+  const {
+    generating: loading,
+    access,
+    generateTests,
+  } = useAIContext();
 
   const handlePluginClick = useCallback(async ({ action, plugin, label }: WorkspaceAction, workspace: Workspace) => {
     setLoadingActions({ ...loadingActions, [label]: true });
@@ -96,6 +105,7 @@ export const WorkspaceDropdown: FC = () => {
     <Dropdown
       aria-label="Workspace Dropdown"
       ref={dropdownRef}
+      closeOnSelect={false}
       className="wide workspace-dropdown"
       onOpen={handleDropdownOpen}
       triggerButton={
@@ -163,6 +173,40 @@ export const WorkspaceDropdown: FC = () => {
               icon="code"
               label={p.label}
               onClick={() => handleGenerateConfig(p.label)}
+            />
+          </DropdownItem>
+        }
+      </DropdownSection>
+
+      <DropdownSection
+        aria-label='AI'
+        title="Insomnia AI"
+        items={isLoggedIn() && access.enabled && activeWorkspace.scope === 'design' ? [{
+          label: 'Auto-generate Tests For Collection',
+          key: 'insomnia-ai/generate-test-suite',
+          action: generateTests,
+        }] : []}
+      >
+        {item =>
+          <DropdownItem
+            key={`generateConfig-${item.label}`}
+            aria-label={item.label}
+          >
+            <ItemContent
+              icon={
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '0 var(--padding-xs)',
+                    width: 'unset',
+                  }}
+                >
+                  <InsomniaAI />
+                </span>}
+              isDisabled={loading}
+              label={item.label}
+              onClick={item.action}
             />
           </DropdownItem>
         }
