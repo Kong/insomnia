@@ -14,7 +14,7 @@ import {
   WebSocketRequest,
 } from '../models/websocket-request';
 import { isWorkspace, prefix as wsPrefix, Workspace } from '../models/workspace';
-import { convert, ConvertResultType } from '../utils/importers/convert';
+import { convert, InsomniaImporter } from '../utils/importers/convert';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
 import { generateId } from './misc';
@@ -24,16 +24,16 @@ export interface ExportedModel extends BaseModel {
 }
 
 interface ConvertResult {
-  type: ConvertResultType;
+  type: InsomniaImporter;
   data: {
     resources: ExportedModel[];
   };
 }
 
-export const isApiSpecImport = ({ id }: Pick<ConvertResultType, 'id'>) =>
+export const isApiSpecImport = ({ id }: Pick<InsomniaImporter, 'id'>) =>
   id === 'openapi3' || id === 'swagger2';
 
-export const isInsomniaV4Import = ({ id }: Pick<ConvertResultType, 'id'>) =>
+export const isInsomniaV4Import = ({ id }: Pick<InsomniaImporter, 'id'>) =>
   id === 'insomnia-4';
 
 export async function fetchImportContentFromURI({ uri }: { uri: string }) {
@@ -71,14 +71,14 @@ export interface ScanResult {
   cookieJars?: CookieJar[];
   unitTests?: UnitTest[];
   unitTestSuites?: UnitTestSuite[];
-  type?: ConvertResultType;
+  type?: InsomniaImporter;
   errors: string[];
 }
 
 let ResourceCache: {
   content: string;
   resources: BaseModel[];
-  type: ConvertResultType;
+  type: InsomniaImporter;
 } | null = null;
 
 export async function scanResources({
