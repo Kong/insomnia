@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
-import { useFetchers, useRevalidator } from 'react-router-dom';
+import React from 'react';
 import styled, { keyframes } from 'styled-components';
+
+import { useAIContext } from '../context/app/ai-context';
 
 const SlideInLeftKeyframes = keyframes`
   0% {
@@ -41,13 +42,14 @@ const RelativeFrame = styled.div({
 
 const AILoadingText = styled.div`
   display: flex;
+  z-index: 1;
   align-items: center;
   height: 100%;
   font-size: var(--font-size-small);
   color: var(--color-font);
   padding-right: var(--padding-sm);
   opacity: 0;
-  animation: ${FadeInKeyframes} 0.3s 0.7s ease-out forwards;
+  animation: ${FadeInKeyframes} 0.1s 0.3s ease-out forwards;
 `;
 
 const LoadingBoundary = styled.div({
@@ -68,24 +70,30 @@ const LoadingBar = styled.div`
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 60px;
   opacity: 0;
-  animation: ${SlideInLeftKeyframes} 0.3s 0.7s ease-out forwards;
+  animation: ${SlideInLeftKeyframes} 0.4s ease-out forwards;
+`;
+
+const LoadingBarIndicator = styled.div`
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  background-color: #7400e1;
+  border-radius: 60px;
+  opacity: 1;
+  transform: translateX(-100%);
 `;
 
 export const InsomniaAILogo = ({
   ...props
 }: React.SVGProps<SVGSVGElement>) => {
-  const loading = useFetchers().filter(loader => loader.formAction?.includes('/ai/generate/')).some(loader => loader.state !== 'idle');
+  const {
+    loading,
+    progress,
+  } = useAIContext();
 
-  const { revalidate } = useRevalidator();
-
-  const prevLoading = React.useRef(loading);
-
-  useEffect(() => {
-    if (prevLoading.current !== loading) {
-      revalidate();
-    }
-    prevLoading.current = loading;
-  }, [loading, revalidate]);
+  const loadingProgress = 100 - (progress.progress / progress.total) * 100;
 
   return (
     <Layout>
@@ -98,6 +106,9 @@ export const InsomniaAILogo = ({
           clipRule="evenodd"
           strokeLinejoin="round"
           strokeMiterlimit={2}
+          style={{
+            zIndex: 1,
+          }}
           {...props}
         >
           <path
@@ -141,16 +152,21 @@ export const InsomniaAILogo = ({
             </linearGradient>
           </defs>
         </svg>
-
+        {loading && <LoadingBoundary>
+          <LoadingBar />
+          <LoadingBarIndicator
+            style={{
+              opacity: progress.progress === 0 || progress.total === progress.progress ? 0 : 1,
+              transform: `translateX(-${loadingProgress}%)`,
+            }}
+          />
+        </LoadingBoundary>
+        }
         {loading && (
           <AILoadingText>
             <span>{'AI is thinking...'}</span>
           </AILoadingText>
         )}
-        {loading && <LoadingBoundary>
-          <LoadingBar />
-        </LoadingBoundary>
-        }
       </RelativeFrame>
 
     </Layout>

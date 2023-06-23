@@ -2,7 +2,6 @@ import React, { Fragment, useCallback } from 'react';
 
 import { isLoggedIn } from '../../../account/session';
 import { useAIContext } from '../../context/app/ai-context';
-import { SvgIcnWarning } from '../assets/svgr/IcnWarning';
 import { Link } from '../base/link';
 import { InsomniaAI } from '../insomnia-ai-icon';
 import { hideAllModals, showModal } from '../modals';
@@ -69,7 +68,7 @@ export const AI = () => {
   if (loggedIn && enabled) {
     return <Fragment>
       <div
-        className="notice pad surprise"
+        className="notice pad success"
         style={{
           display: 'flex',
           flexDirection: 'column',
@@ -103,7 +102,7 @@ export const AI = () => {
             gap: 'var(--padding-xs)',
           }}
         >
-          <SvgIcnWarning fill="var(--color-warning)" /> Beware that too many requests of Insomnia AI could generate an unpredictable spend.
+          <i className='fa fa-info-circle' /> Beware that too many requests of Insomnia AI could generate an unpredictable spend.
         </div>
       </div>
     </Fragment >;
@@ -126,7 +125,7 @@ export const AI = () => {
         </p>
         <br />
         <div className="pad">
-          <Link button className="btn btn--clicky" href="https://insomnia.rest/pricing">
+          <Link button className="btn btn--clicky" href="https://insomnia.rest/pricing/contact">
             Enable Insomnia AI <i className="fa fa-external-link" />
           </Link>
         </div>

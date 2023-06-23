@@ -566,17 +566,22 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
   const spec = parseApiSpec(apiSpec.contents);
 
   const getMethodInfo = (request: Request) => {
-    const specPaths = Object.keys(spec.contents?.paths) || [];
+    try {
+      const specPaths = Object.keys(spec.contents?.paths) || [];
 
-    const pathMatches = specPaths.filter(path => request.url.endsWith(path));
+      const pathMatches = specPaths.filter(path => request.url.endsWith(path));
 
-    const closestPath = pathMatches.sort((a, b) => {
-      return a.length - b.length;
-    })[0];
+      const closestPath = pathMatches.sort((a, b) => {
+        return a.length - b.length;
+      })[0];
 
-    const methodInfo = spec.contents?.paths[closestPath][request.method.toLowerCase()];
+      const methodInfo = spec.contents?.paths[closestPath][request.method.toLowerCase()];
 
-    return methodInfo;
+      return methodInfo;
+    } catch (error) {
+      console.error(error);
+      return {};
+    }
   };
 
   const tests: Partial<UnitTest>[] = requests.map(request => {
@@ -588,38 +593,60 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
     };
   });
 
-  await Promise.all(tests.map(async test => {
-    try {
-      const request = requests.find(r => r._id === test.requestId);
-      if (!request) {
-        throw new Error('Request not found');
+  const total = tests.length;
+  let progress = 0;
+  const progressStream = new TransformStream();
+  const writer = progressStream.writable.getWriter();
+
+  writer.write({
+    progress,
+    total,
+  });
+
+  for (const test of tests) {
+    async function generateTest() {
+      try {
+        const request = requests.find(r => r._id === test.requestId);
+        if (!request) {
+          throw new Error('Request not found');
+        }
+
+        const methodInfo = resolveComponentSchemaRefs(spec, getMethodInfo(request));
+
+        const response = await axiosRequest({
+          method: 'POST',
+          url: 'http://localhost:3000/v1/generate-test',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Session-Id': session.getCurrentSessionId(),
+          },
+          data: {
+            teamId: organizationId,
+            request: requests.find(r => r._id === test.requestId),
+            methodInfo,
+          },
+        });
+
+        const aiTest = response.data.test;
+
+        await models.unitTest.create({ ...aiTest, parentId: aiTestSuite._id, requestId: test.requestId });
+        writer.write({
+          progress: ++progress,
+          total,
+        });
+
+      } catch (err) {
+        console.log(err);
+        writer.write({
+          progress: ++progress,
+          total,
+        });
       }
-
-      const methodInfo = resolveComponentSchemaRefs(spec, getMethodInfo(request));
-
-      const response = await axiosRequest({
-        method: 'POST',
-        url: 'http://localhost:3000/v1/generate-test',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Session-Id': session.getCurrentSessionId(),
-        },
-        data: {
-          teamId: organizationId,
-          request: requests.find(r => r._id === test.requestId),
-          methodInfo,
-        },
-      });
-
-      const aiTest = response.data.test;
-
-      await models.unitTest.create({ ...aiTest, parentId: aiTestSuite._id, requestId: test.requestId });
-    } catch (err) {
-      console.log(err);
     }
-  }));
+    generateTest();
+  }
 
-  return null;
+  return progressStream;
 };
 
 export const generateTestsAction: ActionFunction = async ({ params }) => {
@@ -655,8 +682,18 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
     };
   });
 
-  await Promise.all(
-    tests.map(async test => {
+  const total = tests.length;
+  let progress = 0;
+  const progressStream = new TransformStream();
+  const writer = progressStream.writable.getWriter();
+
+  writer.write({
+    progress,
+    total,
+  });
+
+  for (const test of tests) {
+    async function generateTest() {
       try {
         const response = await axiosRequest({
           method: 'POST',
@@ -674,13 +711,24 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
         const aiTest = response.data.test;
 
         await models.unitTest.create({ ...aiTest, parentId: aiTestSuite._id, requestId: test.requestId });
+
+        writer.write({
+          progress: ++progress,
+          total,
+        });
       } catch (err) {
         console.log(err);
+        writer.write({
+          progress: ++progress,
+          total,
+        });
       }
     }
-    ));
 
-  return null;
+    generateTest();
+  }
+
+  return progressStream;
 };
 
 export const accessAIApiAction: ActionFunction = async ({ params }) => {

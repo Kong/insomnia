@@ -12,6 +12,10 @@ const AIContext = createContext({
     enabled: false,
     loading: false,
   },
+  progress: {
+    total: 0,
+    progress: 0,
+  },
 });
 
 export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
@@ -25,6 +29,10 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
     workspaceId: string;
   };
 
+  const [progress, setProgress] = React.useState({
+    total: 0,
+    progress: 0,
+  });
   const aiAccessFetcher = useFetcher();
   const aiGenerateTestsFetcher = useFetcher();
   const aiGenerateTestsFromSpecFetcher = useFetcher();
@@ -52,10 +60,39 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const isAIEnabled = aiAccessFetcher.data?.enabled ?? false;
 
+  const aiGenerateTestsProgressStream = aiGenerateTestsFetcher.data as TransformStream;
+
+  useEffect(() => {
+    if (aiGenerateTestsProgressStream) {
+      const progress = aiGenerateTestsProgressStream.readable;
+
+      progress.pipeTo(new WritableStream({
+        write: (chunk: any) => {
+          setProgress(chunk);
+        },
+      }));
+    }
+  }, [aiGenerateTestsProgressStream]);
+
+  const aiGenerateTestsFromSpecProgressStream = aiGenerateTestsFromSpecFetcher.data as TransformStream;
+
+  useEffect(() => {
+    if (aiGenerateTestsFromSpecProgressStream) {
+      const progress = aiGenerateTestsFromSpecProgressStream.readable;
+
+      progress.pipeTo(new WritableStream({
+        write: (chunk: any) => {
+          setProgress(chunk);
+        },
+      }));
+    }
+  }, [aiGenerateTestsFromSpecProgressStream]);
+
   return (
     <AIContext.Provider
       value={{
-        loading,
+        loading: loading || (progress.total > 0 && progress.progress < progress.total),
+        progress,
         generateTests: () => {
           aiGenerateTestsFetcher.submit({}, {
             method: 'post',
