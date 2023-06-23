@@ -615,7 +615,7 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
 
         const response = await axiosRequest({
           method: 'POST',
-          url: 'http://localhost:3000/v1/generate-test',
+          url: 'https://ai.insomnia.rest/v1/generate-test',
           headers: {
             'Content-Type': 'application/json',
             'X-Session-Id': session.getCurrentSessionId(),
@@ -697,7 +697,7 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
       try {
         const response = await axiosRequest({
           method: 'POST',
-          url: 'http://localhost:3000/v1/generate-test',
+          url: 'https://ai.insomnia.rest/v1/generate-test',
           headers: {
             'Content-Type': 'application/json',
             'X-Session-Id': session.getCurrentSessionId(),
@@ -742,7 +742,7 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
   try {
     const response = await axiosRequest({
       method: 'POST',
-      url: 'http://localhost:3000/v1/access',
+      url: 'https://ai.insomnia.rest/v1/access',
       headers: {
         'Content-Type': 'application/json',
         'X-Session-Id': session.getCurrentSessionId(),
