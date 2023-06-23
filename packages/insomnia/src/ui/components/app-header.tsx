@@ -3,7 +3,6 @@ import React, { FC, Fragment, ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import coreLogo from '../images/insomnia-logo.svg';
 import { selectIsLoggedIn } from '../redux/selectors';
 import { GitHubStarsButton } from './github-stars-button';
 import { InsomniaAILogo } from './insomnia-icon';

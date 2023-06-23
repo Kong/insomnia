@@ -708,8 +708,6 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
 
     const enabled = response.data.enabled;
 
-    console.log('Response:', enabled);
-
     return {
       enabled,
     };

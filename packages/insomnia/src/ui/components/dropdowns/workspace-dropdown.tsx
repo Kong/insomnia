@@ -44,7 +44,7 @@ export const WorkspaceDropdown: FC = () => {
   const aiAccessFetcher = useFetcher();
   const aiGenerateFetcher = useFetcher();
   const loggedIn = isLoggedIn();
-  const loadingAI = useFetchers().filter(loader => loader.formAction?.includes('/ai/')).some(loader => loader.state !== 'idle');
+  const loadingAI = useFetchers().filter(loader => loader.formAction?.includes('/ai/generate/')).some(loader => loader.state !== 'idle');
 
   useEffect(() => {
     if (aiAccessFetcher.state === 'idle' && !aiAccessFetcher.data && loggedIn) {
@@ -56,7 +56,6 @@ export const WorkspaceDropdown: FC = () => {
   }, [aiAccessFetcher, organizationId, projectId, workspaceId, loggedIn]);
 
   const isAIEnabled = aiAccessFetcher.data?.enabled ?? false;
-  // const isLoading = aiAccessFetcher.state !== 'idle';
 
   const handlePluginClick = useCallback(async ({ action, plugin, label }: WorkspaceAction, workspace: Workspace) => {
     setLoadingActions({ ...loadingActions, [label]: true });
@@ -119,8 +118,6 @@ export const WorkspaceDropdown: FC = () => {
     console.error('warning: tried to render WorkspaceDropdown without an activeWorkspace');
     return null;
   }
-
-  console.log(aiGenerateFetcher.state);
 
   return (
     <Dropdown
@@ -202,13 +199,13 @@ export const WorkspaceDropdown: FC = () => {
       <DropdownSection
         aria-label='AI'
         title="Insomnia AI"
-        items={loggedIn && isAIEnabled ? [{
+        items={loggedIn && isAIEnabled && activeWorkspace.scope === 'design' ? [{
           label: 'Auto-generate Tests For Collection',
           key: 'insomnia-ai/generate-test-suite',
           action: () => {
             aiGenerateFetcher.submit({}, {
               method: 'post',
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/generate-tests`,
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/generate/tests`,
             });
           },
         }] : []}
@@ -219,6 +216,15 @@ export const WorkspaceDropdown: FC = () => {
             aria-label={item.label}
           >
             <ItemContent
+              icon={<span
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0 var(--padding-xs)',
+                  width: 'unset',
+                }}
+              ><InsomniaAI />
+              </span>}
               isDisabled={loadingAI}
               label={item.label}
               onClick={item.action}

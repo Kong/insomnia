@@ -231,7 +231,6 @@ export async function importResources({
       parentId: ResourceIdMap.get(r.parentId),
     }));
 
-    console.log({ resources, resourcesWithIds });
     return {
       resources: resourcesWithIds,
       workspace: existingWorkspace,
@@ -323,8 +322,6 @@ export async function importResources({
     // Use the first environment as the active one
     const subEnvironments =
       resources.filter(isEnvironment).filter(env => env.parentId.startsWith(models.environment.prefix)) || [];
-
-    console.log({ subEnvironments });
 
     if (subEnvironments.length > 0) {
       const firstSubEnvironment = subEnvironments[0];

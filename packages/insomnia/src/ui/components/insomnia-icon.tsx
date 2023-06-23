@@ -1,16 +1,86 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useFetchers, useRevalidator } from 'react-router-dom';
+import styled, { keyframes } from 'styled-components';
+
+const SlideInLeftKeyframes = keyframes`
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`;
+
+const FadeInKeyframes = keyframes`
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+`;
+
+const Layout = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 'var(--padding-xs)',
+  paddingLeft: '11px',
+  position: 'relative',
+});
+
+const RelativeFrame = styled.div({
+  position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 'var(--padding-xs)',
+});
+
+const AILoadingText = styled.div`
+  display: flex;
+  align-items: center;
+  height: 100%;
+  font-size: var(--font-size-small);
+  color: var(--color-font);
+  padding-right: var(--padding-sm);
+  opacity: 0;
+  animation: ${FadeInKeyframes} 0.3s 0.7s ease-out forwards;
+`;
+
+const LoadingBoundary = styled.div({
+  display: 'flex',
+  width: 'calc(100% + 4px)',
+  height: 'calc(100% + 2px)',
+  position: 'absolute',
+  overflow: 'hidden',
+  borderRadius: '60px',
+});
+
+const LoadingBar = styled.div`
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 60px;
+  opacity: 0;
+  animation: ${SlideInLeftKeyframes} 0.3s 0.7s ease-out forwards;
+`;
 
 export const InsomniaAILogo = ({
   ...props
 }: React.SVGProps<SVGSVGElement>) => {
-  const loading = useFetchers().filter(loader => loader.formAction?.includes('/ai/')).some(loader => loader.state !== 'idle' && loader.formMethod === 'post' && loader.formData);
+  const loading = useFetchers().filter(loader => loader.formAction?.includes('/ai/generate/')).some(loader => loader.state !== 'idle');
 
   const { revalidate } = useRevalidator();
 
   const prevLoading = React.useRef(loading);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (prevLoading.current !== loading) {
       revalidate();
     }
@@ -18,23 +88,8 @@ export const InsomniaAILogo = ({
   }, [loading, revalidate]);
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--padding-xs)',
-        paddingLeft: '11px',
-        position: 'relative',
-      }}
-    >
-      <div
-        style={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--padding-xs)',
-        }}
-      >
+    <Layout>
+      <RelativeFrame>
         <svg
           viewBox="0 0 128 128"
           width="28px"
@@ -88,46 +143,16 @@ export const InsomniaAILogo = ({
         </svg>
 
         {loading && (
-          <div
-            className='ai-text'
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              height: '100%',
-              fontSize: 'var(--font-size-small)',
-              color: 'var(--color-font)',
-              paddingRight: 'var(--padding-sm)',
-            }}
-          >
+          <AILoadingText>
             <span>{'AI is thinking...'}</span>
-          </div>
+          </AILoadingText>
         )}
-        {loading && <div
-          style={{
-            display: 'flex',
-            width: 'calc(100% + 4px)',
-            height: 'calc(100% + 2px)',
-            position: 'absolute',
-            overflow: 'hidden',
-            borderRadius: '60px',
-          }}
-        >
-          <div
-            className={loading ? 'ai-block' : ''}
-            style={{
-              display: 'flex',
-              width: '100%',
-              height: '100%',
-              position: 'absolute',
-              inset: 0,
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: '60px',
-              transition: 'opacity 2.2s ease-in-out',
-            }}
-          />
-        </div>}
-      </div>
+        {loading && <LoadingBoundary>
+          <LoadingBar />
+        </LoadingBoundary>
+        }
+      </RelativeFrame>
 
-    </div>
+    </Layout>
   );
 };

@@ -258,12 +258,18 @@ const router = createMemoryRouter(
                               path: 'ai',
                               children: [
                                 {
-                                  path: 'generate-collection-and-tests',
-                                  action: async (...args) => (await import('./routes/actions')).generateCollectionAndTestsAction(...args),
-                                },
-                                {
-                                  path: 'generate-tests',
-                                  action: async (...args) => (await import('./routes/actions')).generateTestsAction(...args),
+                                  path: 'generate',
+                                  children: [
+
+                                    {
+                                      path: 'collection-and-tests',
+                                      action: async (...args) => (await import('./routes/actions')).generateCollectionAndTestsAction(...args),
+                                    },
+                                    {
+                                      path: 'tests',
+                                      action: async (...args) => (await import('./routes/actions')).generateTestsAction(...args),
+                                    },
+                                  ],
                                 },
                                 {
                                   path: 'access',

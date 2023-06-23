@@ -31,7 +31,7 @@ export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) =>
     workspaceId: string;
   };
   const fetcher = useFetcher();
-  const loading = useFetchers().filter(loader => loader.formAction?.includes('/ai/')).some(loader => loader.state !== 'idle');
+  const loading = useFetchers().filter(loader => loader.formAction?.includes('/ai/generate/')).some(loader => loader.state !== 'idle');
 
   const onClick = (...itemPath: any[]): void => {
     const scrollPosition = { start: { line: 0, col: 0 }, end: { line: 0, col: 200 } };
@@ -74,7 +74,7 @@ export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) =>
           onClick={() => {
             fetcher.submit({}, {
               method: 'post',
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/generate-collection-and-tests`,
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/generate/collection-and-tests`,
             });
           }}
         >
