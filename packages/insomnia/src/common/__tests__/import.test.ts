@@ -54,7 +54,6 @@ describe('importRaw()', () => {
     const projectWorkspaces = await workspace.findByParentId(
       DEFAULT_PROJECT_ID
     );
-
     const curlRequests = await request.findByParentId(projectWorkspaces[0]._id);
 
     expect(workspacesCount).toBe(1);

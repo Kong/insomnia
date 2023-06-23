@@ -13,7 +13,7 @@ import {
   isWebSocketRequest,
   WebSocketRequest,
 } from '../models/websocket-request';
-import { isWorkspace, Workspace } from '../models/workspace';
+import { isWorkspace, prefix as wsPrefix, Workspace } from '../models/workspace';
 import { convert, ConvertResultType } from '../utils/importers/convert';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
@@ -146,14 +146,14 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
   invariant(ResourceCache, 'No resources to import');
   const resources = ResourceCache.resources;
   const bufferId = await db.bufferChanges();
-  const workspaces = resources.filter(isWorkspace);
-  for (const workspace of workspaces) {
-    await importToNewWorkspace(workspace, projectId);
+  if (!resources.find(isWorkspace)) {
+    await importToNewWorkspace(projectId);
+    return { resources };
   }
+  const r = await Promise.all(resources.filter(isWorkspace).map(resource => importToNewWorkspace(projectId, resource)));
+
   await db.flushChanges(bufferId);
-  return {
-    resources,
-  };
+  return { resources: r.flat() };
 }
 export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId: string }) => {
   invariant(ResourceCache, 'No resources to import');
@@ -172,7 +172,7 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
   const toImport = resources.find(isWorkspace);
   toImport && ResourceIdMap.set(toImport._id, existingWorkspace._id);
 
-  const filteredResources = resources.filter(
+  const optionalResources = resources.filter(
     resource =>
       !isWorkspace(resource) &&
       !isApiSpec(resource) &&
@@ -180,12 +180,14 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
       !isEnvironment(resource)
   );
 
-  for (const resource of filteredResources) {
+  // Create new ids for each resource below optionalResources
+  for (const resource of optionalResources) {
     const model = getModel(resource.type);
     model && ResourceIdMap.set(resource._id, generateId(model.prefix));
   }
 
-  for (const resource of filteredResources) {
+  // Preserve optionalResource relationships
+  for (const resource of optionalResources) {
     const model = getModel(resource.type);
     if (model) {
       // Make sure we point to the new proto file
@@ -218,29 +220,32 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
   await db.flushChanges(bufferId);
 
   return {
-    resources,
+    resources: resources.map(r => ({
+      ...r,
+      _id: ResourceIdMap.get(r._id),
+      parentId: ResourceIdMap.get(r.parentId),
+    })),
     workspace: existingWorkspace,
   };
 };
 
-const importToNewWorkspace = async (workspace: Workspace, projectId: string) => {
+const importToNewWorkspace = async (projectId: string, workspace?: Workspace) => {
   invariant(ResourceCache, 'No resources to import');
   const resources = ResourceCache.resources;
-  const workspaceId = workspace._id;
+  const workspaceToImport = workspace || { _id: generateId(wsPrefix), name: 'Imported Workspace' };
   const ResourceIdMap = new Map();
-
   const scope =
     isApiSpecImport(ResourceCache?.type) ||
       Boolean(resources.find(r => r.type === 'ApiSpec'))
       ? 'design'
       : 'collection';
   const newWorkspace = await models.workspace.create({
-    name: workspace?.name,
+    name: workspaceToImport?.name,
     scope,
     parentId: projectId,
   });
-
-  const apiSpec = resources.find(r => r.type === 'ApiSpec' && r.parentId === workspaceId);
+  const apiSpec = resources.find(r => r.type === 'ApiSpec' && r.parentId === workspaceToImport._id);
+  // if workspace is not in the resources, there will be no apiSpec, if resource type is set to api spec this could cause a bug
   if (apiSpec) {
     await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
       ...apiSpec,
@@ -262,7 +267,7 @@ const importToNewWorkspace = async (workspace: Workspace, projectId: string) => 
 
   // If we're importing into a new workspace
   // Map new IDs
-  ResourceIdMap.set(workspaceId, newWorkspace._id);
+  ResourceIdMap.set(workspaceToImport._id, newWorkspace._id);
   ResourceIdMap.set('__WORKSPACE_ID__', newWorkspace._id);
   workspace && ResourceIdMap.set(workspace._id, newWorkspace._id);
 
@@ -320,5 +325,11 @@ const importToNewWorkspace = async (workspace: Workspace, projectId: string) => 
       });
     }
   }
-  return { resources, workspace };
+  return {
+    resources: resources.map(r => ({
+      ...r,
+      _id: ResourceIdMap.get(r._id),
+      parentId: ResourceIdMap.get(r.parentId),
+    })), workspace,
+  };
 };

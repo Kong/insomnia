@@ -74,6 +74,7 @@ export const importResourcesAction: ActionFunction = async ({ request }): Promis
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found.');
   if (workspaceId) {
+    // NOTE: perhaps we don't need this
     const result = await importResourcesToWorkspace({
       workspaceId: workspaceId,
     });
