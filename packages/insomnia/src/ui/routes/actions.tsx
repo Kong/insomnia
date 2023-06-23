@@ -8,6 +8,7 @@ import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
 import { importResources, scanResources } from '../../common/import';
+import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
@@ -547,21 +548,29 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
     throw new Error('Error Generating Configuration');
   }
 
-  await scanResources({
+  const resources = await scanResources({
     content: apiSpec.contents,
   });
 
-  const importedResources = await importResources({
-    projectId,
-    workspaceId,
+  const aiGeneratedRequestGroup = await models.requestGroup.create({
+    name: 'AI Generated Requests',
+    parentId: workspaceId,
   });
+
+  const requests = resources.requests?.filter(isRequest).map(request => {
+    return {
+      ...request,
+      _id: generateId(models.request.prefix),
+      parentId: aiGeneratedRequestGroup._id,
+    };
+  }) || [];
+
+  await Promise.all(requests.map(request => models.request.create(request)));
 
   const aiTestSuite = await models.unitTestSuite.create({
     name: 'AI Generated Tests',
     parentId: workspaceId,
   });
-
-  const requests = importedResources.resources.filter(isRequest);
 
   const spec = parseApiSpec(apiSpec.contents);
 
@@ -579,8 +588,8 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
 
       return methodInfo;
     } catch (error) {
-      console.error(error);
-      return {};
+      console.log(error);
+      return undefined;
     }
   };
 
@@ -595,6 +604,8 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
 
   const total = tests.length;
   let progress = 0;
+
+  // @TODO Investigate the defer API for streaming results.
   const progressStream = new TransformStream();
   const writer = progressStream.writable.getWriter();
 
@@ -684,6 +695,7 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
 
   const total = tests.length;
   let progress = 0;
+  // @TODO Investigate the defer API for streaming results.
   const progressStream = new TransformStream();
   const writer = progressStream.writable.getWriter();
 
