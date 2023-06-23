@@ -23,44 +23,6 @@ export const AI = () => {
     },
   } = useAIContext();
 
-  if (!loggedIn) {
-    return <Fragment>
-      <div
-        className="notice pad surprise"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <h1 className="no-margin-top">Try Insomnia AI <InsomniaAI /></h1>
-        <p
-          style={{
-            textAlign: 'center',
-            width: '100%',
-            maxWidth: '66ch',
-          }}
-        >
-          Improve your productivity with Insomnia AI and perform complex operations in 1-click, like auto-generating API tests for your documents and collections.
-          <br />
-          <br />
-          This capability is an add-on to Enterprise customers only.
-        </p>
-        <br />
-        <div className="pad">
-          <Link button className="btn btn--clicky" href="https://insomnia.rest/pricing/contact">
-            Enable Insomnia AI <i className="fa fa-external-link" />
-          </Link>
-        </div>
-      </div>
-      <p>
-        Or{' '}<a href="#" onClick={handleLogin} className="theme--link">
-          Log In
-        </a>
-      </p>
-    </Fragment >;
-  }
-
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -121,6 +83,8 @@ export const AI = () => {
         <h1 className="no-margin-top">Try Insomnia AI <InsomniaAI /></h1>
         <p>
           Improve your productivity with Insomnia AI and perform complex operations in 1-click, like auto-generating API tests for your documents and collections.
+          <br />
+          <br />
           This capability is an add-on to Enterprise customers only.
         </p>
         <br />
