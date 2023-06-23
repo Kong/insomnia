@@ -229,28 +229,22 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
   };
 };
 
-const importToNewWorkspace = async (projectId: string, workspace?: Workspace) => {
+const importToNewWorkspace = async (projectId: string, workspaceToImport?: Workspace) => {
   invariant(ResourceCache, 'No resources to import');
   const resources = ResourceCache.resources;
-  const workspaceToImport = workspace || { _id: generateId(wsPrefix), name: 'Imported Workspace' };
   const ResourceIdMap = new Map();
-  const scope =
-    isApiSpecImport(ResourceCache?.type) ||
-      Boolean(resources.find(r => r.type === 'ApiSpec'))
-      ? 'design'
-      : 'collection';
   const newWorkspace = await models.workspace.create({
-    name: workspaceToImport?.name,
-    scope,
+    name: workspaceToImport?.name || 'Imported Workspace',
+    scope: workspaceToImport?.scope || 'collection',
     parentId: projectId,
   });
-  const apiSpec = resources.find(r => r.type === 'ApiSpec' && r.parentId === workspaceToImport._id);
+  const apiSpec = newWorkspace.scope === 'design' && resources.find(r => r.type === 'ApiSpec' && r.parentId === workspaceToImport?._id);
   // if workspace is not in the resources, there will be no apiSpec, if resource type is set to api spec this could cause a bug
   if (apiSpec) {
     await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
       ...apiSpec,
       _id: generateId(models.apiSpec.prefix),
-      fileName: workspace?.name,
+      fileName: workspaceToImport?.name,
     });
   }
 
@@ -259,7 +253,7 @@ const importToNewWorkspace = async (projectId: string, workspace?: Workspace) =>
     newWorkspace.scope === 'design'
   ) {
     await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
-      fileName: workspace?.name,
+      fileName: newWorkspace.name,
       contents: ResourceCache.content,
       contentType: 'yaml',
     });
@@ -267,9 +261,8 @@ const importToNewWorkspace = async (projectId: string, workspace?: Workspace) =>
 
   // If we're importing into a new workspace
   // Map new IDs
-  ResourceIdMap.set(workspaceToImport._id, newWorkspace._id);
   ResourceIdMap.set('__WORKSPACE_ID__', newWorkspace._id);
-  workspace && ResourceIdMap.set(workspace._id, newWorkspace._id);
+  workspaceToImport && ResourceIdMap.set(workspaceToImport._id, newWorkspace._id);
 
   const resourcesWithoutWorkspaceAndApiSpec = resources.filter(
     resource => !isWorkspace(resource) && !isApiSpec(resource)
@@ -330,6 +323,7 @@ const importToNewWorkspace = async (projectId: string, workspace?: Workspace) =>
       ...r,
       _id: ResourceIdMap.get(r._id),
       parentId: ResourceIdMap.get(r.parentId),
-    })), workspace,
+    })),
+    workspace: newWorkspace,
   };
 };
