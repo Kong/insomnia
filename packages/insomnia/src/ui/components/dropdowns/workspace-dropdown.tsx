@@ -34,7 +34,7 @@ export const WorkspaceDropdown: FC = () => {
   const dropdownRef = useRef<DropdownHandle>(null);
 
   const {
-    loading,
+    generating: loading,
     access,
     generateTests,
   } = useAIContext();

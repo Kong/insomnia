@@ -21,7 +21,7 @@ const StyledSpecEditorSidebar = styled.div`
 
 export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) => {
   const {
-    loading,
+    generating: loading,
     generateTestsFromSpec,
     access,
   } = useAIContext();

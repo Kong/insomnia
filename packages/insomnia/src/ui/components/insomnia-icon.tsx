@@ -89,7 +89,7 @@ export const InsomniaAILogo = ({
   ...props
 }: React.SVGProps<SVGSVGElement>) => {
   const {
-    loading,
+    generating: loading,
     progress,
   } = useAIContext();
 
@@ -168,7 +168,6 @@ export const InsomniaAILogo = ({
           </AILoadingText>
         )}
       </RelativeFrame>
-
     </Layout>
   );
 };

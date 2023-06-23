@@ -5,7 +5,7 @@ import { usePrevious } from 'react-use';
 import { isLoggedIn } from '../../../account/session';
 
 const AIContext = createContext({
-  loading: false,
+  generating: false,
   generateTests: () => { },
   generateTestsFromSpec: () => { },
   access: {
@@ -91,7 +91,7 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
   return (
     <AIContext.Provider
       value={{
-        loading: loading || (progress.total > 0 && progress.progress < progress.total),
+        generating: loading || (progress.total > 0 && progress.progress < progress.total),
         progress,
         generateTests: () => {
           aiGenerateTestsFetcher.submit({}, {
