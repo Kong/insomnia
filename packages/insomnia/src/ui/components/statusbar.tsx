@@ -1,7 +1,6 @@
 import React, { FC } from 'react';
 import styled from 'styled-components';
 
-import { AIGenerationStatus } from './ai-generation-status';
 import { SettingsButton } from './buttons/settings-button';
 import { SvgIcon } from './svg-icon';
 
