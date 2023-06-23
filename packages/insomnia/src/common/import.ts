@@ -345,7 +345,6 @@ export async function importResources({
       parentId: ResourceIdMap.get(r.parentId),
     }));
 
-    console.log({ resources, resourcesWithIds });
     return {
       resources: resourcesWithIds,
       workspace: newWorkspace,
