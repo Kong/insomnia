@@ -60,21 +60,27 @@ export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) =>
   return (
     <StyledSpecEditorSidebar>
       <div>
-        {access.enabled && <Button
-          variant="text"
-          disabled={loading}
-          style={{
-            width: '100%',
-          }}
-          onClick={generateTestsFromSpec}
-        >
-          <InsomniaAI /> <span
+        {access.enabled && (
+          <Button
+            variant="text"
+            disabled={loading}
             style={{
-              marginLeft: 'var(--padding-xs)',
+              width: '100%',
+              justifyContent: 'flex-start!important',
+              gap: 'var(--padding-xs)',
             }}
+            onClick={generateTestsFromSpec}
           >
-            Auto-generate Tests For Collection</span>
-        </Button>}
+            <InsomniaAI
+              style={{
+                flex: '0 0 20px',
+              }}
+            />
+            <span>
+              Auto-generate Tests For Collection
+            </span>
+          </Button>
+        )}
       </div>
       <Sidebar jsonData={specJSON} onClick={onClick} />
     </StyledSpecEditorSidebar>
