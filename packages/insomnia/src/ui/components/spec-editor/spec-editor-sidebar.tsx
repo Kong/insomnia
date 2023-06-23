@@ -63,6 +63,9 @@ export const SpecEditorSidebar: FC<Props> = ({ apiSpec, handleSetSelection }) =>
         {access.enabled && <Button
           variant="text"
           disabled={loading}
+          style={{
+            width: '100%',
+          }}
           onClick={generateTestsFromSpec}
         >
           <InsomniaAI /> <span

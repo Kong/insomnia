@@ -1,10 +1,11 @@
 import React from 'react';
-import { useFetchers } from 'react-router-dom';
+
+import { useAIContext } from '../context/app/ai-context';
 
 export const InsomniaAI = ({
   ...props
 }: React.SVGProps<SVGSVGElement>) => {
-  const loading = useFetchers().filter(loader => loader.formAction?.includes('/ai/')).some(loader => loader.state === 'submitting');
+  const { loading } = useAIContext();
 
   return (
     <svg
