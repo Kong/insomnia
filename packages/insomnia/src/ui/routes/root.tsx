@@ -258,9 +258,10 @@ const Root = () => {
             {importUri && (
               <ImportModal
                 onHide={() => setImportUri('')}
+                projectName="Insomnia"
                 organizationId={organizationId}
                 defaultProjectId={projectId || ''}
-                defaultWorkspaceId={workspaceId}
+                defaultWorkspaceId={workspaceId} // TODO: fall back to last active workspace, or first workspace
                 from={{ type: 'uri', defaultValue: importUri }}
               />
             )}
