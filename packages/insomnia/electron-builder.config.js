@@ -62,7 +62,7 @@ const config = {
       NSRequiresAquaSystemAppearance: false,
     },
     notarize: {
-      appBundleId: 'com.insomnia.app',
+      teamId: 'REPLACE_WITH_TEAM_ID',
     },
     asarUnpack: [
       'node_modules/@getinsomnia/node-libcurl',
