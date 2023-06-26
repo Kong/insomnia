@@ -69,7 +69,6 @@ export const importResourcesAction: ActionFunction = async ({ request }): Promis
 
   invariant(typeof organizationId === 'string', 'OrganizationId is required.');
   invariant(typeof projectId === 'string', 'ProjectId is required.');
-  invariant(typeof workspaceId === 'string', 'WorkspaceId is required.');
   // when importing through insomnia://app/import, projectId is not provided
   if (!projectId) {
     projectId = DEFAULT_PROJECT_ID;
@@ -77,7 +76,7 @@ export const importResourcesAction: ActionFunction = async ({ request }): Promis
 
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found.');
-  if (workspaceId) {
+  if (typeof workspaceId === 'string' && workspaceId) {
     const result = await importResourcesToWorkspace({
       workspaceId: workspaceId,
     });
