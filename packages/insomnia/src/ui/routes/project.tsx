@@ -879,8 +879,8 @@ const ProjectRoute: FC = () => {
     showPrompt({
       title: 'Create New Design Document',
       submitName: 'Create',
-      placeholder: 'My Document',
-      defaultValue: 'My Document',
+      placeholder: 'my-spec.yaml',
+      defaultValue: 'my-spec.yaml',
       selectText: true,
       onComplete: async (name: string) => {
         fetcher.submit(
