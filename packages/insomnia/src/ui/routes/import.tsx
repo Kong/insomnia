@@ -5,6 +5,7 @@ import { ActionFunction, redirect } from 'react-router-dom';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { fetchImportContentFromURI, importResourcesToProject, importResourcesToWorkspace, scanResources, ScanResult } from '../../common/import';
 import * as models from '../../models';
+import { DEFAULT_PROJECT_ID } from '../../models/project';
 import { invariant } from '../../utils/invariant';
 
 export interface ScanForResourcesActionResult extends ScanResult { }
@@ -62,26 +63,28 @@ export interface ImportResourcesActionResult {
 export const importResourcesAction: ActionFunction = async ({ request }): Promise<ImportResourcesActionResult | Response> => {
   const formData = await request.formData();
 
-  // TODO: get multiple workspaces
   const organizationId = formData.get('organizationId');
-  const projectId = formData.get('projectId');
+  let projectId = formData.get('projectId');
   const workspaceId = formData.get('workspaceId');
 
   invariant(typeof organizationId === 'string', 'OrganizationId is required.');
   invariant(typeof projectId === 'string', 'ProjectId is required.');
   invariant(typeof workspaceId === 'string', 'WorkspaceId is required.');
+  // when importing through insomnia://app/import, projectId is not provided
+  if (!projectId) {
+    projectId = DEFAULT_PROJECT_ID;
+  }
 
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found.');
   if (workspaceId) {
-    // NOTE: perhaps we don't need this
     const result = await importResourcesToWorkspace({
       workspaceId: workspaceId,
     });
     return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${result.workspace._id}/${result.workspace.scope === 'design'
       ? ACTIVITY_SPEC : ACTIVITY_DEBUG}`);
   }
-  // NOTE: exported data has not parentId for a workspace...
+
   await importResourcesToProject({ projectId: project._id });
   return redirect(`/organization/${organizationId}/project/${projectId}`);
 };

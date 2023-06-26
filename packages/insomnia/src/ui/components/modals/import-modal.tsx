@@ -390,7 +390,9 @@ const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => {
 interface ImportModalProps extends ModalProps {
   organizationId: string;
   projectName: string;
-  defaultProjectId: string;
+  // undefined when using insomnia://app/import
+  defaultProjectId?: string;
+  // undefined when in workspace selection page
   defaultWorkspaceId?: string;
   from:
   | {
