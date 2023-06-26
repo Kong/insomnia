@@ -94,6 +94,11 @@ export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalPr
     <Modal ref={modalRef} tall>
       <ModalHeader>Generate Config</ModalHeader>
       <ModalBody className="wide">
+        <div className="notice warning">
+          <p>
+            Kong config generation has been moved to decK CLI, <Link href={'https://github.com/Kong/deck'}>https://github.com/Kong/deck</Link>.
+          </p>
+        </div>
         <Tabs
           aria-label="General configuration tabs"
           defaultSelectedKey={activeTab}
