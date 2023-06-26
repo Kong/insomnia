@@ -644,6 +644,9 @@ const ImportResourcesForm = ({
   const [isPending, startTransition] = useTransition();
 
   const id = useId();
+  // allow workspace import if there is only one workspace
+  const totalWorkspaces = scanResult?.workspaces?.length || 0;
+  const shouldImportToWorkspace = defaultWorkspaceId && totalWorkspaces <= 1;
 
   return (
     <Fragment>
@@ -667,7 +670,7 @@ const ImportResourcesForm = ({
         >
           <input hidden name="organizationId" readOnly value={organizationId} />
           <input hidden name="projectId" readOnly value={defaultProjectId} />
-          <input hidden name="workspaceId" readOnly value={defaultWorkspaceId} />
+          {shouldImportToWorkspace && <input hidden name="workspaceId" readOnly value={defaultWorkspaceId} />}
         </form>
         <table className="table--fancy table--outlined margin-top-sm">
           <thead>

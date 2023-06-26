@@ -27,7 +27,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     organizationId,
     projectId,
     workspaceId,
-  } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  } = useParams() as { organizationId: string; projectId: string; workspaceId?: string };
   const projectName = useSelector(selectActiveProjectName) ?? getProductName();
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const activeWorkspaceName = useSelector(selectActiveWorkspaceName);

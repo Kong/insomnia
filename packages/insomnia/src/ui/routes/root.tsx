@@ -242,10 +242,9 @@ const Root = () => {
     );
   }, []);
 
-  const { organizationId, projectId, workspaceId } = useParams() as {
+  const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId?: string;
-    workspaceId?: string;
   };
 
   return (
@@ -260,8 +259,7 @@ const Root = () => {
                 onHide={() => setImportUri('')}
                 projectName="Insomnia"
                 organizationId={organizationId}
-                defaultProjectId={projectId || ''}
-                defaultWorkspaceId={workspaceId} // TODO: fall back to last active workspace, or first workspace
+                defaultProjectId={projectId || ''} // TODO: get default or lastactive
                 from={{ type: 'uri', defaultValue: importUri }}
               />
             )}
