@@ -390,6 +390,8 @@ const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => {
 interface ImportModalProps extends ModalProps {
   organizationId: string;
   projectName: string;
+  // undefined when not using preferences
+  workspaceName?: string;
   // undefined when using insomnia://app/import
   defaultProjectId?: string;
   // undefined when in workspace selection page
@@ -409,6 +411,7 @@ interface ImportModalProps extends ModalProps {
 
 export const ImportModal: FC<ImportModalProps> = ({
   projectName,
+  workspaceName,
   defaultProjectId,
   defaultWorkspaceId,
   organizationId,
@@ -434,16 +437,19 @@ export const ImportModal: FC<ImportModalProps> = ({
       modalProps.onHide?.();
     }
   }, [importFetcher.state, modalProps, prevImportFetcherState]);
-
+  // allow workspace import if there is only one workspace
+  const totalWorkspaces = scanResourcesFetcher.data?.workspaces?.length || 0;
+  const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspaces <= 1;
+  const header = shouldImportToWorkspace ? `Import to "${workspaceName}" Workspace` : `Import to "${projectName}" Project`;
   return (
     <OverlayContainer>
       <Modal {...modalProps} ref={modalRef}>
-        <ModalHeader>Import to {projectName}</ModalHeader>
+        <ModalHeader>{header}</ModalHeader>
         {scanResourcesFetcher.data && scanResourcesFetcher.data.errors.length === 0 ? (
           <ImportResourcesForm
             organizationId={organizationId}
             defaultProjectId={defaultProjectId}
-            defaultWorkspaceId={defaultWorkspaceId}
+            defaultWorkspaceId={shouldImportToWorkspace ? defaultWorkspaceId : ''}
             scanResult={scanResourcesFetcher.data}
             errors={importFetcher.data?.errors}
             onSubmit={e => {
@@ -646,9 +652,6 @@ const ImportResourcesForm = ({
   const [isPending, startTransition] = useTransition();
 
   const id = useId();
-  // allow workspace import if there is only one workspace
-  const totalWorkspaces = scanResult?.workspaces?.length || 0;
-  const shouldImportToWorkspace = defaultWorkspaceId && totalWorkspaces <= 1;
 
   return (
     <Fragment>
@@ -672,7 +675,7 @@ const ImportResourcesForm = ({
         >
           <input hidden name="organizationId" readOnly value={organizationId} />
           <input hidden name="projectId" readOnly value={defaultProjectId} />
-          {shouldImportToWorkspace && <input hidden name="workspaceId" readOnly value={defaultWorkspaceId} />}
+          <input hidden name="workspaceId" readOnly value={defaultWorkspaceId} />
         </form>
         <table className="table--fancy table--outlined margin-top-sm">
           <thead>

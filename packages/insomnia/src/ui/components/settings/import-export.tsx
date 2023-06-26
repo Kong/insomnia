@@ -116,6 +116,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           onHide={() => setIsImportModalOpen(false)}
           from={{ type: 'file' }}
           projectName={projectName}
+          workspaceName={activeWorkspaceName}
           organizationId={organizationId}
           defaultProjectId={projectId}
           defaultWorkspaceId={workspaceId}

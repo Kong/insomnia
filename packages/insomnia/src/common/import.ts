@@ -147,10 +147,11 @@ export async function importResourcesToProject({ projectId }: { projectId: strin
   const resources = ResourceCache.resources;
   const bufferId = await db.bufferChanges();
   if (!resources.find(isWorkspace)) {
-    await importToNewWorkspace(projectId);
+    await importResourcesToNewWorkspace(projectId);
     return { resources };
   }
-  const r = await Promise.all(resources.filter(isWorkspace).map(resource => importToNewWorkspace(projectId, resource)));
+  const r = await Promise.all(resources.filter(isWorkspace)
+    .map(resource => importResourcesToNewWorkspace(projectId, resource)));
 
   await db.flushChanges(bufferId);
   return { resources: r.flat() };
@@ -229,7 +230,7 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
   };
 };
 
-const importToNewWorkspace = async (projectId: string, workspaceToImport?: Workspace) => {
+const importResourcesToNewWorkspace = async (projectId: string, workspaceToImport?: Workspace) => {
   invariant(ResourceCache, 'No resources to import');
   const resources = ResourceCache.resources;
   const ResourceIdMap = new Map();
