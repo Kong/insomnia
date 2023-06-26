@@ -68,9 +68,8 @@ export const importResourcesAction: ActionFunction = async ({ request }): Promis
   const workspaceId = formData.get('workspaceId');
 
   invariant(typeof organizationId === 'string', 'OrganizationId is required.');
-  invariant(typeof projectId === 'string', 'ProjectId is required.');
   // when importing through insomnia://app/import, projectId is not provided
-  if (!projectId) {
+  if (typeof projectId !== 'string' || !projectId) {
     projectId = DEFAULT_PROJECT_ID;
   }
 
