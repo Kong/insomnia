@@ -1,13 +1,9 @@
 import React from 'react';
 import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
-import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { GitRepository } from '../../models/git-repository';
-import { isGrpcRequest } from '../../models/grpc-request';
 import { Project } from '../../models/project';
-import { isRequest } from '../../models/request';
-import { isWebSocketRequest } from '../../models/websocket-request';
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { invariant } from '../../utils/invariant';
@@ -25,31 +21,24 @@ export const workspaceLoader: LoaderFunction = async ({
   invariant(workspaceId, 'Workspace ID is required');
   invariant(projectId, 'Project ID is required');
 
-  const workspace = await models.workspace.getById(workspaceId);
-
-  invariant(workspace, 'Workspace not found');
+  const activeWorkspace = await models.workspace.getById(workspaceId);
+  invariant(activeWorkspace, 'Workspace not found');
 
   // I don't know what to say man, this is just how it is
   await models.environment.getOrCreateForParentId(workspaceId);
   await models.cookieJar.getOrCreateForParentId(workspaceId);
-  await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-  let workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+
   const activeProject = await models.project.getById(projectId);
   invariant(activeProject, 'Project not found');
 
-  const gitRepository = await models.gitRepository.getById(workspaceMeta.gitRepositoryId || '');
-  if (!workspaceMeta.activeRequestId) {
-    // TODO: review this
-    const requests = (await db.withDescendants(workspace, models.request.type)).filter(r => isRequest(r) || isWebSocketRequest(r) || isGrpcRequest(r)).sort((a, b) => b.metaSortKey - a.metaSortKey);
-    if (requests.length) {
-      workspaceMeta = await models.workspaceMeta.update(workspaceMeta, { activeRequestId: requests[0]._id });
-    }
-  }
+  const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const gitRepository = await models.gitRepository.getById(activeWorkspaceMeta.gitRepositoryId || '');
+
   return {
-    activeWorkspace: workspace,
+    activeWorkspace,
     activeProject,
     gitRepository,
-    activeWorkspaceMeta: workspaceMeta,
+    activeWorkspaceMeta,
   };
 };
 

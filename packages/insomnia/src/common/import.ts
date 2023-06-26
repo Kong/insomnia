@@ -13,7 +13,7 @@ import {
   isWebSocketRequest,
   WebSocketRequest,
 } from '../models/websocket-request';
-import { isWorkspace, prefix as wsPrefix, Workspace } from '../models/workspace';
+import { isWorkspace, Workspace } from '../models/workspace';
 import { convert, InsomniaImporter } from '../utils/importers/convert';
 import { invariant } from '../utils/invariant';
 import { database as db } from './database';
