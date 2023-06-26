@@ -24,8 +24,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: "macos-latest"
-            build-targets: "zip"
           - os: "windows-latest"
             build-targets: "portable"
           - os: "ubuntu-latest"
