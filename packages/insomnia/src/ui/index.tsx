@@ -585,6 +585,8 @@ async function renderApp() {
 
     const request = await models.request.create({ parentId: workspaceId });
 
+    await models.apiSpec.getOrCreateForParentId(workspaceId);
+
     const unitTestSuite = await models.unitTestSuite.create({
       parentId: workspaceId,
       name: 'Example Test Suite',
