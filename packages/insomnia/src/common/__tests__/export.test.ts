@@ -216,8 +216,6 @@ describe('export', () => {
     const w = await models.workspace.create({
       name: 'Workspace',
     });
-    const spec = await models.apiSpec.getByParentId(w._id); // Created by workspace migration
-
     const jar = await models.cookieJar.getOrCreateForParentId(w._id);
     const r1 = await models.request.create({
       name: 'Request 1',
@@ -280,9 +278,6 @@ describe('export', () => {
           _id: w._id,
         }),
         expect.objectContaining({
-          _id: spec?._id,
-        }),
-        expect.objectContaining({
           _id: eBase._id,
         }),
         expect.objectContaining({
@@ -317,7 +312,7 @@ describe('export', () => {
         }),
       ]),
     });
-    expect(exportWorkspacesDataJson.resources.length).toBe(13);
+    expect(exportWorkspacesDataJson.resources.length).toBe(12);
     // Test export some requests only.
     const exportRequestsJson = await exportRequestsData([r1, gr1], false, 'json');
     const exportRequestsYaml = await exportRequestsData([r1, gr1], false, 'yaml');
@@ -355,8 +350,8 @@ describe('export', () => {
         }),
       ]),
     });
-    expect(exportRequestsDataJSON.resources.length).toBe(10);
-    expect(exportRequestsDataYAML.resources.length).toBe(10);
+    expect(exportRequestsDataJSON.resources.length).toBe(9);
+    expect(exportRequestsDataYAML.resources.length).toBe(9);
     // Ensure JSON and YAML are the same
     expect(exportRequestsDataJSON.resources).toEqual(exportRequestsDataYAML.resources);
   });

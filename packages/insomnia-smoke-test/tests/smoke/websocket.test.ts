@@ -10,7 +10,6 @@ test('can make websocket connection', async ({ app, page }) => {
     has: page.locator('.CodeMirror-activeline'),
   });
 
-  await page.getByTestId('project').click();
   await page.getByRole('button', { name: 'Create' }).click();
 
   const text = await loadFixture('websockets.yaml');
@@ -19,7 +18,7 @@ test('can make websocket connection', async ({ app, page }) => {
   await page.getByRole('menuitem', { name: 'Import' }).click();
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
-  await page.getByRole('button', { name: 'Import' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionWebSocketsjust now').click();
 
   await page.getByRole('button', { name: 'localhost:4010' }).click();

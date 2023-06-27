@@ -11,7 +11,6 @@ test.describe('gRPC interactions', () => {
   let streamMessage: Locator;
 
   test.beforeEach(async ({ app, page }) => {
-    await page.getByTestId('project').click();
     await page.getByRole('button', { name: 'Create' }).click();
 
     const text = await loadFixture('grpc.yaml');

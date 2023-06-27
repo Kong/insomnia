@@ -12,16 +12,12 @@ export const prefix = 'wrk';
 export const canDuplicate = true;
 export const canSync = true;
 
-interface GenericWorkspace<Scope extends 'design' | 'collection'> {
+export interface BaseWorkspace {
   name: string;
   description: string;
   certificates?: any; // deprecated
-  scope: Scope;
+  scope: 'design' | 'collection';
 }
-
-export type DesignWorkspace = GenericWorkspace<'design'>;
-export type CollectionWorkspace = GenericWorkspace<'collection'>;
-export type BaseWorkspace = DesignWorkspace | CollectionWorkspace;
 
 export type WorkspaceScope = BaseWorkspace['scope'];
 
@@ -36,11 +32,11 @@ export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace 
   model.type === type
 );
 
-export const isDesign = (workspace: Pick<Workspace, 'scope'>): workspace is DesignWorkspace => (
+export const isDesign = (workspace: Pick<Workspace, 'scope'>) => (
   workspace.scope === WorkspaceScopeKeys.design
 );
 
-export const isCollection = (workspace: Pick<Workspace, 'scope'>): workspace is CollectionWorkspace => (
+export const isCollection = (workspace: Pick<Workspace, 'scope'>) => (
   workspace.scope === WorkspaceScopeKeys.collection
 );
 
@@ -50,13 +46,10 @@ export const init = (): BaseWorkspace => ({
   scope: WorkspaceScopeKeys.collection,
 });
 
-export async function migrate(doc: Workspace) {
+export function migrate(doc: Workspace) {
   try {
-    doc = await _migrateExtractClientCertificates(doc);
-    doc = await _migrateEnsureName(doc);
-    await models.apiSpec.getOrCreateForParentId(doc._id, {
-      fileName: doc.name,
-    });
+    doc = _migrateExtractClientCertificates(doc);
+    doc = _migrateEnsureName(doc);
     doc = _migrateScope(doc);
     doc = _migrateIntoDefaultProject(doc);
     return doc;
@@ -96,7 +89,7 @@ export function remove(workspace: Workspace) {
   return db.remove(workspace);
 }
 
-async function _migrateExtractClientCertificates(workspace: Workspace) {
+function _migrateExtractClientCertificates(workspace: Workspace) {
   const certificates = workspace.certificates || null;
 
   if (!Array.isArray(certificates)) {
@@ -105,7 +98,7 @@ async function _migrateExtractClientCertificates(workspace: Workspace) {
   }
 
   for (const cert of certificates) {
-    await models.clientCertificate.create({
+    models.clientCertificate.create({
       parentId: workspace._id,
       host: cert.host || '',
       passphrase: cert.passphrase || null,
@@ -119,7 +112,6 @@ async function _migrateExtractClientCertificates(workspace: Workspace) {
   delete workspace.certificates;
   // This will remove the now-missing `certificates` property
   // NOTE: Using db.update so we don't change things like modified time
-  await db.update(workspace);
   return workspace;
 }
 
@@ -128,7 +120,7 @@ async function _migrateExtractClientCertificates(workspace: Workspace) {
  * this happens (and it causes problems) so this migration will ensure that it is
  * corrected.
  */
-async function _migrateEnsureName(workspace: Workspace) {
+function _migrateEnsureName(workspace: Workspace) {
   if (typeof workspace.name !== 'string') {
     workspace.name = 'My Workspace';
   }
@@ -144,21 +136,13 @@ type MigrationWorkspace = Merge<Workspace, { scope: OldScopeTypes | Workspace['s
  * Ensure workspace scope is set to a valid entry
  */
 function _migrateScope(workspace: MigrationWorkspace) {
-  switch (workspace.scope) {
-    case WorkspaceScopeKeys.collection:
-    case WorkspaceScopeKeys.design:
-      break;
-
-    case 'designer':
-    case 'spec':
-      workspace.scope = WorkspaceScopeKeys.design;
-      break;
-
-    case 'debug':
-    case null:
-    default:
-      workspace.scope = WorkspaceScopeKeys.collection;
-      break;
+  if (workspace.scope === WorkspaceScopeKeys.design || workspace.scope === WorkspaceScopeKeys.collection) {
+    return workspace as Workspace;
+  }
+  if (workspace.scope === 'designer' || workspace.scope === 'spec') {
+    workspace.scope = WorkspaceScopeKeys.design;
+  } else {
+    workspace.scope = WorkspaceScopeKeys.collection;
   }
   return workspace as Workspace;
 }
@@ -167,7 +151,6 @@ function _migrateIntoDefaultProject(workspace: Workspace) {
   if (!workspace.parentId) {
     console.log(`No workspace parentId found for ${workspace._id} setting default ${DEFAULT_PROJECT_ID}`);
     workspace.parentId = DEFAULT_PROJECT_ID;
-    models.workspace.update(workspace, { parentId: DEFAULT_PROJECT_ID });
   }
 
   return workspace;

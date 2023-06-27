@@ -68,18 +68,6 @@ describe('migrate()', () => {
     expect(certsAgain.length).toBe(2);
   });
 
-  it('creates api spec for workspace id', async () => {
-    const workspace = await models.workspace.create({
-      name: 'My Workspace',
-    });
-    await models.apiSpec.removeWhere(workspace._id);
-    expect(await models.apiSpec.getByParentId(workspace._id)).toBe(null);
-    await models.workspace.migrate(workspace);
-    const spec = await models.apiSpec.getByParentId(workspace._id);
-    expect(spec).not.toBe(null);
-    expect(spec?.fileName).toBe(workspace.name);
-  });
-
   it('translates the scope correctly', async () => {
     const specW = await models.workspace.create({
       // @ts-expect-error intentionally incorrect - old scope type

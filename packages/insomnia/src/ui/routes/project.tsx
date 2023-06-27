@@ -583,6 +583,7 @@ interface WorkspaceWithMetadata {
   _id: string;
   hasUnsavedChanges: boolean;
   lastModifiedTimestamp: number;
+  created: number;
   modifiedLocally: number;
   lastCommitTime: number | null | undefined;
   lastCommitAuthor: string | null | undefined;
@@ -590,7 +591,7 @@ interface WorkspaceWithMetadata {
   spec: Record<string, any> | null;
   specFormat: 'openapi' | 'swagger' | null;
   name: string;
-  apiSpec: ApiSpec;
+  apiSpec: ApiSpec | null;
   specFormatVersion: string | null;
   workspace: Workspace;
 }
@@ -662,24 +663,23 @@ export const loader: LoaderFunction = async ({
 
   const projectWorkspaces = await models.workspace.findByParentId(project._id);
 
-  const getWorkspaceMetaData = async (workspace: Workspace) => {
+  const getWorkspaceMetaData = async (workspace: Workspace): Promise<WorkspaceWithMetadata> => {
     const apiSpec = await models.apiSpec.getByParentId(workspace._id);
-    invariant(apiSpec, 'ApiSpec should exist for workspace');
 
     let spec: ParsedApiSpec['contents'] = null;
     let specFormat: ParsedApiSpec['format'] = null;
     let specFormatVersion: ParsedApiSpec['formatVersion'] = null;
-
-    try {
-      const result = parseApiSpec(apiSpec.contents);
-      spec = result.contents;
-      specFormat = result.format;
-      specFormatVersion = result.formatVersion;
-    } catch (err) {
+    if (apiSpec) {
+      try {
+        const result = parseApiSpec(apiSpec.contents);
+        spec = result.contents;
+        specFormat = result.format;
+        specFormatVersion = result.formatVersion;
+      } catch (err) {
       // Assume there is no spec
       // TODO: Check for parse errors if it's an invalid spec
+      }
     }
-
     const workspaceMeta = await models.workspaceMeta.getByParentId(
       workspace._id
     );
@@ -691,14 +691,14 @@ export const loader: LoaderFunction = async ({
     const workspaceModified = workspaceMeta?.modified || workspace.modified;
 
     const modifiedLocally = isDesign(workspace)
-      ? apiSpec.modified
+      ? (apiSpec?.modified || 0)
       : workspaceModified;
 
     // Span spec, workspace and sync related timestamps for card last modified label and sort order
     const lastModifiedFrom = [
       workspace?.modified,
       workspaceMeta?.modified,
-      apiSpec.modified,
+      modifiedLocally,
       workspaceMeta?.cachedGitLastCommitTime,
     ];
 
@@ -709,84 +709,29 @@ export const loader: LoaderFunction = async ({
     const hasUnsavedChanges = Boolean(
       isDesign(workspace) &&
         workspaceMeta?.cachedGitLastCommitTime &&
-        apiSpec.modified > workspaceMeta?.cachedGitLastCommitTime
+      modifiedLocally > workspaceMeta?.cachedGitLastCommitTime
     );
-
+    const name = isDesign(workspace) ? (apiSpec?.fileName || '') : workspace.name;
     return {
       _id: workspace._id,
       hasUnsavedChanges,
       lastModifiedTimestamp,
+      created: workspace.created,
       modifiedLocally,
       lastCommitTime: workspaceMeta?.cachedGitLastCommitTime,
       lastCommitAuthor,
       lastActiveBranch,
       spec,
       specFormat,
-      name: isDesign(workspace) ? apiSpec.fileName : workspace.name,
+      name,
       apiSpec,
       specFormatVersion,
       workspace: {
         ...workspace,
-        name: isDesign(workspace) ? apiSpec.fileName : workspace.name,
+        name,
       },
     };
   };
-
-  // @TODO - Figure out if the database has a way to sort/filter items that could replace this logic.
-  const filterWorkspace = (workspace: WorkspaceWithMetadata) => {
-    const matchResults = fuzzyMatchAll(
-      // Use the filter string
-      filter,
-      // to match against these properties
-      [
-        workspace.name,
-        workspace.workspace.scope === 'design' ? 'document' : 'collection',
-        workspace.lastActiveBranch || '',
-        workspace.specFormatVersion || '',
-      ],
-      {
-        splitSpace: true,
-        loose: true,
-      }
-    );
-
-    return filter ? Boolean(matchResults?.indexes) : true;
-  };
-
-  function sortWorkspaces(
-    workspaceWithMetaA: WorkspaceWithMetadata,
-    workspaceWithMetaB: WorkspaceWithMetadata
-  ) {
-    switch (sortOrder) {
-      case 'modified-desc':
-        return sortMethodMap['modified-desc'](
-          workspaceWithMetaA,
-          workspaceWithMetaB
-        );
-      case 'name-asc':
-        return sortMethodMap['name-asc'](
-          workspaceWithMetaA.workspace,
-          workspaceWithMetaB.workspace
-        );
-      case 'name-desc':
-        return sortMethodMap['name-desc'](
-          workspaceWithMetaA.workspace,
-          workspaceWithMetaB.workspace
-        );
-      case 'created-asc':
-        return sortMethodMap['created-asc'](
-          workspaceWithMetaA.workspace,
-          workspaceWithMetaB.workspace
-        );
-      case 'created-desc':
-        return sortMethodMap['created-desc'](
-          workspaceWithMetaA.workspace,
-          workspaceWithMetaB.workspace
-        );
-      default:
-        throw new Error(`Invalid sort order: ${sortOrder}`);
-    }
-  }
 
   // Fetch all workspace meta data in parallel
   const workspacesWithMetaData = await Promise.all(
@@ -795,8 +740,18 @@ export const loader: LoaderFunction = async ({
 
   const workspaces = workspacesWithMetaData
     .filter(w => (scope !== 'all' ? w.workspace.scope === scope : true))
-    .filter(filterWorkspace)
-    .sort(sortWorkspaces);
+  // @TODO - Figure out if the database has a way to sort/filter items that could replace this logic.
+    .filter(workspace => filter ? Boolean(fuzzyMatchAll(filter,
+      // Use the filter string to match against these properties
+      [
+        workspace.name,
+        workspace.workspace.scope === 'design' ? 'document' : 'collection',
+        workspace.lastActiveBranch || '',
+        workspace.specFormatVersion || '',
+      ],
+      { splitSpace: true, loose: true }
+    )?.indexes) : true)
+    .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
 
   const allProjects = await models.project.all();
 
@@ -1030,7 +985,7 @@ const ProjectRoute: FC = () => {
                   <WorkspaceCard
                     {...workspace}
                     projects={projects}
-                    key={workspace.apiSpec._id}
+                    key={workspace._id}
                     activeProject={activeProject}
                     onSelect={() =>
                       navigate(

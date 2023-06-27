@@ -21,7 +21,7 @@ import { SvgIcon } from '../svg-icon';
 
 interface Props {
   workspace: Workspace;
-  apiSpec: ApiSpec;
+  apiSpec: ApiSpec | null;
   project: Project;
   projects: Project[];
 }
@@ -46,7 +46,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
         ...pluginContexts.data.init(project._id),
         ...pluginContexts.store.init(p.plugin),
       };
-      await p.action(context, parseApiSpec(apiSpec.contents));
+      await p.action(context, parseApiSpec(apiSpec?.contents || ''));
     } catch (err) {
       showError({
         title: 'Document Action Failed',
@@ -55,7 +55,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
     } finally {
       stopLoading(p.label);
     }
-  }, [apiSpec.contents, project._id, startLoading, stopLoading]);
+  }, [apiSpec?.contents, project._id, startLoading, stopLoading]);
 
   const renderPluginDropdownItems: any = useCallback(() => actionPlugins.map(p => (
     <DropdownItem

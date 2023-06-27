@@ -20,7 +20,6 @@ import {
 } from '../common/constants';
 import { database } from '../common/database';
 import { initializeLogging } from '../common/log';
-import { strings } from '../common/strings';
 import * as models from '../models';
 import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../models/project';
@@ -564,40 +563,6 @@ async function renderApp() {
   };
 
   synchronizeRouterState();
-  // Create an empty workspace with a request if the app is launched for the first time
-  const stats = await models.stats.get();
-
-  const isFirstLaunch = !(stats.launches > 1);
-
-  if (isFirstLaunch) {
-    const workspace = await models.workspace.create({
-      scope: 'design',
-      name: `New ${strings.document.singular}`,
-      parentId: DEFAULT_PROJECT_ID,
-    });
-
-    const { _id: workspaceId } = workspace;
-
-    // Create default env, cookie jar, and meta
-    await models.environment.getOrCreateForParentId(workspace._id);
-    await models.cookieJar.getOrCreateForParentId(workspace._id);
-    await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-
-    const request = await models.request.create({ parentId: workspaceId });
-
-    const unitTestSuite = await models.unitTestSuite.create({
-      parentId: workspaceId,
-      name: 'Example Test Suite',
-    });
-
-    await models.workspaceMeta.updateByParentId(workspaceId, {
-      activeRequestId: request._id,
-      activeActivity: ACTIVITY_DEBUG,
-      activeUnitTestSuiteId: unitTestSuite._id,
-    });
-
-    router.navigate(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}/workspace/${workspaceId}/${ACTIVITY_DEBUG}`);
-  }
 
   const root = document.getElementById('root');
 

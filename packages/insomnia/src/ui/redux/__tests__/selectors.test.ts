@@ -58,22 +58,6 @@ describe('selectors', () => {
       expect(selectActiveApiSpec(state)).toBe(undefined);
     });
 
-    it('will return throw when there is not an active apiSpec', async () => {
-      const workspace = await models.workspace.create({
-        name: 'workspace.name',
-        scope: WorkspaceScopeKeys.design,
-      });
-
-      const state = await reduxStateForTest({
-        activeActivity: ACTIVITY_DEBUG,
-        activeWorkspaceId: workspace._id,
-      });
-      state.entities.apiSpecs = {};
-
-      const execute = () => selectActiveApiSpec(state);
-      expect(execute).toThrowError(`an api spec not found for the workspace ${workspace._id} (workspace.name)`);
-    });
-
     it('will return the apiSpec for a given workspace', async () => {
       const workspace = await models.workspace.create({
         name: 'workspace.name',

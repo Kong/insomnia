@@ -7,8 +7,6 @@ test.describe('Dashboard', async () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   test.describe('Projects', async () => {
     test('Can create, rename and delete new project', async ({ page }) => {
-      // Return to Dashboard
-      await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
@@ -50,7 +48,6 @@ test.describe('Dashboard', async () => {
   test.describe('Interactions', async () => { // Not sure about the name here
     // TODO(INS-2504) - we don't support importing multiple collections at this time
     test.skip('Can filter through multiple collections', async ({ app, page }) => {
-      await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
@@ -88,7 +85,6 @@ test.describe('Dashboard', async () => {
     });
 
     test('Can create, rename and delete a document', async ({ page }) => {
-      await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
@@ -97,12 +93,10 @@ test.describe('Dashboard', async () => {
       await page.getByRole('menuitem', { name: 'Design Document' }).click();
       await page.locator('text=Create').nth(1).click();
 
-      // Return to dashboard
-      await page.getByTestId('project').click();
-      await expect(page.locator('.app')).toContainText('my-spec.yaml');
+      // Return to dashboardawait expect(page.locator('.app')).toContainText('My Document');
 
       // Rename document
-      await page.click('text=Documentmy-spec.yamljust now >> button');
+      await page.click('text=DocumentMy Documentjust now >> button');
       await page.getByRole('menuitem', { name: 'Rename' }).click();
       await page.locator('text=Rename DocumentName Rename >> input[type="text"]').fill('test123');
       await page.click('#root button:has-text("Rename")');
@@ -114,9 +108,7 @@ test.describe('Dashboard', async () => {
       await page.locator('input[name="name"]').fill('test123-duplicate');
       await page.click('[role="dialog"] button:has-text("Duplicate")');
 
-      // Return to dashboard
-      await page.getByTestId('project').click();
-      await expect(page.locator('.app')).toContainText('test123-duplicate');
+      // Return to dashboardawait expect(page.locator('.app')).toContainText('test123-duplicate');
 
       const workspaceCards = page.locator('.card-badge');
       await expect(workspaceCards).toHaveCount(3);
@@ -129,7 +121,6 @@ test.describe('Dashboard', async () => {
     });
 
     test('Can create, rename and delete a collection', async ({ page }) => {
-      await page.getByTestId('project').click();
       await expect(page.locator('.app')).toContainText('All Files (1)');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
@@ -138,9 +129,7 @@ test.describe('Dashboard', async () => {
       await page.getByRole('menuitem', { name: 'Request Collection' }).click();
       await page.locator('text=Create').nth(1).click();
 
-      // Return to dashboard
-      await page.getByTestId('project').click();
-      await expect(page.locator('.app')).toContainText('My Collection');
+      // Return to dashboardawait expect(page.locator('.app')).toContainText('My Collection');
 
       // Rename collection
       await page.click('text=CollectionMy Collectionjust now >> button');
@@ -155,9 +144,7 @@ test.describe('Dashboard', async () => {
       await page.locator('input[name="name"]').fill('test123-duplicate');
       await page.click('[role="dialog"] button:has-text("Duplicate")');
 
-      // Return to dashboard
-      await page.getByTestId('project').click();
-      await expect(page.locator('.app')).toContainText('test123-duplicate');
+      // Return to dashboardawait expect(page.locator('.app')).toContainText('test123-duplicate');
       const workspaceCards = page.locator('.card-badge');
       await expect(workspaceCards).toHaveCount(3);
 

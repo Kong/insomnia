@@ -105,6 +105,10 @@ export const createNewWorkspaceAction: ActionFunction = async ({
     parentId: projectId,
   });
 
+  if (scope === 'design') {
+    await models.apiSpec.getOrCreateForParentId(workspace._id);
+  }
+
   // Create default env, cookie jar, and meta
   await models.environment.getOrCreateForParentId(workspace._id);
   await models.cookieJar.getOrCreateForParentId(workspace._id);
