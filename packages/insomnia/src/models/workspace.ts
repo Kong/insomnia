@@ -28,7 +28,7 @@ export const WorkspaceScopeKeys = {
 
 export type Workspace = BaseModel & BaseWorkspace;
 
-export const isWorkspace = (model: Pick<BaseModel, 'type'>) => (
+export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace => (
   model.type === type
 );
 
