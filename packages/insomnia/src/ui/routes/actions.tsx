@@ -743,7 +743,6 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
 };
 
 export const accessAIApiAction: ActionFunction = async ({ params }) => {
-  console.log('AI');
   const { organizationId, projectId, workspaceId } = params;
 
   invariant(typeof organizationId === 'string', 'Organization ID is required');
