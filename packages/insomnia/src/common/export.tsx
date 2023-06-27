@@ -327,11 +327,11 @@ const showSelectExportTypeModal = ({ onDone }: {
   });
 };
 
-const showExportPrivateEnvironmentsModal = async (privateEnvNames: string) => {
+const showExportPrivateEnvironmentsModal = async () => {
   return new Promise<boolean>(resolve => {
     showModal(AskModal, {
       title: 'Export Private Environments?',
-      message: `Do you want to include private environments (${privateEnvNames}) in your export?`,
+      message: 'Do you want to include private environments in your export?',
       onDone: async (isYes: boolean) => {
         if (isYes) {
           resolve(true);
@@ -380,17 +380,7 @@ export const exportAllToFile = (activeProjectName: string, workspacesForActivePr
 
   showSelectExportTypeModal({
     onDone: async selectedFormat => {
-      // Check if we want to export private environments.
-      const environments = await models.environment.all();
-
-      let exportPrivateEnvironments = false;
-      const privateEnvironments = environments.filter(environment => environment.isPrivate);
-
-      if (privateEnvironments.length) {
-        const names = privateEnvironments.map(environment => environment.name).join(', ');
-        exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
-      }
-
+      const exportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
       const fileName = await showSaveExportedFileDialog({
         exportedFileNamePrefix: activeProjectName,
         selectedFormat,
