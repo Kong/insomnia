@@ -4,7 +4,7 @@ import { test } from '../../playwright/test';
 
 test('can render Spectral OpenAPI lint errors', async ({ page }) => {
   await page.getByRole('button', { name: 'New Document' }).click();
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
   await page.click('text=Design');
   await page.click('text=start from an example');
 

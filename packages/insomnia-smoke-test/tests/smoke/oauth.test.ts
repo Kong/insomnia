@@ -16,7 +16,6 @@ test('can make oauth2 requests', async ({ app, page }) => {
     has: page.locator('.CodeMirror-activeline'),
   });
 
-  await page.getByTestId('project').click();
   const projectView = page.locator('#wrapper');
   await projectView.getByRole('button', { name: 'Create' }).click();
 
@@ -26,7 +25,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.getByRole('menuitem', { name: 'Import' }).click();
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
-  await page.getByRole('button', { name: 'Import' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionOAuth Testingjust now').click();
 
   // Authorization code

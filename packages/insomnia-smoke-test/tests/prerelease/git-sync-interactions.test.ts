@@ -3,7 +3,6 @@ import { expect } from '@playwright/test';
 import { test } from '../../playwright/test';
 
 test('Clone Repo with bad values', async ({ page }) => {
-  await page.click('[data-testid="project"] >> text=Insomnia');
   await page.getByRole('button', { name: 'Create' }).click();
   await page.getByRole('menuitem', { name: 'Git Clone' }).click();
   await page.getByRole('tab', { name: 'Git' }).nth(2).click();
@@ -52,7 +51,6 @@ test('Clone Repo with bad values', async ({ page }) => {
 });
 
 test('Clone Bitbucket Repo with bad values', async ({ page }) => {
-  await page.click('[data-testid="project"] >> text=Insomnia');
   await page.getByRole('button', { name: 'Create' }).click();
   await page.getByRole('menuitem', { name: 'Git Clone' }).click();
   await page.getByRole('tab', { name: 'Git' }).nth(2).click();
@@ -78,7 +76,6 @@ test('Clone Bitbucket Repo with bad values', async ({ page }) => {
 });
 
 test('Clone Gitlab Repo with bad values', async ({ page }) => {
-  await page.click('[data-testid="project"] >> text=Insomnia');
   await page.getByRole('button', { name: 'Create' }).click();
   await page.getByRole('menuitem', { name: 'Git Clone' }).click();
   await page.getByRole('tab', { name: 'Git' }).nth(2).click();

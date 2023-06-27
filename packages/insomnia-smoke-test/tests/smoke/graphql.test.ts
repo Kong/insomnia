@@ -6,8 +6,6 @@ import { test } from '../../playwright/test';
 test('can render schema and send GraphQL requests', async ({ app, page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  // Create a new the project
-  await page.getByTestId('project').click();
   await page.getByRole('button', { name: 'Create' }).click();
 
   // Copy the collection with the graphql query to clipboard
@@ -18,7 +16,7 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   await page.getByRole('menuitem', { name: 'Import' }).click();
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
-  await page.getByRole('button', { name: 'Import' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionSmoke GraphQLjust now').click();
   // Open the graphql request
   await page.getByRole('button', { name: 'GraphQL request' }).click();
@@ -48,8 +46,6 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
 test('can send GraphQL requests after editing and prettifying query', async ({ app, page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
-  // Create a new the project
-  await page.getByTestId('project').click();
   await page.getByRole('button', { name: 'Create' }).click();
 
   const text = await loadFixture('graphql.yaml');
@@ -57,7 +53,7 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
   await page.getByRole('menuitem', { name: 'Import' }).click();
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
-  await page.getByRole('button', { name: 'Import' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionSmoke GraphQLjust now').click();
   await page.getByRole('button', { name: 'GraphQL request' }).click();
 

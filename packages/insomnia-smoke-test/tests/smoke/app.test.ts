@@ -10,7 +10,6 @@ test('can send requests', async ({ app, page }) => {
     has: page.locator('.CodeMirror-activeline'),
   });
 
-  await page.getByTestId('project').click();
   await page.getByRole('button', { name: 'Create' }).click();
 
   const text = await loadFixture('smoke-test-collection.yaml');
@@ -19,7 +18,7 @@ test('can send requests', async ({ app, page }) => {
   await page.getByRole('menuitem', { name: 'Import' }).click();
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
-  await page.getByRole('button', { name: 'Import' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionSmoke testsjust now').click();
 
   await page.getByRole('button', { name: 'send JSON request' }).click();
@@ -65,7 +64,6 @@ test('can send requests', async ({ app, page }) => {
 // This feature is unsafe to place beside other tests, cancelling a request can cause network code to block
 // related to https://linear.app/insomnia/issue/INS-973
 test('can cancel requests', async ({ app, page }) => {
-  await page.getByTestId('project').click();
   await page.getByRole('button', { name: 'Create' }).click();
 
   const text = await loadFixture('smoke-test-collection.yaml');
@@ -74,7 +72,7 @@ test('can cancel requests', async ({ app, page }) => {
   await page.getByRole('menuitem', { name: 'Import' }).click();
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
-  await page.getByRole('button', { name: 'Import' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionSmoke testsjust now').click();
 
   await page.getByRole('button', { name: 'delayed request' }).click();
@@ -82,10 +80,4 @@ test('can cancel requests', async ({ app, page }) => {
 
   await page.getByRole('button', { name: 'Cancel Request' }).click();
   await page.click('text=Request was cancelled');
-});
-
-test('url field is focused for first time users', async ({ page }) => {
-  const urlInput = ':nth-match(textarea, 2)';
-  const locator = page.locator(urlInput);
-  await expect(locator).toBeFocused();
 });
