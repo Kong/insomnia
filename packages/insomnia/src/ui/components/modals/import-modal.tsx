@@ -6,7 +6,6 @@ import React, {
   useId,
   useRef,
   useState,
-  useTransition,
 } from 'react';
 import { OverlayContainer, useDrop } from 'react-aria';
 import { useFetcher } from 'react-router-dom';
@@ -421,7 +420,7 @@ export const ImportModal: FC<ImportModalProps> = ({
   const modalRef = useRef<ModalHandle>(null);
   const scanResourcesFetcher = useFetcher<ScanForResourcesActionResult>();
   const importFetcher = useFetcher<ImportResourcesActionResult>();
-
+  console.log('fetcher', importFetcher.state);
   useEffect(() => {
     modalRef.current?.show();
   }, []);
@@ -452,7 +451,9 @@ export const ImportModal: FC<ImportModalProps> = ({
             defaultWorkspaceId={shouldImportToWorkspace ? defaultWorkspaceId : ''}
             scanResult={scanResourcesFetcher.data}
             errors={importFetcher.data?.errors}
+            disabled={importFetcher.state !== 'idle'}
             onSubmit={e => {
+              e.preventDefault();
               importFetcher.submit(e.currentTarget, {
                 method: 'post',
                 action: '/import/resources',
@@ -641,6 +642,7 @@ const ImportResourcesForm = ({
   organizationId,
   onSubmit,
   errors,
+  disabled,
 }: {
   scanResult: ScanForResourcesActionResult;
   organizationId: string;
@@ -648,9 +650,9 @@ const ImportResourcesForm = ({
   defaultWorkspaceId?: string;
   errors?: string[];
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
-}) => {
-  const [isPending, startTransition] = useTransition();
-
+  disabled: boolean;
+}
+) => {
   const id = useId();
 
   return (
@@ -663,12 +665,7 @@ const ImportResourcesForm = ({
         }}
       >
         <form
-          onSubmit={e => {
-            e.preventDefault();
-            startTransition(() => {
-              onSubmit?.(e);
-            });
-          }}
+          onSubmit={onSubmit}
           method="post"
           action="/import/resources"
           id={id}
@@ -827,7 +824,7 @@ const ImportResourcesForm = ({
           variant="contained"
           bg="surprise"
           type="submit"
-          disabled={isPending}
+          disabled={disabled}
           style={{
             height: '40px',
             gap: 'var(--padding-sm)',
@@ -835,7 +832,7 @@ const ImportResourcesForm = ({
           form={id}
           className="btn"
         >
-          {isPending ? (
+          {disabled ? (
             <div>
               <i className="fa fa-spinner fa-spin" /> Importing
             </div>
