@@ -101,6 +101,8 @@ export async function init() {
   autoUpdater.on('update-downloaded', async (_error, _releaseNotes, releaseName) => {
     console.log(`[updater] Downloaded ${releaseName}`);
 
+    _sendUpdateStatus('Performing backup...');
+
     await exportAllWorkspaces();
 
     _sendUpdateComplete(true, 'Updated (Restart Required)');
