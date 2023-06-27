@@ -27,7 +27,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     organizationId,
     projectId,
     workspaceId,
-  } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  } = useParams() as { organizationId: string; projectId: string; workspaceId?: string };
   const projectName = useSelector(selectActiveProjectName) ?? getProductName();
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
@@ -82,15 +82,15 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                     onClick={showExportRequestsModal}
                   />
                 </DropdownItem>
-                <DropdownItem aria-label={`All ${strings.document.plural} and ${strings.collection.plural} from the "${projectName}" ${strings.project.singular}`}>
+                <DropdownItem aria-label={`Export files from the "${projectName}" ${strings.project.singular}`}>
                   <ItemContent
                     icon="empty"
-                    label={`All ${strings.document.plural} and ${strings.collection.plural} from the "${projectName}" ${strings.project.singular}`}
+                    label={`Export files from the "${projectName}" ${strings.project.singular}`}
                     onClick={handleExportAllToFile}
                   />
                 </DropdownItem>
               </DropdownSection>
-            </Dropdown>) : (<Button onClick={handleExportAllToFile}>Export all</Button>)
+            </Dropdown>) : (<Button onClick={handleExportAllToFile}>{`Export files from the "${projectName}" ${strings.project.singular}`}</Button>)
           }
         &nbsp;&nbsp;
           <Button
@@ -102,7 +102,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             onClick={() => setIsImportModalOpen(true)}
           >
             <i className="fa fa-file-import" />
-            Import
+            {`Import to the "${projectName}" ${strings.project.singular}`}
           </Button>
         &nbsp;&nbsp;
           <Link href="https://insomnia.rest/create-run-button" className="btn btn--compact" button>
@@ -115,6 +115,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         <ImportModal
           onHide={() => setIsImportModalOpen(false)}
           from={{ type: 'file' }}
+          projectName={projectName}
+          workspaceName={activeWorkspaceName}
           organizationId={organizationId}
           defaultProjectId={projectId}
           defaultWorkspaceId={workspaceId}

@@ -1,12 +1,7 @@
 import { exportWorkspacesData, exportWorkspacesHAR } from '../../common/export';
-import { fetchImportContentFromURI, importResources, scanResources } from '../../common/import';
+import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';
 import * as models from '../../models';
-import type { Workspace, WorkspaceScope } from '../../models/workspace';
-
-interface PluginImportOptions {
-  workspaceId?: string;
-  scope?: WorkspaceScope;
-}
+import type { Workspace } from '../../models/workspace';
 
 interface InsomniaExport {
   workspace?: Workspace;
@@ -31,7 +26,7 @@ const getWorkspaces = (activeProjectId?: string) => {
 export const init = (activeProjectId?: string) => ({
   data: {
     import: {
-      uri: async (uri: string, options: PluginImportOptions = {}) => {
+      uri: async (uri: string) => {
         if (!activeProjectId) {
           return;
         }
@@ -44,12 +39,11 @@ export const init = (activeProjectId?: string) => ({
           content,
         });
 
-        await importResources({
+        await importResourcesToProject({
           projectId: activeProjectId,
-          workspaceId: options.workspaceId,
         });
       },
-      raw: async (content: string, options: PluginImportOptions = {}) => {
+      raw: async (content: string) => {
         if (!activeProjectId) {
           return;
         }
@@ -57,9 +51,8 @@ export const init = (activeProjectId?: string) => ({
           content,
         });
 
-        await importResources({
+        await importResourcesToProject({
           projectId: activeProjectId,
-          workspaceId: options.workspaceId,
         });
       },
     },

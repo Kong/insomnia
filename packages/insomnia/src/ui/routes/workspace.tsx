@@ -7,7 +7,6 @@ import { Project } from '../../models/project';
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { invariant } from '../../utils/invariant';
-
 export interface WorkspaceLoaderData {
   activeWorkspace: Workspace;
   activeWorkspaceMeta?: WorkspaceMeta;
@@ -22,24 +21,24 @@ export const workspaceLoader: LoaderFunction = async ({
   invariant(workspaceId, 'Workspace ID is required');
   invariant(projectId, 'Project ID is required');
 
-  const workspace = await models.workspace.getById(workspaceId);
-
-  invariant(workspace, 'Workspace not found');
+  const activeWorkspace = await models.workspace.getById(workspaceId);
+  invariant(activeWorkspace, 'Workspace not found');
 
   // I don't know what to say man, this is just how it is
   await models.environment.getOrCreateForParentId(workspaceId);
   await models.cookieJar.getOrCreateForParentId(workspaceId);
-  await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+
   const activeProject = await models.project.getById(projectId);
   invariant(activeProject, 'Project not found');
 
-  const gitRepository = await models.gitRepository.getById(workspaceMeta.gitRepositoryId || '');
+  const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  const gitRepository = await models.gitRepository.getById(activeWorkspaceMeta.gitRepositoryId || '');
+
   return {
-    activeWorkspace: workspace,
+    activeWorkspace,
     activeProject,
     gitRepository,
-    activeWorkspaceMeta: workspaceMeta,
+    activeWorkspaceMeta,
   };
 };
 

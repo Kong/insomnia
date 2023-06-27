@@ -19,8 +19,7 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('button', { name: 'Import' }).click();
-
-  await page.getByRole('link', { name: 'Debug' }).click();
+  await page.getByText('CollectionSmoke GraphQLjust now').click();
   // Open the graphql request
   await page.getByRole('button', { name: 'GraphQL request' }).click();
   // Assert the schema is fetched after switching to GraphQL request
@@ -59,8 +58,7 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('button', { name: 'Import' }).click();
-
-  await page.getByRole('link', { name: 'Debug' }).click();
+  await page.getByText('CollectionSmoke GraphQLjust now').click();
   await page.getByRole('button', { name: 'GraphQL request' }).click();
 
   // Edit and prettify query

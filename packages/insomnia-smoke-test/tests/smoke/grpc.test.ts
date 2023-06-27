@@ -20,8 +20,7 @@ test('can send gRPC requests with reflection', async ({ app, page }) => {
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('button', { name: 'Import' }).click();
-
-  await page.getByRole('link', { name: 'Debug' }).click();
+  await page.getByText('CollectionPreRelease gRPCjust now').click();
 
   await page.getByRole('button', { name: 'Route Guide Example' }).click();
 

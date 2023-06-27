@@ -20,8 +20,7 @@ test('can make websocket connection', async ({ app, page }) => {
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('button', { name: 'Import' }).click();
-
-  await page.getByRole('link', { name: 'Debug' }).click();
+  await page.getByText('CollectionWebSocketsjust now').click();
 
   await page.getByRole('button', { name: 'localhost:4010' }).click();
   await expect(page.locator('.app')).toContainText('ws://localhost:4010');

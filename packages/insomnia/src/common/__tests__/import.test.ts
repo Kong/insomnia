@@ -46,7 +46,7 @@ describe('importRaw()', () => {
     expect(scanResult.type.id).toBe('curl');
     expect(scanResult.errors.length).toBe(0);
 
-    await importUtil.importResources({
+    await importUtil.importResourcesToProject({
       projectId: DEFAULT_PROJECT_ID,
     });
 
@@ -54,7 +54,6 @@ describe('importRaw()', () => {
     const projectWorkspaces = await workspace.findByParentId(
       DEFAULT_PROJECT_ID
     );
-
     const curlRequests = await request.findByParentId(projectWorkspaces[0]._id);
 
     expect(workspacesCount).toBe(1);
@@ -79,9 +78,8 @@ describe('importRaw()', () => {
     expect(scanResult.type?.id).toBe('curl');
     expect(scanResult.errors.length).toBe(0);
 
-    await importUtil.importResources({
+    await importUtil.importResourcesToWorkspace({
       workspaceId: existingWorkspace._id,
-      projectId: existingWorkspace.parentId,
     });
 
     const workspacesCount = await workspace.count();
@@ -107,7 +105,7 @@ describe('importRaw()', () => {
     expect(scanResult.type.id).toBe('postman');
     expect(scanResult.errors.length).toBe(0);
 
-    await importUtil.importResources({
+    await importUtil.importResourcesToProject({
       projectId: DEFAULT_PROJECT_ID,
     });
 
@@ -139,9 +137,8 @@ describe('importRaw()', () => {
     expect(scanResult.type?.id).toBe('postman');
     expect(scanResult.errors.length).toBe(0);
 
-    await importUtil.importResources({
+    await importUtil.importResourcesToWorkspace({
       workspaceId: existingWorkspace._id,
-      projectId: existingWorkspace.parentId,
     });
 
     const workspacesCount = await workspace.count();
@@ -169,9 +166,8 @@ describe('importRaw()', () => {
     expect(scanResult.type?.id).toBe('openapi3');
     expect(scanResult.errors.length).toBe(0);
 
-    await importUtil.importResources({
+    await importUtil.importResourcesToWorkspace({
       workspaceId: existingWorkspace._id,
-      projectId: existingWorkspace.parentId,
     });
 
     const workspacesCount = await workspace.count();

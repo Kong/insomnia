@@ -12,8 +12,7 @@ test.describe('Cookie editor', async () => {
     await page.getByText('Clipboard').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('button', { name: 'Import' }).click();
-
-    await page.getByRole('link', { name: 'Debug' }).click();
+    await page.getByText('Collectionsimplejust now').click();
   });
 
   test('create and send a cookie', async ({ page }) => {

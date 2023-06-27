@@ -20,8 +20,7 @@ test('can send requests', async ({ app, page }) => {
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('button', { name: 'Import' }).click();
-
-  await page.getByRole('link', { name: 'Debug' }).click();
+  await page.getByText('CollectionSmoke testsjust now').click();
 
   await page.getByRole('button', { name: 'send JSON request' }).click();
   await page.click('text=http://127.0.0.1:4010/pets/1Send >> button');
@@ -76,8 +75,7 @@ test('can cancel requests', async ({ app, page }) => {
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('button', { name: 'Import' }).click();
-
-  await page.getByRole('link', { name: 'Debug' }).click();
+  await page.getByText('CollectionSmoke testsjust now').click();
 
   await page.getByRole('button', { name: 'delayed request' }).click();
   await page.click('text=http://127.0.0.1:4010/delay/seconds/20Send >> button');

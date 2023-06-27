@@ -9,7 +9,7 @@ import YAML from 'yaml';
 
 import { isApiSpec } from '../models/api-spec';
 import { isCookieJar } from '../models/cookie-jar';
-import { Environment, isEnvironment } from '../models/environment';
+import { isEnvironment } from '../models/environment';
 import { isGrpcRequest } from '../models/grpc-request';
 import * as requestOperations from '../models/helpers/request-operations';
 import type { BaseModel } from '../models/index';
@@ -327,11 +327,11 @@ const showSelectExportTypeModal = ({ onDone }: {
   });
 };
 
-const showExportPrivateEnvironmentsModal = async (privateEnvNames: string) => {
+const showExportPrivateEnvironmentsModal = async () => {
   return new Promise<boolean>(resolve => {
     showModal(AskModal, {
       title: 'Export Private Environments?',
-      message: `Do you want to include private environments (${privateEnvNames}) in your export?`,
+      message: 'Do you want to include private environments in your export?',
       onDone: async (isYes: boolean) => {
         if (isYes) {
           resolve(true);
@@ -380,19 +380,9 @@ export const exportAllToFile = (activeProjectName: string, workspacesForActivePr
 
   showSelectExportTypeModal({
     onDone: async selectedFormat => {
-      // Check if we want to export private environments.
-      const environments = await models.environment.all();
-
-      let exportPrivateEnvironments = false;
-      const privateEnvironments = environments.filter(environment => environment.isPrivate);
-
-      if (privateEnvironments.length) {
-        const names = privateEnvironments.map(environment => environment.name).join(', ');
-        exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
-      }
-
+      const exportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
       const fileName = await showSaveExportedFileDialog({
-        exportedFileNamePrefix: 'Insomnia-All',
+        exportedFileNamePrefix: activeProjectName,
         selectedFormat,
       });
 
@@ -440,9 +430,7 @@ export const exportRequestsToFile = (requestIds: string[]) => {
   showSelectExportTypeModal({
     onDone: async selectedFormat => {
       const requests: BaseModel[] = [];
-      const privateEnvironments: Environment[] = [];
       const workspaceLookup: any = {};
-
       for (const requestId of requestIds) {
         const request = await requestOperations.getById(requestId);
 
@@ -462,20 +450,8 @@ export const exportRequestsToFile = (requestIds: string[]) => {
         }
 
         workspaceLookup[workspace._id] = true;
-        const descendants = await database.withDescendants(workspace);
-        const privateEnvs = descendants.filter(isEnvironment).filter(
-          descendant => descendant.isPrivate,
-        );
-        privateEnvironments.push(...privateEnvs);
       }
-
-      let exportPrivateEnvironments = false;
-
-      if (privateEnvironments.length) {
-        const names = privateEnvironments.map(privateEnvironment => privateEnvironment.name).join(', ');
-        exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
-      }
-
+      const exportPrivateEnvironments = await showExportPrivateEnvironmentsModal();
       const fileName = await showSaveExportedFileDialog({
         exportedFileNamePrefix: 'Insomnia',
         selectedFormat,

@@ -2,14 +2,14 @@ import { ImportRequest } from './entities';
 import { importers } from './importers';
 import { setDefaults } from './utils';
 
-export interface ConvertResultType {
+export interface InsomniaImporter {
   id: string;
   name: string;
   description: string;
 }
 
 export interface ConvertResult<T = {}> {
-  type: ConvertResultType;
+  type: InsomniaImporter;
   data: {
     _type: 'export';
     __export_format: 4;

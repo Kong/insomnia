@@ -242,10 +242,8 @@ const Root = () => {
     );
   }, []);
 
-  const { organizationId, projectId, workspaceId } = useParams() as {
+  const { organizationId } = useParams() as {
     organizationId: string;
-    projectId?: string;
-    workspaceId?: string;
   };
 
   return (
@@ -255,12 +253,12 @@ const Root = () => {
         <div className="app">
           <ErrorBoundary showAlert>
             <Modals />
+            {/* triggered by insomnia://app/import */}
             {importUri && (
               <ImportModal
                 onHide={() => setImportUri('')}
+                projectName="Insomnia"
                 organizationId={organizationId}
-                defaultProjectId={projectId || ''}
-                defaultWorkspaceId={workspaceId}
                 from={{ type: 'uri', defaultValue: importUri }}
               />
             )}

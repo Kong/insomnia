@@ -21,8 +21,7 @@ test.describe('gRPC interactions', () => {
     await page.getByText('Clipboard').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('button', { name: 'Import' }).click();
-
-    await page.getByRole('link', { name: 'Debug' }).click();
+    await page.getByText('CollectionPreRelease gRPCjust now').click();
     statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
       has: page.locator('.CodeMirror-activeline'),

@@ -18,7 +18,7 @@ module.exports = {
     'styled-components': '<rootDir>/node_modules/styled-components',
     'jsonpath-plus': '<rootDir>/node_modules/jsonpath-plus/dist/index-node-cjs.cjs',
   },
-  collectCoverage: true,
+  collectCoverage: !!process.env.CI,
   collectCoverageFrom: ['src/account/**/*.ts', 'src/common/**/*.ts', 'src/main/**/*.ts', 'src/models/**/*.ts', 'src/network/**/*.ts', 'src/sync/**/*.ts', 'src/templating/**/*.ts', 'src/utils/**/*.ts'],
   coverageThreshold: {
     global: {

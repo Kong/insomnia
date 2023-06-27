@@ -6,21 +6,16 @@ import React, {
   useId,
   useRef,
   useState,
-  useTransition,
 } from 'react';
 import { OverlayContainer, useDrop } from 'react-aria';
 import { useFetcher } from 'react-router-dom';
 import { usePrevious } from 'react-use';
 import styled from 'styled-components';
 
-import { strings } from '../../../common/strings';
-import { isDefaultProject, isLocalProject } from '../../../models/project';
-import { Workspace } from '../../../models/workspace';
 import {
   ImportResourcesActionResult,
   ScanForResourcesActionResult,
 } from '../../routes/import';
-import { ProjectLoaderData } from '../../routes/project';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalHeader } from '../base/modal-header';
 import { Button } from '../themed-button';
@@ -393,7 +388,12 @@ const CurlIcon = (props: React.SVGProps<SVGSVGElement>) => {
 
 interface ImportModalProps extends ModalProps {
   organizationId: string;
-  defaultProjectId: string;
+  projectName: string;
+  // undefined when not using preferences
+  workspaceName?: string;
+  // undefined when using insomnia://app/import
+  defaultProjectId?: string;
+  // undefined when in workspace selection page
   defaultWorkspaceId?: string;
   from:
   | {
@@ -409,6 +409,8 @@ interface ImportModalProps extends ModalProps {
 }
 
 export const ImportModal: FC<ImportModalProps> = ({
+  projectName,
+  workspaceName,
   defaultProjectId,
   defaultWorkspaceId,
   organizationId,
@@ -418,7 +420,7 @@ export const ImportModal: FC<ImportModalProps> = ({
   const modalRef = useRef<ModalHandle>(null);
   const scanResourcesFetcher = useFetcher<ScanForResourcesActionResult>();
   const importFetcher = useFetcher<ImportResourcesActionResult>();
-
+  console.log('fetcher', importFetcher.state);
   useEffect(() => {
     modalRef.current?.show();
   }, []);
@@ -434,19 +436,24 @@ export const ImportModal: FC<ImportModalProps> = ({
       modalProps.onHide?.();
     }
   }, [importFetcher.state, modalProps, prevImportFetcherState]);
-
+  // allow workspace import if there is only one workspace
+  const totalWorkspaces = scanResourcesFetcher.data?.workspaces?.length || 0;
+  const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspaces <= 1;
+  const header = shouldImportToWorkspace ? `Import to "${workspaceName}" Workspace` : `Import to "${projectName}" Project`;
   return (
     <OverlayContainer>
       <Modal {...modalProps} ref={modalRef}>
-        <ModalHeader>Import to Insomnia</ModalHeader>
+        <ModalHeader>{header}</ModalHeader>
         {scanResourcesFetcher.data && scanResourcesFetcher.data.errors.length === 0 ? (
           <ImportResourcesForm
             organizationId={organizationId}
             defaultProjectId={defaultProjectId}
-            defaultWorkspaceId={defaultWorkspaceId}
+            defaultWorkspaceId={shouldImportToWorkspace ? defaultWorkspaceId : ''}
             scanResult={scanResourcesFetcher.data}
             errors={importFetcher.data?.errors}
+            disabled={importFetcher.state !== 'idle'}
             onSubmit={e => {
+              e.preventDefault();
               importFetcher.submit(e.currentTarget, {
                 method: 'post',
                 action: '/import/resources',
@@ -635,6 +642,7 @@ const ImportResourcesForm = ({
   organizationId,
   onSubmit,
   errors,
+  disabled,
 }: {
   scanResult: ScanForResourcesActionResult;
   organizationId: string;
@@ -642,35 +650,9 @@ const ImportResourcesForm = ({
   defaultWorkspaceId?: string;
   errors?: string[];
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
-}) => {
-  const [isPending, startTransition] = useTransition();
-  const projectFetcher = useFetcher<ProjectLoaderData>();
-
-  const [selectedWorkspaceId, setSelectedWorkspaceId] = useState(
-    defaultWorkspaceId || 'create-new-workspace-id'
-  );
-
-  const isCreatingNewWorkspace =
-    selectedWorkspaceId === 'create-new-workspace-id';
-
-  useEffect(() => {
-    if (projectFetcher.state === 'idle' && !projectFetcher.data) {
-      projectFetcher.load(
-        `/organization/${organizationId}/project/${defaultProjectId}`
-      );
-    }
-  }, [defaultProjectId, organizationId, selectedWorkspaceId, projectFetcher]);
-
-  const workspaces: Partial<Workspace>[] = [
-    ...(projectFetcher?.data?.workspaces || []),
-    {
-      _id: 'create-new-workspace-id',
-      name: '+ Create New File',
-    },
-  ];
-
-  const projects = projectFetcher?.data?.projects || [];
-
+  disabled: boolean;
+}
+) => {
   const id = useId();
 
   return (
@@ -683,114 +665,14 @@ const ImportResourcesForm = ({
         }}
       >
         <form
-          onSubmit={e => {
-            e.preventDefault();
-            startTransition(() => {
-              onSubmit?.(e);
-            });
-          }}
+          onSubmit={onSubmit}
           method="post"
           action="/import/resources"
           id={id}
         >
-          <div
-            style={{
-              fontSize: 'var(--font-size-sm)',
-              fontWeight: '500',
-              paddingBottom: 'var(--padding-sm)',
-            }}
-          >
-            Import to:
-          </div>
-          <div
-            style={{
-              border: '1px solid var(--hl-sm)',
-              borderRadius: 'var(--radius-md)',
-              overflow: 'hidden',
-              display: 'flex',
-            }}
-          >
-            <div
-              style={{
-                margin: 0,
-              }}
-              className="form-control form-control--outlined"
-            >
-              <select
-                style={{
-                  border: 'none',
-                  borderRadius: 0,
-                  margin: 0,
-                }}
-                onChange={e =>
-                  projectFetcher.load(
-                    `/organization/${organizationId}/project/${e.currentTarget.value}`
-                  )
-                }
-                defaultValue={defaultProjectId}
-                name="projectId"
-              >
-                {projects.map(project => (
-                  <option key={project._id} value={project._id}>
-                    {project.name} (
-                    {isDefaultProject(project)
-                      ? strings.defaultProject.singular
-                      : isLocalProject(project)
-                        ? strings.localProject.singular
-                        : strings.remoteProject.singular}
-                    )
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div
-              style={{
-                margin: 0,
-              }}
-              className="form-control form-control--outlined"
-            >
-              <select
-                style={{
-                  border: 'none',
-                  borderRadius: 0,
-                  margin: 0,
-                }}
-                onChange={e => {
-                  setSelectedWorkspaceId(e.target.value);
-                }}
-                value={selectedWorkspaceId}
-                name="workspaceId"
-              >
-                {workspaces.map(workspace => (
-                  <option key={workspace._id} value={workspace._id}>
-                    {workspace.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {isCreatingNewWorkspace && (
-              <Fragment>
-                <div
-                  style={{
-                    margin: 0,
-                  }}
-                  className="form-control form-control--outlined"
-                >
-                  <input
-                    style={{
-                      border: 'none',
-                      margin: 0,
-                    }}
-                    autoFocus
-                    type="text"
-                    name="name"
-                    defaultValue="Untitled"
-                  />
-                </div>
-              </Fragment>
-            )}
-          </div>
           <input hidden name="organizationId" readOnly value={organizationId} />
+          <input hidden name="projectId" readOnly value={defaultProjectId} />
+          <input hidden name="workspaceId" readOnly value={defaultWorkspaceId} />
         </form>
         <table className="table--fancy table--outlined margin-top-sm">
           <thead>
@@ -845,6 +727,17 @@ const ImportResourcesForm = ({
             </tr>
           </thead>
           <tbody>
+            {scanResult.workspaces && scanResult.workspaces?.length > 0 && (
+              <tr
+                key={scanResult.workspaces[0]._id}
+                className="table--no-outline-row"
+              >
+                <td>
+                  {scanResult.workspaces.length}{' '}
+                  {scanResult.workspaces.length === 1 ? 'Workspace' : 'Workspaces'}
+                </td>
+              </tr>
+            )}
             {scanResult.requests && scanResult.requests?.length > 0 && (
               <tr
                 key={scanResult.requests[0]._id}
@@ -856,9 +749,9 @@ const ImportResourcesForm = ({
                 </td>
               </tr>
             )}
-            {isCreatingNewWorkspace && scanResult.apiSpec && (
+            {scanResult.apiSpecs && scanResult.apiSpecs?.length > 0 && (
               <tr
-                key={scanResult.apiSpec._id}
+                key={scanResult.apiSpecs[0]._id}
                 className="table--no-outline-row"
               >
                 <td>
@@ -869,14 +762,13 @@ const ImportResourcesForm = ({
                       gap: 'var(--padding-md)',
                     }}
                   >
-                    OpenAPI Spec:{' '}
-                    {scanResult.apiSpec.name || scanResult.apiSpec.fileName}
+                    {scanResult.apiSpecs.length}{' '}
+                    {scanResult.apiSpecs.length === 1 ? 'OpenAPI Spec' : 'OpenAPI Specs'}
                   </div>
                 </td>
               </tr>
             )}
-            {isCreatingNewWorkspace &&
-              scanResult.environments &&
+            {scanResult.environments &&
               scanResult.environments.length > 0 && (
               <tr className="table--no-outline-row">
                 <td>
@@ -884,7 +776,9 @@ const ImportResourcesForm = ({
                   {scanResult.environments.length === 1
                     ? 'Environment'
                     : 'Environments'}
-                  {scanResult.cookieJar ? ' and a Cookie Jar' : ''}
+                  {' with '}
+                  {scanResult.cookieJars?.length}{' '}
+                  {scanResult.cookieJars?.length === 1 ? 'Cookie Jar' : 'Cookie Jars'}
                 </td>
               </tr>
             )}
@@ -930,7 +824,7 @@ const ImportResourcesForm = ({
           variant="contained"
           bg="surprise"
           type="submit"
-          disabled={isPending}
+          disabled={disabled}
           style={{
             height: '40px',
             gap: 'var(--padding-sm)',
@@ -938,7 +832,7 @@ const ImportResourcesForm = ({
           form={id}
           className="btn"
         >
-          {isPending ? (
+          {disabled ? (
             <div>
               <i className="fa fa-spinner fa-spin" /> Importing
             </div>
