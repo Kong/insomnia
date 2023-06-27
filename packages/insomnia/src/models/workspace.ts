@@ -12,16 +12,12 @@ export const prefix = 'wrk';
 export const canDuplicate = true;
 export const canSync = true;
 
-interface GenericWorkspace<Scope extends 'design' | 'collection'> {
+export interface BaseWorkspace {
   name: string;
   description: string;
   certificates?: any; // deprecated
-  scope: Scope;
+  scope: 'design' | 'collection';
 }
-
-export type DesignWorkspace = GenericWorkspace<'design'>;
-export type CollectionWorkspace = GenericWorkspace<'collection'>;
-export type BaseWorkspace = DesignWorkspace | CollectionWorkspace;
 
 export type WorkspaceScope = BaseWorkspace['scope'];
 
@@ -32,15 +28,15 @@ export const WorkspaceScopeKeys = {
 
 export type Workspace = BaseModel & BaseWorkspace;
 
-export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace => (
+export const isWorkspace = (model: Pick<BaseModel, 'type'>) => (
   model.type === type
 );
 
-export const isDesign = (workspace: Pick<Workspace, 'scope'>): workspace is DesignWorkspace => (
+export const isDesign = (workspace: Pick<Workspace, 'scope'>) => (
   workspace.scope === WorkspaceScopeKeys.design
 );
 
-export const isCollection = (workspace: Pick<Workspace, 'scope'>): workspace is CollectionWorkspace => (
+export const isCollection = (workspace: Pick<Workspace, 'scope'>) => (
   workspace.scope === WorkspaceScopeKeys.collection
 );
 
