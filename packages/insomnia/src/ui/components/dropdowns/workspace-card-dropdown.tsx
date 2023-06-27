@@ -21,7 +21,7 @@ import { SvgIcon } from '../svg-icon';
 
 interface Props {
   workspace: Workspace;
-  apiSpec?: ApiSpec;
+  apiSpec: ApiSpec | null;
   project: Project;
   projects: Project[];
 }

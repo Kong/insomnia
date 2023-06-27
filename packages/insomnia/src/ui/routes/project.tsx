@@ -583,6 +583,7 @@ interface WorkspaceWithMetadata {
   _id: string;
   hasUnsavedChanges: boolean;
   lastModifiedTimestamp: number;
+  created: number;
   modifiedLocally: number;
   lastCommitTime: number | null | undefined;
   lastCommitAuthor: string | null | undefined;
@@ -590,7 +591,7 @@ interface WorkspaceWithMetadata {
   spec: Record<string, any> | null;
   specFormat: 'openapi' | 'swagger' | null;
   name: string;
-  apiSpec: ApiSpec;
+  apiSpec: ApiSpec | null;
   specFormatVersion: string | null;
   workspace: Workspace;
 }
@@ -662,7 +663,7 @@ export const loader: LoaderFunction = async ({
 
   const projectWorkspaces = await models.workspace.findByParentId(project._id);
 
-  const getWorkspaceMetaData = async (workspace: Workspace) => {
+  const getWorkspaceMetaData = async (workspace: Workspace): Promise<WorkspaceWithMetadata> => {
     const apiSpec = await models.apiSpec.getByParentId(workspace._id);
 
     let spec: ParsedApiSpec['contents'] = null;
@@ -715,6 +716,7 @@ export const loader: LoaderFunction = async ({
       _id: workspace._id,
       hasUnsavedChanges,
       lastModifiedTimestamp,
+      created: workspace.created,
       modifiedLocally,
       lastCommitTime: workspaceMeta?.cachedGitLastCommitTime,
       lastCommitAuthor,
@@ -731,62 +733,6 @@ export const loader: LoaderFunction = async ({
     };
   };
 
-  // @TODO - Figure out if the database has a way to sort/filter items that could replace this logic.
-  const filterWorkspace = (workspace: WorkspaceWithMetadata) => {
-    const matchResults = fuzzyMatchAll(
-      // Use the filter string
-      filter,
-      // to match against these properties
-      [
-        workspace.name,
-        workspace.workspace.scope === 'design' ? 'document' : 'collection',
-        workspace.lastActiveBranch || '',
-        workspace.specFormatVersion || '',
-      ],
-      {
-        splitSpace: true,
-        loose: true,
-      }
-    );
-
-    return filter ? Boolean(matchResults?.indexes) : true;
-  };
-
-  function sortWorkspaces(
-    workspaceWithMetaA: WorkspaceWithMetadata,
-    workspaceWithMetaB: WorkspaceWithMetadata
-  ) {
-    switch (sortOrder) {
-      case 'modified-desc':
-        return sortMethodMap['modified-desc'](
-          workspaceWithMetaA,
-          workspaceWithMetaB
-        );
-      case 'name-asc':
-        return sortMethodMap['name-asc'](
-          workspaceWithMetaA.workspace,
-          workspaceWithMetaB.workspace
-        );
-      case 'name-desc':
-        return sortMethodMap['name-desc'](
-          workspaceWithMetaA.workspace,
-          workspaceWithMetaB.workspace
-        );
-      case 'created-asc':
-        return sortMethodMap['created-asc'](
-          workspaceWithMetaA.workspace,
-          workspaceWithMetaB.workspace
-        );
-      case 'created-desc':
-        return sortMethodMap['created-desc'](
-          workspaceWithMetaA.workspace,
-          workspaceWithMetaB.workspace
-        );
-      default:
-        throw new Error(`Invalid sort order: ${sortOrder}`);
-    }
-  }
-
   // Fetch all workspace meta data in parallel
   const workspacesWithMetaData = await Promise.all(
     projectWorkspaces.map(getWorkspaceMetaData)
@@ -794,8 +740,18 @@ export const loader: LoaderFunction = async ({
 
   const workspaces = workspacesWithMetaData
     .filter(w => (scope !== 'all' ? w.workspace.scope === scope : true))
-    .filter(filterWorkspace)
-    .sort(sortWorkspaces);
+  // @TODO - Figure out if the database has a way to sort/filter items that could replace this logic.
+    .filter(workspace => filter ? Boolean(fuzzyMatchAll(filter,
+      // Use the filter string to match against these properties
+      [
+        workspace.name,
+        workspace.workspace.scope === 'design' ? 'document' : 'collection',
+        workspace.lastActiveBranch || '',
+        workspace.specFormatVersion || '',
+      ],
+      { splitSpace: true, loose: true }
+    )?.indexes) : true)
+    .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
 
   const allProjects = await models.project.all();
 

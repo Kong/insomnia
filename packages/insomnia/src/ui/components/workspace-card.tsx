@@ -35,7 +35,7 @@ const LabelIcon = styled.div({
 });
 
 export interface WorkspaceCardProps {
-  apiSpec?: ApiSpec;
+  apiSpec: ApiSpec | null;
   workspace: Workspace;
   filter: string;
   activeProject: Project;
