@@ -62,7 +62,7 @@ const config = {
       NSRequiresAquaSystemAppearance: false,
     },
     notarize: {
-      teamId: 'REPLACE_WITH_TEAM_ID',
+      teamId: 'FX44YY62GV',
     },
     asarUnpack: [
       'node_modules/@getinsomnia/node-libcurl',
