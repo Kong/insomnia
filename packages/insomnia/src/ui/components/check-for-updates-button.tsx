@@ -10,17 +10,10 @@ export const CheckForUpdatesButton: FC<Props> = ({ children, className }) => {
   const [status, setStatus] = useState('');
 
   useEffect(() => {
-    const statusUnsubscribe = window.main.on('updater.check.status', (_e: Electron.IpcRendererEvent, status: string) => {
-      if (checking) {
-        setStatus(status);
-      }
-    });
-    const completeUnsubscribe = window.main.on('updater.check.complete', (_e: Electron.IpcRendererEvent, status: string) => {
-      setStatus(status);
-    });
+    const unsubscribe = window.main.on('updaterStatus',
+      (_e: Electron.IpcRendererEvent, status: string) => setStatus(status));
     return () => {
-      statusUnsubscribe();
-      completeUnsubscribe();
+      unsubscribe();
     };
   });
   return (

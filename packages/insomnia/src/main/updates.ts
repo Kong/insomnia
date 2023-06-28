@@ -42,24 +42,17 @@ const getUpdateUrl = (updateChannel: string): string | null => {
 
 const _sendUpdateStatus = (status: string) => {
   for (const window of BrowserWindow.getAllWindows()) {
-    window.webContents.send('updater.check.status', status);
+    window.webContents.send('updaterStatus', status);
   }
 };
 
-const _sendUpdateComplete = (msg: string) => {
-  for (const window of BrowserWindow.getAllWindows()) {
-    window.webContents.send('updater.check.complete', msg);
-  }
-};
-
-let hasDownloadedUpdateAndShownPrompt = false;
 export const init = async () => {
   autoUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
   });
   autoUpdater.on('update-not-available', () => {
     console.log('[updater] Not Available');
-    _sendUpdateComplete('Up to Date');
+    _sendUpdateStatus('Up to Date');
   });
   autoUpdater.on('update-available', () => {
     console.log('[updater] Update Available');
@@ -69,10 +62,8 @@ export const init = async () => {
     console.log(`[updater] Downloaded ${releaseName}`, releaseNotes);
     _sendUpdateStatus('Performing backup...');
     await exportAllWorkspaces();
-    _sendUpdateComplete('Updated (Restart Required)');
-    if (hasDownloadedUpdateAndShownPrompt) {
-      return;
-    }
+    _sendUpdateStatus('Updated (Restart Required)');
+
     setTimeout(() => {
       console.log('[app] Update Downloaded and ready to install over existing app');
       new Notification({
@@ -81,7 +72,6 @@ export const init = async () => {
         silent: true,
       }).show();
     }, 1000 * 2);
-    hasDownloadedUpdateAndShownPrompt = true;
   });
 
   // on app start
@@ -96,7 +86,7 @@ export const init = async () => {
     const settings = await models.settings.getOrCreate();
     const updateUrl = getUpdateUrl(settings.updateChannel);
     if (!canUpdate() || !updateUrl) {
-      _sendUpdateComplete('Updates Not Supported');
+      _sendUpdateStatus('Updates Not Supported');
       return;
     }
     _sendUpdateStatus('Checking');
@@ -112,21 +102,17 @@ export const init = async () => {
       if (settings.updateAutomatically && updateUrl) {
         _checkForUpdates(updateUrl);
       }
-
     }, CHECK_FOR_UPDATES_INTERVAL);
   }
 };
 
 const _checkForUpdates = (updateUrl: string) => {
-  if (hasDownloadedUpdateAndShownPrompt) {
-    return;
-  }
   try {
     console.log(`[updater] Checking for updates url=${updateUrl}`);
     autoUpdater.setFeedURL({ url: updateUrl });
     autoUpdater.checkForUpdates();
   } catch (err) {
     console.warn('[updater] Failed to check for updates:', err.message);
-    _sendUpdateComplete('Update Error');
+    _sendUpdateStatus('Update Error');
   }
 };
