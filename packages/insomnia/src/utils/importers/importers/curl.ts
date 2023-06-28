@@ -131,7 +131,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     }
     return {
       name: name.trim(),
-      value: value?.trim() || '',
+      value: value.trim(),
     };
   });
 
