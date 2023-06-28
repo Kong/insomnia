@@ -11,7 +11,7 @@ import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../utils/url/querystring';
 import { exportAllWorkspaces } from './export';
-const { autoUpdater, BrowserWindow, ipcMain } = electron;
+const { autoUpdater, BrowserWindow, ipcMain, Notification } = electron;
 const canUpdate = () => {
   if (process.platform === 'linux') {
     console.log('[updater] Not supported on this platform', process.platform);
@@ -94,10 +94,14 @@ export const init = async () => {
     if (hasDownloadedUpdateAndShownPrompt) {
       return;
     }
-    const windows = BrowserWindow.getAllWindows();
-    if (windows.length && windows[0].webContents) {
-      windows[0].webContents.send('update-available');
-    }
+    setTimeout(() => {
+      console.log('[app] Update Downloaded and ready to install over existing app');
+      new Notification({
+        title: 'Insomnia Update Ready',
+        body: 'Relaunch the app for it to take effect',
+        silent: true,
+      }).show();
+    }, 1000 * 2);
     hasDownloadedUpdateAndShownPrompt = true;
   });
 

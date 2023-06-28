@@ -12,21 +12,6 @@ import { AskModal } from './components/modals/ask-modal';
 import { SelectModal } from './components/modals/select-modal';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from './components/modals/settings-modal';
 
-window.main.on('update-available', () => {
-  // Give it a few seconds before showing this. Sometimes, when
-  // you relaunch too soon it doesn't work the first time.
-  setTimeout(() => {
-    console.log('[app] Update Available');
-    // eslint-disable-next-line no-new
-    new window.Notification('Insomnia Update Ready', {
-      body: 'Relaunch the app for it to take effect',
-      silent: true,
-      // @ts-expect-error -- TSCONVERSION
-      sticky: true,
-    });
-  }, 1000 * 10);
-});
-
 window.main.on('toggle-preferences', () => {
   showModal(SettingsModal);
 });
