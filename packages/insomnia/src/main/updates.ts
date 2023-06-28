@@ -11,7 +11,7 @@ import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
 import { exportAllWorkspaces } from './export';
-const canUpdate = () => {
+const isUpdateSupported = () => {
   if (process.platform === 'linux') {
     console.log('[updater] Not supported on this platform', process.platform);
     return false;
@@ -31,7 +31,7 @@ const canUpdate = () => {
   return true;
 };
 const getUpdateUrl = (updateChannel: string): string | null => {
-  invariant(canUpdate(), 'auto update is not supported');
+  invariant(isUpdateSupported(), 'auto update is not supported');
   const fullUrl = new URL(process.platform === 'win32' ? UpdateURL.windows : UpdateURL.mac);
   fullUrl.searchParams.append('v', getAppVersion());
   fullUrl.searchParams.append('app', getAppId());
@@ -49,6 +49,7 @@ const _sendUpdateStatus = (status: string) => {
 export const init = async () => {
   autoUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
+    _sendUpdateStatus('Update Error');
   });
   autoUpdater.on('update-not-available', () => {
     console.log('[updater] Not Available');
@@ -74,28 +75,14 @@ export const init = async () => {
     }, 1000 * 2);
   });
 
-  // on app start
-  const settings = await models.settings.getOrCreate();
-  const updateUrl = getUpdateUrl(settings.updateChannel);
-  if (settings.updateAutomatically && updateUrl) {
-    _checkForUpdates(updateUrl);
-  }
-
-  // on check now button pushed
-  ipcMain.on('manualUpdateCheck', async () => {
+  if (isUpdateSupported()) {
+    // on app start
     const settings = await models.settings.getOrCreate();
     const updateUrl = getUpdateUrl(settings.updateChannel);
-    if (!canUpdate() || !updateUrl) {
-      _sendUpdateStatus('Updates Not Supported');
-      return;
+    if (settings.updateAutomatically && updateUrl) {
+      _checkForUpdates(updateUrl);
     }
-    _sendUpdateStatus('Checking');
-    await delay(300); // Pacing
-    _checkForUpdates(updateUrl);
-  });
-
-  // on an interval (3h)
-  if (canUpdate()) {
+    // on an interval (3h)
     setInterval(async () => {
       const settings = await models.settings.getOrCreate();
       const updateUrl = getUpdateUrl(settings.updateChannel);
@@ -103,6 +90,20 @@ export const init = async () => {
         _checkForUpdates(updateUrl);
       }
     }, CHECK_FOR_UPDATES_INTERVAL);
+
+    // on check now button pushed
+    ipcMain.on('manualUpdateCheck', async () => {
+      console.log('[updater] Manual update check');
+      const settings = await models.settings.getOrCreate();
+      const updateUrl = isUpdateSupported() && getUpdateUrl(settings.updateChannel);
+      if (!updateUrl) {
+        _sendUpdateStatus('Updates Not Supported');
+        return;
+      }
+      _sendUpdateStatus('Checking');
+      await delay(300); // Pacing
+      _checkForUpdates(updateUrl);
+    });
   }
 };
 

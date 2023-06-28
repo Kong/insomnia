@@ -6,7 +6,7 @@ interface Props {
 }
 
 export const CheckForUpdatesButton: FC<Props> = ({ children, className }) => {
-  const [checking, setChecking] = useState(false);
+  const [disabled, setDisabled] = useState(false);
   const [status, setStatus] = useState('');
 
   useEffect(() => {
@@ -19,10 +19,12 @@ export const CheckForUpdatesButton: FC<Props> = ({ children, className }) => {
   return (
     <button
       className={className ?? ''}
-      disabled={checking}
+      disabled={disabled}
       onClick={() => {
         window.main.manualUpdateCheck();
-        setChecking(true);
+        // this is to prevent initiating update multiple times
+        // if it errors user can restart the app and try again
+        setDisabled(true);
       }}
     >
       {status || children}
