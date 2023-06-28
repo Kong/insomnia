@@ -1,4 +1,4 @@
-import electron from 'electron';
+import { autoUpdater, BrowserWindow, ipcMain, Notification } from 'electron';
 
 import {
   CHECK_FOR_UPDATES_INTERVAL,
@@ -9,9 +9,8 @@ import {
 } from '../common/constants';
 import { delay } from '../common/misc';
 import * as models from '../models/index';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from '../utils/url/querystring';
+import { invariant } from '../utils/invariant';
 import { exportAllWorkspaces } from './export';
-const { autoUpdater, BrowserWindow, ipcMain, Notification } = electron;
 const canUpdate = () => {
   if (process.platform === 'linux') {
     console.log('[updater] Not supported on this platform', process.platform);
@@ -32,33 +31,13 @@ const canUpdate = () => {
   return true;
 };
 const getUpdateUrl = (updateChannel: string): string | null => {
-  const platform = process.platform;
-  let updateUrl: string | null = null;
-  if (platform === 'win32') {
-    updateUrl = UpdateURL.windows;
-  } else if (platform === 'darwin') {
-    updateUrl = UpdateURL.mac;
-  } else {
-    return null;
-  }
-  const params = [
-    {
-      name: 'v',
-      value: getAppVersion(),
-    },
-    {
-      name: 'app',
-      value: getAppId(),
-    },
-    {
-      name: 'channel',
-      value: updateChannel,
-    },
-  ];
-  const qs = buildQueryStringFromParams(params);
-  const fullUrl = joinUrlAndQueryString(updateUrl, qs);
-  console.log(`[updater] Using url ${fullUrl}`);
-  return fullUrl;
+  invariant(canUpdate(), 'auto update is not supported');
+  const fullUrl = new URL(process.platform === 'win32' ? UpdateURL.windows : UpdateURL.mac);
+  fullUrl.searchParams.append('v', getAppVersion());
+  fullUrl.searchParams.append('app', getAppId());
+  fullUrl.searchParams.append('channel', updateChannel);
+  console.log(`[updater] Using url ${fullUrl.toString()}`);
+  return fullUrl.toString();
 };
 
 const _sendUpdateStatus = (status: string) => {
@@ -111,6 +90,7 @@ export const init = async () => {
   if (settings.updateAutomatically && updateUrl) {
     _checkForUpdates(updateUrl);
   }
+
   // on check now button pushed
   ipcMain.on('manualUpdateCheck', async () => {
     const settings = await models.settings.getOrCreate();
@@ -123,6 +103,7 @@ export const init = async () => {
     await delay(300); // Pacing
     _checkForUpdates(updateUrl);
   });
+
   // on an interval (3h)
   if (canUpdate()) {
     setInterval(async () => {
