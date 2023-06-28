@@ -15,6 +15,8 @@ export const StatusTag: FC<Props> = memo(({ statusMessage, statusCode, small, to
   let colorClass;
   let statusCodeToDisplay: string | number = statusCode;
   const firstChar = (statusCode + '')[0] || '';
+  const unknownPattern = /^unknown$/i;
+  const isStatusMessageUnknown = statusMessage && unknownPattern.test(statusMessage);
 
   switch (firstChar) {
     case '1':
@@ -58,7 +60,7 @@ export const StatusTag: FC<Props> = memo(({ statusMessage, statusCode, small, to
     >
       <Tooltip message={description} position="bottom" delay={tooltipDelay}>
         <strong>{statusCodeToDisplay}</strong>{' '}
-        {statusMessage || RESPONSE_CODE_REASONS[statusCode]}
+        {isStatusMessageUnknown ? RESPONSE_CODE_REASONS[statusCode] || statusMessage : statusMessage || RESPONSE_CODE_REASONS[statusCode]}
       </Tooltip>
     </div>
   );
