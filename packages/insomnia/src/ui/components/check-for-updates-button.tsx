@@ -9,24 +9,19 @@ interface Props {
 export const CheckForUpdatesButton: FC<Props> = ({ children, className }) => {
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState('');
-  const [, setUpdateAvailable] = useState(false);
 
-  const listenerCheckComplete = (_e: Electron.IpcRendererEvent, updateAvailable: true, status: string) => {
-    setStatus(status);
-    setUpdateAvailable(updateAvailable);
-  };
-
-  const listenerCheckStatus = (_e: Electron.IpcRendererEvent, status: string) => {
-    if (checking) {
-      setStatus(status);
-    }
-  };
   useEffect(() => {
-    electron.ipcRenderer.on('updater.check.status', listenerCheckStatus);
-    electron.ipcRenderer.on('updater.check.complete', listenerCheckComplete);
+    const statusUnsubscribe = window.main.on('updater.check.status', (_e: Electron.IpcRendererEvent, status: string) => {
+      if (checking) {
+        setStatus(status);
+      }
+    });
+    const completeUnsubscribe = window.main.on('updater.check.complete', (_e: Electron.IpcRendererEvent, status: string) => {
+      setStatus(status);
+    });
     return () => {
-      electron.ipcRenderer.removeListener('updater.check.complete', listenerCheckComplete);
-      electron.ipcRenderer.removeListener('updater.check.status', listenerCheckStatus);
+      statusUnsubscribe();
+      completeUnsubscribe();
     };
   });
   return (

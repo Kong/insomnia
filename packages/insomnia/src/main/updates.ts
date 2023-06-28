@@ -66,20 +66,14 @@ async function getUpdateUrl(force: boolean): Promise<string | null> {
 }
 
 function _sendUpdateStatus(status: string) {
-  const windows = BrowserWindow.getAllWindows();
-
-  for (const window of windows) {
-    // @ts-expect-error -- TSCONVERSION seems to be a genuine error
-    window.send('updater.check.status', status);
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send('updater.check.status', status);
   }
 }
 
-function _sendUpdateComplete(success: boolean, msg: string) {
-  const windows = BrowserWindow.getAllWindows();
-
-  for (const window of windows) {
-    // @ts-expect-error -- TSCONVERSION seems to be a genuine error
-    window.send('updater.check.complete', success, msg);
+function _sendUpdateComplete(msg: string) {
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send('updater.check.complete', msg);
   }
 }
 
@@ -91,7 +85,7 @@ export async function init() {
   autoUpdater.on('update-not-available', () => {
     console.log('[updater] Not Available');
 
-    _sendUpdateComplete(false, 'Up to Date');
+    _sendUpdateComplete('Up to Date');
   });
   autoUpdater.on('update-available', () => {
     console.log('[updater] Update Available');
@@ -105,7 +99,7 @@ export async function init() {
 
     await exportAllWorkspaces();
 
-    _sendUpdateComplete(true, 'Updated (Restart Required)');
+    _sendUpdateComplete('Updated (Restart Required)');
 
     _showUpdateNotification();
   });
