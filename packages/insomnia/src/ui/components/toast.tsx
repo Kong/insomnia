@@ -1,6 +1,5 @@
 import classnames from 'classnames';
 import type { IpcRendererEvent } from 'electron';
-import { ipcRenderer } from 'electron';
 import React, { FC, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
@@ -124,11 +123,8 @@ export const Toast: FC = () => {
   };
 
   useEffect(() => {
-    const showNotification = (_: IpcRendererEvent, notification: ToastNotification) => handleNotification(notification);
-    ipcRenderer.on('show-notification', showNotification);
-    return () => {
-      ipcRenderer.removeListener('show-notification', showNotification);
-    };
+    const unsubscribe = window.main.on('show-notification', (_: IpcRendererEvent, notification: ToastNotification) => handleNotification(notification));
+    return () => unsubscribe();
   }, []);
 
   const productName = getProductName();

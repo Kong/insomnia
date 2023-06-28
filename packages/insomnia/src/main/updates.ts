@@ -5,7 +5,6 @@ import {
   getAppId,
   getAppVersion,
   isDevelopment,
-  updatesSupported,
   UpdateURL,
 } from '../common/constants';
 import { delay } from '../common/misc';
@@ -13,16 +12,28 @@ import * as models from '../models/index';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../utils/url/querystring';
 import { exportAllWorkspaces } from './export';
 const { autoUpdater, BrowserWindow, ipcMain } = electron;
-
-async function getUpdateUrl(force: boolean): Promise<string | null> {
-  const platform = process.platform;
-  const settings = await models.settings.getOrCreate();
-  let updateUrl: string | null = null;
-
-  if (!updatesSupported()) {
-    return null;
+const canUpdate = () => {
+  if (process.platform === 'linux') {
+    console.log('[updater] Not supported on this platform', process.platform);
+    return false;
   }
-
+  if (process.platform === 'win32' && process.env['PORTABLE_EXECUTABLE_DIR']) {
+    console.log('[updater] Not supported on portable windows binary');
+    return false;
+  }
+  if (process.env.INSOMNIA_DISABLE_AUTOMATIC_UPDATES) {
+    console.log('[updater] Disabled by INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable');
+    return false;
+  }
+  if (isDevelopment()) {
+    console.log('[updater] Disabled in dev mode');
+    return false;
+  }
+  return true;
+};
+const getUpdateUrl = (updateChannel: string): string | null => {
+  const platform = process.platform;
+  let updateUrl: string | null = null;
   if (platform === 'win32') {
     updateUrl = UpdateURL.windows;
   } else if (platform === 'darwin') {
@@ -30,7 +41,6 @@ async function getUpdateUrl(force: boolean): Promise<string | null> {
   } else {
     return null;
   }
-
   const params = [
     {
       name: 'v',
@@ -42,126 +52,96 @@ async function getUpdateUrl(force: boolean): Promise<string | null> {
     },
     {
       name: 'channel',
-      value: settings.updateChannel,
+      value: updateChannel,
     },
   ];
   const qs = buildQueryStringFromParams(params);
   const fullUrl = joinUrlAndQueryString(updateUrl, qs);
   console.log(`[updater] Using url ${fullUrl}`);
-
-  if (process.env.INSOMNIA_DISABLE_AUTOMATIC_UPDATES) {
-    console.log('[updater] Disabled by INSOMNIA_DISABLE_AUTOMATIC_UPDATES environment variable');
-    return null;
-  }
-
-  if (isDevelopment()) {
-    return null;
-  }
-
-  if (!force && !settings.updateAutomatically) {
-    return null;
-  }
-
   return fullUrl;
-}
+};
 
-function _sendUpdateStatus(status: string) {
+const _sendUpdateStatus = (status: string) => {
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('updater.check.status', status);
   }
-}
+};
 
-function _sendUpdateComplete(msg: string) {
+const _sendUpdateComplete = (msg: string) => {
   for (const window of BrowserWindow.getAllWindows()) {
     window.webContents.send('updater.check.complete', msg);
   }
-}
+};
 
-let hasPromptedForUpdates = false;
-export async function init() {
+let hasDownloadedUpdateAndShownPrompt = false;
+export const init = async () => {
   autoUpdater.on('error', error => {
     console.warn(`[updater] Error: ${error.message}`);
   });
   autoUpdater.on('update-not-available', () => {
     console.log('[updater] Not Available');
-
     _sendUpdateComplete('Up to Date');
   });
   autoUpdater.on('update-available', () => {
     console.log('[updater] Update Available');
-
     _sendUpdateStatus('Downloading...');
   });
-  autoUpdater.on('update-downloaded', async (_error, _releaseNotes, releaseName) => {
-    console.log(`[updater] Downloaded ${releaseName}`);
-
+  autoUpdater.on('update-downloaded', async (_event, releaseNotes, releaseName) => {
+    console.log(`[updater] Downloaded ${releaseName}`, releaseNotes);
     _sendUpdateStatus('Performing backup...');
-
     await exportAllWorkspaces();
-
     _sendUpdateComplete('Updated (Restart Required)');
-
-    _showUpdateNotification();
+    if (hasDownloadedUpdateAndShownPrompt) {
+      return;
+    }
+    const windows = BrowserWindow.getAllWindows();
+    if (windows.length && windows[0].webContents) {
+      windows[0].webContents.send('update-available');
+    }
+    hasDownloadedUpdateAndShownPrompt = true;
   });
-  ipcMain.on('updater.check', async () => {
-    await _checkForUpdates(true);
+
+  // on app start
+  const settings = await models.settings.getOrCreate();
+  const updateUrl = getUpdateUrl(settings.updateChannel);
+  if (settings.updateAutomatically && updateUrl) {
+    _checkForUpdates(updateUrl);
+  }
+  // on check now button pushed
+  ipcMain.on('manualUpdateCheck', async () => {
+    const settings = await models.settings.getOrCreate();
+    const updateUrl = getUpdateUrl(settings.updateChannel);
+    if (!canUpdate() || !updateUrl) {
+      _sendUpdateComplete('Updates Not Supported');
+      return;
+    }
+    _sendUpdateStatus('Checking');
+    await delay(300); // Pacing
+    _checkForUpdates(updateUrl);
   });
-  // Check for updates on an interval
-  setInterval(async () => {
-    await _checkForUpdates(false);
-  }, CHECK_FOR_UPDATES_INTERVAL);
-  // Check for updates immediately
-  await _checkForUpdates(false);
-}
+  // on an interval (3h)
+  if (canUpdate()) {
+    setInterval(async () => {
+      const settings = await models.settings.getOrCreate();
+      const updateUrl = getUpdateUrl(settings.updateChannel);
+      if (settings.updateAutomatically && updateUrl) {
+        _checkForUpdates(updateUrl);
+      }
 
-function _showUpdateNotification() {
-  if (hasPromptedForUpdates) {
+    }, CHECK_FOR_UPDATES_INTERVAL);
+  }
+};
+
+const _checkForUpdates = (updateUrl: string) => {
+  if (hasDownloadedUpdateAndShownPrompt) {
     return;
   }
-
-  const windows = BrowserWindow.getAllWindows();
-
-  if (windows.length && windows[0].webContents) {
-    windows[0].webContents.send('update-available');
-  }
-
-  hasPromptedForUpdates = true;
-}
-
-async function _checkForUpdates(force: boolean) {
-  _sendUpdateStatus('Checking');
-
-  await delay(500);
-
-  if (force) {
-    hasPromptedForUpdates = false;
-  }
-
-  if (hasPromptedForUpdates) {
-    // We've already prompted for updates. Don't bug the user anymore
-    return;
-  }
-
-  const updateUrl = await getUpdateUrl(force);
-
-  if (updateUrl === null) {
-    console.log(
-      `[updater] Updater not running platform=${process.platform} dev=${isDevelopment()}`,
-    );
-
-    _sendUpdateComplete(false, 'Updates Not Supported');
-
-    return;
-  }
-
   try {
     console.log(`[updater] Checking for updates url=${updateUrl}`);
-    // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-    autoUpdater.setFeedURL(updateUrl);
+    autoUpdater.setFeedURL({ url: updateUrl });
     autoUpdater.checkForUpdates();
   } catch (err) {
     console.warn('[updater] Failed to check for updates:', err.message);
-
-    _sendUpdateComplete(false, 'Update Error');
+    _sendUpdateComplete('Update Error');
   }
-}
+};

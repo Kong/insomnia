@@ -1,4 +1,3 @@
-import * as electron from 'electron';
 import React, { FC, ReactNode, useEffect, useState } from 'react';
 
 interface Props {
@@ -29,7 +28,7 @@ export const CheckForUpdatesButton: FC<Props> = ({ children, className }) => {
       className={className ?? ''}
       disabled={checking}
       onClick={() => {
-        electron.ipcRenderer.send('updater.check');
+        window.main.manualUpdateCheck();
         setChecking(true);
       }}
     >

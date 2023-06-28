@@ -17,6 +17,7 @@ import { gRPCBridgeAPI } from './grpc';
 
 export interface MainBridgeAPI {
   restart: () => void;
+  checkForUpdates: () => void;
   exportAllWorkspaces: () => Promise<void>;
   spectralRun: (options: { contents: string; rulesetPath: string }) => Promise<ISpectralDiagnostic[]>;
   authorizeUserInWindow: typeof authorizeUserInWindow;
