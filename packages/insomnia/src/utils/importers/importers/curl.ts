@@ -127,6 +127,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     if (!value) {
       return {
         name: name.trim().replace(/;$/, ''),
+        value: '',
       };
     }
     return {
