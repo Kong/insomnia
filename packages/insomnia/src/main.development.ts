@@ -223,7 +223,7 @@ async function _trackStats() {
     if (!justUpdated || !currentVersion) {
       return;
     }
-
+    console.log('[main] App update detected', currentVersion, lastVersion);
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
       url: changelogUrl(),
