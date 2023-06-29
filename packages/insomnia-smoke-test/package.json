@@ -13,13 +13,6 @@
   },
   "version": "3.17.0",
   "scripts": {
-    "bootstrap": "npm run build",
-    "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "lint:fix": "npm run lint -- --fix",
-    "clean": "tsc --build tsconfig.build.json --clean",
-    "postclean": "rimraf dist",
-    "build": "tsc --build tsconfig.build.json",
-    "type-check": "tsc --noEmit --project tsconfig.build.json",
     "test:dev": "xvfb-maybe cross-env BUNDLE=dev playwright test",
     "test:build": "xvfb-maybe cross-env BUNDLE=build playwright test",
     "test:package": "xvfb-maybe cross-env BUNDLE=package playwright test",

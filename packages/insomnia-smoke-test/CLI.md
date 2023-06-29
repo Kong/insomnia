@@ -26,8 +26,17 @@ npm run build:sr --prefix packages/insomnia
 # watch inso
 npm run start --prefix packages/insomnia-inso
 
-# run api test
+# run api test with dev bundle
 $PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
+```
+
+## How to debug pkg
+
+```sh
+# run modify package command and then a unit test
+npm run package --prefix packages/insomnia-inso && \
+$PWD/packages/insomnia-inso/binaries/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
+
 ```
 
 ## How to update the `inso-nedb` fixtures
