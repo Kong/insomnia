@@ -33,11 +33,7 @@ $PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packa
 ## How to debug pkg
 
 ```sh
-# test different pkg versions
-npx -y pkg@5.3.2 . --output binaries/inso --targets host && \
-$PWD/packages/insomnia-inso/binaries/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
-
-# build and run api test with binary output
+# run modify package command and then a unit test
 npm run package --prefix packages/insomnia-inso && \
 $PWD/packages/insomnia-inso/binaries/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
 
