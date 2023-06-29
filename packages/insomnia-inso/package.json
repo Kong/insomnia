@@ -36,7 +36,7 @@
     "build:production": "cross-env NODE_ENV=production npm run build",
     "start": "concurrently --names source,types \"ESBUILD_WATCH=true npm run build:source\" \"npm run build:types -- --watch\"",
     "prepackage": "npm run build:production",
-    "package": "npx -y pkg@5.3.2 . --output binaries/inso --targets host",
+    "package": "npx -y pkg@5.8.1 . --output binaries/inso --targets host",
     "postpackage": "esr src/scripts/verify-pkg.ts",
     "artifacts": "esr src/scripts/artifacts.ts"
   },
