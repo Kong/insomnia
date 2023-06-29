@@ -97,17 +97,16 @@ export function authorizeUserInWindow({
 
       const buttonLabels = certificateList.map(c => `${c.subjectName} (${c.issuerName})`);
       const cancelId = buttonLabels.length;
-      const options = {
+
+      // Prompt the user to select a certificate to use.
+      electron.dialog.showMessageBox(child, {
         type: 'none',
         buttons: [...buttonLabels, 'Cancel'],
         cancelId: cancelId,
         message: `The website\n"${url}"\nrequires a client certificate.`,
         detail: 'This website requires a certificate to validate your identity. Select the certificate to use when you connect to this website.',
         textWidth: 300,
-      };
-
-      // Prompt the user to select a certificate to use.
-      electron.dialog.showMessageBox(child, options).then(r => {
+      }).then(r => {
         const selectedButtonIndex = r.response;
         // Cancel button clicked
         if (r.response === cancelId) {

@@ -114,13 +114,11 @@ export const start = async () => {
     `[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim()
   );
   console.log(
-    `[build] node: ${
-      childProcess.spawnSync('node', ['--version']).stdout
-    }`.trim()
+    `[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim()
   );
 
-  if (process.version.indexOf('v16.') !== 0) {
-    console.log('[build] Node v16.x.x is required to build');
+  if (process.version.indexOf('v18.') !== 0) {
+    console.log('[build] Node v18.x.x is required to build');
     process.exit(1);
   }
 

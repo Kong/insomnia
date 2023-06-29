@@ -2,14 +2,14 @@ import { build } from 'esbuild';
 import { nodeExternalsPlugin } from 'esbuild-node-externals';
 
 const isProd = Boolean(process.env.NODE_ENV === 'production');
-const watch =  Boolean(process.env.ESBUILD_WATCH);
+const watch = Boolean(process.env.ESBUILD_WATCH);
 
 build({
   outfile: './dist/index.js',
   bundle: true,
   platform: 'node',
   minify: isProd,
-  target: 'node16',
+  target: 'node18',
   sourcemap: true,
   format: 'cjs',
   tsconfig: 'tsconfig.build.json',
