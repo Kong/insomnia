@@ -295,7 +295,7 @@ export const GraphQLEditor: FC<Props> = ({
         delete state.body.operationName;
       }
 
-      const content = getGraphQLContent(state.body, query);
+      const content = getGraphQLContent(state.body, query, operationName);
       onChange(content);
 
       setState(state => ({
