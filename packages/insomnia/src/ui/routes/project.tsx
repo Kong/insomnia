@@ -70,6 +70,7 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button/button';
 import { WorkspaceCard } from '../components/workspace-card';
+import { usePresenceContext } from '../context/app/presence-context';
 import { RootLoaderData } from './root';
 
 async function getAllTeamProjects(teamId: string) {
@@ -918,6 +919,8 @@ const ProjectRoute: FC = () => {
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
 
+  const { presence } = usePresenceContext();
+
   const fetcher = useFetcher();
   const submit = useSubmit();
   const navigate = useNavigate();
@@ -1099,26 +1102,35 @@ const ProjectRoute: FC = () => {
                 </div>
               </PaneHeaderToolbar>
               {hasWorkspaces &&
-                workspaces.map(workspace => (
-                  <WorkspaceCard
-                    {...workspace}
-                    projects={projects}
-                    key={workspace._id}
-                    activeProject={activeProject}
-                    onSelect={() =>
-                      navigate(
-                        `/organization/${organizationId}/project/${
-                          activeProject._id
-                        }/workspace/${workspace.workspace._id}/${
-                          workspace.workspace.scope === 'design'
-                            ? ACTIVITY_SPEC
-                            : ACTIVITY_DEBUG
-                        }`
-                      )
-                    }
-                    filter={filter}
-                  />
-                ))}
+                workspaces.map(workspace => {
+                  const activeUsers = presence.filter(p => {
+                    return (
+                      p.project === activeProject._id &&
+                      p.file === workspace.workspace._id
+                    );
+                  });
+                  return (
+                    <WorkspaceCard
+                      {...workspace}
+                      projects={projects}
+                      key={workspace._id}
+                      activeUsers={activeUsers}
+                      activeProject={activeProject}
+                      onSelect={() =>
+                        navigate(
+                          `/organization/${organizationId}/project/${
+                            activeProject._id
+                          }/workspace/${workspace.workspace._id}/${
+                            workspace.workspace.scope === 'design'
+                              ? ACTIVITY_SPEC
+                              : ACTIVITY_DEBUG
+                          }`
+                        )
+                      }
+                      filter={filter}
+                    />
+                  );
+                })}
               {filter && !hasWorkspaces && (
                 <div>
                   <p className="notice subtle">

@@ -43,6 +43,7 @@ import { WorkspaceHeader } from '../components/workspace-header';
 import { AppHooks } from '../containers/app-hooks';
 import { AIProvider } from '../context/app/ai-context';
 import withDragDropContext from '../context/app/drag-drop-context';
+import { PresenceProvider } from '../context/app/presence-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import Modals from './modals';
 import { WorkspaceLoaderData } from './workspace';
@@ -294,40 +295,42 @@ const Root = () => {
   };
 
   return (
-    <AIProvider>
-      <NunjucksEnabledProvider>
-        <AppHooks />
-        <div className="app">
-          <ErrorBoundary showAlert>
-            <Modals />
-            {/* triggered by insomnia://app/import */}
-            {importUri && (
-              <ImportModal
-                onHide={() => setImportUri('')}
-                projectName="Insomnia"
-                organizationId={organizationId}
-                from={{ type: 'uri', defaultValue: importUri }}
-              />
-            )}
-            <Layout>
-              <OrganizationsNav />
-              <AppHeader
-                gridCenter={
-                  workspaceData ? <WorkspaceHeader {...workspaceData} /> : null
-                }
-                gridRight={<AccountToolbar />}
-              />
-              <Outlet />
-              <StatusBar />
-            </Layout>
-          </ErrorBoundary>
+    <PresenceProvider>
+      <AIProvider>
+        <NunjucksEnabledProvider>
+          <AppHooks />
+          <div className="app">
+            <ErrorBoundary showAlert>
+              <Modals />
+              {/* triggered by insomnia://app/import */}
+              {importUri && (
+                <ImportModal
+                  onHide={() => setImportUri('')}
+                  projectName="Insomnia"
+                  organizationId={organizationId}
+                  from={{ type: 'uri', defaultValue: importUri }}
+                />
+              )}
+              <Layout>
+                <OrganizationsNav />
+                <AppHeader
+                  gridCenter={
+                    workspaceData ? <WorkspaceHeader {...workspaceData} /> : null
+                  }
+                  gridRight={<AccountToolbar />}
+                />
+                <Outlet />
+                <StatusBar />
+              </Layout>
+            </ErrorBoundary>
 
-          <ErrorBoundary showAlert>
-            <Toast />
-          </ErrorBoundary>
-        </div>
-      </NunjucksEnabledProvider>
-    </AIProvider>
+            <ErrorBoundary showAlert>
+              <Toast />
+            </ErrorBoundary>
+          </div>
+        </NunjucksEnabledProvider>
+      </AIProvider>
+    </PresenceProvider>
   );
 };
 

@@ -1,4 +1,4 @@
-import electron, { app, ipcMain, session } from 'electron';
+import electron, { app, ipcMain, protocol, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
@@ -21,7 +21,10 @@ import type { Stats } from './models/stats';
 import type { ToastNotification } from './ui/components/toast';
 
 initializeSentry();
-
+protocol.registerSchemesAsPrivileged([{ scheme: 'api', privileges: { secure: true, standard: true, supportFetchAPI: true } }, {
+  scheme: 'streamapi',
+  privileges: { secure: true, standard: true, supportFetchAPI: true },
+}]);
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
   process.exit(0);

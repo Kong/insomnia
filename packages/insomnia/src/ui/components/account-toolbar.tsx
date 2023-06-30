@@ -1,11 +1,13 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, Suspense } from 'react';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import * as session from '../../account/session';
+import { usePresenceContext } from '../context/app/presence-context';
+import { Avatar, AvatarGroup } from './avatar';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { Link as ExternalLink } from './base/link';
 import { showLoginModal } from './modals/login-modal';
-import { SvgIcon } from './svg-icon';
 import { Button } from './themed-button';
 
 const Toolbar = styled.div({
@@ -28,19 +30,57 @@ const SignUpButton = styled(Button)({
 
 export const AccountToolbar = () => {
   const isLoggedIn = session.isLoggedIn();
+  const { presence } = usePresenceContext();
+  const { projectId, workspaceId } = useParams() as { workspaceId: string; projectId: string };
+
+  const activeUsers = presence.filter(p => {
+    return (
+      p.project === projectId &&
+      p.file === workspaceId
+    );
+  });
 
   return (
     <Toolbar>
+      {presence && (
+        <AvatarGroup
+          size="medium"
+          items={activeUsers.map(user => {
+            return {
+              key: user.acct,
+              alt: user.firstName || user.lastName ? `${user.firstName } ${user.lastName}` : user.acct,
+              src: user.avatar,
+            };
+          })}
+        />
+      )}
+      {isLoggedIn && (
+        <Button
+          as={ExternalLink}
+          href={'https://app.insomnia.rest/app/account/invite/'}
+        >
+          Invite
+        </Button>
+      )}
       {isLoggedIn ? (
         <Dropdown
           aria-label="Account"
           triggerButton={
             <DropdownButton
-              style={{ gap: 'var(--padding-xs)' }}
+              style={{ gap: 'var(--padding-xs)', borderRadius: '60px', padding: '3px 10px' }}
               removePaddings={false}
               disableHoverBehavior={false}
             >
-              <SvgIcon icon='user' />{session.getFirstName()} {session.getLastName()}<i className="fa fa-caret-down" />
+              <Suspense fallback={<div />}>
+                <Avatar
+                  style={{
+                    width: '26px',
+                    height: '26px',
+                  }}
+                  alt={`${session.getFirstName()?.charAt(0)}${session.getLastName()?.charAt(0)}`}
+                />
+              </Suspense>
+              {session.getFirstName()} {session.getLastName()}<i className="fa fa-caret-down" />
             </DropdownButton>
           }
         >

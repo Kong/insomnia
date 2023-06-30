@@ -458,6 +458,62 @@ router.subscribe(({ location }) => {
   match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, location.pathname);
 });
 
+function sanitizeTeamId(teamId: string) {
+  return teamId.replace('proj_', '');
+}
+
+// Call the presence API to update the user's presence
+// router.subscribe(async ({ location }) => {
+//   const organizationMatch = matchPath(
+//     {
+//       path: '/organization/:organizationId',
+//       end: false,
+//     },
+//     location.pathname
+//   );
+
+//   const projectMatch = matchPath(
+//     {
+//       path: '/organization/:organizationId',
+//       end: false,
+//     },
+//     location.pathname
+//   );
+
+//   const workspaceMatch = matchPath(
+//     {
+//       path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId',
+//       end: false,
+//     },
+//     location.pathname
+//   );
+
+//   const match = workspaceMatch || projectMatch || organizationMatch;
+
+//   const { organizationId, projectId, workspaceId } = match?.params || {};
+
+//   if (organizationId) {
+//     console.log('match', match);
+
+//     const response = await fetch(`api://v1/teams/${sanitizeTeamId(organizationId)}/collaborators`, {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//         'X-Session-Id': getCurrentSessionId() || '',
+//       },
+//       body: JSON.stringify({
+//         'project': projectId,
+//         'file': workspaceId,
+//       }),
+//     });
+
+//     console.log({
+//       response,
+//     });
+//   }
+
+// });
+
 function updateReduxNavigationState(store: Store, pathname: string) {
   let currentActivity;
   const isActivityHome = matchPath(
