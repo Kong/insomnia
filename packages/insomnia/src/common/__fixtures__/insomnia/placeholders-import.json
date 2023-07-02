@@ -1,0 +1,76 @@
+{
+    "_type": "export",
+    "__export_format": 4,
+    "__export_date": "2017-11-24T16:14:14.805Z",
+    "__export_source": "insomnia.desktop.app:v5.12.0-beta.3",
+    "resources": [
+        {
+            "_id": "__WORKSPACE_ID__",
+            "created": 888,
+            "modified": 999,
+            "description": "",
+            "name": "New",
+            "parentId": null,
+            "_type": "workspace"
+        },
+        {
+            "_id": "__BASE_ENVIRONMENT_ID__",
+            "parentId": "__WORKSPACE_ID__",
+            "modified": 777,
+            "created": 666,
+            "name": "Base Environment",
+            "data": {
+                "test": "value"
+            },
+            "dataPropertyOrder": {
+                "&": [
+                    "test"
+                ]
+            },
+            "color": null,
+            "isPrivate": false,
+            "metaSortKey": 1687966554558,
+            "_type": "environment"
+        },
+        {
+            "_id": "env_imported_1",
+            "parentId": "__BASE_ENVIRONMENT_ID__",
+            "modified": 555,
+            "created": 444,
+            "name": "Sub Environment",
+            "data": {
+                "test-2": "value-2"
+            },
+            "dataPropertyOrder": {
+                "&": [
+                    "test-2"
+                ]
+            },
+            "color": null,
+            "isPrivate": false,
+            "metaSortKey": 1687966554558,
+            "_type": "environment"
+        },
+        {
+            "_id": "req_imported_1",
+            "authentication": {},
+            "body": {},
+            "created": 111,
+            "modified": 222,
+            "metaSortKey": 0,
+            "description": "",
+            "headers": [],
+            "method": "GET",
+            "name": "Test",
+            "parameters": [],
+            "parentId": "__WORKSPACE_ID__",
+            "settingDisableRenderRequestBody": false,
+            "settingEncodeUrl": true,
+            "settingSendCookies": true,
+            "settingStoreCookies": true,
+            "settingFollowRedirects": "global",
+            "url": "https://insomnia.rest/api/tests/0",
+            "_type": "request"
+        }
+    ]
+}

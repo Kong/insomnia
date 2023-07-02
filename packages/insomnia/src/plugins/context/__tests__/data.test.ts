@@ -17,7 +17,7 @@ describe('init()', () => {
 
   it('initializes correctly', async () => {
     const { data } = plugin.init(DEFAULT_PROJECT_ID);
-    expect(Object.keys(data)).toEqual(['import', 'export']);
+    expect(Object.keys(data)).toEqual(['import', 'syncToWorkspace', 'export']);
     expect(Object.keys(data.export).sort()).toEqual(['har', 'insomnia']);
     expect(Object.keys(data.import).sort()).toEqual(['raw', 'uri']);
   });
@@ -117,6 +117,60 @@ describe('app.import.*', () => {
         name: 'Test',
         parameters: [],
         parentId: importedWorkspace._id,
+        settingDisableRenderRequestBody: false,
+        settingEncodeUrl: true,
+        settingSendCookies: true,
+        settingStoreCookies: true,
+        settingRebuildPath: true,
+        settingFollowRedirects: 'global',
+        type: 'Request',
+        url: 'https://insomnia.rest',
+      },
+    ]);
+  });
+
+  // TODO: add test for syncToWorkspace 
+  it('syncToWorkspaceRaw', async () => {
+    // arrange
+    // prepare workspace, base environment and make sure no requests stored
+    const workspace = await models.workspace.getById('wrk_1');
+    expect(workspace).toBeDefined();
+    expect(await db.all(models.workspace.type)).toEqual([workspace]);
+    const baseEnvironment = await models.environment.create({ parentId: workspace!._id, data: {} });
+    expect(baseEnvironment).toBeDefined();
+    expect(await db.all(models.environment.type)).toEqual([baseEnvironment]);
+    expect(await db.count(models.request.type)).toBe(0);
+
+    // get data service as for a plugin
+    const { data } = plugin.init(project._id);
+
+    // prepare content will be used to syncronize with workspace
+    const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
+    const content = fs.readFileSync(filename, 'utf8');
+    expect(content).toBeDefined();
+    expect(content.length).toBeGreaterThan(0);
+
+    // act
+    await data.syncToWorkspace.raw(content, workspace!._id);
+
+    // assert
+    const allWorkspaces = await db.all(models.workspace.type);
+    expect(allWorkspaces).toMatchObject([
+      { ...workspace }, // new workspaces should not be created
+    ]);
+
+    expect(await db.all(models.request.type)).toMatchObject([
+      {
+        isPrivate: false,
+        authentication: {},
+        body: {},
+        description: '',
+        headers: [],
+        metaSortKey: 0,
+        method: 'GET',
+        name: 'Test',
+        parameters: [],
+        parentId: workspace!._id,
         settingDisableRenderRequestBody: false,
         settingEncodeUrl: true,
         settingSendCookies: true,
