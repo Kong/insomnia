@@ -129,7 +129,6 @@ describe('app.import.*', () => {
     ]);
   });
 
-  // TODO: add test for syncToWorkspace 
   it('syncToWorkspaceRaw', async () => {
     // arrange
     // prepare workspace, base environment and make sure no requests stored
@@ -181,6 +180,44 @@ describe('app.import.*', () => {
         url: 'https://insomnia.rest',
       },
     ]);
+  });
+
+  it('syncToWorkspaceRaw.emptyContent', async () => {
+    // arrange
+    // prepare workspace, base environment and make sure no requests stored
+    const workspace = await models.workspace.getById('wrk_1');
+    expect(workspace).toBeDefined();
+    expect(await db.all(models.workspace.type)).toEqual([workspace]);
+    const baseEnvironment = await models.environment.create({ parentId: workspace!._id, data: {} });
+    expect(baseEnvironment).toBeDefined();
+    expect(await db.all(models.environment.type)).toEqual([baseEnvironment]);
+    expect(await db.count(models.request.type)).toBe(0);
+
+    // get data service as for a plugin
+    const { data } = plugin.init(project._id);
+
+    // act
+    expect(async () => {
+      await data.syncToWorkspace.raw('', workspace!._id);
+    }).rejects
+      .toThrow('No content found')
+  });
+
+  it('syncToWorkspaceRaw.emptyWorkspaceId', async () => {
+    // arrange
+    const { data } = plugin.init(project._id);
+
+    // prepare content will be used to syncronize with workspace
+    const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
+    const content = fs.readFileSync(filename, 'utf8');
+    expect(content).toBeDefined();
+    expect(content.length).toBeGreaterThan(0);
+
+    // act
+    expect(async () => {
+      await data.syncToWorkspace.raw(content, '');
+    }).rejects
+      .toThrow('No workspace found')
   });
 });
 

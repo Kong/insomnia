@@ -60,7 +60,7 @@ export const init = (activeProjectId?: string) => ({
     syncToWorkspace: {
       raw: async (content: string, workspaceId: string) => {
         invariant(content, 'No content found')
-        invariant(workspaceId, 'No content found')
+        invariant(workspaceId, 'No workspace found')
         invariant(activeProjectId, 'No active project found');
 
         const workspace = (await models.workspace.findByParentId(activeProjectId)).find(workspace => workspace._id === workspaceId);
