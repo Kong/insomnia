@@ -1,7 +1,8 @@
 import { exportWorkspacesData, exportWorkspacesHAR } from '../../common/export';
-import { fetchImportContentFromURI, importResourcesToProject, scanResources } from '../../common/import';
+import { fetchImportContentFromURI, importResourcesToProject, syncResourcesToWorkspace, scanResources } from '../../common/import';
 import * as models from '../../models';
 import type { Workspace } from '../../models/workspace';
+import { invariant } from '../../utils/invariant';
 
 interface InsomniaExport {
   workspace?: Workspace;
@@ -55,6 +56,24 @@ export const init = (activeProjectId?: string) => ({
           projectId: activeProjectId,
         });
       },
+    },
+    syncToWorkspace: {
+      raw: async (content: string, workspaceId: string) => {
+        invariant(content, 'No content found')
+        invariant(workspaceId, 'No content found')
+        invariant(activeProjectId, 'No active project found');
+
+        const workspace = (await models.workspace.findByParentId(activeProjectId)).find(workspace => workspace._id === workspaceId);
+        invariant(workspace, `No workspace found with id ${workspaceId} in project with id ${activeProjectId}`);
+
+        await scanResources({
+          content,
+        });
+
+        await syncResourcesToWorkspace({
+          workspaceId: workspace._id,
+        });
+      }
     },
     export: {
       insomnia: async ({

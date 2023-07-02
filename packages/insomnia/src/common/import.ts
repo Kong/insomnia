@@ -230,6 +230,53 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
   };
 };
 
+export const syncResourcesToWorkspace = async ({ workspaceId }: { workspaceId: string }) => {
+  invariant(ResourceCache, 'No resources to import');
+
+  const resources = ResourceCache.resources;
+  const bufferId = await db.bufferChanges();
+  const ResourceIdMap = new Map();
+
+  // workspace id mapping
+  const existingWorkspace = await models.workspace.getById(workspaceId);
+  invariant(existingWorkspace, `Could not find workspace with id ${workspaceId}`);
+  ResourceIdMap.set('__WORKSPACE_ID__', existingWorkspace._id);
+  const syncingWorkspace = resources.find(isWorkspace);
+  syncingWorkspace && ResourceIdMap.set(syncingWorkspace._id, existingWorkspace._id);
+
+  // base environment id mapping
+  const existingBaseEnvironment = (await models.environment.findByParentId(existingWorkspace._id))[0];
+  invariant(existingBaseEnvironment, `Could not find base environment for workspace with id ${workspaceId}`);
+  ResourceIdMap.set('__BASE_ENVIRONMENT_ID__', existingWorkspace._id);
+  const syncingBaseEnvironment = resources.filter(isEnvironment).find(e => e.parentId === syncingWorkspace?._id);
+  syncingBaseEnvironment && ResourceIdMap.set(syncingBaseEnvironment._id, existingBaseEnvironment._id);
+
+  // sync resources
+  const resourcesToSync = resources.filter(resource =>
+    !isWorkspace(resource)
+  );
+
+  for (const resource of resourcesToSync) {
+    const model = getModel(resource.type);
+    if (!model) {
+      console.warn(`Could not find model for resource type ${resource.type}. Resource will not be synced`);
+      return;
+    }
+
+    await db.docUpsert(model.type, {
+      ...resource,
+      _id: ResourceIdMap.get(resource._id) || resource._id,
+      parentId: ResourceIdMap.get(resource.parentId) || resource.parentId,
+    })
+  }
+
+  await db.flushChanges(bufferId);
+  return {
+    resources: resources,
+    workspace: existingWorkspace,
+  };
+};
+
 const importResourcesToNewWorkspace = async (projectId: string, workspaceToImport?: Workspace) => {
   invariant(ResourceCache, 'No resources to import');
   const resources = ResourceCache.resources;

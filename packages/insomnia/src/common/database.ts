@@ -124,6 +124,19 @@ export const database = {
     return database.update<T>(doc);
   },
 
+  docUpsert: async <T extends BaseModel>(type: string, ...patches: Patch<T>[]) => {
+    const doc = await models.initModel<T>(
+      type,
+      ...patches,
+      // Fields that the user can't touch
+      {
+        type: type,
+        modified: Date.now(),
+      },
+    );
+    return database.upsert<T>(doc);
+  },
+
   duplicate: async function<T extends BaseModel>(originalDoc: T, patch: Patch<T> = {}) {
     if (db._empty) {
       return _send<T>('duplicate', ...arguments);
