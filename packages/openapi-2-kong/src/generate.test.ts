@@ -1,3 +1,4 @@
+// import SwaggerParser from '@apidevtools/swagger-parser';
 import { describe, expect, it } from '@jest/globals';
 import fs from 'fs';
 import { OpenAPIV3 } from 'openapi-types';
@@ -32,6 +33,18 @@ const k8sFixtureFileString = fs.readFileSync(k8sFixtureFilepath, 'utf-8');
 
 describe('top-level API exports', () => {
   describe('generate()', () => {
+    // it.only('generates DC from file with dereferenced $refs', async () => {
+    //   const {
+    //     documents: [dc],
+    //   } = await generate(path.join(__dirname, 'declarative-config', 'kong-oas.yaml'), 'kong-declarative-config') as DeclarativeConfigResult;
+    //   expect(dc._format_version).toBe('1.1');
+    //   expect(dc.services.length).toBe(1);
+    //   // console.log(JSON.stringify(dc, null, 2));
+    //   const x = await SwaggerParser.validate(path.join(__dirname, 'declarative-config', 'kong-oas.yaml'));
+    //   console.log(JSON.stringify(x, null, 2));
+    //   const file = await fs.promises.readFile(path.join(__dirname, 'declarative-config', 'kong-oas.yaml'), 'utf-8');
+    //   expect(x).toBe(YAML.parse(file));
+    // });
     it('generates DC from file', async () => {
       const {
         documents: [dc],

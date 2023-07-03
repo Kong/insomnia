@@ -1,5 +1,4 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
-import fs from 'fs';
 import path from 'path';
 import YAML from 'yaml';
 
@@ -79,7 +78,11 @@ export const generate = (
   tags: string[] = [],
   legacy: Boolean = true,
 ) => new Promise<ConversionResult>((resolve, reject) => {
-  fs.readFile(path.resolve(filePath), 'utf8', (err, contents) => {
+  SwaggerParser.validate(path.resolve(filePath), {
+    dereference: {
+      circular: 'ignore',
+    },
+  }, (err, api) => {
     if (err != null) {
       reject(err);
       return;
@@ -87,6 +90,6 @@ export const generate = (
 
     const fileSlug = path.basename(filePath);
     const allTags = [`OAS3file_${fileSlug}`, ...tags];
-    resolve(generateFromString(contents, type, allTags, legacy));
+    resolve(generateFromSpec(api as OpenApi3Spec, type, allTags, legacy));
   });
 });

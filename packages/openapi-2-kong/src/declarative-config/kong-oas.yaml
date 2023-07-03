@@ -1,0 +1,606 @@
+openapi: 3.0.0
+
+## NOTE: NOT COMPATIBLE WITH KONG GATEWAY >= 3.0 #####
+info:
+  description: Learn service
+  version: 1.0.0
+  title: Learn Service
+
+
+servers:
+- url: https://{host}.konghq.com/kongu/api/v1/learn
+  # the path variable {host} will be replaced by its default value below.
+  # NOTE: if multiple entries, then only the first one will be used for the service. The others
+  # will only be added as 'targets' (by their host+port, any other attributes will be ignored).
+  # A 'servers' block is currently only supported at the root of the document.
+  # Feature request: 'servers' can also be added to "path" and "operation" objects (mimic the OAS 3 spec)
+  description: Non production servers
+  variables:
+    host:
+      enum:
+      - alpha
+      - dev
+      - qa
+      default: alpha
+- url: https://konghq.com/kongu/api/v1/learn
+  description: Production server
+
+
+x-kong-service-defaults:
+  # the defaults for the Kong services generated from 'servers' above
+  # see https://docs.konghq.com/gateway/latest/admin-api/#service-object
+  retries: 10
+  connect_timeout: 30000
+  write_timeout: 30000
+  read_timeout: 30000
+  # Feature request: defaults can also be added to "path" and "operation" objects
+
+
+x-kong-upstream-defaults:
+  # the defaults for the Kong upstreams (loadbalancers) generated from 'servers' above
+  # see https://docs.konghq.com/latest/admin-api/#upstream-object
+  hash_on: ip
+  healthchecks:
+    passive:
+      unhealthy:
+        http_failures: 3
+        tcp_failures: 3
+        timeouts: 3
+  # Feature request: defaults can also be added to "path" and "operation" objects
+
+
+x-kong-name: awesome_learnservice
+# the above directive gives the entire spec file its name. This will be used for naming
+# the service and upstream objects in Kong. If not given it will use the 'info.title'
+# field above to name them. Names are converted into valid identifiers. For example,
+# "Learn Services" becomes "Learn_Services".
+# Feature request: honor this directive on paths and operation objects as well, currently only global
+
+x-kong-plugin-correlation-id:
+  config:
+    generator: uuid#counter
+# this plugin is configured on a global level. As such it will be configured
+# on the Kong Service entity, and hence apply on all paths and operations in this spec.
+# It can be specified again on paths and operations to override the config for that
+# specific subset of the spec, in that case it will be added to the generated Kong Route entity.
+
+x-kong-plugin-request-validator:
+  config:
+    #body_schema: {}
+    #parameter_schema: {}
+    verbose_response: true
+# here we're using the request validator plugin, without specifying the
+# "config.body_schema" and "config.parameter_schema" properties.
+# This will tell the parser to automatically generate
+# their validation configuration based on Operation objects.
+# NOTE: this is specified on top level, causing ALL Operations to get
+# validation, since this is inherited to the Operation objects.
+# alternatively it can be specified on the Path or Operation levels as well
+# to only apply to that subset of the spec.
+
+tags:
+- name: learn
+  description: Operations for tracks and videos
+- name: activities
+  description: Operations for quiz, track activities, video watching activities
+# FAQ: why aren't the tags generated into the Kong configuration?
+# The OAS tags are very strongly oriented towards documentation, whereas the Kong tags
+# are use for segmentation of configuration. They serve completely different and incompatible
+# purposes.
+
+x-kong-route-defaults:
+  # the defaults for the Kong routes generated from 'paths' below
+  # see https://docs.konghq.com/latest/admin-api/#route-object
+  preserve_host: true
+  # NOTE: these defaults can also be added to "path" and "operation" objects
+  # to only apply to that subset of the spec.
+
+
+paths:
+  "/tracks":
+    # FAQ: why does the generated configuration have a trailing "$"?
+    # The OAS spec defines exact paths, where the Kong configuration defines path prefixes.
+    # Hence the generated configuration is actually a regex, with an end marker to ensure Kong
+    # will also do an exact match. Otherwise for example a path "/tracks/whatever" would also
+    # match this path.
+    post:
+      tags:
+      - learn
+      summary: Upsert tracks
+      operationId: upsertTracks
+      # Kong routes are generated from the top-level Service name (x-kong-name or info.title
+      # if x-kong-name is not set), and then the operationId gets appended (with '-' as separator)
+      # so the generated route name here is "awesome_learnservice-upsertTracks"
+      # If operationId is not specified, the default name will be the global x-kong-name
+      # with the path name and operation type.
+      # If x-kong-name is set on the path-le
+      # [specname]-[operationId]
+      # [specname]-[x-kong-name on path level]-[operation] --> if no "operationId" provided
+      # where [specname] is the x-kong-name on global level (or in its absence "info.title")
+      x-kong-plugin-request-termination:
+        name: request-termination
+        config:
+          status_code: 403
+          message: So long and thanks for all the fish!
+        # the "x-kong-plugin-<plugin name>" directive can be used to add plugins
+        # to Kong routes (OAS operation object).
+        # The configuration provided is the exact same configuration as used on the Admin-API
+        # for that plugin.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/LearningCenterTrack"
+        '400':
+          description: Bad Request
+      requestBody:
+        "$ref": "#/components/requestBodies/tracks"
+    get:
+      tags:
+      - learn
+      summary: Get the tracks of a user
+      operationId: getUserTracks
+      security:
+        - openId: [ "scope3" ]
+        # TODO: validate security generated all together!!! report about it being broken
+        # See #/components/securitySchemes for the definition
+        # NOTE: only a single scheme per security object is supported!
+      x-kong-plugin-file-log:
+        "$ref": "#/components/x-kong/plugins/log_to_file"
+      # Adding another plugin, but in this case we use a reference so any updates
+      # to the configuration can be done in a single place.
+      parameters:
+      # for these parameters to get validated, "x-kong-plugin-request-validator" must be
+      # specified, see that directive above.
+      - name: userId
+        in: query
+        description: id of the user
+        required: true
+        schema:
+          pattern: ^[a-f0-9]{12}1[a-f0-9]{3}[89ab][a-f0-9]{15}$
+          type: string
+      - name: trackIds
+        in: query
+        description: track ids to get
+        required: false
+        schema:
+          type: array
+          items:
+            description: trackId
+            type: string
+          minItems: 0
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/UserLearningCenterTrack"
+        '400':
+          description: Bad Request
+  "/tracks/system":
+    get:
+      tags:
+      - learn
+      summary: Gets system tracks for a user
+      operationId: getSystemTracks
+      security:
+        - basicAuth: []
+        # TODO: validate security generated all together!!! report about it being broken
+        # See #/components/securitySchemes for the definition
+      parameters:
+      - name: userId
+        in: query
+        description: id of the user
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/LearningCenterTrack"
+        '400':
+          description: Bad Request
+  "/tracks/{id}":
+    delete:
+      tags:
+      - learn
+      summary: Delete a Track by Id
+      operationId: deleteTrack
+      security:
+        - keyAuth: []
+        # TODO: validate security generated all together!!! report about it being broken
+        # See #/components/securitySchemes for the definition
+      parameters:
+      - name: id
+        in: path
+        description: Id of the Track to delete
+        required: true
+        schema:
+          "$ref": "#/components/schemas/TrackId"
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/LearningCenterTrack"
+        '400':
+          description: Bad Request
+  "/videos":
+    get:
+      tags:
+      - learn
+      summary: Get Learning Center Videos for a user
+      description: Returns Learning Center Videos for a user
+      operationId: getVideos
+      parameters:
+      - name: userId
+        in: query
+        description: id of the user
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/LearningCenterVideo"
+        '400':
+          description: Bad Request
+    post:
+      tags:
+      - learn
+      summary: Upsert Learning Center Videos
+      operationId: upsertVideos
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/LearningCenterVideo"
+        '400':
+          description: Bad Request
+      requestBody:
+        "$ref": "#/components/requestBodies/Video"
+
+#TODO: cleanup unused stuff in components below
+components:
+  x-kong:
+    # reusable Kong plugin configurations
+    plugins:
+      log_to_file:
+        # file-log plugin configuration
+        config:
+          path: "/dev/stderr"
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      x-kong-security-basic-auth:
+        # using this directive, the scheme can be extended with Kong-specific
+        # configuration options.
+        # NOTE: the directive name is "security", not "plugin"! because it
+        # extends the existing OAS security directives
+        config:
+          hide_credentials: true
+    keyAuth:
+      type: apiKey
+      name: apikey
+      in: header
+      # NOTE: 'in' will be ignored since Kong will always look in header and
+      # query anyway for key-auth.
+      x-kong-security-key-auth:
+        config:
+          key_names: [ "mykey", "yourkey" ]
+          # the "key_names" will be merged with the name specified in OAS above
+          # so effectively keynames that will be accepted are now: "apikey",
+          # "mykey", and "yourkey".
+          hide_credentials: true
+          run_on_preflight: false
+    openId:
+      type: openIdConnect
+      openIdConnectUrl: https://konghq.com/oauth2/.well-known/openid-configuration
+      x-kong-security-openid-connect:
+        # we specify that the Kong OpenID COnnect plugin is to be used to implement this
+        # "security scheme object". Any custom configuration can be added as usual
+        # for plugins.
+        config:
+          run_on_preflight: false
+          scopes_required: ["scope1", "scope2"]
+          # the "scopes_required" listed here will be merged with the scopes specified
+          # on the security requirement. So if an Operation specifies a security
+          # requirement with "scope3", then the effective scopes applied will
+          # be "scope1", "scope2", and "scope3". For example: "read", "write", or
+          # "delete".
+
+  schemas:
+    Track:
+      type: object
+      description: Track
+      properties:
+        id:
+          "$ref": "#/components/schemas/TrackId"
+        index:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100000000
+        description:
+          "$ref": "#/components/schemas/parameterValue"
+        category:
+          "$ref": "#/components/schemas/parameterValue"
+        subcategory:
+          "$ref": "#/components/schemas/parameterValue"
+        quizId:
+          "$ref": "#/components/schemas/parameterValue"
+        assetClass:
+          "$ref": "#/components/schemas/parameterValue"
+    UserLearningCenterTrack:
+      type: object
+      properties:
+        id:
+          description: Id of a learning center track
+          type: string
+        index:
+          type: integer
+          format: int64
+        description:
+          type: string
+        category:
+          type: string
+        subcategory:
+          type: string
+        quizId:
+          type: string
+        isEnabled:
+          type: boolean
+        assetClass:
+          type: string
+    LearningCenterTrack:
+      type: object
+      properties:
+        id:
+          description: Id of a learning center track
+          type: string
+        index:
+          type: integer
+          format: int64
+        description:
+          type: string
+        category:
+          type: string
+        subcategory:
+          type: string
+        quizId:
+          type: string
+        entitlements:
+          type: array
+          items:
+            type: string
+          minItems: 0
+        assetClass:
+          type: string
+    LearningCenterVideo:
+      type: object
+      properties:
+        id:
+          description: Id of a learning center video
+          type: string
+        index:
+          type: integer
+          format: int64
+        title:
+          type: string
+        abbreviation:
+          type: string
+        trackId:
+          "$ref": "#/components/schemas/TrackId"
+        tileSummary:
+          type: string
+        category:
+          type: string
+        subcategory:
+          type: string
+        thumbnail:
+          type: string
+        baseUrl:
+          type: string
+        duration:
+          type: string
+    TrackId:
+      description: Id of a learning center track
+      type: string
+      minLength: 1
+      maxLength: 5
+    TrackActivities:
+      description: Contains the Track activities of a user
+      type: object
+      properties:
+        userId:
+          "$ref": "#/components/schemas/parameterValue"
+        tracks:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TrackActivity"
+    TrackActivity:
+      type: object
+      properties:
+        trackId:
+          "$ref": "#/components/schemas/TrackId"
+        quizId:
+          "$ref": "#/components/schemas/parameterValue"
+        quizAttempts:
+          type: integer
+        videosWatched:
+          type: array
+          items:
+            "$ref": "#/components/schemas/VideoActivity"
+    VideoActivity:
+      type: object
+      properties:
+        videoId:
+          "$ref": "#/components/schemas/parameterValue"
+        timestamp:
+          "$ref": "#/components/schemas/dateOrTimestamp"
+        sessionId:
+          "$ref": "#/components/schemas/parameterValue"
+    QuizResult:
+      description: Quiz Result
+      type: object
+      properties:
+        userId:
+          "$ref": "#/components/schemas/parameterValue"
+        session:
+          "$ref": "#/components/schemas/parameterValue"
+        track:
+          "$ref": "#/components/schemas/TrackId"
+        quizId:
+          "$ref": "#/components/schemas/parameterValue"
+        passed:
+          description: determines whether the user passed the quiz
+          type: boolean
+        score:
+          type: number
+          format: double
+          minimum: 0.1
+          maximum: 100000000
+        scoreSheet:
+          description: Scoresheet for Quiz
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items:
+            type: boolean
+        timestamp:
+          description: Timestamp of quiz result
+          type: string
+          pattern: "^[\\w\\- :.*/\\\\]{1,128}$"
+    CertificationStatusItem:
+      type: object
+      properties:
+        track:
+          type: string
+        timestamp:
+          "$ref": "#/components/schemas/dateOrTimestamp"
+    LearningCenterTrackSummary:
+      type: object
+      properties:
+        trackId:
+          "$ref": "#/components/schemas/TrackId"
+        completed:
+          type: integer
+        inProgress:
+          type: integer
+        notStarted:
+          type: integer
+    TrackIdLearningCenterUserTrackDetailsMap:
+      type: object
+      additionalProperties:
+        "$ref": "#/components/schemas/LearningCenterUserTrackDetails"
+    LearningCenterUserTrackDetails:
+      type: object
+      required:
+      - videosWatched
+      - certificateEarned
+      - quizAttempts
+      - videoCompletionTimes
+      properties:
+        videosWatched:
+          type: array
+          items:
+            type: boolean
+        quizScore:
+          type: number
+          format: double
+        certificateEarned:
+          type: boolean
+        quizAttempts:
+          type: integer
+        videoCompletionTimes:
+          type: array
+          items:
+            type: string
+            format: date-time
+        quizCompletionTime:
+          type: string
+          format: date-time
+    LearningCenterUserSummary:
+      type: object
+      required:
+      - completed
+      - inProgress
+      - notStarted
+      properties:
+        completed:
+          type: integer
+        inProgress:
+          type: integer
+        notStarted:
+          type: integer
+    parameterValue:
+      anyOf:
+      - "$ref": "#/components/schemas/symbol"
+      - "$ref": "#/components/schemas/sanitized_number"
+      - "$ref": "#/components/schemas/symbolArray"
+    dateOrTimestamp:
+      oneOf:
+      - type: string
+        format: dateTime
+      - type: string
+        format: date
+      - type: string
+        pattern: "^[0-9]{4}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$"
+    symbol:
+      type: string
+      maxLength: 4096
+    symbolArray:
+      type: array
+      items:
+        "$ref": "#/components/schemas/symbol"
+      minItems: 0
+      maxItems: 1000
+    sanitized_number:
+      type: integer
+      minimum: -1000000000
+      maximum: 1000000000
+  requestBodies:
+    tracks:
+      content:
+        application/json:
+          schema:
+            type: array
+            minItems: 1
+            items:
+              "$ref": "#/components/schemas/Track"
+    Video:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              videos:
+                type: array
+                minItems: 1
+                maxItems: 1000
+                items:
+                  "$ref": "#/components/schemas/LearningCenterVideo"

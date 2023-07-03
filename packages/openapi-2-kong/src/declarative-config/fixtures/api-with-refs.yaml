@@ -1,0 +1,88 @@
+openapi: 3.0.0
+
+## NOTE: NOT COMPATIBLE WITH KONG GATEWAY >= 3.0 #####
+info:
+  description: Learn service
+  version: 1.0.0
+  title: Learn Service
+
+servers:
+- url: https://konghq.com/kongu/api/v1/learn
+  description: Production server
+
+x-kong-name: awesome_learnservice
+
+paths:
+  "/tracks":
+    post:
+      tags:
+      - learn
+      summary: Upsert tracks
+      operationId: upsertTracks
+      x-kong-plugin-request-validator:
+        config:
+          verbose_response: true
+      x-kong-plugin-file-log:
+        "$ref": "#/components/x-kong/plugins/log_to_file"
+      requestBody:
+        "$ref": "#/components/requestBodies/tracks"
+      responses:
+        '200':
+          description: Successful operation
+
+components:
+  x-kong:
+    # reusable Kong plugin configurations
+    plugins:
+      log_to_file:
+        config:
+          path: "/dev/stderr"
+
+  requestBodies:
+    tracks:
+      content:
+        application/json:
+          schema:
+            type: array
+            minItems: 1
+            items:
+              "$ref": "#/components/schemas/Track"
+
+  schemas:
+    Track:
+      type: object
+      description: Track
+      properties:
+        id:
+          "$ref": "#/components/schemas/TrackId"
+        index:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100000000
+        description:
+          "$ref": "#/components/schemas/parameterValue"
+    TrackId:
+      description: Id of a learning center track
+      type: string
+      minLength: 1
+      maxLength: 5
+    parameterValue:
+      anyOf:
+      - "$ref": "#/components/schemas/symbol"
+      - "$ref": "#/components/schemas/sanitized_number"
+      - "$ref": "#/components/schemas/symbolArray"
+    symbol:
+      type: string
+      maxLength: 4096
+    sanitized_number:
+      type: integer
+      minimum: -1000000000
+      maximum: 1000000000
+    symbolArray:
+      type: array
+      items:
+        "$ref": "#/components/schemas/symbol"
+      minItems: 0
+      maxItems: 1000
+
