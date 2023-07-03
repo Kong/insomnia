@@ -123,6 +123,13 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     ...((pairsByName.H as string[] | undefined) || []),
   ].map(header => {
     const [name, value] = header.split(/:(.*)$/);
+    // remove final colon from header name if present
+    if (!value) {
+      return {
+        name: name.trim().replace(/;$/, ''),
+        value: '',
+      };
+    }
     return {
       name: name.trim(),
       value: value.trim(),
