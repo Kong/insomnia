@@ -42,7 +42,7 @@ export const parseSpec = (spec: string | Record<string, any>) => {
   return SwaggerParser.bundle(api) as Promise<OpenApi3Spec>;
 };
 
-export const generateFromSpec = async (
+export const generateFromSpec = (
   api: OpenApi3Spec,
   type: ConversionResultType,
   tags: string[] = [],
@@ -52,7 +52,7 @@ export const generateFromSpec = async (
 
   switch (type) {
     case 'kong-declarative-config':
-      return await generateDeclarativeConfigFromSpec(api, allTags, legacy);
+      return generateDeclarativeConfigFromSpec(api, allTags, legacy);
 
     case 'kong-for-kubernetes':
       return generateKongForKubernetesConfigFromSpec(api);

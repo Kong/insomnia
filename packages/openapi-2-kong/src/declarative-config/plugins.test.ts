@@ -26,7 +26,7 @@ describe('plugins', () => {
         },
       });
 
-      const result = await generateGlobalPlugins(api, tags);
+      const result = generateGlobalPlugins(api, tags);
 
       expect(result.plugins).toEqual([
         {
@@ -78,7 +78,7 @@ describe('plugins', () => {
         },
       });
 
-      const result = await generateGlobalPlugins(spec, tags);
+      const result = generateGlobalPlugins(spec, tags);
 
       expect(result.plugins as RequestTerminationPlugin[]).toEqual([
         {
@@ -96,24 +96,6 @@ describe('plugins', () => {
   });
 
   describe('generateRequestValidatorPlugin()', () => {
-    const api = getSpec({
-      [xKongPluginRequestValidator]: {
-        name: 'request-validator',
-        enabled: false,
-        config: {
-          body_schema: ALLOW_ALL_SCHEMA,
-          verbose_response: true,
-        },
-      },
-      ...pluginDummy,
-      [xKongPluginKeyAuth]: {
-        name: 'key-auth',
-        config: {
-          key_names: ['x-api-key'],
-        },
-      },
-    });
-
     const parameterSchema: ParameterSchema = {
       explode: false,
       in: 'path',
@@ -134,7 +116,7 @@ describe('plugins', () => {
           allowed_content_types: ['application/json'],
         },
       };
-      const generated = await generateRequestValidatorPlugin({ plugin, tags, api });
+      const generated = generateRequestValidatorPlugin({ plugin, tags });
       expect(generated).toStrictEqual({
         name: 'request-validator',
         enabled: plugin.enabled,
@@ -159,7 +141,7 @@ describe('plugins', () => {
           // allowed_content_types: ['application/json'],
         },
       };
-      const generated = await generateRequestValidatorPlugin({ plugin, tags, api });
+      const generated = generateRequestValidatorPlugin({ plugin, tags });
       expect(generated).toStrictEqual({
         name: 'request-validator',
         enabled: plugin.enabled,
@@ -181,19 +163,18 @@ describe('plugins', () => {
           },
         };
 
-        const generated1 = await generateRequestValidatorPlugin({ plugin, tags, api });
+        const generated1 = generateRequestValidatorPlugin({ plugin, tags });
         expect(generated1.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
         });
 
-        const generated2 = await generateRequestValidatorPlugin({
+        const generated2 = generateRequestValidatorPlugin({
           plugin,
           operation: {
             parameters: [],
           },
           tags,
-          api,
         });
         expect(generated2.config).toStrictEqual({
           version: 'draft4',
@@ -219,7 +200,7 @@ describe('plugins', () => {
         const operation: OA3Operation = {
           parameters: [param],
         };
-        const generated = await generateRequestValidatorPlugin({ tags, operation, api });
+        const generated = generateRequestValidatorPlugin({ tags, operation });
         expect(generated.config).toStrictEqual({
           version: 'draft4',
           parameter_schema: [
@@ -244,7 +225,7 @@ describe('plugins', () => {
             },
           ],
         };
-        const generated = await generateRequestValidatorPlugin({ tags, operation, api });
+        const generated = generateRequestValidatorPlugin({ tags, operation });
         expect(generated.config).toStrictEqual({
           version: 'draft4',
           parameter_schema: [
@@ -285,7 +266,7 @@ describe('plugins', () => {
             paramWithoutSchema,
           ],
         };
-        const generated = await generateRequestValidatorPlugin({ tags, operation, api });
+        const generated = generateRequestValidatorPlugin({ tags, operation });
         expect(generated.config).toStrictEqual({
           version: 'draft4',
           parameter_schema: [
@@ -318,7 +299,7 @@ describe('plugins', () => {
             body_schema: ALLOW_ALL_SCHEMA,
           },
         };
-        const generated = await generateRequestValidatorPlugin({ plugin, tags, api });
+        const generated = generateRequestValidatorPlugin({ plugin, tags });
         expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
@@ -336,14 +317,13 @@ describe('plugins', () => {
             $ref: '#/components/non-existent',
           },
         };
-        const apiWithNoComponents = { ...api, components: {} };
-        expect((await generateRequestValidatorPlugin({ operation: op1, tags, api: apiWithNoComponents })).config).toStrictEqual(
+        expect((generateRequestValidatorPlugin({ operation: op1, tags })).config).toStrictEqual(
           defaultReqVal,
         );
-        expect((await generateRequestValidatorPlugin({ operation: op2, tags, api: apiWithNoComponents })).config).toStrictEqual(
+        expect((generateRequestValidatorPlugin({ operation: op2, tags })).config).toStrictEqual(
           defaultReqVal,
         );
-        expect((await generateRequestValidatorPlugin({ tags, api: apiWithNoComponents })).config).toStrictEqual(
+        expect((generateRequestValidatorPlugin({ tags })).config).toStrictEqual(
           defaultReqVal,
         );
       });
@@ -357,7 +337,7 @@ describe('plugins', () => {
             },
           },
         };
-        const generated = await generateRequestValidatorPlugin({ tags, operation, api });
+        const generated = generateRequestValidatorPlugin({ tags, operation });
         expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
@@ -396,7 +376,7 @@ describe('plugins', () => {
             },
           },
         };
-        const generated = await generateRequestValidatorPlugin({ tags, operation, api });
+        const generated = generateRequestValidatorPlugin({ tags, operation });
         expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: JSON.stringify(schemaJson),
@@ -405,7 +385,7 @@ describe('plugins', () => {
       });
 
       it('should default body_schema if no schema is defined or generated', async () => {
-        const generated = await generateRequestValidatorPlugin({ tags, operation: {}, api });
+        const generated = generateRequestValidatorPlugin({ tags, operation: {} });
         expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: ALLOW_ALL_SCHEMA,
@@ -414,7 +394,7 @@ describe('plugins', () => {
     });
     describe('body_schema generateBodyOptions FTI-3278', () => {
       it('should keep to properties[].type unchanged nullable is not set', async () => {
-        const generated = await generateBodyOptions(api, {
+        const generated = generateBodyOptions({
           requestBody: {
             content: {
               'application/json': {
@@ -432,7 +412,7 @@ describe('plugins', () => {
         expect(generated.bodySchema).toStrictEqual('{\"properties\":{\"redirectUri\":{\"type\":\"string\"}}}');
       });
       it('should keep to properties[].type unchanged nullable is false', async () => {
-        const generated = await generateBodyOptions(api, {
+        const generated = generateBodyOptions({
           requestBody: {
             content: {
               'application/json': {
@@ -451,7 +431,7 @@ describe('plugins', () => {
         expect(generated.bodySchema).toStrictEqual('{\"properties\":{\"redirectUri\":{\"type\":\"string\",\"nullable\":false}}}');
       });
       it('should append null to properties[].type if nullable is true', async () => {
-        const generated = await generateBodyOptions(api, {
+        const generated = generateBodyOptions({
           requestBody: {
             content: {
               'application/json': {

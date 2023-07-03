@@ -19,7 +19,7 @@ import {
 import { generateSecurityPlugins } from './security-plugins';
 import { appendUpstreamToName } from './upstreams';
 
-export async function generateServices(api: OpenApi3Spec, tags: string[], legacy: Boolean = true) {
+export function generateServices(api: OpenApi3Spec, tags: string[], legacy: Boolean = true) {
   const servers = getAllServers(api);
 
   if (servers.length === 0) {
@@ -27,11 +27,11 @@ export async function generateServices(api: OpenApi3Spec, tags: string[], legacy
   }
 
   // only support one service for now
-  const service = await generateService(servers[0], api, tags, legacy);
+  const service = generateService(servers[0], api, tags, legacy);
   return [service];
 }
 
-export async function generateService(server: OA3Server, api: OpenApi3Spec, tags: string[], legacy: Boolean = true) {
+export function generateService(server: OA3Server, api: OpenApi3Spec, tags: string[], legacy: Boolean = true) {
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
   const parsedUrl = parseUrl(serverUrl);
@@ -42,7 +42,7 @@ export async function generateService(server: OA3Server, api: OpenApi3Spec, tags
   }
 
   // Service plugins
-  const globalPlugins = await generateGlobalPlugins(api, tags);
+  const globalPlugins = generateGlobalPlugins(api, tags);
   const serviceDefaults = api[xKongServiceDefaults] || {};
 
   if (typeof serviceDefaults !== 'object') {
@@ -130,12 +130,11 @@ export async function generateService(server: OA3Server, api: OpenApi3Spec, tags
       // Path plugin takes precedence over global
       const parentValidatorPlugin = pathValidatorPlugin || globalPlugins.requestValidatorPlugin;
 
-      const regularPlugins = await generateOperationPlugins({
+      const regularPlugins = generateOperationPlugins({
         operation,
         pathPlugins,
         parentValidatorPlugin,
         tags,
-        api,
       });
 
       const plugins = [...regularPlugins, ...securityPlugins];
