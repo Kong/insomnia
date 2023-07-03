@@ -9,7 +9,7 @@ import { generateUpstreams } from './upstreams';
 describe('tags', () => {
   it('test that tags are appended to Service entities', async () => {
     const spec = getSpec();
-    const services = await generateServices(spec, tags);
+    const services = generateServices(spec, tags);
     services.forEach(service => {
       expect(service.tags).toEqual(tags);
     });
@@ -17,7 +17,7 @@ describe('tags', () => {
 
   it('test that tags are appended to Route entities', async () => {
     const spec = getSpec();
-    const services = await generateServices(spec, tags);
+    const services = generateServices(spec, tags);
     services.forEach(service => {
       service.routes.forEach(route => {
         expect(route.tags).toEqual(tags);

@@ -132,9 +132,7 @@ describe('top-level API exports', () => {
       components: {
         schemas: {
           dog: {
-            name: {
-              type: 'string',
-            },
+            description: 'OK',
           } as OpenAPIV3.SchemaObject,
         },
       },
@@ -151,7 +149,7 @@ describe('top-level API exports', () => {
           post: {
             responses: {
               200: {
-                '$ref': '#/components/schemas/dog',
+                description: 'OK',
               } as OpenAPIV3.SchemaObject,
             } as OpenAPIV3.ResponsesObject,
           },

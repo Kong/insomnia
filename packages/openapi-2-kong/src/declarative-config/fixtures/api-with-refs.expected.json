@@ -1,0 +1,60 @@
+{
+  "_format_version": "1.1",
+  "services": [
+    {
+      "name": "awesome_learnservice",
+      "protocol": "https",
+      "host": "konghq.com",
+      "port": 443,
+      "path": "/kongu/api/v1/learn",
+      "plugins": [],
+      "routes": [
+        {
+          "tags": [
+            "OAS3_import",
+            "OAS3file_api-with-refs.yaml"
+          ],
+          "name": "awesome_learnservice-upsertTracks",
+          "methods": [
+            "POST"
+          ],
+          "paths": [
+            "/tracks$"
+          ],
+          "strip_path": false,
+          "plugins": [
+            {
+              "name": "file-log",
+              "config": {
+                "path": "/dev/stderr"
+              },
+              "tags": [
+                "OAS3_import",
+                "OAS3file_api-with-refs.yaml"
+              ]
+            },
+            {
+              "name": "request-validator",
+              "config": {
+                "version": "draft4",
+                "body_schema": "{\"type\":\"array\",\"minItems\":1,\"items\":{\"type\":\"object\",\"description\":\"Track\",\"properties\":{\"id\":{\"description\":\"Id of a learning center track\",\"type\":\"string\",\"minLength\":1,\"maxLength\":5},\"index\":{\"type\":\"integer\",\"format\":\"int32\",\"minimum\":1,\"maximum\":100000000},\"description\":{\"anyOf\":[{\"type\":\"string\",\"maxLength\":4096},{\"type\":\"integer\",\"minimum\":-1000000000,\"maximum\":1000000000},{\"type\":\"array\",\"items\":{\"type\":\"string\",\"maxLength\":4096},\"minItems\":0,\"maxItems\":1000}]}}}}",
+                "allowed_content_types": [
+                  "application/json"
+                ],
+                "verbose_response": true
+              },
+              "tags": [
+                "OAS3_import",
+                "OAS3file_api-with-refs.yaml"
+              ]
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "OAS3_import",
+        "OAS3file_api-with-refs.yaml"
+      ]
+    }
+  ]
+}

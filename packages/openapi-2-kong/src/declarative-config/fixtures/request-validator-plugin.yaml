@@ -12,6 +12,9 @@ x-kong-plugin-request-validator:
 paths:
   /global:
     get:
+      responses:
+        '200':
+          description: success
       requestBody:
         content:
           application/json:
@@ -23,6 +26,9 @@ paths:
         enabled: true
         config:
           body_scheme: '{}'
+      responses:
+        '200':
+          description: success
       parameters:
         - in: query
           name: queryid
@@ -46,6 +52,9 @@ paths:
           required: true
   /body:
     post:
+      responses:
+        '200':
+          description: success
       requestBody:
         content:
           application/json:

@@ -27,8 +27,7 @@
           "plugins": [
             {
               "config": {
-                "allowed_content_types": ["application/json"],
-                "body_schema": "{\"allOf\":[{\"$ref\":\"#/components/schemas/CircularStart\"}],\"components\":{\"schemas\":{\"CircularStart\":{\"allOf\":[{\"$ref\":\"#/components/schemas/CircularEnd\"}]},\"CircularEnd\":{\"allOf\":[{\"$ref\":\"#/components/schemas/CircularStart\"}]}}},\"$schema\":\"http://json-schema.org/schema#\"}",
+                "body_schema": "{}",
                 "verbose_response": true,
                 "version": "draft4"
               },

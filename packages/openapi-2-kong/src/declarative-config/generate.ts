@@ -5,7 +5,7 @@ import { DeclarativeConfigResult } from '../types/outputs';
 import { generateServices } from './services';
 import { generateUpstreams } from './upstreams';
 
-export async function generateDeclarativeConfigFromSpec(
+export function generateDeclarativeConfigFromSpec(
   api: OpenApi3Spec,
   tags: string[],
   legacy: Boolean = true
@@ -14,7 +14,7 @@ export async function generateDeclarativeConfigFromSpec(
     const formatVersion = legacy ? '1.1' : '3.0';
     const document: DeclarativeConfig = {
       _format_version: formatVersion,
-      services: await generateServices(api, tags, legacy),
+      services: generateServices(api, tags, legacy),
     };
 
     if (hasUpstreams(api)) {
