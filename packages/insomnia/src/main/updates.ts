@@ -59,8 +59,8 @@ export const init = async () => {
     console.log('[updater] Update Available');
     _sendUpdateStatus('Downloading...');
   });
-  autoUpdater.on('update-downloaded', async (_event, releaseNotes, releaseName) => {
-    console.log(`[updater] Downloaded ${releaseName}`, releaseNotes);
+  autoUpdater.on('update-downloaded', async (_error, _releaseNotes, releaseName) => {
+    console.log(`[updater] Downloaded ${releaseName}`);
     _sendUpdateStatus('Performing backup...');
     await exportAllWorkspaces();
     await delay(1000 * 10); // Workaround early restart issues
