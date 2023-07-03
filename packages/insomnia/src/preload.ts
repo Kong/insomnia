@@ -26,6 +26,8 @@ const grpc: gRPCBridgeAPI = {
 };
 const main: Window['main'] = {
   restart: () => ipcRenderer.send('restart'),
+  halfSecondAfterAppStart: () => ipcRenderer.send('halfSecondAfterAppStart'),
+  manualUpdateCheck: () => ipcRenderer.send('manualUpdateCheck'),
   exportAllWorkspaces: () => ipcRenderer.invoke('exportAllWorkspaces'),
   authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
   spectralRun: options => ipcRenderer.invoke('spectralRun', options),

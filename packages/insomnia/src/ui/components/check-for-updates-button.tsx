@@ -1,4 +1,3 @@
-import * as electron from 'electron';
 import React, { FC, ReactNode, useEffect, useState } from 'react';
 
 interface Props {
@@ -7,35 +6,25 @@ interface Props {
 }
 
 export const CheckForUpdatesButton: FC<Props> = ({ children, className }) => {
-  const [checking, setChecking] = useState(false);
+  const [disabled, setDisabled] = useState(false);
   const [status, setStatus] = useState('');
-  const [, setUpdateAvailable] = useState(false);
 
-  const listenerCheckComplete = (_e: Electron.IpcRendererEvent, updateAvailable: true, status: string) => {
-    setStatus(status);
-    setUpdateAvailable(updateAvailable);
-  };
-
-  const listenerCheckStatus = (_e: Electron.IpcRendererEvent, status: string) => {
-    if (checking) {
-      setStatus(status);
-    }
-  };
   useEffect(() => {
-    electron.ipcRenderer.on('updater.check.status', listenerCheckStatus);
-    electron.ipcRenderer.on('updater.check.complete', listenerCheckComplete);
+    const unsubscribe = window.main.on('updaterStatus',
+      (_e: Electron.IpcRendererEvent, status: string) => setStatus(status));
     return () => {
-      electron.ipcRenderer.removeListener('updater.check.complete', listenerCheckComplete);
-      electron.ipcRenderer.removeListener('updater.check.status', listenerCheckStatus);
+      unsubscribe();
     };
   });
   return (
     <button
       className={className ?? ''}
-      disabled={checking}
+      disabled={disabled}
       onClick={() => {
-        electron.ipcRenderer.send('updater.check');
-        setChecking(true);
+        window.main.manualUpdateCheck();
+        // this is to prevent initiating update multiple times
+        // if it errors user can restart the app and try again
+        setDisabled(true);
       }}
     >
       {status || children}

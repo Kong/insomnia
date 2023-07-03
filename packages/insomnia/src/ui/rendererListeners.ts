@@ -1,6 +1,4 @@
 
-import { ipcRenderer } from 'electron';
-
 import { isDevelopment } from '../common/constants';
 import { database } from '../common/database';
 import * as models from '../models';
@@ -14,27 +12,12 @@ import { AskModal } from './components/modals/ask-modal';
 import { SelectModal } from './components/modals/select-modal';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from './components/modals/settings-modal';
 
-ipcRenderer.on('update-available', () => {
-  // Give it a few seconds before showing this. Sometimes, when
-  // you relaunch too soon it doesn't work the first time.
-  setTimeout(() => {
-    console.log('[app] Update Available');
-    // eslint-disable-next-line no-new
-    new window.Notification('Insomnia Update Ready', {
-      body: 'Relaunch the app for it to take effect',
-      silent: true,
-      // @ts-expect-error -- TSCONVERSION
-      sticky: true,
-    });
-  }, 1000 * 10);
-});
-
-ipcRenderer.on('toggle-preferences', () => {
+window.main.on('toggle-preferences', () => {
   showModal(SettingsModal);
 });
 
 if (isDevelopment()) {
-  ipcRenderer.on('clear-model', () => {
+  window.main.on('clear-model', () => {
     const options = models
       .types()
       .filter(t => t !== models.settings.type) // don't clear settings
@@ -59,7 +42,7 @@ if (isDevelopment()) {
     });
   });
 
-  ipcRenderer.on('clear-all-models', () => {
+  window.main.on('clear-all-models', () => {
     showModal(AskModal, {
       title: 'Clear all models',
       message: 'Are you sure you want to clear all models? This operation cannot be undone.',
@@ -86,7 +69,7 @@ if (isDevelopment()) {
   });
 }
 
-ipcRenderer.on('reload-plugins', async () => {
+window.main.on('reload-plugins', async () => {
   const settings = await models.settings.getOrCreate();
   await plugins.reloadPlugins();
   await themes.applyColorScheme(settings);
@@ -94,7 +77,7 @@ ipcRenderer.on('reload-plugins', async () => {
   console.log('[plugins] reloaded');
 });
 
-ipcRenderer.on('toggle-preferences-shortcuts', () => {
+window.main.on('toggle-preferences-shortcuts', () => {
   showModal(SettingsModal, { tab: TAB_INDEX_SHORTCUTS });
 });
 

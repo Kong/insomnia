@@ -145,7 +145,7 @@ const _launchApp = async () => {
   await _trackStats();
   let window: BrowserWindow;
   // Handle URLs sent via command line args
-  ipcMain.once('window-ready', () => {
+  ipcMain.once('halfSecondAfterAppStart', () => {
     console.log('[main] Window ready, handling command line arguments', process.argv);
     const args = process.argv.slice(1).filter(a => a !== '.');
     if (args.length) {
@@ -215,7 +215,7 @@ async function _trackStats() {
     launches: oldStats.launches + 1,
   });
 
-  ipcMain.once('window-ready', () => {
+  ipcMain.once('halfSecondAfterAppStart', () => {
     const { currentVersion, launches, lastVersion } = stats;
 
     const firstLaunch = launches === 1;
@@ -223,7 +223,7 @@ async function _trackStats() {
     if (!justUpdated || !currentVersion) {
       return;
     }
-
+    console.log('[main] App update detected', currentVersion, lastVersion);
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
       url: changelogUrl(),

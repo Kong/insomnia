@@ -1,4 +1,3 @@
-import { ipcRenderer } from 'electron';
 import { FC, useEffect } from 'react';
 
 import { useGlobalKeyboardShortcuts } from '../hooks/use-global-keyboard-shortcuts';
@@ -11,9 +10,9 @@ export const AppHooks: FC = () => {
   useSettingsSideEffects();
   useGlobalKeyboardShortcuts();
   useThemeChange();
-  // Give it a bit before letting the backend know it's ready
+  // Used for detecting if we just updated Insomnia and app --args or insomnia:// and
   useEffect(() => {
-    setTimeout(() => ipcRenderer.send('window-ready'), 500);
+    setTimeout(() => window.main.halfSecondAfterAppStart(), 500);
   }, []);
 
   return null;
