@@ -58,22 +58,10 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
       });
 
       const json = await response.json() as {
-        data: Omit<UserPresence, 'firstName' | 'lastName'> & {
-          first: string;
-          last: string;
-        }[];
+        data: UserPresence[];
       };
 
-      console.log('json', json);
-
-      setPresence(json.data.map(p => {
-        return {
-          ...p,
-          firstName: p.first,
-          lastName: p.last,
-        };
-      }));
-
+      setPresence(json.data);
     }
 
     updatePresence();
