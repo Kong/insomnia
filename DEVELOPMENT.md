@@ -72,3 +72,15 @@ This is just a brief summary of Insomnia's current technical debt.
 - Bundling `libcurl` (native module) has caused many weeks of headaches trying to get builds working across Windows, Mac, and Linux. More expertise here is definitely needed.
 - All input fields that support features like templating or code completion are actually [CodeMirror](https://codemirror.net/6/) instances. This isn't really debt, but may affect things going forward.
 - Use of `libcurl` means Insomnia can't run in a web browser and can't support bidirectional socket communication.
+
+## Electron upgrade
+
+<https://releases.electronjs.org/>
+
+bump the following node and electron versions
+
+- `.npmrc`
+- `.nvmrc`
+- `packages/insomnia/package.json` electron and node-libcurl
+- `packages/insomnia-send-request/package.json` node-libcurl
+- `shell.nix`
