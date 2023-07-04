@@ -46,7 +46,7 @@
     "graphql": "^15.8.0",
     "jest": "^28.1.0",
     "mkdirp": "^1.0.4",
-    "oidc-provider": "^8.2.2",
+    "oidc-provider": "^7.10.6",
     "uuid": "^8.3.2",
     "ws": "^8.13.0",
     "xvfb-maybe": "^0.2.1"
