@@ -57,11 +57,17 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
         }),
       });
 
-      const json = await response.json() as {
-        data: UserPresence[];
-      };
+      if (response.ok) {
+        try {
+          const json = await response.json() as {
+            data: UserPresence[];
+          };
+          setPresence(json.data);
+        } catch (e) {
+          console.log('Error parsing response', e);
+        }
+      }
 
-      setPresence(json.data);
     }
 
     updatePresence();
