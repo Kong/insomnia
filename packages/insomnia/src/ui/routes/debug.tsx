@@ -15,6 +15,7 @@ import { isWebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent, trackSegmentEvent } from '../analytics';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
+import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';
@@ -61,6 +62,7 @@ export interface GrpcRequestState {
   methods: GrpcMethodInfo[];
   reloadMethods: boolean;
 }
+
 const INITIAL_GRPC_REQUEST_STATE = {
   running: false,
   requestMessages: [],
@@ -70,6 +72,7 @@ const INITIAL_GRPC_REQUEST_STATE = {
   methods: [],
   reloadMethods: true,
 };
+
 export const Debug: FC = () => {
   const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
@@ -264,6 +267,7 @@ export const Debug: FC = () => {
         <SidebarChildren
           filter={sidebarFilter || ''}
         />
+        <WorkspaceSyncDropdown />
       </Fragment>
         : null}
       renderPaneOne={activeWorkspace ?

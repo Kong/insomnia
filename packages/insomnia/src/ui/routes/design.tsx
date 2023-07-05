@@ -24,6 +24,7 @@ import {
   CodeEditorHandle,
 } from '../components/codemirror/code-editor';
 import { DesignEmptyState } from '../components/design-empty-state';
+import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Notice, NoticeTable } from '../components/notice-table';
 import { SidebarLayout } from '../components/sidebar-layout';
@@ -256,9 +257,25 @@ const Design: FC = () => {
               apiSpec={apiSpec}
               handleSetSelection={handleScrollToSelection}
             />
+            <div
+              style={{
+                gridRowStart: 6,
+              }}
+            >
+              <WorkspaceSyncDropdown />
+            </div>
           </ErrorBoundary>
         ) : (
-          <EmptySpaceHelper>A spec navigator will render here</EmptySpaceHelper>
+          <Fragment>
+            <EmptySpaceHelper>A spec navigator will render here</EmptySpaceHelper>
+            <div
+              style={{
+                gridRowStart: 6,
+              }}
+            >
+              <WorkspaceSyncDropdown />
+            </div>
+          </Fragment>
         )
       }
       renderPaneTwo={showRightPane && <SwaggerUIDiv text={apiSpec.contents} />}

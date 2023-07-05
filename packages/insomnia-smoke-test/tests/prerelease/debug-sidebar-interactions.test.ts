@@ -12,7 +12,7 @@ test.describe('Debug-Sidebar', async () => {
     await page.getByRole('menuitem', { name: 'Import' }).click();
     await page.getByText('Clipboard').click();
     await page.getByRole('button', { name: 'Scan' }).click();
-    await page.getByRole('button', { name: 'Import' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     await page.getByText('Collectionsimplejust now').click();
   });
 
@@ -61,9 +61,9 @@ test.describe('Debug-Sidebar', async () => {
     });
 
     test('Open properties of the collection', async ({ page }) => {
-      await page.getByRole('button', { name: 'Untitled' }).click();
-      await page.getByRole('menuitem', { name: 'Document Settings' }).click();
-      await page.getByText('Document Settings').click();
+      await page.getByRole('button', { name: 'simple' }).click();
+      await page.getByRole('menuitem', { name: 'Collection Settings' }).click();
+      await page.getByText('Collection Settings').click();
     });
 
     test('Filter by request name', async ({ page }) => {

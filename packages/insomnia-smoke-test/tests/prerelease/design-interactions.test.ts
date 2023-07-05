@@ -14,8 +14,8 @@ test.describe('Design interactions', async () => {
     await page.getByRole('menuitem', { name: 'Import' }).click();
     await page.getByText('Clipboard').click();
     await page.getByRole('button', { name: 'Scan' }).click();
-    await page.getByRole('button', { name: 'Import' }).click();
-    await page.getByText('CollectionSmoke testsjust now').click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    await page.getByText('unit-test.yaml').click();
     // Switch to Test tab
     await page.click('a:has-text("Test")');
 

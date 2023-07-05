@@ -1,4 +1,4 @@
-import { ActionFunction, LoaderFunction } from 'react-router-dom';
+import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
 import { database } from '../../common/database';
 import { isNotNullOrUndefined } from '../../common/misc';
@@ -9,7 +9,8 @@ import { pullBackendProject } from '../../sync/vcs/pull-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
 
-export const pullRemoteCollectionAction: ActionFunction = async ({ request }) => {
+export const pullRemoteCollectionAction: ActionFunction = async ({ request, params }) => {
+  const { organizationId, projectId } = params;
   const formData = await request.formData();
 
   const backendProjectId = formData.get('backendProjectId');
@@ -37,7 +38,11 @@ export const pullRemoteCollectionAction: ActionFunction = async ({ request }) =>
   // Remove all backend projects for workspace first
   await newVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
 
-  await pullBackendProject({ vcs: newVCS, backendProject, remoteProjects });
+  const { workspaceId } = await pullBackendProject({ vcs: newVCS, backendProject, remoteProjects });
+
+  if (workspaceId) {
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+  }
 
   return null;
 };

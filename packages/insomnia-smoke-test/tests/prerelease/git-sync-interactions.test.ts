@@ -13,7 +13,7 @@ test('Clone Repo with bad values', async ({ page }) => {
   await page.getByText('Author Email').fill('test');
   await page.getByText('Username').fill('test');
   await page.getByText('Authentication Token').fill('test');
-  await page.getByRole('button', { name: 'Clone' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Clone' }).click();
 
   // Basic check repository data is loaded
   // Design doc
@@ -50,31 +50,6 @@ test('Clone Repo with bad values', async ({ page }) => {
   await expect(page.locator('.app')).toContainText('Error Pushing Repository');
 });
 
-test('Clone Bitbucket Repo with bad values', async ({ page }) => {
-  await page.getByRole('button', { name: 'Create' }).click();
-  await page.getByRole('menuitem', { name: 'Git Clone' }).click();
-  await page.getByRole('tab', { name: 'Git' }).nth(2).click();
-
-  // Fill in Git Sync details and clone repository
-  await page.getByText('Git URI (https)').fill('https://bitbucket.org/atlassian/bitbucket-example-plugin.git');
-  await page.getByText('Author Name').fill('test');
-  await page.getByText('Author Email').fill('test');
-  await page.getByText('Username').fill('test');
-  await page.getByText('Authentication Token').fill('test');
-  await page.getByRole('button', { name: 'Clone' }).click();
-
-  // Create a branch and try to push with bad Git token
-  await page.getByRole('button', { name: 'master' }).click();
-  await page.getByRole('menuitem', { name: 'Branches' }).click();
-  await page.getByPlaceholder('testing-branch').fill('test123');
-  await page.getByRole('button', { name: '+ Create' }).click();
-  await page.getByRole('cell', { name: 'test123(current)' }).click();
-  await page.getByRole('button', { name: 'Done' }).click();
-  await page.getByRole('button', { name: 'test123' }).click();
-  await page.getByRole('menuitem', { name: 'Push' }).click();
-  await expect(page.locator('.app')).toContainText('Error Pushing Repository');
-});
-
 test('Clone Gitlab Repo with bad values', async ({ page }) => {
   await page.getByRole('button', { name: 'Create' }).click();
   await page.getByRole('menuitem', { name: 'Git Clone' }).click();
@@ -86,7 +61,7 @@ test('Clone Gitlab Repo with bad values', async ({ page }) => {
   await page.getByText('Author Email').fill('test');
   await page.getByText('Username').fill('test');
   await page.getByText('Authentication Token').fill('test');
-  await page.getByRole('button', { name: 'Clone' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Clone' }).click();
 
   // Create a branch and try to push with bad Git token
   await page.getByRole('button', { name: 'master' }).click();

@@ -23,7 +23,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test-result/${testResult._id}`);
   }
 
-  return;
+  return null;
 };
 
 export const loader: LoaderFunction = async ({

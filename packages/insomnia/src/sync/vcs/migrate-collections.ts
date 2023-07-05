@@ -1,6 +1,6 @@
 import { isLoggedIn } from '../../account/session';
-import { asyncFilter } from '../../common/async-array-helpers';
 import { database } from '../../common/database';
+import { isNotNullOrUndefined } from '../../common/misc';
 import * as models from '../../models';
 import { isRemoteProject, RemoteProject } from '../../models/project';
 import {  isCollection, Workspace } from '../../models/workspace';
@@ -36,7 +36,7 @@ export const migrateCollectionsIntoRemoteProject = async (vcs: VCS) => {
   const isNotInRemoteProject = (collection: Workspace) => !Boolean(remoteProjects.find(project => project._id === collection.parentId));
   const hasLocalProject = (collection: Workspace) => vcs.hasBackendProjectForRootDocument(collection._id);
 
-  const needsMigration = await asyncFilter(collections, async coll => await hasLocalProject(coll) && isNotInRemoteProject(coll));
+  const needsMigration = (await Promise.all(collections.map(async coll => await hasLocalProject(coll) && isNotInRemoteProject(coll) ? coll : null))).filter(isNotNullOrUndefined);
 
   // If nothing to migrate, exit
   if (!needsMigration.length) {

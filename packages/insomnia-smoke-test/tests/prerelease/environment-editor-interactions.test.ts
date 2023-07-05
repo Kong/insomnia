@@ -10,8 +10,8 @@ test.describe('Environment Editor', async () => {
     await page.getByRole('menuitem', { name: 'Import' }).click();
     await page.getByText('Clipboard').click();
     await page.getByRole('button', { name: 'Scan' }).click();
-    await page.getByRole('button', { name: 'Import' }).click();
-    await page.getByText('CollectionSmoke testsjust now').click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+    await page.getByText('Collectionenvironments').click();
   });
 
   test('create a new environment', async ({ page }) => {

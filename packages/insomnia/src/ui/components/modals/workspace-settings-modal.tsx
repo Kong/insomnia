@@ -1,5 +1,6 @@
 import React, { FC, forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useRevalidator } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { ACTIVITY_HOME } from '../../../common/constants';
@@ -12,7 +13,7 @@ import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
 import { invariant } from '../../../utils/invariant';
 import { setActiveActivity } from '../../redux/modules/global';
-import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceName } from '../../redux/selectors';
+import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceMeta, selectActiveWorkspaceName } from '../../redux/selectors';
 import { FileInputButton } from '../base/file-input-button';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -57,6 +58,7 @@ const CertificateField: FC<{
     </span>
   );
 };
+
 export interface WorkspaceSettingsModalOptions {
   showAddCertificateForm: boolean;
   host: string;
@@ -86,10 +88,13 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
     defaultPreviewMode: false,
   });
 
+  const { revalidate } = useRevalidator();
   const workspace = useSelector(selectActiveWorkspace);
   const apiSpec = useSelector(selectActiveApiSpec);
   const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
   const clientCertificates = useSelector(selectActiveWorkspaceClientCertificates);
+  const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
+
   const [caCert, setCaCert] = useState<CaCertificate | null>(null);
   useEffect(() => {
     if (!workspace) {
@@ -223,6 +228,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
     showDescription,
     defaultPreviewMode,
   } = state;
+
   return (
     <Modal ref={modalRef}>
       {workspace ?
@@ -489,6 +495,47 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                     </div>
                   </form>
                 )}
+              </PanelContainer>
+            </TabItem>
+            <TabItem key="git-sybc" title="Git Sync">
+              <PanelContainer className="pad">
+                <div className="form-control form-control--outlined">
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--padding-xs)',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={Boolean(workspaceMeta?.gitRepositoryId)}
+                      onChange={async () => {
+                        if (workspaceMeta?.gitRepositoryId) {
+                          await models.workspaceMeta.update(workspaceMeta, {
+                            gitRepositoryId: null,
+                          });
+                        } else {
+                          invariant(workspaceMeta, 'Workspace meta not found');
+
+                          const repo = await models.gitRepository.create({
+                            uri: '',
+                          });
+
+                          await models.workspaceMeta.update(workspaceMeta, {
+                            gitRepositoryId: repo._id,
+                          });
+                        }
+
+                        revalidate();
+                      }}
+                    />
+                    Enable Git Sync
+                  </label>
+                  <p>
+                    By enabling Git Sync, you can sync your workspace with a Git repository. This will disable the ability to sync with Insomnia Sync.
+                  </p>
+                </div>
               </PanelContainer>
             </TabItem>
           </Tabs>

@@ -19,7 +19,7 @@ test.describe('gRPC interactions', () => {
     await page.getByRole('menuitem', { name: 'Import' }).click();
     await page.getByText('Clipboard').click();
     await page.getByRole('button', { name: 'Scan' }).click();
-    await page.getByRole('button', { name: 'Import' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     await page.getByText('CollectionPreRelease gRPCjust now').click();
     statusTag = page.locator('[data-testid="response-status-tag"]:visible');
     responseBody = page.locator('[data-testid="response-pane"] >> [data-testid="CodeEditor"]:visible', {
