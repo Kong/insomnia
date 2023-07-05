@@ -3,6 +3,7 @@ import { test } from '../../playwright/test';
 test('Sign in with Gitlab', async ({ app, page }) => {
   await page.getByRole('button', { name: 'New Document' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('button', { name: 'Git Sync' }).click();
   await page.getByRole('button', { name: 'Setup Git Sync' }).click();
   await page.getByRole('tab', { name: 'GitLab' }).click();
 
