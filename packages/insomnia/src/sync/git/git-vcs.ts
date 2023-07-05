@@ -429,7 +429,7 @@ export class GitVCS {
     });
   }
 
-  async log(input: {depth?: number; ref?: string} = {}) {
+  async log(input: {depth?: number} = {}) {
     const { depth = 35 } = input;
     try {
       const remoteOriginURI = await this.getRemoteOriginURI();
@@ -443,7 +443,7 @@ export class GitVCS {
         });
       }
 
-      return await git.log({ ...this._baseOpts, depth, ref: input.ref });
+      return await git.log({ ...this._baseOpts, depth });
     } catch (error: unknown) {
       if (error instanceof git.Errors.NotFoundError) {
         return [];
