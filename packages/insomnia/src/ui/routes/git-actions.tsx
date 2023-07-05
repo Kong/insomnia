@@ -188,11 +188,9 @@ export const gitBranchesLoader: LoaderFunction = async ({
   };
 };
 
-export type GitFetchLoaderData =
-  | {
+export interface GitFetchLoaderData {
       errors: string[];
     }
-  | {};
 
 export const gitFetchAction: ActionFunction = async ({
   params,
@@ -229,7 +227,9 @@ export const gitFetchAction: ActionFunction = async ({
     };
   }
 
-  return {};
+  return {
+    errors: [],
+  };
 };
 
 export type GitLogLoaderData =
