@@ -4,8 +4,8 @@ import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
 import { docsGitSync } from '../../../common/documentation';
-import { workspace } from '../../../models';
 import { GitRepository } from '../../../models/git-repository';
+import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
 import { getOauth2FormatName } from '../../../sync/git/utils';
 import {
   GitFetchLoaderData,
@@ -296,38 +296,40 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
             </DropdownButton>
           }
         >
-          {isInsomniaSyncEnabled ? <DropdownSection>
-            <DropdownItem
-              key='gitSync'
-              arial-label='Use Insomnia Sync'
-            >
-              <Button
-                variant='contained'
-                bg='surprise'
-                onClick={async () => {
-                  const currentWorkspace = await workspace.getById(workspaceId);
-                  if (!currentWorkspace) {
-                    return;
-                  }
-                  await workspace.update(currentWorkspace, {
-                    gitSync: false,
-                  });
-
-                  revalidate();
-                }}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: 'var(--padding-sm)',
-                  margin: '0 var(--padding-sm)',
-                }}
+          <DropdownSection
+            items={isInsomniaSyncEnabled ? [{
+              value: 'Use Insomnia Sync',
+              id: 'use-insomnia-sync',
+            }] : []}
+          >
+            {item => (
+              <DropdownItem
+                key={item.id}
+                arial-label='Use Insomnia Sync'
               >
-                <i className="fa fa-cloud" /> Use Insomnia Sync
-              </Button>
-            </DropdownItem>
-          </DropdownSection> : null}
+                <Button
+                  variant='contained'
+                  bg='surprise'
+                  onClick={async () => {
+                    if (gitRepository) {
+                      await deleteGitRepository(gitRepository);
+                      revalidate();
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 'var(--padding-sm)',
+                    margin: '0 var(--padding-sm)',
+                  }}
+                >
+                  <i className="fa fa-cloud" /> Use Insomnia Sync
+                </Button>
+              </DropdownItem>
+            )}
+          </DropdownSection>
           <DropdownSection
             title={
               <span>
@@ -363,15 +365,6 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
         <Dropdown
           className="wide tall"
           ref={dropdownRef}
-          onOpen={() => {
-            // gitFetchFetcher.submit(
-            //   {},
-            //   {
-            //     action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/fetch`,
-            //     method: 'post',
-            //   }
-            // );
-          }}
           triggerButton={
             <DropdownButton
               size="medium"
@@ -433,38 +426,41 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
             </DropdownButton>
           }
         >
-          {isInsomniaSyncEnabled ? <DropdownSection>
-            <DropdownItem
-              key='gitSync'
-              arial-label='Use Insomnia Sync'
-            >
-              <Button
-                variant='contained'
-                bg='surprise'
-                onClick={async () => {
-                  const currentWorkspace = await workspace.getById(workspaceId);
-                  if (!currentWorkspace) {
-                    return;
-                  }
-                  await workspace.update(currentWorkspace, {
-                    gitSync: false,
-                  });
-
-                  revalidate();
-                }}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: 'var(--padding-sm)',
-                  margin: '0 var(--padding-sm)',
-                }}
+          <DropdownSection
+            items={isInsomniaSyncEnabled ? [{
+              value: 'Use Insomnia Sync',
+              id: 'use-insomnia-sync',
+            }] : []}
+          >
+            {item => (
+              <DropdownItem
+                key={item.id}
+                textValue='Use Insomnia Sync'
+                arial-label='Use Insomnia Sync'
               >
-                <i className="fa fa-cloud" /> Use Insomnia Sync
-              </Button>
-            </DropdownItem>
-          </DropdownSection> : null}
+                <Button
+                  variant='contained'
+                  bg='surprise'
+                  onClick={async () => {
+                    if (gitRepository) {
+                      await deleteGitRepository(gitRepository);
+                      revalidate();
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 'var(--padding-sm)',
+                    margin: '0 var(--padding-sm)',
+                  }}
+                >
+                  <i className="fa fa-cloud" /> Use Insomnia Sync
+                </Button>
+              </DropdownItem>
+            )}
+          </DropdownSection>
           <DropdownSection
             title={
               <span>
