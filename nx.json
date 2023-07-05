@@ -8,7 +8,14 @@
           "test",
           "build",
           "build:source",
-          "build:types"
+          "build:types",
+          "artifacts",
+          "prebuild",
+          "build:app",
+          "build:main.min.js",
+          "build:sr",
+          "build:sr:source",
+          "build:sr:types"
         ]
       }
     }
