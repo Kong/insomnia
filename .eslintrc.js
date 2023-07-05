@@ -12,7 +12,7 @@ const {
 module.exports = {
   settings: {
     react: {
-      version: '17.0.2', // note: remember to always keep this in sync with `"react": "^17.0.2",` which is present in any package.json of a project using React.
+      version: '18.2.0', // note: remember to always keep this in sync with `"react": "^18.2.0",` which is present in any package.json of a project using React.
     },
   },
   parser: '@typescript-eslint/parser',
