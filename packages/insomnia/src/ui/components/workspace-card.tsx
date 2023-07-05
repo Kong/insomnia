@@ -1,6 +1,5 @@
 import React, { Fragment } from 'react';
 import { FC } from 'react';
-import { useFetcher } from 'react-router-dom';
 import styled from 'styled-components';
 
 import {
@@ -13,7 +12,6 @@ import { strings } from '../../common/strings';
 import { ApiSpec } from '../../models/api-spec';
 import { Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
-import { BackendProject } from '../../sync/types';
 import { Highlight } from './base/highlight';
 import { Card } from './card';
 import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
@@ -36,9 +34,11 @@ const LabelIcon = styled.div({
   height: '1rem',
 });
 
-export interface WorkspaceMetadata {
+export interface WorkspaceCardProps {
   apiSpec: ApiSpec | null;
   workspace: Workspace;
+  filter: string;
+  activeProject: Project;
   lastActiveBranch?: string | null;
   lastModifiedTimestamp: number;
   lastCommitTime?: number | null;
@@ -48,22 +48,9 @@ export interface WorkspaceMetadata {
   specFormat: 'openapi' | 'swagger' | null;
   specFormatVersion: string | null;
   hasUnsavedChanges: boolean;
-}
-
-export type WorkspaceCardProps = {
-  filter: string;
-  activeProject: Project;
   onSelect: (workspaceId: string, activity: GlobalActivity) => void;
   projects: Project[];
-} & WorkspaceMetadata;
-
-export type RemoteWorkspaceCardProps = {
-  filter: string;
-  onSelect: (backendProjectId: string) => void;
-  remoteId: string;
-  projectId: string;
-  organizationId: string;
-} & BackendProject;
+}
 
 /** note: numbers are not technically valid (and, indeed, we throw a lint error), but we need to handle this case otherwise a user will not be able to import a spec with a malformed version and even _see_ that it's got the error. */
 export const getVersionDisplayment = (version?: string | number | null) => {
@@ -91,17 +78,17 @@ export const getVersionDisplayment = (version?: string | number | null) => {
 export const WorkspaceCard: FC<WorkspaceCardProps> = ({
   apiSpec,
   filter,
-  hasUnsavedChanges,
-  spec,
-  specFormat,
-  specFormatVersion,
-  lastCommitAuthor,
-  lastCommitTime,
-  modifiedLocally,
   lastActiveBranch,
   lastModifiedTimestamp,
   workspace,
   activeProject,
+  lastCommitTime,
+  modifiedLocally,
+  lastCommitAuthor,
+  spec,
+  specFormat,
+  specFormatVersion,
+  hasUnsavedChanges,
   projects,
   onSelect,
 }) => {
@@ -202,70 +189,5 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
       docFormat={format}
       onClick={() => onSelect(workspace._id, defaultActivity)}
     />
-  );
-};
-
-export const RemoteWorkspaceCard: FC<RemoteWorkspaceCardProps> = ({
-  id,
-  name,
-  filter,
-  remoteId,
-  projectId,
-  organizationId,
-}) => {
-  const { submit, state } = useFetcher();
-
-  const isLoading = state !== 'idle';
-
-  // Filter the card by multiple different properties
-  const matchResults = fuzzyMatchAll(
-    filter,
-    [name],
-    {
-      splitSpace: true,
-      loose: true,
-    }
-  );
-
-  // Return null if we don't match the filter
-  if (filter && !matchResults) {
-    return null;
-  }
-
-  return (
-    <div
-      className={isLoading && 'fa-fade'}
-      style={{
-        opacity: isLoading ? 0.5 : 1,
-        pointerEvents: isLoading ? 'none' : 'auto',
-      }}
-    >
-      <Card
-        docTitle={<Highlight search={filter} text={name} />}
-        tagLabel={
-          <Label>
-            <LabelIcon
-              style={{
-                backgroundColor: 'var(--color-warning)',
-                color: 'var(--color-font-warning)',
-              }}
-            ><i className={isLoading ? 'fa fa-spinner fa-spin' : 'fa fa-cloud-download'} /></LabelIcon>
-            <Highlight search={filter} text={'Remote'} />
-          </Label>
-        }
-        onClick={() => {
-          submit(
-            {
-              remoteId,
-              backendProjectId: id,
-            },
-            {
-              action: `/organization/${organizationId}/project/${projectId}/remote-collections/pull`,
-              method: 'post',
-            }
-          );
-        }}
-      />
-    </div>
   );
 };
