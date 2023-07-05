@@ -1,5 +1,4 @@
 import SwaggerParser from '@apidevtools/swagger-parser';
-import { camelCase } from 'change-case';
 import crypto from 'crypto';
 import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import { parse as urlParse } from 'url';
@@ -12,6 +11,14 @@ export const id = 'openapi3';
 export const name = 'OpenAPI 3.0';
 export const description = 'Importer for OpenAPI 3.0 specification (json/yaml)';
 
+function camelCase(str: string) {
+  return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (match: string, index: number) => {
+    if (+match === 0) {
+      return '';
+    } // or if (/\s+/.test(match)) for white spaces
+    return index === 0 ? match.toLowerCase() : match.toUpperCase();
+  });
+}
 function isPlainObject(value: any) {
   if (typeof value !== 'object' || value === null) {
     return false;
