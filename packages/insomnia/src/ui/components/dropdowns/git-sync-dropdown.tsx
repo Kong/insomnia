@@ -243,12 +243,6 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
 
   const status = gitStatusFetcher.data?.status;
 
-  const pullToolTipMsg = status?.pull !== undefined
-    ? `There ${status.pull === 1 ? 'is' : 'are'} ${status.pull} commit${status.pull === 1 ? '' : 's'} to pull`
-    : 'No changes to pull';
-  const pushToolTipMsg = status?.push !== undefined
-    ? `There ${status.push === 1 ? 'is' : 'are'} ${status.push} commit${status.push === 1 ? '' : 's'} to push`
-    : 'No changes to push';
   const commitToolTipMsg = status?.localChanges ? 'Local changes made' : 'No local changes made';
 
   if (isButton) {
@@ -257,9 +251,6 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
         <Dropdown
           className="wide tall"
           ref={dropdownRef}
-          // onOpen={() => {
-
-          // }}
           triggerButton={
             <DropdownButton
               size="medium"
@@ -402,20 +393,6 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
                         color: status?.localChanges ? 'var(--color-notice)' : 'var(--color-hl)',
                       }}
                     ><i className="fa fa-cube space-left" /></span>
-                  </Tooltip>
-                  <Tooltip message={pullToolTipMsg}>
-                    <span
-                      style={{
-                        opacity: status?.pull ? 1 : 0.5,
-                      }}
-                    ><i className="fa fa-cloud-download space-left" /></span>
-                  </Tooltip>
-                  <Tooltip message={pushToolTipMsg}>
-                    <span
-                      style={{
-                        opacity: status?.push ? 1 : 0.5,
-                      }}
-                    ><i className="fa fa-cloud-upload space-left" /></span>
                   </Tooltip>
                 </div>
               </div>

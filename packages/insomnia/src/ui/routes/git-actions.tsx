@@ -1222,9 +1222,7 @@ export const gitRollbackChangesAction: ActionFunction = async ({
 
 export interface GitStatusResult {
   status: {
-    push?: number;
-    pull?: number;
-    localChanges?: number;
+    localChanges: number;
   };
 }
 
@@ -1237,33 +1235,11 @@ export const gitStatusLoader: LoaderFunction = async ({
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-
-  const repoId = workspaceMeta?.gitRepositoryId;
-
-  if (!repoId) {
-    return {
-      status: {},
-    };
-  }
-
-  const gitRepository = await models.gitRepository.getById(repoId);
-
-  invariant(gitRepository, 'Git Repository not found');
-
-  const { credentials } = gitRepository;
-
-  const { pull, push } = await GitVCS.pullPushStatus({
-    credentials,
-  });
-
   const { changes } = await getGitChanges(GitVCS, workspace);
   const localChanges = changes.filter(i => i.editable).length;
 
   return {
     status: {
-      push,
-      pull,
       localChanges,
     },
   };
