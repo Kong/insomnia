@@ -61,9 +61,8 @@ export const pullBackendProject = async ({
     for (const doc of (await vcs.allDocuments()) || []) {
       if (isWorkspace(doc)) {
         doc.parentId = project._id;
+        workspaceId = doc._id;
       }
-
-      workspaceId = doc._id;
       await database.upsert(doc);
     }
 

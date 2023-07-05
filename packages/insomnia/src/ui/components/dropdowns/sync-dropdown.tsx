@@ -367,7 +367,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                   width: '100%',
                 }}
               >
-                <i className="fa fa-code-fork " /> Setup Sync
+                <i className="fa fa-cloud" /> Setup Sync
               </div>
             </DropdownButton>
           }
@@ -482,7 +482,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                 }}
               >
                 <div className="ellipsis">
-                  <i className="fa fa-code-fork space-right" />{' '}
+                  <i className="fa fa-cloud space-right" />{' '}
                   {initializing ? 'Initializing...' : currentBranch}
                 </div>
                 <div className="flex space-left">

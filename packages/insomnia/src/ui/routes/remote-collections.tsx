@@ -43,6 +43,8 @@ export const pullRemoteCollectionAction: ActionFunction = async ({ request, para
   if (workspaceId) {
     return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
   }
+
+  return null;
 };
 
 export interface RemoteCollectionsLoaderData {
