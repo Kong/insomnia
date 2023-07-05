@@ -516,9 +516,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                             gitRepositoryId: null,
                           });
                         } else {
-                          if (!workspaceMeta) {
-                            throw new Error('Workspace meta not found');
-                          }
+                          invariant(workspaceMeta, 'Workspace meta not found');
 
                           const repo = await models.gitRepository.create({
                             uri: '',
