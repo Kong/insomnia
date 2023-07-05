@@ -471,6 +471,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
       parentId: project._id,
       description: `Insomnia Workspace for ${repoSettingsPatch.uri}}`,
     });
+    await models.apiSpec.getOrCreateForParentId(workspace._id);
     trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
       ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
       providerName,
