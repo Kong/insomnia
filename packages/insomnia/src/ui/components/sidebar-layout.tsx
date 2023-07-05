@@ -187,6 +187,10 @@ const Pane = forwardRef<HTMLElement, { position: string; children: ReactNode }>(
   }
 );
 
+export const SidebarFooter = styled.div({
+  gridRowStart: 6,
+});
+
 interface Props {
   renderPageSidebar?: ReactNode;
   renderPaneOne?: ReactNode;

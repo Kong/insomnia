@@ -112,10 +112,10 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   // Create default env, cookie jar, and meta
   await models.environment.getOrCreateForParentId(workspace._id);
   await models.cookieJar.getOrCreateForParentId(workspace._id);
-  await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
   await database.flushChanges(flushId);
-  if (session.isLoggedIn() && isRemoteProject(project) && !workspace.gitSync) {
+  if (session.isLoggedIn() && isRemoteProject(project) && !workspaceMeta.gitRepositoryId) {
     const vcs = getVCS();
     if (vcs) {
       await initializeLocalBackendProjectAndMarkForSync({

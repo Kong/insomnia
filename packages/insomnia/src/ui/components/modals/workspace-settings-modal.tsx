@@ -13,7 +13,7 @@ import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
 import { invariant } from '../../../utils/invariant';
 import { setActiveActivity } from '../../redux/modules/global';
-import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceName } from '../../redux/selectors';
+import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceMeta, selectActiveWorkspaceName } from '../../redux/selectors';
 import { FileInputButton } from '../base/file-input-button';
 import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -93,6 +93,8 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
   const apiSpec = useSelector(selectActiveApiSpec);
   const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
   const clientCertificates = useSelector(selectActiveWorkspaceClientCertificates);
+  const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
+
   const [caCert, setCaCert] = useState<CaCertificate | null>(null);
   useEffect(() => {
     if (!workspace) {
@@ -507,13 +509,23 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                   >
                     <input
                       type="checkbox"
-                      checked={Boolean(workspace?.gitSync)}
+                      checked={Boolean(workspaceMeta?.gitRepositoryId)}
                       onChange={async () => {
-                        if (workspace?.gitSync) {
-                          await models.workspace.update(workspace, { gitSync: false });
+                        if (workspaceMeta?.gitRepositoryId) {
+                          await models.workspaceMeta.update(workspaceMeta, {
+                            gitRepositoryId: null,
+                          });
                         } else {
-                          await models.workspace.update(workspace, {
-                            gitSync: true,
+                          if (!workspaceMeta) {
+                            throw new Error('Workspace meta not found');
+                          }
+
+                          const repo = await models.gitRepository.create({
+                            uri: '',
+                          });
+
+                          await models.workspaceMeta.update(workspaceMeta, {
+                            gitRepositoryId: repo._id,
                           });
                         }
 

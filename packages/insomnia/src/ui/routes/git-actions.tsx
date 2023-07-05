@@ -635,10 +635,6 @@ export const updateGitRepoAction: ActionFunction = async ({
     gitRepositoryId,
   });
 
-  await models.workspace.update(workspace, {
-    gitSync: true,
-  });
-
   return null;
 };
 

@@ -26,14 +26,9 @@ const KongLink = styled.a({
   },
 });
 
-const OnlineStatusIndicator = () => {
-
-};
-
 export const StatusBar: FC = () => {
   return (
     <Bar>
-
       <SettingsButton />
       <KongLink className="made-with-love" href="https://konghq.com/">
         Made with&nbsp; <SvgIcon icon="heart" /> &nbsp;by Kong

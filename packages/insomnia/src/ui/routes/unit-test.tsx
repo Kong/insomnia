@@ -18,7 +18,7 @@ import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../componen
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { showPrompt } from '../components/modals';
-import { SidebarLayout } from '../components/sidebar-layout';
+import { SidebarFooter, SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button';
 import { TestRunStatus } from './test-results';
 import TestSuiteRoute from './test-suite';
@@ -162,13 +162,9 @@ const TestRoute: FC = () => {
               ))}
             </ul>
           </div>
-          <div
-            style={{
-              gridRowStart: 6,
-            }}
-          >
+          <SidebarFooter>
             <WorkspaceSyncDropdown />
-          </div>
+          </SidebarFooter>
         </ErrorBoundary>
       }
       renderPaneOne={

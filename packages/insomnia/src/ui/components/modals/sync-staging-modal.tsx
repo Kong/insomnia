@@ -49,11 +49,6 @@ export interface SyncStagingModalHandle {
 export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs }, ref) => {
   const modalRef = useRef<ModalHandle>(null);
   const syncItems = useSelector(selectSyncItems);
-
-  console.log({
-    syncItems,
-  });
-
   const [state, setState] = useState<State>({
     status: {
       stage: {},
