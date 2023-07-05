@@ -18,8 +18,8 @@ test.describe('Plugins', async () => {
   });
 
   test('Check Declarative Config and Kong Kubernetes config', async ({ page }) => {
-    // Switch to design tab
-    await page.click('text=Design');
+    await page.getByRole('button', { name: 'New Document' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
 
     // Set example OpenAPI spec
     await page.click('text=start from an example');

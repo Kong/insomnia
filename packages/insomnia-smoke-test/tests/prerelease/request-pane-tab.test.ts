@@ -1,5 +1,13 @@
 import { test } from '../../playwright/test';
 
+test.beforeEach(async ({ page }) => {
+  await page.getByRole('button', { name: 'New Collection' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
+
+  await page.getByRole('button', { name: ' ' }).press('ArrowDown');
+  await page.getByRole('menuitem', { name: 'HTTP Request' }).press('Enter');
+});
+
 test('Select body dropdown', async ({ page }) => {
   await page.getByRole('button', { name: 'Body' }).click();
   await page.getByRole('menuitem', { name: 'JSON' }).click();
