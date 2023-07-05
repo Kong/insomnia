@@ -420,7 +420,6 @@ export const ImportModal: FC<ImportModalProps> = ({
   const modalRef = useRef<ModalHandle>(null);
   const scanResourcesFetcher = useFetcher<ScanForResourcesActionResult>();
   const importFetcher = useFetcher<ImportResourcesActionResult>();
-  console.log('fetcher', importFetcher.state);
   useEffect(() => {
     modalRef.current?.show();
   }, []);

@@ -30,9 +30,6 @@ interface ConvertResult {
   };
 }
 
-export const isApiSpecImport = ({ id }: Pick<InsomniaImporter, 'id'>) =>
-  id === 'openapi3' || id === 'swagger2';
-
 export const isInsomniaV4Import = ({ id }: Pick<InsomniaImporter, 'id'>) =>
   id === 'insomnia-4';
 
@@ -229,11 +226,29 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
     workspace: existingWorkspace,
   };
 };
-
+export const isApiSpecImport = ({ id }: Pick<InsomniaImporter, 'id'>) =>
+  id === 'openapi3' || id === 'swagger2';
 const importResourcesToNewWorkspace = async (projectId: string, workspaceToImport?: Workspace) => {
   invariant(ResourceCache, 'No resources to import');
   const resources = ResourceCache.resources;
   const ResourceIdMap = new Map();
+  // in order to support import from api spec yaml
+  if (ResourceCache?.type?.id && isApiSpecImport(ResourceCache.type)) {
+    const newWorkspace = await models.workspace.create({
+      name: workspaceToImport?.name,
+      scope: 'design',
+      parentId: projectId,
+    });
+    models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
+      contents: ResourceCache.content,
+      contentType: 'yaml',
+      fileName: workspaceToImport?.name,
+    });
+    return {
+      resources,
+      workspace: newWorkspace,
+    };
+  }
   const newWorkspace = await models.workspace.create({
     name: workspaceToImport?.name || 'Imported Workspace',
     scope: workspaceToImport?.scope || 'collection',
