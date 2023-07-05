@@ -3,7 +3,7 @@ import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals'
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
 import MemoryDriver from '../../store/drivers/memory-driver';
-import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../initialize-backend-project';
+import { pushSnapshotOnInitialize } from '../initialize-backend-project';
 import { VCS } from '../vcs';
 
 describe('initialize-backend-project', () => {
