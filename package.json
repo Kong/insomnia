@@ -42,8 +42,8 @@
     "dev": "npm start --prefix packages/insomnia"
   },
   "devDependencies": {
-    "@jest/globals": "^28.1.0",
-    "@jest/types": "^28.1.0",
+    "@jest/globals": "^29.6.0",
+    "@jest/types": "^29.6.0",
     "@types/eslint": "^8.4.3",
     "@types/node": "^20.3.3",
     "@types/svgo": "^2.6.3",
@@ -58,16 +58,16 @@
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-jest": "^26.0.0",
     "eslint-plugin-json": "^3.1.0",
-    "eslint-plugin-react": "^7.28.0",
+    "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.3.0",
     "eslint-plugin-simple-import-sort": "^7.0.0",
-    "jest": "^28.1.0",
+    "jest": "^29.6.0",
     "lerna": "^6.6.2",
-    "markdownlint-cli2": "^0.2.0",
+    "markdownlint-cli2": "^0.8.1",
     "rimraf": "^3.0.2",
     "svg-text-to-path": "^1.1.2",
     "svgo": "^2.8.0",
-    "ts-jest": "^28.0.1",
+    "ts-jest": "^29.1.1",
     "type-fest": "^2.12.0",
     "typescript": "^4.5.5"
   }

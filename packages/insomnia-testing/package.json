@@ -24,7 +24,7 @@
     "watch": "npm run build -- --watch"
   },
   "devDependencies": {
-    "@jest/globals": "^28.1.0",
+    "@jest/globals": "^29.6.0",
     "@types/chai": "^4.2.15",
     "@types/mkdirp": "^1.0.1",
     "@types/mocha": "^8.2.1",

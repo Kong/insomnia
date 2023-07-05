@@ -38,7 +38,7 @@
     "artifacts": "esr src/scripts/artifacts.ts"
   },
   "devDependencies": {
-    "@jest/globals": "^28.1.0",
+    "@jest/globals": "^29.6.0",
     "@types/mkdirp": "^1.0.1",
     "@types/nedb": "^1.8.11",
     "@types/node": "^20.3.3",
@@ -50,7 +50,7 @@
     "esbuild-node-externals": "^1.7.0",
     "esbuild-runner": "^2.2.2",
     "execa": "^5.0.0",
-    "jest": "^28.1.0",
+    "jest": "^29.6.0",
     "jest-mock": "^28.0.2",
     "rimraf": "^3.0.2"
   },
