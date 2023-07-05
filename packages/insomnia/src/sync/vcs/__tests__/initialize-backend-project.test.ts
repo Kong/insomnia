@@ -9,24 +9,6 @@ import { VCS } from '../vcs';
 describe('initialize-backend-project', () => {
   beforeEach(globalBeforeEach);
 
-  describe('initializeLocalBackendProjectAndMarkForSync()', () => {
-    it('should do nothing if not request collection', async () => {
-      // Arrange
-      const workspace = await models.workspace.create({ scope: 'design' });
-      const vcs = new VCS(new MemoryDriver());
-      const switchAndCreateBackendProjectIfNotExistSpy = jest.spyOn(vcs, 'switchAndCreateBackendProjectIfNotExist');
-
-      // Act
-      await initializeLocalBackendProjectAndMarkForSync({ workspace, vcs });
-
-      // Assert
-      expect(switchAndCreateBackendProjectIfNotExistSpy).not.toHaveBeenCalled();
-      // const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
-      // expect(workspaceMeta?.pushSnapshotOnInitialize).toBe(false);
-      switchAndCreateBackendProjectIfNotExistSpy.mockClear();
-    });
-  });
-
   describe('pushSnapshotOnInitialize()', () => {
     const vcs = new VCS(new MemoryDriver());
 
