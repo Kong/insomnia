@@ -18,7 +18,7 @@
     "prebuild": "npm run clean",
     "build:source": "esr esbuild.ts",
     "build:types": "tsc --build tsconfig.build.json",
-    "build": "concurrently --names source,types \"npm run build:source\" \"npm run build:types\"",
+    "build": "esr esbuild.ts && tsc --build tsconfig.build.json",
     "clean": "rimraf dist",
     "bootstrap": "npm run build"
   },
@@ -36,7 +36,6 @@
     "@types/styled-components": "^5.1.23",
     "@types/url-join": "^4.0.1",
     "axios": "^0.21.2",
-    "concurrently": "^7.0.0",
     "cross-env": "^7.0.3",
     "esbuild": "^0.16.0",
     "esbuild-runner": "^2.2.1",
