@@ -77,7 +77,7 @@ export function createWindow() {
     minHeight: MINIMUM_HEIGHT,
     minWidth: MINIMUM_WIDTH,
     acceptFirstMouse: true,
-    icon: app.isPackaged ? path.resolve(__dirname, appLogo) : path.join(__dirname, '..', 'static', 'insomnia-core-logo_16x.png'),
+    icon: path.resolve(__dirname, appLogo),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       zoomFactor: getZoomFactor(),
