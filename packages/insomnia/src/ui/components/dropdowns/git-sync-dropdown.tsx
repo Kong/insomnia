@@ -84,19 +84,16 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
     workspaceId,
   ]);
 
+  // Only fetch the repo status if we have a repo uri and we don't have the status already
+  const shouldFetchGitRepoStatus = Boolean(gitRepository?.uri && gitRepository?._id && gitStatusFetcher.state === 'idle' && !gitStatusFetcher.data && gitRepoDataFetcher.data);
+
   useEffect(() => {
-    if (
-      gitRepository?.uri &&
-      gitRepository?._id &&
-      gitStatusFetcher.state === 'idle' &&
-      !gitStatusFetcher.data &&
-      gitRepoDataFetcher.data
-    ) {
+    if (shouldFetchGitRepoStatus) {
       gitStatusFetcher.load(
         `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/status`
       );
     }
-  }, [gitStatusFetcher, gitRepository?.uri, gitRepository?._id, organizationId, projectId, workspaceId, gitRepoDataFetcher.data]);
+  }, [gitStatusFetcher, organizationId, projectId, shouldFetchGitRepoStatus, workspaceId]);
 
   useEffect(() => {
     const errors = [...(gitPushFetcher.data?.errors ?? [])];
