@@ -11,10 +11,9 @@ export const WorkspaceHeader: FC<{
   activeProject: Project;
   activeWorkspace: Workspace;
 }> = ({ activeProject, activeWorkspace }) => {
-  const { organizationId, projectId, workspaceId } = useParams<{
+  const { organizationId, projectId } = useParams<{
     organizationId: string;
     projectId: string;
-    workspaceId: string;
   }>();
 
   const navigate = useNavigate();
@@ -33,10 +32,6 @@ export const WorkspaceHeader: FC<{
       node: <WorkspaceDropdown />,
     },
   ];
-
-  if (!activeProject || !activeWorkspace || !workspaceId) {
-    return null;
-  }
 
   return (
     <Fragment>

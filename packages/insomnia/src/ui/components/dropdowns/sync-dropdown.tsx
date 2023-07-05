@@ -167,7 +167,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects });
     if (pulledIntoProject.project._id !== project._id) {
       // If pulled into a different project, reactivate the workspace
-      await dispatch(activateWorkspace({ workspaceId: workspace._id }));
+      dispatch(activateWorkspace({ workspaceId: workspace._id }));
       logCollectionMovedToProject(workspace, pulledIntoProject.project);
     }
     await refreshVCSAndRefetchRemote();

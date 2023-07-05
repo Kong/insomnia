@@ -62,69 +62,76 @@ export const gitRepoLoader: LoaderFunction = async ({
     const workspace = await models.workspace.getById(workspaceId);
     invariant(workspace, 'Workspace not found');
     const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-    if (!workspaceMeta?.gitRepositoryId) {
+    invariant(workspaceMeta, 'Workspace meta not found');
+    if (!workspaceMeta.gitRepositoryId) {
       return {
         errors: ['Workspace is not linked to a git repository'],
       };
     }
 
     const gitRepository = await models.gitRepository.getById(
-      workspaceMeta?.gitRepositoryId
+      workspaceMeta.gitRepositoryId
     );
     invariant(gitRepository, 'Git Repository not found');
 
-    if (!GitVCS.isInitializedForRepo(gitRepository._id)) {
-      const baseDir = path.join(
-        process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-        `version-control/git/${gitRepository._id}`
-      );
+    if (GitVCS.isInitializedForRepo(gitRepository._id)) {
+      return {
+        branch: await GitVCS.getBranch(),
+        branches: await GitVCS.listBranches(),
+        gitRepository: gitRepository,
+      };
+    }
 
-      // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
-      const neDbClient = NeDBClient.createClient(workspaceId, projectId);
+    const baseDir = path.join(
+      process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+      `version-control/git/${gitRepository._id}`
+    );
 
-      // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
-      const gitDataClient = fsClient(baseDir);
+    // All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database
+    const neDbClient = NeDBClient.createClient(workspaceId, projectId);
 
-      // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
-      const otherDatClient = fsClient(path.join(baseDir, 'other'));
+    // All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem
+    const gitDataClient = fsClient(baseDir);
 
-      // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
-      const routableFS = routableFSClient(otherDatClient, {
-        [GIT_INSOMNIA_DIR]: neDbClient,
-        [GIT_INTERNAL_DIR]: gitDataClient,
+    // All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of.
+    const otherDatClient = fsClient(path.join(baseDir, 'other'));
+
+    // The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations.
+    const routableFS = routableFSClient(otherDatClient, {
+      [GIT_INSOMNIA_DIR]: neDbClient,
+      [GIT_INTERNAL_DIR]: gitDataClient,
+    });
+
+    // Init VCS
+    const { credentials, uri } = gitRepository;
+    if (gitRepository.needsFullClone) {
+      await GitVCS.initFromClone({
+        repoId: gitRepository._id,
+        url: uri,
+        gitCredentials: credentials,
+        directory: GIT_CLONE_DIR,
+        fs: routableFS,
+        gitDirectory: GIT_INTERNAL_DIR,
       });
 
-      // Init VCS
-      const { credentials, uri } = gitRepository;
-      if (gitRepository.needsFullClone) {
-        await GitVCS.initFromClone({
-          repoId: gitRepository._id,
-          url: uri,
-          gitCredentials: credentials,
-          directory: GIT_CLONE_DIR,
-          fs: routableFS,
-          gitDirectory: GIT_INTERNAL_DIR,
-        });
-
-        await models.gitRepository.update(gitRepository, {
-          needsFullClone: false,
-        });
-      } else {
-        await GitVCS.init({
-          repoId: gitRepository._id,
-          uri,
-          directory: GIT_CLONE_DIR,
-          fs: routableFS,
-          gitDirectory: GIT_INTERNAL_DIR,
-          gitCredentials: credentials,
-        });
-      }
-
-      // Configure basic info
-      const { author, uri: gitUri } = gitRepository;
-      await GitVCS.setAuthor(author.name, author.email);
-      await GitVCS.addRemote(gitUri);
+      await models.gitRepository.update(gitRepository, {
+        needsFullClone: false,
+      });
+    } else {
+      await GitVCS.init({
+        repoId: gitRepository._id,
+        uri,
+        directory: GIT_CLONE_DIR,
+        fs: routableFS,
+        gitDirectory: GIT_INTERNAL_DIR,
+        gitCredentials: credentials,
+      });
     }
+
+    // Configure basic info
+    const { author, uri: gitUri } = gitRepository;
+    await GitVCS.setAuthor(author.name, author.email);
+    await GitVCS.addRemote(gitUri);
 
     return {
       branch: await GitVCS.getBranch(),
@@ -159,14 +166,15 @@ export const gitBranchesLoader: LoaderFunction = async ({
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-  if (!workspaceMeta?.gitRepositoryId) {
+  invariant(workspaceMeta, 'Workspace meta not found');
+  if (!workspaceMeta.gitRepositoryId) {
     return {
       errors: ['Workspace is not linked to a git repository'],
     };
   }
 
   const gitRepository = await models.gitRepository.getById(
-    workspaceMeta?.gitRepositoryId
+    workspaceMeta.gitRepositoryId
   );
   invariant(gitRepository, 'Git Repository not found');
 
@@ -196,14 +204,15 @@ export const gitFetchAction: ActionFunction = async ({
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-  if (!workspaceMeta?.gitRepositoryId) {
+  invariant(workspaceMeta, 'Workspace meta not found');
+  if (!workspaceMeta.gitRepositoryId) {
     return {
       errors: ['Workspace is not linked to a git repository'],
     };
   }
 
   const gitRepository = await models.gitRepository.getById(
-    workspaceMeta?.gitRepositoryId
+    workspaceMeta.gitRepositoryId
   );
   invariant(gitRepository, 'Git Repository not found');
 
@@ -211,7 +220,7 @@ export const gitFetchAction: ActionFunction = async ({
     await GitVCS.fetch({
       singleBranch: true,
       depth: 1,
-      credentials: gitRepository?.credentials,
+      credentials: gitRepository.credentials,
     });
   } catch (e) {
     console.error(e);
@@ -241,14 +250,15 @@ export const gitLogLoader: LoaderFunction = async ({
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
-  if (!workspaceMeta?.gitRepositoryId) {
+  invariant(workspaceMeta, 'Workspace meta not found');
+  if (!workspaceMeta.gitRepositoryId) {
     return {
       errors: ['Workspace is not linked to a git repository'],
     };
   }
 
   const gitRepository = await models.gitRepository.getById(
-    workspaceMeta?.gitRepositoryId
+    workspaceMeta.gitRepositoryId
   );
   invariant(gitRepository, 'Git Repository not found');
 
