@@ -17,7 +17,7 @@
   "author": "Kong <office@konghq.com>",
   "main": "src/main.min.js",
   "scripts": {
-    "bootstrap": "npx -y electron-rebuild && npm run build:sr",
+    "bootstrap": "npm run build:sr",
     "prebuild": "npm run clean",
     "build": "npm run build:sr && npm run build:app",
     "build:app": "esr --cache ./scripts/build.ts --noErrorTruncation",

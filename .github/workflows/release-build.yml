@@ -34,6 +34,12 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
+      - name: Install deps windows-latest
+        if: matrix.os == 'windows-latest'
+        run: |
+          choco install nasm -y
+          $env:PATH=$env:PROGRAMFILES + "\NASM;" + $env:Path
+
       - name: Bootstrap packages
         run: npm run bootstrap
 
