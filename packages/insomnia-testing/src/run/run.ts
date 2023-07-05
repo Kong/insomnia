@@ -9,15 +9,7 @@ import { TestResults } from './entities';
 import { Insomnia, InsomniaOptions } from './insomnia';
 import { JavaScriptReporter } from './javascript-reporter';
 
-declare global {
-  namespace NodeJS {
-    interface Global {
-      insomnia?: Insomnia;
-      chai?: typeof chai;
-    }
-  }
-}
-
+// declare var insomnia: Insomnia;
 const runInternal = async <TReturn, TNetworkResponse>(
   testSrc: string | string[],
   options: InsomniaOptions<TNetworkResponse>,
@@ -28,7 +20,9 @@ const runInternal = async <TReturn, TNetworkResponse>(
 
   // Add global `insomnia` helper.
   // This is the only way to add new globals to the Mocha environment as far as I can tell
+  // @ts-expect-error -- global hack
   global.insomnia = new Insomnia(options);
+  // @ts-expect-error -- global hack
   global.chai = chai;
 
   const mocha: Mocha = new Mocha({
@@ -51,7 +45,9 @@ const runInternal = async <TReturn, TNetworkResponse>(
       resolve(extractResult(runner));
 
       // Remove global since we don't need it anymore
+      // @ts-expect-error -- global hack
       delete global.insomnia;
+      // @ts-expect-error -- global hack
       delete global.chai;
 
       if (keepFile && mocha.files.length) {
