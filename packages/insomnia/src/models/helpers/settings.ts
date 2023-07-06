@@ -1,3 +1,4 @@
+import electron from 'electron';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import type { ValueOf } from 'type-fest';
@@ -68,7 +69,7 @@ const addConfigFileToPath = (path: string | undefined) => (
 
 export const getConfigFile = () => {
   const portableExecutable = process.env['PORTABLE_EXECUTABLE_DIR'];
-  const insomniaDataDirectory = process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData');
+  const insomniaDataDirectory = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
   const localDev = getLocalDevConfigFilePath();
   const configPaths = [
     portableExecutable,

@@ -346,7 +346,7 @@ export const ResponseViewer = ({
       filterHistory={filterHistory}
       mode={getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? 'application/xml' : _getContentType()}
       noMatchBrackets
-      onwindow.main.openInBrowser={url => !disablePreviewLinks && window.main.openInBrowser(getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? xmlDecode(url) : url)}
+      onClickLink={url => !disablePreviewLinks && window.main.openInBrowser(getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? xmlDecode(url) : url)}
       placeholder="..."
       readOnly
       uniquenessKey={responseId}

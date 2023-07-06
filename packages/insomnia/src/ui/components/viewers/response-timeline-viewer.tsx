@@ -45,7 +45,7 @@ export const ResponseTimelineViewer: FC<Props> = ({ timeline }) => {
       ref={editorRef}
       hideLineNumbers
       readOnly
-      onwindow.main.openInBrowser={window.main.openInBrowser}
+      onClickLink={window.main.openInBrowser}
       defaultValue={rows}
       className="pad-left"
       mode="curl"
