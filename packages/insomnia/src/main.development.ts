@@ -143,7 +143,7 @@ app.on('activate', (_error, hasVisibleWindows) => {
 
 const _launchApp = async () => {
   await _trackStats();
-  let window: BrowserWindow;
+  const window = windowUtils.createWindow();
   // Handle URLs sent via command line args
   ipcMain.once('halfSecondAfterAppStart', () => {
     console.log('[main] Window ready, handling command line arguments', process.argv);
@@ -152,37 +152,11 @@ const _launchApp = async () => {
       window.webContents.send('shell:open', args.join());
     }
   });
-  // Disable deep linking in playwright e2e tests in order to run multiple tests in parallel
-  if (!process.env.PLAYWRIGHT) {
-    // Deep linking logic - https://www.electronjs.org/docs/latest/tutorial/launch-app-from-url-in-another-app
-    const gotTheLock = app.requestSingleInstanceLock();
-    if (!gotTheLock) {
-      console.error('[app] Failed to get instance lock');
-      app.quit();
-    } else {
-      // Called when second instance launched with args (Windows/Linux)
-      app.on('second-instance', (_1, args) => {
-        console.log('Second instance listener received:', args.join('||'));
-        if (window) {
-          if (window.isMinimized()) {
-            window.restore();
-          }
-          window.focus();
-        }
-        const lastArg = args.slice(-1).join();
-        console.log('[main] Open Deep Link URL sent from second instance', lastArg);
-        window.webContents.send('shell:open', lastArg);
-      });
-      window = windowUtils.createWindow();
 
-      app.on('open-url', (_event, url) => {
-        console.log('[main] Open Deep Link URL', url);
-        window.webContents.send('shell:open', url);
-      });
-    }
-  } else {
-    window = windowUtils.createWindow();
-  }
+  app.on('open-url', (_event, url) => {
+    console.log('[main] Open Deep Link URL', url);
+    window.webContents.send('shell:open', url);
+  });
 
   // Don't send origin header from Insomnia because we're not technically using CORS
   session.defaultSession.webRequest.onBeforeSendHeaders((details, fn) => {
