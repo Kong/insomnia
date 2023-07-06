@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { SaveDialogOptions } from 'electron';
+import type { SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import multiparty from 'multiparty';

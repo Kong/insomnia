@@ -1,4 +1,4 @@
-import { IpcRendererEvent } from 'electron';
+import type { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
 import {
   LoaderFunction,
