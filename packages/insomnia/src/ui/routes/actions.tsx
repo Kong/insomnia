@@ -772,6 +772,9 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
       enabled,
     };
   } catch (err) {
+    if (err?.response?.status === 500) {
+      return { enabled: false };
+    }
     console.log(err);
     return { enabled: false };
   }

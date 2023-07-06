@@ -110,8 +110,15 @@ const Root = () => {
       'shell:open',
       async (_: IpcRendererEvent, url: string) => {
         // Get the url without params
+        let parsedUrl;
+        try {
+          parsedUrl = new URL(url);
+        } catch (err) {
+          console.log('Invalid args, expected insomnia://x/y/z', url);
+          return;
+        }
         let urlWithoutParams = url.substring(0, url.indexOf('?')) || url;
-        const params = Object.fromEntries(new URL(url).searchParams);
+        const params = Object.fromEntries(parsedUrl.searchParams);
         // Change protocol for dev redirects to match switch case
         if (isDevelopment()) {
           urlWithoutParams = urlWithoutParams.replace(

@@ -383,6 +383,7 @@ export function createWindow() {
       `OS: ${os.type()} ${os.arch()} ${os.release()}`,
       `Electron: ${process.versions.electron}`,
       `Node: ${process.versions.node}`,
+      `Node ABI: ${process.versions.modules}`,
       `V8: ${process.versions.v8}`,
       `Architecture: ${process.arch}`,
     ].join('\n');
