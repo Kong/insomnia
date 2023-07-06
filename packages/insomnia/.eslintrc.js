@@ -16,7 +16,7 @@ module.exports = {
     'react/no-find-dom-node': OFF(UNKNOWN),
     'no-restricted-properties': [ERROR, {
       property: 'openExternal',
-      message: 'use the `clickLink` function in `electron-helpers.ts` instead.  see https://security.stackexchange.com/questions/225799/dangers-of-electrons-shell-openexternal-on-untrusted-content for more information.',
+      message: 'use the `window.main.openInBrowser` function instead.  see https://security.stackexchange.com/questions/225799/dangers-of-electrons-shell-openexternal-on-untrusted-content for more information.',
     }],
   },
 };

@@ -1,6 +1,5 @@
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
-import { getPortableExecutableDir } from './electron-helpers';
 import { KeyCombination } from './settings';
 
 const env = process['env'];

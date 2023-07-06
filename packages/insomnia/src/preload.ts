@@ -27,6 +27,7 @@ const grpc: gRPCBridgeAPI = {
 const main: Window['main'] = {
   loginStateChange: () => ipcRenderer.send('loginStateChange'),
   restart: () => ipcRenderer.send('restart'),
+  openInBrowser: () => ipcRenderer.send('openInBrowser'),
   halfSecondAfterAppStart: () => ipcRenderer.send('halfSecondAfterAppStart'),
   manualUpdateCheck: () => ipcRenderer.send('manualUpdateCheck'),
   exportAllWorkspaces: () => ipcRenderer.invoke('exportAllWorkspaces'),

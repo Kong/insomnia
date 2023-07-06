@@ -1,7 +1,6 @@
 import React, { FormEvent, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import * as session from '../../../account/session';
-import { clickLink } from '../../../common/electron-helpers';
 import { getLoginUrl, submitAuthCode } from '../../auth-session-provider';
 import { type ModalHandle, Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -67,7 +66,7 @@ export const LoginModal = forwardRef<LoginModalHandle, {}>(function LoginModal({
       modalRef.current?.show();
 
       if (!reauth) {
-        clickLink(url);
+        window.main.openInBrowser(url);
       }
     },
   }), []);
@@ -94,7 +93,7 @@ export const LoginModal = forwardRef<LoginModalHandle, {}>(function LoginModal({
   }, [state.url]);
 
   const openUrl = useCallback(() => {
-    clickLink(state.url);
+    window.main.openInBrowser(state.url);
   }, [state.url]);
 
   const renderBody = () => {

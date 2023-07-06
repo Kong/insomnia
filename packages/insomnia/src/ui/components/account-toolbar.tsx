@@ -2,7 +2,6 @@ import React, { Fragment } from 'react';
 import styled from 'styled-components';
 
 import * as session from '../../account/session';
-import { clickLink } from '../../common/electron-helpers';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { Link as ExternalLink } from './base/link';
 import { showLoginModal } from './modals/login-modal';
@@ -53,7 +52,7 @@ export const AccountToolbar = () => {
               icon="gear"
               label='Account Settings'
               stayOpenAfterClick
-              onClick={() => clickLink('https://app.insomnia.rest/app/account/')}
+              onClick={() => window.main.openInBrowser('https://app.insomnia.rest/app/account/')}
             />
           </DropdownItem>
           <DropdownItem
