@@ -1,5 +1,3 @@
-import { unreachableCase } from 'ts-assert-unreachable';
-
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
 import { getPortableExecutableDir } from './electron-helpers';
@@ -123,7 +121,7 @@ export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) =
       return 'Super';
 
     default:
-      return unreachableCase(key, 'unrecognized key');
+      throw new Error(key + 'unrecognized key');
   }
 };
 

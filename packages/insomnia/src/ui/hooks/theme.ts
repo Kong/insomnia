@@ -1,7 +1,6 @@
 import { ChangeEvent, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
-import { unreachableCase } from 'ts-assert-unreachable';
 
 import * as models from '../../models';
 import { ThemeSettings } from '../../models/settings';
@@ -67,7 +66,7 @@ export const useThemes = () => {
         break;
 
       default:
-        unreachableCase(colorScheme);
+        throw new Error(colorScheme);
     }
   }, [apply]);
 

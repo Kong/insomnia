@@ -37,7 +37,6 @@
     "oauth-1.0a": "^2.2.6",
     "openapi-2-kong": "^3.18.0",
     "tough-cookie": "^4.0.0",
-    "ts-assert-unreachable": "^0.0.9",
     "tslib": "2.0.1",
     "url-join": "^4.0.1",
     "uuid": "^8.3.2",

@@ -4,7 +4,6 @@ import fs from 'fs';
 import { NoParamCallback } from 'fs-extra';
 import path from 'path';
 import React from 'react';
-import { unreachableCase } from 'ts-assert-unreachable';
 import YAML from 'yaml';
 
 import { isApiSpec } from '../models/api-spec';
@@ -407,7 +406,7 @@ export const exportAllToFile = (activeProjectName: string, workspacesForActivePr
             break;
 
           default:
-            unreachableCase(selectedFormat, `selected export format "${selectedFormat}" is invalid`);
+            throw new Error(`selected export format "${selectedFormat}" is invalid`);
         }
       } catch (err) {
         showError({
@@ -478,7 +477,7 @@ export const exportRequestsToFile = (requestIds: string[]) => {
             break;
 
           default:
-            unreachableCase(selectedFormat, `selected export format "${selectedFormat}" is invalid`);
+            throw new Error(`selected export format "${selectedFormat}" is invalid`);
         }
       } catch (err) {
         showError({

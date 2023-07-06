@@ -1,6 +1,3 @@
-import { OpenDialogOptions } from 'electron';
-import { unreachableCase } from 'ts-assert-unreachable';
-
 interface Options {
   itemTypes?: ('file' | 'directory')[];
   extensions?: string[];
@@ -28,7 +25,7 @@ export const selectFileOrFolder = async ({ itemTypes, extensions }: Options) => 
     title += ' Directory';
   }
 
-  const options: OpenDialogOptions = {
+  const { canceled, filePaths } = await window.dialog.showOpenDialog({
     title,
     buttonLabel: 'Select',
     properties: types.map(type => {
@@ -40,16 +37,14 @@ export const selectFileOrFolder = async ({ itemTypes, extensions }: Options) => 
           return 'openDirectory';
 
         default:
-          unreachableCase(type, `unrecognized item type: "${type}"`);
+          throw new Error(`unrecognized item type: "${type}"`);
       }
     }),
-    // @ts-expect-error https://github.com/electron/electron/pull/29322
     filters: [{
       extensions: (extensions?.length ? extensions : ['*']),
+      name: '',
     }],
-  };
-
-  const { canceled, filePaths } = await window.dialog.showOpenDialog(options);
+  });
 
   const fileSelection: FileSelection = {
     filePath: filePaths[0],
