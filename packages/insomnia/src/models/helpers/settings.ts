@@ -68,7 +68,7 @@ const addConfigFileToPath = (path: string | undefined) => (
 );
 
 export const getConfigFile = () => {
-  const portableExecutable = getPortableExecutableDir();
+  const portableExecutable = process.env['PORTABLE_EXECUTABLE_DIR'];
   const insomniaDataDirectory = process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData');
   const localDev = getLocalDevConfigFilePath();
   const configPaths = [

@@ -50,7 +50,7 @@ export function updatesSupported() {
   }
 
   // Updates are not supported for Windows portable binaries
-  if (isWindows() && getPortableExecutableDir()) {
+  if (isWindows() && process.env['PORTABLE_EXECUTABLE_DIR']) {
     return false;
   }
 
