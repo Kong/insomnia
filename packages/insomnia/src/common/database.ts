@@ -668,7 +668,7 @@ const allTypes = () => Object.keys(db);
 
 function getDBFilePath(modelType: string) {
   // NOTE: Do not EVER change this. EVER!
-  return fsPath.join(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), `insomnia.${modelType}.db`);
+  return fsPath.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), `insomnia.${modelType}.db`);
 }
 
 // ~~~~~~~~~~~~~~~~ //
