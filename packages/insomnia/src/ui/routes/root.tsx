@@ -134,14 +134,6 @@ const Root = () => {
             });
             break;
 
-          case 'insomnia://app/auth/login':
-            showModal(LoginModal, {
-              title: params.title,
-              message: params.message,
-              reauth: true,
-            });
-            break;
-
           case 'insomnia://app/import':
             setImportUri(params.uri);
             break;
