@@ -1,5 +1,3 @@
-import { unreachableCase } from 'ts-assert-unreachable';
-
 import {
   CONTENT_TYPE_GRAPHQL,
   CONTENT_TYPE_JSON,
@@ -113,10 +111,7 @@ export const createRequest: RequestCreator = async ({
     }
 
     default:
-      unreachableCase(
-        requestType,
-        "tried to create a request but didn't specify the type"
-      );
+      throw new Error("tried to create a request but didn't specify the type" + requestType);
   }
 
   trackSegmentEvent(SegmentEvent.requestCreate, { requestType });

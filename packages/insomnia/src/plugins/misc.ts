@@ -1,5 +1,4 @@
 import Color from 'color';
-import { unreachableCase } from 'ts-assert-unreachable';
 
 import { getAppDefaultTheme } from '../common/constants';
 import { ThemeSettings } from '../models/settings';
@@ -332,7 +331,7 @@ export async function applyColorScheme(settings: ThemeSettings) {
       break;
 
     default:
-      unreachableCase(scheme);
+      throw new Error(scheme);
   }
 }
 
