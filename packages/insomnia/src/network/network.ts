@@ -6,7 +6,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { cookiesFromJar, jarFromCookies } from '../common/cookies';
 import { database as db } from '../common/database';
-import { getDataDirectory } from '../common/electron-helpers';
 import {
   getContentTypeHeader,
   getLocationHeader,
@@ -387,7 +386,7 @@ async function _applyResponsePluginHooks(
 export function storeTimeline(timeline: ResponseTimelineEntry[]): Promise<string> {
   const timelineStr = JSON.stringify(timeline, null, '\t');
   const timelineHash = uuidv4();
-  const responsesDir = pathJoin(getDataDirectory(), 'responses');
+  const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'responses');
   mkdirp.sync(responsesDir);
   const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
   if (process.type === 'renderer') {

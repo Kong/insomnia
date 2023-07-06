@@ -18,11 +18,6 @@ export function clickLink(href: string) {
  */
 export const getPortableExecutableDir = () => process.env['PORTABLE_EXECUTABLE_DIR'];
 
-export function getDataDirectory() {
-  const { app } = process.type === 'renderer' ? window : electron;
-  return process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
-}
-
 export function getTempDir() {
   // NOTE: Using a fairly unique name here because "insomnia" is a common word
   const { app } = process.type === 'renderer' ? window : electron;

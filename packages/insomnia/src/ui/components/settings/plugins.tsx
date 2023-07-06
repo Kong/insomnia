@@ -7,7 +7,7 @@ import {
   PLUGIN_HUB_BASE,
 } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
-import { clickLink, getDataDirectory } from '../../../common/electron-helpers';
+import { clickLink } from '../../../common/electron-helpers';
 import * as models from '../../../models';
 import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
@@ -252,7 +252,7 @@ export const Plugins: FC = () => {
           style={{
             marginLeft: '0.3em',
           }}
-          onClick={() => window.shell.showItemInFolder(path.join(getDataDirectory(), 'plugins'))}
+          onClick={() => window.shell.showItemInFolder(path.join(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'plugins'))}
         >
           Reveal Plugins Folder
         </Button>

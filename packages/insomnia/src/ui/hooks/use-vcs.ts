@@ -1,6 +1,5 @@
 import  { useEffect, useRef, useState } from 'react';
 
-import { getDataDirectory } from '../../common/electron-helpers';
 import { generateId } from '../../common/misc';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { type MergeConflict } from '../../sync/types';
@@ -27,7 +26,7 @@ export function useVCS({
     async function updateVCS() {
       let vcsInstance = getVCS();
       if (!vcsInstance) {
-        const driver = FileSystemDriver.create(getDataDirectory());
+        const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
 
         vcsInstance = await initVCS(driver, async conflicts => {
           return new Promise(resolve => {
