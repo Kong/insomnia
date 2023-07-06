@@ -7,7 +7,6 @@ import mkdirp from 'mkdirp';
 import path from 'path';
 
 import { isDevelopment, isWindows } from '../common/constants';
-import { getDataDirectory, getTempDir } from '../common/electron-helpers';
 
 const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
 
@@ -51,7 +50,7 @@ export default async function(lookupName: string) {
       info = await _isInsomniaPlugin(lookupName);
       // Get actual module name without version suffixes and things
       const moduleName = info.name;
-      const pluginDir = path.join(getDataDirectory(), 'plugins', moduleName);
+      const pluginDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'plugins', moduleName);
 
       // Make plugin directory
       mkdirp.sync(pluginDir);
@@ -166,7 +165,7 @@ async function _isInsomniaPlugin(lookupName: string) {
 
 async function _installPluginToTmpDir(lookupName: string) {
   return new Promise<{ tmpDir: string }>((resolve, reject) => {
-    const tmpDir = path.join(getTempDir(), `${lookupName}-${Date.now()}`);
+    const tmpDir = path.join(electron.app.getPath('temp'), `${lookupName}-${Date.now()}`);
     mkdirp.sync(tmpDir);
     console.log(`[plugins] Installing plugin to ${tmpDir}`);
     childProcess.execFile(

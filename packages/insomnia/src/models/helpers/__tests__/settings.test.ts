@@ -2,7 +2,6 @@ import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals'
 import { mocked } from 'jest-mock';
 
 import * as _constants from '../../../common/constants';
-import * as electronHelpers from '../../../common/electron-helpers';
 import { Settings } from '../../../common/settings';
 import * as models from '../../../models';
 import * as settingsHelpers from '../settings';
@@ -44,7 +43,7 @@ describe('getConfigFile', () => {
   afterAll(jest.resetAllMocks);
 
   it('prioritizes portable config location over all others', () => {
-    jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue('portableExecutable');
+    jest.spyOn(, 'getPortableExecutableDir').mockReturnValue('portableExecutable');
     jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue('insomniaDataDirectory');
     jest.spyOn(settingsHelpers, 'getLocalDevConfigFilePath').mockReturnValue('localDev');
 

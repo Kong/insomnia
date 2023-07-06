@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
+import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import { getTempDir } from '../../../common/electron-helpers';
 import * as models from '../../../models/index';
 import * as plugin from '../response';
 
@@ -37,7 +37,7 @@ describe('response.*', () => {
   beforeEach(globalBeforeEach);
 
   it('works for basic and full response', async () => {
-    const bodyPath = path.join(getTempDir(), 'response.zip');
+    const bodyPath = path.join(electron.app.getPath('temp'), 'response.zip');
     fs.writeFileSync(bodyPath, Buffer.from('Hello World!'));
     const response = await models.initModel(models.response.type, {
       bodyPath,
