@@ -4,7 +4,7 @@ import { Spectral } from '@stoplight/spectral-core';
 // @ts-expect-error - This is a bundled file not sure why it's not found
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
-import { app, ipcMain, IpcRendererEvent } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcRendererEvent } from 'electron';
 import fs from 'fs';
 
 import { axiosRequest } from '../../network/axios-request';
@@ -16,6 +16,7 @@ import { WebSocketBridgeAPI } from '../network/websocket';
 import { gRPCBridgeAPI } from './grpc';
 
 export interface MainBridgeAPI {
+  loginStateChange: () => void;
   restart: () => void;
   halfSecondAfterAppStart: () => void;
   manualUpdateCheck: () => void;
@@ -32,6 +33,13 @@ export interface MainBridgeAPI {
   grpc: gRPCBridgeAPI;
 }
 export function registerMainHandlers() {
+  ipcMain.on('loginStateChange', async () => {
+    console.log('get windows');
+    BrowserWindow.getAllWindows().forEach(w => {
+      console.log('sending login state change to window');
+      w.webContents.send('loggedIn');
+    });
+  });
   ipcMain.handle('exportAllWorkspaces', async () => {
     return exportAllWorkspaces();
   });

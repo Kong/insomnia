@@ -37,22 +37,12 @@ export interface SessionData {
   publicKey: JsonWebKey;
   encPrivateKey: crypt.AESMessage;
 }
-
-const loginCallbacks: LoginCallback[] = [];
-
-function _callCallbacks() {
-  const loggedIn = isLoggedIn();
-  console.log('[session] Sync state changed loggedIn=' + loggedIn);
-
-  for (const cb of loginCallbacks) {
-    if (typeof cb === 'function') {
-      cb(loggedIn);
-    }
-  }
-}
-
 export function onLoginLogout(loginCallback: LoginCallback) {
-  loginCallbacks.push(loginCallback);
+  window.main.on('loggedIn', () => {
+    console.log('onLoginLogout', isLoggedIn());
+
+    loginCallback(isLoggedIn());
+  });
 }
 
 /** Creates a session from a sessionId and derived symmetric key. */
@@ -80,7 +70,7 @@ export async function absorbKey(sessionId: string, key: string) {
     JSON.parse(encPrivateKey),
   );
 
-  _callCallbacks();
+  window.main.loginStateChange();
 }
 
 export async function changePasswordWithToken(rawNewPassphrase: string, confirmationCode: string) {
@@ -193,13 +183,12 @@ export async function logout() {
   }
 
   _unsetSessionData();
-
-  _callCallbacks();
+  window.main.loginStateChange();
 }
 
 /** Set data for the new session and store it encrypted with the sessionId */
 export function setSessionData(
-  sessionId: string,
+  id: string,
   accountId: string,
   firstName: string,
   lastName: string,
@@ -209,19 +198,20 @@ export function setSessionData(
   encPrivateKey: crypt.AESMessage,
 ) {
   const sessionData: SessionData = {
-    id: sessionId,
-    accountId: accountId,
-    symmetricKey: symmetricKey,
-    publicKey: publicKey,
-    encPrivateKey: encPrivateKey,
-    email: email,
-    firstName: firstName,
-    lastName: lastName,
+    id,
+    accountId,
+    symmetricKey,
+    publicKey,
+    encPrivateKey,
+    email,
+    firstName,
+    lastName,
   };
   const dataStr = JSON.stringify(sessionData);
-  window.localStorage.setItem(_getSessionKey(sessionId), dataStr);
+  window.localStorage.setItem(_getSessionKey(id), dataStr);
   // NOTE: We're setting this last because the stuff above might fail
-  window.localStorage.setItem('currentSessionId', sessionId);
+  window.localStorage.setItem('currentSessionId', id);
+  return sessionData;
 }
 export async function listTeams() {
   return fetch.get('/api/teams', getCurrentSessionId());
