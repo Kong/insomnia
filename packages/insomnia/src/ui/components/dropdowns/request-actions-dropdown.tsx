@@ -1,4 +1,3 @@
-import { clipboard } from 'electron';
 import HTTPSnippet from 'httpsnippet';
 import React, { forwardRef, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -97,7 +96,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       const cmd = snippet.convert('shell', 'curl');
 
       if (cmd) {
-        clipboard.writeText(cmd);
+        window.clipboard.writeText(cmd);
       }
     } catch (err) {
       showModal(AlertModal, {

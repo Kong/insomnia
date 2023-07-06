@@ -1,4 +1,3 @@
-import { clipboard } from 'electron';
 import fs from 'fs';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
@@ -78,7 +77,7 @@ export const MessageEventView: FC<Props<WebSocketMessageEvent>> = ({ event, requ
   }, [raw]);
 
   const handleCopyResponseToClipboard = useCallback(() => {
-    clipboard.writeText(raw);
+    window.clipboard.writeText(raw);
   }, [raw]);
 
   const previewMode = useSelector(selectResponsePreviewMode);

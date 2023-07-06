@@ -57,15 +57,22 @@ const app: Window['app'] = {
 const shell: Window['shell'] = {
   showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),
 };
+const clipboard: Window['clipboard'] = {
+  readText: () => ipcRenderer.sendSync('readText'),
+  writeText: options => ipcRenderer.send('writeText', options),
+  clear: () => ipcRenderer.send('clear'),
+};
 
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('main', main);
   contextBridge.exposeInMainWorld('dialog', dialog);
   contextBridge.exposeInMainWorld('app', app);
   contextBridge.exposeInMainWorld('shell', shell);
+  contextBridge.exposeInMainWorld('clipboard', clipboard);
 } else {
   window.main = main;
   window.dialog = dialog;
   window.app = app;
   window.shell = shell;
+  window.clipboard = clipboard;
 }

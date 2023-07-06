@@ -1,4 +1,3 @@
-import * as electron from 'electron';
 import React from 'react';
 import type ReactDOM from 'react-dom';
 
@@ -180,15 +179,15 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
 
       clipboard: {
         readText() {
-          return electron.clipboard.readText();
+          return window.clipboard.readText();
         },
 
         writeText(text) {
-          electron.clipboard.writeText(text);
+          window.clipboard.writeText(text);
         },
 
         clear() {
-          electron.clipboard.clear();
+          window.clipboard.clear();
         },
       },
 

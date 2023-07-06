@@ -1,5 +1,4 @@
 // Import
-import { clipboard } from 'electron';
 import { ActionFunction, redirect } from 'react-router-dom';
 
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
@@ -42,7 +41,7 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
       uri,
     });
   } else {
-    content = clipboard.readText();
+    content = window.clipboard.readText();
   }
 
   if (!content) {

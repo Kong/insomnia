@@ -1,4 +1,3 @@
-import { clipboard } from 'electron';
 import React, { FormEvent, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import * as session from '../../../account/session';
@@ -91,7 +90,7 @@ export const LoginModal = forwardRef<LoginModalHandle, {}>(function LoginModal({
   }, []);
 
   const copyUrl = useCallback(() => {
-    clipboard.writeText(state.url);
+    window.clipboard.writeText(state.url);
   }, [state.url]);
 
   const openUrl = useCallback(() => {
