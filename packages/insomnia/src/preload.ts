@@ -46,6 +46,7 @@ const main: Window['main'] = {
   grpc,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
+  axiosRequest: options => ipcRenderer.invoke('axiosRequest', options),
 };
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),

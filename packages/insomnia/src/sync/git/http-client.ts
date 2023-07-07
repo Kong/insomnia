@@ -1,5 +1,3 @@
-import { axiosRequest } from '../../network/axios-request';
-
 /** This is a client for isomorphic-git {@link https://isomorphic-git.org/docs/en/http} */
 export const httpClient = {
   request: async (config: any) => {
@@ -15,7 +13,7 @@ export const httpClient = {
     }
 
     try {
-      response = await axiosRequest({
+      response = await window.main.axiosRequest({
         url: config.url,
         method: config.method,
         headers: config.headers,

@@ -16,7 +16,6 @@ import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { UnitTest } from '../../models/unit-test';
 import { isCollection } from '../../models/workspace';
-import { axiosRequest } from '../../network/axios-request';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';
@@ -627,7 +626,7 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
 
         const methodInfo = resolveComponentSchemaRefs(spec, getMethodInfo(request));
 
-        const response = await axiosRequest({
+        const response = await window.main.axiosRequest({
           method: 'POST',
           url: 'https://ai.insomnia.rest/v1/generate-test',
           headers: {
@@ -710,7 +709,7 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
   for (const test of tests) {
     async function generateTest() {
       try {
-        const response = await axiosRequest({
+        const response = await window.main.axiosRequest({
           method: 'POST',
           url: 'https://ai.insomnia.rest/v1/generate-test',
           headers: {
@@ -754,7 +753,7 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   try {
-    const response = await axiosRequest({
+    const response = await window.main.axiosRequest({
       method: 'POST',
       url: 'https://ai.insomnia.rest/v1/access',
       headers: {

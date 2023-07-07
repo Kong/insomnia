@@ -2,11 +2,10 @@ import axios, { AxiosRequestConfig } from 'axios';
 import * as https from 'https';
 import { parse as urlParse } from 'url';
 
-import { isDevelopment } from '../common/constants';
-import * as models from '../models';
-import { setDefaultProtocol } from '../utils/url/protocol';
-import { isUrlMatchedInNoProxyRule } from './is-url-matched-in-no-proxy-rule';
-
+import { isDevelopment } from '../../common/constants';
+import * as models from '../../models';
+import { isUrlMatchedInNoProxyRule } from '../../network/is-url-matched-in-no-proxy-rule';
+import { setDefaultProtocol } from '../../utils/url/protocol';
 export async function axiosRequest(config: AxiosRequestConfig) {
   const settings = await models.settings.getOrCreate();
   const isHttps = config.url?.indexOf('https:') === 0;

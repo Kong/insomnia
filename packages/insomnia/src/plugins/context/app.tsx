@@ -1,7 +1,6 @@
 import React from 'react';
 import type ReactDOM from 'react-dom';
 
-import { axiosRequest as axios } from '../../../src/network/axios-request';
 import { getAppPlatform, getAppVersion } from '../../common/constants';
 import type { RenderPurpose } from '../../common/render';
 import {
@@ -61,7 +60,6 @@ export interface AppContext {
 }
 
 export interface PrivateProperties {
-  axios: typeof axios;
   loadRendererModules: () => Promise<{
     ReactDOM: typeof ReactDOM;
     React: typeof React;
@@ -212,7 +210,6 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
       },
     },
     __private: {
-      axios,
       // Provide modules that can be used in the renderer process
       async loadRendererModules() {
         if (typeof globalThis.document === 'undefined') {
