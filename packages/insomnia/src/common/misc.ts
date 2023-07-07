@@ -59,10 +59,6 @@ export function hasAcceptHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'accept').length > 0;
 }
 
-export function hasUserAgentHeader<T extends Header>(headers: T[]) {
-  return filterHeaders(headers, 'user-agent').length > 0;
-}
-
 export function hasAcceptEncodingHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'accept-encoding').length > 0;
 }
