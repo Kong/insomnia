@@ -11,16 +11,24 @@ interface AuthBox {
   key: string;
 }
 const sessionKeyPair = keyPair();
-window.localStorage.setItem('insomnia.sessionKeyPair', JSON.stringify(sessionKeyPair));
+encodeBase64(sessionKeyPair.publicKey).then(res => {
+  window.localStorage.setItem('insomnia.publicKey', res);
+  console.log('sessionKeyPairfromls', window.localStorage.getItem('insomnia.publicKey'));
+
+});
+encodeBase64(sessionKeyPair.secretKey).then(res => {
+  window.localStorage.setItem('insomnia.secretKey', res);
+});
 /**
  * Keypair used for the login handshake.
  * This keypair can be re-used for the entire session.
  */
 export async function submitAuthCode(code: string) {
   try {
-    const sessionKeyPair = JSON.parse(window.localStorage.getItem('insomnia.sessionKeyPair') || '{}');
     const rawBox = await decodeBase64(code.trim());
-    const boxData = open(rawBox, sessionKeyPair.publicKey, sessionKeyPair.secretKey);
+    const publicKey = await decodeBase64(window.localStorage.getItem('insomnia.publicKey') || '');
+    const secretKey = await decodeBase64(window.localStorage.getItem('insomnia.secretKey') || '');
+    const boxData = open(rawBox, publicKey, secretKey);
     invariant(boxData, 'Invalid authentication code.');
 
     const decoder = new TextDecoder();
@@ -33,7 +41,10 @@ export async function submitAuthCode(code: string) {
 }
 
 export async function getLoginUrl() {
-  const sessionKeyPair = JSON.parse(window.localStorage.getItem('insomnia.sessionKeyPair') || '{}');
-  const loginKey = await encodeBase64(sessionKeyPair.publicKey);
-  return `${getAppWebsiteBaseURL()}/app/auth-app/?loginKey=${encodeURIComponent(loginKey)}`;
+  const publicKey = window.localStorage.getItem('insomnia.publicKey');
+  if (!publicKey) {
+    console.log('No public key found');
+    return '';
+  }
+  return `${getAppWebsiteBaseURL()}/app/auth-app/?loginKey=${encodeURIComponent(publicKey)}`;
 }
