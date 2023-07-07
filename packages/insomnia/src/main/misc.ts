@@ -1,6 +1,6 @@
-import electron from 'electron';
+import { BrowserWindow, dialog } from 'electron';
 
-import * as models from '../../models/index';
+import * as models from '../models';
 
 export enum ChromiumVerificationResult {
   BLIND_TRUST = 0,
@@ -27,7 +27,7 @@ export function authorizeUserInWindow({
     } = await models.settings.getOrCreate();
 
     // Create a child window
-    const child = new electron.BrowserWindow({
+    const child = new BrowserWindow({
       webPreferences: {
         nodeIntegration: false,
         partition: sessionId,
@@ -79,7 +79,7 @@ export function authorizeUserInWindow({
       const cancelId = buttonLabels.length;
 
       // Prompt the user to select a certificate to use.
-      electron.dialog.showMessageBox(child, {
+      dialog.showMessageBox(child, {
         type: 'none',
         buttons: [...buttonLabels, 'Cancel'],
         cancelId: cancelId,

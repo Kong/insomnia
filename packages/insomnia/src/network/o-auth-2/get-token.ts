@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import querystring from 'querystring';
+import { v4 as uuidv4 } from 'uuid';
 
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
@@ -21,7 +22,7 @@ const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 export function initNewOAuthSession() {
   // the value of this variable needs to start with 'persist:'
   // otherwise sessions won't be persisted over application-restarts
-  const authWindowSessionId = `persist:oauth2_${window.crypto.randomUUID()}`;
+  const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
   window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
   return authWindowSessionId;
 }
