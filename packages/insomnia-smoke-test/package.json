@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@grpc/grpc-js": "^1.6.7",
-    "@grpc/proto-loader": "^0.6.11",
+    "@grpc/proto-loader": "^0.7.7",
     "@jest/globals": "^28.1.0",
     "@playwright/test": "^1.32.3",
     "@ravanallc/grpc-server-reflection": "^0.1.6",
