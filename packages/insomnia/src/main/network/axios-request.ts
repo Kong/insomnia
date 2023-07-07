@@ -19,7 +19,6 @@ export async function axiosRequest(config: AxiosRequestConfig) {
 
   const finalConfig: AxiosRequestConfig = {
     ...config,
-    adapter: global.require('axios/lib/adapters/http'),
     httpsAgent: new https.Agent({
       rejectUnauthorized: settings.validateSSL,
     }),

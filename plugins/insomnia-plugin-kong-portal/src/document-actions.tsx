@@ -20,7 +20,6 @@ export interface Context {
     getItem: (key: string) => Promise<string | null>;
   };
   __private: {
-    axios: typeof axios;
     loadRendererModules: () => Promise<{
       ReactDOM: typeof ReactDOM;
       React: typeof React;
@@ -37,7 +36,7 @@ export const documentActions = [
     hideAfterClick: true,
     action(context: Context, spec: Spec) {
       const root = document.createElement('div');
-      const { axios, loadRendererModules } = context.__private;
+      const { loadRendererModules } = context.__private;
       loadRendererModules().then(({ React, ReactDOM }) => {
         const { DeployToPortal } = getDeployToPortalComponent({ React });
 
