@@ -2,6 +2,7 @@ import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
+import { version } from '../../../../package.json';
 import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_POST } from '../../../common/constants';
 import { database } from '../../../common/database';
 import { getContentTypeHeader } from '../../../common/misc';
@@ -128,6 +129,12 @@ export function updateMimeType(
     headers.push({
       name: 'Content-Type',
       value: contentTypeHeaderValue,
+    });
+  }
+  if (!headers.find(h => h?.name?.toLowerCase() === 'user-agent')) {
+    headers.push({
+      name: 'User-Agent',
+      value: `Insomnia/${version}`,
     });
   }
 

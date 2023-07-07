@@ -13,9 +13,8 @@ import tls from 'tls';
 import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
-import { version } from '../../../package.json';
 import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
-import { describeByteSize, hasAuthHeader, hasUserAgentHeader } from '../../common/misc';
+import { describeByteSize, hasAuthHeader } from '../../common/misc';
 import { ClientCertificate } from '../../models/client-certificate';
 import { ResponseHeader } from '../../models/response';
 import { buildMultipart } from './multipart';
@@ -247,14 +246,14 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     } else if (requestBody !== undefined) {
       curl.setOpt(Curl.option.POSTFIELDS, requestBody);
     }
+
+    // suppress node-libcurl default user-agent
+    curl.setOpt(Curl.option.USERAGENT, '');
+
     const headerStrings = parseHeaderStrings({ req, requestBody, requestBodyPath, finalUrl, authHeader });
     curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
 
     const { headers } = req;
-    // Set User-Agent if it's not already in headers
-    if (!hasUserAgentHeader(headers)) {
-      curl.setOpt(Curl.option.USERAGENT, `insomnia/${version}`);
-    }
     const { username, password, disabled } = authentication;
     const isDigest = authentication.type === AUTH_DIGEST;
     const isNLTM = authentication.type === AUTH_NTLM;

@@ -92,6 +92,9 @@ describe('updateMimeType()', () => {
       {
         name: 'Content-Type',
         value: 'text/html',
+      }, {
+        'name': 'User-Agent',
+        'value': 'Insomnia/2023.4.0',
       },
     ]);
   });
@@ -129,11 +132,14 @@ describe('updateMimeType()', () => {
       {
         bad: true,
       },
-      null,
+      null, {
+        'name': 'User-Agent',
+        'value': 'Insomnia/2023.4.0',
+      },
     ]);
   });
 
-  it('replaces header when exists', async () => {
+  it('replaces header when exists2', async () => {
     const request = await models.request.create({
       name: 'My Request',
       parentId: 'fld_1',
@@ -150,6 +156,9 @@ describe('updateMimeType()', () => {
       {
         name: 'content-tYPE',
         value: 'text/html',
+      }, {
+        'name': 'User-Agent',
+        'value': 'Insomnia/2023.4.0',
       },
     ]);
   });
@@ -168,7 +177,10 @@ describe('updateMimeType()', () => {
     expect(request).not.toBeNull();
     const newRequest = await updateMimeType(request, null);
     expect(newRequest.body).toEqual({});
-    expect(newRequest.headers).toEqual([]);
+    expect(newRequest.headers).toEqual([{
+      'name': 'User-Agent',
+      'value': 'Insomnia/2023.4.0',
+    }]);
   });
 
   it('uses saved body when provided', async () => {
