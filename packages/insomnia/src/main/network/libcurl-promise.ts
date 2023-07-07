@@ -246,6 +246,10 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     } else if (requestBody !== undefined) {
       curl.setOpt(Curl.option.POSTFIELDS, requestBody);
     }
+
+    // suppress node-libcurl default user-agent
+    curl.setOpt(Curl.option.USERAGENT, '');
+
     const headerStrings = parseHeaderStrings({ req, requestBody, requestBodyPath, finalUrl, authHeader });
     curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
 
