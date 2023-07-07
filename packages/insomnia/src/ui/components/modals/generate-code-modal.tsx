@@ -1,4 +1,4 @@
-import { availableTargets, HarRequest, HTTPSnippet } from 'httpsnippet';
+import { availableTargets, HTTPSnippet } from 'httpsnippet';
 import { AvailableTarget } from 'httpsnippet/dist/helpers/utils';
 import { ClientInfo } from 'httpsnippet/dist/targets/targets';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
@@ -14,7 +14,7 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
-const fallbackTarget: AvailableTarget = { key: 'shell', title: 'shell', extname: '.sh', default: '', clients: [{ key: 'curl', title: 'curl', link: '', description: '' }] };
+const fallbackTarget: AvailableTarget = { key: 'shell', title: 'shell', extname: '.sh', default: 'curl', clients: [{ key: 'curl', title: 'curl', link: '', description: '' }] };
 const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell') || fallbackTarget;
 const DEFAULT_CLIENT = fallbackTarget.clients[0];
 const MODE_MAP: Record<string, string> = {
@@ -73,8 +73,11 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
     if (!har) {
       return;
     }
-    const snippet = new HTTPSnippet(har as unknown as HarRequest);
+    console.log('generateCode', target.key, client.key, har);
+
+    const snippet = new HTTPSnippet(har);
     const cmd = snippet.convert(target.key, client.key) || [''];
+    console.log('CMD', cmd);
     setState({
       request,
       cmd: Array.isArray(cmd) ? cmd.join('\n') : cmd,

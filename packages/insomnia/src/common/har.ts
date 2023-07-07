@@ -1,5 +1,6 @@
 import clone from 'clone';
 import fs from 'fs';
+import { HarRequest } from 'httpsnippet';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
 import * as models from '../models';
@@ -54,20 +55,6 @@ export interface HarPostData {
   params: HarPostParam[];
   text: string;
   comment?: string;
-}
-
-export interface HarRequest {
-  method: string;
-  url: string;
-  httpVersion: string;
-  cookies: HarCookie[];
-  headers: HarHeader[];
-  queryString: HarQueryString[];
-  postData?: HarPostData;
-  headersSize: number;
-  bodySize: number;
-  comment?: string;
-  settingEncodeUrl: boolean;
 }
 
 export interface HarContent {
@@ -402,7 +389,6 @@ export async function exportHarWithRenderedRequest(
     postData: getRequestPostData(renderedRequest),
     headersSize: -1,
     bodySize: -1,
-    settingEncodeUrl: renderedRequest.settingEncodeUrl,
   };
   return harRequest;
 }
@@ -517,7 +503,7 @@ function getRequestQueryString(renderedRequest: RenderedRequest): HarQueryString
   }));
 }
 
-function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | undefined {
+function getRequestPostData(renderedRequest: RenderedRequest): HarPostData {
   let body;
   if (renderedRequest.body.fileName) {
     try {
@@ -526,7 +512,11 @@ function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | und
       };
     } catch (error) {
       console.warn('[code gen] Failed to read file', error);
-      return;
+      return {
+        mimeType: '',
+        text: '',
+        params: [],
+      };
     }
   } else {
     // For every other type, Insomnia uses the same body format as HAR
