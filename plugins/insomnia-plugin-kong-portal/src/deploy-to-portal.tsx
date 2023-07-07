@@ -19,7 +19,7 @@ interface Props {
     };
     status: number;
   }>;
-  trackSegmentEvent: Context['__private']['analytics']['trackSegmentEvent'];
+  trackSegmentEvent: Context['__private']['trackSegmentEvent'];
   store: Context['store'];
   spec: Spec;
 }
@@ -167,7 +167,7 @@ export function getDeployToPortalComponent(options: {
               type: 'deploy',
               action,
               error: err.response.status + ': ' + err.response.statusText,
-            }
+            },
           });
         } else {
           console.log('Failed to upload to dev portal', err.response);
@@ -204,9 +204,12 @@ export function getDeployToPortalComponent(options: {
           },
         });
         if (response.status === 200 || response.status === 201) {
-          trackSegmentEvent('Kong Connected', {
-            type: 'token',
-            action: 'portal_deploy',
+          trackSegmentEvent({
+            event: 'Kong Connected',
+            properties: {
+              type: 'token',
+              action: 'portal_deploy',
+            },
           });
 
           // Set legacy mode for post upload formatting, suppress loader, set monitor portal URL, move to upload view
@@ -222,10 +225,13 @@ export function getDeployToPortalComponent(options: {
         }
       } catch (error: unknown) {
         if (error instanceof Error) {
-          trackSegmentEvent('Kong Connected', {
-            type: 'token',
-            action: 'portal_deploy',
-            error: error.message,
+          trackSegmentEvent({
+            event: 'Kong Connected',
+            properties: {
+              type: 'token',
+              action: 'portal_deploy',
+              error: error.message,
+            },
           });
           console.log('Connection error', error);
           this._handleLoadingToggle(false);

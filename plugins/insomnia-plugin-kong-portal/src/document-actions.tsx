@@ -21,11 +21,11 @@ export interface Context {
   };
   __private: {
     axios: typeof axios;
-    trackSegmentEvent: ({ event: string, properties?: Record<string, any> }) => void;
     loadRendererModules: () => Promise<{
       ReactDOM: typeof ReactDOM;
       React: typeof React;
     }>;
+    trackSegmentEvent: (options: { event: string; properties?: Record<string, any> }) => void;
   };
   app: {
     dialog: (message: string, root: HTMLElement, config: any) => void;
