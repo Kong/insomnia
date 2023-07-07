@@ -511,6 +511,17 @@ export function createWindow() {
   };
   const template: MenuItemConstructorOptions[] = [];
   template.push(applicationMenu);
+  template.push({
+    label: `${MNEMONIC_SYM}File`,
+    submenu: [
+      {
+        label: `${MNEMONIC_SYM}New Window`,
+        click: () => {
+          createWindow();
+        },
+      },
+    ],
+  });
   template.push(editMenu);
   template.push(viewMenu);
   template.push(windowMenu);
