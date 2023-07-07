@@ -15,10 +15,10 @@ interface AuthBox {
  * Keypair used for the login handshake.
  * This keypair can be re-used for the entire session.
  */
-const sessionKeyPair = keyPair();
-
 export async function submitAuthCode(code: string) {
   try {
+    const sessionKeyPair = keyPair();
+    window.localStorage.setItem('insomnia.sessionKeyPair', JSON.stringify(sessionKeyPair));
     const rawBox = await decodeBase64(code.trim());
     const boxData = open(rawBox, sessionKeyPair.publicKey, sessionKeyPair.secretKey);
     invariant(boxData, 'Invalid authentication code.');
@@ -33,6 +33,8 @@ export async function submitAuthCode(code: string) {
 }
 
 export async function getLoginUrl() {
+  const sessionKeyPair = JSON.parse(window.localStorage.getItem('insomnia.sessionKeyPair') || '{}');
+  invariant(sessionKeyPair.publicKey, 'No session keypair found');
   const loginKey = await encodeBase64(sessionKeyPair.publicKey);
   return `${getAppWebsiteBaseURL()}/app/auth-app/?loginKey=${encodeURIComponent(loginKey)}`;
 }
