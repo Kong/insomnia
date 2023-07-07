@@ -2,6 +2,7 @@ import express from 'express';
 import { graphqlHTTP } from 'express-graphql';
 import { readFileSync } from 'fs';
 import { createServer } from 'https';
+import crypto from 'node:crypto';
 import { join } from 'path';
 
 import { basicAuthRouter } from './basic-auth';
@@ -34,7 +35,6 @@ app.get('/cookies', (_req, res) => {
 });
 
 app.use('/file', express.static('fixtures/files'));
-
 app.use('/auth/basic', basicAuthRouter);
 
 githubApi(app);
@@ -58,6 +58,36 @@ app.use('/graphql', graphqlHTTP({
   rootValue: root,
   graphiql: true,
 }));
+app.use(express.json()); // Used to parse JSON bodies
+
+// SSE routes
+let subscribers: { id: string; response: express.Response }[] = [];
+app.get('/events', (request, response) => {
+  const headers = {
+    'Content-Type': 'text/event-stream',
+    'Connection': 'keep-alive',
+    'Cache-Control': 'no-cache',
+  };
+  response.writeHead(200, headers);
+  const subscriberId = crypto.randomUUID();
+  const data = `data: ${JSON.stringify({ id: subscriberId })}\n\n`;
+  response.write(data);
+  const subscriber = {
+    id: subscriberId,
+    response,
+  };
+  subscribers.push(subscriber);
+  request.on('close', () => {
+    console.log(`${subscriberId} Connection closed`);
+    subscribers = subscribers.filter(sub => sub.id !== subscriberId);
+  });
+});
+app.post('/send-event', (request, response) => {
+  // Requires middleware to parse JSON body
+  console.log('Received event', request.body);
+  subscribers.forEach(subscriber => subscriber.response.write(`data: ${JSON.stringify(request.body)}\n\n`));
+  response.json({ success: true });
+});
 
 startWebSocketServer(app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}`);
