@@ -18,7 +18,7 @@ import { gRPCBridgeAPI } from './grpc';
 
 export interface MainBridgeAPI {
   loginStateChange: () => void;
-  openInBrowser: () => void;
+  openInBrowser: (url: string) => void;
   restart: () => void;
   halfSecondAfterAppStart: () => void;
   manualUpdateCheck: () => void;

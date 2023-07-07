@@ -1,34 +1,4 @@
-const localStorageMock: Storage = (() => {
-  let store: Record<string, string> = {};
-  return {
-    get length() {
-      return Object.keys(store).length;
-    },
-
-    clear() {
-      store = {};
-    },
-
-    getItem(key: string) {
-      return store[key];
-    },
-
-    key() {
-      return null;
-    },
-
-    removeItem(key: string) {
-      delete store[key];
-    },
-
-    setItem(key: string, value: string) {
-      store[key] = value.toString();
-    },
-  };
-})();
-
 globalThis.__DEV__ = false;
-globalThis.localStorage = localStorageMock;
 
 globalThis.requestAnimationFrame = (callback: FrameRequestCallback) => {
   process.nextTick(callback);
