@@ -131,7 +131,7 @@ export function updateMimeType(
       value: contentTypeHeaderValue,
     });
   }
-  if (!headers.find(({ name }) => name.toLowerCase() === 'user-agent')) {
+  if (!headers.find(h => h?.name?.toLowerCase() === 'user-agent')) {
     headers.push({
       name: 'User-Agent',
       value: `Insomnia/${version}`,
