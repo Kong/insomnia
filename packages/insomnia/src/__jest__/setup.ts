@@ -1,4 +1,4 @@
-const localStorageMock: Storage = (function () {
+const localStorageMock: Storage = (() => {
   let store: Record<string, string> = {};
   return {
     get length() {
