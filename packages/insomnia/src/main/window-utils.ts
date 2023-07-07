@@ -626,6 +626,6 @@ function initLocalStorage() {
   localStorage = new LocalStorage(localStoragePath);
 }
 
-export function getWindow() {
+export function getOrCreateWindow() {
   return newWindow ?? createWindow();
 }

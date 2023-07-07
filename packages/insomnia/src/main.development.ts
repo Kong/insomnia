@@ -149,7 +149,7 @@ const _launchApp = async () => {
     console.log('[main] Window ready, handling command line arguments', process.argv);
     const args = process.argv.slice(1).filter(a => a !== '.');
     if (args.length) {
-      window = windowUtils.getWindow();
+      window = windowUtils.getOrCreateWindow();
       window.webContents.send('shell:open', args.join());
     }
   });
@@ -164,7 +164,7 @@ const _launchApp = async () => {
       // Called when second instance launched with args (Windows/Linux)
       app.on('second-instance', (_1, args) => {
         console.log('Second instance listener received:', args.join('||'));
-        window = windowUtils.getWindow();
+        window = windowUtils.getOrCreateWindow();
         if (window) {
           if (window.isMinimized()) {
             window.restore();
@@ -175,24 +175,24 @@ const _launchApp = async () => {
         console.log('[main] Open Deep Link URL sent from second instance', lastArg);
         window.webContents.send('shell:open', lastArg);
       });
-      window = windowUtils.getWindow();
+      window = windowUtils.getOrCreateWindow();
 
       app.on('open-url', (_event, url) => {
         console.log('[main] Open Deep Link URL', url);
-        window = windowUtils.getWindow();
+        window = windowUtils.getOrCreateWindow();
         if (window) {
           if (window.isMinimized()) {
             window.restore();
           }
           window.focus();
         } else {
-          window = windowUtils.getWindow();
+          window = windowUtils.getOrCreateWindow();
         }
         window.webContents.send('shell:open', url);
       });
     }
   } else {
-    window = windowUtils.getWindow();
+    window = windowUtils.getOrCreateWindow();
   }
 
   // Don't send origin header from Insomnia because we're not technically using CORS
