@@ -1,4 +1,5 @@
 import clone from 'clone';
+import electron from 'electron';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import { join as pathJoin } from 'path';
@@ -386,7 +387,7 @@ async function _applyResponsePluginHooks(
 export function storeTimeline(timeline: ResponseTimelineEntry[]): Promise<string> {
   const timelineStr = JSON.stringify(timeline, null, '\t');
   const timelineHash = uuidv4();
-  const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'), 'responses');
+  const responsesDir = pathJoin(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'), 'responses');
   mkdirp.sync(responsesDir);
   const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
   if (process.type === 'renderer') {
