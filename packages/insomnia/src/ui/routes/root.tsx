@@ -30,7 +30,6 @@ import { showError, showModal } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
 import { AskModal } from '../components/modals/ask-modal';
 import { ImportModal } from '../components/modals/import-modal';
-import { LoginModal } from '../components/modals/login-modal';
 import {
   SettingsModal,
   TAB_INDEX_PLUGINS,
