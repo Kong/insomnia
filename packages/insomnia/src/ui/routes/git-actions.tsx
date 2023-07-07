@@ -36,7 +36,6 @@ import {
 import { invariant } from '../../utils/invariant';
 import {
   SegmentEvent,
-  trackSegmentEvent,
   vcsSegmentEventProperties,
 } from '../analytics';
 
@@ -390,10 +389,10 @@ export const cloneGitRepoAction: ActionFunction = async ({
     };
   }
 
-  trackSegmentEvent(
-    SegmentEvent.vcsSyncStart,
-    vcsSegmentEventProperties('git', 'clone')
-  );
+  window.main.trackSegmentEvent({
+    event: SegmentEvent.vcsSyncStart,
+    properties: vcsSegmentEventProperties('git', 'clone'),
+  });
   repoSettingsPatch.needsFullClone = true;
   repoSettingsPatch.uri = parseGitToHttpsURL(repoSettingsPatch.uri);
   let fsClient = MemClient.createClient();
@@ -406,9 +405,12 @@ export const cloneGitRepoAction: ActionFunction = async ({
     });
   } catch (originalUriError) {
     if (repoSettingsPatch.uri.endsWith('.git')) {
-      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-        ...vcsSegmentEventProperties('git', 'clone', originalUriError.message),
-        providerName,
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.vcsSyncComplete,
+        properties: {
+          ...vcsSegmentEventProperties('git', 'clone', originalUriError.message),
+          providerName,
+        },
       });
 
       return {
@@ -427,9 +429,11 @@ export const cloneGitRepoAction: ActionFunction = async ({
       // by this point the clone was successful, so update with this syntax
       repoSettingsPatch.uri = dotGitUri;
     } catch (dotGitError) {
-      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-        ...vcsSegmentEventProperties('git', 'clone', dotGitError.message),
-        providerName,
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.vcsSyncComplete, properties: {
+          ...vcsSegmentEventProperties('git', 'clone', dotGitError.message),
+          providerName,
+        },
       });
       return {
         errors: [
@@ -472,9 +476,11 @@ export const cloneGitRepoAction: ActionFunction = async ({
       description: `Insomnia Workspace for ${repoSettingsPatch.uri}}`,
     });
     await models.apiSpec.getOrCreateForParentId(workspace._id);
-    trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-      ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
-      providerName,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsSyncComplete, properties: {
+        ...vcsSegmentEventProperties('git', 'clone', 'no directory found'),
+        providerName,
+      },
     });
 
     workspaceId = workspace._id;
@@ -487,9 +493,11 @@ export const cloneGitRepoAction: ActionFunction = async ({
     const workspaces = await fsClient.promises.readdir(workspaceBase);
 
     if (workspaces.length === 0) {
-      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-        ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'),
-        providerName,
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.vcsSyncComplete, properties: {
+          ...vcsSegmentEventProperties('git', 'clone', 'no workspaces found'),
+          providerName,
+        },
       });
 
       return {
@@ -498,13 +506,15 @@ export const cloneGitRepoAction: ActionFunction = async ({
     }
 
     if (workspaces.length > 1) {
-      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-        ...vcsSegmentEventProperties(
-          'git',
-          'clone',
-          'multiple workspaces found'
-        ),
-        providerName,
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.vcsSyncComplete, properties: {
+          ...vcsSegmentEventProperties(
+            'git',
+            'clone',
+            'multiple workspaces found'
+          ),
+          providerName,
+        },
       });
 
       return {
@@ -520,13 +530,15 @@ export const cloneGitRepoAction: ActionFunction = async ({
     const existingWorkspace = await models.workspace.getById(workspace._id);
 
     if (existingWorkspace) {
-      trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-        ...vcsSegmentEventProperties(
-          'git',
-          'clone',
-          'workspace already exists'
-        ),
-        providerName,
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.vcsSyncComplete, properties: {
+          ...vcsSegmentEventProperties(
+            'git',
+            'clone',
+            'workspace already exists'
+          ),
+          providerName,
+        },
       });
       return {
         errors: [
@@ -561,9 +573,11 @@ export const cloneGitRepoAction: ActionFunction = async ({
 
   // Flush DB changes
   await database.flushChanges(bufferId);
-  trackSegmentEvent(SegmentEvent.vcsSyncComplete, {
-    ...vcsSegmentEventProperties('git', 'clone'),
-    providerName,
+  window.main.trackSegmentEvent({
+    event: SegmentEvent.vcsSyncComplete, properties: {
+      ...vcsSegmentEventProperties('git', 'clone'),
+      providerName,
+    },
   });
 
   invariant(workspaceId, 'Workspace ID is required');
@@ -736,9 +750,11 @@ export const commitToGitRepoAction: ActionFunction = async ({
     await GitVCS.commit(message);
 
     const providerName = getOauth2FormatName(repo?.credentials);
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'commit'),
-      providerName,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction, properties: {
+        ...vcsSegmentEventProperties('git', 'commit'),
+        providerName,
+      },
     });
   } catch (e) {
     const message =
@@ -779,9 +795,11 @@ export const createNewGitBranchAction: ActionFunction = async ({
   try {
     const providerName = getOauth2FormatName(repo?.credentials);
     await GitVCS.checkout(branch);
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'create_branch'),
-      providerName,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction, properties: {
+        ...vcsSegmentEventProperties('git', 'create_branch'),
+        providerName,
+      },
     });
   } catch (err) {
     const errorMessage =
@@ -887,14 +905,18 @@ export const mergeGitBranchAction: ActionFunction = async ({
     const bufferId = await database.bufferChanges();
 
     await GitVCS.checkout(branch);
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'checkout_branch'),
-      providerName,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction, properties: {
+        ...vcsSegmentEventProperties('git', 'checkout_branch'),
+        providerName,
+      },
     });
     await database.flushChanges(bufferId, true);
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'merge_branch'),
-      providerName,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction, properties: {
+        ...vcsSegmentEventProperties('git', 'merge_branch'),
+        providerName,
+      },
     });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -936,9 +958,11 @@ export const deleteGitBranchAction: ActionFunction = async ({
   try {
     const providerName = getOauth2FormatName(repo?.credentials);
     await GitVCS.deleteBranch(branch);
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'delete_branch'),
-      providerName,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction, properties: {
+        ...vcsSegmentEventProperties('git', 'delete_branch'),
+        providerName,
+      },
     });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -993,16 +1017,20 @@ export const pushToGitRemoteAction: ActionFunction = async ({
   const providerName = getOauth2FormatName(gitRepository.credentials);
   try {
     await GitVCS.push(gitRepository.credentials);
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push'),
-      providerName,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction, properties: {
+        ...vcsSegmentEventProperties('git', force ? 'force_push' : 'push'),
+        providerName,
+      },
     });
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
 
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'push', errorMessage),
-      providerName,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction, properties: {
+        ...vcsSegmentEventProperties('git', 'push', errorMessage),
+        providerName,
+      },
     });
 
     if (err instanceof Errors.PushRejectedError) {
@@ -1059,16 +1087,19 @@ export const pullFromGitRemoteAction: ActionFunction = async ({
 
   try {
     await GitVCS.pull(gitRepository.credentials);
-    trackSegmentEvent(SegmentEvent.vcsAction, {
-      ...vcsSegmentEventProperties('git', 'pull'),
-      providerName,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.vcsAction, properties: {
+        ...vcsSegmentEventProperties('git', 'pull'),
+        providerName,
+      },
     });
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
-    trackSegmentEvent(
-      SegmentEvent.vcsAction,
-      vcsSegmentEventProperties('git', 'pull', errorMessage)
-    );
+    window.main.trackSegmentEvent({
+      event:
+        SegmentEvent.vcsAction, properties:
+        vcsSegmentEventProperties('git', 'pull', errorMessage),
+    });
 
     return {
       errors: [`${errorMessage}`],

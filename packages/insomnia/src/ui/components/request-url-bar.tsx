@@ -14,7 +14,7 @@ import { update } from '../../models/helpers/request-operations';
 import { isRequest, Request } from '../../models/request';
 import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
-import { SegmentEvent, trackSegmentEvent } from '../analytics';
+import { SegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { selectActiveEnvironment, selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
@@ -107,10 +107,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute, {
-      preferredHttpVersion: settings.preferredHttpVersion,
-      authenticationType: request.authentication?.type,
-      mimeType: request.body.mimeType,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.requestExecute,
+      properties: {
+        preferredHttpVersion: settings.preferredHttpVersion,
+        authenticationType: request.authentication?.type,
+        mimeType: request.body.mimeType,
+      },
     });
     setLoading(true);
     try {
@@ -188,10 +191,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent(SegmentEvent.requestExecute, {
-      preferredHttpVersion: settings.preferredHttpVersion,
-      authenticationType: request.authentication?.type,
-      mimeType: request.body.mimeType,
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.requestExecute,
+      properties: {
+        preferredHttpVersion: settings.preferredHttpVersion,
+        authenticationType: request.authentication?.type,
+        mimeType: request.body.mimeType,
+      },
     });
     setLoading(true);
     try {

@@ -13,7 +13,7 @@ import { isRequest } from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
-import { SegmentEvent, trackSegmentEvent } from '../analytics';
+import { SegmentEvent } from '../analytics';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
@@ -203,7 +203,7 @@ export const Debug: FC = () => {
             lastActive: Date.now(),
           });
           models.stats.incrementCreatedRequests();
-          trackSegmentEvent(SegmentEvent.requestCreate, { requestType: 'HTTP' });
+          window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType: 'HTTP' } });
         }
       },
     request_showCreateFolder:

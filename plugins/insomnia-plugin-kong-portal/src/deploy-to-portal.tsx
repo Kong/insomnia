@@ -155,16 +155,19 @@ export function getDeployToPortalComponent(options: {
         if (response.statusText === 'Created' || response.statusText === 'OK') {
           this.setState({ kongPortalDeployView: 'success' });
           const action = overwrite ? 'replace_portal' : 'create_portal';
-          trackSegmentEvent('Kong Synced', { type: 'deploy', action });
+          trackSegmentEvent({ event: 'Kong Synced', properties: { type: 'deploy', action } });
         }
       } catch (err) {
         if (err.response && err.response.status === 409) {
           this.setState({ kongPortalDeployView: 'overwrite' });
           const action = overwrite ? 'replace_portal' : 'create_portal';
-          trackSegmentEvent('Kong Synced', {
-            type: 'deploy',
-            action,
-            error: err.response.status + ': ' + err.response.statusText,
+          trackSegmentEvent({
+            event: 'Kong Synced',
+            properties: {
+              type: 'deploy',
+              action,
+              error: err.response.status + ': ' + err.response.statusText,
+            }
           });
         } else {
           console.log('Failed to upload to dev portal', err.response);

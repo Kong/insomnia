@@ -23,7 +23,7 @@ import { isWebSocketPayload } from '../models/websocket-payload';
 import { isWebSocketRequest } from '../models/websocket-request';
 import { isWorkspace, Workspace } from '../models/workspace';
 import { resetKeys } from '../sync/ignore-keys';
-import { SegmentEvent, trackSegmentEvent } from '../ui/analytics';
+import { SegmentEvent } from '../ui/analytics';
 import { showAlert, showError, showModal } from '../ui/components/modals';
 import { AskModal } from '../ui/components/modals/ask-modal';
 import { SelectModal } from '../ui/components/modals/select-modal';
@@ -127,7 +127,7 @@ export async function exportRequestsHAR(
   }
 
   const data = await har.exportHar(harRequests);
-  trackSegmentEvent(SegmentEvent.dataExport, { type: 'har' });
+  window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: 'har' } });
   return JSON.stringify(data, null, '\t');
 }
 
@@ -270,7 +270,7 @@ export async function exportRequestsData(
       delete d.type;
       return d;
     });
-  trackSegmentEvent(SegmentEvent.dataExport, { type: format });
+  window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: format } });
 
   if (format.toLowerCase() === 'yaml') {
     return YAML.stringify(data);

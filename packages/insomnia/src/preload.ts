@@ -43,6 +43,8 @@ const main: Window['main'] = {
   },
   webSocket,
   grpc,
+  trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
+  trackPageView: options => ipcRenderer.send('trackPageView', options),
 };
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),

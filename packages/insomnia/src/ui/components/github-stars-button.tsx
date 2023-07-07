@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { useMount, useMountedState } from 'react-use';
 import styled from 'styled-components';
 
-import { SegmentEvent, trackSegmentEvent } from '../analytics';
+import { SegmentEvent } from '../analytics';
 import { selectSettings } from '../redux/selectors';
 import { SvgIcon } from './svg-icon';
 import { Button } from './themed-button';
@@ -90,16 +90,22 @@ export const GitHubStarsButton = () => {
   });
 
   const starClick = useCallback(() => {
-    trackSegmentEvent(SegmentEvent.buttonClick, {
-      type: 'GitHub stars',
-      action: 'clicked star',
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.buttonClick,
+      properties: {
+        type: 'GitHub stars',
+        action: 'clicked star',
+      },
     });
   }, []);
 
   const counterClick = useCallback(() => {
-    trackSegmentEvent(SegmentEvent.buttonClick, {
-      type: 'GitHub stars',
-      action: 'clicked stargazers',
+    window.main.trackSegmentEvent({
+      event: SegmentEvent.buttonClick,
+      properties: {
+        type: 'GitHub stars',
+        action: 'clicked stargazers',
+      },
     });
   }, []);
 
