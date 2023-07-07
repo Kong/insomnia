@@ -15,7 +15,21 @@ import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   PKCE_CHALLENGE_S256,
 } from './constants';
-import { getOAuthSession } from './misc';
+
+const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
+
+export function initNewOAuthSession() {
+  // the value of this variable needs to start with 'persist:'
+  // otherwise sessions won't be persisted over application-restarts
+  const authWindowSessionId = `persist:oauth2_${window.crypto.randomUUID()}`;
+  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+  return authWindowSessionId;
+}
+
+export function getOAuthSession(): string {
+  const token = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+  return token || initNewOAuthSession();
+}
 
 // NOTE
 // 1. return valid access token from insomnia db

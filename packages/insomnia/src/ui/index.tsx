@@ -23,7 +23,7 @@ import { initializeLogging } from '../common/log';
 import * as models from '../models';
 import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../models/project';
-import { initNewOAuthSession } from '../network/o-auth-2/misc';
+import { initNewOAuthSession } from '../network/o-auth-2/get-token';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
 import { invariant } from '../utils/invariant';
