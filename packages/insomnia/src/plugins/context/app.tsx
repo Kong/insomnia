@@ -63,7 +63,6 @@ export interface AppContext {
 
 export interface PrivateProperties {
   axios: typeof axios;
-  trackSegmentEvent: typeof window.main.trackSegmentEvent;
   loadRendererModules: () => Promise<{
     ReactDOM: typeof ReactDOM;
     React: typeof React;
@@ -215,7 +214,6 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
     },
     __private: {
       axios,
-      trackSegmentEvent: window.main.trackSegmentEvent,
       // Provide modules that can be used in the renderer process
       async loadRendererModules() {
         if (typeof globalThis.document === 'undefined') {
