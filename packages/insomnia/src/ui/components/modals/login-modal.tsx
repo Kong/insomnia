@@ -1,5 +1,5 @@
 import { clipboard } from 'electron';
-import React, { FormEvent, forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { FormEvent, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import * as session from '../../../account/session';
 import { clickLink } from '../../../common/electron-helpers';
@@ -27,7 +27,7 @@ export interface LoginModalHandle extends ModalHandle {
   show: (options?: Options) => void;
 }
 
-export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginModal({ ...props }, ref) {
+export const LoginModal = forwardRef<LoginModalHandle, {}>(function LoginModal({ ...props }, ref) {
   const modalRef = useRef<ModalHandle>(null);
   const tokenInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,6 +42,7 @@ export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginMo
 
   useEffect(() => {
     session.onLoginLogout(() => {
+      console.log('how oten does this happen?');
       modalRef.current?.hide();
     });
   }, []);
@@ -187,7 +188,7 @@ export const LoginModal = memo(forwardRef<LoginModalHandle, {}>(function LoginMo
       </ModalFooter>
     </Modal>
   );
-}));
+});
 
 LoginModal.displayName = 'LoginModal';
 

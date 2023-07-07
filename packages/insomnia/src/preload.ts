@@ -25,6 +25,7 @@ const grpc: gRPCBridgeAPI = {
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
 };
 const main: Window['main'] = {
+  loginStateChange: () => ipcRenderer.send('loginStateChange'),
   restart: () => ipcRenderer.send('restart'),
   halfSecondAfterAppStart: () => ipcRenderer.send('halfSecondAfterAppStart'),
   manualUpdateCheck: () => ipcRenderer.send('manualUpdateCheck'),

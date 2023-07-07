@@ -26,7 +26,8 @@ const DEFAULT_HEIGHT = 720;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
-let mainWindow: ElectronBrowserWindow | null = null;
+let newWindow: ElectronBrowserWindow | null = null;
+const windows = new Set<ElectronBrowserWindow>();
 let localStorage: LocalStorage | null = null;
 
 interface Bounds {
@@ -63,7 +64,7 @@ export function createWindow() {
     }
   }
 
-  mainWindow = new BrowserWindow({
+  newWindow = new BrowserWindow({
     // Make sure we don't initialize the window outside the bounds
     x: isVisibleOnAnyDisplay ? x : undefined,
     y: isVisibleOnAnyDisplay ? y : undefined,
@@ -91,19 +92,19 @@ export function createWindow() {
 
   // BrowserWindow doesn't have an option for this, so we have to do it manually :(
   if (maximize) {
-    mainWindow?.maximize();
+    newWindow?.maximize();
   }
 
-  mainWindow?.on('resize', () => saveBounds());
-  mainWindow?.on('maximize', () => saveBounds());
-  mainWindow?.on('unmaximize', () => saveBounds());
-  mainWindow?.on('move', () => saveBounds());
-  mainWindow?.on('unresponsive', () => {
+  newWindow?.on('resize', () => saveBounds());
+  newWindow?.on('maximize', () => saveBounds());
+  newWindow?.on('unmaximize', () => saveBounds());
+  newWindow?.on('move', () => saveBounds());
+  newWindow?.on('unresponsive', () => {
     showUnresponsiveModal();
   });
 
   // Open generic links (<a .../>) in default browser
-  mainWindow?.webContents.on('will-navigate', (event, url) => {
+  newWindow?.webContents.on('will-navigate', (event, url) => {
     // Prevents local dev full-reload events from opening browser window, see https://github.com/Kong/insomnia/pull/4925
     if (url.startsWith(appUrl)) {
       return;
@@ -114,7 +115,7 @@ export function createWindow() {
     clickLink(url);
   });
 
-  mainWindow?.webContents.setWindowOpenHandler(() => {
+  newWindow?.webContents.setWindowOpenHandler(() => {
     return { action: 'deny' };
   });
 
@@ -123,13 +124,13 @@ export function createWindow() {
   const appUrl = process.env.APP_RENDER_URL || pathToFileURL(appPath).href;
 
   console.log(`[main] Loading ${appUrl}`);
-  mainWindow?.loadURL(appUrl);
+  newWindow?.loadURL(appUrl);
   // Emitted when the window is closed.
-  mainWindow?.on('closed', () => {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    mainWindow = null;
+  newWindow?.on('closed', () => {
+    if (newWindow) {
+      windows.delete(newWindow);
+      newWindow = windows.values().next().value || null;
+    }
   });
 
   const applicationMenu: MenuItemConstructorOptions = {
@@ -250,7 +251,7 @@ export function createWindow() {
       {
         label: `Resize to ${MNEMONIC_SYM}Small (qHD 540)`,
         click: () =>
-          mainWindow?.setBounds({
+          newWindow?.setBounds({
             width: 960,
             height: 540,
           }),
@@ -258,7 +259,7 @@ export function createWindow() {
       {
         label: `Resize to Defaul${MNEMONIC_SYM}t (HD 720)`,
         click: () =>
-          mainWindow?.setBounds({
+          newWindow?.setBounds({
             width: DEFAULT_WIDTH,
             height: DEFAULT_HEIGHT,
           }),
@@ -266,7 +267,7 @@ export function createWindow() {
       {
         label: `Resize to ${MNEMONIC_SYM}Large (FHD 1080)`,
         click: () =>
-          mainWindow?.setBounds({
+          newWindow?.setBounds({
             width: 1920,
             height: 1080,
           }),
@@ -289,8 +290,13 @@ export function createWindow() {
       {
         label: `Toggle ${MNEMONIC_SYM}DevTools`,
         accelerator: 'Alt+CmdOrCtrl+I',
-        // @ts-expect-error -- TSCONVERSION needs global module augmentation
-        click: () => mainWindow?.toggleDevTools(),
+        click: () => {
+          const window = BrowserWindow.getFocusedWindow();
+          if (window) {
+            // @ts-expect-error -- TSCONVERSION needs global module augmentation
+            window.toggleDevTools();
+          }
+        },
       },
     ],
   };
@@ -299,6 +305,12 @@ export function createWindow() {
     label: `${MNEMONIC_SYM}Window`,
     role: 'window',
     submenu: [
+      {
+        label: `${MNEMONIC_SYM}New`,
+        click: () => {
+          createWindow();
+        },
+      },
       {
         label: `${MNEMONIC_SYM}Minimize`,
         role: 'minimize',
@@ -434,13 +446,18 @@ export function createWindow() {
       {
         label: `${MNEMONIC_SYM}Reload`,
         accelerator: 'Shift+F5',
-        click: () => mainWindow?.reload(),
+        click: () => {
+          const window = BrowserWindow.getFocusedWindow();
+          if (window) {
+            window.reload();
+          }
+        },
       },
       {
         label: `Take ${MNEMONIC_SYM}Screenshot`,
         click: function() {
           // @ts-expect-error -- TSCONVERSION not accounted for in the electron types to provide a function
-          mainWindow?.capturePage(image => {
+          newWindow?.capturePage(image => {
             const buffer = image.toPNG();
             const dir = app.getPath('desktop');
             fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
@@ -466,7 +483,7 @@ export function createWindow() {
       {
         label: `Set window for ${MNEMONIC_SYM}FHD Screenshot`,
         click: () => {
-          mainWindow?.setBounds({
+          newWindow?.setBounds({
             width: 1920,
             height: 1080,
           });
@@ -494,6 +511,17 @@ export function createWindow() {
   };
   const template: MenuItemConstructorOptions[] = [];
   template.push(applicationMenu);
+  template.push({
+    label: `${MNEMONIC_SYM}File`,
+    submenu: [
+      {
+        label: `${MNEMONIC_SYM}New Window`,
+        click: () => {
+          createWindow();
+        },
+      },
+    ],
+  });
   template.push(editMenu);
   template.push(viewMenu);
   template.push(windowMenu);
@@ -505,7 +533,8 @@ export function createWindow() {
   }
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-  return mainWindow;
+  windows.add(newWindow);
+  return newWindow;
 }
 
 async function showUnresponsiveModal() {
@@ -520,22 +549,32 @@ async function showUnresponsiveModal() {
 
   // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   if (id === 1) {
-    mainWindow?.destroy();
+    const browserWindow = BrowserWindow.getFocusedWindow();
+
+    if (!browserWindow || !browserWindow.webContents) {
+      return;
+    }
+    browserWindow?.destroy();
     createWindow();
   }
 }
 
 function saveBounds() {
-  if (!mainWindow) {
+  const browserWindow = BrowserWindow.getFocusedWindow();
+
+  if (!browserWindow || !browserWindow.webContents) {
+    return;
+  }
+  if (!browserWindow) {
     return;
   }
 
-  const fullscreen = mainWindow?.isFullScreen();
+  const fullscreen = browserWindow?.isFullScreen();
 
   // Only save the size if we're not in fullscreen
   if (!fullscreen) {
-    localStorage?.setItem('bounds', mainWindow?.getBounds());
-    localStorage?.setItem('maximize', mainWindow?.isMaximized());
+    localStorage?.setItem('bounds', browserWindow?.getBounds());
+    localStorage?.setItem('maximize', browserWindow?.isMaximized());
     localStorage?.setItem('fullscreen', false);
   } else {
     localStorage?.setItem('fullscreen', true);
@@ -596,4 +635,8 @@ export const setZoom = (transformer: (current: number) => number) => () => {
 function initLocalStorage() {
   const localStoragePath = path.join(getDataDirectory(), 'localStorage');
   localStorage = new LocalStorage(localStoragePath);
+}
+
+export function getOrCreateWindow() {
+  return newWindow ?? createWindow();
 }
