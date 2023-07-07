@@ -1,5 +1,5 @@
 import { clipboard } from 'electron';
-import HTTPSnippet from 'httpsnippet';
+import { HTTPSnippet } from 'httpsnippet';
 import React, { forwardRef, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 

@@ -1,4 +1,6 @@
-import HTTPSnippet, { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
+import { availableTargets, HarRequest, HTTPSnippet } from 'httpsnippet';
+import { AvailableTarget } from 'httpsnippet/dist/helpers/utils';
+import { ClientInfo } from 'httpsnippet/dist/targets/targets';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
 import { exportHarRequest } from '../../../common/har';
@@ -12,8 +14,8 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
-const DEFAULT_TARGET = HTTPSnippet.availableTargets().find(t => t.key === 'shell') as HTTPSnippetTarget;
-const DEFAULT_CLIENT = DEFAULT_TARGET?.clients.find(t => t.key === 'curl') as HTTPSnippetClient;
+const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell');
+const DEFAULT_CLIENT = DEFAULT_TARGET?.clients.find(t => t.key === 'curl');
 const MODE_MAP: Record<string, string> = {
   c: 'clike',
   java: 'clike',
@@ -33,10 +35,10 @@ export interface GenerateCodeModalOptions {
   request?: Request;
 }
 export interface State {
-  cmd: string;
+  cmd: string | string[];
   request?: Request;
-  target: HTTPSnippetTarget;
-  client: HTTPSnippetClient;
+  target: AvailableTarget;
+  client: ClientInfo;
 }
 export interface GenerateCodeModalHandle {
   show: (options: GenerateCodeModalOptions) => void;
@@ -46,14 +48,14 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
   const modalRef = useRef<ModalHandle>(null);
   const editorRef = useRef<CodeEditorHandle>(null);
 
-  let storedTarget: HTTPSnippetTarget | undefined;
-  let storedClient: HTTPSnippetClient | undefined;
+  let storedTarget: AvailableTarget | undefined;
+  let storedClient: ClientInfo | undefined;
   try {
-    storedTarget = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as HTTPSnippetTarget;
+    storedTarget = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as AvailableTarget;
   } catch (error) {}
 
   try {
-    storedClient = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client') || '') as HTTPSnippetClient;
+    storedClient = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client') || '') as ClientInfo;
   } catch (error) {}
   const [state, setState] = useState<State>({
     cmd: '',
@@ -62,7 +64,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
     client: storedClient || DEFAULT_CLIENT,
   });
 
-  const generateCode = useCallback(async (request: Request, target: HTTPSnippetTarget, client: HTTPSnippetClient) => {
+  const generateCode = useCallback(async (request: Request, target: AvailableTarget, client: ClientInfo) => {
     // Some clients need a content-length for the request to succeed
     const addContentLength = Boolean((TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key));
     const har = await exportHarRequest(request._id, props.environmentId, addContentLength);
@@ -70,8 +72,8 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
     if (!har) {
       return;
     }
-    const snippet = new HTTPSnippet(har);
-    const cmd = snippet.convert(target.key, client.key) || '';
+    const snippet = new HTTPSnippet(har as unknown as HarRequest);
+    const cmd = snippet.convert(target.key, client.key) || [''];
     setState({
       request,
       cmd,
@@ -91,15 +93,15 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       if (!options.request) {
         return;
       }
-      generateCode(options.request, state.target, state.client);
+      generateCode(options.request, state.target || DEFAULT_TARGET, state.client);
       modalRef.current?.show();
     },
   }), [generateCode, state]);
 
   const { cmd, target, client, request } = state;
-  const targets = HTTPSnippet.availableTargets();
+  const targets = availableTargets();
   // NOTE: Just some extra precautions in case the target is messed up
-  let clients: HTTPSnippetClient[] = [];
+  let clients: ClientInfo[] = [];
   if (target && Array.isArray(target.clients)) {
     clients = target.clients;
   }
