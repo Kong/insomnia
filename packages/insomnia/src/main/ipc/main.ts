@@ -9,6 +9,7 @@ import fs from 'fs';
 
 import { axiosRequest } from '../../network/axios-request';
 import { authorizeUserInWindow } from '../../network/o-auth-2/misc';
+import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { exportAllWorkspaces } from '../export';
 import installPlugin from '../install-plugin';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
@@ -31,6 +32,8 @@ export interface MainBridgeAPI {
   on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
   webSocket: WebSocketBridgeAPI;
   grpc: gRPCBridgeAPI;
+  trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
+  trackPageView: (options: { name: string }) => void;
 }
 export function registerMainHandlers() {
   ipcMain.on('loginStateChange', async () => {
@@ -63,6 +66,13 @@ export function registerMainHandlers() {
 
   ipcMain.on('cancelCurlRequest', (_, requestId: string): void => {
     cancelCurlRequest(requestId);
+  });
+
+  ipcMain.on('trackSegmentEvent', (_, options: { event: SegmentEvent; properties?: Record<string, unknown> }): void => {
+    trackSegmentEvent(options.event, options.properties);
+  });
+  ipcMain.on('trackPageView', (_, options: { name: string }): void => {
+    trackPageView(options.name);
   });
 
   ipcMain.handle('installPlugin', (_, lookupName: string) => {

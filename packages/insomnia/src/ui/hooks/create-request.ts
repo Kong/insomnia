@@ -9,7 +9,7 @@ import { isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { WorkspaceMeta } from '../../models/workspace-meta';
-import { SegmentEvent, trackSegmentEvent } from '../analytics';
+import { SegmentEvent } from '../analytics';
 
 export const updateActiveWorkspaceMeta = async (
   patch: Partial<WorkspaceMeta>,
@@ -114,5 +114,5 @@ export const createRequest: RequestCreator = async ({
       throw new Error("tried to create a request but didn't specify the type" + requestType);
   }
 
-  trackSegmentEvent(SegmentEvent.requestCreate, { requestType });
+  window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType } });
 };

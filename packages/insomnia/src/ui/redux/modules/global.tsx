@@ -6,7 +6,6 @@ import {
   isValidActivity,
 } from '../../../common/constants';
 import { DEFAULT_PROJECT_ID } from '../../../models/project';
-import { trackPageView } from '../../analytics';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
@@ -98,7 +97,7 @@ export const loginStateChange = (loggedIn: boolean) => ({
 export const setActiveActivity = (activity: GlobalActivity) => {
   activity = isValidActivity(activity) ? activity : ACTIVITY_HOME;
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
-  trackPageView(activity);
+  window.main.trackPageView({ name: activity });
   return {
     type: SET_ACTIVE_ACTIVITY,
     activity,

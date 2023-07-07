@@ -21,9 +21,6 @@ export interface Context {
   };
   __private: {
     axios: typeof axios;
-    analytics: {
-      trackSegmentEvent: (event: string, properties?: Record<string, any>) => any;
-    };
     loadRendererModules: () => Promise<{
       ReactDOM: typeof ReactDOM;
       React: typeof React;
@@ -40,7 +37,7 @@ export const documentActions = [
     hideAfterClick: true,
     action(context: Context, spec: Spec) {
       const root = document.createElement('div');
-      const { analytics, axios, loadRendererModules } = context.__private;
+      const { axios, loadRendererModules } = context.__private;
       loadRendererModules().then(({ React, ReactDOM }) => {
         const { DeployToPortal } = getDeployToPortalComponent({ React });
 
@@ -49,7 +46,6 @@ export const documentActions = [
             spec={spec}
             store={context.store}
             axios={axios}
-            trackSegmentEvent={analytics.trackSegmentEvent}
           />,
           root,
         );

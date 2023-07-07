@@ -1,5 +1,4 @@
 import { invariant } from '../../../utils/invariant';
-import { trackPageView } from '../../analytics';
 import { ModalProps } from '../base/modal';
 import { AlertModal, AlertModalOptions } from './alert-modal';
 import { ErrorModal, ErrorModalOptions } from './error-modal';
@@ -36,7 +35,7 @@ export function showModal<TModalProps extends ModalProps & React.RefAttributes<{
 ) {
   const name = modalComponent.name || modalComponent.displayName;
   invariant(name, 'Modal must have a name or displayName');
-  trackPageView(name);
+  window.main.trackPageView({ name });
 
   const modalHandle = getModalComponentHandle(name) as unknown as GetRefHandleFromProps<TModalProps>;
 

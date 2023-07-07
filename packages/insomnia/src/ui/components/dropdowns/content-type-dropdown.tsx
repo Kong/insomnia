@@ -15,7 +15,7 @@ import {
   getContentTypeName,
 } from '../../../common/constants';
 import { isWebSocketRequest } from '../../../models/websocket-request';
-import { SegmentEvent, trackSegmentEvent } from '../../analytics';
+import { SegmentEvent } from '../../analytics';
 import { selectActiveRequest } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { AlertModal } from '../modals/alert-modal';
@@ -67,7 +67,7 @@ export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
     }
 
     onChange(mimeType);
-    trackSegmentEvent(SegmentEvent.requestBodyTypeSelect, { type: mimeType });
+    window.main.trackSegmentEvent({ event: SegmentEvent.requestBodyTypeSelect, properties: { type: mimeType } });
   }, [onChange, activeRequest]);
 
   if (!activeRequest) {

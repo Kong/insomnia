@@ -19,7 +19,6 @@ interface Props {
     };
     status: number;
   }>;
-  trackSegmentEvent: Context['__private']['analytics']['trackSegmentEvent'];
   store: Context['store'];
   spec: Spec;
 }
@@ -96,7 +95,7 @@ export function getDeployToPortalComponent(options: {
         event.preventDefault();
       }
 
-      const { spec, axios, trackSegmentEvent } = this.props;
+      const { spec, axios } = this.props;
 
       const {
         kongSpecFileName,
@@ -154,18 +153,10 @@ export function getDeployToPortalComponent(options: {
         });
         if (response.statusText === 'Created' || response.statusText === 'OK') {
           this.setState({ kongPortalDeployView: 'success' });
-          const action = overwrite ? 'replace_portal' : 'create_portal';
-          trackSegmentEvent('Kong Synced', { type: 'deploy', action });
         }
       } catch (err) {
         if (err.response && err.response.status === 409) {
           this.setState({ kongPortalDeployView: 'overwrite' });
-          const action = overwrite ? 'replace_portal' : 'create_portal';
-          trackSegmentEvent('Kong Synced', {
-            type: 'deploy',
-            action,
-            error: err.response.status + ': ' + err.response.statusText,
-          });
         } else {
           console.log('Failed to upload to dev portal', err.response);
           if (err.response && err.response.data && err.response.data.message) {
@@ -179,7 +170,7 @@ export function getDeployToPortalComponent(options: {
     _handleConnectKong = async (event: SyntheticEvent<HTMLFormElement>) => {
       event.preventDefault();
 
-      const { axios, trackSegmentEvent } = this.props;
+      const { axios } = this.props;
 
       const { kongPortalUserWorkspace, kongPortalApiUrl, kongPortalRbacToken } =
         this.state;
@@ -201,11 +192,6 @@ export function getDeployToPortalComponent(options: {
           },
         });
         if (response.status === 200 || response.status === 201) {
-          trackSegmentEvent('Kong Connected', {
-            type: 'token',
-            action: 'portal_deploy',
-          });
-
           // Set legacy mode for post upload formatting, suppress loader, set monitor portal URL, move to upload view
           const guiHost = response.data.configuration.portal_gui_host;
           this.setState({
@@ -219,11 +205,6 @@ export function getDeployToPortalComponent(options: {
         }
       } catch (error: unknown) {
         if (error instanceof Error) {
-          trackSegmentEvent('Kong Connected', {
-            type: 'token',
-            action: 'portal_deploy',
-            error: error.message,
-          });
           console.log('Connection error', error);
           this._handleLoadingToggle(false);
           this.setState({ connectionError: error });
