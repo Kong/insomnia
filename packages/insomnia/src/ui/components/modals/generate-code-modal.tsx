@@ -14,8 +14,9 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
-const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell');
-const DEFAULT_CLIENT = DEFAULT_TARGET?.clients.find(t => t.key === 'curl');
+const fallbackTarget: AvailableTarget = { key: 'shell', title: 'shell', extname: '.sh', default: '', clients: [{ key: 'curl', title: 'curl', link: '', description: '' }] };
+const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell') || fallbackTarget;
+const DEFAULT_CLIENT = fallbackTarget.clients[0];
 const MODE_MAP: Record<string, string> = {
   c: 'clike',
   java: 'clike',
@@ -35,7 +36,7 @@ export interface GenerateCodeModalOptions {
   request?: Request;
 }
 export interface State {
-  cmd: string | string[];
+  cmd: string;
   request?: Request;
   target: AvailableTarget;
   client: ClientInfo;
@@ -48,8 +49,8 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
   const modalRef = useRef<ModalHandle>(null);
   const editorRef = useRef<CodeEditorHandle>(null);
 
-  let storedTarget: AvailableTarget | undefined;
-  let storedClient: ClientInfo | undefined;
+  let storedTarget: AvailableTarget = DEFAULT_TARGET;
+  let storedClient: ClientInfo = DEFAULT_CLIENT;
   try {
     storedTarget = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as AvailableTarget;
   } catch (error) {}
@@ -76,7 +77,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
     const cmd = snippet.convert(target.key, client.key) || [''];
     setState({
       request,
-      cmd,
+      cmd: Array.isArray(cmd) ? cmd.join('\n') : cmd,
       client,
       target,
     });
@@ -93,7 +94,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
       if (!options.request) {
         return;
       }
-      generateCode(options.request, state.target || DEFAULT_TARGET, state.client);
+      generateCode(options.request, state.target, state.client);
       modalRef.current?.show();
     },
   }), [generateCode, state]);

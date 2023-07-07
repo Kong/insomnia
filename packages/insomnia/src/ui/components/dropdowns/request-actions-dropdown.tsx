@@ -1,5 +1,5 @@
 import { clipboard } from 'electron';
-import { HTTPSnippet } from 'httpsnippet';
+import { HarRequest, HTTPSnippet } from 'httpsnippet';
 import React, { forwardRef, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -93,11 +93,13 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
     try {
       const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
       const har = await exportHarRequest(request._id, environmentId);
-      const snippet = new HTTPSnippet(har);
+      if (!har) {
+        return;
+      }
+      const snippet = new HTTPSnippet(har as HarRequest);
       const cmd = snippet.convert('shell', 'curl');
-
       if (cmd) {
-        clipboard.writeText(cmd);
+        clipboard.writeText(Array.isArray(cmd) ? cmd.join('\n') : cmd);
       }
     } catch (err) {
       showModal(AlertModal, {
