@@ -13,8 +13,6 @@ interface AuthBox {
 const sessionKeyPair = keyPair();
 encodeBase64(sessionKeyPair.publicKey).then(res => {
   window.localStorage.setItem('insomnia.publicKey', res);
-  console.log('sessionKeyPairfromls', window.localStorage.getItem('insomnia.publicKey'));
-
 });
 encodeBase64(sessionKeyPair.secretKey).then(res => {
   window.localStorage.setItem('insomnia.secretKey', res);
