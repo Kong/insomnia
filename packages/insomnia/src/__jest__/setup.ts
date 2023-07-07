@@ -1,4 +1,4 @@
-const localStorageMock: Storage = (function() {
+const localStorageMock: Storage = (() => {
   let store: Record<string, string> = {};
   return {
     get length() {
@@ -27,21 +27,21 @@ const localStorageMock: Storage = (function() {
   };
 })();
 
-global.__DEV__ = false;
-global.localStorage = localStorageMock;
+globalThis.__DEV__ = false;
+globalThis.localStorage = localStorageMock;
 
-global.requestAnimationFrame = (callback: FrameRequestCallback) => {
+globalThis.requestAnimationFrame = (callback: FrameRequestCallback) => {
   process.nextTick(callback);
   // note: the spec indicates that the return of this function (the request id) is a non-zero number.  hopefully returning 0 here will indicate that this is a mock if the return is ever to be used accidentally.
   return 0;
 };
 
-global.require = require;
+globalThis.require = require;
 
 // Don't console log real logs that start with a tag (eg. [db] ...). It's annoying
 const log = console.log;
 
-global.console.log = (...args) => {
+globalThis.console.log = (...args) => {
   if (!(typeof args[0] === 'string' && args[0][0] === '[')) {
     log(...args);
   }
