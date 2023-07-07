@@ -9,9 +9,9 @@ import fs from 'fs';
 
 import { axiosRequest } from '../../network/axios-request';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
+import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { exportAllWorkspaces } from '../export';
 import installPlugin from '../install-plugin';
-import { authorizeUserInWindow } from '../misc';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
 import { gRPCBridgeAPI } from './grpc';
