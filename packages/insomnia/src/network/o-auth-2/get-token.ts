@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import querystring from 'querystring';
+import { v4 as uuidv4 } from 'uuid';
 
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
@@ -15,7 +16,21 @@ import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   PKCE_CHALLENGE_S256,
 } from './constants';
-import { getOAuthSession } from './misc';
+
+const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
+
+export function initNewOAuthSession() {
+  // the value of this variable needs to start with 'persist:'
+  // otherwise sessions won't be persisted over application-restarts
+  const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
+  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
+  return authWindowSessionId;
+}
+
+export function getOAuthSession(): string {
+  const token = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
+  return token || initNewOAuthSession();
+}
 
 // NOTE
 // 1. return valid access token from insomnia db

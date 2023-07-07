@@ -8,8 +8,8 @@ import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
 import { axiosRequest } from '../../network/axios-request';
-import { authorizeUserInWindow } from '../../network/o-auth-2/misc';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
+import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { exportAllWorkspaces } from '../export';
 import installPlugin from '../install-plugin';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';

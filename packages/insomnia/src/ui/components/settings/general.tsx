@@ -15,7 +15,7 @@ import { docsKeyMaps } from '../../../common/documentation';
 import { HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
+import { initNewOAuthSession } from '../../../network/o-auth-2/get-token';
 import { selectSettings, selectStats } from '../../redux/selectors';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';

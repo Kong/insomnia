@@ -15,7 +15,7 @@ import {
   PKCE_CHALLENGE_S256,
 } from '../../../../network/o-auth-2/constants';
 import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
-import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
+import { initNewOAuthSession } from '../../../../network/o-auth-2/get-token';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
 import { useActiveRequest } from '../../../hooks/use-active-request';
 import { Link } from '../../base/link';

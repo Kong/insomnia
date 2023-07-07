@@ -1,24 +1,10 @@
-import electron from 'electron';
-import { v4 as uuidv4 } from 'uuid';
+import { BrowserWindow, dialog } from 'electron';
 
-import * as models from '../../models/index';
+import * as models from '../models';
 
 export enum ChromiumVerificationResult {
   BLIND_TRUST = 0,
   USE_CHROMIUM_RESULT = -3
-}
-
-export const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
-export function getOAuthSession(): string {
-  const token = window.localStorage.getItem(LOCALSTORAGE_KEY_SESSION_ID);
-  return token || initNewOAuthSession();
-}
-export function initNewOAuthSession() {
-  // the value of this variable needs to start with 'persist:'
-  // otherwise sessions won't be persisted over application-restarts
-  const authWindowSessionId = `persist:oauth2_${uuidv4()}`;
-  window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
-  return authWindowSessionId;
 }
 
 export function authorizeUserInWindow({
@@ -41,7 +27,7 @@ export function authorizeUserInWindow({
     } = await models.settings.getOrCreate();
 
     // Create a child window
-    const child = new electron.BrowserWindow({
+    const child = new BrowserWindow({
       webPreferences: {
         nodeIntegration: false,
         partition: sessionId,
@@ -51,24 +37,18 @@ export function authorizeUserInWindow({
 
     function _parseUrl(currentUrl: string, source: string) {
       if (currentUrl.match(urlSuccessRegex)) {
-        console.log(
-          `[oauth2] ${source}: Matched success redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`,
-        );
+        console.log(`[oauth2] ${source}: Matched success redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`,);
         finalUrl = currentUrl;
         child.close();
       } else if (currentUrl.match(urlFailureRegex)) {
-        console.log(
-          `[oauth2] ${source}: Matched error redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`,
-        );
+        console.log(`[oauth2] ${source}: Matched error redirect to "${currentUrl}" with ${urlFailureRegex.toString()}`,);
         finalUrl = currentUrl;
         child.close();
       } else if (currentUrl === url) {
         // It's the first one, so it's not a redirect
         console.log(`[oauth2] ${source}: Loaded "${currentUrl}"`);
       } else {
-        console.log(
-          `[oauth2] ${source}: Ignoring URL "${currentUrl}". Didn't match ${urlSuccessRegex.toString()}`,
-        );
+        console.log(`[oauth2] ${source}: Ignoring URL "${currentUrl}". Didn't match ${urlSuccessRegex.toString()}`,);
       }
     }
 
@@ -99,7 +79,7 @@ export function authorizeUserInWindow({
       const cancelId = buttonLabels.length;
 
       // Prompt the user to select a certificate to use.
-      electron.dialog.showMessageBox(child, {
+      dialog.showMessageBox(child, {
         type: 'none',
         buttons: [...buttonLabels, 'Cancel'],
         cancelId: cancelId,
