@@ -150,6 +150,9 @@ describe('updateMimeType()', () => {
       {
         name: 'content-tYPE',
         value: 'text/html',
+      }, {
+        'name': 'User-Agent',
+        'value': 'Insomnia/2023.4.0',
       },
     ]);
   });
@@ -168,7 +171,10 @@ describe('updateMimeType()', () => {
     expect(request).not.toBeNull();
     const newRequest = await updateMimeType(request, null);
     expect(newRequest.body).toEqual({});
-    expect(newRequest.headers).toEqual([]);
+    expect(newRequest.headers).toEqual([{
+      'name': 'User-Agent',
+      'value': 'Insomnia/2023.4.0',
+    }]);
   });
 
   it('uses saved body when provided', async () => {
