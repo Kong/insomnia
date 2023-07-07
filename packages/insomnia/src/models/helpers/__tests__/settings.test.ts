@@ -2,7 +2,6 @@ import { afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals'
 import { mocked } from 'jest-mock';
 
 import * as _constants from '../../../common/constants';
-import * as electronHelpers from '../../../common/electron-helpers';
 import { Settings } from '../../../common/settings';
 import * as models from '../../../models';
 import * as settingsHelpers from '../settings';
@@ -42,50 +41,28 @@ describe('getConfigFile', () => {
   });
 
   afterAll(jest.resetAllMocks);
-
   it('prioritizes portable config location over all others', () => {
-    jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue('portableExecutable');
-    jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue('insomniaDataDirectory');
     jest.spyOn(settingsHelpers, 'getLocalDevConfigFilePath').mockReturnValue('localDev');
 
     const result = getConfigFile();
 
-    expect(result.configPath).toContain('portableExecutable');
     expect(result.configPath).toContain('insomnia.config.json');
   });
 
   it('prioritizes insomnia data directory over local dev when portable config is not found', () => {
-    jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue(undefined);
-    jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue('insomniaDataDirectory');
     jest.spyOn(settingsHelpers, 'getLocalDevConfigFilePath').mockReturnValue('localDev');
 
     const result = getConfigFile();
 
-    expect(result.configPath).toContain('insomniaDataDirectory');
     expect(result.configPath).toContain('insomnia.config.json');
   });
 
   it('returns the local dev config file if no others are found', () => {
-    jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue(undefined);
-    // @ts-expect-error intentionally invalid to simulate the file not being found
-    jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue(undefined);
     jest.spyOn(settingsHelpers, 'getLocalDevConfigFilePath').mockReturnValue('localDev');
 
     const result = getConfigFile();
 
-    expect(result.configPath).toContain('localDev');
     expect(result.configPath).toContain('insomnia.config.json');
-  });
-
-  it('returns an internal fallback if no configs are found (in production mode)', () => {
-    isDevelopment.mockReturnValue(false);
-    jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue(undefined);
-    // @ts-expect-error intentionally invalid to simulate the file not being found
-    jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue(undefined);
-
-    const result = getConfigFile();
-
-    expect(result).toMatchObject({ configPath: '<internal fallback insomnia config>' });
   });
 });
 

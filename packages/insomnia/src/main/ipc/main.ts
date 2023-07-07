@@ -4,7 +4,7 @@ import { Spectral } from '@stoplight/spectral-core';
 // @ts-expect-error - This is a bundled file not sure why it's not found
 import { bundleAndLoadRuleset } from '@stoplight/spectral-ruleset-bundler/with-loader';
 import { oas } from '@stoplight/spectral-rulesets';
-import { app, BrowserWindow, ipcMain, IpcRendererEvent } from 'electron';
+import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
 import { axiosRequest } from '../../network/axios-request';
@@ -18,6 +18,7 @@ import { gRPCBridgeAPI } from './grpc';
 
 export interface MainBridgeAPI {
   loginStateChange: () => void;
+  openInBrowser: (url: string) => void;
   restart: () => void;
   halfSecondAfterAppStart: () => void;
   manualUpdateCheck: () => void;
@@ -78,9 +79,18 @@ export function registerMainHandlers() {
   ipcMain.handle('installPlugin', (_, lookupName: string) => {
     return installPlugin(lookupName);
   });
+
   ipcMain.on('restart', () => {
     app.relaunch();
     app.exit();
+  });
+
+  ipcMain.on('openInBrowser', (_, href: string) => {
+    const { protocol } = new URL(href);
+    if (protocol === 'http:' || protocol === 'https:') {
+      // eslint-disable-next-line no-restricted-properties
+      shell.openExternal(href);
+    }
   });
 
   ipcMain.handle('spectralRun', async (_, { contents, rulesetPath }: {

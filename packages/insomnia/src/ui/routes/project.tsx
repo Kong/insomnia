@@ -30,7 +30,6 @@ import {
   ACTIVITY_SPEC,
   DashboardSortOrder,
 } from '../../common/constants';
-import { clickLink } from '../../common/electron-helpers';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
@@ -502,7 +501,7 @@ const OrganizationProjectsSidebar: FC<{
 
       <List
         onAction={key => {
-          clickLink(key.toString());
+          window.main.openInBrowser(key.toString());
         }}
       >
         <Item

@@ -14,7 +14,6 @@ import * as models from '../models/index';
 import { isSettings } from '../models/settings';
 import type { Workspace } from '../models/workspace';
 import { DB_PERSIST_INTERVAL } from './constants';
-import { getDataDirectory } from './electron-helpers';
 import { generateId } from './misc';
 
 export interface Query {
@@ -669,7 +668,7 @@ const allTypes = () => Object.keys(db);
 
 function getDBFilePath(modelType: string) {
   // NOTE: Do not EVER change this. EVER!
-  return fsPath.join(getDataDirectory(), `insomnia.${modelType}.db`);
+  return fsPath.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), `insomnia.${modelType}.db`);
 }
 
 // ~~~~~~~~~~~~~~~~ //

@@ -1,5 +1,5 @@
 import type { OpenDialogOptions, SaveDialogOptions } from 'electron';
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, ipcMain, shell } from 'electron';
 
 export function registerElectronHandlers() {
   ipcMain.on('setMenuBarVisibility', (_, visible: boolean) => {
@@ -24,6 +24,18 @@ export function registerElectronHandlers() {
 
   ipcMain.on('showItemInFolder', (_, name: string) => {
     shell.showItemInFolder(name);
+  });
+
+  ipcMain.on('readText', event => {
+    event.returnValue = clipboard.readText();
+  });
+
+  ipcMain.on('writeText', (_, text: string) => {
+    clipboard.writeText(text);
+  });
+
+  ipcMain.on('clear', () => {
+    clipboard.clear();
   });
 
   ipcMain.on('getPath', (event, name: Parameters<typeof Electron.app['getPath']>[0]) => {

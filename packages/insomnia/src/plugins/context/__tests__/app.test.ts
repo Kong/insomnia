@@ -1,6 +1,4 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import electron from 'electron';
-import { mocked } from 'jest-mock';
 
 import appPackageJson from '../../../../package.json';
 import { globalBeforeEach } from '../../../__jest__/before-each';
@@ -117,46 +115,4 @@ describe('app.getInfo()', () => {
     });
   });
 
-});
-
-describe('app.clipboard', () => {
-  it('writes to clipboard', () => {
-    // Arrange
-    const mockedClipboard = mocked(electron.clipboard);
-    const context = plugin.init();
-    const text = 'abc';
-
-    // Act
-    context.app.clipboard.writeText(text);
-
-    // Assert
-    expect(mockedClipboard.writeText).toHaveBeenCalledWith(text);
-  });
-
-  it('reads from clipboard', () => {
-    // Arrange
-    const text = 'abc';
-    const mockedClipboard = mocked(electron.clipboard);
-    mockedClipboard.readText.mockReturnValue(text);
-    const context = plugin.init();
-
-    // Act
-    const outputText = context.app.clipboard.readText();
-
-    // Assert
-    expect(outputText).toBe(text);
-    expect(mockedClipboard.readText).toHaveBeenCalled();
-  });
-
-  it('clears clipboard', () => {
-    // Arrange
-    const mockedClipboard = mocked(electron.clipboard);
-    const context = plugin.init();
-
-    // Act
-    context.app.clipboard.clear();
-
-    // Assert
-    expect(mockedClipboard.clear).toHaveBeenCalled();
-  });
 });

@@ -2,7 +2,6 @@ import classnames from 'classnames';
 import highlight from 'highlight.js/lib/common';
 import React, { FC, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { clickLink } from '../../common/electron-helpers';
 import { markdownToHTML } from '../../common/markdown-to-html';
 import { HandleRender } from '../../common/render';
 import { useGatedNunjucks } from '../context/nunjucks/use-gated-nunjucks';
@@ -55,7 +54,7 @@ export const MarkdownPreview: FC<Props> = ({ markdown, className, heading }) => 
   }, [compiled]);
   const _handleClickLink = (event: any) => {
     event.preventDefault();
-    clickLink(event.target.getAttribute('href'));
+    window.main.openInBrowser(event.target.getAttribute('href'));
   };
 
   return (

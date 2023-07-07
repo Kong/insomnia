@@ -1,15 +1,14 @@
+import electron from 'electron';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
-
-import { getDataDirectory } from '../common/electron-helpers';
 
 export async function createPlugin(
   moduleName: string,
   version: string,
   mainJs: string,
 ) {
-  const pluginDir = path.join(getDataDirectory(), 'plugins', moduleName);
+  const pluginDir = path.join(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'), 'plugins', moduleName);
 
   if (fs.existsSync(pluginDir)) {
     throw new Error(`Plugin already exists at "${pluginDir}"`);

@@ -1,9 +1,9 @@
+import electron from 'electron';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import type { ValueOf } from 'type-fest';
 
 import { isDevelopment } from '../../common/constants';
-import { getDataDirectory, getPortableExecutableDir } from '../../common/electron-helpers';
 import { Settings } from '../../common/settings';
 import { INSOMNIA_CONFIG_FILENAME, InsomniaConfig } from '../../utils/config/entities';
 import { ErrorResult, isErrorResult, validate } from '../../utils/config/validate';
@@ -68,8 +68,8 @@ const addConfigFileToPath = (path: string | undefined) => (
 );
 
 export const getConfigFile = () => {
-  const portableExecutable = getPortableExecutableDir();
-  const insomniaDataDirectory = getDataDirectory();
+  const portableExecutable = process.env['PORTABLE_EXECUTABLE_DIR'];
+  const insomniaDataDirectory = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
   const localDev = getLocalDevConfigFilePath();
   const configPaths = [
     portableExecutable,

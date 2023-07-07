@@ -11,7 +11,6 @@ import {
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODE_RAW,
 } from '../../../common/constants';
-import { clickLink } from '../../../common/electron-helpers';
 import { xmlDecode } from '../../../common/misc';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -347,7 +346,7 @@ export const ResponseViewer = ({
       filterHistory={filterHistory}
       mode={getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? 'application/xml' : _getContentType()}
       noMatchBrackets
-      onClickLink={url => !disablePreviewLinks && clickLink(getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? xmlDecode(url) : url)}
+      onClickLink={url => !disablePreviewLinks && window.main.openInBrowser(getBodyAsString()?.match(/^\s*<\?xml [^?]*\?>/) ? xmlDecode(url) : url)}
       placeholder="..."
       readOnly
       uniquenessKey={responseId}

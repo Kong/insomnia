@@ -1,4 +1,3 @@
-import { clipboard } from 'electron';
 import React, { FC, useCallback, useState } from 'react';
 import { useInterval } from 'react-use';
 
@@ -24,7 +23,7 @@ export const CopyButton: FC<Props> = ({
     const toCopy = typeof content === 'string' ? content : await content();
 
     if (toCopy) {
-      clipboard.writeText(toCopy);
+      window.clipboard.writeText(toCopy);
     }
     setshowConfirmation(true);
   }, [content]);

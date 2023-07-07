@@ -15,7 +15,6 @@ import {
   MNEMONIC_SYM,
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
-import { clickLink, getDataDirectory } from '../common/electron-helpers';
 import * as log from '../common/log';
 import LocalStorage from './local-storage';
 
@@ -112,7 +111,11 @@ export function createWindow() {
 
     console.log('[app] Navigate to ' + url);
     event.preventDefault();
-    clickLink(url);
+    const { protocol } = new URL(url);
+    if (protocol === 'http:' || protocol === 'https:') {
+      // eslint-disable-next-line no-restricted-properties
+      shell.openExternal(url);
+    }
   });
 
   newWindow?.webContents.setWindowOpenHandler(() => {
@@ -153,7 +156,12 @@ export function createWindow() {
             return;
           }
 
-          clickLink(changelogUrl());
+          const href = changelogUrl();
+          const { protocol } = new URL(href);
+          if (protocol === 'http:' || protocol === 'https:') {
+            // eslint-disable-next-line no-restricted-properties
+            shell.openExternal(href);
+          }
         },
       },
       {
@@ -335,7 +343,11 @@ export function createWindow() {
         label: `${MNEMONIC_SYM}Help and Support`,
         ...(isMac() ? {} : { accelerator: 'F1' }),
         click: () => {
-          clickLink(docsBase);
+          const { protocol } = new URL(docsBase);
+          if (protocol === 'http:' || protocol === 'https:') {
+            // eslint-disable-next-line no-restricted-properties
+            shell.openExternal(docsBase);
+          }
         },
       },
       {
@@ -355,7 +367,7 @@ export function createWindow() {
       {
         label: `Show App ${MNEMONIC_SYM}Data Folder`,
         click: () => {
-          const directory = getDataDirectory();
+          const directory = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
           shell.showItemInFolder(directory);
         },
       },
@@ -379,7 +391,8 @@ export function createWindow() {
       {
         label: 'Show Software License',
         click: () => {
-          clickLink('https://insomnia.rest/license');
+          // eslint-disable-next-line no-restricted-properties
+          shell.openExternal('https://insomnia.rest/license');
         },
       },
     ],
@@ -633,7 +646,7 @@ export const setZoom = (transformer: (current: number) => number) => () => {
 };
 
 function initLocalStorage() {
-  const localStoragePath = path.join(getDataDirectory(), 'localStorage');
+  const localStoragePath = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'localStorage');
   localStorage = new LocalStorage(localStoragePath);
 }
 

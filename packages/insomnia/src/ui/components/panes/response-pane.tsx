@@ -1,4 +1,3 @@
-import { clipboard } from 'electron';
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import React, { FC, useCallback } from 'react';
@@ -70,7 +69,7 @@ export const ResponsePane: FC<Props> = ({
   const handleCopyResponseToClipboard = useCallback(async () => {
     const bodyBuffer = handleGetResponseBody();
     if (bodyBuffer) {
-      clipboard.writeText(bodyBuffer.toString('utf8'));
+      window.clipboard.writeText(bodyBuffer.toString('utf8'));
     }
   }, [handleGetResponseBody]);
   const handleDownloadResponseBody = useCallback(async (prettify: boolean) => {

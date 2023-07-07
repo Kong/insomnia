@@ -1,10 +1,10 @@
+import electron from 'electron';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
 import appConfig from '../../config/config.json';
 import { ParsedApiSpec } from '../common/api-specs';
-import { getDataDirectory } from '../common/electron-helpers';
 import { resolveHomePath } from '../common/misc';
 import type { PluginConfig, PluginConfigMap } from '../common/settings';
 import * as models from '../models';
@@ -209,7 +209,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
       .filter(p => p)
       .map(resolveHomePath);
     // Make sure the default directories exist
-    const pluginPath = path.join(getDataDirectory(), 'plugins');
+    const pluginPath = path.join(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'), 'plugins');
     mkdirp.sync(pluginPath);
     // Also look in node_modules folder in each directory
     const basePaths = [pluginPath, ...extraPaths];

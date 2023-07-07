@@ -1,7 +1,7 @@
 import { LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
-import { OpenDialogOptions } from 'electron';
+import type { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
 import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonNullTypeNode, OperationDefinitionNode, parse, typeFromAST } from 'graphql';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';

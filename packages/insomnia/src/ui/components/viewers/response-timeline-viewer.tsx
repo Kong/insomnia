@@ -1,6 +1,5 @@
 import React, { FC, useEffect, useRef } from 'react';
 
-import { clickLink } from '../../../common/electron-helpers';
 import type { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
@@ -46,7 +45,7 @@ export const ResponseTimelineViewer: FC<Props> = ({ timeline }) => {
       ref={editorRef}
       hideLineNumbers
       readOnly
-      onClickLink={clickLink}
+      onClickLink={window.main.openInBrowser}
       defaultValue={rows}
       className="pad-left"
       mode="curl"
