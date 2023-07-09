@@ -54,6 +54,6 @@ export async function axiosRequest(config: AxiosRequestConfig) {
     statusText: response.statusText,
     headers: response.headers,
     data: response.data,
-    config,
+    config: finalConfig,
   };
 }
