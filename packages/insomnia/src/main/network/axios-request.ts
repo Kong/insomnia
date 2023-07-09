@@ -42,9 +42,19 @@ export async function axiosRequest(config: AxiosRequestConfig) {
   if (isDevelopment()) {
     console.log('[axios] Response', {
       config,
-      response,
+      response: {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+        data: response.data,
+      },
     });
   }
 
-  return response;
+  return {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+    data: response.data
+  };
 }
