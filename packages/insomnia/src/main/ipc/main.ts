@@ -38,6 +38,9 @@ export interface MainBridgeAPI {
   axiosRequest: typeof axiosRequest;
 }
 export function registerMainHandlers() {
+  ipcMain.handle('axiosRequest', async (_, options: Parameters<typeof axiosRequest>[0]) => {
+    return axiosRequest(options);
+  });
   ipcMain.on('loginStateChange', async () => {
     console.log('get windows');
     BrowserWindow.getAllWindows().forEach(w => {
