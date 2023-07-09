@@ -41,13 +41,11 @@ export async function axiosRequest(config: AxiosRequestConfig) {
 
   if (isDevelopment()) {
     console.log('[axios] Response', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+      data: response.data,
       config,
-      response: {
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers,
-        data: response.data,
-      },
     });
   }
 
@@ -56,5 +54,6 @@ export async function axiosRequest(config: AxiosRequestConfig) {
     statusText: response.statusText,
     headers: response.headers,
     data: response.data,
+    config,
   };
 }
