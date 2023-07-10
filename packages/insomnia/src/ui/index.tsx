@@ -167,6 +167,31 @@ const router = createMemoryRouter(
                               ],
                             },
                             {
+                              path: 'environment',
+                              children: [
+                                {
+                                  path: 'update',
+                                  action: async (...args) => (await import('./routes/actions')).updateEnvironment(...args),
+                                },
+                                {
+                                  path: 'delete',
+                                  action: async (...args) => (await import('./routes/actions')).deleteEnvironmentAction(...args),
+                                },
+                                {
+                                  path: 'create',
+                                  action: async (...args) => (await import('./routes/actions')).createEnvironmentAction(...args),
+                                },
+                                {
+                                  path: 'duplicate',
+                                  action: async (...args) => (await import('./routes/actions')).duplicateEnvironmentAction(...args),
+                                },
+                                {
+                                  path: 'set-active',
+                                  action: async (...args) => (await import('./routes/actions')).setActiveEnvironmentAction(...args),
+                                },
+                              ],
+                            },
+                            {
                               path: 'test/*',
                               loader: async (...args) =>  (await import('./routes/unit-test')).loader(...args),
                               element: (
