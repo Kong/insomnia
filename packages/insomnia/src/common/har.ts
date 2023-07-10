@@ -409,7 +409,7 @@ export async function exportHarWithRenderedRequest(
 
 function getRequestCookies(renderedRequest: RenderedRequest) {
   const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
-  const domainCookies = jar.getCookiesSync(renderedRequest.url);
+  const domainCookies = renderedRequest.url ? jar.getCookiesSync(renderedRequest.url) : [];
   const harCookies: HarCookie[] = domainCookies.map(mapCookie);
   return harCookies;
 }
