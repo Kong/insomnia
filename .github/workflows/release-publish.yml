@@ -165,7 +165,6 @@ jobs:
           release: ${{ contains(github.event.inputs.version, 'beta') && 'beta' || 'stable' }}
 
       - name: Upload .deb to pulp and/or cloudsmith (stable only)
-        if: ${{ env.IS_PRERELEASE == 'false' }}
         uses: docker://kong/release-script:latest
         env:
           PULP_USERNAME: ${{ secrets.PULP_USERNAME }}
@@ -185,6 +184,7 @@ jobs:
             --dist-name ubuntu
             --dist-version focal
             --package-type insomnia
+            ${{ env.IS_PRERELEASE == 'true' && '--internal' || '' }}
             --publish
 
       - name: Push Inso CLI docker image tags to Docker Hub
