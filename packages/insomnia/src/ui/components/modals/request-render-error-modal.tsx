@@ -8,7 +8,7 @@ import { isRequest } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { RenderError } from '../../../templating';
 import { Link } from '../base/link';
-import { type ModalHandle, Modal, ModalProps } from '../base/modal';
+import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { RequestSettingsModal } from '../modals/request-settings-modal';

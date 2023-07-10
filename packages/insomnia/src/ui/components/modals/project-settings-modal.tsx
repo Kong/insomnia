@@ -4,7 +4,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import { strings } from '../../../common/strings';
 import { isRemoteProject, Project } from '../../../models/project';
-import { type ModalHandle, Modal, ModalProps } from '../base/modal';
+import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';

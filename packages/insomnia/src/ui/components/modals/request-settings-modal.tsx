@@ -10,7 +10,7 @@ import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-
 import { isWorkspace, Workspace } from '../../../models/workspace';
 import { invariant } from '../../../utils/invariant';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
-import { type ModalHandle, Modal, ModalProps } from '../base/modal';
+import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditorHandle } from '../codemirror/code-editor';
