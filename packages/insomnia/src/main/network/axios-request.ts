@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import * as https from 'https';
 import { parse as urlParse } from 'url';
 
@@ -6,7 +6,7 @@ import { isDevelopment } from '../../common/constants';
 import * as models from '../../models';
 import { isUrlMatchedInNoProxyRule } from '../../network/is-url-matched-in-no-proxy-rule';
 import { setDefaultProtocol } from '../../utils/url/protocol';
-export async function axiosRequest(config: AxiosRequestConfig) {
+export const axiosRequest = async (config: AxiosRequestConfig): Promise<AxiosResponse> => {
   const settings = await models.settings.getOrCreate();
   const isHttps = config.url?.indexOf('https:') === 0;
   let proxyUrl: string | null = null;
@@ -46,9 +46,10 @@ export async function axiosRequest(config: AxiosRequestConfig) {
       headers: response.headers,
       data: response.data,
       config: {
-        method: finalConfig.method,
-        url: finalConfig.url,
-        proxy: finalConfig.proxy,
+        method: response.config.method,
+        url: response.config.url,
+        proxy: response.config.proxy,
+        headers: response.config.headers,
       },
     });
   }
@@ -59,9 +60,10 @@ export async function axiosRequest(config: AxiosRequestConfig) {
     headers: response.headers,
     data: response.data,
     config: {
-      method: finalConfig.method,
-      url: finalConfig.url,
-      proxy: finalConfig.proxy,
+      method: response.config.method,
+      url: response.config.url,
+      proxy: response.config.proxy,
+      headers: response.config.headers,
     },
   };
-}
+};
