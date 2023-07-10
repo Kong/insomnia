@@ -1,7 +1,7 @@
 import * as srp from 'srp-js';
 
 import * as crypt from './crypt';
-import * as fetch from './fetch';
+import { insomniaFetch } from './fetch';
 
 type LoginCallback = (isLoggedIn: boolean) => void;
 
@@ -101,7 +101,7 @@ export async function changePasswordWithToken(rawNewPassphrase: string, confirma
   const symmetricKey = JSON.stringify(_getSymmetricKey());
   const newEncSymmetricKeyJSON = crypt.encryptAES(newSecret, symmetricKey);
   const newEncSymmetricKey = JSON.stringify(newEncSymmetricKeyJSON);
-  return fetch._fetch('POST',
+  return insomniaFetch('POST',
     '/auth/change-password',
     {
       code: confirmationCode,
@@ -115,7 +115,7 @@ export async function changePasswordWithToken(rawNewPassphrase: string, confirma
 }
 
 export function sendPasswordChangeCode() {
-  return fetch._fetch('POST', '/auth/send-password-code', null, getCurrentSessionId());
+  return insomniaFetch('POST', '/auth/send-password-code', null, getCurrentSessionId());
 }
 
 export function getPublicKey() {
@@ -175,7 +175,7 @@ export function isLoggedIn() {
 /** Log out and delete session data */
 export async function logout() {
   try {
-    await fetch._fetch('POST', '/auth/logout', null, getCurrentSessionId());
+    await insomniaFetch('POST', '/auth/logout', null, getCurrentSessionId());
   } catch (error) {
     // Not a huge deal if this fails, but we don't want it to prevent the
     // user from signing out.
@@ -214,7 +214,7 @@ export function setSessionData(
   return sessionData;
 }
 export async function listTeams() {
-  return fetch._fetch('GET', '/api/teams', null, getCurrentSessionId());
+  return insomniaFetch('GET', '/api/teams', null, getCurrentSessionId());
 }
 
 // ~~~~~~~~~~~~~~~~ //
@@ -225,7 +225,7 @@ function _getSymmetricKey() {
 }
 
 async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
-  const response = await fetch._fetch<WhoamiResponse>('GET', '/auth/whoami', null, sessionId || getCurrentSessionId());
+  const response = await insomniaFetch<WhoamiResponse>('GET', '/auth/whoami', null, sessionId || getCurrentSessionId());
   if (typeof response === 'string') {
     throw new Error('Unexpected plaintext response');
   }
@@ -233,7 +233,7 @@ async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse>
 }
 
 function _getAuthSalts(email: string) {
-  return fetch._fetch('POST',
+  return insomniaFetch('POST',
     '/auth/login-s',
     {
       email,

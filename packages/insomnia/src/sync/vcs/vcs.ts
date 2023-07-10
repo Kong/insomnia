@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import path from 'path';
 
 import * as crypt from '../../account/crypt';
-import * as fetch from '../../account/fetch';
+import { insomniaFetch } from '../../account/fetch';
 import * as session from '../../account/session';
 import { chunkArray, generateId } from '../../common/misc';
 import { strings } from '../../common/strings';
@@ -475,7 +475,7 @@ export class VCS {
   async pull(candidates: StatusCandidate[], teamId: string | undefined | null) {
     await this._getOrCreateRemoteBackendProject(teamId || '');
     const localBranch = await this._getCurrentBranch();
-    const tmpBranchForRemote = await this._fetch(localBranch.name + '.hidden', localBranch.name);
+    const tmpBranchForRemote = await this.customFetch(localBranch.name + '.hidden', localBranch.name);
     // Merge branch and ensure that we use the remote's history when merging
     const message = `Synced latest changes from ${localBranch.name}`;
     const delta = await this._merge(
@@ -552,7 +552,7 @@ export class VCS {
     await this._queryPushSnapshots(snapshots);
   }
 
-  async _fetch(localBranchName: string, remoteBranchName: string) {
+  async customFetch(localBranchName: string, remoteBranchName: string) {
     const remoteBranch: Branch | null = await this._queryBranch(remoteBranchName);
 
     if (!remoteBranch) {
@@ -710,7 +710,7 @@ export class VCS {
   ): Promise<Record<string, any>> {
     const { sessionId } = this._assertSession();
 
-    const { data, errors } = await fetch._fetch(
+    const { data, errors } = await insomniaFetch(
       'POST',
       '/graphql?' + name,
       {

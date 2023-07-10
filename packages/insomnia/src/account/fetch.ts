@@ -16,7 +16,7 @@ export function onCommand(callback: Function) {
   _commandListeners.push(callback);
 }
 
-export async function _fetch<T = any>(
+export async function insomniaFetch<T = any>(
   method: 'POST' | 'PUT' | 'GET',
   path: string,
   obj: unknown,
@@ -67,7 +67,7 @@ export async function _fetch<T = any>(
     if (response.status === 502 && retries < 5) {
       retries++;
       await delay(retries * 200);
-      return _fetch(method, path, obj, sessionId, compressBody, retries);
+      return insomniaFetch(method, path, obj, sessionId, compressBody, retries);
     }
   } catch (err) {
     throw new Error(`Failed to fetch '${url}'`);
