@@ -24,10 +24,6 @@ export async function insomniaFetch<T = any>(
   compressBody = false,
   retries = 0
 ): Promise<T | string> {
-  if (sessionId === undefined) {
-    throw new Error(`No session ID provided to ${method}:${path}`);
-  }
-
   const config: {
     method: string;
     headers: Record<string, string>;
@@ -36,6 +32,12 @@ export async function insomniaFetch<T = any>(
     method: method,
     headers: {},
   };
+  if (sessionId === undefined) {
+    throw new Error(`No session ID provided to ${method}:${path}`);
+  }
+  if (sessionId) {
+    config.headers['X-Session-Id'] = sessionId;
+  }
 
   // Set some client information
   if (_userAgent) {
@@ -49,10 +51,6 @@ export async function insomniaFetch<T = any>(
   } else if (obj) {
     config.body = JSON.stringify(obj);
     config.headers['Content-Type'] = 'application/json';
-  }
-
-  if (sessionId) {
-    config.headers['X-Session-Id'] = sessionId;
   }
 
   let response: Response | undefined;
