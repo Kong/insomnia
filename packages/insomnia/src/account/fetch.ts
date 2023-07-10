@@ -1,5 +1,4 @@
 import { parse as urlParse } from 'url';
-import zlib from 'zlib';
 
 import { delay } from '../common/misc';
 import { invariant } from '../utils/invariant';
@@ -21,7 +20,6 @@ export async function insomniaFetch<T = any>(
   path: string,
   obj: unknown,
   sessionId: string | null,
-  compressBody = false,
   retries = 0
 ): Promise<T | string> {
   const config: {
@@ -30,34 +28,20 @@ export async function insomniaFetch<T = any>(
     body?: string | Buffer;
   } = {
     method: method,
-    headers: {},
+    headers: {
+      ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
+      ...(_userAgent ? { 'X-Insomnia-Client': _userAgent } : {}),
+      ...(obj ? { 'Content-Type': 'application/json' } : {}),
+      ...(obj ? { body: JSON.stringify(obj) } : {}),
+    },
   };
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
-  if (sessionId) {
-    config.headers['X-Session-Id'] = sessionId;
-  }
-
-  // Set some client information
-  if (_userAgent) {
-    config.headers['X-Insomnia-Client'] = _userAgent;
-  }
-
-  if (obj && compressBody) {
-    config.body = zlib.gzipSync(JSON.stringify(obj));
-    config.headers['Content-Type'] = 'application/json';
-    config.headers['Content-Encoding'] = 'gzip';
-  } else if (obj) {
-    config.body = JSON.stringify(obj);
-    config.headers['Content-Type'] = 'application/json';
-  }
-
-  let response: Response | undefined;
 
   invariant(_baseUrl, 'API base URL not configured!');
   const url = `${_baseUrl}${path}`;
-
+  let response: Response | undefined;
   try {
     response = await window.fetch(url, config);
 
@@ -65,7 +49,7 @@ export async function insomniaFetch<T = any>(
     if (response.status === 502 && retries < 5) {
       retries++;
       await delay(retries * 200);
-      return insomniaFetch(method, path, obj, sessionId, compressBody, retries);
+      return insomniaFetch(method, path, obj, sessionId, retries);
     }
   } catch (err) {
     throw new Error(`Failed to fetch '${url}'`);
@@ -73,7 +57,11 @@ export async function insomniaFetch<T = any>(
 
   const uri = response.headers.get('x-insomnia-command');
   if (uri) {
-    const parsed = urlParse(uri, true);
+    const parsed = urlParse(uri, t  if (response.headers.get('content-type') === 'application/json' || path.match(/\.json$/)) {
+      return response.json();
+    } else {
+      return response.text();
+    }rue);
     _commandListeners.map(fn => fn(`${parsed.hostname}${parsed.pathname}`, JSON.parse(JSON.stringify(parsed.query))));
   }
   if (!response.ok) {
@@ -84,9 +72,6 @@ export async function insomniaFetch<T = any>(
     throw err;
   }
 
-  if (response.headers.get('content-type') === 'application/json' || path.match(/\.json$/)) {
-    return response.json();
-  } else {
-    return response.text();
-  }
+  const isJson = response.headers.get('content-type') === 'application/json' || path.match(/\.json$/);
+  return isJson ? response.json() : response.text();
 }
