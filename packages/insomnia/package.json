@@ -55,7 +55,7 @@
     "@segment/analytics-node": "1.0.0",
     "apiconnect-wsdl": "^1.8.31",
     "aws4": "^1.11.0",
-    "axios": "^0.21.2",
+    "axios": "^1.4.0",
     "change-case": "^4.1.1",
     "clone": "^2.1.0",
     "color": "^3.1.2",

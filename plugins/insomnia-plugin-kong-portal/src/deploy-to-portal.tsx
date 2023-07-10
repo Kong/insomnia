@@ -1,24 +1,23 @@
-import { AxiosError, AxiosRequestConfig } from 'axios';
+import { AxiosError, AxiosRequestConfig, isAxiosError } from 'axios';
 import type ReactLib from 'react';
 import { type SyntheticEvent } from 'react';
 import urlJoin from 'url-join';
 
 import { Context, Spec } from './document-actions';
 
-const isAxiosError = (error?: Error | AxiosError): error is AxiosError =>
-  Boolean(error) && Object.prototype.hasOwnProperty.call(error, 'isAxiosError');
-
-interface Props {
-  axios: (config: AxiosRequestConfig) => Promise<{
-    statusText: string;
-    data: {
-      configuration: {
-        portal_gui_host: string;
-        portal_is_legacy: boolean;
-      };
+interface PortalResponse {
+  statusText: string;
+  data: {
+    configuration: {
+      portal_gui_host: string;
+      portal_is_legacy: boolean;
     };
-    status: number;
-  }>;
+  };
+  status: number;
+  message: string;
+}
+interface Props {
+  axios: (config: AxiosRequestConfig) => Promise<PortalResponse>;
   store: Context['store'];
   spec: Spec;
 }
@@ -34,7 +33,7 @@ interface State extends PersistedState {
   workspaceId: string;
 
   isLoading: boolean;
-  connectionError: AxiosError | Error | null;
+  connectionError: AxiosError<PortalResponse> | Error | null;
   showUploadError: boolean;
   forceSpecOverwrite: boolean;
   kongSpecFileName: string;

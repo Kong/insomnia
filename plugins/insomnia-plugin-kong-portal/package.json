@@ -35,7 +35,7 @@
     "@types/react-dom": "^16.9.12",
     "@types/styled-components": "^5.1.23",
     "@types/url-join": "^4.0.1",
-    "axios": "^0.21.2",
+    "axios": "^1.4.0",
     "cross-env": "^7.0.3",
     "esbuild": "^0.16.0",
     "esbuild-runner": "^2.2.1",
