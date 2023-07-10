@@ -8,13 +8,13 @@ import { Context, Spec } from './document-actions';
 interface PortalResponse {
   statusText: string;
   data: {
-    message: string;
     configuration: {
       portal_gui_host: string;
       portal_is_legacy: boolean;
     };
   };
   status: number;
+  message: string;
 }
 interface Props {
   axios: (config: AxiosRequestConfig) => Promise<PortalResponse>;
