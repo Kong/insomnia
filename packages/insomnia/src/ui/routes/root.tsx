@@ -50,6 +50,10 @@ import { WorkspaceLoaderData } from './workspace';
 
 export interface RootLoaderData {
   organizations: Organization[];
+  user: {
+    name: string;
+    picture: string;
+  };
 }
 
 export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
@@ -100,7 +104,16 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
 
       const teams = response.data.teams as Team[];
 
+      const user = await window.main.insomniaFetch<{
+        name: string;
+        picture: string;
+      }>({
+        method: 'GET',
+        path: '/v1/user/profile',
+        sessionId,
+      });
       return {
+        user,
         organizations: [defaultOrganization, ...teams.map(team => ({
           _id: team.id,
           name: team.name,
@@ -109,12 +122,20 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
     } catch (err) {
       console.log('Failed to load Teams', err);
       return {
+        user: {
+          name: '',
+          picture: '',
+        },
         organizations: [defaultOrganization],
       };
     }
   }
 
   return {
+    user: {
+      name: '',
+      picture: '',
+    },
     organizations: [defaultOrganization],
   };
 };
