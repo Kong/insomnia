@@ -224,8 +224,12 @@ function _getSymmetricKey() {
   return _getSessionData()?.symmetricKey;
 }
 
-function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
-  return fetch.getJson<WhoamiResponse>('/auth/whoami', sessionId || getCurrentSessionId());
+async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
+  const response = await fetch.get<WhoamiResponse>('/auth/whoami', sessionId || getCurrentSessionId());
+  if (typeof response === 'string') {
+    throw new Error('Unexpected plaintext response');
+  }
+  return response;
 }
 
 function _getAuthSalts(email: string) {
