@@ -2,7 +2,6 @@ import { createHash, randomBytes } from 'crypto';
 import { v4 as uuid } from 'uuid';
 
 import { getApiBaseURL } from '../../common/constants';
-import { axiosRequest } from '../../network/axios-request';
 
 const env = process['env'];
 
@@ -27,7 +26,7 @@ const getGitLabConfig = async () => {
   }
 
   // Otherwise fetch the config for the GitLab API
-  return axiosRequest({
+  return window.main.axiosRequest({
     url: getApiBaseURL() + '/v1/oauth/gitlab/config',
     method: 'GET',
   }).then(({ data }) => {
@@ -116,7 +115,7 @@ export async function exchangeCodeForGitLabToken(input: {
     code_verifier: verifier,
   }).toString();
 
-  return axiosRequest({
+  return window.main.axiosRequest({
     url: url.toString(),
     method: 'POST',
     headers: {
@@ -144,7 +143,7 @@ export async function refreshToken() {
     client_id: clientId,
   }).toString();
 
-  return axiosRequest({
+  return window.main.axiosRequest({
     url: url.toString(),
     method: 'POST',
     headers: {

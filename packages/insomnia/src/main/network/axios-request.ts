@@ -2,11 +2,10 @@ import axios, { AxiosRequestConfig } from 'axios';
 import * as https from 'https';
 import { parse as urlParse } from 'url';
 
-import { isDevelopment } from '../common/constants';
-import * as models from '../models';
-import { setDefaultProtocol } from '../utils/url/protocol';
-import { isUrlMatchedInNoProxyRule } from './is-url-matched-in-no-proxy-rule';
-
+import { isDevelopment } from '../../common/constants';
+import * as models from '../../models';
+import { isUrlMatchedInNoProxyRule } from '../../network/is-url-matched-in-no-proxy-rule';
+import { setDefaultProtocol } from '../../utils/url/protocol';
 export async function axiosRequest(config: AxiosRequestConfig) {
   const settings = await models.settings.getOrCreate();
   const isHttps = config.url?.indexOf('https:') === 0;
@@ -20,14 +19,13 @@ export async function axiosRequest(config: AxiosRequestConfig) {
 
   const finalConfig: AxiosRequestConfig = {
     ...config,
-    adapter: global.require('axios/lib/adapters/http'),
     httpsAgent: new https.Agent({
       rejectUnauthorized: settings.validateSSL,
     }),
+    // ignore HTTP_PROXY, HTTPS_PROXY, NO_PROXY environment variables
+    proxy: false,
   };
 
-  // ignore HTTP_PROXY, HTTPS_PROXY, NO_PROXY environment variables
-  finalConfig.proxy = false;
   if (settings.proxyEnabled && proxyUrl && !isUrlMatchedInNoProxyRule(finalConfig.url, settings.noProxy)) {
     const { hostname, port } = urlParse(setDefaultProtocol(proxyUrl));
 
@@ -43,10 +41,27 @@ export async function axiosRequest(config: AxiosRequestConfig) {
 
   if (isDevelopment()) {
     console.log('[axios] Response', {
-      config,
-      response,
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+      data: response.data,
+      config: {
+        method: finalConfig.method,
+        url: finalConfig.url,
+        proxy: finalConfig.proxy,
+      },
     });
   }
 
-  return response;
+  return {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+    data: response.data,
+    config: {
+      method: finalConfig.method,
+      url: finalConfig.url,
+      proxy: finalConfig.proxy,
+    },
+  };
 }

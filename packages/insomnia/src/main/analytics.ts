@@ -11,7 +11,7 @@ import {
   getSegmentWriteKey,
 } from '../common/constants';
 import * as models from '../models/index';
-import { axiosRequest } from '../network/axios-request';
+import { axiosRequest } from './network/axios-request';
 
 const analytics = new Analytics({ writeKey: getSegmentWriteKey() });
 

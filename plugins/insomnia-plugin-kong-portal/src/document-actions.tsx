@@ -1,4 +1,3 @@
-import axios from 'axios';
 import type React from 'react';
 import type ReactDOM from 'react-dom';
 
@@ -20,7 +19,7 @@ export interface Context {
     getItem: (key: string) => Promise<string | null>;
   };
   __private: {
-    axios: typeof axios;
+    axios: any;
     loadRendererModules: () => Promise<{
       ReactDOM: typeof ReactDOM;
       React: typeof React;

@@ -7,11 +7,11 @@ import { oas } from '@stoplight/spectral-rulesets';
 import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
-import { axiosRequest } from '../../network/axios-request';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { exportAllWorkspaces } from '../export';
 import installPlugin from '../install-plugin';
+import { axiosRequest } from '../network/axios-request';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
 import { gRPCBridgeAPI } from './grpc';
@@ -35,8 +35,12 @@ export interface MainBridgeAPI {
   grpc: gRPCBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
+  axiosRequest: typeof axiosRequest;
 }
 export function registerMainHandlers() {
+  ipcMain.handle('axiosRequest', async (_, options: Parameters<typeof axiosRequest>[0]) => {
+    return axiosRequest(options);
+  });
   ipcMain.on('loginStateChange', async () => {
     console.log('get windows');
     BrowserWindow.getAllWindows().forEach(w => {
