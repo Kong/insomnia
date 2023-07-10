@@ -22,10 +22,10 @@ export async function axiosRequest(config: AxiosRequestConfig) {
     httpsAgent: new https.Agent({
       rejectUnauthorized: settings.validateSSL,
     }),
+    // ignore HTTP_PROXY, HTTPS_PROXY, NO_PROXY environment variables
+    proxy: false,
   };
 
-  // ignore HTTP_PROXY, HTTPS_PROXY, NO_PROXY environment variables
-  finalConfig.proxy = false;
   if (settings.proxyEnabled && proxyUrl && !isUrlMatchedInNoProxyRule(finalConfig.url, settings.noProxy)) {
     const { hostname, port } = urlParse(setDefaultProtocol(proxyUrl));
 
