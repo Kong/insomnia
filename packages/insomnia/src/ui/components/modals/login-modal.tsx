@@ -2,7 +2,7 @@ import React, { FormEvent, forwardRef, useCallback, useEffect, useImperativeHand
 
 import * as session from '../../../account/session';
 import { getLoginUrl, submitAuthCode } from '../../auth-session-provider';
-import { type ModalHandle, Modal } from '../base/modal';
+import { Modal, type ModalHandle } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import tinykeys, { type KeyBindingMap, createKeybindingsHandler as _createKeybindingsHandler, KeyBindingHandlerOptions } from 'tinykeys';
+import tinykeys, { createKeybindingsHandler as _createKeybindingsHandler, KeyBindingHandlerOptions, type KeyBindingMap } from 'tinykeys';
 
 import { getPlatformKeyCombinations } from '../../common/hotkeys';
 import { keyboardKeys } from '../../common/keyboard-keys';

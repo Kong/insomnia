@@ -9,7 +9,7 @@ import { describeChanges } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { selectSyncItems } from '../../redux/selectors';
 import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
-import { type ModalHandle, Modal, ModalProps } from '../base/modal';
+import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';

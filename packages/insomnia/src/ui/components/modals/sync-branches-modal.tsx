@@ -6,7 +6,7 @@ import { database as db, Operation } from '../../../common/database';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { selectSyncItems } from '../../redux/selectors';
-import { type ModalHandle, Modal, ModalProps } from '../base/modal';
+import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';

@@ -11,7 +11,7 @@ import { selectActiveWorkspace, selectActiveWorkspaceMeta, selectEnvironments } 
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { Editable } from '../base/editable';
 import { Link } from '../base/link';
-import { type ModalHandle, Modal, ModalProps } from '../base/modal';
+import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';

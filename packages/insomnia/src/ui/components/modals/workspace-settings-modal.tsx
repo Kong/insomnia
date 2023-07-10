@@ -15,7 +15,7 @@ import { invariant } from '../../../utils/invariant';
 import { setActiveActivity } from '../../redux/modules/global';
 import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceMeta, selectActiveWorkspaceName } from '../../redux/selectors';
 import { FileInputButton } from '../base/file-input-button';
-import { type ModalHandle, Modal, ModalProps } from '../base/modal';
+import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';

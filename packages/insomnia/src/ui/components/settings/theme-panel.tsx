@@ -171,7 +171,8 @@ const MoonSvg = () => (
 
 const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }) => (
   <svg
-    /* @ts-expect-error -- TSCONVERSION */
+    // @ts-expect-error -- something about themes
+    // eslint-disable-next-line react/no-unknown-property
     theme={themeName}
     className="theme-preview"
     width="100%"
@@ -187,8 +188,11 @@ const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }
       for `--sub` to see more.
     */}
 
-    {/* @ts-expect-error -- TSCONVERSION */}
-    <g subtheme={themeName}>
+    <g
+      // @ts-expect-error -- something about themes
+      // eslint-disable-next-line react/no-unknown-property
+      subtheme={themeName}
+    >
       {/* App Header */}
       <g className="theme--app-header--sub">
         <rect x="0" y="0" width="100%" height="10%" style={{ fill: 'var(--color-bg)' }} />

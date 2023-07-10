@@ -1,6 +1,7 @@
-import electron from 'electron';
 import fs, { mkdir } from 'node:fs/promises';
 import path from 'node:path';
+
+import electron from 'electron';
 
 import { version } from '../../package.json';
 import { database as db } from '../common/database';

@@ -15,9 +15,9 @@ import {
   PushToGitRemoteResult,
 } from '../../routes/git-actions';
 import {
-  type DropdownHandle,
   Dropdown,
   DropdownButton,
+  type DropdownHandle,
   DropdownItem,
   DropdownSection,
   ItemContent,

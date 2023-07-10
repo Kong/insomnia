@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import { selectActiveWorkspaceMeta, selectEnvironments, selectHotKeyRegistry } from '../../redux/selectors';
-import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showModal } from '../modals/index';
 import { WorkspaceEnvironmentsEditModal } from '../modals/workspace-environments-edit-modal';

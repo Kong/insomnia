@@ -6,7 +6,7 @@ import type { ConfigGenerator } from '../../../plugins';
 import * as plugins from '../../../plugins';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
-import { type ModalHandle, Modal, ModalProps } from '../base/modal';
+import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
