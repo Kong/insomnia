@@ -16,10 +16,6 @@ export function onCommand(callback: Function) {
   _commandListeners.push(callback);
 }
 
-export async function post<T = any>(path: string, obj: unknown, sessionId: string | null, compressBody = false): Promise<T | string> {
-  return _fetch<T>('POST', path, obj, sessionId, compressBody);
-}
-
 export async function _fetch<T = any>(
   method: 'POST' | 'PUT' | 'GET',
   path: string,

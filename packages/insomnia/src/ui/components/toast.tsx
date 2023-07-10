@@ -112,7 +112,7 @@ export const Toast: FC = () => {
         updatesNotSupported: !updatesSupported(),
         version: getAppVersion(),
       };
-      const notificationOrEmpty = await fetch.post<ToastNotification>('/notification', data, session.getCurrentSessionId());
+      const notificationOrEmpty = await fetch._fetch<ToastNotification>('POST', '/notification', data, session.getCurrentSessionId());
       if (notificationOrEmpty && typeof notificationOrEmpty !== 'string') {
         updatedNotification = notificationOrEmpty;
       }

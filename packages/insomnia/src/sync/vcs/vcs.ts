@@ -710,7 +710,8 @@ export class VCS {
   ): Promise<Record<string, any>> {
     const { sessionId } = this._assertSession();
 
-    const { data, errors } = await fetch.post(
+    const { data, errors } = await fetch._fetch(
+      'POST',
       '/graphql?' + name,
       {
         query,
