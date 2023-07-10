@@ -20,11 +20,7 @@ export async function post<T = any>(path: string, obj: unknown, sessionId: strin
   return _fetch<T>('POST', path, obj, sessionId, compressBody);
 }
 
-export async function get<T = any>(path: string, sessionId: string | null): Promise<T | string> {
-  return _fetch<T>('GET', path, null, sessionId);
-}
-
-async function _fetch<T = any>(
+export async function _fetch<T = any>(
   method: 'POST' | 'PUT' | 'GET',
   path: string,
   obj: unknown,

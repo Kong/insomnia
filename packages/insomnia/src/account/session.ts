@@ -214,7 +214,7 @@ export function setSessionData(
   return sessionData;
 }
 export async function listTeams() {
-  return fetch.get('/api/teams', getCurrentSessionId());
+  return fetch._fetch('GET', '/api/teams', null, getCurrentSessionId());
 }
 
 // ~~~~~~~~~~~~~~~~ //
@@ -225,7 +225,7 @@ function _getSymmetricKey() {
 }
 
 async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
-  const response = await fetch.get<WhoamiResponse>('/auth/whoami', sessionId || getCurrentSessionId());
+  const response = await fetch._fetch<WhoamiResponse>('GET', '/auth/whoami', null, sessionId || getCurrentSessionId());
   if (typeof response === 'string') {
     throw new Error('Unexpected plaintext response');
   }
