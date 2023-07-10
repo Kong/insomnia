@@ -12,7 +12,7 @@ import * as pluginContexts from '../../../plugins/context/index';
 import { createRequest, CreateRequestType } from '../../hooks/create-request';
 import { createRequestGroup } from '../../hooks/create-request-group';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
-import { type DropdownHandle, type DropdownProps, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
 

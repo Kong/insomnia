@@ -18,7 +18,7 @@ import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectHotKeyRegistry } from '../../redux/selectors';
-import { type DropdownHandle, type DropdownProps, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';

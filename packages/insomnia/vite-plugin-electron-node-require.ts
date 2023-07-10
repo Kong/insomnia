@@ -1,7 +1,6 @@
 import { createRequire } from 'node:module';
-import type {
-  Plugin,
-} from 'vite';
+
+import type { Plugin } from 'vite';
 
 export interface Options {
   modules: string[];

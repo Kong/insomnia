@@ -1,7 +1,7 @@
 import React, { FC, forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import { Link } from '../base/link';
-import { type ModalHandle, Modal, ModalProps } from '../base/modal';
+import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 

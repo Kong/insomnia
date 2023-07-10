@@ -6,7 +6,7 @@ import * as models from '../../../models';
 import type { Cookie } from '../../../models/cookie-jar';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { selectActiveCookieJar } from '../../redux/selectors';
-import { type ModalHandle, Modal, ModalProps } from '../base/modal';
+import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
