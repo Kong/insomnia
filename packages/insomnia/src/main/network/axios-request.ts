@@ -45,7 +45,11 @@ export async function axiosRequest(config: AxiosRequestConfig) {
       statusText: response.statusText,
       headers: response.headers,
       data: response.data,
-      config,
+      config: {
+        method: finalConfig.method,
+        url: finalConfig.url,
+        proxy: finalConfig.proxy,
+      },
     });
   }
 
@@ -54,6 +58,10 @@ export async function axiosRequest(config: AxiosRequestConfig) {
     statusText: response.statusText,
     headers: response.headers,
     data: response.data,
-    config: finalConfig,
+    config: {
+      method: finalConfig.method,
+      url: finalConfig.url,
+      proxy: finalConfig.proxy,
+    },
   };
 }
