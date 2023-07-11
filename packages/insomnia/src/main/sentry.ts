@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/electron/main';
 import type { SentryRequestType } from '@sentry/types';
 
+import * as session from '../account/session';
 import { ChangeBufferEvent, database as db } from '../common/database';
 import { SENTRY_OPTIONS } from '../common/sentry';
 import * as models from '../models/index';
@@ -13,14 +14,14 @@ let enabled = false;
  */
 export function sentryWatchAnalyticsEnabled() {
   models.settings.getOrCreate().then(settings => {
-    enabled = settings.enableAnalytics;
+    enabled = settings.enableAnalytics || session.isLoggedIn();
   });
 
   db.onChange(async (changes: ChangeBufferEvent[]) => {
     for (const change of changes) {
       const [event, doc] = change;
       if (isSettings(doc) && event === 'update') {
-        enabled = doc.enableAnalytics;
+        enabled = doc.enableAnalytics || session.isLoggedIn();
       }
     }
   });
