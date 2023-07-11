@@ -9,9 +9,9 @@
   "dependencies": {
     "@getinsomnia/node-libcurl": "2.3.6-18",
     "@segment/analytics-node": "1.0.0",
-    "@stoplight/spectral-core": "^1.12.2",
-    "@stoplight/spectral-formats": "^1.2.0",
-    "@stoplight/spectral-rulesets": "^1.9.0",
+    "@stoplight/spectral-core": "^1.18.2",
+    "@stoplight/spectral-formats": "^1.5.0",
+    "@stoplight/spectral-rulesets": "^1.16.0",
     "aws4": "^1.10.0",
     "axios": "^1.4.0",
     "clone": "^2.1.2",
