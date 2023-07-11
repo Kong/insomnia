@@ -658,6 +658,16 @@ export const loader: LoaderFunction = async ({
 
   const project = await models.project.getById(projectId);
 
+  console.log({
+    project,
+  });
+
+  const allProjects = await models.project.all();
+
+  console.log({
+    allProjects,
+  });
+
   invariant(project, 'Project was not found');
 
   const projectWorkspaces = await models.workspace.findByParentId(project._id);
@@ -752,7 +762,7 @@ export const loader: LoaderFunction = async ({
     )?.indexes) : true)
     .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
 
-  const allProjects = await models.project.all();
+  // const allProjects = await models.project.all();
 
   const organizationProjects =
     organizationId === DEFAULT_ORGANIZATION_ID
