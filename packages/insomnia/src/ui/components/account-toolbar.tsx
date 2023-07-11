@@ -87,10 +87,6 @@ export const AccountToolbar = () => {
             >
               <Suspense fallback={<div />}>
                 <Avatar
-                  style={{
-                    width: '26px',
-                    height: '26px',
-                  }}
                   src={user?.picture}
                   alt={`${session.getFirstName()?.charAt(0)}${session
                     .getLastName()

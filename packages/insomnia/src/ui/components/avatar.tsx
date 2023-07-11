@@ -20,7 +20,7 @@ const appearIn = keyframes`
   }
 `;
 
-export const AvatarImage = styled.div`
+const ImageElement = styled.img`
   border: 2px solid var(--color-bg);
   box-sizing: border-box;
   outline: none;
@@ -31,6 +31,11 @@ export const AvatarImage = styled.div`
   background-position: center;
   animation: ${appearIn} 0.2s ease-in-out;
 `;
+
+const AvatarImage = ({ src, alt, size }: { src: string; alt: string; size: 'small' | 'medium' }) => {
+  imgCache.read(src);
+  return <ImageElement alt={alt} src={src} style={{ width: size === 'small' ? '20px' : '24px', height: size === 'small' ? '20px' : '24px' }} />;
+};
 
 const AvatarPlaceholder = styled.div<{size: 'small' | 'medium'}>`
   border: 2px solid var(--color-bg);
@@ -54,42 +59,43 @@ const AvatarPlaceholder = styled.div<{size: 'small' | 'medium'}>`
   font-weight: bold;
 `;
 
-const imgCache = {
-  __cache: {},
-  read(src) {
+class ImageCache {
+  __cache: Record<string, Promise<string> | string> = {};
+
+  read(src: string) {
     if (!this.__cache[src]) {
       this.__cache[src] = new Promise(resolve => {
         const img = new Image();
         img.onload = () => {
-          this.__cache[src] = true;
+          this.__cache[src] = src;
           resolve(this.__cache[src]);
         };
         img.src = src;
-      }).then(img => {
-        this.__cache[src] = true;
       });
     }
     if (this.__cache[src] instanceof Promise) {
       throw this.__cache[src];
     }
     return this.__cache[src];
-  },
-};
+  }
+}
 
-export const Avatar = ({ src, alt, style }: { src: string; alt: string }) => {
-  console.log(imgCache);
+const imgCache = new ImageCache();
+
+export const Avatar = ({ src, alt, size }: { src: string; alt: string; size?: 'small' | 'medium' }) => {
   if (!src) {
     return <AvatarPlaceholder size="medium">{alt}</AvatarPlaceholder>;
   }
-  imgCache.read(src);
+
   return (
     <Tooltip message={alt}>
-      <AvatarImage
-        style={{
-          backgroundImage: `url(${src})`,
-          ...style,
-        }}
-      />
+      <Suspense fallback={<AvatarPlaceholder size="medium">{alt}</AvatarPlaceholder>}>
+        <AvatarImage
+          src={src}
+          alt={alt}
+          size={size || 'small'}
+        />
+      </Suspense>
     </Tooltip>
   );
 };
@@ -109,11 +115,7 @@ export const AvatarGroup = ({ items, maxAvatars = 3, size = 'small' }: { items: 
       >
         {avatars.map((avatar, index) => (
           <Avatar
-            style={{
-              marginLeft: size === 'small' ? '-5px' : '-6px',
-              width: size === 'small' ? '20px' : '24px',
-              height: size === 'small' ? '20px' : '24px',
-            }}
+            size="medium"
             key={index}
             src={avatar.src}
             alt={avatar.alt}
