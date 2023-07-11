@@ -397,19 +397,22 @@ export const General: FC = () => {
         placeholder="~/.insomnia:/other/path"
       />
 
-      <hr className="pad-top" />
-      <h2>Network Activity</h2>
-
-      <BooleanSetting
-        descriptions={[
-          `Help Kong improve its products by sending anonymous data about features and plugins used, hardware and software configuration, statistics on number of requests, ${strings.collection.plural.toLowerCase()}, ${strings.document.plural.toLowerCase()}, etc.`,
-          'Please note that this will not include personal data or any sensitive information, such as request data, names, etc.',
-        ]}
-        label="Send Anonymous Usage Statistics"
-        setting="enableAnalytics"
-        value={isLoggedIn ? true : undefined}
-        disabled={isLoggedIn}
-      />
+      {!isLoggedIn && (
+        <>
+          <hr className="pad-top" />
+          <h2>Network Activity</h2>
+          <BooleanSetting
+            descriptions={[
+              `Help Kong improve its products by sending anonymous data about features and plugins used, hardware and software configuration, statistics on number of requests, ${strings.collection.plural.toLowerCase()}, ${strings.document.plural.toLowerCase()}, etc.`,
+              'Please note that this will not include personal data or any sensitive information, such as request data, names, etc.',
+            ]}
+            label="Send Anonymous Usage Statistics"
+            setting="enableAnalytics"
+            disabled={isLoggedIn}
+          />
+        </>
+      )
+      }
 
       <DevelopmentOnlySettings />
     </div>
