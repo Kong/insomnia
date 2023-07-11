@@ -232,12 +232,7 @@ export interface WorkspaceEnvironmentsEditModalHandle {
 }
 export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEditModalHandle, ModalProps>((props, ref) => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string}>();
-  const {
-    baseEnvironment,
-    activeWorkspaceMeta,
-    activeEnvironment,
-    subEnvironments,
-  } = useRouteLoaderData(
+  const routeData = useRouteLoaderData(
     ':workspaceId'
   ) as WorkspaceLoaderData;
   const modalRef = useRef<ModalHandle>(null);
@@ -258,6 +253,17 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
       modalRef.current?.show();
     },
   }), []);
+
+  if (!routeData) {
+    return null;
+  }
+
+  const {
+    baseEnvironment,
+    activeWorkspaceMeta,
+    activeEnvironment,
+    subEnvironments,
+  } = routeData;
 
   function onSelectionChange(e: any) {
     const environmentId = e.anchorKey;
