@@ -1,8 +1,6 @@
 import React, { FC, Fragment, useCallback, useState } from 'react';
-import { useSelector } from 'react-redux';
 
 import * as session from '../../../account/session';
-import { selectSettings } from '../../redux/selectors';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
@@ -10,7 +8,6 @@ import { hideAllModals, showModal } from '../modals/index';
 import { LoginModal } from '../modals/login-modal';
 
 export const Account: FC = () => {
-  const { disablePaidFeatureAds } = useSelector(selectSettings);
   const [codeSent, setCodeSent] = useState(false);
   const [error, setError] = useState('');
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -153,10 +150,6 @@ export const Account: FC = () => {
         </form>
       )}
     </Fragment>
-  ) : (disablePaidFeatureAds ? (
-    <a href="#" onClick={handleLogin} className="theme--link">
-      Log In
-    </a>
   ) : (
     <Fragment>
       <div className="notice pad surprise">
@@ -181,6 +174,5 @@ export const Account: FC = () => {
           Log In
         </a>
       </p>
-    </Fragment>)
-  );
+    </Fragment>);
 };

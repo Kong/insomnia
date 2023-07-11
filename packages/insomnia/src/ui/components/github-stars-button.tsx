@@ -1,10 +1,8 @@
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useMount, useMountedState } from 'react-use';
 import styled from 'styled-components';
 
 import { SegmentEvent } from '../analytics';
-import { selectSettings } from '../redux/selectors';
 import { SvgIcon } from './svg-icon';
 import { Button } from './themed-button';
 
@@ -45,7 +43,6 @@ const LOCALSTORAGE_GITHUB_STARS_KEY = 'insomnia:github-stars';
 
 export const GitHubStarsButton = () => {
   const isMounted = useMountedState();
-  const { incognitoMode } = useSelector(selectSettings);
   const localStorageStars = localStorage.getItem(LOCALSTORAGE_GITHUB_STARS_KEY);
   const initialState = parseInt(localStorageStars || '21700', 10);
   const [starCount, setStarCount] = useState(initialState);
@@ -57,9 +54,6 @@ export const GitHubStarsButton = () => {
   const [error, setError] = useState<Error | null>(null);
 
   useMount(() => {
-    if (incognitoMode) {
-      return;
-    }
 
     if (!isMounted()) {
       return;
@@ -109,7 +103,7 @@ export const GitHubStarsButton = () => {
     });
   }, []);
 
-  const shouldShowCount = !Boolean(error) && !incognitoMode;
+  const shouldShowCount = !Boolean(error);
 
   return (
     <ButtonGroup>
