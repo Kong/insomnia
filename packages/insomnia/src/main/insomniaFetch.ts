@@ -10,11 +10,16 @@ interface FetchConfig {
   obj?: unknown;
   retries?: number;
 }
-// internel backoff customer headers for tracing x-command respect proxies(two way:? also be able to listen for specific messages in headers)
-// external might respect proxy can disable ssl validation
-// build core request thing that uses node:fetch? proxy support
-// build two wrappers around core for internal and external
-// note: fetch may not support conditional proxying
+// internal request (insomniaFetch)
+// should validate ssl certs on our server
+// should only go to insomnia API
+// should be able to listen for specific messages in headers
+// should be able to retry on 502
+
+// external request (axiosRequest)
+// should respect settings for proxy and ssl validation
+// should be for all third party APIs, github, gitlab, isometric-git
+
 const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): Promise<Response> => {
   try {
     const response = await net.fetch(url, init);
