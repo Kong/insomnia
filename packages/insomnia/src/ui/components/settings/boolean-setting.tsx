@@ -24,12 +24,14 @@ export const BooleanSetting: FC<{
   label: ReactNode;
   setting: SettingsOfType<boolean>;
   disabled?: boolean;
+  value?: boolean;
 }> = ({
   descriptions,
   help,
   label,
   setting,
   disabled = false,
+  value,
 }) => {
   const settings = useSelector(selectSettings);
 
@@ -41,6 +43,8 @@ export const BooleanSetting: FC<{
     await models.settings.patch({ [setting]: checked });
   }, [setting]);
 
+  const checked = typeof value === 'boolean' ? value : settings[setting];
+
   return (
     <>
       <div className="form-control form-control--thin">
@@ -48,7 +52,7 @@ export const BooleanSetting: FC<{
           {label}
           {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
           <input
-            checked={Boolean(settings[setting])}
+            checked={Boolean(checked)}
             name={setting}
             onChange={onChange}
             type="checkbox"

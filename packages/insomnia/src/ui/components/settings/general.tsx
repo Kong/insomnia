@@ -407,6 +407,7 @@ export const General: FC = () => {
         ]}
         label="Send Anonymous Usage Statistics"
         setting="enableAnalytics"
+        value={isLoggedIn ? true : undefined}
         disabled={isLoggedIn}
       />
 
