@@ -149,7 +149,7 @@ function _migrateScope(workspace: MigrationWorkspace) {
 
 function _migrateIntoDefaultProject(workspace: Workspace) {
   if (!workspace.parentId) {
-    console.log(`No workspace parentId found for ${workspace._id} setting default ${DEFAULT_PROJECT_ID}`);
+    console.log(`[db] No workspace parentId found for ${workspace._id} setting default ${DEFAULT_PROJECT_ID}`);
     workspace.parentId = DEFAULT_PROJECT_ID;
   }
 
