@@ -44,11 +44,12 @@ export const Dropdown = forwardRef<DropdownHandle, DropdownProps>((props: Dropdo
     dataTestId = 'DropdownButton',
     isDisabled = false,
     onOpen,
+    onClose,
   } = props;
 
   const state: MenuTriggerState = useMenuTriggerState({
     ...props,
-    onOpenChange: isOpen => isOpen && onOpen?.(),
+    onOpenChange: isOpen => isOpen ? onOpen?.() : onClose?.(),
   });
 
   const triggerRef = useRef<HTMLButtonElement>(ref);
