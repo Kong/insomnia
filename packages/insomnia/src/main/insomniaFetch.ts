@@ -1,22 +1,8 @@
-import { net } from 'electron';
-import { parse as urlParse } from 'url';
+import { BrowserWindow, net } from 'electron';
 
 import { getApiBaseURL, getClientString } from '../common/constants';
 import { delay } from '../common/misc';
-import { invariant } from '../utils/invariant';
 
-const _commandListeners: Function[] = [];
-export function onCommand(callback: Function) {
-  _commandListeners.push(callback);
-}
-
-let _userAgent = getClientString();
-let _baseUrl = getApiBaseURL();
-
-export function setup(userAgent: string, baseUrl: string) {
-  _userAgent = userAgent;
-  _baseUrl = baseUrl;
-}
 interface FetchConfig {
   method: 'POST' | 'PUT' | 'GET';
   path: string;
@@ -46,8 +32,8 @@ const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): 
 export async function insomniaFetch<T = any>({ method, path, obj, sessionId, retries = 0 }: FetchConfig): Promise<T | string> {
   const config: RequestInit = {
     headers: {
+      'X-Insomnia-Client': getClientString(),
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
-      ...(_userAgent ? { 'X-Insomnia-Client': _userAgent } : {}),
       ...(obj ? { 'Content-Type': 'application/json' } : {}),
     },
     ...(obj ? { body: JSON.stringify(obj) } : {}),
@@ -55,13 +41,12 @@ export async function insomniaFetch<T = any>({ method, path, obj, sessionId, ret
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
-
-  invariant(_baseUrl, 'API base URL not configured!');
-  const response = await exponentialBackOff(`${_baseUrl}${path}`, config, retries);
+  const response = await exponentialBackOff(`${getApiBaseURL()}${path}`, config, retries);
   const uri = response.headers.get('x-insomnia-command');
   if (uri) {
-    const parsed = urlParse(uri, true);
-    _commandListeners.map(fn => fn(`${parsed.hostname}${parsed.pathname}`, JSON.parse(JSON.stringify(parsed.query))));
+    for (const window of BrowserWindow.getAllWindows()) {
+      window.webContents.send('shell:open', uri);
+    }
   }
   if (!response.ok) {
     const err = new Error(`Response ${response.status} for ${path}`);
