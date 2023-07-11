@@ -1,8 +1,6 @@
 import { bindActionCreators, combineReducers, Store } from 'redux';
 
-import * as fetch from '../../../account/fetch';
 import { isLoggedIn, onLoginLogout } from '../../../account/session';
-import { getApiBaseURL, getClientString } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import configureStore from '../create';
 import * as entities from './entities';
@@ -14,7 +12,7 @@ export async function init(): Promise<Store> {
   const { addChanges, initializeWith: initEntities } = bindActionCreators({ addChanges: entities.addChanges, initializeWith: entities.initializeWith }, store.dispatch);
 
   // @ts-expect-error -- TSCONVERSION
-  const { newCommand, loginStateChange } = bindActionCreators(global, store.dispatch);
+  const { loginStateChange } = bindActionCreators(global, store.dispatch);
   // Link DB changes to entities reducer/actions
   const docs = await entities.allDocs();
   initEntities(docs);
@@ -24,9 +22,6 @@ export async function init(): Promise<Store> {
   onLoginLogout(loggedIn => {
     loginStateChange(loggedIn);
   });
-  // Bind to fetch commands
-  fetch.setup(getClientString(), getApiBaseURL());
-  fetch.onCommand(newCommand);
 
   return store;
 }
