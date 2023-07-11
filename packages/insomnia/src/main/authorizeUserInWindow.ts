@@ -140,17 +140,15 @@ export function authorizeUserInWindow({
     try {
       await child.loadURL(url);
     } catch (error) {
-      switch (error.errno) {
-        case URLLoadErrorCodes.ERR_ABORTED:
-          //Ignore the error as the initial url load was aborted on redirect.
-          break;
-        default:
-          // Reject with error to show result in OAuth2 tab
-          reject(error);
-          // Need to close child window here since an exception in loadURL precludes normal call in
-          // _parseUrl
-          child.close();
+      // Ignore the error as the initial url load was aborted on redirect.
+      if (error.errno === URLLoadErrorCodes.ERR_ABORTED) {
+        return;
       }
+      // Reject with error to show result in OAuth2 tab
+      reject(error);
+      // Need to close child window here since an exception in loadURL precludes normal call in
+      // _parseUrl
+      child.close();
     }
   });
 }
