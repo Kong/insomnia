@@ -76,7 +76,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
   useEffect(() => {
     const startStream = async () => {
       try {
-        const response = await fetch(`streamapi://v1/teams/${sanitizeTeamId(organizationId)}/streams`,
+        const response = await fetch(`eventsource://v1/teams/${sanitizeTeamId(organizationId)}/streams`,
           {
             headers: new Headers({
               'Accept': 'text/event-stream',

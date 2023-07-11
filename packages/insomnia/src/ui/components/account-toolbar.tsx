@@ -1,11 +1,17 @@
 import React, { Fragment, Suspense } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLoaderData, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import * as session from '../../account/session';
 import { usePresenceContext } from '../context/app/presence-context';
+import { RootLoaderData } from '../routes/root';
 import { Avatar, AvatarGroup } from './avatar';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
+import {
+  Dropdown,
+  DropdownButton,
+  DropdownItem,
+  ItemContent,
+} from './base/dropdown';
 import { Link as ExternalLink } from './base/link';
 import { showLoginModal } from './modals/login-modal';
 import { Button } from './themed-button';
@@ -31,13 +37,14 @@ const SignUpButton = styled(Button)({
 export const AccountToolbar = () => {
   const isLoggedIn = session.isLoggedIn();
   const { presence } = usePresenceContext();
-  const { projectId, workspaceId } = useParams() as { workspaceId: string; projectId: string };
+  const { user } = useLoaderData() as RootLoaderData;
+  const { projectId, workspaceId } = useParams() as {
+    workspaceId: string;
+    projectId: string;
+  };
 
   const activeUsers = presence.filter(p => {
-    return (
-      p.project === projectId &&
-      p.file === workspaceId
-    );
+    return p.project === projectId && p.file === workspaceId;
   });
 
   return (
@@ -45,11 +52,14 @@ export const AccountToolbar = () => {
       {presence && (
         <AvatarGroup
           size="medium"
-          items={activeUsers.map(user => {
+          items={activeUsers.map(activeUser => {
             return {
-              key: user.acct,
-              alt: user.firstName || user.lastName ? `${user.firstName } ${user.lastName}` : user.acct,
-              src: user.avatar,
+              key: activeUser.acct,
+              alt:
+                activeUser.firstName || activeUser.lastName
+                  ? `${activeUser.firstName} ${activeUser.lastName}`
+                  : activeUser.acct,
+              src: activeUser.avatar,
             };
           })}
         />
@@ -67,7 +77,11 @@ export const AccountToolbar = () => {
           aria-label="Account"
           triggerButton={
             <DropdownButton
-              style={{ gap: 'var(--padding-xs)', borderRadius: '60px', padding: '3px 10px' }}
+              style={{
+                gap: 'var(--padding-xs)',
+                borderRadius: '60px',
+                padding: '3px 10px',
+              }}
               removePaddings={false}
               disableHoverBehavior={false}
             >
@@ -77,28 +91,26 @@ export const AccountToolbar = () => {
                     width: '26px',
                     height: '26px',
                   }}
-                  alt={`${session.getFirstName()?.charAt(0)}${session.getLastName()?.charAt(0)}`}
+                  src={user?.picture}
+                  alt={`${session.getFirstName()?.charAt(0)}${session
+                    .getLastName()
+                    ?.charAt(0)}`}
                 />
               </Suspense>
-              {session.getFirstName()} {session.getLastName()}<i className="fa fa-caret-down" />
+              {session.getFirstName()} {session.getLastName()}
+              <i className="fa fa-caret-down" />
             </DropdownButton>
           }
         >
-          <DropdownItem
-            key="account-settings"
-            aria-label="Account settings"
-          >
+          <DropdownItem key="account-settings" aria-label="Account settings">
             <ItemContent
               icon="gear"
-              label='Account Settings'
+              label="Account Settings"
               stayOpenAfterClick
               onClick={() => window.main.openInBrowser('https://app.insomnia.rest/app/account/')}
             />
           </DropdownItem>
-          <DropdownItem
-            key="logout"
-            aria-label='logout'
-          >
+          <DropdownItem key="logout" aria-label="logout">
             <ItemContent
               icon="sign-out"
               label="Logout"
@@ -110,10 +122,15 @@ export const AccountToolbar = () => {
         </Dropdown>
       ) : (
         <Fragment>
-          <Button variant='outlined' size="small" onClick={showLoginModal}>
+          <Button variant="outlined" size="small" onClick={showLoginModal}>
             Login
           </Button>
-          <SignUpButton href="https://app.insomnia.rest/app/signup/" as={ExternalLink} size="small" variant='contained'>
+          <SignUpButton
+            href="https://app.insomnia.rest/app/signup/"
+            as={ExternalLink}
+            size="small"
+            variant="contained"
+          >
             Sign Up
           </SignUpButton>
         </Fragment>

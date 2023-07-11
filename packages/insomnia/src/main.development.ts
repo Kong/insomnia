@@ -21,8 +21,8 @@ import type { Stats } from './models/stats';
 import type { ToastNotification } from './ui/components/toast';
 
 initializeSentry();
-protocol.registerSchemesAsPrivileged([{ scheme: 'api', privileges: { secure: true, standard: true, supportFetchAPI: true } }, {
-  scheme: 'streamapi',
+protocol.registerSchemesAsPrivileged([{
+  scheme: 'eventsource',
   privileges: { secure: true, standard: true, supportFetchAPI: true },
 }]);
 // Handle potential auto-update

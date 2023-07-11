@@ -1,6 +1,6 @@
 import { app, protocol } from 'electron';
-import type { IncomingMessage } from 'http';
 import http from 'http';
+import https from 'https';
 
 import { getApiBaseURL } from '../common/constants';
 
@@ -8,68 +8,7 @@ export interface RegisterProtocolOptions {
   scheme: string;
 }
 
-export async function registerInsomniaAPIProtocol(
-  { scheme }: RegisterProtocolOptions,
-) {
-  await app.whenReady();
-
-  if (protocol.isProtocolRegistered(scheme)) {
-    return;
-  }
-
-  console.log('Registering protocol', scheme);
-
-  protocol.registerBufferProtocol(scheme, async function(request, callback) {
-    const url = new URL(`${getApiBaseURL()}/${request.url.replace(`${scheme}://`, '')}`);
-
-    console.log('Loading resource', url, request);
-
-    const response = await new Promise<IncomingMessage>(resolve => {
-      const req = http.request({
-        method: request.method,
-        headers: request.headers,
-        protocol: url.protocol,
-        hostname: url.hostname,
-        port: url.port,
-        path: url.pathname,
-      }, resolve);
-
-      req.on('error', err => {
-        console.error('Failed to load resource', err);
-        callback({ statusCode: 500 });
-      });
-
-      request.uploadData?.forEach(data => {
-        console.log('Writing request', data.bytes);
-        req.write(data.bytes);
-      });
-
-      return req.end();
-    });
-
-    const { statusCode, headers } = response;
-
-    console.log('Loaded resource', statusCode, headers);
-
-    if (statusCode === 404) {
-      return callback({ statusCode });
-    }
-
-    const chunks: Buffer[] = [];
-
-    response.on('data', chunk => chunks.push(chunk));
-    response.on('end', () => {
-      const buffer = Buffer.concat(chunks);
-      console.log('Loaded resource', buffer);
-      callback({ statusCode, headers: headers as Record<string, string>, data: buffer });
-    });
-
-    response.on('error', err => {
-      console.error('Failed to load resource', err);
-      callback({ statusCode: 500 });
-    });
-  });
-}
+const RETRY_TIMEOUT = 1000;
 
 export async function registerInsomniaStreamProtocol(
   { scheme }: RegisterProtocolOptions,
@@ -80,42 +19,46 @@ export async function registerInsomniaStreamProtocol(
     return;
   }
 
-  console.log('Registering STREAM protocol', scheme);
-
   protocol.registerStreamProtocol(scheme, async function(request, callback) {
     const url = new URL(`${getApiBaseURL()}/${request.url.replace(`${scheme}://`, '')}`);
 
-    console.log('Loading resource STREAM', url, request);
+    const client = url.protocol === 'https:' ? https : http;
 
-    const req = http.request({
-      method: request.method,
-      headers: request.headers,
-      protocol: url.protocol,
-      hostname: url.hostname,
-      port: url.port,
-      path: url.pathname,
-    }, res => {
-      console.log('Loaded resource STREAM', res);
-      callback(res);
-    });
+    const sendRequest = () => {
+      const req = client.request({
+        method: request.method,
+        headers: request.headers,
+        protocol: url.protocol,
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname,
+      }, response => {
+        if (response.statusCode === 204) {
+          return callback({ statusCode: 204 });
+        }
 
-    req.on('error', err => {
-      console.error('Failed to load resource', err);
-      callback({ statusCode: 500 });
-    });
+        if (response.statusCode !== 200) {
+          setTimeout(() => {
+            sendRequest();
+          }, RETRY_TIMEOUT);
+        }
 
-    // request.uploadData?.forEach(data => {
-    //   console.log('Writing request STREAM', data.bytes);
-    //   req.write(data.bytes);
-    // });
+        callback(response);
+      });
 
-    req.end();
+      req.on('error', () => {
+        setTimeout(() => {
+          sendRequest();
+        }, RETRY_TIMEOUT);
+      });
 
-    // res.on('data', chunk => {
-    //   console.log('Loaded resource STREAM', chunk);
-    //   callback({ data: chunk });
-    // });
+      req.on('close', () => {
+        setTimeout(() => {
+          sendRequest();
+        }, RETRY_TIMEOUT);
+      });
+    };
 
-    // callback(res);
+    sendRequest();
   });
 }
