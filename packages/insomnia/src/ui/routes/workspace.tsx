@@ -2,6 +2,7 @@ import React from 'react';
 import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
 import * as models from '../../models';
+import { Environment } from '../../models/environment';
 import { GitRepository } from '../../models/git-repository';
 import { Project } from '../../models/project';
 import { Workspace } from '../../models/workspace';
@@ -12,6 +13,9 @@ export interface WorkspaceLoaderData {
   activeWorkspaceMeta?: WorkspaceMeta;
   activeProject: Project;
   gitRepository: GitRepository | null;
+  activeEnvironment: Environment;
+  baseEnvironment: Environment;
+  subEnvironments: Environment[];
 }
 
 export const workspaceLoader: LoaderFunction = async ({
@@ -31,14 +35,29 @@ export const workspaceLoader: LoaderFunction = async ({
   const activeProject = await models.project.getById(projectId);
   invariant(activeProject, 'Project not found');
 
-  const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
-  const gitRepository = await models.gitRepository.getById(activeWorkspaceMeta.gitRepositoryId || '');
+  const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
+    workspaceId,
+  );
+  const gitRepository = await models.gitRepository.getById(
+    activeWorkspaceMeta.gitRepositoryId || '',
+  );
+
+  const baseEnvironment = await models.environment.getByParentId(workspaceId);
+  invariant(baseEnvironment, 'Base environment not found');
+
+  const subEnvironments = (await models.environment.findByParentId(baseEnvironment._id))
+    .sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
+
+  const activeEnvironment = subEnvironments.find(({ _id }) => activeWorkspaceMeta.activeEnvironmentId === _id) || baseEnvironment;
 
   return {
     activeWorkspace,
     activeProject,
     gitRepository,
     activeWorkspaceMeta,
+    activeEnvironment,
+    subEnvironments,
+    baseEnvironment,
   };
 };
 

@@ -1,13 +1,14 @@
 import classnames from 'classnames';
-import React, { FC, forwardRef, Fragment, useImperativeHandle, useRef, useState } from 'react';
+import React, { FC, forwardRef, Fragment, useImperativeHandle, useRef } from 'react';
 import { ListDropTargetDelegate, ListKeyboardDelegate, mergeProps, useDraggableCollection, useDraggableItem, useDropIndicator, useDroppableCollection, useDroppableItem, useFocusRing, useListBox, useOption } from 'react-aria';
 import { useSelector } from 'react-redux';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { DraggableCollectionState, DroppableCollectionState, Item, ListState, useDraggableCollectionState, useDroppableCollectionState, useListState } from 'react-stately';
 
 import { docsTemplateTags } from '../../../common/documentation';
-import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
-import { selectActiveWorkspace, selectActiveWorkspaceMeta, selectEnvironments } from '../../redux/selectors';
+import { selectActiveWorkspaceMeta } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { Editable } from '../base/editable';
 import { Link } from '../base/link';
@@ -224,106 +225,82 @@ const ReorderableListBox = props => {
     </ul>
   );
 };
-interface State {
-  baseEnvironment: Environment | null;
-  selectedEnvironmentId: string | null;
-}
+
 export interface WorkspaceEnvironmentsEditModalHandle {
   show: () => void;
   hide: () => void;
 }
 export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEditModalHandle, ModalProps>((props, ref) => {
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string}>();
+  const routeData = useRouteLoaderData(
+    ':workspaceId'
+  ) as WorkspaceLoaderData;
   const modalRef = useRef<ModalHandle>(null);
   const environmentEditorRef = useRef<EnvironmentEditorHandle>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [state, setState] = useState<State>({
-    baseEnvironment: null,
-    selectedEnvironmentId: null,
-  });
+  const createEnvironmentFetcher = useFetcher();
+  const deleteEnvironmentFetcher = useFetcher();
+  const updateEnvironmentFetcher = useFetcher();
+  const setActiveEnvironmentFetcher = useFetcher();
+  const duplicateEnvironmentFetcher = useFetcher();
 
-  const workspace = useSelector(selectActiveWorkspace);
-  const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
-  const environments = useSelector(selectEnvironments);
   useImperativeHandle(ref, () => ({
     hide: () => {
       modalRef.current?.hide();
     },
     show: async () => {
-      if (!workspace) {
-        return;
-      }
-      const baseEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
-
-      setState(state => ({
-        ...state,
-        baseEnvironment,
-        selectedEnvironmentId: workspaceMeta?.activeEnvironmentId || baseEnvironment._id,
-      }));
       modalRef.current?.show();
     },
-  }), [workspace, workspaceMeta?.activeEnvironmentId]);
+  }), []);
+
+  if (!routeData) {
+    return null;
+  }
+
+  const {
+    baseEnvironment,
+    activeWorkspaceMeta,
+    activeEnvironment,
+    subEnvironments,
+  } = routeData;
 
   function onSelectionChange(e: any) {
+    const environmentId = e.anchorKey;
     // Only switch if valid
-    if (environmentEditorRef.current?.isValid() && e.anchorKey) {
-      const environment = subEnvironments.filter(evt => evt._id === e.anchorKey)[0];
-      setState(state => ({
-        ...state,
-        selectedEnvironmentId: environment._id || null,
-      }));
-      if (workspaceMeta?.activeEnvironmentId !== environment._id && workspaceMeta) {
-        models.workspaceMeta.update(workspaceMeta, { activeEnvironmentId: environment._id });
-      }
+    if (environmentEditorRef.current?.isValid() && activeWorkspaceMeta?.activeEnvironmentId !== environmentId) {
+      setActiveEnvironmentFetcher.submit({
+        environmentId,
+      },
+      {
+        method: 'post',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
+      });
     }
   }
 
-  async function handleDeleteEnvironment(environmentId: string | null) {
-    // Don't delete the root environment
-    if (!environmentId || environmentId === state.baseEnvironment?._id) {
-      return;
-    }
-    // Unset active environment if it's being deleted
-    if (workspaceMeta?.activeEnvironmentId === environmentId && workspaceMeta) {
-      models.workspaceMeta.update(workspaceMeta, { activeEnvironmentId: null });
-    }
-    // Delete the current one
-    const current = environments.find(e => e._id === environmentId);
-    current && models.environment.remove(current);
-    setState(state => ({
-      ...state,
-      selectedEnvironmentId: state.baseEnvironment?._id || null,
-    }));
+  async function handleDeleteEnvironment(environmentId: string) {
+    deleteEnvironmentFetcher.submit({
+      environmentId,
+    },
+    {
+      encType: 'application/json',
+      method: 'post',
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/delete`,
+    });
   }
 
-  const updateEnvironment = async (environmentId: string | null, patch: Partial<Environment>) => {
-    if (environmentId === null) {
-      return;
-    }
-    // NOTE: Fetch the environment first because it might not be up to date.
-    const realEnvironment = await models.environment.getById(environmentId);
-    if (realEnvironment) {
-      const updated = await models.environment.update(realEnvironment, patch);
-      // reload the root environment if it changed since its not updated by redux
-      const isBaseEnvironment = realEnvironment?.parentId === workspace?._id;
-      if (isBaseEnvironment) {
-        setState({ ...state, baseEnvironment: updated });
-      }
-    }
+  const updateEnvironment = async (environmentId: string, patch: Partial<Environment>) => {
+    updateEnvironmentFetcher.submit({
+      patch,
+      environmentId,
+    },
+    {
+      encType: 'application/json',
+      method: 'post',
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
+    });
   };
-
-  const { baseEnvironment, selectedEnvironmentId } = state;
-  const selectedEnvironment = baseEnvironment?._id === selectedEnvironmentId
-    ? baseEnvironment
-    : environments.filter(e => e.parentId === baseEnvironment?._id).find(subEnvironment => subEnvironment._id === selectedEnvironmentId) || null;
-  const selectedEnvironmentName = selectedEnvironment?.name || '';
-  const selectedEnvironmentColor = selectedEnvironment?.color || null;
-  const subEnvironments = environments
-    .filter(environment => environment.parentId === (baseEnvironment && baseEnvironment._id))
-    .sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
-  if (inputRef.current && selectedEnvironmentColor) {
-    inputRef.current.value = selectedEnvironmentColor;
-  }
 
   function onReorder(e: any) {
     const source = [...e.keys][0];
@@ -349,16 +326,19 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
         <div className="env-modal__sidebar">
           <div
             className={classnames('env-modal__sidebar-root-item', {
-              'env-modal__sidebar-item--active': selectedEnvironmentId === baseEnvironment?._id,
+              'env-modal__sidebar-item--active': activeEnvironment._id === baseEnvironment._id,
             })}
           >
             <button
               onClick={() => {
-                if (environmentEditorRef.current?.isValid() && selectedEnvironmentId !== baseEnvironment?._id) {
-                  baseEnvironment?._id && setState(state => ({
-                    ...state,
-                    selectedEnvironmentId: baseEnvironment?._id,
-                  }));
+                if (environmentEditorRef.current?.isValid() && activeEnvironment._id !== baseEnvironment._id) {
+                  setActiveEnvironmentFetcher.submit({
+                    environmentId: baseEnvironment._id,
+                  },
+                  {
+                    method: 'post',
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
+                  });
                 }
               }}
             >
@@ -387,16 +367,14 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                   icon="eye"
                   label="Environment"
                   onClick={async () => {
-                    if (baseEnvironment) {
-                      const environment = await models.environment.create({
-                        parentId: baseEnvironment._id,
-                        isPrivate: false,
-                      });
-                      setState(state => ({
-                        ...state,
-                        selectedEnvironmentId: environment._id,
-                      }));
-                    }
+                    createEnvironmentFetcher.submit({
+                      isPrivate: false,
+                    },
+                    {
+                      encType: 'application/json',
+                      method: 'post',
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/create`,
+                    });
                   }}
                 />
               </DropdownItem>
@@ -405,16 +383,14 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                   icon="eye-slash"
                   label="Private Environment"
                   onClick={async () => {
-                    if (baseEnvironment) {
-                      const environment = await models.environment.create({
-                        parentId: baseEnvironment._id,
-                        isPrivate: true,
-                      });
-                      setState(state => ({
-                        ...state,
-                        selectedEnvironmentId: environment._id,
-                      }));
-                    }
+                    createEnvironmentFetcher.submit({
+                      isPrivate: true,
+                    },
+                    {
+                      encType: 'application/json',
+                      method: 'post',
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/create`,
+                    });
                   }}
                 />
               </DropdownItem>
@@ -438,29 +414,29 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
         <div className="env-modal__main">
           <div className="env-modal__main__header">
             <h1>
-              {baseEnvironment?._id === selectedEnvironmentId ? (
+              {baseEnvironment._id === activeEnvironment._id ? (
                 ROOT_ENVIRONMENT_NAME
               ) : (
                 <Editable
                   singleClick
                   className="wide"
                   onSubmit={name => {
-                    if (selectedEnvironmentId && name) {
-                      updateEnvironment(selectedEnvironmentId, { name });
+                    if (activeEnvironment._id && name) {
+                      updateEnvironment(activeEnvironment._id, { name });
                     }
                   }}
-                  value={selectedEnvironmentName}
+                  value={activeEnvironment.name}
                 />
               )}
             </h1>
 
-            {selectedEnvironmentId && baseEnvironment?._id !== selectedEnvironmentId ? (
+            {baseEnvironment._id !== activeEnvironment._id ? (
               <Fragment>
                 <input
                   className="hidden"
                   type="color"
                   ref={inputRef}
-                  onChange={event => updateEnvironment(selectedEnvironmentId, { color: event.target.value })}
+                  onChange={event => updateEnvironment(activeEnvironment._id, { color: event.target.value })}
                 />
 
                 <Dropdown
@@ -471,11 +447,11 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                       className="btn btn--clicky"
                       disableHoverBehavior={false}
                     >
-                      {selectedEnvironmentColor && (
+                      {activeEnvironment.color && (
                         <i
                           className="fa fa-circle space-right"
                           style={{
-                            color: selectedEnvironmentColor,
+                            color: activeEnvironment.color,
                           }}
                         />
                       )}
@@ -483,18 +459,18 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                     </DropdownButton>
                   }
                 >
-                  <DropdownItem aria-label={selectedEnvironmentColor ? 'Change Color' : 'Assign Color'}>
+                  <DropdownItem aria-label={activeEnvironment.color ? 'Change Color' : 'Assign Color'}>
                     <ItemContent
                       icon="circle"
-                      label={selectedEnvironmentColor ? 'Change Color' : 'Assign Color'}
+                      label={activeEnvironment.color ? 'Change Color' : 'Assign Color'}
                       iconStyle={{
-                        ...(selectedEnvironmentColor ? { color: selectedEnvironmentColor } : {}),
+                        ...(activeEnvironment.color ? { color: activeEnvironment.color } : {}),
                       }}
                       onClick={() => {
-                        if (!selectedEnvironmentColor) {
+                        if (!activeEnvironment.color) {
                           // TODO: fix magic-number. Currently this is the `surprise` background color for the default theme,
                           // but we should be grabbing the actual value from the user's actual theme instead.
-                          updateEnvironment(selectedEnvironmentId, { color: '#7d69cb' });
+                          updateEnvironment(activeEnvironment._id, { color: '#7d69cb' });
                         }
                         inputRef.current?.click();
                       }}
@@ -503,22 +479,24 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
                   <DropdownItem aria-label='Unset Color'>
                     <ItemContent
-                      isDisabled={!selectedEnvironmentColor}
+                      isDisabled={!activeEnvironment.color}
                       icon="minus-circle"
                       label="Unset Color"
-                      onClick={() => updateEnvironment(selectedEnvironmentId, { color: null })}
+                      onClick={() => updateEnvironment(activeEnvironment._id, { color: null })}
                     />
                   </DropdownItem>
                 </Dropdown>
 
                 <button
                   onClick={async () => {
-                    if (selectedEnvironment) {
-                      const newEnvironment = await models.environment.duplicate(selectedEnvironment);
-                      setState(state => ({
-                        ...state,
-                        selectedEnvironmentId: newEnvironment._id,
-                      }));
+                    if (activeEnvironment) {
+                      duplicateEnvironmentFetcher.submit({
+                        environmentId: activeEnvironment._id,
+                      }, {
+                        encType: 'application/json',
+                        method: 'post',
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/duplicate`,
+                      });
                     }
                   }}
                   className="btn btn--clicky space-right"
@@ -526,22 +504,22 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                   <i className="fa fa-copy" /> Duplicate
                 </button>
 
-                <PromptButton
-                  onClick={() => handleDeleteEnvironment(selectedEnvironmentId)}
+                {activeEnvironment._id !== baseEnvironment._id && <PromptButton
+                  onClick={() => handleDeleteEnvironment(activeEnvironment._id)}
                   className="btn btn--clicky"
                 >
                   <i className="fa fa-trash-o" />
-                </PromptButton>
+                </PromptButton>}
               </Fragment>
             ) : null}
           </div>
           <div className="env-modal__editor">
             <EnvironmentEditor
               ref={environmentEditorRef}
-              key={`${selectedEnvironmentId || 'n/a'}`}
+              key={`${activeEnvironment._id}`}
               environmentInfo={{
-                object: selectedEnvironment?.data || {},
-                propertyOrder: selectedEnvironment?.dataPropertyOrder || null,
+                object: activeEnvironment.data,
+                propertyOrder: activeEnvironment.dataPropertyOrder,
               }}
               onBlur={() => {
                 // Only save if it's valid
@@ -549,8 +527,8 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                   return;
                 }
                 const data = environmentEditorRef.current?.getValue();
-                if (selectedEnvironment && data) {
-                  updateEnvironment(selectedEnvironmentId, {
+                if (activeEnvironment && data) {
+                  updateEnvironment(activeEnvironment._id, {
                     data: data.object,
                     dataPropertyOrder: data.propertyOrder,
                   });

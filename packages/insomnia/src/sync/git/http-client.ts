@@ -30,8 +30,8 @@ export const httpClient = {
     }
 
     return {
-      url: response.request.res.responseUrl,
-      method: response.request.method,
+      url: config.url,
+      method: config.method,
       headers: response.headers,
       body: [response.data],
       statusCode: response.status,
