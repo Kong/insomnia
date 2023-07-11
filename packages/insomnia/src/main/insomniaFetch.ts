@@ -7,8 +7,9 @@ interface FetchConfig {
   method: 'POST' | 'PUT' | 'GET';
   path: string;
   sessionId: string | null;
-  obj?: unknown;
+  data?: unknown;
   retries?: number;
+  origin?: string;
 }
 // internal request (insomniaFetch)
 // should validate ssl certs on our server
@@ -28,39 +29,37 @@ const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): 
       await delay(retries * 200);
       return exponentialBackOff(url, init, retries);
     }
+    if (!response.ok) {
+      const err = new Error(`Response ${response.status} for ${url}`);
+      err.message = await response.text();
+      throw err;
+    }
     return response;
   } catch (err) {
-    throw new Error(`Failed to fetch '${url}'`);
+    throw new Error(`Failed to fetch ${url}: ${err.message}`);
   }
 };
 
-export async function insomniaFetch<T = any>({ method, path, obj, sessionId, retries = 0 }: FetchConfig): Promise<T | string> {
+export async function insomniaFetch<T = any>({ method, path, data, sessionId, origin }: FetchConfig): Promise<T | string> {
   const config: RequestInit = {
+    method,
     headers: {
       'X-Insomnia-Client': getClientString(),
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
-      ...(obj ? { 'Content-Type': 'application/json' } : {}),
+      ...(data ? { 'Content-Type': 'application/json' } : {}),
     },
-    ...(obj ? { body: JSON.stringify(obj) } : {}),
+    ...(data ? { body: JSON.stringify(data) } : {}),
   };
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
-  const response = await exponentialBackOff(`${getApiBaseURL()}${path}`, config, retries);
+  const response = await exponentialBackOff(`${origin || getApiBaseURL()}${path}`, config);
   const uri = response.headers.get('x-insomnia-command');
   if (uri) {
     for (const window of BrowserWindow.getAllWindows()) {
       window.webContents.send('shell:open', uri);
     }
   }
-  if (!response.ok) {
-    const err = new Error(`Response ${response.status} for ${path}`);
-    err.message = await response.text();
-    // @ts-expect-error -- TSCONVERSION
-    err.statusCode = response.status;
-    throw err;
-  }
-
   const isJson = response.headers.get('content-type') === 'application/json' || path.match(/\.json$/);
   return isJson ? response.json() : response.text();
 }
