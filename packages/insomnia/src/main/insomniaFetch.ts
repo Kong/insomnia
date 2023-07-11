@@ -1,3 +1,4 @@
+import { net } from 'electron';
 import { parse as urlParse } from 'url';
 
 import { getApiBaseURL, getClientString } from '../common/constants';
@@ -23,40 +24,40 @@ interface FetchConfig {
   obj?: unknown;
   retries?: number;
 }
+// internel backoff customer headers for tracing x-command respect proxies(two way:? also be able to listen for specific messages in headers)
+// external might respect proxy can disable ssl validation
+// build core request thing that uses node:fetch? proxy support
+// build two wrappers around core for internal and external
+// note: fetch may not support conditional proxying
+const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): Promise<Response> => {
+  try {
+    const response = await net.fetch(url, init);
+    if (response.status === 502 && retries < 5) {
+      retries++;
+      await delay(retries * 200);
+      return exponentialBackOff(url, init, retries);
+    }
+    return response;
+  } catch (err) {
+    throw new Error(`Failed to fetch '${url}'`);
+  }
+};
+
 export async function insomniaFetch<T = any>({ method, path, obj, sessionId, retries = 0 }: FetchConfig): Promise<T | string> {
-  const config: {
-    method: string;
-    headers: Record<string, string>;
-    body?: string | Buffer;
-  } = {
-    method: method,
+  const config: RequestInit = {
     headers: {
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
       ...(_userAgent ? { 'X-Insomnia-Client': _userAgent } : {}),
       ...(obj ? { 'Content-Type': 'application/json' } : {}),
-      ...(obj ? { body: JSON.stringify(obj) } : {}),
     },
+    ...(obj ? { body: JSON.stringify(obj) } : {}),
   };
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
 
   invariant(_baseUrl, 'API base URL not configured!');
-  const url = `${_baseUrl}${path}`;
-  let response: Response | undefined;
-  try {
-    response = await window.fetch(url, config);
-
-    // Exponential backoff for 502 errors
-    if (response.status === 502 && retries < 5) {
-      retries++;
-      await delay(retries * 200);
-      return insomniaFetch({ method, path, obj, sessionId, retries });
-    }
-  } catch (err) {
-    throw new Error(`Failed to fetch '${url}'`);
-  }
-
+  const response = await exponentialBackOff(`${_baseUrl}${path}`, config, retries);
   const uri = response.headers.get('x-insomnia-command');
   if (uri) {
     const parsed = urlParse(uri, true);
