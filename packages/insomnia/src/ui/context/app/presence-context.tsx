@@ -50,7 +50,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
         path: `/v1/teams/${sanitizeTeamId(organizationId)}/collaborators`,
         method: 'POST',
         sessionId: getCurrentSessionId() || '',
-        obj: {
+        data: {
           project: projectId,
           file: workspaceId,
         },
