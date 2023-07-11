@@ -1,7 +1,6 @@
 import * as srp from 'srp-js';
 
 import * as crypt from './crypt';
-import { insomniaFetch } from './fetch';
 
 type LoginCallback = (isLoggedIn: boolean) => void;
 
@@ -101,7 +100,7 @@ export async function changePasswordWithToken(rawNewPassphrase: string, confirma
   const symmetricKey = JSON.stringify(_getSymmetricKey());
   const newEncSymmetricKeyJSON = crypt.encryptAES(newSecret, symmetricKey);
   const newEncSymmetricKey = JSON.stringify(newEncSymmetricKeyJSON);
-  return insomniaFetch({
+  return window.main.insomniaFetch({
     method: 'POST',
     path: '/auth/change-password',
     obj: {
@@ -116,7 +115,7 @@ export async function changePasswordWithToken(rawNewPassphrase: string, confirma
 }
 
 export function sendPasswordChangeCode() {
-  return insomniaFetch({
+  return window.main.insomniaFetch({
     method: 'POST',
     path: '/auth/send-password-code',
     sessionId: getCurrentSessionId(),
@@ -180,7 +179,7 @@ export function isLoggedIn() {
 /** Log out and delete session data */
 export async function logout() {
   try {
-    await insomniaFetch({
+    await window.main.insomniaFetch({
       method: 'POST',
       path: '/auth/logout',
       sessionId: getCurrentSessionId(),
@@ -223,7 +222,7 @@ export function setSessionData(
   return sessionData;
 }
 export async function listTeams() {
-  return insomniaFetch({
+  return window.main.insomniaFetch({
     method: 'GET',
     path: '/api/teams',
     sessionId: getCurrentSessionId(),
@@ -238,7 +237,7 @@ function _getSymmetricKey() {
 }
 
 async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
-  const response = await insomniaFetch<WhoamiResponse>({
+  const response = await window.main.insomniaFetch<WhoamiResponse>({
     method: 'GET',
     path: '/auth/whoami',
     sessionId: sessionId || getCurrentSessionId(),
@@ -250,7 +249,7 @@ async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse>
 }
 
 function _getAuthSalts(email: string) {
-  return insomniaFetch({
+  return window.main.insomniaFetch({
     method: 'POST',
     path: '/auth/login-s',
     obj: { email },

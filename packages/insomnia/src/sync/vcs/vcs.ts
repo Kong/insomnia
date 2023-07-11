@@ -3,7 +3,6 @@ import crypto from 'crypto';
 import path from 'path';
 
 import * as crypt from '../../account/crypt';
-import { insomniaFetch } from '../../account/fetch';
 import * as session from '../../account/session';
 import { chunkArray, generateId } from '../../common/misc';
 import { strings } from '../../common/strings';
@@ -710,7 +709,7 @@ export class VCS {
   ): Promise<Record<string, any>> {
     const { sessionId } = this._assertSession();
 
-    const { data, errors } = await insomniaFetch({
+    const { data, errors } = await window.main.insomniaFetch({
       method: 'POST',
       path: '/graphql?' + name,
       obj: { query, variables },

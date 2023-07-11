@@ -7,10 +7,10 @@ import { oas } from '@stoplight/spectral-rulesets';
 import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
-import { insomniaFetch } from '../../account/fetch';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { exportAllWorkspaces } from '../export';
+import { insomniaFetch } from '../insomniaFetch';
 import installPlugin from '../install-plugin';
 import { axiosRequest } from '../network/axios-request';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
