@@ -1,12 +1,5 @@
 {
-  "json.schemas": [
-    {
-      "fileMatch": [
-        "insomnia.config.json",
-      ],
-      "url": "./packages/insomnia/src/utils/config/generated/schemas/insomnia.schema.json"
-    }
-  ],
+  "json.schemas": [],
   "files.associations": {
     "*.db": "ndjson",
     "*.jsonl": "ndjson",

@@ -16,7 +16,6 @@ const mockStore = configureMockStore(middlewares);
 
 const createSettings = () => {
   const settings = models.settings.init();
-  settings.incognitoMode = true;
   return settings;
 };
 
