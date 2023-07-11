@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
+import { version } from '../../../package.json';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { CONTENT_TYPE_GRAPHQL } from '../../common/constants';
 import { newBodyGraphQL, updateMimeType } from '../../ui/components/panes/request-pane';
@@ -94,7 +95,7 @@ describe('updateMimeType()', () => {
         value: 'text/html',
       }, {
         'name': 'User-Agent',
-        'value': 'Insomnia/2023.4.0',
+        'value': `Insomnia/${version}`,
       },
     ]);
   });
@@ -134,7 +135,7 @@ describe('updateMimeType()', () => {
       },
       null, {
         'name': 'User-Agent',
-        'value': 'Insomnia/2023.4.0',
+        'value': `Insomnia/${version}`,
       },
     ]);
   });
@@ -158,7 +159,7 @@ describe('updateMimeType()', () => {
         value: 'text/html',
       }, {
         'name': 'User-Agent',
-        'value': 'Insomnia/2023.4.0',
+        'value': `Insomnia/${version}`,
       },
     ]);
   });
@@ -179,7 +180,7 @@ describe('updateMimeType()', () => {
     expect(newRequest.body).toEqual({});
     expect(newRequest.headers).toEqual([{
       'name': 'User-Agent',
-      'value': 'Insomnia/2023.4.0',
+      'value': `Insomnia/${version}`,
     }]);
   });
 

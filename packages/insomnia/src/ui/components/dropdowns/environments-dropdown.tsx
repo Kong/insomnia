@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useRef } from 'react';
+import React, { FC, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -28,13 +28,10 @@ export const EnvironmentsDropdown: FC<Props> = () => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const setActiveEnvironmentFetcher = useFetcher();
   const dropdownRef = useRef<DropdownHandle>(null);
-
-  const toggleSwitchMenu = useCallback(() => {
-    dropdownRef.current?.toggle(true);
-  }, []);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useDocBodyKeyboardShortcuts({
-    environment_showSwitchMenu: toggleSwitchMenu,
+    environment_showSwitchMenu: () => setIsDropdownOpen(true),
   });
 
   // NOTE: Base environment might not exist if the users hasn't managed environments yet.
@@ -43,6 +40,9 @@ export const EnvironmentsDropdown: FC<Props> = () => {
   return (
     <Dropdown
       ref={dropdownRef}
+      isOpen={isDropdownOpen}
+      onOpen={() => setIsDropdownOpen(true)}
+      onClose={() => setIsDropdownOpen(false)}
       triggerButton={
         <DropdownButton
           className="btn btn--super-compact no-wrap"
