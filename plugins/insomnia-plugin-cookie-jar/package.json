@@ -28,6 +28,6 @@
     "test": "jest --silent"
   },
   "dependencies": {
-    "tough-cookie": "^2.3.3"
+    "tough-cookie": "^4.1.3"
   }
 }
