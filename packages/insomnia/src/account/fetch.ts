@@ -57,11 +57,7 @@ export async function insomniaFetch<T = any>(
 
   const uri = response.headers.get('x-insomnia-command');
   if (uri) {
-    const parsed = urlParse(uri, t  if (response.headers.get('content-type') === 'application/json' || path.match(/\.json$/)) {
-      return response.json();
-    } else {
-      return response.text();
-    }rue);
+    const parsed = urlParse(uri, true);
     _commandListeners.map(fn => fn(`${parsed.hostname}${parsed.pathname}`, JSON.parse(JSON.stringify(parsed.query))));
   }
   if (!response.ok) {
