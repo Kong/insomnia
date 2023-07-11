@@ -103,8 +103,7 @@ export const EnvironmentsDropdown: FC<Props> = () => {
           label="No Environment"
           onClick={() => {
             setActiveEnvironmentFetcher.submit({
-              // @TODO - Null VS Empty String VS other
-              environmentId: '',
+              environmentId: baseEnvironment._id,
             },
             {
               method: 'post',

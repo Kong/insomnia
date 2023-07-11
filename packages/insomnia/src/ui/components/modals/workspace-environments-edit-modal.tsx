@@ -12,7 +12,7 @@ import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { Editable } from '../base/editable';
 import { Link } from '../base/link';
-import { Modal, type ModalHandle, ModalProps } from '../base/modal';
+import { type ModalHandle, Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -281,8 +281,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
 
   async function handleDeleteEnvironment(environmentId: string) {
     deleteEnvironmentFetcher.submit({
-      // @TODO empty string vs null
-      environmentId: environmentId,
+      environmentId,
     },
     {
       encType: 'application/json',
@@ -327,14 +326,14 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
         <div className="env-modal__sidebar">
           <div
             className={classnames('env-modal__sidebar-root-item', {
-              'env-modal__sidebar-item--active': activeEnvironment?._id === baseEnvironment?._id,
+              'env-modal__sidebar-item--active': activeEnvironment._id === baseEnvironment._id,
             })}
           >
             <button
               onClick={() => {
-                if (environmentEditorRef.current?.isValid() && activeEnvironment?._id !== baseEnvironment?._id) {
+                if (environmentEditorRef.current?.isValid() && activeEnvironment._id !== baseEnvironment._id) {
                   setActiveEnvironmentFetcher.submit({
-                    environmentId: baseEnvironment?._id,
+                    environmentId: baseEnvironment._id,
                   },
                   {
                     method: 'post',
@@ -415,29 +414,29 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
         <div className="env-modal__main">
           <div className="env-modal__main__header">
             <h1>
-              {baseEnvironment?._id === activeEnvironment?._id ? (
+              {baseEnvironment._id === activeEnvironment._id ? (
                 ROOT_ENVIRONMENT_NAME
               ) : (
                 <Editable
                   singleClick
                   className="wide"
                   onSubmit={name => {
-                    if (activeEnvironment?._id && name) {
-                      updateEnvironment(activeEnvironment?._id, { name });
+                    if (activeEnvironment._id && name) {
+                      updateEnvironment(activeEnvironment._id, { name });
                     }
                   }}
-                  value={activeEnvironment?.name}
+                  value={activeEnvironment.name}
                 />
               )}
             </h1>
 
-            {activeEnvironment?._id && baseEnvironment?._id !== activeEnvironment?._id ? (
+            {baseEnvironment._id !== activeEnvironment._id ? (
               <Fragment>
                 <input
                   className="hidden"
                   type="color"
                   ref={inputRef}
-                  onChange={event => updateEnvironment(activeEnvironment?._id, { color: event.target.value })}
+                  onChange={event => updateEnvironment(activeEnvironment._id, { color: event.target.value })}
                 />
 
                 <Dropdown
@@ -471,7 +470,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                         if (!activeEnvironment.color) {
                           // TODO: fix magic-number. Currently this is the `surprise` background color for the default theme,
                           // but we should be grabbing the actual value from the user's actual theme instead.
-                          updateEnvironment(activeEnvironment?._id, { color: '#7d69cb' });
+                          updateEnvironment(activeEnvironment._id, { color: '#7d69cb' });
                         }
                         inputRef.current?.click();
                       }}
@@ -483,7 +482,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                       isDisabled={!activeEnvironment.color}
                       icon="minus-circle"
                       label="Unset Color"
-                      onClick={() => updateEnvironment(activeEnvironment?._id, { color: null })}
+                      onClick={() => updateEnvironment(activeEnvironment._id, { color: null })}
                     />
                   </DropdownItem>
                 </Dropdown>
@@ -505,8 +504,8 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                   <i className="fa fa-copy" /> Duplicate
                 </button>
 
-                {activeEnvironment?._id !== baseEnvironment?._id && <PromptButton
-                  onClick={() => handleDeleteEnvironment(activeEnvironment?._id)}
+                {activeEnvironment._id !== baseEnvironment._id && <PromptButton
+                  onClick={() => handleDeleteEnvironment(activeEnvironment._id)}
                   className="btn btn--clicky"
                 >
                   <i className="fa fa-trash-o" />
@@ -517,10 +516,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
           <div className="env-modal__editor">
             <EnvironmentEditor
               ref={environmentEditorRef}
-              key={`${activeEnvironment?._id || 'n/a'}`}
+              key={`${activeEnvironment._id}`}
               environmentInfo={{
-                object: activeEnvironment?.data || {},
-                propertyOrder: activeEnvironment?.dataPropertyOrder || null,
+                object: activeEnvironment.data,
+                propertyOrder: activeEnvironment.dataPropertyOrder,
               }}
               onBlur={() => {
                 // Only save if it's valid
@@ -529,7 +528,7 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                 }
                 const data = environmentEditorRef.current?.getValue();
                 if (activeEnvironment && data) {
-                  updateEnvironment(activeEnvironment?._id, {
+                  updateEnvironment(activeEnvironment._id, {
                     data: data.object,
                     dataPropertyOrder: data.propertyOrder,
                   });
