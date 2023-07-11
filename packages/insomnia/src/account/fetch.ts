@@ -1,18 +1,20 @@
 import { parse as urlParse } from 'url';
 
+import { getApiBaseURL, getClientString } from '../common/constants';
 import { delay } from '../common/misc';
 import { invariant } from '../utils/invariant';
-let _userAgent = '';
-let _baseUrl = '';
+
 const _commandListeners: Function[] = [];
+export function onCommand(callback: Function) {
+  _commandListeners.push(callback);
+}
+
+let _userAgent = getClientString();
+let _baseUrl = getApiBaseURL();
 
 export function setup(userAgent: string, baseUrl: string) {
   _userAgent = userAgent;
   _baseUrl = baseUrl;
-}
-
-export function onCommand(callback: Function) {
-  _commandListeners.push(callback);
 }
 
 export async function insomniaFetch<T = any>(
