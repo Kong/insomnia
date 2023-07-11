@@ -5,7 +5,7 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import type { Environment } from '../../../models/environment';
 import { selectHotKeyRegistry } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
-import { type DropdownHandle, Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showModal } from '../modals/index';
 import { WorkspaceEnvironmentsEditModal } from '../modals/workspace-environments-edit-modal';
