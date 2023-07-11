@@ -291,7 +291,11 @@ export const GraphQLEditor: FC<Props> = ({
         }
       }
 
-      const content = getGraphQLContent(state.body, query);
+      if (!operationName) {
+        delete state.body.operationName;
+      }
+
+      const content = getGraphQLContent(state.body, query, operationName);
       onChange(content);
 
       setState(state => ({
