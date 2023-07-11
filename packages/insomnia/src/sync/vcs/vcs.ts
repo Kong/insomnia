@@ -712,7 +712,7 @@ export class VCS {
     const { data, errors } = await window.main.insomniaFetch({
       method: 'POST',
       path: '/graphql?' + name,
-      obj: { query, variables },
+      data: { query, variables },
       sessionId,
     });
 

@@ -114,7 +114,7 @@ export const Toast: FC = () => {
       const notificationOrEmpty = await window.main.insomniaFetch<ToastNotification>({
         method: 'POST',
         path: '/notification',
-        obj: data,
+        data,
         sessionId: session.getCurrentSessionId(),
       });
       if (notificationOrEmpty && typeof notificationOrEmpty !== 'string') {

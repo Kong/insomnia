@@ -626,13 +626,11 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
 
         const methodInfo = resolveComponentSchemaRefs(spec, getMethodInfo(request));
 
-        const response = await window.main.axiosRequest({
+        const response = await window.main.insomniaFetch({
           method: 'POST',
-          url: 'https://ai.insomnia.rest/v1/generate-test',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Session-Id': session.getCurrentSessionId(),
-          },
+          origin: 'https://ai.insomnia.rest',
+          path: '/v1/generate-test',
+          sessionId: session.getCurrentSessionId(),
           data: {
             teamId: organizationId,
             request: requests.find(r => r._id === test.requestId),
@@ -709,13 +707,11 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
   for (const test of tests) {
     async function generateTest() {
       try {
-        const response = await window.main.axiosRequest({
+        const response = await window.main.insomniaFetch({
           method: 'POST',
-          url: 'https://ai.insomnia.rest/v1/generate-test',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Session-Id': session.getCurrentSessionId(),
-          },
+          origin: 'https://ai.insomnia.rest',
+          path: '/v1/generate-test',
+          sessionId: session.getCurrentSessionId(),
           data: {
             teamId: organizationId,
             request: requests.find(r => r._id === test.requestId),
@@ -753,13 +749,11 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   try {
-    const response = await window.main.axiosRequest({
+    const response = await window.main.insomniaFetch({
       method: 'POST',
-      url: 'https://ai.insomnia.rest/v1/access',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Session-Id': session.getCurrentSessionId(),
-      },
+      origin: 'https://ai.insomnia.rest',
+      path: '/v1/access',
+      sessionId: session.getCurrentSessionId(),
       data: {
         teamId: organizationId,
       },

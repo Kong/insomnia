@@ -1,75 +1,65 @@
-import { parse as urlParse } from 'url';
+import { BrowserWindow, net } from 'electron';
 
 import { getApiBaseURL, getClientString } from '../common/constants';
 import { delay } from '../common/misc';
-import { invariant } from '../utils/invariant';
 
-const _commandListeners: Function[] = [];
-export function onCommand(callback: Function) {
-  _commandListeners.push(callback);
-}
-
-let _userAgent = getClientString();
-let _baseUrl = getApiBaseURL();
-
-export function setup(userAgent: string, baseUrl: string) {
-  _userAgent = userAgent;
-  _baseUrl = baseUrl;
-}
 interface FetchConfig {
   method: 'POST' | 'PUT' | 'GET';
   path: string;
   sessionId: string | null;
-  obj?: unknown;
+  data?: unknown;
   retries?: number;
+  origin?: string;
 }
-export async function insomniaFetch<T = any>({ method, path, obj, sessionId, retries = 0 }: FetchConfig): Promise<T | string> {
-  const config: {
-    method: string;
-    headers: Record<string, string>;
-    body?: string | Buffer;
-  } = {
-    method: method,
+// internal request (insomniaFetch)
+// should validate ssl certs on our server
+// should only go to insomnia API
+// should be able to listen for specific messages in headers
+// should be able to retry on 502
+
+// external request (axiosRequest)
+// should respect settings for proxy and ssl validation
+// should be for all third party APIs, github, gitlab, isometric-git
+
+const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): Promise<Response> => {
+  try {
+    const response = await net.fetch(url, init);
+    if (response.status === 502 && retries < 5) {
+      retries++;
+      await delay(retries * 200);
+      return exponentialBackOff(url, init, retries);
+    }
+    if (!response.ok) {
+      const err = new Error(`Response ${response.status} for ${url}`);
+      err.message = await response.text();
+      throw err;
+    }
+    return response;
+  } catch (err) {
+    throw new Error(`Failed to fetch ${url}: ${err.message}`);
+  }
+};
+
+export async function insomniaFetch<T = any>({ method, path, data, sessionId, origin }: FetchConfig): Promise<T | string> {
+  const config: RequestInit = {
+    method,
     headers: {
+      'X-Insomnia-Client': getClientString(),
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
-      ...(_userAgent ? { 'X-Insomnia-Client': _userAgent } : {}),
-      ...(obj ? { 'Content-Type': 'application/json' } : {}),
-      ...(obj ? { body: JSON.stringify(obj) } : {}),
+      ...(data ? { 'Content-Type': 'application/json' } : {}),
     },
+    ...(data ? { body: JSON.stringify(data) } : {}),
   };
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
-
-  invariant(_baseUrl, 'API base URL not configured!');
-  const url = `${_baseUrl}${path}`;
-  let response: Response | undefined;
-  try {
-    response = await window.fetch(url, config);
-
-    // Exponential backoff for 502 errors
-    if (response.status === 502 && retries < 5) {
-      retries++;
-      await delay(retries * 200);
-      return insomniaFetch({ method, path, obj, sessionId, retries });
-    }
-  } catch (err) {
-    throw new Error(`Failed to fetch '${url}'`);
-  }
-
+  const response = await exponentialBackOff(`${origin || getApiBaseURL()}${path}`, config);
   const uri = response.headers.get('x-insomnia-command');
   if (uri) {
-    const parsed = urlParse(uri, true);
-    _commandListeners.map(fn => fn(`${parsed.hostname}${parsed.pathname}`, JSON.parse(JSON.stringify(parsed.query))));
+    for (const window of BrowserWindow.getAllWindows()) {
+      window.webContents.send('shell:open', uri);
+    }
   }
-  if (!response.ok) {
-    const err = new Error(`Response ${response.status} for ${path}`);
-    err.message = await response.text();
-    // @ts-expect-error -- TSCONVERSION
-    err.statusCode = response.status;
-    throw err;
-  }
-
   const isJson = response.headers.get('content-type') === 'application/json' || path.match(/\.json$/);
   return isJson ? response.json() : response.text();
 }

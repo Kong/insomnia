@@ -103,7 +103,7 @@ export async function changePasswordWithToken(rawNewPassphrase: string, confirma
   return window.main.insomniaFetch({
     method: 'POST',
     path: '/auth/change-password',
-    obj: {
+    data: {
       code: confirmationCode,
       newEmail: newEmail,
       encSymmetricKey: encSymmetricKey,
@@ -252,7 +252,7 @@ function _getAuthSalts(email: string) {
   return window.main.insomniaFetch({
     method: 'POST',
     path: '/auth/login-s',
-    obj: { email },
+    data: { email },
     sessionId: getCurrentSessionId(),
   });
 }
