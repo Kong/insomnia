@@ -112,7 +112,12 @@ export const Toast: FC = () => {
         updatesNotSupported: !updatesSupported(),
         version: getAppVersion(),
       };
-      const notificationOrEmpty = await insomniaFetch<ToastNotification>('POST', '/notification', data, session.getCurrentSessionId());
+      const notificationOrEmpty = await insomniaFetch<ToastNotification>({
+        method: 'POST',
+        path: '/notification',
+        obj: data,
+        sessionId: session.getCurrentSessionId(),
+      });
       if (notificationOrEmpty && typeof notificationOrEmpty !== 'string') {
         updatedNotification = notificationOrEmpty;
       }

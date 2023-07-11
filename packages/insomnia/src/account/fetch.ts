@@ -16,14 +16,14 @@ export function setup(userAgent: string, baseUrl: string) {
   _userAgent = userAgent;
   _baseUrl = baseUrl;
 }
-
-export async function insomniaFetch<T = any>(
-  method: 'POST' | 'PUT' | 'GET',
-  path: string,
-  obj: unknown,
-  sessionId: string | null,
-  retries = 0
-): Promise<T | string> {
+interface FetchConfig {
+  method: 'POST' | 'PUT' | 'GET';
+  path: string;
+  sessionId: string | null;
+  obj?: unknown;
+  retries?: number;
+}
+export async function insomniaFetch<T = any>({ method, path, obj, sessionId, retries = 0 }: FetchConfig): Promise<T | string> {
   const config: {
     method: string;
     headers: Record<string, string>;
@@ -51,7 +51,7 @@ export async function insomniaFetch<T = any>(
     if (response.status === 502 && retries < 5) {
       retries++;
       await delay(retries * 200);
-      return insomniaFetch(method, path, obj, sessionId, retries);
+      return insomniaFetch({ method, path, obj, sessionId, retries });
     }
   } catch (err) {
     throw new Error(`Failed to fetch '${url}'`);

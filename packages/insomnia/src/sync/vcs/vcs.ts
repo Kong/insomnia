@@ -710,15 +710,12 @@ export class VCS {
   ): Promise<Record<string, any>> {
     const { sessionId } = this._assertSession();
 
-    const { data, errors } = await insomniaFetch(
-      'POST',
-      '/graphql?' + name,
-      {
-        query,
-        variables,
-      },
+    const { data, errors } = await insomniaFetch({
+      method: 'POST',
+      path: '/graphql?' + name,
+      obj: { query, variables },
       sessionId,
-    );
+    });
 
     if (errors && errors.length) {
       console.log(`[sync] Failed to query ${name}`, errors);

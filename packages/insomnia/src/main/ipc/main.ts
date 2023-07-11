@@ -7,6 +7,7 @@ import { oas } from '@stoplight/spectral-rulesets';
 import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
+import { insomniaFetch } from '../../account/fetch';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { exportAllWorkspaces } from '../export';
@@ -36,8 +37,12 @@ export interface MainBridgeAPI {
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   axiosRequest: typeof axiosRequest;
+  insomniaFetch: typeof insomniaFetch;
 }
 export function registerMainHandlers() {
+  ipcMain.handle('insomniaFetch', async (_, options: Parameters<typeof insomniaFetch>[0]) => {
+    return insomniaFetch(options);
+  });
   ipcMain.handle('axiosRequest', async (_, options: Parameters<typeof axiosRequest>[0]) => {
     return axiosRequest(options);
   });
