@@ -3,7 +3,6 @@ import * as electron from 'electron';
 import { app } from 'electron';
 import fs from 'fs';
 import fsx from 'fs-extra';
-import mkdirp from 'mkdirp';
 import path from 'path';
 
 import { isDevelopment, isWindows } from '../common/constants';
@@ -53,7 +52,7 @@ export default async function(lookupName: string) {
       const pluginDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'plugins', moduleName);
 
       // Make plugin directory
-      mkdirp.sync(pluginDir);
+      fs.mkdirSync(pluginDir, { recursive: true });
 
       // Download the module
       const request = electron.net.request(info.dist.tarball);
@@ -73,7 +72,7 @@ export default async function(lookupName: string) {
 
       // Move each dependency into node_modules folder
       const pluginModulesDir = path.join(pluginDir, 'node_modules');
-      mkdirp.sync(pluginModulesDir);
+      fs.mkdirSync(pluginModulesDir, { recursive: true });
 
       for (const name of fs.readdirSync(tmpDir)) {
         const src = path.join(tmpDir, name);
@@ -166,7 +165,8 @@ async function _isInsomniaPlugin(lookupName: string) {
 async function _installPluginToTmpDir(lookupName: string) {
   return new Promise<{ tmpDir: string }>((resolve, reject) => {
     const tmpDir = path.join(electron.app.getPath('temp'), `${lookupName}-${Date.now()}`);
-    mkdirp.sync(tmpDir);
+    fs.mkdirSync(tmpDir, { recursive: true });
+
     console.log(`[plugins] Installing plugin to ${tmpDir}`);
     childProcess.execFile(
       escape(process.execPath),

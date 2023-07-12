@@ -1,5 +1,4 @@
 import fs from 'fs';
-import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
 
@@ -22,7 +21,7 @@ const recursiveWriteProtoDirectory = async (
 ): Promise<string[]> => {
   // Increment folder path
   const dirPath = path.join(currentDirPath, dir.name);
-  mkdirp.sync(dirPath);
+  fs.mkdirSync(dirPath, { recursive: true });
   // Get and write proto files
   const files = descendants.filter(isProtoFile).filter(f => f.parentId === dir._id);
   await Promise.all(files.map(protoFile => {
@@ -87,7 +86,8 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
     // Write single file
     // Create temp folder
     const rootDir = path.join(os.tmpdir(), 'insomnia-grpc');
-    mkdirp.sync(rootDir);
+    fs.mkdirSync(rootDir, { recursive: true });
+
     const filePath = `${protoFile._id}.${protoFile.modified}.proto`;
     const result = {
       filePath,

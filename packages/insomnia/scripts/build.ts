@@ -1,7 +1,7 @@
 import childProcess from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
+import fs from 'fs';
 import licenseChecker from 'license-checker';
-import mkdirp from 'mkdirp';
 import { ncp } from 'ncp';
 import path from 'path';
 import rimraf from 'rimraf';
@@ -28,7 +28,7 @@ const emptyDir = (relPath: string) =>
       if (err) {
         reject(err);
       } else {
-        mkdirp.sync(dir);
+        fs.mkdirSync(dir, { recursive: true });
         resolve();
       }
     });
@@ -52,7 +52,7 @@ const buildLicenseList = (relSource: string, relDest: string) =>
   new Promise<void>((resolve, reject) => {
     const source = path.resolve(__dirname, relSource);
     const dest = path.resolve(__dirname, relDest);
-    mkdirp.sync(path.dirname(dest));
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
 
     licenseChecker.init(
       {

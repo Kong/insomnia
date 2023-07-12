@@ -1,5 +1,4 @@
 import fs from 'fs';
-import mkdirp from 'mkdirp';
 import path from 'path';
 
 import type { BaseDriver } from './base';
@@ -150,7 +149,8 @@ export default class FileSystemDriver implements BaseDriver {
   _getKeyPath(key: string) {
     const p = path.join(this._directory, key);
     // Create base directory
-    mkdirp.sync(path.dirname(p));
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+
     return p;
   }
 }

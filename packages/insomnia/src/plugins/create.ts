@@ -1,6 +1,5 @@
 import electron from 'electron';
 import fs from 'fs';
-import mkdirp from 'mkdirp';
 import path from 'path';
 
 export async function createPlugin(
@@ -13,8 +12,8 @@ export async function createPlugin(
   if (fs.existsSync(pluginDir)) {
     throw new Error(`Plugin already exists at "${pluginDir}"`);
   }
+  fs.mkdirSync(pluginDir, { recursive: true });
 
-  mkdirp.sync(pluginDir);
   // Write package.json
   fs.writeFileSync(
     path.join(pluginDir, 'package.json'),

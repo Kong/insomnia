@@ -1,5 +1,4 @@
 import fs from 'fs';
-import mkdirp from 'mkdirp';
 import path from 'path';
 
 import { InsoError } from './errors';
@@ -12,7 +11,8 @@ export async function writeFileWithCliOptions(
   const outputPath = path.isAbsolute(output) ? output : path.join(workingDir || process.cwd(), output);
 
   try {
-    await mkdirp.sync(path.dirname(outputPath));
+    await fs.promises.mkdir(path.dirname(outputPath), { recursive: true });
+
     await fs.promises.writeFile(outputPath, contents);
     return outputPath;
   } catch (error) {

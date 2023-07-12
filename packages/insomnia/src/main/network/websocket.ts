@@ -1,7 +1,6 @@
 import electron, { ipcMain } from 'electron';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
-import mkdirp from 'mkdirp';
 import path from 'path';
 import tls, { KeyObject, PxfObject } from 'tls';
 import { v4 as uuidV4 } from 'uuid';
@@ -119,7 +118,8 @@ const openWebSocketConnection = async (
   }
 
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
-  mkdirp.sync(responsesDir);
+  fs.mkdirSync(responsesDir, { recursive: true });
+
   const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
   eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
   const timelinePath = path.join(responsesDir, responseId + '.timeline');

@@ -1,5 +1,5 @@
 import { ProcessEnvOptions, spawn } from 'child_process';
-import mkdirp from 'mkdirp';
+import fs from 'fs';
 import path from 'path';
 
 import { getVersion } from '../util';
@@ -65,7 +65,7 @@ const startProcess = (cwd: ProcessEnvOptions['cwd']) => {
 const artifacts = async () => {
   return new Promise<void>(resolve => {
     const cwd = path.join(__dirname, '../../artifacts');
-    mkdirp.sync(cwd);
+    fs.mkdirSync(cwd, { recursive: true });
 
     const process = startProcess(cwd);
 
