@@ -38,8 +38,6 @@ export interface SessionData {
 }
 export function onLoginLogout(loginCallback: LoginCallback) {
   window.main.on('loggedIn', () => {
-    console.log('onLoginLogout', isLoggedIn());
-
     loginCallback(isLoggedIn());
   });
 }
