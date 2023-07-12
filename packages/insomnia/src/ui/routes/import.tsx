@@ -1,7 +1,6 @@
 // Import
-import { ActionFunction, redirect } from 'react-router-dom';
+import { ActionFunction } from 'react-router-dom';
 
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { fetchImportContentFromURI, importResourcesToProject, importResourcesToWorkspace, scanResources, ScanResult } from '../../common/import';
 import * as models from '../../models';
 import { DEFAULT_PROJECT_ID } from '../../models/project';
@@ -57,9 +56,10 @@ export const scanForResourcesAction: ActionFunction = async ({ request }): Promi
 
 export interface ImportResourcesActionResult {
   errors?: string[];
+  done: boolean;
 }
 
-export const importResourcesAction: ActionFunction = async ({ request }): Promise<ImportResourcesActionResult | Response> => {
+export const importResourcesAction: ActionFunction = async ({ request }): Promise<ImportResourcesActionResult> => {
   const formData = await request.formData();
 
   const organizationId = formData.get('organizationId');
@@ -75,13 +75,13 @@ export const importResourcesAction: ActionFunction = async ({ request }): Promis
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found.');
   if (typeof workspaceId === 'string' && workspaceId) {
-    const result = await importResourcesToWorkspace({
+    await importResourcesToWorkspace({
       workspaceId: workspaceId,
     });
-    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${result.workspace._id}/${result.workspace.scope === 'design'
-      ? ACTIVITY_SPEC : ACTIVITY_DEBUG}`);
+    // TODO: find more elegant way to wait for import to finish
+    return { done: true };
   }
 
   await importResourcesToProject({ projectId: project._id });
-  return redirect(`/organization/${organizationId}/project/${projectId}`);
+  return { done: true };
 };

@@ -9,7 +9,6 @@ import React, {
 } from 'react';
 import { OverlayContainer, useDrop } from 'react-aria';
 import { useFetcher } from 'react-router-dom';
-import { usePrevious } from 'react-use';
 import styled from 'styled-components';
 
 import {
@@ -19,7 +18,6 @@ import {
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalHeader } from '../base/modal-header';
 import { Button } from '../themed-button';
-import { hideAllModals } from '.';
 
 const Pill = styled.div({
   display: 'flex',
@@ -424,17 +422,11 @@ export const ImportModal: FC<ImportModalProps> = ({
     modalRef.current?.show();
   }, []);
 
-  // Hack to close modal when import is complete until useFetcher provides a better API https://github.com/remix-run/react-router/discussions/10013
-  const prevImportFetcherState = usePrevious(importFetcher.state);
   useEffect(() => {
-    if (
-      prevImportFetcherState === 'loading' &&
-      importFetcher.state === 'idle'
-    ) {
-      hideAllModals();
-      modalProps.onHide?.();
+    if (importFetcher?.data?.done === true) {
+      modalRef.current?.hide();
     }
-  }, [importFetcher.state, modalProps, prevImportFetcherState]);
+  }, [importFetcher.data]);
   // allow workspace import if there is only one workspace
   const totalWorkspaces = scanResourcesFetcher.data?.workspaces?.length || 0;
   const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspaces <= 1;
