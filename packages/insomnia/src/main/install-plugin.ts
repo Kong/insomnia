@@ -1,4 +1,4 @@
-import { mkdir, readdir, rename, rmdir, stat } from 'node:fs/promises';
+import { cp, mkdir, readdir, stat } from 'node:fs/promises';
 
 import childProcess from 'child_process';
 import * as electron from 'electron';
@@ -64,8 +64,7 @@ export default async function(lookupName: string) {
       console.log(`[plugins] Moving plugin from ${tmpDir} to ${pluginDir}`);
 
       // Move entire module to plugins folder
-      await rmdir(pluginDir, { recursive: true });
-      await rename(path.join(tmpDir, moduleName), pluginDir);
+      await cp(path.join(tmpDir, moduleName), pluginDir, { recursive: true });
 
       // Move each dependency into node_modules folder
       const pluginModulesDir = path.join(pluginDir, 'node_modules');
@@ -79,8 +78,7 @@ export default async function(lookupName: string) {
         }
 
         const dest = path.join(pluginModulesDir, filename);
-        await rmdir(dest, { recursive: true });
-        await rename(src, dest);
+        await cp(src, dest, { recursive: true });
       }
     } catch (err) {
       reject(err);
@@ -191,6 +189,7 @@ async function _installPluginToTmpDir(lookupName: string) {
         },
       },
       (err, stdout, stderr) => {
+        console.log('[plugins] Install complete', { err, stdout, stderr });
         // Check yarn/electron process exit code.
         // In certain environments electron can exit with error even if the command was performed successfully.
         // Checking for success message in output is a workaround for false errors.
