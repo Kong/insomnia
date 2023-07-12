@@ -184,8 +184,7 @@ jobs:
             --dist-name ubuntu
             --dist-version focal
             --package-type insomnia
-            ${{ env.IS_PRERELEASE == 'true' && '--internal' || '' }}
-            --publish
+            ${{ env.IS_PRERELEASE == 'true' && '--internal' || '--publish' }}
 
       - name: Push Inso CLI docker image tags to Docker Hub
         run: |
