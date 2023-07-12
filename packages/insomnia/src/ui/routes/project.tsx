@@ -627,10 +627,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
       console.log({ projectExists, projectId, organizationId });
 
       if (!projectExists) {
-        projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]?._id;
-        if (!projectId) {
-          return redirect(`/organization/${organizationId}`);
-        }
+        projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]._id;
       }
 
       return redirect(`/organization/${match?.params.organizationId}/project/${projectId}`);
