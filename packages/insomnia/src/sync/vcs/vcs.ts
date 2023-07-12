@@ -1169,8 +1169,6 @@ export class VCS {
       });
     }
 
-    console.log(teamKeys);
-
     const { projectCreate } = await this._runGraphQL(
       `
         mutation (
