@@ -1,10 +1,7 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import fs from 'fs';
-import { Mock } from 'jest-mock';
 import os from 'os';
 import path from 'path';
 
-import { InsoError } from './errors';
 import { writeFileWithCliOptions } from './write-file';
 
 jest.mock('node:fs/promises', () => ({

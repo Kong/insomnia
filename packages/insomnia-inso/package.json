@@ -41,7 +41,6 @@
     "@jest/globals": "^28.1.0",
     "@types/nedb": "^1.8.11",
     "@types/node": "^20.3.3",
-    "@types/yaml": "^1.9.7",
     "concurrently": "^8.2.0",
     "cross-env": "^7.0.3",
     "esbuild": "^0.16.0",
@@ -81,6 +80,6 @@
     "nedb": "^1.8.0",
     "openapi-2-kong": "^3.19.0-beta.0",
     "string-argv": "^0.3.2",
-    "yaml": "^1.10.0"
+    "yaml": "^2.3.1"
   }
 }
