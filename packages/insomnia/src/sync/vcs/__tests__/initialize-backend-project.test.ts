@@ -72,7 +72,7 @@ describe('initialize-backend-project', () => {
     });
 
     it('should push snapshot if conditions are met', async () => {
-      const project = await models.project.create({ remoteId: 'abc' });
+      const project = await models.project.create({ remoteId: 'abc', parentId: 'abc' });
       const workspace = await models.workspace.create({ parentId: project._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id, pushSnapshotOnInitialize: true });
       vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
