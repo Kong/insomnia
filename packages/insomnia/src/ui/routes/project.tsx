@@ -610,6 +610,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
   const prevOrganizationLocation = localStorage.getItem(`locationHistoryEntry:${organizationId}`);
 
+  // Check if the last visited project exists and redirect to it
   if (prevOrganizationLocation) {
     const match = matchPath(
       {
@@ -632,6 +633,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     }
   }
 
+  // Check if the org is the default org and redirect to the first local project
   if (models.organization.DEFAULT_ORGANIZATION_ID === organizationId) {
     const localProjects = (await models.project.all()).filter(
       proj => !isRemoteProject(proj)
@@ -641,40 +643,42 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
         `/organization/${organizationId}/project/${localProjects[0]._id}`
       );
     }
-  } else {
-    const projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]?._id;
+  }
 
-    if (projectId) {
-      return redirect(`/organization/${organizationId}/project/${projectId}`);
-    } else {
-      try {
-        const remoteProjects = await getAllTeamProjects(organizationId);
+  // Check if the org has any projects and redirect to the first one
+  const projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]?._id;
 
-        const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
+  if (projectId) {
+    return redirect(`/organization/${organizationId}/project/${projectId}`);
+  }
+
+  // Check if the org has any remote projects and redirect to the first one
+  try {
+    const remoteProjects = await getAllTeamProjects(organizationId);
+
+    const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
         id: string;
         name: string;
       }) => {
-          const project = await models.initModel<RemoteProject>(
-            models.project.type,
-            {
-              _id: prj.id,
-              remoteId: prj.id,
-              name: prj.name,
-              parentId: organizationId,
-            }
-          );
+      const project = await models.initModel<RemoteProject>(
+        models.project.type,
+        {
+          _id: prj.id,
+          remoteId: prj.id,
+          name: prj.name,
+          parentId: organizationId,
+        }
+      );
 
-          return project;
-        }));
+      return project;
+    }));
 
-        await database.batchModifyDocs({ upsert: projectsToUpdate });
+    await database.batchModifyDocs({ upsert: projectsToUpdate });
 
-        return redirect(`/organization/${organizationId}/project/${projectsToUpdate[0]._id}`);
-      } catch (err) {
-        console.log(err);
-        return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${models.project.DEFAULT_PROJECT_ID}`);
-      }
-    }
+    return redirect(`/organization/${organizationId}/project/${projectsToUpdate[0]._id}`);
+  } catch (err) {
+    console.log(err);
+    return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${models.project.DEFAULT_PROJECT_ID}`);
   }
 
   return;

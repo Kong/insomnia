@@ -27,29 +27,33 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
             <i className="fa fa-ellipsis space-left" />
           </DropdownButton>
         }
+        items={[{
+          label: `${strings.project.singular} Settings`,
+          onClick: () => setIsSettingsModalOpen(true),
+          icon: 'gear',
+          iconStyle: { width: 'unset', fill: 'var(--hl)' },
+          style: { gap: 'var(--padding-sm)' },
+        }, ...!project._id.startsWith('proj_team') ? [{
+          label: 'Delete',
+          onClick: () =>
+            deleteProjectFetcher.submit(
+              {},
+              { method: 'post', action: `/organization/${organizationId}/project/${project._id}/delete` }
+            ),
+          icon: 'trash-o',
+          withPrompt: true,
+        }] : [],
+        ]}
       >
-        <DropdownItem aria-label={`${strings.project.singular} Settings`}>
-          <ItemContent
-            icon="gear"
-            style={{ gap: 'var(--padding-sm)' }}
-            iconStyle={{ width: 'unset', fill: 'var(--hl)' }}
-            label={`${strings.project.singular} Settings`}
-            onClick={() => setIsSettingsModalOpen(true)}
-          />
-        </DropdownItem>
-        {!project._id.startsWith('proj_team') && <DropdownItem aria-label='Delete'>
-          <ItemContent
-            icon="trash-o"
-            label="Delete"
-            withPrompt
-            onClick={() =>
-              deleteProjectFetcher.submit(
-                {},
-                { method: 'post', action: `/organization/${organizationId}/project/${project._id}/delete` }
-              )
-            }
-          />
-        </DropdownItem>}
+        {item => (
+
+          <DropdownItem aria-label={`${strings.project.singular} Settings`}>
+            <ItemContent
+              key={item.label}
+              {...item}
+            />
+          </DropdownItem>
+        )}
       </Dropdown>
       {isSettingsModalOpen && (
         <ProjectSettingsModal

@@ -38,7 +38,7 @@ export const NetworkStatus = () => {
     window.addEventListener('offline', handleOffline);
 
     onLoginLogout(isLoggedIn => {
-      setStatus(isLoggedIn ? status : 'unauthorized');
+      setStatus(status => isLoggedIn ? status : 'unauthorized');
     });
 
     return () => {
@@ -57,34 +57,36 @@ export const NetworkStatus = () => {
         </>
       }
     >
-      {
-        <div
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--padding-xs)',
+        }}
+      >
+        <span
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--padding-xs)',
+            backgroundColor: {
+              online: 'var(--color-success)',
+              offline: 'var(--color-danger)',
+              unauthorized: 'var(--color-warning)',
+            }[status],
+            width: '8px',
+            height: '8px',
+            borderRadius: '100%',
+            display: 'inline-block',
+          }}
+        />
+        <span
+          style={{
+            color: 'var(--color-font)',
+            fontSize: 'var(--font-size-xs)',
           }}
         >
-          <span
-            style={{
-              backgroundColor: status === 'online' ? 'var(--color-success)' : 'var(--color-danger)',
-              width: '8px',
-              height: '8px',
-              borderRadius: '100%',
-              display: 'inline-block',
-            }}
-          />
-          <span
-            style={{
-              color: 'var(--color-font)',
-              fontSize: 'var(--font-size-xs)',
-            }}
-          >
-            {status === 'unauthorized' && 'Log in to Insomnia Cloud to sync your data'}
-            {status !== 'unauthorized' && status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
-        </div>
-      }
+          {status === 'unauthorized' && 'Log in to sync your data'}
+          {status !== 'unauthorized' && status.charAt(0).toUpperCase() + status.slice(1)}
+        </span>
+      </div>
     </Tooltip>
   );
 };
