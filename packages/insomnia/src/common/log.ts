@@ -14,7 +14,7 @@ export const initializeLogging = () => {
     // When the log file exceeds this limit, it will be rotated to {file name}.old.log file.
     fileTransport.maxSize = 1024 * 1024 * 10;
     // Rotate the log file every time we start the app
-    fileTransport.archiveLog(logFile.path);
+    fileTransport.archiveLog(logFile);
     logFile.clear();
   }
 

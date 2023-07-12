@@ -1,7 +1,7 @@
 import 'codemirror/addon/mode/overlay';
 
 import CodeMirror, { CodeMirrorLinkClickCallback } from 'codemirror';
-import { Html5Entities } from 'html-entities';
+import { decode } from 'html-entities';
 
 import { FLEXIBLE_URL_REGEX } from '../../../../common/constants';
 
@@ -40,7 +40,7 @@ CodeMirror.defineExtension('makeLinksClickable', function(this: CodeMirror.Edito
       const cls = event.target.className;
 
       if (cls.indexOf('cm-clickable') >= 0) {
-        handleClick(Html5Entities.decode(event.target.innerHTML));
+        handleClick(decode(event.target.innerHTML));
       }
     }
 
