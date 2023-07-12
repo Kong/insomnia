@@ -4,14 +4,13 @@ import { v4 as uuidv4 } from 'uuid';
 import * as session from '../account/session';
 import { getAccountId } from '../account/session';
 import {
-  getApiBaseURL,
   getAppPlatform,
   getAppVersion,
   getProductName,
   getSegmentWriteKey,
 } from '../common/constants';
 import * as models from '../models/index';
-import { axiosRequest } from './network/axios-request';
+import { insomniaFetch } from './insomniaFetch';
 
 const analytics = new Analytics({ writeKey: getSegmentWriteKey() });
 
@@ -101,12 +100,10 @@ export async function trackPageView(name: string) {
 
 export async function sendTelemetry() {
   if (session.isLoggedIn()) {
-    axiosRequest({
+    insomniaFetch({
       method: 'POST',
-      url: `${getApiBaseURL()}/v1/telemetry/`,
-      headers: {
-        'X-Session-Id': session.getCurrentSessionId(),
-      },
+      path: '/v1/telemetry/',
+      sessionId: session.getCurrentSessionId(),
     }).catch((error: unknown) => {
       console.warn('[analytics] Unexpected error while sending telemetry', error);
     });

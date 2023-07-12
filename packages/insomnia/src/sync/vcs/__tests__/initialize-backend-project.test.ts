@@ -72,14 +72,14 @@ describe('initialize-backend-project', () => {
     });
 
     it('should push snapshot if conditions are met', async () => {
-      const project = await models.project.create({ remoteId: 'abc' });
+      const project = await models.project.create({ remoteId: 'abc', parentId: 'team_abc' });
       const workspace = await models.workspace.create({ parentId: project._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id, pushSnapshotOnInitialize: true });
       vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
       await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
 
-      expect(pushSpy).toHaveBeenCalledWith(project.remoteId);
+      expect(pushSpy).toHaveBeenCalledWith({ teamId: 'team_abc', teamProjectId: project.remoteId });
       const updatedMeta = await models.workspaceMeta.getByParentId(workspace._id);
       expect(updatedMeta?.pushSnapshotOnInitialize).toBe(false);
     });

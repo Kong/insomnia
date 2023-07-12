@@ -14,13 +14,10 @@ interface Options {
   vcs: VCS;
   backendProject: BackendProjectWithTeam;
   remoteProjects: RemoteProject[];
+  teamProjectId: string;
 }
 
-export const pullBackendProject = async ({
-  vcs,
-  backendProject,
-  remoteProjects,
-}: Options) => {
+export const pullBackendProject = async ({ vcs, backendProject, remoteProjects, teamProjectId }: Options) => {
   // Set backend project, checkout master, and pull
   await vcs.setBackendProject(backendProject);
   await vcs.checkout([], DEFAULT_BRANCH_NAME);
@@ -33,9 +30,7 @@ export const pullBackendProject = async ({
   const defaultBranchMissing = !remoteBranches.includes(DEFAULT_BRANCH_NAME);
 
   // Find or create the remote project locally
-  let project = remoteProjects.find(
-    ({ remoteId }) => remoteId === backendProject.team.id
-  );
+  let project = remoteProjects.find(({ _id }) => _id === teamProjectId);
   if (!project) {
     project = await initializeProjectFromTeam(backendProject.team);
     await database.upsert(project);
@@ -53,7 +48,7 @@ export const pullBackendProject = async ({
 
     workspaceId = workspace._id;
   } else {
-    await vcs.pull([], project.remoteId); // There won't be any existing docs since it's a new pull
+    await vcs.pull({ candidates: [], teamId: project.parentId, teamProjectId: project._id }); // There won't be any existing docs since it's a new pull
 
     const flushId = await database.bufferChanges();
 
