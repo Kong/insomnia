@@ -70,13 +70,14 @@ export const renameProjectAction: ActionFunction = async ({
   invariant(project, 'Project not found');
 
   if (isRemoteProject(project)) {
+    const sessionId = session.getCurrentSessionId();
+    invariant(sessionId, 'User must be logged in to rename a project');
+
     try {
-      await axiosRequest({
-        url: `${getApiBaseURL()}/v1/teams/${project.parentId}/team-projects/${projectId}`,
+      await window.main.insomniaFetch({
+        path: `/v1/teams/${project.parentId}/team-projects/${projectId}`,
         method: 'PATCH',
-        headers: {
-          'X-Session-Id': session.getCurrentSessionId() || '',
-        },
+        sessionId,
         data: {
           name,
         },
@@ -87,12 +88,11 @@ export const renameProjectAction: ActionFunction = async ({
       console.log(err);
       return null;
     }
-  } else {
-
-    await models.project.update(project, { name });
-
-    return null;
   }
+
+  await models.project.update(project, { name });
+
+  return null;
 };
 
 export const deleteProjectAction: ActionFunction = async ({ params }) => {
@@ -125,14 +125,14 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
       console.log(err);
       return null;
     }
-  } else {
-    await models.stats.incrementDeletedRequestsForDescendents(project);
-    await models.project.remove(project);
-
-    window.main.trackSegmentEvent({ event: SegmentEvent.projectLocalDelete });
-
-    return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`);
   }
+
+  await models.stats.incrementDeletedRequestsForDescendents(project);
+  await models.project.remove(project);
+
+  window.main.trackSegmentEvent({ event: SegmentEvent.projectLocalDelete });
+
+  return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`);
 };
 
 // Workspace
