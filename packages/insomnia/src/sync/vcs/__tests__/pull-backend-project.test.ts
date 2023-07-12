@@ -49,7 +49,7 @@ describe('pullBackendProject()', () => {
       });
 
       // Act
-      await pullBackendProject({ vcs, backendProject, remoteProjects: [project].filter(isRemoteProject) });
+      await pullBackendProject({ vcs, backendProject, remoteProjects: [project].filter(isRemoteProject), teamProjectId: project._id });
 
       // Assert
       expect(project?.name).not.toBe(backendProject.team.name); // should not rename if the project already exists
@@ -57,17 +57,19 @@ describe('pullBackendProject()', () => {
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
-      expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
+      const expectedWorkspace: Partial<Workspace> = {
         _id: backendProject.rootDocumentId,
         name: backendProject.name,
         parentId: project._id,
         scope: 'collection',
-      }));
+      };
+
+      expect(workspace).toEqual(expect.objectContaining(expectedWorkspace));
     });
 
     it('should insert a project and workspace with parent', async () => {
       // Act
-      await pullBackendProject({ vcs, backendProject, remoteProjects: [] });
+      await pullBackendProject({ vcs, backendProject, remoteProjects: [], teamProjectId: backendProject.team.id });
 
       // Assert
       const project = await models.project.getByRemoteId(backendProject.team.id);
@@ -76,12 +78,14 @@ describe('pullBackendProject()', () => {
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
-      expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
+      const expectedWorkspace: Partial<Workspace> = {
         _id: backendProject.rootDocumentId,
         name: backendProject.name,
         parentId: project?._id,
         scope: 'collection',
-      }));
+      };
+
+      expect(workspace).toStrictEqual(expect.objectContaining(expectedWorkspace));
     });
 
     it('should update a workspace if the name or parentId is different', async () => {
@@ -89,7 +93,7 @@ describe('pullBackendProject()', () => {
       await models.workspace.create({ _id: backendProject.rootDocumentId, name: 'someName' });
 
       // Act
-      await pullBackendProject({ vcs, backendProject, remoteProjects: [] });
+      await pullBackendProject({ vcs, backendProject, remoteProjects: [], teamProjectId: backendProject.team.id });
 
       // Assert
       const project = await models.project.getByRemoteId(backendProject.team.id);
@@ -97,11 +101,13 @@ describe('pullBackendProject()', () => {
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
-      expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
+      const expectedWorkspace: Partial<Workspace> = {
         _id: backendProject.rootDocumentId,
         name: backendProject.name,
         parentId: project?._id,
-      }));
+      };
+
+      expect(workspace).toStrictEqual(expect.objectContaining(expectedWorkspace));
     });
   });
 
@@ -115,7 +121,7 @@ describe('pullBackendProject()', () => {
       vcs.allDocuments.mockResolvedValue([existingWrk, existingReq]);
 
       // Act
-      await pullBackendProject({ vcs, backendProject, remoteProjects: [] });
+      await pullBackendProject({ vcs, backendProject, remoteProjects: [], teamProjectId: backendProject.team.id });
 
       // Assert
       const project = await models.project.getByRemoteId(backendProject.team.id);
@@ -123,18 +129,20 @@ describe('pullBackendProject()', () => {
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
-      expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
+      const expectedWorkspace: Partial<Workspace> = {
         _id: backendProject.rootDocumentId,
         name: backendProject.name,
         parentId: project?._id,
-      }));
+      };
+
+      expect(workspace).toStrictEqual(expect.objectContaining(expectedWorkspace));
 
       const requests = await models.request.all();
       expect(requests).toHaveLength(1);
       const request = requests[0];
       expect(request).toStrictEqual(existingReq);
 
-      expect(vcs.pull).toHaveBeenCalledWith([], project?.remoteId);
+      expect(vcs.pull).toHaveBeenCalledWith({ candidates: [], teamId: project?.parentId, teamProjectId: project?._id });
     });
   });
 
@@ -143,7 +151,7 @@ describe('pullBackendProject()', () => {
     vcs.getRemoteBranches.mockRejectedValue(new Error('invalid access to project'));
 
     // Act
-    const action = () => pullBackendProject({ vcs, backendProject, remoteProjects: [] });
+    const action = () => pullBackendProject({ vcs, backendProject, remoteProjects: [], teamProjectId: '' });
 
     // Assert
     expect(vcs.pull).not.toHaveBeenCalled();

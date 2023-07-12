@@ -8,6 +8,7 @@ import {
 } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { isDevelopment } from '../../common/constants';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { DEFAULT_PROJECT_ID } from '../../models/project';
 import { Button } from '../components/themed-button';
@@ -36,6 +37,14 @@ export const ErrorRoute: FC = () => {
     return err?.message || 'Unknown error';
   };
 
+  const getErrorStack = (err: any) => {
+    if (isRouteErrorResponse(err)) {
+      return err.error?.stack;
+    }
+
+    return err?.stack;
+  };
+
   const navigate = useNavigate();
   const navigation = useNavigation();
 
@@ -54,6 +63,9 @@ export const ErrorRoute: FC = () => {
         Try to reload the app{' '}
         <span>{navigation.state === 'loading' ? <Spinner /> : null}</span>
       </Button>
+      {isDevelopment() && (
+        <code className="selectable" style={{ wordBreak: 'break-word', margin: 'var(--padding-sm)' }}>{getErrorStack(error)}</code>
+      )}
     </Container>
   );
 };
