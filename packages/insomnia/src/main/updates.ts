@@ -1,4 +1,4 @@
-import { autoUpdater, BrowserWindow, dialog, ipcMain, Notification } from 'electron';
+import { autoUpdater, BrowserWindow, dialog, ipcMain } from 'electron';
 
 import {
   CHECK_FOR_UPDATES_INTERVAL,
