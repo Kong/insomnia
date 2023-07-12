@@ -126,7 +126,7 @@ export class VCS {
     return this._allBackendProjects();
   }
 
-  async remoteBackendProjects(teamId: string, teamProjectId: string) {
+  async remoteBackendProjects({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
     return this._queryBackendProjects(teamId, teamProjectId);
   }
 
@@ -492,8 +492,8 @@ export class VCS {
     console.log(`[sync] Created snapshot ${snapshot.id} (${name})`);
   }
 
-  async pull(candidates: StatusCandidate[], teamId: string, teamProjectId: string) {
-    await this._getOrCreateRemoteBackendProject(teamId, teamProjectId);
+  async pull({ candidates, teamId, teamProjectId }: { candidates: StatusCandidate[]; teamId: string; teamProjectId: string }) {
+    await this._getOrCreateRemoteBackendProject({ teamId, teamProjectId });
     const localBranch = await this._getCurrentBranch();
     const tmpBranchForRemote = await this.customFetch(localBranch.name + '.hidden', localBranch.name);
     // Merge branch and ensure that we use the remote's history when merging
@@ -511,19 +511,19 @@ export class VCS {
     return delta;
   }
 
-  async _getOrCreateRemoteBackendProject(teamId: string, teamProjectId: string) {
+  async _getOrCreateRemoteBackendProject({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
     const localProject = await this._assertBackendProject();
     let remoteProject = await this._queryProject();
 
     if (!remoteProject) {
-      remoteProject = await this._createRemoteProject(localProject, teamId, teamProjectId);
+      remoteProject = await this._createRemoteProject({ ...localProject, teamId, teamProjectId });
     }
 
     await this._storeBackendProject(remoteProject);
     return remoteProject;
   }
 
-  async _createRemoteProject({ rootDocumentId, name }: BackendProject, teamId: string, teamProjectId: string) {
+  async _createRemoteProject({ rootDocumentId, name, teamId, teamProjectId }: BackendProject & { teamId: string; teamProjectId: string }) {
     if (!teamId) {
       throw new Error('teamId should be defined');
     }
@@ -532,8 +532,8 @@ export class VCS {
     return this._queryCreateProject(rootDocumentId, name, teamId, teamProjectId, teamKeys.memberKeys);
   }
 
-  async push(teamId: string, teamProjectId: string) {
-    await this._getOrCreateRemoteBackendProject(teamId, teamProjectId);
+  async push({ teamId, teamProjectId }: { teamId: string; teamProjectId: string }) {
+    await this._getOrCreateRemoteBackendProject({ teamId, teamProjectId });
     const branch = await this._getCurrentBranch();
     // Check branch history to make sure there are no conflicts
     let lastMatchingIndex = 0;

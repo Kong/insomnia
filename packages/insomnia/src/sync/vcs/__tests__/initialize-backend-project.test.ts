@@ -79,7 +79,7 @@ describe('initialize-backend-project', () => {
 
       await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
 
-      expect(pushSpy).toHaveBeenCalledWith('team_abc', project.remoteId);
+      expect(pushSpy).toHaveBeenCalledWith({ teamId: 'team_abc', teamProjectId: project.remoteId });
       const updatedMeta = await models.workspaceMeta.getByParentId(workspace._id);
       expect(updatedMeta?.pushSnapshotOnInitialize).toBe(false);
     });

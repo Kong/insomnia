@@ -185,7 +185,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     try {
       const branch = await vcs.getBranch();
       await interceptAccessError({
-        callback: () => vcs.push(project.parentId, project._id),
+        callback: () => vcs.push({ teamId: project.parentId, teamProjectId: project._id }),
         action: 'push',
         resourceName: branch,
         resourceType: 'branch',
@@ -214,7 +214,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     try {
       const branch = await vcs.getBranch();
       const delta = await interceptAccessError({
-        callback: () => vcs.pull(syncItems, project.parentId, project._id),
+        callback: () => vcs.pull({ candidates: syncItems, teamId: project.parentId, teamProjectId: project._id }),
         action: 'pull',
         resourceName: branch,
         resourceType: 'branch',

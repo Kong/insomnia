@@ -48,6 +48,6 @@ export const pushSnapshotOnInitialize = async ({
 
   if (markedForPush && projectIsForWorkspace && projectRemoteId && hasProject) {
     await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });
-    await vcs.push(parentId, projectRemoteId);
+    await vcs.push({ teamId: parentId, teamProjectId: projectRemoteId });
   }
 };

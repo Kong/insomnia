@@ -48,7 +48,7 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProjects, 
 
     workspaceId = workspace._id;
   } else {
-    await vcs.pull([], project.parentId, project._id); // There won't be any existing docs since it's a new pull
+    await vcs.pull({ candidates: [], teamId: project.parentId, teamProjectId: project._id }); // There won't be any existing docs since it's a new pull
 
     const flushId = await database.bufferChanges();
 
