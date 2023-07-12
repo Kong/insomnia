@@ -38,7 +38,7 @@ const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): 
   }
 };
 
-export async function insomniaFetch<T = any>({ method, path, data, sessionId, origin }: FetchConfig): Promise<T | string> {
+export async function insomniaFetch<T = any>({ method, path, data, sessionId, origin }: FetchConfig): Promise<T> {
   const config: RequestInit = {
     method,
     headers: {
