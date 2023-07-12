@@ -39,7 +39,6 @@
   },
   "devDependencies": {
     "@jest/globals": "^28.1.0",
-    "@types/mkdirp": "^1.0.1",
     "@types/nedb": "^1.8.11",
     "@types/node": "^20.3.3",
     "@types/rimraf": "^3.0.0",
