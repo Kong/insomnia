@@ -1,7 +1,6 @@
 // Import
-import { ActionFunction, redirect } from 'react-router-dom';
+import { ActionFunction } from 'react-router-dom';
 
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { fetchImportContentFromURI, importResourcesToProject, importResourcesToWorkspace, scanResources, ScanResult } from '../../common/import';
 import * as models from '../../models';
 import { DEFAULT_PROJECT_ID } from '../../models/project';
