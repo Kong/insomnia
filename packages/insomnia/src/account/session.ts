@@ -98,7 +98,7 @@ export async function changePasswordWithToken(rawNewPassphrase: string, confirma
   const symmetricKey = JSON.stringify(_getSymmetricKey());
   const newEncSymmetricKeyJSON = crypt.encryptAES(newSecret, symmetricKey);
   const newEncSymmetricKey = JSON.stringify(newEncSymmetricKeyJSON);
-  return window.main.insomniaFetch({
+  await window.main.insomniaFetch({
     method: 'POST',
     path: '/auth/change-password',
     data: {
@@ -113,7 +113,7 @@ export async function changePasswordWithToken(rawNewPassphrase: string, confirma
 }
 
 export function sendPasswordChangeCode() {
-  return window.main.insomniaFetch({
+  window.main.insomniaFetch({
     method: 'POST',
     path: '/auth/send-password-code',
     sessionId: getCurrentSessionId(),
@@ -219,13 +219,6 @@ export function setSessionData(
   window.localStorage.setItem('currentSessionId', id);
   return sessionData;
 }
-export async function listTeams() {
-  return window.main.insomniaFetch({
-    method: 'GET',
-    path: '/api/teams',
-    sessionId: getCurrentSessionId(),
-  });
-}
 
 // ~~~~~~~~~~~~~~~~ //
 // Helper Functions //
@@ -247,7 +240,7 @@ async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse>
 }
 
 function _getAuthSalts(email: string) {
-  return window.main.insomniaFetch({
+  return window.main.insomniaFetch<{ saltKey: string; saltAuth: string }>({
     method: 'POST',
     path: '/auth/login-s',
     data: { email },

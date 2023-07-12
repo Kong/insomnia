@@ -11,20 +11,19 @@ import {
 } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { isLoggedIn, onLoginLogout } from '../../account/session';
+import { getCurrentSessionId, isLoggedIn, onLoginLogout } from '../../account/session';
 import { isDevelopment } from '../../common/constants';
-import { database } from '../../common/database';
 import * as models from '../../models';
 import { defaultOrganization, Organization } from '../../models/organization';
-import { isRemoteProject } from '../../models/project';
 import { Settings } from '../../models/settings';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
 import { exchangeCodeForToken } from '../../sync/git/github-oauth-provider';
 import { exchangeCodeForGitLabToken } from '../../sync/git/gitlab-oauth-provider';
-import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
-import { getVCS } from '../../sync/vcs/vcs';
+import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
+import { MergeConflict, Team } from '../../sync/types';
+import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { submitAuthCode } from '../auth-session-provider';
 import { AccountToolbar } from '../components/account-toolbar';
 import { AppHeader } from '../components/app-header';
@@ -39,6 +38,7 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../components/modals/settings-modal';
+import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { OrganizationsNav } from '../components/organizations-navbar';
 import { StatusBar } from '../components/statusbar';
 import { Toast } from '../components/toast';
@@ -57,29 +57,71 @@ export interface RootLoaderData {
 }
 
 export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
-  // Load all projects
-  try {
-    const vcs = getVCS();
-    if (vcs && isLoggedIn()) {
-      const teams = await vcs.teams();
-      const projects = await Promise.all(teams.map(initializeProjectFromTeam));
-      await database.batchModifyDocs({ upsert: projects });
-    }
-  } catch {
-    console.log('Failed to load projects');
-  }
-  const allProjects = await models.project.all();
+  // Load all projects if the user is logged in
+  if (isLoggedIn()) {
+    try {
+      let vcs = getVCS();
+      if (!vcs) {
+        const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
 
-  const remoteOrgs = allProjects
-    .filter(isRemoteProject)
-    .map(({ _id, name }) => ({
-      _id,
-      name,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+        console.log('Initializing VCS');
+        vcs = await initVCS(driver, async conflicts => {
+          return new Promise(resolve => {
+            showModal(SyncMergeModal, {
+              conflicts,
+              handleDone: (conflicts?: MergeConflict[]) => resolve(conflicts || []),
+            });
+          });
+        });
+      }
+
+      const sessionId = getCurrentSessionId();
+
+      // Teams are now organizations
+      const response = await window.main.insomniaFetch<{
+        data: {
+          teams: Team[];
+        };
+        errors?: {
+          message: string;
+        }[];
+      }>({
+        method: 'POST',
+        path: '/graphql',
+        sessionId,
+        data: {
+          query: `
+          query {
+            teams {
+              id
+              name
+            }
+          }
+        `,
+          variables: {},
+        },
+      });
+
+      const teams = response.data.teams as Team[];
+
+      return {
+        organizations: [defaultOrganization, ...teams.map(team => ({
+          _id: team.id,
+          name: team.name,
+        })).sort((a, b) => a.name.localeCompare(b.name))],
+        settings: await models.settings.getOrCreate(),
+      };
+    } catch (err) {
+      console.log('Failed to load Teams', err);
+      return {
+        organizations: [defaultOrganization],
+        settings: await models.settings.getOrCreate(),
+      };
+    }
+  }
 
   return {
-    organizations: [defaultOrganization, ...remoteOrgs],
+    organizations: [defaultOrganization],
     settings: await models.settings.getOrCreate(),
   };
 };
