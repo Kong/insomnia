@@ -4,7 +4,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
-import { isDefaultProject, isLocalProject, Project } from '../../../models/project';
+import { Project } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -48,7 +48,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
                 <select defaultValue={workspace.parentId} name="projectId">
                   {projects.map(project => (
                     <option key={project._id} value={project._id}>
-                      {project.name} ({isDefaultProject(project) ? strings.defaultProject.singular : isLocalProject(project) ? strings.localProject.singular : strings.remoteProject.singular})
+                      {project.name}
                     </option>
                   ))}
                 </select>

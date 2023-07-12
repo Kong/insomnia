@@ -28,7 +28,7 @@ export const SyncPullButton: FC<Props> = props => {
     try {
       // Clone old VCS so we don't mess anything up while working on other projects
       await newVCS.checkout([], branch);
-      await newVCS.pull([], activeProject.remoteId);
+      await newVCS.pull({ candidates: [], teamId: activeProject.parentId, teamProjectId: activeProject._id });
     } catch (err) {
       showError({
         title: 'Pull Error',
