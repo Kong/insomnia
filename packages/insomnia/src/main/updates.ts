@@ -1,4 +1,4 @@
-import { autoUpdater, BrowserWindow, ipcMain, Notification } from 'electron';
+import { autoUpdater, BrowserWindow, dialog, ipcMain, Notification } from 'electron';
 
 import {
   CHECK_FOR_UPDATES_INTERVAL,
@@ -59,21 +59,24 @@ export const init = async () => {
     console.log('[updater] Update Available');
     _sendUpdateStatus('Downloading...');
   });
-  autoUpdater.on('update-downloaded', async (_error, _releaseNotes, releaseName) => {
+  autoUpdater.on('update-downloaded', async (_error, releaseNotes, releaseName) => {
     console.log(`[updater] Downloaded ${releaseName}`);
     _sendUpdateStatus('Performing backup...');
     await exportAllWorkspaces();
     await delay(1000 * 10); // Workaround early restart issues
     _sendUpdateStatus('Updated (Restart Required)');
 
-    setTimeout(() => {
-      console.log('[app] Update Downloaded and ready to install over existing app');
-      new Notification({
-        title: 'Insomnia Update Ready',
-        body: 'Relaunch the app for it to take effect',
-        silent: true,
-      }).show();
-    }, 1000 * 2);
+    dialog.showMessageBox({
+      type: 'info',
+      buttons: ['Restart', 'Later'],
+      title: 'Application Update',
+      message: process.platform === 'win32' ? releaseNotes : releaseName,
+      detail: 'A new version has been downloaded. Restart the application to apply the updates.',
+    }).then(returnValue => {
+      if (returnValue.response === 0) {
+        autoUpdater.quitAndInstall();
+      }
+    });
   });
 
   if (isUpdateSupported()) {
