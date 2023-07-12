@@ -2,7 +2,6 @@ import React, { createContext, FC, PropsWithChildren, useContext, useEffect, use
 import { useParams } from 'react-router-dom';
 
 import { getCurrentSessionId } from '../../../account/session';
-import { insomniaFetch } from '../../../main/insomniaFetch';
 
 const PresenceContext = createContext<{
   presence: UserPresence[];
@@ -46,7 +45,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
 
   useEffect(() => {
     async function updatePresence() {
-      const response = await insomniaFetch({
+      const response = await window.main.insomniaFetch({
         path: `/v1/teams/${sanitizeTeamId(organizationId)}/collaborators`,
         method: 'POST',
         sessionId: getCurrentSessionId() || '',
