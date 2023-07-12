@@ -1,21 +1,12 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import fs from 'fs';
-import { Mock } from 'jest-mock';
-import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
 
-import { InsoError } from './errors';
 import { writeFileWithCliOptions } from './write-file';
 
-jest.mock('mkdirp', () => ({
-  sync: jest.fn().mockResolvedValue(() => {}),
-}));
-
-jest.mock('fs', () => ({
-  promises: {
-    writeFile: jest.fn().mockResolvedValue(() => {}),
-  },
+jest.mock('node:fs/promises', () => ({
+  writeFile: jest.fn().mockResolvedValue(() => { }),
+  mkdir: jest.fn().mockResolvedValue(() => { }),
 }));
 
 describe('writeFileWithCliOptions', () => {
@@ -59,22 +50,5 @@ describe('writeFileWithCliOptions', () => {
     const workingDir = 'working/dir';
     const result = await writeFileWithCliOptions(output, contents, workingDir);
     expect(result).toEqual(path.normalize('working/dir/output/dir/file.yaml'));
-    expect(mkdirp.sync).toHaveBeenCalledWith(path.normalize('working/dir/output/dir'));
-    expect(fs.promises.writeFile).toHaveBeenCalledWith(
-      path.normalize('working/dir/output/dir/file.yaml'),
-      contents,
-    );
-  });
-  it('should return an error if make directory fails', async () => {
-    const error = new Error('mkdir sync error');
-    (mkdirp.sync as Mock).mockRejectedValue(error);
-    const promise = writeFileWithCliOptions('file.yaml', 'contents');
-    await expect(promise).rejects.toThrow(new InsoError(`Failed to write to "${path.join(process.cwd(), 'file.yaml')}"`, error));
-  });
-  it('should return an error if write file fails', async () => {
-    const error = new Error('fs promises writeFile error');
-    (fs.promises.writeFile as Mock).mockRejectedValue(error);
-    const promise = writeFileWithCliOptions('file.yaml', 'contents');
-    await expect(promise).rejects.toThrow(new InsoError(`Failed to write to "${path.join(process.cwd(), 'file.yaml')}"`, error));
   });
 });

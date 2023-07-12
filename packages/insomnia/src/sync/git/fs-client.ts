@@ -1,5 +1,4 @@
 import fs from 'fs';
-import mkdirp from 'mkdirp';
 import path from 'path';
 
 type FSWraps =
@@ -17,7 +16,7 @@ type FSWraps =
 /** This is a client for isomorphic-git. {@link https://isomorphic-git.org/docs/en/fs} */
 export const fsClient = (basePath: string) => {
   console.log(`[fsClient] Created in ${basePath}`);
-  mkdirp.sync(basePath);
+  fs.mkdirSync(basePath, { recursive: true });
 
   const wrap = (fn: FSWraps) => async (filePath: string, ...args: any[]) => {
     const modifiedPath = path.join(basePath, path.normalize(filePath));

@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import fs from 'fs';
 import { SpyInstance } from 'jest-mock';
-import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
 
@@ -11,27 +10,23 @@ import { writeProtoFile } from '../write-proto-file';
 
 describe('writeProtoFile', () => {
   let existsSyncSpy: SpyInstance<any>;
-  let mkdirpSyncSpy: SpyInstance<any>;
   let tmpDirSpy: SpyInstance<any>;
   let writeFileSpy: SpyInstance<any>;
 
   const _setupSpies = () => {
     existsSyncSpy = jest.spyOn(fs, 'existsSync');
-    mkdirpSyncSpy = jest.spyOn(mkdirp, 'sync');
     tmpDirSpy = jest.spyOn(os, 'tmpdir');
     writeFileSpy = jest.spyOn(fs.promises, 'writeFile');
   };
 
   const _configureSpies = (tmpDir: string, exists: boolean) => {
     existsSyncSpy.mockReturnValue(exists);
-    mkdirpSyncSpy.mockImplementation(() => {});
     tmpDirSpy.mockReturnValue(tmpDir);
     writeFileSpy.mockResolvedValue(undefined);
   };
 
   const _restoreSpies = () => {
     existsSyncSpy.mockRestore();
-    mkdirpSyncSpy.mockRestore();
     tmpDirSpy.mockRestore();
     writeFileSpy.mockRestore();
   };
@@ -69,7 +64,6 @@ describe('writeProtoFile', () => {
       const expectedFullPath = path.join(expectedDir, expectedFileName);
       expect(result.filePath).toEqual(expectedFileName);
       expect(result.dirs).toEqual([expectedDir]);
-      expect(mkdirpSyncSpy).toHaveBeenCalledWith(expectedDir);
       expect(existsSyncSpy).toHaveBeenCalledWith(expectedFullPath);
       expect(writeFileSpy).toHaveBeenCalledWith(expectedFullPath, pf.protoText);
     });
@@ -93,7 +87,6 @@ describe('writeProtoFile', () => {
       const expectedFullPath = path.join(expectedDir, expectedFileName);
       expect(result.filePath).toEqual(expectedFileName);
       expect(result.dirs).toEqual([expectedDir]);
-      expect(mkdirpSyncSpy).toHaveBeenCalledWith(expectedDir);
       expect(existsSyncSpy).toHaveBeenCalledWith(expectedFullPath);
       expect(writeFileSpy).not.toHaveBeenCalled();
     });
@@ -129,7 +122,6 @@ describe('writeProtoFile', () => {
       const expectedFullPath = path.join(expectedRootDir, expectedFilePath);
       expect(result.filePath).toEqual(expectedFilePath);
       expect(result.dirs).toEqual([expectedRootDir]);
-      expect(mkdirpSyncSpy).toHaveBeenCalledWith(expectedRootDir);
       expect(existsSyncSpy).toHaveBeenCalledWith(expectedFullPath);
       expect(writeFileSpy).toHaveBeenCalledWith(expectedFullPath, pf.protoText);
     });
@@ -180,11 +172,9 @@ describe('writeProtoFile', () => {
       expect(result.filePath).toEqual(expectedFilePath.nested);
       expect(result.dirs).toEqual([expectedRootDir, expectedNestedDir]);
       // Root folder should be created and written to
-      expect(mkdirpSyncSpy).toHaveBeenCalledWith(expectedRootDir);
       expect(existsSyncSpy).toHaveBeenCalledWith(expectedFullPath.root);
       expect(writeFileSpy).toHaveBeenCalledWith(expectedFullPath.root, pfRoot.protoText);
       // Nested folder should be created and written to
-      expect(mkdirpSyncSpy).toHaveBeenCalledWith(expectedNestedDir);
       expect(existsSyncSpy).toHaveBeenCalledWith(expectedFullPath.nested);
       expect(writeFileSpy).toHaveBeenCalledWith(expectedFullPath.nested, pfNested.protoText);
     });
@@ -234,9 +224,7 @@ describe('writeProtoFile', () => {
       };
       expect(result.filePath).toEqual(expectedFilePath.nested);
       expect(result.dirs).toEqual([expectedRootDir, expectedNestedDir]);
-      expect(mkdirpSyncSpy).toHaveBeenCalledWith(expectedRootDir);
       expect(existsSyncSpy).toHaveBeenCalledWith(expectedFullPath.root);
-      expect(mkdirpSyncSpy).toHaveBeenCalledWith(expectedNestedDir);
       expect(existsSyncSpy).toHaveBeenCalledWith(expectedFullPath.nested);
       expect(writeFileSpy).not.toHaveBeenCalled();
     });

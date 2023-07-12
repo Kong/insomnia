@@ -30,17 +30,15 @@ const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): 
       return exponentialBackOff(url, init, retries);
     }
     if (!response.ok) {
-      const err = new Error(`Response ${response.status} for ${url}`);
-      err.message = await response.text();
-      throw err;
+      console.log(`Response not OK: ${response.status} for ${url}`);
     }
     return response;
   } catch (err) {
-    throw new Error(`Failed to fetch ${url}: ${err.message}`);
+    throw err;
   }
 };
 
-export async function insomniaFetch<T = any>({ method, path, data, sessionId, origin }: FetchConfig): Promise<T | string> {
+export async function insomniaFetch<T = any>({ method, path, data, sessionId, origin }: FetchConfig): Promise<T> {
   const config: RequestInit = {
     method,
     headers: {

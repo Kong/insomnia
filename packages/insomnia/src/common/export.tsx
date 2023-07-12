@@ -1,7 +1,6 @@
 import clone from 'clone';
 import { format } from 'date-fns';
 import fs from 'fs';
-import { NoParamCallback } from 'fs-extra';
 import path from 'path';
 import React from 'react';
 import YAML from 'yaml';
@@ -362,7 +361,7 @@ const showSaveExportedFileDialog = async ({
   return filePath || null;
 };
 
-const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDone: NoParamCallback) => {
+const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDone: fs.NoParamCallback) => {
   // Remember last exported path
   window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
   fs.writeFile(filename, jsonData, {}, onDone);

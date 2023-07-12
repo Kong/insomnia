@@ -1,5 +1,4 @@
 import fs from 'fs';
-import mkdirp from 'mkdirp';
 import path from 'path';
 
 class LocalStorage {
@@ -10,7 +9,8 @@ class LocalStorage {
   constructor(basePath: string) {
     this._basePath = basePath;
     // Debounce writes on a per key basis
-    mkdirp.sync(basePath);
+    fs.mkdirSync(basePath, { recursive: true });
+
     console.log(`[localstorage] Initialized at ${basePath}`);
   }
 

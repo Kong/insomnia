@@ -709,7 +709,7 @@ export class VCS {
   ): Promise<Record<string, any>> {
     const { sessionId } = this._assertSession();
 
-    const { data, errors } = await window.main.insomniaFetch({
+    const { data, errors } = await window.main.insomniaFetch<{ data: {}; errors: [{ message: string }] }>({
       method: 'POST',
       path: '/graphql?' + name,
       data: { query, variables },

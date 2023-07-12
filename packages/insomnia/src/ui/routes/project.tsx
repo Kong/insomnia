@@ -658,15 +658,7 @@ export const loader: LoaderFunction = async ({
 
   const project = await models.project.getById(projectId);
 
-  console.log({
-    project,
-  });
-
   const allProjects = await models.project.all();
-
-  console.log({
-    allProjects,
-  });
 
   invariant(project, 'Project was not found');
 

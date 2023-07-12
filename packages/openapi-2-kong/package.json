@@ -19,12 +19,11 @@
     "openapi-types": "^8.0.0",
     "slugify": "1.6.5",
     "url-join": "^4.0.1",
-    "yaml": "2.0.0-5"
+    "yaml": "^2.3.1"
   },
   "devDependencies": {
     "@jest/globals": "^28.1.0",
     "@types/url-join": "^4.0.1",
-    "@types/yaml": "^1.9.7",
     "jest": "^28.1.0",
     "type-fest": "^2.12.0"
   },

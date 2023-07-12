@@ -40,7 +40,6 @@ export const LoginModal = forwardRef<LoginModalHandle, {}>(function LoginModal({
 
   useEffect(() => {
     session.onLoginLogout(() => {
-      console.log('how oten does this happen?');
       modalRef.current?.hide();
     });
   }, []);

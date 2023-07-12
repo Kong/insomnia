@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { EventEmitter } from 'events';
-import mkdirp from 'mkdirp';
+import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
@@ -10,7 +10,7 @@ const remote = {
   app: {
     getPath(name) {
       const dir = path.join(os.tmpdir(), `insomnia-tests-${RANDOM_STRING}`, name);
-      mkdirp.sync(dir);
+      fs.mkdirSync(dir, { recursive: true });
       return dir;
     },
 

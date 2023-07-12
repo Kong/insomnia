@@ -47,9 +47,7 @@ export function registerMainHandlers() {
     return axiosRequest(options);
   });
   ipcMain.on('loginStateChange', async () => {
-    console.log('get windows');
     BrowserWindow.getAllWindows().forEach(w => {
-      console.log('sending login state change to window');
       w.webContents.send('loggedIn');
     });
   });

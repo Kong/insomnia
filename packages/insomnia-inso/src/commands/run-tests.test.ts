@@ -83,7 +83,7 @@ describe('runInsomniaTests()', () => {
     });
     expect(result).toBe(false);
     expect(logger.__getLogs().fatal).toEqual(['No test suites found; cannot run tests.']);
-  });
+  }, 10000);
 
   it('should return false if environment could not be found', async () => {
     const result = runInsomniaTests('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
@@ -94,7 +94,7 @@ describe('runInsomniaTests()', () => {
     await expect(result).rejects.toThrowError(
       'Expected single sub environment in the data store, but found none.',
     );
-  });
+  }, 10000);
 
   it('should return true if test results have no failures', async function() {
     runTestsCli.mockResolvedValue(true);

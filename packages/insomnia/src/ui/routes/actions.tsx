@@ -626,7 +626,7 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
 
         const methodInfo = resolveComponentSchemaRefs(spec, getMethodInfo(request));
 
-        const response = await window.main.insomniaFetch({
+        const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
           origin: 'https://ai.insomnia.rest',
           path: '/v1/generate-test',
@@ -638,7 +638,7 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
           },
         });
 
-        const aiTest = response.data.test;
+        const aiTest = response.test;
 
         await models.unitTest.create({ ...aiTest, parentId: aiTestSuite._id, requestId: test.requestId });
         writer.write({
@@ -707,7 +707,7 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
   for (const test of tests) {
     async function generateTest() {
       try {
-        const response = await window.main.insomniaFetch({
+        const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
           origin: 'https://ai.insomnia.rest',
           path: '/v1/generate-test',
@@ -718,7 +718,7 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
           },
         });
 
-        const aiTest = response.data.test;
+        const aiTest = response.test;
 
         await models.unitTest.create({ ...aiTest, parentId: aiTestSuite._id, requestId: test.requestId });
 
@@ -749,7 +749,7 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   try {
-    const response = await window.main.insomniaFetch({
+    const response = await window.main.insomniaFetch<{ enabled: boolean }>({
       method: 'POST',
       origin: 'https://ai.insomnia.rest',
       path: '/v1/access',
@@ -759,16 +759,10 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
       },
     });
 
-    const enabled = response.data.enabled;
-
     return {
-      enabled,
+      enabled: response.enabled,
     };
   } catch (err) {
-    if (err?.response?.status === 500) {
-      return { enabled: false };
-    }
-    console.log(err);
     return { enabled: false };
   }
 };
