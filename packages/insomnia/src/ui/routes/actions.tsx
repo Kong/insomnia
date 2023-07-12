@@ -638,7 +638,7 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
           },
         });
 
-        const aiTest = response.data.test;
+        const aiTest = response.test;
 
         await models.unitTest.create({ ...aiTest, parentId: aiTestSuite._id, requestId: test.requestId });
         writer.write({
@@ -718,7 +718,7 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
           },
         });
 
-        const aiTest = response.data.test;
+        const aiTest = response.test;
 
         await models.unitTest.create({ ...aiTest, parentId: aiTestSuite._id, requestId: test.requestId });
 
@@ -759,16 +759,10 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
       },
     });
 
-    const enabled = response.data.enabled;
-
     return {
-      enabled,
+      enabled: response.enabled,
     };
   } catch (err) {
-    if (err?.response?.status === 500) {
-      return { enabled: false };
-    }
-    console.log(err);
     return { enabled: false };
   }
 };
