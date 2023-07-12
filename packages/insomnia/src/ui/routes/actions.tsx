@@ -33,7 +33,7 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   if (organizationId !== DEFAULT_ORGANIZATION_ID) {
     const sessionId = session.getCurrentSessionId();
     invariant(sessionId, 'User must be logged in to create a project');
-    const response = await window.main.insomniaFetch({
+    const response = await window.main.insomniaFetch<{ id: string }>({
       path: `/v1/teams/${organizationId}/team-projects`,
       method: 'POST',
       data: {
@@ -42,9 +42,7 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
       sessionId,
     });
 
-    const newProject = response.data;
-
-    return redirect(`/organization/${organizationId}/project/${newProject.id}`);
+    return redirect(`/organization/${organizationId}/project/${response.id}`);
   } else {
     const project = await models.project.create({ name });
     window.main.trackSegmentEvent({ event: SegmentEvent.projectLocalCreate });
@@ -107,15 +105,11 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
     invariant(sessionId, 'User must be logged in to delete a project');
 
     try {
-      const deleteProjectResponse = await window.main.insomniaFetch({
+      await window.main.insomniaFetch({
         path: `/v1/teams/${organizationId}/team-projects/${projectId}`,
         method: 'DELETE',
         sessionId,
       });
-
-      if (deleteProjectResponse.status !== 200) {
-        throw new Error(deleteProjectResponse.statusText);
-      }
 
       await models.stats.incrementDeletedRequestsForDescendents(project);
       await models.project.remove(project);

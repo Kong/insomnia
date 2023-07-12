@@ -38,6 +38,7 @@ export const Account: FC = () => {
       setError('Code was not provided');
       return;
     }
+
     try {
       await session.changePasswordWithToken(password, code);
     } catch (err) {
