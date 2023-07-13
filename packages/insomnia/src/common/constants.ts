@@ -57,7 +57,7 @@ export function updatesSupported() {
 }
 
 export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
-export const changelogUrl = () => appConfig.changelogUrl;
+export const changelogUrl = () => appConfig.changelogUrl + '#' + version;
 
 // Global Stuff
 export const DB_PERSIST_INTERVAL = 1000 * 60 * 30; // Compact every once in a while
