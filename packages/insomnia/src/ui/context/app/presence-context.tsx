@@ -1,7 +1,7 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { getCurrentSessionId, isLoggedIn } from '../../../account/session';
+import { getCurrentSessionId } from '../../../account/session';
 
 const PresenceContext = createContext<{
   presence: UserPresence[];
@@ -42,10 +42,45 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
   const [presence, setPresence] = useState<UserPresence[]>([]);
 
   useEffect(() => {
+    const sessionId = getCurrentSessionId();
+
+    if (!sessionId) {
+      return;
+    }
+
+    const handleWindowClose = async () => {
+      try {
+        const response = await window.main.insomniaFetch<{
+            data: UserPresence[];
+          }>({
+            path: `/v1/teams/${sanitizeTeamId(organizationId)}/collaborators`,
+            method: 'POST',
+            sessionId,
+            data: {
+              project: '',
+              file: '',
+            },
+          });
+
+        const { data } = response;
+        if (data.length > 0) {
+          setPresence(response.data);
+        }
+      } catch (e) {
+        console.log('Error parsing response', e);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleWindowClose);
+    return () => {
+      window.removeEventListener('beforeunload', handleWindowClose);
+    };
+  }, [organizationId]);
+
+  useEffect(() => {
     async function updatePresence() {
       const sessionId = getCurrentSessionId();
-      if (isLoggedIn()) {
-        console.log(sessionId);
+      if (sessionId) {
         try {
           const response = await window.main.insomniaFetch<{
               data: UserPresence[];
@@ -73,13 +108,19 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [organizationId, projectId, workspaceId]);
 
   useEffect(() => {
+    const sessionId = getCurrentSessionId();
+
+    if (!sessionId) {
+      return;
+    }
+
     const startStream = async () => {
       try {
         const response = await fetch(`eventsource://v1/teams/${sanitizeTeamId(organizationId)}/streams`,
           {
             headers: new Headers({
               'Accept': 'text/event-stream',
-              'X-Session-Id': getCurrentSessionId() || '',
+              'X-Session-Id': sessionId,
             }),
           });
 
@@ -93,15 +134,14 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
               if (done) {
                 return;
               }
+
               const data = new TextDecoder('utf-8').decode(value);
 
-              const [id, event, payload] = data.split('\n').map(s => s.trim()).map(s => {
+              const [, event, payload] = data.split('\n').map(s => s.trim()).map(s => {
                 const removeTextBeforeFirstColon = s.split(':').slice(1).join(':');
 
                 return removeTextBeforeFirstColon.trim();
               });
-
-              console.log({ id, event, payload });
 
               if (event === 'message') {
                 const presenceEvent = JSON.parse(payload) as UserPresenceEvent;
@@ -134,8 +174,6 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
 
     startStream();
   }, [organizationId]);
-
-  console.log({ presence });
 
   return (
     <PresenceContext.Provider
