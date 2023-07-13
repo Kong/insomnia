@@ -1,4 +1,5 @@
 import {
+  CONTENT_TYPE_EVENT_STREAM,
   CONTENT_TYPE_GRAPHQL,
   CONTENT_TYPE_JSON,
   METHOD_GET,
@@ -92,11 +93,12 @@ export const createRequest: RequestCreator = async ({
     case 'SSE': {
       const request = await models.request.create({
         parentId,
-        method: METHOD_POST,
+        method: METHOD_GET,
+        url: 'https://localhost:4010/events',
         headers: [
           {
-            name: 'Accept',
-            value: 'text/event-stream',
+            name: 'Content-Type',
+            value: CONTENT_TYPE_EVENT_STREAM,
           },
         ],
         name: 'New Event Stream',

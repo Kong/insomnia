@@ -253,6 +253,7 @@ export const CONTENT_TYPE_JSON = 'application/json';
 export const CONTENT_TYPE_PLAINTEXT = 'text/plain';
 export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_YAML = 'text/yaml';
+export const CONTENT_TYPE_EVENT_STREAM = 'text/event-stream';
 export const CONTENT_TYPE_EDN = 'application/edn';
 export const CONTENT_TYPE_FORM_URLENCODED = 'application/x-www-form-urlencoded';
 export const CONTENT_TYPE_FORM_DATA = 'multipart/form-data';
