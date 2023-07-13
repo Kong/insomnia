@@ -25,7 +25,11 @@ export const axiosRequest = async (config: AxiosRequestConfig): Promise<AxiosRes
     // ignore HTTP_PROXY, HTTPS_PROXY, NO_PROXY environment variables
     proxy: false,
   };
-
+  // hack for http-client
+  const isArrayBuffer = Array.isArray(config.data) && config.responseType === 'arraybuffer';
+  if (isArrayBuffer) {
+    finalConfig.data = Buffer.concat(config.data);
+  }
   if (settings.proxyEnabled && proxyUrl && !isUrlMatchedInNoProxyRule(finalConfig.url, settings.noProxy)) {
     const { hostname, port } = urlParse(setDefaultProtocol(proxyUrl));
 
@@ -44,7 +48,7 @@ export const axiosRequest = async (config: AxiosRequestConfig): Promise<AxiosRes
       status: response.status,
       statusText: response.statusText,
       headers: response.headers,
-      data: response.data,
+      data: !!response.data,
       config: {
         method: response.config.method,
         url: response.config.url,
