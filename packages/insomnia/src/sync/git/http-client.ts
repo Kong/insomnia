@@ -2,14 +2,9 @@
 export const httpClient = {
   request: async (config: any) => {
     let response;
-    let body: Buffer | null = null;
 
     if (config.headers && !config.headers.Accept) {
       config.headers.Accept = '*/*';
-    }
-
-    if (Array.isArray(config.body)) {
-      body = Buffer.concat(config.body);
     }
 
     try {
@@ -19,15 +14,17 @@ export const httpClient = {
         url: withoutGitPlus,
         method: config.method,
         headers: config.headers,
-        data: body,
+        data: config.body,
         responseType: 'arraybuffer',
         maxRedirects: 10,
       });
     } catch (err) {
       if (!err.response) {
+        console.log('[git-http-client] Error thrown', err.message);
         // NOTE: config.url is unreachable
         throw err;
       }
+      console.log('[git-http-client] Ignored Error', err.response);
       response = err.response;
     }
 

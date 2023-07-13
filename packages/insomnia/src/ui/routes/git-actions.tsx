@@ -413,7 +413,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
       });
 
       return {
-        errors: ['Error cloning repository'],
+        errors: [originalUriError.message],
       };
     }
 
@@ -435,9 +435,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
         },
       });
       return {
-        errors: [
-          'Error Cloning Repository: failed to clone with and without `.git` suffix',
-        ],
+        errors: [dotGitError.message],
       };
     }
   }
