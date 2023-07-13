@@ -1,5 +1,6 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useInterval } from 'react-use';
 
 import { getCurrentSessionId } from '../../../account/session';
 
@@ -41,6 +42,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
 
+  // Update presence when the app window closes
   useEffect(() => {
     const sessionId = getCurrentSessionId();
 
@@ -77,6 +79,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
     };
   }, [organizationId]);
 
+  // Update presence when the user switches org, projects, workspaces
   useEffect(() => {
     async function updatePresence() {
       const sessionId = getCurrentSessionId();
@@ -106,6 +109,33 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
 
     updatePresence();
   }, [organizationId, projectId, workspaceId]);
+
+  // Update presence every minute
+  useInterval(async () => {
+    const sessionId = getCurrentSessionId();
+    if (sessionId) {
+      try {
+        const response = await window.main.insomniaFetch<{
+                data: UserPresence[];
+              }>({
+                path: `/v1/teams/${sanitizeTeamId(organizationId)}/collaborators`,
+                method: 'POST',
+                sessionId,
+                data: {
+                  project: projectId,
+                  file: workspaceId,
+                },
+              });
+
+        const { data } = response;
+        if (data.length > 0) {
+          setPresence(response.data);
+        }
+      } catch (e) {
+        console.log('Error parsing response', e);
+      }
+    }
+  }, 1000 * 6);
 
   useEffect(() => {
     const sessionId = getCurrentSessionId();
