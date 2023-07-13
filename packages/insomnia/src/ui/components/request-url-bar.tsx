@@ -318,10 +318,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           body: r.body,
           authentication: r.authentication,
           parameters: r.parameters,
-        },
-        // Pass true to indicate that this is an import
-        true
-        );
+        }, true); // Pass true to indicate that this is an import
       }
     } catch (error) {
       // Import failed, that's alright
@@ -357,7 +354,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const handleSendDropdownHide = useCallback(() => {
     buttonRef.current?.blur();
   }, []);
-
+  const isEventStream = request?.headers?.find(h => h.name === 'Content-Type')?.value === 'text/event-stream';
+  const buttonText = isEventStream ? 'Listen' : (downloadPath ? 'Download' : 'Send');
   const { url, method } = request;
   const isCancellable = currentInterval || currentTimeout;
   return (
@@ -397,8 +395,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               className="urlbar__send-btn"
               onClick={send}
             >
-              {downloadPath ? 'Download' : 'Send'}
-            </button>
+              {buttonText}</button>
             <Dropdown
               key="dropdown"
               className="tall"
