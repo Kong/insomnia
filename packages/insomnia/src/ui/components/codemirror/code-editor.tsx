@@ -449,12 +449,15 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
           console.log('Failed to set CodeMirror option', err.message);
         }
         onChange(doc.getValue() || '');
+        if (onBlur && !codeMirror.current?.hasFocus()) {
+          onBlur();
+        }
         setOriginalCode(doc.getValue() || '');
       }
     }, DEBOUNCE_MILLIS);
     codeMirror.current?.on('changes', fn);
     return () => codeMirror.current?.off('changes', fn);
-  }, [lintOptions, noLint, onChange]);
+  }, [lintOptions, noLint, onChange, onBlur]);
 
   useEffect(() => {
     const handleOnBlur = () => onBlur?.();
