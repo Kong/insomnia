@@ -1,5 +1,5 @@
 import { test } from '../../playwright/test';
-test.only('Clone from github', async ({ page }) => {
+test('Clone from github', async ({ page }) => {
   await page.getByRole('button', { name: 'Git Clone' }).click();
   await page.getByRole('tab', { name: ' Git' }).click();
   await page.getByPlaceholder('https://github.com/org/repo.git').fill('https://github.com/gatzjames/insomnia-git-example.git');
