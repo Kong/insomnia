@@ -63,7 +63,6 @@ export const workspaceLoader: LoaderFunction = async ({
 
 const WorkspaceRoute = () => {
   const workspaceData = useLoaderData() as WorkspaceLoaderData;
-
   const branch = workspaceData.activeWorkspaceMeta?.cachedGitRepositoryBranch;
   return <Outlet key={branch} />;
 };

@@ -10,6 +10,7 @@ const PresenceContext = createContext<{
   presence: [],
 });
 
+// This happens because the API accepts teamIds as team_xxx
 function sanitizeTeamId(teamId: string) {
   return teamId.replace('proj_', '');
 }
@@ -135,7 +136,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
         console.log('Error parsing response', e);
       }
     }
-  }, 1000 * 6);
+  }, 1000 * 60 * 3);
 
   useEffect(() => {
     const sessionId = getCurrentSessionId();
@@ -167,11 +168,14 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
 
               const data = new TextDecoder('utf-8').decode(value);
 
-              const [, event, payload] = data.split('\n').map(s => s.trim()).map(s => {
+              const parsedData = data.split('\n').map(s => s.trim()).map(s => {
                 const removeTextBeforeFirstColon = s.split(':').slice(1).join(':');
 
                 return removeTextBeforeFirstColon.trim();
               });
+
+              const event = parsedData[1];
+              const payload = parsedData[2];
 
               if (event === 'message') {
                 const presenceEvent = JSON.parse(payload) as UserPresenceEvent;
