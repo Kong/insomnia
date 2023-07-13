@@ -194,6 +194,7 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
       avatars={
         activeUsers.length > 0 ?
           <AvatarGroup
+            animate
             size='small'
             maxAvatars={2}
             items={activeUsers.map(user => {

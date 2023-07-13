@@ -1,4 +1,4 @@
-import React, { Fragment, Suspense } from 'react';
+import React, { Fragment } from 'react';
 import { useLoaderData, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -51,6 +51,7 @@ export const AccountToolbar = () => {
     <Toolbar>
       {presence && (
         <AvatarGroup
+          animate
           size="medium"
           items={activeUsers.map(activeUser => {
             return {
@@ -80,19 +81,18 @@ export const AccountToolbar = () => {
               style={{
                 gap: 'var(--padding-xs)',
                 borderRadius: '60px',
-                padding: '3px 10px',
+                padding: '3px 3px',
+                alignItems: 'center',
               }}
               removePaddings={false}
               disableHoverBehavior={false}
             >
-              <Suspense fallback={<div />}>
-                <Avatar
-                  src={user?.picture}
-                  alt={`${session.getFirstName()?.charAt(0)}${session
-                    .getLastName()
-                    ?.charAt(0)}`}
-                />
-              </Suspense>
+              <Avatar
+                src={user?.picture}
+                alt={`${session.getFirstName()?.charAt(0)}${session
+                  .getLastName()
+                  ?.charAt(0)}`}
+              />
               {session.getFirstName()} {session.getLastName()}
               <i className="fa fa-caret-down" />
             </DropdownButton>

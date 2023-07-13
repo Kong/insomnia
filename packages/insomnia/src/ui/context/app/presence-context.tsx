@@ -1,7 +1,7 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { getCurrentSessionId } from '../../../account/session';
+import { getCurrentSessionId, isLoggedIn } from '../../../account/session';
 
 const PresenceContext = createContext<{
   presence: UserPresence[];
@@ -41,31 +41,32 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
 
-  console.log('presence', presence);
-
   useEffect(() => {
     async function updatePresence() {
-      const response = await window.main.insomniaFetch({
-        path: `/v1/teams/${sanitizeTeamId(organizationId)}/collaborators`,
-        method: 'POST',
-        sessionId: getCurrentSessionId() || '',
-        data: {
-          project: projectId,
-          file: workspaceId,
-        },
-      });
-
-      if (response.ok) {
+      const sessionId = getCurrentSessionId();
+      if (isLoggedIn()) {
+        console.log(sessionId);
         try {
-          const json = await response.json() as {
-            data: UserPresence[];
-          };
-          setPresence(json.data);
+          const response = await window.main.insomniaFetch<{
+              data: UserPresence[];
+            }>({
+              path: `/v1/teams/${sanitizeTeamId(organizationId)}/collaborators`,
+              method: 'POST',
+              sessionId,
+              data: {
+                project: projectId,
+                file: workspaceId,
+              },
+            });
+
+          const { data } = response;
+          if (data.length > 0) {
+            setPresence(response.data);
+          }
         } catch (e) {
           console.log('Error parsing response', e);
         }
       }
-
     }
 
     updatePresence();
@@ -89,8 +90,6 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
             try {
               const { done, value } = await bodyStream.read();
 
-              console.log({ done, value });
-
               if (done) {
                 return;
               }
@@ -108,7 +107,6 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
                 const presenceEvent = JSON.parse(payload) as UserPresenceEvent;
 
                 if (presenceEvent.type === 'PresentUserLeave') {
-                  console.log('User Left', presenceEvent);
                   setPresence(prev => prev.filter(p => {
                     if (p.acct === presenceEvent.acct && p.file === presenceEvent.file && p.project === presenceEvent.project) {
                       return false;
@@ -137,10 +135,12 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
     startStream();
   }, [organizationId]);
 
+  console.log({ presence });
+
   return (
     <PresenceContext.Provider
       value={{
-        presence: presence,
+        presence,
       }}
     >
       {children}

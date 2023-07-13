@@ -20,7 +20,10 @@ const appearIn = keyframes`
   }
 `;
 
-const ImageElement = styled.img`
+const ImageElement = styled.img<{
+  size: 'small' | 'medium';
+  animate: boolean;
+}>`
   border: 2px solid var(--color-bg);
   box-sizing: border-box;
   outline: none;
@@ -29,15 +32,17 @@ const ImageElement = styled.img`
   object-position: center;
   background-size: cover;
   background-position: center;
-  animation: ${appearIn} 0.2s ease-in-out;
+  animation: ${({ animate }) => (animate ? appearIn : 'none')} 0.2s ease-in-out;
+  width: ${({ size }) => (size === 'small' ? '20px' : '24px')};
+  height: ${({ size }) => (size === 'small' ? '20px' : '24px')};
 `;
 
-const AvatarImage = ({ src, alt, size }: { src: string; alt: string; size: 'small' | 'medium' }) => {
+const AvatarImage = ({ src, alt, size, animate }: { src: string; alt: string; size: 'small' | 'medium'; animate: boolean }) => {
   imgCache.read(src);
-  return <ImageElement alt={alt} src={src} style={{ width: size === 'small' ? '20px' : '24px', height: size === 'small' ? '20px' : '24px' }} />;
+  return <ImageElement animate={animate} alt={alt} src={src} size={size} />;
 };
 
-const AvatarPlaceholder = styled.div<{size: 'small' | 'medium'}>`
+const AvatarPlaceholder = styled.div<{size: 'small' | 'medium'; animate: boolean}>`
   border: 2px solid var(--color-bg);
   box-sizing: border-box;
   outline: none;
@@ -48,7 +53,8 @@ const AvatarPlaceholder = styled.div<{size: 'small' | 'medium'}>`
   object-position: center;
   background-size: cover;
   background-position: center;
-  animation: ${appearIn} 0.2s ease-in-out;
+  margin: 0!important;
+  animation: ${({ animate }) => animate ? appearIn : 'none'} 0.2s ease-in-out;
   background-color: var(--color-surprise);
   color: var(--color-font);
   display: flex;
@@ -82,25 +88,32 @@ class ImageCache {
 
 const imgCache = new ImageCache();
 
-export const Avatar = ({ src, alt, size }: { src: string; alt: string; size?: 'small' | 'medium' }) => {
+export const Avatar = ({ src, alt, size = 'medium', animate }: { src: string; alt: string; size?: 'small' | 'medium'; animate?: boolean }) => {
   if (!src) {
-    return <AvatarPlaceholder size="medium">{alt}</AvatarPlaceholder>;
+    return <AvatarPlaceholder animate={Boolean(animate)} size={size}>{alt}</AvatarPlaceholder>;
   }
 
   return (
-    <Tooltip message={alt}>
-      <Suspense fallback={<AvatarPlaceholder size="medium">{alt}</AvatarPlaceholder>}>
+    <Tooltip
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+      }}
+      message={alt}
+    >
+      <Suspense fallback={<AvatarPlaceholder animate={Boolean(animate)} size={size}>{alt}</AvatarPlaceholder>}>
         <AvatarImage
+          animate={Boolean(animate)}
           src={src}
           alt={alt}
-          size={size || 'small'}
+          size={size}
         />
       </Suspense>
     </Tooltip>
   );
 };
 
-export const AvatarGroup = ({ items, maxAvatars = 3, size = 'small' }: { items: {src: string; alt: string}[]; maxAvatars?: number; size: 'small' | 'medium' }) => {
+export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium', animate = false }: { items: {src: string; alt: string}[]; maxAvatars?: number; size: 'small' | 'medium'; animate?: boolean }) => {
   const avatars = items.slice(0, maxAvatars);
   const overflow = items.length - maxAvatars;
 
@@ -115,8 +128,9 @@ export const AvatarGroup = ({ items, maxAvatars = 3, size = 'small' }: { items: 
       >
         {avatars.map((avatar, index) => (
           <Avatar
-            size="medium"
+            size={size}
             key={index}
+            animate={animate}
             src={avatar.src}
             alt={avatar.alt}
           />
@@ -129,7 +143,7 @@ export const AvatarGroup = ({ items, maxAvatars = 3, size = 'small' }: { items: 
               ))
             }
           >
-            <AvatarPlaceholder size={size}>{`+${overflow}`}</AvatarPlaceholder>
+            <AvatarPlaceholder animate={animate} size={size}>{`+${overflow}`}</AvatarPlaceholder>
           </Tooltip>
         )}
       </div>
