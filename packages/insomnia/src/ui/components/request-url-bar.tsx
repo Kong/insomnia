@@ -396,7 +396,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               onClick={send}
             >
               {buttonText}</button>
-            <Dropdown
+            {isEventStream ? null : (<Dropdown
               key="dropdown"
               className="tall"
               ref={dropdownRef}
@@ -475,7 +475,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                   />
                 </DropdownItem>
               </DropdownSection>
-            </Dropdown>
+            </Dropdown>)}
           </>
         )}
       </div>
