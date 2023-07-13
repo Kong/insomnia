@@ -13,8 +13,10 @@ export const httpClient = {
     }
 
     try {
+      // hosted-git-info was adding git+ to the beginning of the url which isn't supported by axios after 0.27.0
+      const withoutGitPlus = config.url.replace(/^git\+/, '');
       response = await window.main.axiosRequest({
-        url: config.url,
+        url: withoutGitPlus,
         method: config.method,
         headers: config.headers,
         data: body,
