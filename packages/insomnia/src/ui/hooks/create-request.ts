@@ -46,7 +46,7 @@ export const setActiveRequest = async (
   });
 };
 
-export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL' | 'WebSocket';
+export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL' | 'WebSocket' | 'SSE';
 type RequestCreator = (input: {
   parentId: string;
   requestType: CreateRequestType;
@@ -83,6 +83,23 @@ export const createRequest: RequestCreator = async ({
           text: '',
         },
         name: 'New Request',
+      });
+      models.stats.incrementCreatedRequests();
+      setActiveRequest(request._id, workspaceId);
+      break;
+    }
+
+    case 'SSE': {
+      const request = await models.request.create({
+        parentId,
+        method: METHOD_POST,
+        headers: [
+          {
+            name: 'Accept',
+            value: 'text/event-stream',
+          },
+        ],
+        name: 'New Event Stream',
       });
       models.stats.incrementCreatedRequests();
       setActiveRequest(request._id, workspaceId);
