@@ -627,7 +627,10 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
       console.log({ projectExists, projectId, organizationId });
 
       if (!projectExists) {
-        projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]._id;
+        projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]?._id;
+        if (!projectId) {
+          return redirect(`/organization/${organizationId}`);
+        }
       }
 
       return redirect(`/organization/${match?.params.organizationId}/project/${projectId}`);
@@ -639,7 +642,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     const localProjects = (await models.project.all()).filter(
       proj => !isRemoteProject(proj)
     );
-    if (localProjects[0]._id) {
+    if (localProjects[0]?._id) {
       return redirect(
         `/organization/${organizationId}/project/${localProjects[0]._id}`
       );
