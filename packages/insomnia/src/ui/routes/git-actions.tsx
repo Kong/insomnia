@@ -313,7 +313,7 @@ type CloneGitActionResult =
 
 export function parseGitToHttpsURL(s: string) {
   // try to convert any git URL to https URL
-  let parsed = fromUrl(s)?.https() || '';
+  let parsed = fromUrl(s)?.https({ noGitPlus: true }) || '';
 
   // fallback for self-hosted git servers, see https://github.com/Kong/insomnia/issues/5967
   // and https://github.com/npm/hosted-git-info/issues/11
@@ -348,7 +348,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
   // URI
   const uri = formData.get('uri');
   invariant(typeof uri === 'string', 'URI is required');
-  repoSettingsPatch.uri = uri;
+  repoSettingsPatch.uri = parseGitToHttpsURL(uri);
   // Author
   const authorName = formData.get('authorName');
   invariant(typeof authorName === 'string', 'Author name is required');
@@ -394,7 +394,6 @@ export const cloneGitRepoAction: ActionFunction = async ({
     properties: vcsSegmentEventProperties('git', 'clone'),
   });
   repoSettingsPatch.needsFullClone = true;
-  repoSettingsPatch.uri = parseGitToHttpsURL(repoSettingsPatch.uri);
   let fsClient = MemClient.createClient();
 
   const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
@@ -605,7 +604,8 @@ export const updateGitRepoAction: ActionFunction = async ({
   // URI
   const uri = formData.get('uri');
   invariant(typeof uri === 'string', 'URI is required');
-  repoSettingsPatch.uri = uri;
+  repoSettingsPatch.uri = parseGitToHttpsURL(uri);
+
   // Author
   const authorName = formData.get('authorName');
   invariant(typeof authorName === 'string', 'Author name is required');
