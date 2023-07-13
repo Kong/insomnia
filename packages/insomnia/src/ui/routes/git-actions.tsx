@@ -348,7 +348,8 @@ export const cloneGitRepoAction: ActionFunction = async ({
   // URI
   const uri = formData.get('uri');
   invariant(typeof uri === 'string', 'URI is required');
-  repoSettingsPatch.uri = uri;
+  repoSettingsPatch.uri = parseGitToHttpsURL(uri);
+
   // Author
   const authorName = formData.get('authorName');
   invariant(typeof authorName === 'string', 'Author name is required');
@@ -394,7 +395,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
     properties: vcsSegmentEventProperties('git', 'clone'),
   });
   repoSettingsPatch.needsFullClone = true;
-  repoSettingsPatch.uri = parseGitToHttpsURL(repoSettingsPatch.uri);
+
   let fsClient = MemClient.createClient();
 
   const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
@@ -414,7 +415,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
       });
 
       return {
-        errors: ['Error cloning repository'],
+        errors: ['Error cloning repository: ', originalUriError.message],
       };
     }
 
@@ -437,7 +438,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
       });
       return {
         errors: [
-          'Error Cloning Repository: failed to clone with and without `.git` suffix',
+          'Error Cloning Repository: failed to clone with and without `.git` suffix: ' + dotGitError.message,
         ],
       };
     }
@@ -605,7 +606,8 @@ export const updateGitRepoAction: ActionFunction = async ({
   // URI
   const uri = formData.get('uri');
   invariant(typeof uri === 'string', 'URI is required');
-  repoSettingsPatch.uri = uri;
+  repoSettingsPatch.uri = parseGitToHttpsURL(uri);
+
   // Author
   const authorName = formData.get('authorName');
   invariant(typeof authorName === 'string', 'Author name is required');
@@ -1277,13 +1279,12 @@ export const gitStatusLoader: LoaderFunction = async ({
 
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
-
-  const { changes } = await getGitChanges(GitVCS, workspace);
-  const localChanges = changes.filter(i => i.editable).length;
-
-  return {
-    status: {
-      localChanges,
-    },
-  };
+  try {
+    const { changes } = await getGitChanges(GitVCS, workspace);
+    const localChanges = changes.filter(i => i.editable).length;
+    return { status: { localChanges } };
+  } catch (e) {
+    console.log('error in gitStatusLoader', e);
+    return { status: { localChanges: 0 } };
+  }
 };
