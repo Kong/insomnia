@@ -228,14 +228,23 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     setLoading(false);
   }, [activeEnvironment?._id, request, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
+  const isEventStream = request?.headers?.find(h => h.name === 'Content-Type')?.value === 'text/event-stream';
+  const startListening = () => {
+    console.log('start listening');
+
+  };
   const send = useCallback(() => {
     setCurrentTimeout(undefined);
     if (downloadPath) {
       sendThenSetFilePath(downloadPath);
-    } else {
-      handleSend();
+      return;
     }
-  }, [downloadPath, handleSend, sendThenSetFilePath]);
+    if (isEventStream) {
+      startListening();
+      return;
+    }
+    handleSend();
+  }, [downloadPath, handleSend, isEventStream, sendThenSetFilePath]);
 
   useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
@@ -354,7 +363,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const handleSendDropdownHide = useCallback(() => {
     buttonRef.current?.blur();
   }, []);
-  const isEventStream = request?.headers?.find(h => h.name === 'Content-Type')?.value === 'text/event-stream';
   const buttonText = isEventStream ? 'Listen' : (downloadPath ? 'Download' : 'Send');
   const { url, method } = request;
   const isCancellable = currentInterval || currentTimeout;
