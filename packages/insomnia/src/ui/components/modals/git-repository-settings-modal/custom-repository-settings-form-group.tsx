@@ -118,7 +118,6 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
               </Link>
             </HelpTooltip>
             <input
-              required
               type="password"
               name="token"
               disabled={Boolean(uri)}
