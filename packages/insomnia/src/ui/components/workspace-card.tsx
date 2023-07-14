@@ -11,7 +11,9 @@ import { fuzzyMatchAll } from '../../common/misc';
 import { strings } from '../../common/strings';
 import { Project } from '../../models/project';
 import { isDesign } from '../../models/workspace';
+import { UserPresence } from '../context/app/presence-context';
 import { WorkspaceWithMetadata } from '../routes/project';
+import { AvatarGroup } from './avatar';
 import { Highlight } from './base/highlight';
 import { Card } from './card';
 import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
@@ -36,6 +38,7 @@ const LabelIcon = styled.div({
 
 export interface WorkspaceCardProps {
   workspaceWithMetadata: WorkspaceWithMetadata;
+  activeUsers: UserPresence[];
   filter: string;
   activeProject: Project;
   onSelect: (workspaceId: string, activity: GlobalActivity) => void;
@@ -70,6 +73,7 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
   filter,
   activeProject,
   projects,
+  activeUsers,
   onSelect,
 }) => {
   const {
@@ -186,6 +190,22 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
         />
       }
       docFormat={format}
+      avatars={
+        activeUsers.length > 0 ?
+          <AvatarGroup
+            animate
+            size='small'
+            maxAvatars={2}
+            items={activeUsers.map(user => {
+              return {
+                key: user.acct,
+                alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+                src: user.avatar,
+              };
+            })}
+          />
+          : null
+      }
       onClick={() => onSelect(workspace._id, defaultActivity)}
     />
   );
