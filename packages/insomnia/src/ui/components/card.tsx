@@ -51,6 +51,7 @@ const StyledCard = styled.div({
 
 const CardHeader = styled.div({
   textAlign: 'left',
+  height: '20px',
   padding: 'var(--padding-md) var(--padding-xs) 0 var(--padding-xs)',
   display: 'flex',
   justifyContent: 'space-between',
@@ -219,6 +220,7 @@ export interface CardProps {
   onChange?: (event: React.SyntheticEvent<HTMLInputElement>) => any;
   onClick?: (event: React.SyntheticEvent<HTMLDivElement>) => any;
   selectable?: boolean;
+  avatars?: ReactNode;
 }
 
 export const Card: FC<CardProps> = props => {
@@ -236,6 +238,7 @@ export const Card: FC<CardProps> = props => {
     docMenu,
     docFormat,
     selectable,
+    avatars,
     onClick,
   } = props;
 
@@ -243,6 +246,7 @@ export const Card: FC<CardProps> = props => {
     <StyledCard className={state.selected ? 'selected' : 'deselected'} onClick={onClick}>
       <CardHeader>
         <div className="header-item card-badge">{tagLabel}</div>
+        {avatars}
         {selectable ? (
           <div className="header-item card-menu">
             <label className="card-checkbox-label">
