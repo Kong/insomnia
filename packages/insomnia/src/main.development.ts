@@ -1,4 +1,4 @@
-import electron, { app, ipcMain, protocol, session } from 'electron';
+import electron, { app, ipcMain, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
@@ -8,6 +8,7 @@ import appConfig from '../config/config.json';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
+import { registerInsomniaStreamProtocol } from './main/api.protocol';
 import { registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
@@ -21,10 +22,8 @@ import type { Stats } from './models/stats';
 import type { ToastNotification } from './ui/components/toast';
 
 initializeSentry();
-protocol.registerSchemesAsPrivileged([{
-  scheme: 'eventsource',
-  privileges: { secure: true, standard: true, supportFetchAPI: true },
-}]);
+
+registerInsomniaStreamProtocol();
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
   process.exit(0);

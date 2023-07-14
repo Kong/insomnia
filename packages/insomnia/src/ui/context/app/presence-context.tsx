@@ -27,7 +27,7 @@ export interface UserPresence {
 }
 
 interface UserPresenceEvent extends UserPresence {
-  type: string;
+  type: 'PresentUserLeave' | 'PresentStateChanged';
 }
 
 export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
@@ -65,8 +65,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
             },
           });
 
-        const { data } = response;
-        if (data.length > 0) {
+        if (response?.data?.length > 0) {
           setPresence(response.data);
         }
       } catch (e) {
@@ -136,7 +135,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
         console.log('Error parsing response', e);
       }
     }
-  }, 1000 * 60 * 3);
+  }, 1000 * 30);
 
   useEffect(() => {
     const sessionId = getCurrentSessionId();
@@ -145,68 +144,40 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
       return;
     }
 
-    const startStream = async () => {
-      try {
-        const response = await fetch(`eventsource://v1/teams/${sanitizeTeamId(organizationId)}/streams`,
-          {
-            headers: new Headers({
-              'Accept': 'text/event-stream',
-              'X-Session-Id': sessionId,
-            }),
-          });
+    try {
+      const source = new EventSource(`insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams?sessionId=${sessionId}`);
 
-        const bodyStream = response.body?.getReader();
+      source.addEventListener('message', e => {
+        try {
+          const presenceEvent = JSON.parse(e.data) as UserPresenceEvent;
 
-        if (bodyStream) {
-          const read = async () => {
-            try {
-              const { done, value } = await bodyStream.read();
+          if (presenceEvent.type === 'PresentUserLeave') {
+            setPresence(prev => prev.filter(p => {
+              const isSameUser = p.acct === presenceEvent.acct;
+              const isSameProjectFile = p.file === presenceEvent.file && p.project === presenceEvent.project;
 
-              if (done) {
-                return;
+              // Remove any presence events we have for the same user in this project/file
+              if (isSameUser && isSameProjectFile) {
+                return false;
               }
 
-              const data = new TextDecoder('utf-8').decode(value);
-
-              const parsedData = data.split('\n').map(s => s.trim()).map(s => {
-                const removeTextBeforeFirstColon = s.split(':').slice(1).join(':');
-
-                return removeTextBeforeFirstColon.trim();
-              });
-
-              const event = parsedData[1];
-              const payload = parsedData[2];
-
-              if (event === 'message') {
-                const presenceEvent = JSON.parse(payload) as UserPresenceEvent;
-
-                if (presenceEvent.type === 'PresentUserLeave') {
-                  setPresence(prev => prev.filter(p => {
-                    if (p.acct === presenceEvent.acct && p.file === presenceEvent.file && p.project === presenceEvent.project) {
-                      return false;
-                    }
-
-                    return true;
-                  }));
-                } else if (presenceEvent.type === 'PresentStateChanged') {
-                  setPresence(prev => [...prev.filter(p => p.acct !== presenceEvent.acct), presenceEvent]);
-                }
-              }
-
-              read();
-            } catch (e) {
-              console.log('Error Reading body', e);
-            }
-          };
-
-          read();
+              return true;
+            }));
+          } else if (presenceEvent.type === 'PresentStateChanged') {
+            setPresence(prev => [...prev.filter(p => p.acct !== presenceEvent.acct), presenceEvent]);
+          }
+        } catch (e) {
+          console.log('Error parsing response from SSE', e);
         }
-      } catch (e) {
-        console.log('ERROR', e);
-      }
-    };
+      });
+      return () => {
+        source.close();
+      };
+    } catch (e) {
+      console.log('ERROR', e);
+      return;
+    }
 
-    startStream();
   }, [organizationId]);
 
   return (
