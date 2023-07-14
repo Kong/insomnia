@@ -43,12 +43,17 @@ import { WorkspaceHeader } from '../components/workspace-header';
 import { AppHooks } from '../containers/app-hooks';
 import { AIProvider } from '../context/app/ai-context';
 import withDragDropContext from '../context/app/drag-drop-context';
+import { PresenceProvider } from '../context/app/presence-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import Modals from './modals';
 import { WorkspaceLoaderData } from './workspace';
 
 export interface RootLoaderData {
   organizations: Organization[];
+  user: {
+    name: string;
+    picture: string;
+  };
 }
 
 export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
@@ -99,7 +104,16 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
 
       const teams = response.data.teams as Team[];
 
+      const user = await window.main.insomniaFetch<{
+        name: string;
+        picture: string;
+      }>({
+        method: 'GET',
+        path: '/v1/user/profile',
+        sessionId,
+      });
       return {
+        user,
         organizations: [defaultOrganization, ...teams.map(team => ({
           _id: team.id,
           name: team.name,
@@ -108,12 +122,20 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
     } catch (err) {
       console.log('Failed to load Teams', err);
       return {
+        user: {
+          name: '',
+          picture: '',
+        },
         organizations: [defaultOrganization],
       };
     }
   }
 
   return {
+    user: {
+      name: '',
+      picture: '',
+    },
     organizations: [defaultOrganization],
   };
 };
@@ -294,40 +316,42 @@ const Root = () => {
   };
 
   return (
-    <AIProvider>
-      <NunjucksEnabledProvider>
-        <AppHooks />
-        <div className="app">
-          <ErrorBoundary showAlert>
-            <Modals />
-            {/* triggered by insomnia://app/import */}
-            {importUri && (
-              <ImportModal
-                onHide={() => setImportUri('')}
-                projectName="Insomnia"
-                organizationId={organizationId}
-                from={{ type: 'uri', defaultValue: importUri }}
-              />
-            )}
-            <Layout>
-              <OrganizationsNav />
-              <AppHeader
-                gridCenter={
-                  workspaceData ? <WorkspaceHeader {...workspaceData} /> : null
-                }
-                gridRight={<AccountToolbar />}
-              />
-              <Outlet />
-              <StatusBar />
-            </Layout>
-          </ErrorBoundary>
+    <PresenceProvider>
+      <AIProvider>
+        <NunjucksEnabledProvider>
+          <AppHooks />
+          <div className="app">
+            <ErrorBoundary showAlert>
+              <Modals />
+              {/* triggered by insomnia://app/import */}
+              {importUri && (
+                <ImportModal
+                  onHide={() => setImportUri('')}
+                  projectName="Insomnia"
+                  organizationId={organizationId}
+                  from={{ type: 'uri', defaultValue: importUri }}
+                />
+              )}
+              <Layout>
+                <OrganizationsNav />
+                <AppHeader
+                  gridCenter={
+                    workspaceData ? <WorkspaceHeader {...workspaceData} /> : null
+                  }
+                  gridRight={<AccountToolbar />}
+                />
+                <Outlet />
+                <StatusBar />
+              </Layout>
+            </ErrorBoundary>
 
-          <ErrorBoundary showAlert>
-            <Toast />
-          </ErrorBoundary>
-        </div>
-      </NunjucksEnabledProvider>
-    </AIProvider>
+            <ErrorBoundary showAlert>
+              <Toast />
+            </ErrorBoundary>
+          </div>
+        </NunjucksEnabledProvider>
+      </AIProvider>
+    </PresenceProvider>
   );
 };
 

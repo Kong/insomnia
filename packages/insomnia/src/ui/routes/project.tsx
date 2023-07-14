@@ -70,6 +70,7 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button/button';
 import { WorkspaceCard } from '../components/workspace-card';
+import { usePresenceContext } from '../context/app/presence-context';
 import { RootLoaderData } from './root';
 
 async function getAllTeamProjects(teamId: string) {
@@ -626,7 +627,10 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
       console.log({ projectExists, projectId, organizationId });
 
       if (!projectExists) {
-        projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]._id;
+        projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]?._id;
+        if (!projectId) {
+          return redirect(`/organization/${organizationId}`);
+        }
       }
 
       return redirect(`/organization/${match?.params.organizationId}/project/${projectId}`);
@@ -638,7 +642,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     const localProjects = (await models.project.all()).filter(
       proj => !isRemoteProject(proj)
     );
-    if (localProjects[0]._id) {
+    if (localProjects[0]?._id) {
       return redirect(
         `/organization/${organizationId}/project/${localProjects[0]._id}`
       );
@@ -745,8 +749,6 @@ export const loader: LoaderFunction = async ({
   invariant(projectId, 'projectId parameter is required');
   const project = await models.project.getById(projectId);
 
-  const allProjects = await models.project.all();
-
   invariant(project, 'Project was not found');
 
   const projectWorkspaces = await models.workspace.findByParentId(project._id);
@@ -841,8 +843,7 @@ export const loader: LoaderFunction = async ({
     )?.indexes) : true)
     .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
 
-  // const allProjects = await models.project.all();
-
+  const allProjects = await models.project.all();
   const organizationProjects =
     organizationId === DEFAULT_ORGANIZATION_ID
       ? allProjects.filter(proj => !isRemoteProject(proj))
@@ -920,6 +921,8 @@ const ProjectRoute: FC = () => {
   const [searchParams] = useSearchParams();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
+
+  const { presence } = usePresenceContext();
 
   const fetcher = useFetcher();
   const submit = useSubmit();
@@ -1102,26 +1105,35 @@ const ProjectRoute: FC = () => {
                 </div>
               </PaneHeaderToolbar>
               {hasWorkspaces &&
-                workspaces.map(workspace => (
-                  <WorkspaceCard
-                    {...workspace}
-                    projects={projects}
-                    key={workspace._id}
-                    activeProject={activeProject}
-                    onSelect={() =>
-                      navigate(
-                        `/organization/${organizationId}/project/${
-                          activeProject._id
-                        }/workspace/${workspace.workspace._id}/${
-                          workspace.workspace.scope === 'design'
-                            ? ACTIVITY_SPEC
-                            : ACTIVITY_DEBUG
-                        }`
-                      )
-                    }
-                    filter={filter}
-                  />
-                ))}
+                workspaces.map(workspace => {
+                  const activeUsers = presence.filter(p => {
+                    return (
+                      p.project === activeProject._id &&
+                      p.file === workspace.workspace._id
+                    );
+                  });
+                  return (
+                    <WorkspaceCard
+                      {...workspace}
+                      projects={projects}
+                      key={workspace._id}
+                      activeUsers={activeUsers}
+                      activeProject={activeProject}
+                      onSelect={() =>
+                        navigate(
+                          `/organization/${organizationId}/project/${
+                            activeProject._id
+                          }/workspace/${workspace.workspace._id}/${
+                            workspace.workspace.scope === 'design'
+                              ? ACTIVITY_SPEC
+                              : ACTIVITY_DEBUG
+                          }`
+                        )
+                      }
+                      filter={filter}
+                    />
+                  );
+                })}
               {filter && !hasWorkspaces && (
                 <div>
                   <p className="notice subtle">

@@ -46,8 +46,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
         ]}
       >
         {item => (
-
-          <DropdownItem aria-label={`${strings.project.singular} Settings`}>
+          <DropdownItem key={item.label} aria-label={`${strings.project.singular} Settings`}>
             <ItemContent
               key={item.label}
               {...item}

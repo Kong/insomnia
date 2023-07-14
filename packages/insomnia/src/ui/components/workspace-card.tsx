@@ -12,6 +12,8 @@ import { strings } from '../../common/strings';
 import { ApiSpec } from '../../models/api-spec';
 import { Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
+import { UserPresence } from '../context/app/presence-context';
+import { AvatarGroup } from './avatar';
 import { Highlight } from './base/highlight';
 import { Card } from './card';
 import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
@@ -36,6 +38,7 @@ const LabelIcon = styled.div({
 
 export interface WorkspaceCardProps {
   apiSpec: ApiSpec | null;
+  activeUsers: UserPresence[];
   workspace: Workspace;
   filter: string;
   activeProject: Project;
@@ -90,6 +93,7 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
   specFormatVersion,
   hasUnsavedChanges,
   projects,
+  activeUsers,
   onSelect,
 }) => {
   let branch = lastActiveBranch;
@@ -187,6 +191,22 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
         />
       }
       docFormat={format}
+      avatars={
+        activeUsers.length > 0 ?
+          <AvatarGroup
+            animate
+            size='small'
+            maxAvatars={2}
+            items={activeUsers.map(user => {
+              return {
+                key: user.acct,
+                alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+                src: user.avatar,
+              };
+            })}
+          />
+          : null
+      }
       onClick={() => onSelect(workspace._id, defaultActivity)}
     />
   );
