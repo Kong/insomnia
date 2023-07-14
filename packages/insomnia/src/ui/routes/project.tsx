@@ -57,6 +57,7 @@ import { isDesign, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { Team } from '../../sync/types';
 import { invariant } from '../../utils/invariant';
+import { AvatarGroup } from '../components/avatar';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
@@ -68,7 +69,29 @@ import { ImportModal } from '../components/modals/import-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
+import { usePresenceContext } from '../context/app/presence-context';
 import { useOrganizationLoaderData } from './organization';
+
+async function getAllTeamProjects(organizationId: string) {
+  const sessionId = getCurrentSessionId() || '';
+  console.log('Fetching projects for team', organizationId);
+  if (!sessionId) {
+    return [];
+  }
+
+  const response = await window.main.insomniaFetch<{
+    data: {
+      id: string;
+      name: string;
+    }[];
+  }>({
+    path: `/v1/teams/${organizationId}/team-projects`,
+    method: 'GET',
+    sessionId,
+  });
+
+  return response.data as Team[];
+}
 
 export interface WorkspaceWithMetadata {
   _id: string;
@@ -109,9 +132,18 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     );
 
     if (match && match.params.organizationId && match.params.projectId) {
-      return redirect(
-        `/organization/${match?.params.organizationId}/project/${match?.params.projectId}`
-      );
+      let projectId = match.params.projectId;
+      const projectExists = await models.project.getById(projectId);
+      console.log({ projectExists, projectId, organizationId });
+
+      if (!projectExists) {
+        projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]?._id;
+        if (!projectId) {
+          return redirect(`/organization/${organizationId}`);
+        }
+      }
+
+      return redirect(`/organization/${match?.params.organizationId}/project/${projectId}`);
     }
   }
 
@@ -120,7 +152,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     const localProjects = (await models.project.all()).filter(
       proj => !isRemoteProject(proj)
     );
-    if (localProjects[0]._id) {
+    if (localProjects[0]?._id) {
       return redirect(
         `/organization/${organizationId}/project/${localProjects[0]._id}`
       );
@@ -342,7 +374,6 @@ export const loader: LoaderFunction = async ({
     .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
 
   const allProjects = await models.project.all();
-
   const organizationProjects =
     organizationId === DEFAULT_ORGANIZATION_ID
       ? allProjects.filter(proj => !isRemoteProject(proj))
@@ -429,6 +460,8 @@ const ProjectRoute: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
+
+  const { presence } = usePresenceContext();
 
   const fetcher = useFetcher();
   const navigate = useNavigate();
@@ -1022,6 +1055,27 @@ const ProjectRoute: FC = () => {
                                 `by ${item.lastCommitAuthor}`}
                             </span>
                           </div>
+                        )}
+                        {presence && (
+                          <AvatarGroup
+                            size="small"
+                            maxAvatars={3}
+                            items={
+                              presence.filter(p => {
+                                return (
+                                  p.project === activeProject._id &&
+                                  p.file === item.workspace._id
+                                );
+                              })
+                              .map(user => {
+                                return {
+                                  key: user.acct,
+                                  alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+                                  src: user.avatar,
+                                };
+                              })
+                            }
+                          />
                         )}
                       </div>
                     </Item>
