@@ -7,6 +7,16 @@ export enum ChromiumVerificationResult {
   USE_CHROMIUM_RESULT = -3
 }
 
+export enum URLLoadErrorCodes {
+  /**
+   * An operation was aborted (due to user action).
+   * Error code generated from Electron or Chromium. e.g. redirect
+   * - https://www.electronjs.org/docs/latest/api/web-contents#event-did-fail-load
+   * - https://source.chromium.org/chromium/chromium/src/+/main:net/base/net_error_list.h
+   */
+  ERR_ABORTED = -3
+}
+
 export function authorizeUserInWindow({
   url,
   urlSuccessRegex = /(code=).*/,
@@ -130,6 +140,10 @@ export function authorizeUserInWindow({
     try {
       await child.loadURL(url);
     } catch (error) {
+      // Ignore the error as the initial url load was aborted on redirect.
+      if (error.errno === URLLoadErrorCodes.ERR_ABORTED) {
+        return;
+      }
       // Reject with error to show result in OAuth2 tab
       reject(error);
       // Need to close child window here since an exception in loadURL precludes normal call in
