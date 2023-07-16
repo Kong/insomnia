@@ -246,8 +246,8 @@ export const Plugins: FC = () => {
               {updates.plugins.map(update => (
                 <li key={update.name}>
                   <span style={{ marginRight: 5 }}>
-                    {update.status === 'in-progress' && (<i className="fa fa-refresh fa-spin" title="Updating in progres" />)}
-                    {update.status === 'error' && (<i className="fa fa-exclamation-triangle" style={{ color: 'var(--color-warning)' }} title={update.statusMessage ?? 'Plugin cannot be udpated'} />)}
+                    {update.status === 'in-progress' && (<i className="fa fa-refresh fa-spin" title="Updating in progress" />)}
+                    {update.status === 'error' && (<i className="fa fa-exclamation-triangle" style={{ color: 'var(--color-warning)' }} title={update.statusMessage ?? 'Plugin cannot be updated'} />)}
                     {update.status === 'success' && (<i className="fa fa-check" style={{ color: 'var(--color-success)' }} title="Updating complete" />)}
                     {update.status === 'pending' && (<i className="fa fa-chevron-right" />)}
                   </span>
