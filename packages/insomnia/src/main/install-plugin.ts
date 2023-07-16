@@ -46,7 +46,7 @@ export default async function(lookupName: string) {
     let info: InsomniaPlugin | null = null;
 
     try {
-      info = await _isInsomniaPlugin(lookupName);
+      info = await getPluginInstallationInfo(lookupName);
       // Get actual module name without version suffixes and things
       const moduleName = info.name;
       const pluginDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'plugins', moduleName);
@@ -89,7 +89,7 @@ export default async function(lookupName: string) {
   });
 }
 
-async function _isInsomniaPlugin(lookupName: string) {
+export async function getPluginInstallationInfo(lookupName: string) {
   return new Promise<InsomniaPlugin>((resolve, reject) => {
     console.log('[plugins] Fetching module info from npm');
     childProcess.execFile(

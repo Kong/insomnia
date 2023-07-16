@@ -19,10 +19,25 @@ import { HelpTooltip } from '../help-tooltip';
 import { showAlert, showPrompt } from '../modals';
 import { Button } from '../themed-button';
 
+interface PluginUpdate {
+  name: string;
+  versionFrom: string;
+  versionTo: string;
+  status: 'in-progress' | 'error' | 'success' | 'pending';
+  statusMessage?: string;
+}
+
+interface UpdateStatus {
+  message: string;
+  plugins: PluginUpdate[];
+  completed?: boolean;
+}
+
 interface State {
   plugins: Plugin[];
   npmPluginValue: string;
   error: Error | null;
+  updates: UpdateStatus | null;
   installPluginErrMsg: string;
   isInstallingFromNpm: boolean;
   isRefreshingPlugins: boolean;
@@ -32,6 +47,7 @@ export const Plugins: FC = () => {
     plugins: [],
     npmPluginValue: '',
     error: null,
+    updates: null,
     installPluginErrMsg: '',
     isInstallingFromNpm: false,
     isRefreshingPlugins: false,
@@ -39,6 +55,7 @@ export const Plugins: FC = () => {
   const {
     plugins,
     error,
+    updates,
     installPluginErrMsg,
     isInstallingFromNpm,
     isRefreshingPlugins,
@@ -57,6 +74,57 @@ export const Plugins: FC = () => {
     reload();
 
     setState(state => ({ ...state, plugins, isRefreshingPlugins: false }));
+  }
+
+  async function checkForUpdates() {
+    const updates: UpdateStatus = { message: 'Looking for updates...', plugins: [] };
+    setState(state => ({ ...state, updates }));
+
+    let plugins = await getPlugins(false);
+
+    // build the list of plugins to udpate
+    plugins = plugins.filter(plugin => plugin.directory);
+    for (const plugin of plugins) {
+      try {
+        const update = await window.main.getPluginInstallationInfo(plugin.name);
+        if (update && update.version !== plugin.version) {
+          updates.plugins.push({ name: plugin.name, versionFrom: plugin.version, versionTo: update.version, status: 'pending' });
+          setState(state => ({ ...state, updates }));
+        }
+      } catch (err) {
+        updates.plugins.push({ name: plugin.name, versionFrom: plugin.version, versionTo: 'error', status: 'error', statusMessage: err.message });
+        setState(state => ({ ...state, updates }));
+      }
+    }
+
+    // when no updates found
+    if (updates.plugins.length === 0) {
+      updates.message = 'No updates found';
+      updates.completed = true;
+      setState(state => ({ ...state, updates }));
+      return;
+    }
+
+    // update plugins
+    for (const update of updates.plugins.filter(p => p.status === 'pending')) {
+      update.status = 'in-progress';
+      setState(state => ({ ...state, updates }));
+
+      try {
+        await window.main.installPlugin(update.name);
+      } catch (err) {
+        update.status = 'error';
+        update.statusMessage = err.message;
+        setState(state => ({ ...state, updates }));
+      }
+
+      update.status = 'success';
+      setState(state => ({ ...state, updates }));
+    }
+
+    await refreshPlugins();
+    updates.completed = true;
+    setState(state => ({ ...state, updates }));
   }
 
   return (
@@ -160,6 +228,33 @@ export const Plugins: FC = () => {
         </div>
       )}
 
+      {updates && (
+        <div className="notice surprise text-left margin-bottom">
+          {updates.completed && (
+            <button className="pull-right icon" onClick={() => setState(state => ({ ...state, updates: null }))}>
+              <i className="fa fa-times" />
+            </button>
+          )}
+
+          <div>
+            <p style={{ marginBottom: 5 }}>{updates.message}</p>
+            <ul>
+              {updates.plugins.map(update => (
+                <li key={update.name}>
+                  <span style={{ marginRight: 5 }}>
+                    {update.status === 'in-progress' && (<i className="fa fa-refresh fa-spin" title="Updating in progres" />)}
+                    {update.status === 'error' && (<i className="fa fa-exclamation-triangle" style={{ color: 'var(--color-warning)' }} title={update.statusMessage ?? 'Plugin cannot be udpated'} />)}
+                    {update.status === 'success' && (<i className="fa fa-check" style={{ color: 'var(--color-success)' }} title="Updating complete" />)}
+                    {update.status === 'pending' && (<i className="fa fa-chevron-right" />)}
+                  </span>
+                  <span className='selectable'>{update.name} ({update.versionFrom} -&gt; {update.versionTo})</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       <form
         onSubmit={async event => {
           event.preventDefault();
@@ -204,7 +299,16 @@ export const Plugins: FC = () => {
       </form>
       <hr />
       <div className="text-right">
+        <Button disabled={updates !== null && updates.completed !== true} onClick={() => checkForUpdates()}>
+          <div>
+            <i className="fa fa-refresh" style={{ marginRight: 2 }} />
+            <span>Check updates</span>
+          </div>
+        </Button>
         <Button
+          style={{
+            marginLeft: '0.3em',
+          }}
           onClick={() => window.main.openInBrowser(PLUGIN_HUB_BASE)}
         >
           Browse Plugin Hub

@@ -11,7 +11,7 @@ import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { exportAllWorkspaces } from '../export';
 import { insomniaFetch } from '../insomniaFetch';
-import installPlugin from '../install-plugin';
+import installPlugin, { getPluginInstallationInfo } from '../install-plugin';
 import { axiosRequest } from '../network/axios-request';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
@@ -28,6 +28,7 @@ export interface MainBridgeAPI {
   authorizeUserInWindow: typeof authorizeUserInWindow;
   setMenuBarVisibility: (visible: boolean) => void;
   installPlugin: typeof installPlugin;
+  getPluginInstallationInfo: typeof getPluginInstallationInfo;
   writeFile: (options: { path: string; content: string }) => Promise<string>;
   cancelCurlRequest: typeof cancelCurlRequest;
   curlRequest: typeof curlRequest;
@@ -85,6 +86,10 @@ export function registerMainHandlers() {
 
   ipcMain.handle('installPlugin', (_, lookupName: string) => {
     return installPlugin(lookupName);
+  });
+
+  ipcMain.handle('getPluginInstallationInfo', (_, lookupName: string) => {
+    return getPluginInstallationInfo(lookupName);
   });
 
   ipcMain.on('restart', () => {
