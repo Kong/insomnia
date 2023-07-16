@@ -106,6 +106,9 @@ export const Plugins: FC = () => {
     }
 
     // update plugins
+    updates.message = 'Downloading updates...';
+    setState(state => ({ ...state, updates }));
+
     for (const update of updates.plugins.filter(p => p.status === 'pending')) {
       update.status = 'in-progress';
       setState(state => ({ ...state, updates }));
@@ -123,6 +126,7 @@ export const Plugins: FC = () => {
     }
 
     await refreshPlugins();
+    updates.message = 'Updates complete';
     updates.completed = true;
     setState(state => ({ ...state, updates }));
   }
