@@ -84,7 +84,7 @@ export const Plugins: FC = () => {
 
     // build the list of plugins to udpate
     plugins = plugins.filter(plugin => plugin.directory);
-    for (const plugin of plugins) {
+    for (const plugin of plugins.filter(x => x.config.disabled !== true)) {
       try {
         const update = await window.main.getPluginInstallationInfo(plugin.name);
         if (update && update.version !== plugin.version) {
