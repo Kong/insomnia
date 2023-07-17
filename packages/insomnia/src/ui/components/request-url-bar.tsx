@@ -241,7 +241,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       return;
     }
     if (isEventStream) {
-      console.log('Starting event stream');
       const startListening = async () => {
         invariant(activeWorkspace, 'activeWorkspace not found (remove with redux)');
         const environmentId = activeEnvironment?._id;

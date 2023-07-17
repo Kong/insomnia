@@ -1,7 +1,8 @@
-import { Curl, CurlFeature } from '@getinsomnia/node-libcurl';
+import { Readable } from 'node:stream';
+
+import { Curl, CurlFeature, HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { ipcMain } from 'electron';
 import fs from 'fs';
-import { IncomingMessage } from 'http';
 import path from 'path';
 import tls, { KeyObject, PxfObject } from 'tls';
 import { v4 as uuidV4 } from 'uuid';
@@ -9,13 +10,10 @@ import { v4 as uuidV4 } from 'uuid';
 import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
 import { jarFromCookies } from '../../common/cookies';
 import { generateId, getSetCookieHeaders } from '../../common/misc';
-import { webSocketRequest } from '../../models';
 import * as models from '../../models';
 import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
-import { BaseCurlRequest } from '../../models/websocket-request';
-import type { CurlResponse } from '../../models/websocket-response';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
@@ -71,19 +69,13 @@ const CurlConnections = new Map<string, Curl>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
 
-const parseResponseAndBuildTimeline = (url: string, incomingMessage: IncomingMessage, clientRequestHeaders: string) => {
-  const statusMessage = incomingMessage.statusMessage || '';
-  const statusCode = incomingMessage.statusCode || 0;
-  const httpVersion = incomingMessage.httpVersion;
-  const responseHeaders = Object.entries(incomingMessage.headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
-  const headersIn = responseHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
+const parseHeadersAndBuildTimeline = (url: string, headers: HeaderInfo) => {
+  const statusMessage = headers.result?.reason || '';
+  const statusCode = headers.result?.code || 0;
+  const httpVersion = headers.result?.version;
+  const responseHeaders = Object.entries(headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
   const timeline = [
     { value: `Preparing request to ${url}`, name: 'Text', timestamp: Date.now() },
-    { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
-    { value: 'Using HTTP 1.1', name: 'Text', timestamp: Date.now() },
-    { value: clientRequestHeaders, name: 'HeaderOut', timestamp: Date.now() },
-    { value: `HTTP/${httpVersion} ${statusCode} ${statusMessage}`, name: 'HeaderIn', timestamp: Date.now() },
-    { value: headersIn, name: 'HeaderIn', timestamp: Date.now() },
   ];
   return { timeline, responseHeaders, statusCode, statusMessage, httpVersion };
 };
@@ -103,7 +95,7 @@ const openCurlConnection = async (
   const existingConnection = CurlConnections.get(options.requestId);
 
   if (existingConnection) {
-    console.warn('Connection still open to ' + existingConnection.url);
+    console.warn('Connection still open to ' + existingConnection.getInfo(Curl.info.EFFECTIVE_URL));
     return;
   }
   const request = await models.request.getById(options.requestId);
@@ -228,75 +220,61 @@ const openCurlConnection = async (
       console.error('curl - error: ', error, errorCode);
       curl.close();
     });
-    curl.on('stream', async (stream, _statusCode, _headers) => {
+
+    curl.on('stream', async (stream: Readable, _code: number, [headers]: HeaderInfo[]) => {
+      console.log('response stream: started', headers);
+      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseHeadersAndBuildTimeline(url, headers);
+
+      const responsePatch: Partial<CurlResponse> = {
+        _id: responseId,
+        parentId: request._id,
+        environmentId: responseEnvironmentId,
+        headers: responseHeaders,
+        url: url,
+        statusCode,
+        statusMessage,
+        httpVersion,
+        elapsedTime: performance.now() - start,
+        timelinePath,
+        eventLogPath: responseBodyPath,
+        settingSendCookies: request.settingSendCookies,
+        settingStoreCookies: request.settingStoreCookies,
+      };
+      const settings = await models.settings.getOrCreate();
+      const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
+      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
+
+      if (request.settingStoreCookies) {
+        const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
+        const totalSetCookies = setCookieStrings.length;
+        if (totalSetCookies) {
+          const currentUrl = request.url;
+          const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar: options.cookieJar });
+          rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
+          const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
+          if (hasCookiesToPersist) {
+            await models.cookieJar.update(options.cookieJar, { cookies });
+            timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
+          }
+        }
+      }
+      timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+
       // we are going to write the response stream to this file
       const writableStream = eventLogFileStreams.get(request._id);
       // two ways to go here
       invariant(writableStream, 'writableStream should be defined');
-      // using pipe
-      stream.pipe(writableStream);
-      console.log('response stream: writing');
-      stream.on('end', () => {
-        console.log('response stream: finished!');
-      });
-      stream.on('error', error => {
-        console.log('response stream: error', error);
-      });
-      stream.on('close', () => {
-        console.log('response stream: close');
-      });
-
       // usinc async iterators (Node.js >= 10)
-      // for await (const chunk of stream) {
-      //   writableStream.write(chunk);
-      // }
-      // writableStream.end();
+      for await (const chunk of stream) {
+        console.log('response stream: writing', new TextDecoder('utf-8').decode(chunk));
+        writableStream.write(chunk);
+      }
+      writableStream.end();
     });
     console.log('Performing curl request');
     curl.perform();
     CurlConnections.set(options.requestId, curl);
-
-    // ws.on('upgrade', async incomingMessage => {
-    //   // @ts-expect-error -- private property
-    //   const internalRequestHeader = ws._req._header;
-    //   const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(url, incomingMessage, internalRequestHeader);
-    //   const responsePatch: Partial<CurlResponse> = {
-    //     _id: responseId,
-    //     parentId: request._id,
-    //     environmentId: responseEnvironmentId,
-    //     headers: responseHeaders,
-    //     url: url,
-    //     statusCode,
-    //     statusMessage,
-    //     httpVersion,
-    //     elapsedTime: performance.now() - start,
-    //     timelinePath,
-    //     eventLogPath: responseBodyPath,
-    //     settingSendCookies: request.settingSendCookies,
-    //     settingStoreCookies: request.settingStoreCookies,
-    //   };
-
-    //   const settings = await models.settings.getOrCreate();
-    //   models.response.create(responsePatch, settings.maxHistoryResponses);
-    //   models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
-
-    //   if (request.settingStoreCookies) {
-    //     const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
-    //     const totalSetCookies = setCookieStrings.length;
-    //     if (totalSetCookies) {
-    //       const currentUrl = request.url;
-    //       const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar: options.cookieJar });
-    //       rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
-    //       const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
-    //       if (hasCookiesToPersist) {
-    //         await models.cookieJar.update(options.cookieJar, { cookies });
-    //         timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
-    //       }
-    //     }
-    //   }
-
-    //   timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
-    // });
+    event.sender.send(readyStateChannel, curl.isRunning);
     // ws.on('unexpected-response', async (clientRequest, incomingMessage) => {
     //   incomingMessage.on('data', chunk => {
     //     timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: chunk.toString(), name: 'DataOut', timestamp: Date.now() }) + '\n');
@@ -426,8 +404,8 @@ const deleteRequestMaps = async (requestId: string, message: string, event?: Cur
 
 const getCurlReadyState = async (
   options: { requestId: string }
-): Promise<CurlConnection['readyState']> => {
-  return CurlConnections.get(options.requestId)?.readyState ?? 0;
+): Promise<CurlConnection['isOpen']> => {
+  return CurlConnections.get(options.requestId)?.isOpen ?? false;
 };
 
 const closeCurlConnection = (
