@@ -22,6 +22,7 @@ import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
+import { Response } from '../../models/response';
 
 export interface CurlConnection extends Curl {
   _id: string;
@@ -212,12 +213,14 @@ const openCurlConnection = async (
       console.log(
         `curl - end - status: ${statusCode} - data length: ${data.length}`,
       );
+      event.sender.send(readyStateChannel, false);
       curl.close();
     });
 
     curl.on('error', (error, errorCode) => {
       console.log('\n'.repeat(5));
       console.error('curl - error: ', error, errorCode);
+      event.sender.send(readyStateChannel, false);
       curl.close();
     });
 
@@ -225,7 +228,7 @@ const openCurlConnection = async (
       console.log('response stream: started', headers);
       const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseHeadersAndBuildTimeline(url, headers);
 
-      const responsePatch: Partial<CurlResponse> = {
+      const responsePatch: Partial<Response> = {
         _id: responseId,
         parentId: request._id,
         environmentId: responseEnvironmentId,
@@ -236,7 +239,7 @@ const openCurlConnection = async (
         httpVersion,
         elapsedTime: performance.now() - start,
         timelinePath,
-        eventLogPath: responseBodyPath,
+        bodyPath: responseBodyPath,
         settingSendCookies: request.settingSendCookies,
         settingStoreCookies: request.settingStoreCookies,
       };
@@ -275,183 +278,186 @@ const openCurlConnection = async (
     curl.perform();
     CurlConnections.set(options.requestId, curl);
     event.sender.send(readyStateChannel, curl.isRunning);
-    // ws.on('unexpected-response', async (clientRequest, incomingMessage) => {
-    //   incomingMessage.on('data', chunk => {
-    //     timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: chunk.toString(), name: 'DataOut', timestamp: Date.now() }) + '\n');
-    //   });
-    //   // @ts-expect-error -- private property
-    //   const internalRequestHeader = clientRequest._header;
-    //   const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(url, incomingMessage, internalRequestHeader);
-    //   timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
-    //   const responsePatch: Partial<CurlResponse> = {
-    //     _id: responseId,
-    //     parentId: request._id,
-    //     environmentId: responseEnvironmentId,
-    //     headers: responseHeaders,
-    //     url: url,
-    //     statusCode,
-    //     statusMessage,
-    //     httpVersion,
-    //     elapsedTime: performance.now() - start,
-    //     timelinePath,
-    //     eventLogPath: responseBodyPath,
-    //     settingSendCookies: request.settingSendCookies,
-    //     settingStoreCookies: request.settingStoreCookies,
-    //   };
-    //   const settings = await models.settings.getOrCreate();
-    //   models.response.create(responsePatch, settings.maxHistoryResponses);
-    //   models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
-    //   deleteRequestMaps(request._id, `Unexpected response ${incomingMessage.statusCode}`);
-    // });
 
-    // ws.addEventListener('open', () => {
-    //   const openEvent: CurlOpenEvent = {
-    //     _id: uuidV4(),
-    //     requestId: options.requestId,
-    //     type: 'open',
-    //     timestamp: Date.now(),
-    //   };
+    curl.on('close', () => {
 
-    //   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
-    //   timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: 'Curl connection established', name: 'Text', timestamp: Date.now() }) + '\n');
-    //   event.sender.send(readyStateChannel, ws.readyState);
+      // ws.on('unexpected-response', async (clientRequest, incomingMessage) => {
+      //   incomingMessage.on('data', chunk => {
+      //     timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: chunk.toString(), name: 'DataOut', timestamp: Date.now() }) + '\n');
+      //   });
+      //   // @ts-expect-error -- private property
+      //   const internalRequestHeader = clientRequest._header;
+      //   const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(url, incomingMessage, internalRequestHeader);
+      //   timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+      //   const responsePatch: Partial<CurlResponse> = {
+      //     _id: responseId,
+      //     parentId: request._id,
+      //     environmentId: responseEnvironmentId,
+      //     headers: responseHeaders,
+      //     url: url,
+      //     statusCode,
+      //     statusMessage,
+      //     httpVersion,
+      //     elapsedTime: performance.now() - start,
+      //     timelinePath,
+      //     eventLogPath: responseBodyPath,
+      //     settingSendCookies: request.settingSendCookies,
+      //     settingStoreCookies: request.settingStoreCookies,
+      //   };
+      //   const settings = await models.settings.getOrCreate();
+      //   models.response.create(responsePatch, settings.maxHistoryResponses);
+      //   models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
+      //   deleteRequestMaps(request._id, `Unexpected response ${incomingMessage.statusCode}`);
+      // });
 
-    //   if (options.initialPayload) {
-    //     sendPayload(ws, { requestId: options.requestId, payload: options.initialPayload });
-    //   }
-    // });
+      // ws.addEventListener('open', () => {
+      //   const openEvent: CurlOpenEvent = {
+      //     _id: uuidV4(),
+      //     requestId: options.requestId,
+      //     type: 'open',
+      //     timestamp: Date.now(),
+      //   };
 
-    // ws.addEventListener('message', ({ data }: MessageEvent) => {
-    //   const messageEvent: CurlMessageEvent = {
-    //     _id: uuidV4(),
-    //     requestId: options.requestId,
-    //     data,
-    //     type: 'message',
-    //     direction: 'INCOMING',
-    //     timestamp: Date.now(),
-    //   };
+      //   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
+      //   timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: 'Curl connection established', name: 'Text', timestamp: Date.now() }) + '\n');
+      //   event.sender.send(readyStateChannel, ws.readyState);
 
-    //   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
-    // });
+      //   if (options.initialPayload) {
+      //     sendPayload(ws, { requestId: options.requestId, payload: options.initialPayload });
+      //   }
+      // });
 
-    // ws.addEventListener('close', ({ code, reason, wasClean }) => {
-    //   const closeEvent: CurlCloseEvent = {
-    //     _id: uuidV4(),
-    //     requestId: options.requestId,
-    //     code,
-    //     reason,
-    //     type: 'close',
-    //     wasClean,
-    //     timestamp: Date.now(),
-    //   };
+      // ws.addEventListener('message', ({ data }: MessageEvent) => {
+      //   const messageEvent: CurlMessageEvent = {
+      //     _id: uuidV4(),
+      //     requestId: options.requestId,
+      //     data,
+      //     type: 'message',
+      //     direction: 'INCOMING',
+      //     timestamp: Date.now(),
+      //   };
 
-    //   const message = `Closing connection with code ${code}`;
-    //   deleteRequestMaps(request._id, message, closeEvent);
-    //   event.sender.send(readyStateChannel, ws.readyState);
-    // });
+      //   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
+      // });
 
-    // ws.addEventListener('error', async ({ error, message }: ErrorEvent) => {
-    //   console.error('Error from remote:', error.code, error);
+      // ws.addEventListener('close', ({ code, reason, wasClean }) => {
+      //   const closeEvent: CurlCloseEvent = {
+      //     _id: uuidV4(),
+      //     requestId: options.requestId,
+      //     code,
+      //     reason,
+      //     type: 'close',
+      //     wasClean,
+      //     timestamp: Date.now(),
+      //   };
 
-    //   const errorEvent: CurlErrorEvent = {
-    //     _id: uuidV4(),
-    //     requestId: options.requestId,
-    //     message,
-    //     type: 'error',
-    //     error,
-    //     timestamp: Date.now(),
-    //   };
+      //   const message = `Closing connection with code ${code}`;
+      //   deleteRequestMaps(request._id, message, closeEvent);
+      //   event.sender.send(readyStateChannel, ws.readyState);
+      // });
 
-    //   deleteRequestMaps(request._id, message, errorEvent);
-    //   event.sender.send(readyStateChannel, ws.readyState);
-    //   if (error.code) {
-    //     createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, message || 'Something went wrong');
-    //   }
-    // });
-  } catch (e) {
-    console.error('unhandled error:', e);
+      // ws.addEventListener('error', async ({ error, message }: ErrorEvent) => {
+      //   console.error('Error from remote:', error.code, error);
 
-    deleteRequestMaps(request._id, e.message || 'Something went wrong');
-    createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, e.message || 'Something went wrong');
-  }
-};
+      //   const errorEvent: CurlErrorEvent = {
+      //     _id: uuidV4(),
+      //     requestId: options.requestId,
+      //     message,
+      //     type: 'error',
+      //     error,
+      //     timestamp: Date.now(),
+      //   };
 
-const createErrorResponse = async (responseId: string, requestId: string, environmentId: string | null, timelinePath: string, message: string) => {
-  const settings = await models.settings.getOrCreate();
-  const responsePatch = {
-    _id: responseId,
-    parentId: requestId,
-    environmentId: environmentId,
-    timelinePath,
-    statusMessage: 'Error',
-    error: message,
+      //   deleteRequestMaps(request._id, message, errorEvent);
+      //   event.sender.send(readyStateChannel, ws.readyState);
+      //   if (error.code) {
+      //     createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, message || 'Something went wrong');
+      //   }
+      // });
+    } catch (e) {
+      console.error('unhandled error:', e);
+
+      deleteRequestMaps(request._id, e.message || 'Something went wrong');
+      createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, e.message || 'Something went wrong');
+    }
   };
-  models.response.create(responsePatch, settings.maxHistoryResponses);
-  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: null });
-};
 
-const deleteRequestMaps = async (requestId: string, message: string, event?: CurlCloseEvent | CurlErrorEvent) => {
-  if (event) {
-    eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
-  }
-  eventLogFileStreams.get(requestId)?.end();
-  eventLogFileStreams.delete(requestId);
-  timelineFileStreams.get(requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
-  timelineFileStreams.get(requestId)?.end();
-  timelineFileStreams.delete(requestId);
-  CurlConnections.delete(requestId);
-};
-
-const getCurlReadyState = async (
-  options: { requestId: string }
-): Promise<CurlConnection['isOpen']> => {
-  return CurlConnections.get(options.requestId)?.isOpen ?? false;
-};
-
-const closeCurlConnection = (
-  options: { requestId: string }
-): void => {
-  const ws = CurlConnections.get(options.requestId);
-  if (!ws) {
-    return;
-  }
-  ws.close();
-};
-
-const closeAllCurlConnections = (): void => CurlConnections.forEach(ws => ws.close());
-
-const findMany = async (
-  options: { responseId: string }
-): Promise<CurlEvent[]> => {
-  const response = await models.response.getById(options.responseId);
-  if (!response || !response.bodyPath) {
-    return [];
-  }
-  const body = await fs.promises.readFile(response.bodyPath);
-  return body.toString().split('\n').filter(e => e?.trim())
-    // Parse the message
-    .map(e => JSON.parse(e))
-    // Reverse the list of messages so that we get the latest message first
-    .reverse() || [];
-};
-
-export interface CurlBridgeAPI {
-  open: (options: OpenCurlRequestOptions) => void;
-  close: typeof closeCurlConnection;
-  closeAll: typeof closeAllCurlConnections;
-  readyState: {
-    getCurrent: typeof getCurlReadyState;
+  const createErrorResponse = async (responseId: string, requestId: string, environmentId: string | null, timelinePath: string, message: string) => {
+    const settings = await models.settings.getOrCreate();
+    const responsePatch = {
+      _id: responseId,
+      parentId: requestId,
+      environmentId: environmentId,
+      timelinePath,
+      statusMessage: 'Error',
+      error: message,
+    };
+    models.response.create(responsePatch, settings.maxHistoryResponses);
+    models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: null });
   };
-  event: {
-    findMany: typeof findMany;
-  };
-}
-export const registerCurlHandlers = () => {
-  ipcMain.handle('curl.open', openCurlConnection);
-  ipcMain.on('curl.close', (_, options: Parameters<typeof closeCurlConnection>[0]) => closeCurlConnection(options));
-  ipcMain.on('curl.closeAll', closeAllCurlConnections);
-  ipcMain.handle('curl.readyState', (_, options: Parameters<typeof getCurlReadyState>[0]) => getCurlReadyState(options));
-  ipcMain.handle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
-};
 
-electron.app.on('window-all-closed', closeAllCurlConnections);
+  const deleteRequestMaps = async (requestId: string, message: string, event?: CurlCloseEvent | CurlErrorEvent) => {
+    if (event) {
+      eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
+    }
+    eventLogFileStreams.get(requestId)?.end();
+    eventLogFileStreams.delete(requestId);
+    timelineFileStreams.get(requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
+    timelineFileStreams.get(requestId)?.end();
+    timelineFileStreams.delete(requestId);
+    CurlConnections.delete(requestId);
+  };
+
+  const getCurlReadyState = async (
+    options: { requestId: string }
+  ): Promise<CurlConnection['isOpen']> => {
+    return CurlConnections.get(options.requestId)?.isOpen ?? false;
+  };
+
+  const closeCurlConnection = (
+    options: { requestId: string }
+  ): void => {
+    const ws = CurlConnections.get(options.requestId);
+    if (!ws) {
+      return;
+    }
+    ws.close();
+  };
+
+  const closeAllCurlConnections = (): void => CurlConnections.forEach(ws => ws.close());
+
+  const findMany = async (
+    options: { responseId: string }
+  ): Promise<CurlEvent[]> => {
+    const response = await models.response.getById(options.responseId);
+    if (!response || !response.bodyPath) {
+      return [];
+    }
+    const body = await fs.promises.readFile(response.bodyPath);
+    return body.toString().split('\n').filter(e => e?.trim())
+      // Parse the message
+      .map(e => JSON.parse(e))
+      // Reverse the list of messages so that we get the latest message first
+      .reverse() || [];
+  };
+
+  export interface CurlBridgeAPI {
+    open: (options: OpenCurlRequestOptions) => void;
+    close: typeof closeCurlConnection;
+    closeAll: typeof closeAllCurlConnections;
+    readyState: {
+      getCurrent: typeof getCurlReadyState;
+    };
+    event: {
+      findMany: typeof findMany;
+    };
+  }
+  export const registerCurlHandlers = () => {
+    ipcMain.handle('curl.open', openCurlConnection);
+    ipcMain.on('curl.close', (_, options: Parameters<typeof closeCurlConnection>[0]) => closeCurlConnection(options));
+    ipcMain.on('curl.closeAll', closeAllCurlConnections);
+    ipcMain.handle('curl.readyState', (_, options: Parameters<typeof getCurlReadyState>[0]) => getCurlReadyState(options));
+    ipcMain.handle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
+  };
+
+  electron.app.on('window-all-closed', closeAllCurlConnections);

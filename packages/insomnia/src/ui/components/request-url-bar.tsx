@@ -18,6 +18,7 @@ import { convert } from '../../utils/importers/convert';
 import { invariant } from '../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
+import { useCurlReadyState } from '../context/websocket-client/use-ws-ready-state';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
@@ -273,6 +274,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
   const handleStop = () => {
+    if (isEventStream) {
+      window.main.curl.close({ requestId: request._id });
+      return;
+    }
     setCurrentInterval(null);
     setCurrentTimeout(undefined);
   };
@@ -389,7 +394,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }, []);
   const buttonText = isEventStream ? 'Connect' : (downloadPath ? 'Download' : 'Send');
   const { url, method } = request;
-  const isCancellable = currentInterval || currentTimeout;
+  const isEventStreamOpen = useCurlReadyState(request._id);
+  const isCancellable = currentInterval || currentTimeout || isEventStreamOpen;
   return (
     <div className="urlbar">
       <MethodDropdown

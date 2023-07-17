@@ -30,3 +30,28 @@ export function useWSReadyState(requestId: string): ReadyState {
 
   return readyState;
 }
+
+export function useCurlReadyState(requestId: string): boolean {
+  const [readyState, setReadyState] = useState<boolean>(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    window.main.curl.readyState.getCurrent({ requestId })
+      .then((currentReadyState: boolean) => {
+        isMounted && setReadyState(currentReadyState);
+      });
+
+    const unsubscribe = window.main.on(`curl.${requestId}.readyState`,
+      (_, incomingReadyState: boolean) => {
+        isMounted && setReadyState(incomingReadyState);
+      });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+
+  }, [requestId]);
+
+  return readyState;
+}
