@@ -211,22 +211,6 @@ const openCurlConnection = async (
     const curl = new Curl();
     curl.enable(CurlFeature.StreamResponse);
     curl.setOpt('URL', url);
-    curl.on('end', (statusCode, data, [headers]: HeaderInfo[]) => {
-      const closeEvent: CurlCloseEvent = {
-        _id: uuidV4(),
-        requestId: options.requestId,
-        statusCode: headers.result?.code || 0,
-        reason: headers.result?.reason || '',
-        type: 'close',
-        timestamp: Date.now(),
-      };
-      console.log(
-        `curl - end - status: ${statusCode} - data length: ${data.length}`,
-      );
-      deleteRequestMaps(request._id, 'Closing connection', closeEvent);
-      event.sender.send(readyStateChannel, false);
-      curl.close();
-    });
 
     curl.on('error', (error, errorCode) => {
       const errorEvent: CurlErrorEvent = {
@@ -243,12 +227,13 @@ const openCurlConnection = async (
       curl.close();
       if (errorCode) {
         // TODO: figure out how to show 4XX/5XX in the UI
-        // createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, message || 'Something went wrong');
+        createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, error.message || 'Something went wrong');
       }
     });
 
     curl.on('stream', async (stream: Readable, _code: number, [headers]: HeaderInfo[]) => {
       console.log('response stream: started', headers);
+      event.sender.send(readyStateChannel, true);
       const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseHeadersAndBuildTimeline(url, headers);
 
       const responsePatch: Partial<Response> = {
@@ -265,6 +250,7 @@ const openCurlConnection = async (
         bodyPath: responseBodyPath,
         settingSendCookies: request.settingSendCookies,
         settingStoreCookies: request.settingStoreCookies,
+        bodyCompression: null,
       };
       const settings = await models.settings.getOrCreate();
       const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
@@ -302,59 +288,12 @@ const openCurlConnection = async (
         eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
       }
       eventLogFileStreams.get(options.requestId)?.end();
+      console.log('response stream: ended');
+      event.sender.send(readyStateChannel, false);
     });
     console.log('Performing curl request');
     curl.perform();
     CurlConnections.set(options.requestId, curl);
-    event.sender.send(readyStateChannel, curl.isRunning);
-
-    // ws.addEventListener('message', ({ data }: MessageEvent) => {
-    //   const messageEvent: CurlMessageEvent = {
-    //     _id: uuidV4(),
-    //     requestId: options.requestId,
-    //     data,
-    //     type: 'message',
-    //     direction: 'INCOMING',
-    //     timestamp: Date.now(),
-    //   };
-
-    //   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
-    // });
-
-    // ws.addEventListener('close', ({ code, reason, wasClean }) => {
-    //   const closeEvent: CurlCloseEvent = {
-    //     _id: uuidV4(),
-    //     requestId: options.requestId,
-    //     code,
-    //     reason,
-    //     type: 'close',
-    //     wasClean,
-    //     timestamp: Date.now(),
-    //   };
-
-    //   const message = `Closing connection with code ${code}`;
-    //   deleteRequestMaps(request._id, message, closeEvent);
-    //   event.sender.send(readyStateChannel, ws.readyState);
-    // });
-
-    // ws.addEventListener('error', async ({ error, message }: ErrorEvent) => {
-    //   console.error('Error from remote:', error.code, error);
-
-    //   const errorEvent: CurlErrorEvent = {
-    //     _id: uuidV4(),
-    //     requestId: options.requestId,
-    //     message,
-    //     type: 'error',
-    //     error,
-    //     timestamp: Date.now(),
-    //   };
-
-    //   deleteRequestMaps(request._id, message, errorEvent);
-    //   event.sender.send(readyStateChannel, ws.readyState);
-    //   if (error.code) {
-    //     createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, message || 'Something went wrong');
-    //   }
-    // });
   } catch (e) {
     console.error('unhandled error:', e);
 
@@ -396,13 +335,29 @@ const getCurlReadyState = async (
 };
 
 const closeCurlConnection = (
+  event: Electron.IpcMainInvokeEvent,
   options: { requestId: string }
 ): void => {
-  const ws = CurlConnections.get(options.requestId);
-  if (!ws) {
+  const curl = CurlConnections.get(options.requestId);
+  console.log('Closing curl connection', curl?.isRunning);
+  if (!curl) {
     return;
   }
-  ws.close();
+  const readyStateChannel = `curl.${options.requestId}.readyState`;
+  const statusCode = +(curl.getInfo(Curl.info.HTTP_CONNECTCODE) || 0);
+  const closeEvent: CurlCloseEvent = {
+    _id: uuidV4(),
+    requestId: options.requestId,
+    type: 'close',
+    timestamp: Date.now(),
+    statusCode,
+    reason: '',
+  };
+  deleteRequestMaps(options.requestId, 'Closing connection', closeEvent);
+  curl.close();
+  event.sender.send(readyStateChannel, false);
+
+  console.log('Closed curl connection', curl?.isRunning);
 };
 
 const closeAllCurlConnections = (): void => CurlConnections.forEach(ws => ws.close());
@@ -435,7 +390,7 @@ export interface CurlBridgeAPI {
 }
 export const registerCurlHandlers = () => {
   ipcMain.handle('curl.open', openCurlConnection);
-  ipcMain.on('curl.close', (_, options: Parameters<typeof closeCurlConnection>[0]) => closeCurlConnection(options));
+  ipcMain.on('curl.close', closeCurlConnection);
   ipcMain.on('curl.closeAll', closeAllCurlConnections);
   ipcMain.handle('curl.readyState', (_, options: Parameters<typeof getCurlReadyState>[0]) => getCurlReadyState(options));
   ipcMain.handle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));

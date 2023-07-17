@@ -133,7 +133,9 @@ export const ResponsePane: FC<Props> = ({
       </PlaceholderResponsePane>
     );
   }
-  const timeline = models.response.getTimeline(response);
+  const isEventStream = request?.headers?.find(h => h.name === 'Content-Type')?.value === 'text/event-stream';
+  const isNewLineDelimted = isEventStream;
+  const timeline = models.response.getTimeline(response, false, isNewLineDelimted);
   const cookieHeaders = getSetCookieHeaders(response.headers);
   return (
     <Pane type="response">
