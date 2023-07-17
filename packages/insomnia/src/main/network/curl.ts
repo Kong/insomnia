@@ -1,0 +1,479 @@
+import { Curl, CurlFeature } from '@getinsomnia/node-libcurl';
+import electron, { ipcMain } from 'electron';
+import fs from 'fs';
+import { IncomingMessage } from 'http';
+import path from 'path';
+import tls, { KeyObject, PxfObject } from 'tls';
+import { v4 as uuidV4 } from 'uuid';
+
+import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
+import { jarFromCookies } from '../../common/cookies';
+import { generateId, getSetCookieHeaders } from '../../common/misc';
+import { webSocketRequest } from '../../models';
+import * as models from '../../models';
+import { CookieJar } from '../../models/cookie-jar';
+import { Environment } from '../../models/environment';
+import { RequestAuthentication, RequestHeader } from '../../models/request';
+import { BaseCurlRequest } from '../../models/websocket-request';
+import type { CurlResponse } from '../../models/websocket-response';
+import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
+import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
+import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
+import { addSetCookiesToToughCookieJar } from '../../network/network';
+import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
+import { invariant } from '../../utils/invariant';
+import { setDefaultProtocol } from '../../utils/url/protocol';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
+
+export interface CurlConnection extends Curl {
+  _id: string;
+  requestId: string;
+}
+
+export type CurlOpenEvent = Omit<Event, 'target'> & {
+  _id: string;
+  requestId: string;
+  type: 'open';
+  timestamp: number;
+};
+
+export type CurlMessageEvent = Omit<MessageEvent, 'target'> & {
+  _id: string;
+  requestId: string;
+  direction: 'OUTGOING' | 'INCOMING';
+  type: 'message';
+  timestamp: number;
+};
+
+export type CurlErrorEvent = Omit<ErrorEvent, 'target'> & {
+  _id: string;
+  requestId: string;
+  type: 'error';
+  timestamp: number;
+};
+
+export type CurlCloseEvent = Omit<CloseEvent, 'target'> & {
+  _id: string;
+  requestId: string;
+  type: 'close';
+  timestamp: number;
+};
+
+export type CurlEvent =
+  | CurlOpenEvent
+  | CurlMessageEvent
+  | CurlErrorEvent
+  | CurlCloseEvent;
+
+export type CurlEventLog = CurlEvent[];
+
+const CurlConnections = new Map<string, Curl>();
+const eventLogFileStreams = new Map<string, fs.WriteStream>();
+const timelineFileStreams = new Map<string, fs.WriteStream>();
+
+const parseResponseAndBuildTimeline = (url: string, incomingMessage: IncomingMessage, clientRequestHeaders: string) => {
+  const statusMessage = incomingMessage.statusMessage || '';
+  const statusCode = incomingMessage.statusCode || 0;
+  const httpVersion = incomingMessage.httpVersion;
+  const responseHeaders = Object.entries(incomingMessage.headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
+  const headersIn = responseHeaders.map(({ name, value }) => `${name}: ${value}`).join('\n');
+  const timeline = [
+    { value: `Preparing request to ${url}`, name: 'Text', timestamp: Date.now() },
+    { value: `Current time is ${new Date().toISOString()}`, name: 'Text', timestamp: Date.now() },
+    { value: 'Using HTTP 1.1', name: 'Text', timestamp: Date.now() },
+    { value: clientRequestHeaders, name: 'HeaderOut', timestamp: Date.now() },
+    { value: `HTTP/${httpVersion} ${statusCode} ${statusMessage}`, name: 'HeaderIn', timestamp: Date.now() },
+    { value: headersIn, name: 'HeaderIn', timestamp: Date.now() },
+  ];
+  return { timeline, responseHeaders, statusCode, statusMessage, httpVersion };
+};
+interface OpenCurlRequestOptions {
+  requestId: string;
+  workspaceId: string;
+  url: string;
+  headers: RequestHeader[];
+  authentication: RequestAuthentication;
+  cookieJar: CookieJar;
+  initialPayload?: string;
+}
+const openCurlConnection = async (
+  event: Electron.IpcMainInvokeEvent,
+  options: OpenCurlRequestOptions
+): Promise<void> => {
+  const existingConnection = CurlConnections.get(options.requestId);
+
+  if (existingConnection) {
+    console.warn('Connection still open to ' + existingConnection.url);
+    return;
+  }
+  const request = await models.request.getById(options.requestId);
+  const responseId = generateId('res');
+  if (!request) {
+    console.warn('Could not find request for ' + options.requestId);
+    return;
+  }
+
+  const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
+  fs.mkdirSync(responsesDir, { recursive: true });
+
+  const responseBodyPath = path.join(responsesDir, uuidV4() + '.response');
+  eventLogFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
+  const timelinePath = path.join(responsesDir, responseId + '.timeline');
+  timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
+
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
+  const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
+  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
+  const responseEnvironmentId = environment ? environment._id : null;
+
+  const caCert = await models.caCertificate.findByParentId(options.workspaceId);
+  const caCertficatePath = caCert?.path;
+  // attempt to read CA Certificate PEM from disk, fallback to root certificates
+  const caCertificate = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
+
+  try {
+    const readyStateChannel = `curl.${request._id}.readyState`;
+
+    const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseCurlRequest['headers'][0]) =>
+      ({ ...acc, [name.toLowerCase() || '']: value || '' });
+    const headers = options.headers;
+    let url = options.url;
+    let authCookie = null;
+    if (!options.authentication.disabled) {
+      if (options.authentication.type === AUTH_BASIC) {
+        const { username, password, useISO88591 } = options.authentication;
+        const encoding = useISO88591 ? 'latin1' : 'utf8';
+        headers.push(getBasicAuthHeader(username, password, encoding));
+      }
+      if (options.authentication.type === AUTH_API_KEY) {
+        const { key, value, addTo } = options.authentication;
+        if (addTo === HEADER) {
+          headers.push({ name: key, value: value });
+        } else if (addTo === COOKIE) {
+          authCookie = `${key}=${value}`;
+        } else if (addTo === QUERY_PARAMS) {
+          const authQueryParam = {
+            name: key,
+            value: value,
+          };
+          const qs = authQueryParam ? buildQueryStringFromParams([authQueryParam]) : '';
+          url = joinUrlAndQueryString(options.url, qs);
+        }
+      }
+      if (options.authentication.type === AUTH_BEARER) {
+        const { token, prefix } = options.authentication;
+        headers.push(getBearerAuthHeader(token, prefix));
+      }
+    }
+
+    const lowerCasedEnabledHeaders = headers
+      .filter(({ name, disabled }) => Boolean(name) && !disabled)
+      .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
+    const settings = await models.settings.getOrCreate();
+    const start = performance.now();
+
+    const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
+    const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'wss:'), options.url));
+    const pemCertificates: string[] = [];
+    const pemCertificateKeys: KeyObject[] = [];
+    const pfxCertificates: PxfObject[] = [];
+
+    filteredClientCertificates.forEach(clientCertificate => {
+      const { passphrase, cert, key, pfx } = clientCertificate;
+
+      if (cert) {
+        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) + '\n');
+        pemCertificates.push(fs.readFileSync(cert, 'utf-8'));
+      }
+
+      if (key) {
+        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n');
+        pemCertificateKeys.push({ pem: fs.readFileSync(key, 'utf-8'), passphrase: passphrase ?? undefined });
+      }
+
+      if (pfx) {
+        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n');
+        pfxCertificates.push({ buf: fs.readFileSync(pfx, 'utf-8'), passphrase: passphrase ?? undefined });
+      }
+    });
+
+    if (request.settingSendCookies && options.cookieJar.cookies.length) {
+      const jar = jarFromCookies(options.cookieJar.cookies);
+      const cookieHeader = jar.getCookieStringSync(options.url);
+      const cookieHeaderWithAuth = cookieHeader ? `${cookieHeader};${authCookie ?? ''}` : `${authCookie};`;
+      if (cookieHeaderWithAuth) {
+        lowerCasedEnabledHeaders['cookie'] = cookieHeaderWithAuth;
+      }
+    }
+
+    const followRedirects = {
+      'off': false,
+      'on': true,
+      'global': settings.followRedirects,
+    }[request.settingFollowRedirects] ?? true;
+    const curl = new Curl();
+    curl.enable(CurlFeature.StreamResponse);
+    curl.setOpt('URL', url);
+    curl.on('end', (statusCode, data) => {
+      console.log('\n'.repeat(5));
+      // data length should be 0, as it was sent using the response stream
+      console.log(
+        `curl - end - status: ${statusCode} - data length: ${data.length}`,
+      );
+      curl.close();
+    });
+
+    curl.on('error', (error, errorCode) => {
+      console.log('\n'.repeat(5));
+      console.error('curl - error: ', error, errorCode);
+      curl.close();
+    });
+    curl.on('stream', async (stream, _statusCode, _headers) => {
+      // we are going to write the response stream to this file
+      const writableStream = eventLogFileStreams.get(request._id);
+      // two ways to go here
+      invariant(writableStream, 'writableStream should be defined');
+      // using pipe
+      stream.pipe(writableStream);
+      console.log('response stream: writing');
+      stream.on('end', () => {
+        console.log('response stream: finished!');
+      });
+      stream.on('error', error => {
+        console.log('response stream: error', error);
+      });
+      stream.on('close', () => {
+        console.log('response stream: close');
+      });
+
+      // usinc async iterators (Node.js >= 10)
+      // for await (const chunk of stream) {
+      //   writableStream.write(chunk);
+      // }
+      // writableStream.end();
+    });
+    console.log('Performing curl request');
+    curl.perform();
+    CurlConnections.set(options.requestId, curl);
+
+    // ws.on('upgrade', async incomingMessage => {
+    //   // @ts-expect-error -- private property
+    //   const internalRequestHeader = ws._req._header;
+    //   const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(url, incomingMessage, internalRequestHeader);
+    //   const responsePatch: Partial<CurlResponse> = {
+    //     _id: responseId,
+    //     parentId: request._id,
+    //     environmentId: responseEnvironmentId,
+    //     headers: responseHeaders,
+    //     url: url,
+    //     statusCode,
+    //     statusMessage,
+    //     httpVersion,
+    //     elapsedTime: performance.now() - start,
+    //     timelinePath,
+    //     eventLogPath: responseBodyPath,
+    //     settingSendCookies: request.settingSendCookies,
+    //     settingStoreCookies: request.settingStoreCookies,
+    //   };
+
+    //   const settings = await models.settings.getOrCreate();
+    //   models.response.create(responsePatch, settings.maxHistoryResponses);
+    //   models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
+
+    //   if (request.settingStoreCookies) {
+    //     const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
+    //     const totalSetCookies = setCookieStrings.length;
+    //     if (totalSetCookies) {
+    //       const currentUrl = request.url;
+    //       const { cookies, rejectedCookies } = await addSetCookiesToToughCookieJar({ setCookieStrings, currentUrl, cookieJar: options.cookieJar });
+    //       rejectedCookies.forEach(errorMessage => timeline.push({ value: `Rejected cookie: ${errorMessage}`, name: 'Text', timestamp: Date.now() }));
+    //       const hasCookiesToPersist = totalSetCookies > rejectedCookies.length;
+    //       if (hasCookiesToPersist) {
+    //         await models.cookieJar.update(options.cookieJar, { cookies });
+    //         timeline.push({ value: `Saved ${totalSetCookies} cookies`, name: 'Text', timestamp: Date.now() });
+    //       }
+    //     }
+    //   }
+
+    //   timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+    // });
+    // ws.on('unexpected-response', async (clientRequest, incomingMessage) => {
+    //   incomingMessage.on('data', chunk => {
+    //     timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: chunk.toString(), name: 'DataOut', timestamp: Date.now() }) + '\n');
+    //   });
+    //   // @ts-expect-error -- private property
+    //   const internalRequestHeader = clientRequest._header;
+    //   const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseResponseAndBuildTimeline(url, incomingMessage, internalRequestHeader);
+    //   timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
+    //   const responsePatch: Partial<CurlResponse> = {
+    //     _id: responseId,
+    //     parentId: request._id,
+    //     environmentId: responseEnvironmentId,
+    //     headers: responseHeaders,
+    //     url: url,
+    //     statusCode,
+    //     statusMessage,
+    //     httpVersion,
+    //     elapsedTime: performance.now() - start,
+    //     timelinePath,
+    //     eventLogPath: responseBodyPath,
+    //     settingSendCookies: request.settingSendCookies,
+    //     settingStoreCookies: request.settingStoreCookies,
+    //   };
+    //   const settings = await models.settings.getOrCreate();
+    //   models.response.create(responsePatch, settings.maxHistoryResponses);
+    //   models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
+    //   deleteRequestMaps(request._id, `Unexpected response ${incomingMessage.statusCode}`);
+    // });
+
+    // ws.addEventListener('open', () => {
+    //   const openEvent: CurlOpenEvent = {
+    //     _id: uuidV4(),
+    //     requestId: options.requestId,
+    //     type: 'open',
+    //     timestamp: Date.now(),
+    //   };
+
+    //   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
+    //   timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: 'Curl connection established', name: 'Text', timestamp: Date.now() }) + '\n');
+    //   event.sender.send(readyStateChannel, ws.readyState);
+
+    //   if (options.initialPayload) {
+    //     sendPayload(ws, { requestId: options.requestId, payload: options.initialPayload });
+    //   }
+    // });
+
+    // ws.addEventListener('message', ({ data }: MessageEvent) => {
+    //   const messageEvent: CurlMessageEvent = {
+    //     _id: uuidV4(),
+    //     requestId: options.requestId,
+    //     data,
+    //     type: 'message',
+    //     direction: 'INCOMING',
+    //     timestamp: Date.now(),
+    //   };
+
+    //   eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
+    // });
+
+    // ws.addEventListener('close', ({ code, reason, wasClean }) => {
+    //   const closeEvent: CurlCloseEvent = {
+    //     _id: uuidV4(),
+    //     requestId: options.requestId,
+    //     code,
+    //     reason,
+    //     type: 'close',
+    //     wasClean,
+    //     timestamp: Date.now(),
+    //   };
+
+    //   const message = `Closing connection with code ${code}`;
+    //   deleteRequestMaps(request._id, message, closeEvent);
+    //   event.sender.send(readyStateChannel, ws.readyState);
+    // });
+
+    // ws.addEventListener('error', async ({ error, message }: ErrorEvent) => {
+    //   console.error('Error from remote:', error.code, error);
+
+    //   const errorEvent: CurlErrorEvent = {
+    //     _id: uuidV4(),
+    //     requestId: options.requestId,
+    //     message,
+    //     type: 'error',
+    //     error,
+    //     timestamp: Date.now(),
+    //   };
+
+    //   deleteRequestMaps(request._id, message, errorEvent);
+    //   event.sender.send(readyStateChannel, ws.readyState);
+    //   if (error.code) {
+    //     createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, message || 'Something went wrong');
+    //   }
+    // });
+  } catch (e) {
+    console.error('unhandled error:', e);
+
+    deleteRequestMaps(request._id, e.message || 'Something went wrong');
+    createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, e.message || 'Something went wrong');
+  }
+};
+
+const createErrorResponse = async (responseId: string, requestId: string, environmentId: string | null, timelinePath: string, message: string) => {
+  const settings = await models.settings.getOrCreate();
+  const responsePatch = {
+    _id: responseId,
+    parentId: requestId,
+    environmentId: environmentId,
+    timelinePath,
+    statusMessage: 'Error',
+    error: message,
+  };
+  models.response.create(responsePatch, settings.maxHistoryResponses);
+  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: null });
+};
+
+const deleteRequestMaps = async (requestId: string, message: string, event?: CurlCloseEvent | CurlErrorEvent) => {
+  if (event) {
+    eventLogFileStreams.get(requestId)?.write(JSON.stringify(event) + '\n');
+  }
+  eventLogFileStreams.get(requestId)?.end();
+  eventLogFileStreams.delete(requestId);
+  timelineFileStreams.get(requestId)?.write(JSON.stringify({ value: message, name: 'Text', timestamp: Date.now() }) + '\n');
+  timelineFileStreams.get(requestId)?.end();
+  timelineFileStreams.delete(requestId);
+  CurlConnections.delete(requestId);
+};
+
+const getCurlReadyState = async (
+  options: { requestId: string }
+): Promise<CurlConnection['readyState']> => {
+  return CurlConnections.get(options.requestId)?.readyState ?? 0;
+};
+
+const closeCurlConnection = (
+  options: { requestId: string }
+): void => {
+  const ws = CurlConnections.get(options.requestId);
+  if (!ws) {
+    return;
+  }
+  ws.close();
+};
+
+const closeAllCurlConnections = (): void => CurlConnections.forEach(ws => ws.close());
+
+const findMany = async (
+  options: { responseId: string }
+): Promise<CurlEvent[]> => {
+  const response = await models.response.getById(options.responseId);
+  if (!response || !response.bodyPath) {
+    return [];
+  }
+  const body = await fs.promises.readFile(response.bodyPath);
+  return body.toString().split('\n').filter(e => e?.trim())
+    // Parse the message
+    .map(e => JSON.parse(e))
+    // Reverse the list of messages so that we get the latest message first
+    .reverse() || [];
+};
+
+export interface CurlBridgeAPI {
+  open: (options: OpenCurlRequestOptions) => void;
+  close: typeof closeCurlConnection;
+  closeAll: typeof closeAllCurlConnections;
+  readyState: {
+    getCurrent: typeof getCurlReadyState;
+  };
+  event: {
+    findMany: typeof findMany;
+  };
+}
+export const registerCurlHandlers = () => {
+  ipcMain.handle('curl.open', openCurlConnection);
+  ipcMain.on('curl.close', (_, options: Parameters<typeof closeCurlConnection>[0]) => closeCurlConnection(options));
+  ipcMain.on('curl.closeAll', closeAllCurlConnections);
+  ipcMain.handle('curl.readyState', (_, options: Parameters<typeof getCurlReadyState>[0]) => getCurlReadyState(options));
+  ipcMain.handle('curl.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
+};
+
+electron.app.on('window-all-closed', closeAllCurlConnections);

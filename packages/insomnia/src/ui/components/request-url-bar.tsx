@@ -9,15 +9,18 @@ import styled from 'styled-components';
 
 import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
+import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../common/render';
 import * as models from '../../models';
 import { update } from '../../models/helpers/request-operations';
 import { isRequest, Request } from '../../models/request';
 import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
+import { invariant } from '../../utils/invariant';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import { selectActiveEnvironment, selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
+import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
@@ -59,6 +62,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const downloadPath = useSelector(selectResponseDownloadPath);
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const activeEnvironment = useSelector(selectActiveEnvironment);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
   const activeRequest = useSelector(selectActiveRequest);
   const settings = useSelector(selectSettings);
   const methodDropdownRef = useRef<DropdownHandle>(null);
@@ -229,10 +233,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }, [activeEnvironment?._id, request, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const isEventStream = request?.headers?.find(h => h.name === 'Content-Type')?.value === 'text/event-stream';
-  const startListening = () => {
-    console.log('start listening');
 
-  };
   const send = useCallback(() => {
     setCurrentTimeout(undefined);
     if (downloadPath) {
@@ -240,11 +241,35 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       return;
     }
     if (isEventStream) {
+      console.log('Starting event stream');
+      const startListening = async () => {
+        invariant(activeWorkspace, 'activeWorkspace not found (remove with redux)');
+        const environmentId = activeEnvironment?._id;
+        const workspaceId = activeWorkspace._id;
+        const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+        // Render any nunjucks tags in the url/headers/authentication settings/cookies
+        const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+        const rendered = await render({
+          url: request.url,
+          headers: request.headers,
+          authentication: request.authentication,
+          parameters: request.parameters.filter(p => !p.disabled),
+          workspaceCookieJar,
+        }, renderContext);
+        window.main.curl.open({
+          requestId: request._id,
+          workspaceId,
+          url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
+          headers: rendered.headers,
+          authentication: rendered.authentication,
+          cookieJar: rendered.workspaceCookieJar,
+        });
+      };
       startListening();
       return;
     }
     handleSend();
-  }, [downloadPath, handleSend, isEventStream, sendThenSetFilePath]);
+  }, [activeEnvironment?._id, activeWorkspace, downloadPath, handleSend, isEventStream, request, sendThenSetFilePath]);
 
   useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
@@ -363,7 +388,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const handleSendDropdownHide = useCallback(() => {
     buttonRef.current?.blur();
   }, []);
-  const buttonText = isEventStream ? 'Listen' : (downloadPath ? 'Download' : 'Send');
+  const buttonText = isEventStream ? 'Connect' : (downloadPath ? 'Download' : 'Send');
   const { url, method } = request;
   const isCancellable = currentInterval || currentTimeout;
   return (

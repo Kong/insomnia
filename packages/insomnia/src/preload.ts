@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 import { gRPCBridgeAPI } from './main/ipc/grpc';
+import { CurlBridgeAPI } from './main/network/curl';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 
 const webSocket: WebSocketBridgeAPI = {
@@ -15,6 +16,18 @@ const webSocket: WebSocketBridgeAPI = {
     send: options => ipcRenderer.invoke('webSocket.event.send', options),
   },
 };
+const curl: CurlBridgeAPI = {
+  open: options => ipcRenderer.invoke('curl.open', options),
+  close: options => ipcRenderer.send('curl.close', options),
+  closeAll: () => ipcRenderer.send('curl.closeAll'),
+  readyState: {
+    getCurrent: options => ipcRenderer.invoke('curl.readyState', options),
+  },
+  event: {
+    findMany: options => ipcRenderer.invoke('curl.event.findMany', options),
+  },
+};
+
 const grpc: gRPCBridgeAPI = {
   start: options => ipcRenderer.send('grpc.start', options),
   sendMessage: options => ipcRenderer.send('grpc.sendMessage', options),
@@ -44,6 +57,7 @@ const main: Window['main'] = {
   },
   webSocket,
   grpc,
+  curl,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   axiosRequest: options => ipcRenderer.invoke('axiosRequest', options),
