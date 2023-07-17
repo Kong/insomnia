@@ -29,6 +29,14 @@ test('can send requests', async ({ app, page }) => {
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();
   await expect(responseBody).toContainText('{"id":"1"}');
 
+  await page.getByRole('button', { name: 'connects to event stream and shows ping response' }).click();
+  await expect(page.locator('.app')).toContainText('http://localhost:4010/events');
+  await page.click('text=Connect');
+  await expect(statusTag).toContainText('200 OK');
+  await page.getByRole('tab', { name: 'Timeline' }).click();
+  await expect(responseBody).toContainText('Event Stream connection established');
+  await page.click('text=Disconnect');
+
   await page.getByRole('button', { name: 'sends dummy.csv request and shows rich response' }).click();
   await page.click('text=http://127.0.0.1:4010/file/dummy.csvSend >> button');
   await expect(statusTag).toContainText('200 OK');
