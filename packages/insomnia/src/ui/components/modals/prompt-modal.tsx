@@ -69,7 +69,7 @@ export const PromptModal = forwardRef<PromptModalHandle, ModalProps>((_, ref) =>
     event.preventDefault();
     if (inputRef.current) {
       const result = inputRef.current.type === 'checkbox' ? inputRef.current.checked.toString() : inputRef.current.value;
-      if (result) {
+      if (result || inputRef.current?.type === 'text') {
         state.onComplete?.(state.upperCase ? result?.toUpperCase() : result);
       }
       modalRef.current?.hide();
