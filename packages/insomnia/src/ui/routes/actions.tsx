@@ -144,7 +144,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
   await database.flushChanges(flushId);
-  if (session.isLoggedIn() && isRemoteProject(project) && !workspaceMeta.gitRepositoryId) {
+  if (session.isLoggedIn() && !workspaceMeta.gitRepositoryId) {
     const vcs = getVCS();
     if (vcs) {
       await initializeLocalBackendProjectAndMarkForSync({
@@ -234,7 +234,7 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
   try {
     // Mark for sync if logged in and in the expected project
     const vcs = getVCS();
-    if (session.isLoggedIn() && vcs && isRemoteProject(duplicateToProject)) {
+    if (session.isLoggedIn() && vcs) {
       await initializeLocalBackendProjectAndMarkForSync({
         vcs: vcs.newInstance(),
         workspace: newWorkspace,
