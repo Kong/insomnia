@@ -4,7 +4,7 @@ import * as models from '../../models';
 import { isRemoteProject } from '../../models/project';
 import { Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
-import { pushSnapshotOnInitialize } from './initialize-backend-project';
+import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from './initialize-backend-project';
 import { getVCS } from './vcs';
 
 let status: 'idle' | 'pending' | 'error' | 'completed' = 'idle';
@@ -94,6 +94,7 @@ export const migrateLocalToCloudProjects = async () => {
           const vcs = getVCS();
           invariant(vcs, 'VCS must be initialized');
 
+          await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
           await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project });
         }
       }
