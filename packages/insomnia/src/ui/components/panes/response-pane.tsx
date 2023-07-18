@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
-import React, { FC, useCallback } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
@@ -9,7 +9,9 @@ import * as models from '../../../models';
 import type { Request } from '../../../models/request';
 import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
+import { invariant } from '../../../utils/invariant';
 import { jsonPrettify } from '../../../utils/prettify/json';
+import { useCurlConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveResponse, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
@@ -38,10 +40,30 @@ export const ResponsePane: FC<Props> = ({
   runningRequests,
 }) => {
   const response = useSelector(selectActiveResponse) as Response | null;
+  invariant(response, 'response missing');
+  const events = useCurlConnectionEvents({ responseId: response._id });
   const filterHistory = useSelector(selectResponseFilterHistory);
   const filter = useSelector(selectResponseFilter);
   const settings = useSelector(selectSettings);
   const previewMode = useSelector(selectResponsePreviewMode);
+  const isEventStream = request?.headers?.find(h => h.name === 'Content-Type')?.value === 'text/event-stream';
+  const [timelineThing, setTimeline] = useState<any[]>([]);
+  useEffect(() => {
+    let isMounted = true;
+    const fn = async () => {
+      // @TODO: this needs to fs.watch or tail the file, instead of reading the whole thing on every event.
+      // or alternatively a throttle to keep it from reading too frequently
+      const rawBuffer = await fs.promises.readFile(response.timelinePath);
+      const timelineString = rawBuffer.toString();
+      const timelineParsed = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e));
+      isMounted && setTimeline(timelineParsed);
+    };
+    isEventStream && fn();
+    return () => {
+      isMounted = false;
+    };
+  }, [response.timelinePath, events.length, isEventStream]);
+
   const handleSetFilter = async (responseFilter: string) => {
     if (!response) {
       return;
@@ -133,9 +155,8 @@ export const ResponsePane: FC<Props> = ({
       </PlaceholderResponsePane>
     );
   }
-  const isEventStream = request?.headers?.find(h => h.name === 'Content-Type')?.value === 'text/event-stream';
   const isNewLineDelimted = isEventStream;
-  const timeline = models.response.getTimeline(response, false, isNewLineDelimted);
+  const timeline = isEventStream ? timelineThing : models.response.getTimeline(response, false, isNewLineDelimted);
   const cookieHeaders = getSetCookieHeaders(response.headers);
   return (
     <Pane type="response">
