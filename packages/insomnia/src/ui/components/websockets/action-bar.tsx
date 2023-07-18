@@ -5,7 +5,7 @@ import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/r
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
-import { ReadyState } from '../../context/websocket-client/use-ws-ready-state';
+import { ReadyState } from '../../hooks/use-ready-state';
 import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
