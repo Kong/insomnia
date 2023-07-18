@@ -3,50 +3,40 @@ import React, { useEffect, useState } from 'react';
 import {
   LoaderFunction,
   Outlet,
+  useFetcher,
   useParams,
-  useRevalidator,
-  useRouteLoaderData,
 } from 'react-router-dom';
-import styled from 'styled-components';
 
-import { getCurrentSessionId, isLoggedIn, onLoginLogout } from '../../account/session';
+import { getCurrentSessionId } from '../../account/session';
 import { isDevelopment } from '../../common/constants';
 import * as models from '../../models';
-import { defaultOrganization, Organization } from '../../models/organization';
+import { Organization } from '../../models/organization';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
 import { exchangeCodeForToken } from '../../sync/git/github-oauth-provider';
 import { exchangeCodeForGitLabToken } from '../../sync/git/gitlab-oauth-provider';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import { MergeConflict, Team } from '../../sync/types';
+import { MergeConflict } from '../../sync/types';
 import { getVCS, initVCS } from '../../sync/vcs/vcs';
-import { submitAuthCode } from '../auth-session-provider';
-import { AccountToolbar } from '../components/account-toolbar';
-import { AppHeader } from '../components/app-header';
 import { ErrorBoundary } from '../components/error-boundary';
 import { showError, showModal } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
 import { AskModal } from '../components/modals/ask-modal';
 import { ImportModal } from '../components/modals/import-modal';
-import { LoginModal } from '../components/modals/login-modal';
 import {
   SettingsModal,
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../components/modals/settings-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
-import { OrganizationsNav } from '../components/organizations-navbar';
-import { StatusBar } from '../components/statusbar';
 import { Toast } from '../components/toast';
-import { WorkspaceHeader } from '../components/workspace-header';
 import { AppHooks } from '../containers/app-hooks';
 import { AIProvider } from '../context/app/ai-context';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { PresenceProvider } from '../context/app/presence-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import Modals from './modals';
-import { WorkspaceLoaderData } from './workspace';
 
 export interface RootLoaderData {
   organizations: Organization[];
@@ -58,7 +48,9 @@ export interface RootLoaderData {
 
 export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
   // Load all projects if the user is logged in
-  if (isLoggedIn()) {
+  const sessionId = getCurrentSessionId();
+  if (sessionId) {
+    // await migrateLocalToCloudProjects();
     try {
       let vcs = getVCS();
       if (!vcs) {
@@ -75,34 +67,26 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
         });
       }
 
-      const sessionId = getCurrentSessionId();
-
       // Teams are now organizations
-      const response = await window.main.insomniaFetch<{
-        data: {
-          teams: Team[];
-        };
-        errors?: {
-          message: string;
+      const teams = await window.main.insomniaFetch<{
+        created: string;
+        id: string;
+        ownerAccountId: string;
+        name: string;
+        isPersonal: boolean;
+        accounts: {
+          firstName: string;
+          lastName: string;
+          email: string;
+          id: string;
+          isAdmin: boolean;
+          dateAccepted: string;
         }[];
-      }>({
-        method: 'POST',
-        path: '/graphql',
+      }[]>({
+        method: 'GET',
+        path: '/api/teams',
         sessionId,
-        data: {
-          query: `
-          query {
-            teams {
-              id
-              name
-            }
-          }
-        `,
-          variables: {},
-        },
       });
-
-      const teams = response.data.teams as Team[];
 
       const user = await window.main.insomniaFetch<{
         name: string;
@@ -112,12 +96,22 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
         path: '/v1/user/profile',
         sessionId,
       });
+
       return {
         user,
-        organizations: [defaultOrganization, ...teams.map(team => ({
+        organizations: teams.map(team => ({
           _id: team.id,
           name: team.name,
-        })).sort((a, b) => a.name.localeCompare(b.name))],
+          isPersonal: team.isPersonal,
+        })).sort((a, b) => a.name.localeCompare(b.name)).sort((a, b) => {
+          if (a.isPersonal && !b.isPersonal) {
+            return -1;
+          } else if (!a.isPersonal && b.isPersonal) {
+            return 1;
+          } else {
+            return 0;
+          }
+        }),
       };
     } catch (err) {
       console.log('Failed to load Teams', err);
@@ -126,7 +120,7 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
           name: '',
           picture: '',
         },
-        organizations: [defaultOrganization],
+        organizations: [],
       };
     }
   }
@@ -136,36 +130,14 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
       name: '',
       picture: '',
     },
-    organizations: [defaultOrganization],
+    organizations: [],
   };
 };
 
-const Layout = styled.div({
-  position: 'relative',
-  height: '100%',
-  width: '100%',
-  display: 'grid',
-  backgroundColor: 'var(--color-bg)',
-  gridTemplate: `
-    'Header Header' auto
-    'Navbar Content' 1fr
-    'Statusbar Statusbar' 30px [row-end]
-    / 50px 1fr;
-  `,
-});
-
 const Root = () => {
-  const { revalidate } = useRevalidator();
-  const workspaceData = useRouteLoaderData(
-    ':workspaceId'
-  ) as WorkspaceLoaderData | null;
   const [importUri, setImportUri] = useState('');
 
-  useEffect(() => {
-    onLoginLogout(() => {
-      revalidate();
-    });
-  }, [revalidate]);
+  const actionFetcher = useFetcher();
 
   useEffect(() => {
     return window.main.on(
@@ -197,10 +169,9 @@ const Root = () => {
             break;
 
           case 'insomnia://app/auth/login':
-            showModal(LoginModal, {
-              title: params.title,
-              message: params.message,
-              reauth: true,
+            actionFetcher.submit({}, {
+              action: '/auth/logout',
+              method: 'POST',
             });
             break;
 
@@ -299,7 +270,13 @@ const Root = () => {
           }
 
           case 'insomnia://app/auth/finish': {
-            submitAuthCode(params.box);
+            actionFetcher.submit({
+              code: params.box,
+            }, {
+              action: '/auth/authorize',
+              method: 'POST',
+              'encType': 'application/json',
+            });
             break;
           }
 
@@ -309,7 +286,7 @@ const Root = () => {
         }
       }
     );
-  }, []);
+  }, [actionFetcher]);
 
   const { organizationId } = useParams() as {
     organizationId: string;
@@ -332,17 +309,7 @@ const Root = () => {
                   from={{ type: 'uri', defaultValue: importUri }}
                 />
               )}
-              <Layout>
-                <OrganizationsNav />
-                <AppHeader
-                  gridCenter={
-                    workspaceData ? <WorkspaceHeader {...workspaceData} /> : null
-                  }
-                  gridRight={<AccountToolbar />}
-                />
-                <Outlet />
-                <StatusBar />
-              </Layout>
+              <Outlet />
             </ErrorBoundary>
 
             <ErrorBoundary showAlert>
