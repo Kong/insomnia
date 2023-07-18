@@ -1,5 +1,3 @@
-import { StringDecoder } from 'string_decoder';
-
 import { getCurrentSessionId } from '../../account/session';
 import { database } from '../../common/database';
 import * as models from '../../models';
@@ -60,37 +58,48 @@ export const migrateLocalToCloudProjects = async () => {
     invariant(personalTeam, 'Could not find personal Team');
 
     // For each local project
-    for (const project of localProjects) {
+    for (const localProject of localProjects) {
       // -- Create a remote project
-      const remoteProject = await window.main.insomniaFetch<{ id: string; name: StringDecoder }>({
+      const newCloudProject = await window.main.insomniaFetch<{ id: string; name: string }>({
         path: `/v1/teams/${personalTeam.id}/team-projects`,
         method: 'POST',
         data: {
-          name: project.name,
+          name: localProject.name,
         },
         sessionId,
       });
 
-      // For each workspace in the project
+      const project = await models.project.create({
+        _id: newCloudProject.id,
+        name: newCloudProject.name,
+        remoteId: newCloudProject.id,
+        parentId: personalTeam.id,
+      });
+
+      // For each workspace in the local project
       const projectWorkspaces = await database.find<Workspace>(models.workspace.type, {
-        parentId: project._id,
+        parentId: localProject._id,
       });
 
       for (const workspace of projectWorkspaces) {
         // Update the workspace to point to the newly created project
         await models.workspace.update(workspace, {
-          parentId: remoteProject.id,
+          parentId: project._id,
         });
 
         const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-        const vcs = getVCS();
-        invariant(vcs, 'VCS must be initialized');
-        // Initialize Sync on the workspace
-        await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project });
+
+        // Initialize Sync on the workspace if it's not using Git sync
+        if (!workspaceMeta.gitRepositoryId) {
+          const vcs = getVCS();
+          invariant(vcs, 'VCS must be initialized');
+
+          await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project });
+        }
       }
 
       // Delete the local project
-      await models.project.remove(project);
+      await models.project.remove(localProject);
     }
 
     status = 'completed';
