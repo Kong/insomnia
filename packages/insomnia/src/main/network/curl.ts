@@ -107,10 +107,6 @@ const openCurlConnection = async (
     return;
   }
 
-  if (!options.url) {
-    throw new Error('URL is required');
-  }
-
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
   fs.mkdirSync(responsesDir, { recursive: true });
 
@@ -130,6 +126,9 @@ const openCurlConnection = async (
   const caCertificate = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
 
   try {
+    if (!options.url) {
+      throw new Error('URL is required');
+    }
     const readyStateChannel = `curl.${request._id}.readyState`;
 
     const settings = await models.settings.getOrCreate();

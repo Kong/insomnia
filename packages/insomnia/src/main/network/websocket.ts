@@ -117,10 +117,6 @@ const openWebSocketConnection = async (
     return;
   }
 
-  if (!options.url) {
-    throw new Error('URL is required');
-  }
-
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
   fs.mkdirSync(responsesDir, { recursive: true });
 
@@ -140,6 +136,9 @@ const openWebSocketConnection = async (
   const caCertificate = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
 
   try {
+    if (!options.url) {
+      throw new Error('URL is required');
+    }
     const readyStateChannel = `webSocket.${request._id}.readyState`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
