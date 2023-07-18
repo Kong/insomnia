@@ -136,9 +136,11 @@ export class ImportPostman {
       url: this.importUrl(request.url),
       parameters: parameters,
       method: request.method || 'GET',
-      headers: headers.map(({ key, value }) => ({
+      headers: headers.map(({ key, value, disabled, description }) => ({
         name: key,
         value,
+        ...(disabled ? { disabled } : {}),
+        ...(typeof description !== 'undefined' ? { description } : {}),
       })),
       body: this.importBody(request.body, headers.find(({ key }) => key === 'Content-Type')?.value),
       authentication,
