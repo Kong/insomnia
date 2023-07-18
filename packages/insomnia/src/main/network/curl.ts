@@ -231,8 +231,8 @@ const openCurlConnection = async (
       }
     });
 
-    curl.on('stream', async (stream: Readable, _code: number, [headers]: HeaderInfo[]) => {
-      console.log('response stream: started', headers);
+    curl.on('stream', async (stream: Readable, _code: number, [headersWithStatus]: HeaderInfo[]) => {
+      const { result, ...headers } = headersWithStatus;
       event.sender.send(readyStateChannel, true);
       const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseHeadersAndBuildTimeline(url, headers);
 
