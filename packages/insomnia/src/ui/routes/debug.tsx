@@ -34,9 +34,8 @@ import { ResponsePane } from '../components/panes/response-pane';
 import { SidebarChildren } from '../components/sidebar/sidebar-children';
 import { SidebarFilter } from '../components/sidebar/sidebar-filter';
 import { SidebarLayout } from '../components/sidebar-layout';
-import { CurlResponsePane } from '../components/websockets/curl-response-pane';
+import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
-import { WebSocketResponsePane } from '../components/websockets/websocket-response-pane';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { createRequestGroup } from '../hooks/create-request-group';
 import {
@@ -303,10 +302,8 @@ export const Debug: FC = () => {
         <ErrorBoundary showAlert>
           {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
             <GrpcResponsePane activeRequest={activeRequest} grpcState={grpcState} />)}
-          {activeRequest && isEventStreamRequest(activeRequest) && (
-            <CurlResponsePane requestId={activeRequest._id} />)}
-          {activeRequest && isWebSocketRequest(activeRequest) && (
-            <WebSocketResponsePane requestId={activeRequest._id} />)}
+          {activeRequest && isEventStreamRequest(activeRequest) && isWebSocketRequest(activeRequest) && (
+            <RealtimeResponsePane requestId={activeRequest._id} />)}
           {activeRequest && isRequest(activeRequest) && (
             <ResponsePane request={activeRequest} runningRequests={runningRequests} />)}
         </ErrorBoundary>}

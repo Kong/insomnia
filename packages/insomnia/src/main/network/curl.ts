@@ -37,6 +37,7 @@ export interface CurlMessageEvent {
   type: 'message';
   timestamp: number;
   data: string;
+  direction: 'OUTGOING' | 'INCOMING';
 }
 
 export interface CurlErrorEvent {
@@ -242,6 +243,7 @@ const openCurlConnection = async (
           data: new TextDecoder('utf-8').decode(chunk),
           type: 'message',
           timestamp: Date.now(),
+          direction: 'INCOMING',
         };
         eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
       }

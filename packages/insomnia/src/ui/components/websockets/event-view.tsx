@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
+import { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
 import { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
 import { requestMeta } from '../../../models';
 import { selectResponsePreviewMode } from '../../redux/selectors';
@@ -36,7 +37,7 @@ const PreviewPaneContents = styled.div({
   flexGrow: 1,
 });
 
-export const MessageEventView: FC<Props<WebSocketMessageEvent>> = ({ event, requestId }) => {
+export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent>> = ({ event, requestId }) => {
 
   let raw = event.data.toString();
   // Best effort to parse the binary data as a string
@@ -108,38 +109,38 @@ export const MessageEventView: FC<Props<WebSocketMessageEvent>> = ({ event, requ
       </PreviewPaneButtons>
       <PreviewPaneContents>
         {previewMode === PREVIEW_MODE_FRIENDLY &&
-        <CodeEditor
-          hideLineNumbers
-          mode={'text/json'}
-          defaultValue={pretty}
-          uniquenessKey={event._id}
-          readOnly
-        />}
+          <CodeEditor
+            hideLineNumbers
+            mode={'text/json'}
+            defaultValue={pretty}
+            uniquenessKey={event._id}
+            readOnly
+          />}
         {previewMode === PREVIEW_MODE_SOURCE &&
-        <CodeEditor
-          hideLineNumbers
-          mode={'text/json'}
-          defaultValue={raw}
-          uniquenessKey={event._id}
-          readOnly
-        />}
+          <CodeEditor
+            hideLineNumbers
+            mode={'text/json'}
+            defaultValue={raw}
+            uniquenessKey={event._id}
+            readOnly
+          />}
         {previewMode === PREVIEW_MODE_RAW &&
-        <CodeEditor
-          hideLineNumbers
-          mode={'text/plain'}
-          defaultValue={raw}
-          uniquenessKey={event._id}
-          readOnly
-        />}
+          <CodeEditor
+            hideLineNumbers
+            mode={'text/plain'}
+            defaultValue={raw}
+            uniquenessKey={event._id}
+            readOnly
+          />}
       </PreviewPaneContents>
     </PreviewPane>
   );
 };
 
-export const EventView: FC<Props<WebSocketEvent>> = ({ event, ...props }) => {
+export const EventView: FC<Props<CurlEvent | WebSocketEvent>> = ({ event, ...props }) => {
   switch (event.type) {
     case 'message':
-      return <MessageEventView event={event} {...props}/>;
+      return <MessageEventView event={event} {...props} />;
     default:
       return null;
   }
