@@ -245,7 +245,7 @@ export const Debug: FC = () => {
       window.main.grpc.closeAll();
     };
   }, [activeEnvironment?._id]);
-
+  const isRealtimeRequest = activeRequest && (isWebSocketRequest(activeRequest) || isEventStreamRequest(activeRequest));
   return (
     <SidebarLayout
       renderPageSidebar={activeWorkspace ? <Fragment>
@@ -302,9 +302,9 @@ export const Debug: FC = () => {
         <ErrorBoundary showAlert>
           {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
             <GrpcResponsePane activeRequest={activeRequest} grpcState={grpcState} />)}
-          {activeRequest && isEventStreamRequest(activeRequest) && isWebSocketRequest(activeRequest) && (
+          {isRealtimeRequest && (
             <RealtimeResponsePane requestId={activeRequest._id} />)}
-          {activeRequest && isRequest(activeRequest) && (
+          {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
             <ResponsePane request={activeRequest} runningRequests={runningRequests} />)}
         </ErrorBoundary>}
     />

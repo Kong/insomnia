@@ -95,14 +95,9 @@ export const RealtimeResponsePane: FC<{ requestId: string }> =
           <PaneHeader />
           <EmptyStatePane
             icon={<i className="fa fa-paper-plane" />}
-            documentationLinks={[
-              {
-                title: 'Introduction to Curls in Insomnia',
-                url: 'https://docs.insomnia.rest/insomnia/requests',
-              },
-            ]}
-            title="Enter a URL and connect to a Curl server to start sending data"
-            secondaryAction="Select a payload type to send data to the connection"
+            documentationLinks={[]}
+            title="Enter a URL and connect to start receiving event stream data"
+            secondaryAction=""
           />
         </Pane>
       );

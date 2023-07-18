@@ -94,7 +94,11 @@ resources:
     method: GET
     body: {}
     parameters: []
-    headers: []
+    headers:
+      - id: pair_4c3fe3092f1245eab6d960c633d8be8c
+        name: Accept
+        value: text/event-stream
+        description: ""
     authentication: {}
     metaSortKey: -1636141078601
     isPrivate: false
