@@ -138,7 +138,7 @@ const Pane = styled.div({
   gridTemplateColumns: 'repeat(auto-fit, 208px)',
   gridAutoRows: 'min-content',
   placeContent: 'start',
-  overflow: 'hidden auto',
+  overflow: 'auto',
   padding: '0 var(--padding-md) var(--padding-md) var(--padding-md)',
   gap: '1rem',
   flex: '1 0 auto',

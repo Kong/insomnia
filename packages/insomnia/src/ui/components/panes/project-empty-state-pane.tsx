@@ -35,8 +35,10 @@ const PostmanIcon = (props: React.SVGProps<SVGSVGElement>) => {
 
 const Wrapper = styled.div({
   height: '100%',
+  width: '100%',
   boxSizing: 'border-box',
   display: 'flex',
+  flexWrap: 'wrap',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
@@ -78,14 +80,16 @@ const SquareButton = styled(Button)({
   flexDirection: 'column',
   padding: 'var(--padding-xl)',
   gap: 'var(--padding-md)',
-  background: 'linear-gradient(120.49deg, var(--color-bg) 9.66%, rgba(var(--color-bg-rgb), 0.4) 107.02%)',
+  maxWidth: 180,
+  background: 'linear-gradient(120.49deg, var(--color-bg) 9.66%, var(--hl-md) 107.02%)',
 });
 
 const AlmostSquareButton = styled(Button)({
   flexDirection: 'column',
+  maxWidth: 130,
   padding: '4em var(--padding-xl)',
   gap: 'var(--padding-md)',
-  background: 'linear-gradient(120.49deg, var(--color-bg) 9.66%, rgba(var(--color-bg-rgb), 0.4) 107.02%)',
+  background: 'linear-gradient(120.49deg, var(--color-bg) 9.66%, var(--hl-md) 107.02%)',
 });
 
 interface Props {
@@ -100,11 +104,14 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
     <Wrapper>
       <Title>This is an empty project, to get started create your first resource:</Title>
       <div
-        style={{ display: 'grid', gap: 'var(--padding-md)', marginTop: 'var(--padding-md)', gridTemplate: `
-        "TopLeft TopRight" auto
-        "Divider Divider" auto
-        "BottomLeft BottomRight" auto / auto auto
-      ` }}
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          width: '100%',
+          gap: 'var(--padding-md)',
+          marginTop: 'var(--padding-md)',
+        }}
       >
         <SquareButton
           onClick={createRequestCollection}
@@ -126,11 +133,24 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
             }}
           /> New Document
         </SquareButton>
-        <Divider
-          style={{
-            gridArea: 'Divider',
-          }}
-        >or</Divider>
+      </div>
+      <Divider
+        style={{
+          width: '100%',
+        }}
+      >
+        or
+      </Divider>
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          width: '100%',
+          gap: 'var(--padding-md)',
+          marginTop: 'var(--padding-md)',
+        }}
+      >
         <AlmostSquareButton
           onClick={importFrom}
         >
@@ -177,79 +197,6 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
           <span><PostmanIcon /></span> Postman
         </AlmostSquareButton>
       </div>
-
-      {/* <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', marginTop: 'var(--padding-md)' }}>
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 'var(--padding-md)', gap: 'var(--padding-md)' }}>
-          <SquareButton
-            onClick={createRequestCollection}
-          >
-            <i
-              className='fa fa-bars'
-              style={{
-                fontSize: 'var(--font-size-xl)',
-              }}
-            /> New Collection
-          </SquareButton>
-          <SquareButton
-            onClick={createDesignDocument}
-          >
-            <i
-              className='fa fa-file-o'
-              style={{
-                fontSize: 'var(--font-size-xl)',
-              }}
-            /> New Document
-          </SquareButton>
-        </div>
-        <Divider>or</Divider>
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 'var(--padding-md)', flexWrap: 'wrap' }}>
-          <AlmostSquareButton
-            onClick={importFrom}
-          >
-            <i
-              className='fa fa-file-import'
-              style={{
-                fontSize: 'var(--font-size-lg)',
-              }}
-            /> Import
-          </AlmostSquareButton>
-          <AlmostSquareButton
-            onClick={importFrom}
-          >
-            <i
-              className='fa fa-link'
-              style={{
-                fontSize: 'var(--font-size-lg)',
-              }}
-            /> Url
-          </AlmostSquareButton>
-          <AlmostSquareButton
-            onClick={importFrom}
-          >
-            <i
-              className='fa fa-clipboard'
-              style={{
-                fontSize: 'var(--font-size-lg)',
-              }}
-            /> Clipboard
-          </AlmostSquareButton>
-          <AlmostSquareButton
-            onClick={cloneFromGit}
-          >
-            <i
-              className='fa fa-code-fork'
-              style={{
-                fontSize: 'var(--font-size-lg)',
-              }}
-            /> Git Clone
-          </AlmostSquareButton>
-          <AlmostSquareButton
-            onClick={importFrom}
-          >
-            <span><PostmanIcon /></span> Postman
-          </AlmostSquareButton>
-        </div>
-      </div> */}
     </Wrapper>
   );
 };
