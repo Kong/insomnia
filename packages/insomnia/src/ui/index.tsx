@@ -596,6 +596,11 @@ async function renderApp() {
       const activity = state.global.activeActivity;
 
       const activeProject = selectActiveProject(state);
+
+      if (!activeProject) {
+        return;
+      }
+
       const organizationId = activeProject.parentId;
 
       if (activity !== currentActivity) {

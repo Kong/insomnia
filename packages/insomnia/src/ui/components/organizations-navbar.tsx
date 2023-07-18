@@ -2,8 +2,9 @@ import React, { FC } from 'react';
 import { Link, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { getAppWebsiteBaseURL } from '../../common/constants';
 import { RootLoaderData } from '../routes/root';
-import { Dropdown, DropdownButton, DropdownItem } from './base/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { SvgIcon } from './svg-icon';
 import { Tooltip } from './tooltip';
 
@@ -99,10 +100,13 @@ export const OrganizationsNav: FC = () => {
             }
           >
             <DropdownItem>
-              Create new organization
-            </DropdownItem>
-            <DropdownItem>
-              Do stuff
+              <ItemContent
+                icon="plus"
+                label="Create new organization"
+                onClick={() => {
+                  window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/teams`);
+                }}
+              />
             </DropdownItem>
           </Dropdown>
         </li>

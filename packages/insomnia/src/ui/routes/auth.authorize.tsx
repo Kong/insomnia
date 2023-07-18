@@ -1,6 +1,10 @@
 import React from 'react';
 import { ActionFunction, redirect, useFetcher, useNavigate } from 'react-router-dom';
 
+import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
+import { migrateCollectionsIntoRemoteProject } from '../../sync/vcs/migrate-collections';
+import { migrateLocalToCloudProjects } from '../../sync/vcs/migrate-to-cloud-projects';
+import { VCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Button } from '../components/themed-button';
@@ -15,6 +19,11 @@ export const action: ActionFunction = async ({
   await submitAuthCode(data.code);
 
   console.log('Login successful');
+
+  const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
+  await migrateCollectionsIntoRemoteProject(new VCS(driver));
+  await migrateLocalToCloudProjects();
+
   return redirect('/organization');
 };
 

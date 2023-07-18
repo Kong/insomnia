@@ -24,7 +24,7 @@ import {
 import { Item, ListProps, ListState, useListState } from 'react-stately';
 import styled from 'styled-components';
 
-import { getCurrentSessionId } from '../../account/session';
+import { getAccountId, getCurrentSessionId } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   ACTIVITY_DEBUG,
@@ -1081,7 +1081,7 @@ const ProjectRoute: FC = () => {
                       p.project === activeProject._id &&
                       p.file === workspace.workspace._id
                     );
-                  });
+                  }).filter(p => p.acct !== getAccountId());
                   return (
                     <WorkspaceCard
                       {...workspace}

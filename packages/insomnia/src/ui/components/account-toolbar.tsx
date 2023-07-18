@@ -3,6 +3,7 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import * as session from '../../account/session';
+import { getAccountId } from '../../account/session';
 import { usePresenceContext } from '../context/app/presence-context';
 import { RootLoaderData } from '../routes/root';
 import { Avatar, AvatarGroup } from './avatar';
@@ -34,7 +35,7 @@ export const AccountToolbar = () => {
 
   const activeUsers = presence.filter(p => {
     return p.project === projectId && p.file === workspaceId;
-  });
+  }).filter(p => p.acct !== getAccountId());
 
   const logoutFetcher = useFetcher();
 
@@ -44,14 +45,11 @@ export const AccountToolbar = () => {
         <AvatarGroup
           animate
           size="medium"
-          items={activeUsers.map(activeUser => {
+          items={activeUsers.map(user => {
             return {
-              key: activeUser.acct,
-              alt:
-                activeUser.firstName || activeUser.lastName
-                  ? `${activeUser.firstName} ${activeUser.lastName}`
-                  : activeUser.acct,
-              src: activeUser.avatar,
+              key: user.acct,
+              alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+              src: user.avatar,
             };
           })}
         />

@@ -59,10 +59,10 @@ export const Button = styled.button<ButtonProps>`
   margin: ${({ margin }) => (margin || 0)};
   text-align: center;
   font-size: var(--font-size-sm);
-  display: inline-flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: center !important;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
   border: 1px solid transparent;
 
   ${({ radius }) => css`

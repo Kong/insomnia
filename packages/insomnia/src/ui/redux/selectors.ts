@@ -117,7 +117,7 @@ export const selectWorkspaces = createSelector(
 export const selectWorkspacesForActiveProject = createSelector(
   selectWorkspaces,
   selectActiveProject,
-  (workspaces, activeProject) => workspaces.filter(workspace => workspace.parentId === activeProject._id),
+  (workspaces, activeProject) => workspaces.filter(workspace => workspace.parentId === activeProject?._id),
 );
 
 export const selectActiveWorkspace = createSelector(
@@ -519,11 +519,6 @@ export const selectActiveUnitTestSuites = createSelector(
 export const selectSyncItems = createSelector(
   selectActiveWorkspaceEntities,
   getStatusCandidates,
-);
-
-export const selectIsLoggedIn = createSelector(
-  selectGlobal,
-  global => global.isLoggedIn,
 );
 
 export const selectActiveActivity = createSelector(

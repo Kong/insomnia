@@ -21,6 +21,7 @@ export const logCollectionMovedToProject = (collection: Workspace, remoteProject
   });
 };
 
+// Migrate any collections with sync setup and no remote project into a remote project
 export const migrateCollectionsIntoRemoteProject = async (vcs: VCS) => {
   console.log('[sync] checking for collections which need to be moved into a remote project');
 
