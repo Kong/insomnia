@@ -57,7 +57,7 @@ describe('postman', () => {
           {
             name: 'X-Header1',
             value: 'value1',
-            description: 'description1'
+            description: 'description1',
           },
           {
             name: 'X-Header2',
