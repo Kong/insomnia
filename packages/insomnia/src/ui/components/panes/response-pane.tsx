@@ -1,17 +1,15 @@
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
-import { CurlEvent } from '../../../main/network/curl';
 import * as models from '../../../models';
-import { isEventStreamRequest, type Request } from '../../../models/request';
+import type { Request } from '../../../models/request';
 import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
-import { useCurlConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveResponse, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
@@ -27,7 +25,6 @@ import { ResponseCookiesViewer } from '../viewers/response-cookies-viewer';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
-import { EventLogView } from '../websockets/event-log-view';
 import { BlankPane } from './blank-pane';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
@@ -36,41 +33,6 @@ interface Props {
   request?: Request | null;
   runningRequests: Record<string, number>;
 }
-const EventStreamResponse = ({ responseId }: { responseId: string }) => {
-  const [selectedEvent, setSelectedEvent] = useState<CurlEvent | null>(null);
-  const events = useCurlConnectionEvents({ responseId });
-  // TODO: handle empty events list
-  return (<EventLogView
-    events={events}
-    onSelect={(event: CurlEvent) => setSelectedEvent(selected => selected?._id === event._id ? null : event)}
-    selectionId={selectedEvent?._id}
-  />);
-};
-const EventStreamTimeline = ({ request, response }: { request: Request; response: Response }) => {
-  const [eventTimeline, setTimeline] = useState<any[]>([]);
-  const events = useCurlConnectionEvents({ responseId: response._id });
-
-  useEffect(() => {
-    let isMounted = true;
-    const fn = async () => {
-      // @TODO: this needs to fs.watch or tail the file, instead of reading the whole thing on every event.
-      // or alternatively a throttle to keep it from reading too frequently
-      const rawBuffer = await fs.promises.readFile(response.timelinePath);
-      const timelineString = rawBuffer.toString();
-      const timelineParsed = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e));
-      isMounted && setTimeline(timelineParsed);
-    };
-    request && isEventStreamRequest(request) && fn();
-    return () => {
-      isMounted = false;
-    };
-  }, [response.timelinePath, events.length, request]);
-
-  return (<ResponseTimelineViewer
-    key={response._id}
-    timeline={eventTimeline}
-  />);
-};
 export const ResponsePane: FC<Props> = ({
   request,
   runningRequests,
@@ -80,7 +42,6 @@ export const ResponsePane: FC<Props> = ({
   const filter = useSelector(selectResponseFilter);
   const settings = useSelector(selectSettings);
   const previewMode = useSelector(selectResponsePreviewMode);
-
   const handleSetFilter = async (responseFilter: string) => {
     if (!response) {
       return;
@@ -103,12 +64,8 @@ export const ResponsePane: FC<Props> = ({
     if (!response) {
       return null;
     }
-    if (request && isEventStreamRequest(request)) {
-      // TODO: parse the body into a table
-      return models.response.getBodyBuffer(response);
-    }
     return models.response.getBodyBuffer(response);
-  }, [request, response]);
+  }, [response]);
   const handleCopyResponseToClipboard = useCallback(async () => {
     const bodyBuffer = handleGetResponseBody();
     if (bodyBuffer) {
@@ -176,6 +133,7 @@ export const ResponsePane: FC<Props> = ({
       </PlaceholderResponsePane>
     );
   }
+  const timeline = models.response.getTimeline(response);
   const cookieHeaders = getSetCookieHeaders(response.headers);
   return (
     <Pane type="response">
@@ -203,25 +161,23 @@ export const ResponsePane: FC<Props> = ({
             />
           }
         >
-          {response && isEventStreamRequest(request) ?
-            (<EventStreamResponse responseId={response._id} />) :
-            (<ResponseViewer
-              key={response._id}
-              bytes={Math.max(response.bytesContent, response.bytesRead)}
-              contentType={response.contentType || ''}
-              disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-              disablePreviewLinks={settings.disableResponsePreviewLinks}
-              download={handleDownloadResponseBody}
-              editorFontSize={settings.editorFontSize}
-              error={response.error}
-              filter={filter}
-              filterHistory={filterHistory}
-              getBody={handleGetResponseBody}
-              previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
-              responseId={response._id}
-              updateFilter={response.error ? undefined : handleSetFilter}
-              url={response.url}
-            />)}
+          <ResponseViewer
+            key={response._id}
+            bytes={Math.max(response.bytesContent, response.bytesRead)}
+            contentType={response.contentType || ''}
+            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+            disablePreviewLinks={settings.disableResponsePreviewLinks}
+            download={handleDownloadResponseBody}
+            editorFontSize={settings.editorFontSize}
+            error={response.error}
+            filter={filter}
+            filterHistory={filterHistory}
+            getBody={handleGetResponseBody}
+            previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
+            responseId={response._id}
+            updateFilter={response.error ? undefined : handleSetFilter}
+            url={response.url}
+          />
         </TabItem>
         <TabItem
           key="headers"
@@ -263,12 +219,10 @@ export const ResponsePane: FC<Props> = ({
         </TabItem>
         <TabItem key="timeline" title="Timeline">
           <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-            {isEventStreamRequest(request) ?
-              <EventStreamTimeline request={request} response={response} /> :
-              <ResponseTimelineViewer
-                key={response._id}
-                timeline={models.response.getTimeline(response, false)}
-              />}
+            <ResponseTimelineViewer
+              key={response._id}
+              timeline={timeline}
+            />
           </ErrorBoundary>
         </TabItem>
       </Tabs>
