@@ -5,11 +5,11 @@ import { useSelector } from 'react-redux';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
+import { CurlEvent } from '../../../main/network/curl';
 import * as models from '../../../models';
 import { isEventStreamRequest, type Request } from '../../../models/request';
 import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
-import { invariant } from '../../../utils/invariant';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useCurlConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
@@ -27,6 +27,7 @@ import { ResponseCookiesViewer } from '../viewers/response-cookies-viewer';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
 import { ResponseViewer } from '../viewers/response-viewer';
+import { EventLogView } from '../websockets/event-log-view';
 import { BlankPane } from './blank-pane';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
@@ -35,18 +36,20 @@ interface Props {
   request?: Request | null;
   runningRequests: Record<string, number>;
 }
-export const ResponsePane: FC<Props> = ({
-  request,
-  runningRequests,
-}) => {
-  const response = useSelector(selectActiveResponse) as Response | null;
-  invariant(response, 'response missing');
+const EventStreamResponse = ({ responseId }: { responseId: string }) => {
+  const [selectedEvent, setSelectedEvent] = useState<CurlEvent | null>(null);
+  const events = useCurlConnectionEvents({ responseId });
+  // TODO: handle empty events list
+  return (<EventLogView
+    events={events}
+    onSelect={(event: CurlEvent) => setSelectedEvent(selected => selected?._id === event._id ? null : event)}
+    selectionId={selectedEvent?._id}
+  />);
+};
+const EventStreamTimeline = ({ request, response }: { request: Request; response: Response }) => {
+  const [eventTimeline, setTimeline] = useState<any[]>([]);
   const events = useCurlConnectionEvents({ responseId: response._id });
-  const filterHistory = useSelector(selectResponseFilterHistory);
-  const filter = useSelector(selectResponseFilter);
-  const settings = useSelector(selectSettings);
-  const previewMode = useSelector(selectResponsePreviewMode);
-  const [timelineThing, setTimeline] = useState<any[]>([]);
+
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
@@ -62,6 +65,21 @@ export const ResponsePane: FC<Props> = ({
       isMounted = false;
     };
   }, [response.timelinePath, events.length, request]);
+
+  return (<ResponseTimelineViewer
+    key={response._id}
+    timeline={eventTimeline}
+  />);
+};
+export const ResponsePane: FC<Props> = ({
+  request,
+  runningRequests,
+}) => {
+  const response = useSelector(selectActiveResponse) as Response | null;
+  const filterHistory = useSelector(selectResponseFilterHistory);
+  const filter = useSelector(selectResponseFilter);
+  const settings = useSelector(selectSettings);
+  const previewMode = useSelector(selectResponsePreviewMode);
 
   const handleSetFilter = async (responseFilter: string) => {
     if (!response) {
@@ -158,7 +176,6 @@ export const ResponsePane: FC<Props> = ({
       </PlaceholderResponsePane>
     );
   }
-  const timeline = isEventStreamRequest(request) ? timelineThing : models.response.getTimeline(response, false, isNewLineDelimted);
   const cookieHeaders = getSetCookieHeaders(response.headers);
   return (
     <Pane type="response">
@@ -186,23 +203,25 @@ export const ResponsePane: FC<Props> = ({
             />
           }
         >
-          <ResponseViewer
-            key={response._id}
-            bytes={Math.max(response.bytesContent, response.bytesRead)}
-            contentType={response.contentType || ''}
-            disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
-            disablePreviewLinks={settings.disableResponsePreviewLinks}
-            download={handleDownloadResponseBody}
-            editorFontSize={settings.editorFontSize}
-            error={response.error}
-            filter={filter}
-            filterHistory={filterHistory}
-            getBody={handleGetResponseBody}
-            previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
-            responseId={response._id}
-            updateFilter={response.error ? undefined : handleSetFilter}
-            url={response.url}
-          />
+          {response && isEventStreamRequest(request) ?
+            (<EventStreamResponse responseId={response._id} />) :
+            (<ResponseViewer
+              key={response._id}
+              bytes={Math.max(response.bytesContent, response.bytesRead)}
+              contentType={response.contentType || ''}
+              disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+              disablePreviewLinks={settings.disableResponsePreviewLinks}
+              download={handleDownloadResponseBody}
+              editorFontSize={settings.editorFontSize}
+              error={response.error}
+              filter={filter}
+              filterHistory={filterHistory}
+              getBody={handleGetResponseBody}
+              previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
+              responseId={response._id}
+              updateFilter={response.error ? undefined : handleSetFilter}
+              url={response.url}
+            />)}
         </TabItem>
         <TabItem
           key="headers"
@@ -244,10 +263,12 @@ export const ResponsePane: FC<Props> = ({
         </TabItem>
         <TabItem key="timeline" title="Timeline">
           <ErrorBoundary key={response._id} errorClassName="font-error pad text-center">
-            <ResponseTimelineViewer
-              key={response._id}
-              timeline={timeline}
-            />
+            {isEventStreamRequest(request) ?
+              <EventStreamTimeline request={request} response={response} /> :
+              <ResponseTimelineViewer
+                key={response._id}
+                timeline={models.response.getTimeline(response, false)}
+              />}
           </ErrorBoundary>
         </TabItem>
       </Tabs>

@@ -9,7 +9,7 @@ import * as models from '../../models';
 import { isGrpcRequest } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isRequest } from '../../models/request';
+import { isEventStreamRequest, isRequest } from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
@@ -34,6 +34,7 @@ import { ResponsePane } from '../components/panes/response-pane';
 import { SidebarChildren } from '../components/sidebar/sidebar-children';
 import { SidebarFilter } from '../components/sidebar/sidebar-filter';
 import { SidebarLayout } from '../components/sidebar-layout';
+import { CurlResponsePane } from '../components/websockets/curl-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { WebSocketResponsePane } from '../components/websockets/websocket-response-pane';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
@@ -112,8 +113,8 @@ export const Debug: FC = () => {
   };
 
   const grpcState = grpcStates.find(s => s.requestId === activeRequest?._id);
-  const setGrpcState = (newState:GrpcRequestState) => setGrpcStates(state => state.map(s => s.requestId === activeRequest?._id ? newState : s));
-  const reloadRequests = (requestIds:string[]) => {
+  const setGrpcState = (newState: GrpcRequestState) => setGrpcStates(state => state.map(s => s.requestId === activeRequest?._id ? newState : s));
+  const reloadRequests = (requestIds: string[]) => {
     setGrpcStates(state => state.map(s => requestIds.includes(s.requestId) ? { ...s, reloadMethods: true } : s));
   };
   useEffect(() => window.main.on('grpc.start', (_, id) => {
@@ -123,11 +124,13 @@ export const Debug: FC = () => {
     setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, running: false } : s));
   }), []);
   useEffect(() => window.main.on('grpc.data', (_, id, value) => {
-    setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, responseMessages: [...s.responseMessages, {
-      id: generateId(),
-      text: JSON.stringify(value),
-      created: Date.now(),
-    }] } : s));
+    setGrpcStates(state => state.map(s => s.requestId === id ? {
+      ...s, responseMessages: [...s.responseMessages, {
+        id: generateId(),
+        text: JSON.stringify(value),
+        created: Date.now(),
+      }],
+    } : s));
   }), []);
   useEffect(() => window.main.on('grpc.error', (_, id, error) => {
     setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, error } : s));
@@ -300,6 +303,8 @@ export const Debug: FC = () => {
         <ErrorBoundary showAlert>
           {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
             <GrpcResponsePane activeRequest={activeRequest} grpcState={grpcState} />)}
+          {activeRequest && isEventStreamRequest(activeRequest) && (
+            <CurlResponsePane requestId={activeRequest._id} />)}
           {activeRequest && isWebSocketRequest(activeRequest) && (
             <WebSocketResponsePane requestId={activeRequest._id} />)}
           {activeRequest && isRequest(activeRequest) && (

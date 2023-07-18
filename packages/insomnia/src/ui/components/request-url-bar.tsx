@@ -390,7 +390,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const handleSendDropdownHide = useCallback(() => {
     buttonRef.current?.blur();
   }, []);
-  const buttonText = isEventStream ? 'Connect' : (downloadPath ? 'Download' : 'Send');
+  const buttonText = isEventStreamRequest(request) ? 'Connect' : (downloadPath ? 'Download' : 'Send');
   const { url, method } = request;
   const isEventStreamOpen = useCurlReadyState(request._id);
   const isCancellable = currentInterval || currentTimeout || isEventStreamOpen;
@@ -419,10 +419,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         {isCancellable ? (
           <button
             type="button"
-            className="urlbar__send-btn danger"
+            className="urlbar__send-btn"
             onClick={handleStop}
           >
-            Cancel
+            {isEventStreamRequest(request) ? 'Disconnect' : 'Cancel'}
           </button>
         ) : (
           <>
@@ -432,7 +432,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               onClick={send}
             >
               {buttonText}</button>
-            {isEventStream ? null : (<Dropdown
+            {isEventStreamRequest(request) ? null : (<Dropdown
               key="dropdown"
               className="tall"
               ref={dropdownRef}

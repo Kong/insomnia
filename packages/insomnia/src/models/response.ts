@@ -239,7 +239,7 @@ export const getBodyBuffer = (
   }
 };
 
-export function getTimeline(response: Response, showBody?: boolean, isNewLineDelimited?: boolean) {
+export function getTimeline(response: Response, showBody?: boolean) {
   const { timelinePath, bodyPath } = response;
 
   if (!timelinePath) {
@@ -249,9 +249,7 @@ export function getTimeline(response: Response, showBody?: boolean, isNewLineDel
   try {
     const rawBuffer = fs.readFileSync(timelinePath);
     const timelineString = rawBuffer.toString();
-    const timeline = isNewLineDelimited
-      ? timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e))
-      : JSON.parse(timelineString) as ResponseTimelineEntry[];
+    const timeline = JSON.parse(timelineString) as ResponseTimelineEntry[];
 
     const body: ResponseTimelineEntry[] = showBody ? [
       {
