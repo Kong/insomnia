@@ -311,6 +311,8 @@ const closeCurlConnection = (
     timestamp: Date.now(),
     statusCode,
     reason: '',
+    code: 0,
+    wasClean: true,
   };
   CurlConnections.get(options.requestId)?.close();
   deleteRequestMaps(options.requestId, 'Closing connection', closeEvent);
