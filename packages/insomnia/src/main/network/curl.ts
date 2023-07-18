@@ -339,7 +339,7 @@ const findMany = async (
 
 export interface CurlBridgeAPI {
   open: (options: OpenCurlRequestOptions) => void;
-  close: typeof closeCurlConnection;
+  close: (options: { requestId: string }) => void;
   closeAll: typeof closeAllCurlConnections;
   readyState: {
     getCurrent: typeof getCurlReadyState;
