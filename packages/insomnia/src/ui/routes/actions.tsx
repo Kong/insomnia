@@ -58,30 +58,24 @@ export const renameProjectAction: ActionFunction = async ({
 
   invariant(project, 'Project not found');
 
-  if (isRemoteProject(project)) {
-    const sessionId = session.getCurrentSessionId();
-    invariant(sessionId, 'User must be logged in to rename a project');
+  const sessionId = session.getCurrentSessionId();
+  invariant(sessionId, 'User must be logged in to rename a project');
 
-    try {
-      await window.main.insomniaFetch({
-        path: `/v1/teams/${project.parentId}/team-projects/${projectId}`,
-        method: 'PATCH',
-        sessionId,
-        data: {
-          name,
-        },
-      });
-      await models.project.update(project, { name });
-      return null;
-    } catch (err) {
-      console.log(err);
-      return null;
-    }
+  try {
+    await window.main.insomniaFetch({
+      path: `/v1/teams/${project.parentId}/team-projects/${projectId}`,
+      method: 'PATCH',
+      sessionId,
+      data: {
+        name,
+      },
+    });
+    await models.project.update(project, { name });
+    return null;
+  } catch (err) {
+    console.log(err);
+    return null;
   }
-
-  await models.project.update(project, { name });
-
-  return null;
 };
 
 export const deleteProjectAction: ActionFunction = async ({ params }) => {

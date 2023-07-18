@@ -3,11 +3,13 @@ import { useAsync } from 'react-use';
 import { onLoginLogout } from '../../account/session';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { migrateCollectionsIntoRemoteProject } from '../../sync/vcs/migrate-collections';
+import { migrateLocalToCloudProjects } from '../../sync/vcs/migrate-to-cloud-projects';
 import { VCS } from '../../sync/vcs/vcs';
 
 const check = async () => {
   const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
   await migrateCollectionsIntoRemoteProject(new VCS(driver));
+  await migrateLocalToCloudProjects();
 };
 
 // Check on login / logout

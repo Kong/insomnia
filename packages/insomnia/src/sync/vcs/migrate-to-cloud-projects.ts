@@ -59,6 +59,7 @@ export const migrateLocalToCloudProjects = async () => {
     });
 
     for (const project of localProjects) {
+      // @TODO What should happen if there is an existing local project in the remote projects
       let remoteProject = teamProjects.data.find(p => p.id === project._id);
       // Create the remote project if it doesn't exist
       if (!remoteProject) {
@@ -80,8 +81,9 @@ export const migrateLocalToCloudProjects = async () => {
       const projectWorkspaces = workspaces.filter(w => w.parentId === project._id);
 
       for (const workspace of projectWorkspaces) {
-        workspace.parentId = remoteProject.id;
-        models.workspace.update(workspace, workspace);
+        await models.workspace.update(workspace, {
+          parentId: remoteProject.id,
+        });
       }
 
       await models.project.remove(project);
