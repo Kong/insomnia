@@ -247,7 +247,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
   }
 });
 
-const createConfiguredCurlInstance = ({
+export const createConfiguredCurlInstance = ({
   req,
   finalUrl,
   settings,

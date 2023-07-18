@@ -1,28 +1,23 @@
 import { Readable } from 'node:stream';
 
-import { Curl, CurlFeature, HeaderInfo } from '@getinsomnia/node-libcurl';
+import { Curl, CurlFeature, CurlInfoDebug, HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { ipcMain } from 'electron';
 import fs from 'fs';
 import path from 'path';
-import tls, { KeyObject, PxfObject } from 'tls';
+import tls from 'tls';
 import { v4 as uuidV4 } from 'uuid';
 
-import { AUTH_API_KEY, AUTH_BASIC, AUTH_BEARER } from '../../common/constants';
-import { jarFromCookies } from '../../common/cookies';
-import { generateId, getSetCookieHeaders } from '../../common/misc';
+import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
 import * as models from '../../models';
 import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
 import { Response } from '../../models/response';
-import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
-import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
-import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
 import { addSetCookiesToToughCookieJar } from '../../network/network';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
+import { createConfiguredCurlInstance } from './libcurl-promise';
 
 export interface CurlConnection extends Curl {
   _id: string;
@@ -74,10 +69,11 @@ const CurlConnections = new Map<string, Curl>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();
 
-const parseHeadersAndBuildTimeline = (url: string, headers: HeaderInfo) => {
-  const statusMessage = headers.result?.reason || '';
-  const statusCode = headers.result?.code || 0;
-  const httpVersion = headers.result?.version;
+const parseHeadersAndBuildTimeline = (url: string, headersWithStatus: HeaderInfo) => {
+  const { result, ...headers } = headersWithStatus;
+  const statusMessage = result?.reason || '';
+  const statusCode = result?.code || 0;
+  const httpVersion = result?.version;
   const responseHeaders = Object.entries(headers).map(([name, value]) => ({ name, value: value?.toString() || '' }));
   const timeline = [
     { value: `Preparing request to ${url}`, name: 'Text', timestamp: Date.now() },
@@ -110,6 +106,10 @@ const openCurlConnection = async (
     return;
   }
 
+  if (!options.url) {
+    throw new Error('URL is required');
+  }
+
   const responsesDir = path.join(process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'), 'responses');
   fs.mkdirSync(responsesDir, { recursive: true });
 
@@ -131,87 +131,47 @@ const openCurlConnection = async (
   try {
     const readyStateChannel = `curl.${request._id}.readyState`;
 
-    const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseCurlRequest['headers'][0]) =>
-      ({ ...acc, [name.toLowerCase() || '']: value || '' });
-    const headers = options.headers;
-    let url = options.url;
-    let authCookie = null;
-    if (!options.authentication.disabled) {
-      if (options.authentication.type === AUTH_BASIC) {
-        const { username, password, useISO88591 } = options.authentication;
-        const encoding = useISO88591 ? 'latin1' : 'utf8';
-        headers.push(getBasicAuthHeader(username, password, encoding));
-      }
-      if (options.authentication.type === AUTH_API_KEY) {
-        const { key, value, addTo } = options.authentication;
-        if (addTo === HEADER) {
-          headers.push({ name: key, value: value });
-        } else if (addTo === COOKIE) {
-          authCookie = `${key}=${value}`;
-        } else if (addTo === QUERY_PARAMS) {
-          const authQueryParam = {
-            name: key,
-            value: value,
-          };
-          const qs = authQueryParam ? buildQueryStringFromParams([authQueryParam]) : '';
-          url = joinUrlAndQueryString(options.url, qs);
-        }
-      }
-      if (options.authentication.type === AUTH_BEARER) {
-        const { token, prefix } = options.authentication;
-        headers.push(getBearerAuthHeader(token, prefix));
-      }
-    }
-
-    const lowerCasedEnabledHeaders = headers
-      .filter(({ name, disabled }) => Boolean(name) && !disabled)
-      .reduce(reduceArrayToLowerCaseKeyedDictionary, {});
     const settings = await models.settings.getOrCreate();
     const start = performance.now();
-
     const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
-    const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'wss:'), options.url));
-    const pemCertificates: string[] = [];
-    const pemCertificateKeys: KeyObject[] = [];
-    const pfxCertificates: PxfObject[] = [];
-
-    filteredClientCertificates.forEach(clientCertificate => {
-      const { passphrase, cert, key, pfx } = clientCertificate;
-
-      if (cert) {
-        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Adding SSL PEM certificate: ${cert}`, name: 'Text', timestamp: Date.now() }) + '\n');
-        pemCertificates.push(fs.readFileSync(cert, 'utf-8'));
-      }
-
-      if (key) {
-        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Adding SSL KEY certificate: ${key}`, name: 'Text', timestamp: Date.now() }) + '\n');
-        pemCertificateKeys.push({ pem: fs.readFileSync(key, 'utf-8'), passphrase: passphrase ?? undefined });
-      }
-
-      if (pfx) {
-        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: `Adding SSL P12 certificate: ${pfx}`, name: 'Text', timestamp: Date.now() }) + '\n');
-        pfxCertificates.push({ buf: fs.readFileSync(pfx, 'utf-8'), passphrase: passphrase ?? undefined });
-      }
+    const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), options.url));
+    const { curl, debugTimeline } = createConfiguredCurlInstance({
+      // TODO: get cookies here
+      req: { ...request, cookieJar: options.cookieJar, cookies: [] },
+      finalUrl: options.url,
+      settings,
+      caCert: caCertificate,
+      certificates: filteredClientCertificates,
     });
-
-    if (request.settingSendCookies && options.cookieJar.cookies.length) {
-      const jar = jarFromCookies(options.cookieJar.cookies);
-      const cookieHeader = jar.getCookieStringSync(options.url);
-      const cookieHeaderWithAuth = cookieHeader ? `${cookieHeader};${authCookie ?? ''}` : `${authCookie};`;
-      if (cookieHeaderWithAuth) {
-        lowerCasedEnabledHeaders['cookie'] = cookieHeaderWithAuth;
-      }
-    }
-
-    const followRedirects = {
-      'off': false,
-      'on': true,
-      'global': settings.followRedirects,
-    }[request.settingFollowRedirects] ?? true;
-    const curl = new Curl();
+    debugTimeline.forEach(entry => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(entry) + '\n'));
     curl.enable(CurlFeature.StreamResponse);
-    curl.setOpt('URL', url);
+    curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
+      const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
+      const isEmpty = buffer.length === 0;
+      // Don't show cookie setting because this will display every domain in the jar
+      const isAddCookie = infoType === CurlInfoDebug.Text && buffer.toString('utf8').indexOf('Added cookie') === 0;
+      if (isSSLData || isEmpty || isAddCookie) {
+        return 0;
+      }
 
+      // NOTE: resolves "Text" from CurlInfoDebug[CurlInfoDebug.Text]
+      let name = CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug;
+      let timelineMessage;
+      const isRequestData = infoType === CurlInfoDebug.DataOut;
+      if (isRequestData) {
+        // Ignore large post data messages
+        const isLessThan10KB = buffer.length / 1024 < (settings.maxTimelineDataSizeKB || 1);
+        timelineMessage = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
+      }
+      const isResponseData = infoType === CurlInfoDebug.DataIn;
+      if (isResponseData) {
+        timelineMessage = `Received ${describeByteSize(buffer.length)} chunk`;
+        name = 'Text';
+      }
+      const value = timelineMessage || buffer.toString('utf8');
+      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ name, value, timestamp: Date.now() }) + '\n');
+      return 0;
+    });
     curl.on('error', (error, errorCode) => {
       const errorEvent: CurlErrorEvent = {
         _id: uuidV4(),
@@ -226,22 +186,20 @@ const openCurlConnection = async (
       event.sender.send(readyStateChannel, false);
       curl.close();
       if (errorCode) {
-        // TODO: figure out how to show 4XX/5XX in the UI
         createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, error.message || 'Something went wrong');
       }
     });
 
     curl.on('stream', async (stream: Readable, _code: number, [headersWithStatus]: HeaderInfo[]) => {
-      const { result, ...headers } = headersWithStatus;
       event.sender.send(readyStateChannel, true);
-      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseHeadersAndBuildTimeline(url, headers);
+      const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseHeadersAndBuildTimeline(options.url, headersWithStatus);
 
       const responsePatch: Partial<Response> = {
         _id: responseId,
         parentId: request._id,
         environmentId: responseEnvironmentId,
         headers: responseHeaders,
-        url: url,
+        url: options.url,
         statusCode,
         statusMessage,
         httpVersion,
@@ -277,7 +235,6 @@ const openCurlConnection = async (
       // two ways to go here
       invariant(writableStream, 'writableStream should be defined');
       for await (const chunk of stream) {
-        console.log('response stream: writing', new TextDecoder('utf-8').decode(chunk));
         const messageEvent: CurlMessageEvent = {
           _id: uuidV4(),
           requestId: options.requestId,
@@ -338,13 +295,12 @@ const closeCurlConnection = (
   event: Electron.IpcMainInvokeEvent,
   options: { requestId: string }
 ): void => {
-  const curl = CurlConnections.get(options.requestId);
-  console.log('Closing curl connection', curl?.isRunning);
-  if (!curl) {
+  console.log('Closing curl connection', CurlConnections.get(options.requestId)?.isRunning);
+  if (!CurlConnections.get(options.requestId)) {
     return;
   }
   const readyStateChannel = `curl.${options.requestId}.readyState`;
-  const statusCode = +(curl.getInfo(Curl.info.HTTP_CONNECTCODE) || 0);
+  const statusCode = +(CurlConnections.get(options.requestId)?.getInfo(Curl.info.HTTP_CONNECTCODE) || 0);
   const closeEvent: CurlCloseEvent = {
     _id: uuidV4(),
     requestId: options.requestId,
@@ -353,14 +309,14 @@ const closeCurlConnection = (
     statusCode,
     reason: '',
   };
+  CurlConnections.get(options.requestId)?.close();
   deleteRequestMaps(options.requestId, 'Closing connection', closeEvent);
-  curl.close();
   event.sender.send(readyStateChannel, false);
 
-  console.log('Closed curl connection', curl?.isRunning);
+  console.log('Closed curl connection', CurlConnections.get(options.requestId)?.isRunning);
 };
 
-const closeAllCurlConnections = (): void => CurlConnections.forEach(ws => ws.close());
+const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl.close());
 
 const findMany = async (
   options: { responseId: string }
@@ -370,6 +326,7 @@ const findMany = async (
     return [];
   }
   const body = await fs.promises.readFile(response.bodyPath);
+  // TODO: stop this being called with regular response bodies
   return body.toString().split('\n').filter(e => e?.trim())
     // Parse the message
     .map(e => JSON.parse(e))

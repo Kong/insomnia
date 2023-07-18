@@ -86,8 +86,12 @@ export const ResponsePane: FC<Props> = ({
     if (!response) {
       return null;
     }
+    if (isEventStream) {
+      // TODO: parse the body into a table
+      return models.response.getBodyBuffer(response);
+    }
     return models.response.getBodyBuffer(response);
-  }, [response]);
+  }, [isEventStream, response]);
   const handleCopyResponseToClipboard = useCallback(async () => {
     const bodyBuffer = handleGetResponseBody();
     if (bodyBuffer) {
