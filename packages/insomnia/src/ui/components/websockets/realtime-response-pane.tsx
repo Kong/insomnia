@@ -9,7 +9,7 @@ import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { WebSocketEvent } from '../../../main/network/websocket';
 import { Response } from '../../../models/response';
 import { WebSocketResponse } from '../../../models/websocket-response';
-import { useCurlConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
+import { useRealtimeConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
 import { selectActiveResponse } from '../../redux/selectors';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -121,7 +121,7 @@ const RealtimeActiveResponsePane: FC<{ requestId: string; response: WebSocketRes
   const [clearEventsBefore, setClearEventsBefore] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [eventType, setEventType] = useState<CurlEvent['type']>();
-  const allEvents = useCurlConnectionEvents({ responseId: response._id });
+  const allEvents = useRealtimeConnectionEvents({ responseId: response._id });
   const handleSelection = (event: CurlEvent | WebSocketEvent) => {
     setSelectedEvent((selected: CurlEvent | WebSocketEvent | null) => selected?._id === event._id ? null : event);
   };

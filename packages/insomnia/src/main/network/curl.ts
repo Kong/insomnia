@@ -56,6 +56,8 @@ export interface CurlCloseEvent {
   timestamp: number;
   statusCode: number;
   reason: string;
+  wasClean: boolean;
+  code: number;
 }
 
 export type CurlEvent =
