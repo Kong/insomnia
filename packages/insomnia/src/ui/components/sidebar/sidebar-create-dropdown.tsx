@@ -51,11 +51,11 @@ export const SidebarCreateDropdown = () => {
         />
       </DropdownItem>
 
-      <DropdownItem aria-label='SSE Request'>
+      <DropdownItem aria-label='Event Stream Request'>
         <ItemContent
           icon="plus-circle"
-          label="SSE Request"
-          onClick={() => create('SSE')}
+          label="Event Stream Request"
+          onClick={() => create('Event Stream')}
         />
       </DropdownItem>
 

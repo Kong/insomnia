@@ -47,7 +47,7 @@ export const setActiveRequest = async (
   });
 };
 
-export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL' | 'WebSocket' | 'SSE';
+export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL' | 'WebSocket' | 'Event Stream';
 type RequestCreator = (input: {
   parentId: string;
   requestType: CreateRequestType;
@@ -90,14 +90,14 @@ export const createRequest: RequestCreator = async ({
       break;
     }
 
-    case 'SSE': {
+    case 'Event Stream': {
       const request = await models.request.create({
         parentId,
         method: METHOD_GET,
         url: 'http://localhost:4010/events',
         headers: [
           {
-            name: 'Content-Type',
+            name: 'Accept',
             value: CONTENT_TYPE_EVENT_STREAM,
           },
         ],
