@@ -36,8 +36,7 @@ const SendMessageForm = styled.form({
   position: 'relative',
   boxSizing: 'border-box',
 });
-const SendButton = styled.button<{ isConnected: boolean }>(({ isConnected }) =>
-({
+const SendButton = styled.button<{ isConnected: boolean }>(({ isConnected }) => ({
   padding: '0 var(--padding-md)',
   marginLeft: 'var(--padding-xs)',
   height: '100%',
