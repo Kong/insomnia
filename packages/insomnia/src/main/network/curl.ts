@@ -172,7 +172,7 @@ const openCurlConnection = async (
       timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ name, value, timestamp: Date.now() }) + '\n');
       return 0;
     });
-    curl.on('error', (error, errorCode) => {
+    curl.on('error', async (error, errorCode) => {
       const errorEvent: CurlErrorEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
@@ -186,7 +186,10 @@ const openCurlConnection = async (
       event.sender.send(readyStateChannel, false);
       curl.close();
       if (errorCode) {
-        createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, error.message || 'Something went wrong');
+        const res = await models.response.getById(responseId);
+        if (!res) {
+          createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, error.message || 'Something went wrong');
+        }
       }
     });
 
@@ -244,11 +247,11 @@ const openCurlConnection = async (
         };
         eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(messageEvent) + '\n');
       }
+      // NOTE: this can only happen if the stream is closed cleanly by the remote server
       eventLogFileStreams.get(options.requestId)?.end();
       console.log('response stream: ended');
       event.sender.send(readyStateChannel, false);
     });
-    console.log('Performing curl request');
     curl.perform();
     CurlConnections.set(options.requestId, curl);
   } catch (e) {
@@ -269,8 +272,8 @@ const createErrorResponse = async (responseId: string, requestId: string, enviro
     statusMessage: 'Error',
     error: message,
   };
-  models.response.create(responsePatch, settings.maxHistoryResponses);
-  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: null });
+  const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
+  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const deleteRequestMaps = async (requestId: string, message: string, event?: CurlCloseEvent | CurlErrorEvent) => {
