@@ -139,7 +139,7 @@ export class ImportPostman {
       headers: headers.map(({ key, value, disabled, description }) => ({
         name: key,
         value,
-        ...(disabled ? { disabled } : {}),
+        ...(typeof disabled !== 'undefined' ? { disabled } : {}),
         ...(typeof description !== 'undefined' ? { description } : {}),
       })),
       body: this.importBody(request.body, headers.find(({ key }) => key === 'Content-Type')?.value),
