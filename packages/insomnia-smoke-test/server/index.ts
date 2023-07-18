@@ -79,7 +79,10 @@ app.get('/events', (request, response) => {
   };
   subscribers.push(subscriber);
   setInterval(() => {
-    response.write(`data: ${JSON.stringify({ id: subscriberId, message: 'Time: ' + new Date().toISOString().slice(11, 19) })}\n\n`);
+    // const id = subscriberId;
+    const data = JSON.stringify({ message: 'Time: ' + new Date().toISOString().slice(11, 19) });
+    // response.write('id: ' + id + '\n');
+    response.write('data: ' + data + '\n\n');
   }, 1000);
   request.on('close', () => {
     console.log(`${subscriberId} Connection closed`);

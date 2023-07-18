@@ -155,7 +155,7 @@ const openCurlConnection = async (
       }
 
       // NOTE: resolves "Text" from CurlInfoDebug[CurlInfoDebug.Text]
-      let name = CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug;
+      const name = CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug;
       let timelineMessage;
       const isRequestData = infoType === CurlInfoDebug.DataOut;
       if (isRequestData) {
@@ -164,12 +164,10 @@ const openCurlConnection = async (
         timelineMessage = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
       }
       const isResponseData = infoType === CurlInfoDebug.DataIn;
-      if (isResponseData) {
-        timelineMessage = `Received ${describeByteSize(buffer.length)} chunk`;
-        name = 'Text';
+      if (!isResponseData) {
+        const value = timelineMessage || buffer.toString('utf8');
+        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ name, value, timestamp: Date.now() }) + '\n');
       }
-      const value = timelineMessage || buffer.toString('utf8');
-      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ name, value, timestamp: Date.now() }) + '\n');
       return 0;
     });
     curl.on('error', async (error, errorCode) => {
@@ -298,7 +296,6 @@ const closeCurlConnection = (
   event: Electron.IpcMainInvokeEvent,
   options: { requestId: string }
 ): void => {
-  console.log('Closing curl connection', CurlConnections.get(options.requestId)?.isRunning);
   if (!CurlConnections.get(options.requestId)) {
     return;
   }
@@ -315,8 +312,6 @@ const closeCurlConnection = (
   CurlConnections.get(options.requestId)?.close();
   deleteRequestMaps(options.requestId, 'Closing connection', closeEvent);
   event.sender.send(readyStateChannel, false);
-
-  console.log('Closed curl connection', CurlConnections.get(options.requestId)?.isRunning);
 };
 
 const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl.close());
