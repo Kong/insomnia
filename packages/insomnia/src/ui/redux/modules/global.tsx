@@ -8,7 +8,6 @@ import {
 import { DEFAULT_PROJECT_ID } from '../../../models/project';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
-const LOGIN_STATE_CHANGE = 'global/login-state-change';
 export const SET_ACTIVE_PROJECT = 'global/activate-project';
 export const SET_DASHBOARD_SORT_ORDER = 'global/dashboard-sort-order';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
@@ -57,22 +56,11 @@ function activeWorkspaceReducer(state: string | null = null, action: any) {
   }
 }
 
-function loginStateChangeReducer(state = false, action: any) {
-  switch (action.type) {
-    case LOGIN_STATE_CHANGE:
-      return action.loggedIn;
-
-    default:
-      return state;
-  }
-}
-
 export interface GlobalState {
   activeProjectId: string;
   dashboardSortOrder: DashboardSortOrder;
   activeWorkspaceId: string | null;
   activeActivity: GlobalActivity | null;
-  isLoggedIn: boolean;
 }
 
 export const reducer = combineReducers<GlobalState>({
@@ -80,16 +68,11 @@ export const reducer = combineReducers<GlobalState>({
   activeProjectId: activeProjectReducer,
   activeWorkspaceId: activeWorkspaceReducer,
   activeActivity: activeActivityReducer,
-  isLoggedIn: loginStateChangeReducer,
 });
 
 // ~~~~~~~ //
 // ACTIONS //
 // ~~~~~~~ //
-export const loginStateChange = (loggedIn: boolean) => ({
-  type: LOGIN_STATE_CHANGE,
-  loggedIn,
-});
 
 /*
   Go to an explicit activity

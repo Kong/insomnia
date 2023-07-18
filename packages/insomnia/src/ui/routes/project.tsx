@@ -30,6 +30,7 @@ import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
   DashboardSortOrder,
+  getAppWebsiteBaseURL,
 } from '../../common/constants';
 import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
@@ -39,18 +40,12 @@ import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { sortProjects } from '../../models/helpers/project';
 import {
-  DEFAULT_ORGANIZATION_ID,
-  defaultOrganization,
-  Organization,
-} from '../../models/organization';
-import {
   isDefaultProject,
   isRemoteProject,
   Project,
   RemoteProject,
 } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
-import { Team } from '../../sync/types';
 import { invariant } from '../../utils/invariant';
 import {
   Dropdown,
@@ -292,9 +287,6 @@ const OrganizationProjectsSidebar: FC<{
   const [searchParams] = useSearchParams();
   const [isSearchOpen, setSearchOpen] = useState(false);
 
-  // Only show the search in the default organization (local data) since other organizations (remote data) only have one project
-  const shouldShowSearch = organizationId === DEFAULT_ORGANIZATION_ID;
-
   return (
     <Sidebar
       style={{
@@ -327,23 +319,22 @@ const OrganizationProjectsSidebar: FC<{
       </SidebarTitle>
       <SidebarSection>
         <SidebarSectionTitle>Projects ({projects.length})</SidebarSectionTitle>
-        {shouldShowSearch && (
-          <Button
-            style={{
-              padding: 'var(--padding-sm)',
-              minWidth: 'auto',
-              width: 'unset',
-              flex: 0,
-            }}
-            variant="text"
-            size="small"
-            onClick={() => {
-              setSearchOpen(!isSearchOpen);
-            }}
-          >
-            <i data-testid="SearchProjectsButton" className="fa fa-search" />
-          </Button>
-        )}
+
+        <Button
+          style={{
+            padding: 'var(--padding-sm)',
+            minWidth: 'auto',
+            width: 'unset',
+            flex: 0,
+          }}
+          variant="text"
+          size="small"
+          onClick={() => {
+            setSearchOpen(!isSearchOpen);
+          }}
+        >
+          <i data-testid="SearchProjectsButton" className="fa fa-search" />
+        </Button>
         <Button
           style={{
             padding: 'var(--padding-sm)',
@@ -377,7 +368,7 @@ const OrganizationProjectsSidebar: FC<{
           <i data-testid="CreateProjectButton" className="fa fa-plus" />
         </Button>
       </SidebarSection>
-      {isSearchOpen && shouldShowSearch && (
+      {isSearchOpen && (
         <SearchFormContainer>
           <SearchFormControl className="form-control form-control--outlined no-margin">
             <SearchInput
@@ -452,6 +443,7 @@ const OrganizationProjectsSidebar: FC<{
       <ProjectListContainer>
         <List
           key="files-list"
+          aria-label='Files List'
           selectionMode="single"
           disallowEmptySelection
           selectedKeys={[searchParams.get('scope') || 'all']}
@@ -507,26 +499,61 @@ const OrganizationProjectsSidebar: FC<{
         </List>
       </ProjectListContainer>
 
-      <SidebarDivider />
+      <SidebarDivider
+        style={{
+          padding: 0,
+        }}
+      />
 
-      <List
-        onAction={key => {
-          window.main.openInBrowser(key.toString());
+      <div
+        style={{
+          padding: 'var(--padding-sm) 0',
         }}
       >
-        <Item
-          key="https://insomnia.rest/pricing"
-          aria-label="Help and Feedback"
+        <List
+
+          aria-label='Help and Feedback'
+          onAction={key => {
+            window.main.openInBrowser(key.toString());
+          }}
         >
-          <SidebarListItemContent level={1}>
-            <SidebarListItemTitle
-              icon="arrow-up-right-from-square"
-              label="Explore Subscriptions"
-            />
-          </SidebarListItemContent>
-        </Item>
-      </List>
+          <Item
+            key={`${getAppWebsiteBaseURL()}/app/dashboard/teams/${organizationId}/members`}
+            aria-label="Invite people to organization"
+          >
+            <SidebarListItemContent level={0}>
+              <SidebarListItemTitle
+                icon="plus"
+                label="Invite people to organization"
+              />
+            </SidebarListItemContent>
+          </Item>
+          <Item
+            key="https://insomnia.rest/pricing"
+            aria-label="Explore Subscriptions"
+          >
+            <SidebarListItemContent level={0}>
+              <SidebarListItemTitle
+                icon="arrow-up-right-from-square"
+                label="Explore Subscriptions"
+              />
+            </SidebarListItemContent>
+          </Item>
+          <Item
+            key="https://github.com/Kong/insomnia/discussions"
+            aria-label="Help and Feedback"
+          >
+            <SidebarListItemContent level={0}>
+              <SidebarListItemTitle
+                icon="message"
+                label="Help and Feedback"
+              />
+            </SidebarListItemContent>
+          </Item>
+        </List>
+      </div>
     </Sidebar>
+
   );
 };
 
@@ -627,22 +654,13 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
       console.log({ projectExists, projectId, organizationId });
 
       if (!projectExists) {
-        projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]._id;
+        projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId || proj._id === organizationId)[0]?._id;
+        if (!projectId) {
+          return redirect(`/organization/${organizationId}`);
+        }
       }
 
       return redirect(`/organization/${match?.params.organizationId}/project/${projectId}`);
-    }
-  }
-
-  // Check if the org is the default org and redirect to the first local project
-  if (models.organization.DEFAULT_ORGANIZATION_ID === organizationId) {
-    const localProjects = (await models.project.all()).filter(
-      proj => !isRemoteProject(proj)
-    );
-    if (localProjects[0]?._id) {
-      return redirect(
-        `/organization/${organizationId}/project/${localProjects[0]._id}`
-      );
     }
   }
 
@@ -679,10 +697,8 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     return redirect(`/organization/${organizationId}/project/${projectsToUpdate[0]._id}`);
   } catch (err) {
     console.log(err);
-    return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${models.project.DEFAULT_PROJECT_ID}`);
+    return redirect('/organization');
   }
-
-  return;
 };
 
 export interface ProjectLoaderData {
@@ -692,13 +708,16 @@ export interface ProjectLoaderData {
   collectionsCount: number;
   activeProject: Project;
   projects: Project[];
-  organization: Organization;
 }
 
 export const loader: LoaderFunction = async ({
   params,
   request,
 }): Promise<ProjectLoaderData> => {
+  const sessionId = getCurrentSessionId();
+  if (!sessionId) {
+    throw redirect('/auth/login');
+  }
   const search = new URL(request.url).searchParams;
   const { organizationId } = params;
   let { projectId } = params;
@@ -710,37 +729,35 @@ export const loader: LoaderFunction = async ({
   const scope = search.get('scope') || 'all';
   const projectName = search.get('projectName') || '';
 
-  if (organizationId !== models.organization.DEFAULT_ORGANIZATION_ID) {
-    try {
-      console.log('Fetching projects for team', organizationId);
-      const remoteProjects = await getAllTeamProjects(organizationId);
+  try {
+    console.log('Fetching projects for team', organizationId);
+    const remoteProjects = await getAllTeamProjects(organizationId);
 
-      const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
+    const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
       id: string;
       name: string;
     }) => {
-        const project = await models.initModel<RemoteProject>(
-          models.project.type,
-          {
-            _id: prj.id,
-            remoteId: prj.id,
-            name: prj.name,
-            parentId: organizationId,
-          }
-        );
+      const project = await models.initModel<RemoteProject>(
+        models.project.type,
+        {
+          _id: prj.id,
+          remoteId: prj.id,
+          name: prj.name,
+          parentId: organizationId,
+        }
+      );
 
-        return project;
-      }));
+      return project;
+    }));
 
-      await database.batchModifyDocs({ upsert: projectsToUpdate });
+    await database.batchModifyDocs({ upsert: projectsToUpdate });
 
-      if (!projectId || projectId === 'undefined') {
-        projectId = remoteProjects[0].id;
-      }
-    } catch (err) {
-      console.log(err);
-      throw redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${models.project.DEFAULT_PROJECT_ID}`);
+    if (!projectId || projectId === 'undefined') {
+      projectId = remoteProjects[0].id;
     }
+  } catch (err) {
+    console.log(err);
+    throw redirect('/organization');
   }
 
   invariant(projectId, 'projectId parameter is required');
@@ -841,56 +858,13 @@ export const loader: LoaderFunction = async ({
     .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
 
   const allProjects = await models.project.all();
-  const organizationProjects =
-    organizationId === DEFAULT_ORGANIZATION_ID
-      ? allProjects.filter(proj => !isRemoteProject(proj))
-      : allProjects.filter(proj => proj.parentId === organizationId);
+  const organizationProjects = allProjects.filter(proj => proj.parentId === organizationId);
 
   const projects = sortProjects(organizationProjects).filter(p =>
     p.name.toLowerCase().includes(projectName.toLowerCase())
   );
 
-  let organization = defaultOrganization;
-
-  if (organizationId !== DEFAULT_ORGANIZATION_ID) {
-    try {
-      const sessionId = getCurrentSessionId();
-
-      const response = await window.main.insomniaFetch<{
-        data: {
-          teams: Team[];
-        };
-      }>({
-        method: 'POST',
-        path: '/graphql',
-        sessionId,
-        data: {
-          query: `
-          query {
-            teams {
-              id
-              name
-            }
-          }
-        `,
-          variables: {},
-        },
-      });
-
-      const teams = response.data.teams;
-      const organizations = teams.map(t => ({
-        _id: t.id,
-        name: t.name,
-      }));
-
-      organization = organizations.find(organization => organization._id === organizationId) || defaultOrganization;
-    } catch (err) {
-      console.warn('Failed to fetch organization', err);
-    }
-  }
-
   return {
-    organization,
     workspaces,
     projects,
     activeProject: project,
@@ -909,7 +883,6 @@ const ProjectRoute: FC = () => {
     workspaces,
     activeProject,
     projects,
-    organization,
     allFilesCount,
     collectionsCount,
     documentsCount,
@@ -944,7 +917,7 @@ const ProjectRoute: FC = () => {
             scope: 'collection',
           },
           {
-            action: `/organization/${organization._id}/project/${activeProject._id}/workspace/new`,
+            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
             method: 'post',
           }
         );
@@ -966,7 +939,7 @@ const ProjectRoute: FC = () => {
             scope: 'design',
           },
           {
-            action: `/organization/${organization._id}/project/${activeProject._id}/workspace/new`,
+            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
             method: 'post',
           }
         );
@@ -987,7 +960,7 @@ const ProjectRoute: FC = () => {
           renderPageSidebar={
             <OrganizationProjectsSidebar
               organizationId={organizationId}
-              title={organization.name}
+              title={'TODO'}
               projects={projects}
               workspaces={workspaces.map(w => w.workspace)}
               activeProject={activeProject}

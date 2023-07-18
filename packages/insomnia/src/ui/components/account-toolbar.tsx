@@ -1,5 +1,5 @@
-import React, { Fragment } from 'react';
-import { useLoaderData, useParams } from 'react-router-dom';
+import React from 'react';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import * as session from '../../account/session';
@@ -12,9 +12,6 @@ import {
   DropdownItem,
   ItemContent,
 } from './base/dropdown';
-import { Link as ExternalLink } from './base/link';
-import { showLoginModal } from './modals/login-modal';
-import { Button } from './themed-button';
 
 const Toolbar = styled.div({
   display: 'flex',
@@ -24,28 +21,22 @@ const Toolbar = styled.div({
   margin: 0,
 });
 
-const SignUpButton = styled(Button)({
-  '&&': {
-    backgroundColor: 'var(--color-surprise)',
-    color: 'var(--color-font-surprise)',
-    textDecoration: 'none',
-    margin: 0,
-    boxSizing: 'border-box',
-  },
-});
-
 export const AccountToolbar = () => {
-  const isLoggedIn = session.isLoggedIn();
   const { presence } = usePresenceContext();
-  const { user } = useLoaderData() as RootLoaderData;
+  const data = useRouteLoaderData('root') as RootLoaderData;
   const { projectId, workspaceId } = useParams() as {
     workspaceId: string;
     projectId: string;
+    organizationId: string;
   };
+
+  const user = data?.user || {};
 
   const activeUsers = presence.filter(p => {
     return p.project === projectId && p.file === workspaceId;
   });
+
+  const logoutFetcher = useFetcher();
 
   return (
     <Toolbar>
@@ -65,72 +56,53 @@ export const AccountToolbar = () => {
           })}
         />
       )}
-      {isLoggedIn && (
-        <Button
-          as={ExternalLink}
-          href={'https://app.insomnia.rest/app/account/invite/'}
-        >
-          Invite
-        </Button>
-      )}
-      {isLoggedIn ? (
-        <Dropdown
-          aria-label="Account"
-          triggerButton={
-            <DropdownButton
-              style={{
-                gap: 'var(--padding-xs)',
-                borderRadius: '60px',
-                padding: '3px 3px',
-                alignItems: 'center',
-              }}
-              removePaddings={false}
-              disableHoverBehavior={false}
-            >
-              <Avatar
-                src={user?.picture}
-                alt={`${session.getFirstName()?.charAt(0)}${session
-                  .getLastName()
-                  ?.charAt(0)}`}
-              />
-              {session.getFirstName()} {session.getLastName()}
-              <i className="fa fa-caret-down" />
-            </DropdownButton>
-          }
-        >
-          <DropdownItem key="account-settings" aria-label="Account settings">
-            <ItemContent
-              icon="gear"
-              label="Account Settings"
-              stayOpenAfterClick
-              onClick={() => window.main.openInBrowser('https://app.insomnia.rest/app/account/')}
-            />
-          </DropdownItem>
-          <DropdownItem key="logout" aria-label="logout">
-            <ItemContent
-              icon="sign-out"
-              label="Logout"
-              withPrompt
-              stayOpenAfterClick
-              onClick={session.logout}
-            />
-          </DropdownItem>
-        </Dropdown>
-      ) : (
-        <Fragment>
-          <Button variant="outlined" size="small" onClick={showLoginModal}>
-            Login
-          </Button>
-          <SignUpButton
-            href="https://app.insomnia.rest/app/signup/"
-            as={ExternalLink}
-            size="small"
-            variant="contained"
+      <Dropdown
+        aria-label="Account"
+        triggerButton={
+          <DropdownButton
+            style={{
+              gap: 'var(--padding-xs)',
+              borderRadius: '60px',
+              padding: '3px 3px',
+              alignItems: 'center',
+            }}
+            removePaddings={false}
+            disableHoverBehavior={false}
           >
-            Sign Up
-          </SignUpButton>
-        </Fragment>
-      )}
+            <Avatar
+              src={user?.picture}
+              alt={`${session.getFirstName()?.charAt(0)}${session
+                .getLastName()
+                ?.charAt(0)}`}
+            />
+            {session.getFirstName()} {session.getLastName()}
+            <i className="fa fa-caret-down" />
+          </DropdownButton>
+        }
+      >
+        <DropdownItem key="account-settings" aria-label="Account settings">
+          <ItemContent
+            icon="gear"
+            label="Account Settings"
+            stayOpenAfterClick
+            onClick={() => window.main.openInBrowser('https://app.insomnia.rest/app/account/')}
+          />
+        </DropdownItem>
+        <DropdownItem key="logout" aria-label="logout">
+          <ItemContent
+            icon="sign-out"
+            label="Logout"
+            withPrompt
+            stayOpenAfterClick
+            onClick={() => {
+              logoutFetcher.submit({}, {
+                action: '/auth/logout',
+                method: 'POST',
+              });
+            }}
+          />
+        </DropdownItem>
+      </Dropdown>
     </Toolbar>
   );
 };
