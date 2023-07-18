@@ -142,6 +142,9 @@ const openWebSocketConnection = async (
       ({ ...acc, [name.toLowerCase() || '']: value || '' });
     const headers = options.headers;
     let url = options.url;
+    if (!url) {
+      throw new Error('URL is required');
+    }
     let authCookie = null;
     if (!options.authentication.disabled) {
       if (options.authentication.type === AUTH_BASIC) {
