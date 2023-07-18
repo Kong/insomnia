@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
-import type { Request } from '../../../models/request';
+import { isEventStreamRequest, type Request } from '../../../models/request';
 import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
 import { invariant } from '../../../utils/invariant';
@@ -46,7 +46,6 @@ export const ResponsePane: FC<Props> = ({
   const filter = useSelector(selectResponseFilter);
   const settings = useSelector(selectSettings);
   const previewMode = useSelector(selectResponsePreviewMode);
-  const isEventStream = request?.headers?.find(h => h.name === 'Content-Type')?.value === 'text/event-stream';
   const [timelineThing, setTimeline] = useState<any[]>([]);
   useEffect(() => {
     let isMounted = true;
@@ -58,11 +57,11 @@ export const ResponsePane: FC<Props> = ({
       const timelineParsed = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e));
       isMounted && setTimeline(timelineParsed);
     };
-    isEventStream && fn();
+    request && isEventStreamRequest(request) && fn();
     return () => {
       isMounted = false;
     };
-  }, [response.timelinePath, events.length, isEventStream]);
+  }, [response.timelinePath, events.length, request]);
 
   const handleSetFilter = async (responseFilter: string) => {
     if (!response) {
@@ -86,12 +85,12 @@ export const ResponsePane: FC<Props> = ({
     if (!response) {
       return null;
     }
-    if (isEventStream) {
+    if (request && isEventStreamRequest(request)) {
       // TODO: parse the body into a table
       return models.response.getBodyBuffer(response);
     }
     return models.response.getBodyBuffer(response);
-  }, [isEventStream, response]);
+  }, [request, response]);
   const handleCopyResponseToClipboard = useCallback(async () => {
     const bodyBuffer = handleGetResponseBody();
     if (bodyBuffer) {
@@ -159,8 +158,7 @@ export const ResponsePane: FC<Props> = ({
       </PlaceholderResponsePane>
     );
   }
-  const isNewLineDelimted = isEventStream;
-  const timeline = isEventStream ? timelineThing : models.response.getTimeline(response, false, isNewLineDelimted);
+  const timeline = isEventStreamRequest(request) ? timelineThing : models.response.getTimeline(response, false, isNewLineDelimted);
   const cookieHeaders = getSetCookieHeaders(response.headers);
   return (
     <Pane type="response">

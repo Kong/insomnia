@@ -12,7 +12,7 @@ import { getContentDispositionHeader } from '../../common/misc';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../common/render';
 import * as models from '../../models';
 import { update } from '../../models/helpers/request-operations';
-import { isRequest, Request } from '../../models/request';
+import { isEventStreamRequest, isRequest, Request } from '../../models/request';
 import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
 import { invariant } from '../../utils/invariant';
@@ -233,15 +233,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     setLoading(false);
   }, [activeEnvironment?._id, request, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
-  const isEventStream = request?.headers?.find(h => h.name === 'Content-Type')?.value === 'text/event-stream';
-
   const send = useCallback(() => {
     setCurrentTimeout(undefined);
     if (downloadPath) {
       sendThenSetFilePath(downloadPath);
       return;
     }
-    if (isEventStream) {
+    if (isEventStreamRequest(request)) {
       const startListening = async () => {
         invariant(activeWorkspace, 'activeWorkspace not found (remove with redux)');
         const environmentId = activeEnvironment?._id;
@@ -269,12 +267,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       return;
     }
     handleSend();
-  }, [activeEnvironment?._id, activeWorkspace, downloadPath, handleSend, isEventStream, request, sendThenSetFilePath]);
+  }, [activeEnvironment?._id, activeWorkspace, downloadPath, handleSend, request, sendThenSetFilePath]);
 
   useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
   const handleStop = () => {
-    if (isEventStream) {
+    if (isEventStreamRequest(request)) {
       window.main.curl.close({ requestId: request._id });
       return;
     }
