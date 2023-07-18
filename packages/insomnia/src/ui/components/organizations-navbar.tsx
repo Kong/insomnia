@@ -101,7 +101,14 @@ export const OrganizationsNav: FC = () => {
           >
             <DropdownItem>
               <ItemContent
-                icon="plus"
+                label="Join an organization"
+                onClick={() => {
+                  window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/teams`);
+                }}
+              />
+            </DropdownItem>
+            <DropdownItem>
+              <ItemContent
                 label="Create new organization"
                 onClick={() => {
                   window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/teams`);
