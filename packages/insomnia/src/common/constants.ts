@@ -475,8 +475,11 @@ export const RESPONSE_CODE_DESCRIPTIONS: Record<number, string> = {
   506: 'The server has an internal configuration error: transparent content negotiation for the request results in a circular reference.',
   507: 'The server has an internal configuration error: the chosen variant resource is configured to engage in transparent content negotiation itself, and is therefore not a proper end point in the negotiation process.',
   508: 'The server detected an infinite loop while processing the request.',
+  509: 'The server has exceeded the bandwidth specified by the server administrator; this is often used by shared hosting providers to limit the bandwidth of customers.',
   510: 'Further extensions to the request are required for the server to fulfill it.',
   511: 'The 511 status code indicates that the client needs to authenticate to gain network access.',
+  598: 'Used by some HTTP proxies to signal a network read timeout behind the proxy to a client in front of the proxy.',
+  599: 'An error used by some HTTP proxies to signal a network connect timeout behind the proxy to a client in front of the proxy.',
 };
 
 export const RESPONSE_CODE_REASONS: Record<number, string> = {
@@ -546,8 +549,11 @@ export const RESPONSE_CODE_REASONS: Record<number, string> = {
   506: 'Variant Also Negotiates',
   507: 'Insufficient Storage',
   508: 'Loop Detected',
+  509: 'Bandwidth Limit Exceeded',
   510: 'Not Extended',
   511: 'Network Authentication Required',
+  598: 'Network read timeout error',
+  599: 'Network Connect Timeout Error',
 };
 
 export const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';

@@ -12,53 +12,36 @@ interface Props {
 }
 
 export const StatusTag: FC<Props> = memo(({ statusMessage, statusCode, small, tooltipDelay }) => {
-  let colorClass;
   let statusCodeToDisplay: string | number = statusCode;
   const firstChar = (statusCode + '')[0] || '';
 
-  switch (firstChar) {
-    case '1':
-      colorClass = 'bg-info';
-      break;
+  const colorClass = {
+    '1': 'bg-info',
+    '2': 'bg-success',
+    '3': 'bg-surprise',
+    '4': 'bg-warning',
+    '5': 'bg-danger',
+    '0': 'bg-danger',
+  }[firstChar] || 'bg-surprise';
 
-    case '2':
-      colorClass = 'bg-success';
-      break;
-
-    case '3':
-      colorClass = 'bg-surprise';
-      break;
-
-    case '4':
-      colorClass = 'bg-warning';
-      break;
-
-    case '5':
-      colorClass = 'bg-danger';
-      break;
-
-    case '0':
-      colorClass = 'bg-danger';
-      statusCodeToDisplay = '';
-      break;
-
-    default:
-      colorClass = 'bg-surprise';
-      statusCodeToDisplay = '';
-      break;
+  if (firstChar === '0') {
+    statusCodeToDisplay = '';
   }
 
   const description = RESPONSE_CODE_DESCRIPTIONS[statusCode] || 'Unknown Response Code';
+  const isStatusMessageUnknown = statusMessage === 'Unknown' || statusMessage === 'unknown';
+  let statusMessageToShow = statusMessage || RESPONSE_CODE_REASONS[statusCode];
+  if (isStatusMessageUnknown) {
+    statusMessageToShow = RESPONSE_CODE_REASONS[statusCode] || statusMessage;
+  }
   return (
     <div
-      className={classnames('tag', colorClass, {
-        'tag--small': small,
-      })}
+      className={classnames('tag', colorClass, { 'tag--small': small })}
       data-testid="response-status-tag"
     >
       <Tooltip message={description} position="bottom" delay={tooltipDelay}>
         <strong>{statusCodeToDisplay}</strong>{' '}
-        {statusMessage || RESPONSE_CODE_REASONS[statusCode]}
+        {statusMessageToShow}
       </Tooltip>
     </div>
   );
