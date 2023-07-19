@@ -186,7 +186,10 @@
     "vkbeautify": "^0.99.1",
     "ws": "^8.13.0",
     "xmldom": "^0.6.0",
-    "xpath": "0.0.32"
+    "xpath": "0.0.32",
+    "tailwindcss": "^3.3.3",
+    "autoprefixer": "^10.4.2",
+    "postcss": "^8.4.6"
   },
   "dev": {
     "dev-server-port": 3334
