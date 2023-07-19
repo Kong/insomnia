@@ -84,6 +84,31 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     _type: request
+  - _id: req_e6fab3568ed54f9d83c92e2c8006e150
+    parentId: wrk_5b5ab67830944ffcbec47528366ef403
+    modified: 1636141084436
+    created: 1636141078601
+    url: http://127.0.0.1:4010/events
+    name: connects to event stream and shows ping response
+    description: ""
+    method: GET
+    body: {}
+    parameters: []
+    headers:
+      - id: pair_4c3fe3092f1245eab6d960c633d8be8c
+        name: Accept
+        value: text/event-stream
+        description: ""
+    authentication: {}
+    metaSortKey: -1636141078601
+    isPrivate: false
+    settingStoreCookies: true
+    settingSendCookies: true
+    settingDisableRenderRequestBody: false
+    settingEncodeUrl: true
+    settingRebuildPath: true
+    settingFollowRedirects: global
+    _type: request
   - _id: req_06a660bffe724e3fac14d7d09b4a5c9b
     parentId: wrk_5b5ab67830944ffcbec47528366ef403
     modified: 1636141067089
@@ -197,11 +222,4 @@ resources:
     settingRebuildPath: true
     settingFollowRedirects: global
     _type: request
-  - _id: spc_255904e6a8774d24b29c9c3718feb07f
-    parentId: wrk_5b5ab67830944ffcbec47528366ef403
-    modified: 1636140994428
-    created: 1636140994428
-    fileName: Smoke tests
-    contents: ""
-    contentType: yaml
-    _type: api_spec
+

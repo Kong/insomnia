@@ -1,8 +1,9 @@
+import crypto from 'node:crypto';
+
 import express from 'express';
 import { graphqlHTTP } from 'express-graphql';
 import { readFileSync } from 'fs';
 import { createServer } from 'https';
-import crypto from 'node:crypto';
 import { join } from 'path';
 
 import { basicAuthRouter } from './basic-auth';
@@ -42,7 +43,7 @@ gitlabApi(app);
 
 app.get('/delay/seconds/:duration', (req, res) => {
   const delaySec = Number.parseInt(req.params.duration || '2');
-  setTimeout(function() {
+  setTimeout(function () {
     res.send(`Delayed by ${delaySec} seconds`);
   }, delaySec * 1000);
 });
@@ -77,6 +78,12 @@ app.get('/events', (request, response) => {
     response,
   };
   subscribers.push(subscriber);
+  setInterval(() => {
+    // const id = subscriberId;
+    const data = JSON.stringify({ message: 'Time: ' + new Date().toISOString().slice(11, 19) });
+    // response.write('id: ' + id + '\n');
+    response.write('data: ' + data + '\n\n');
+  }, 1000);
   request.on('close', () => {
     console.log(`${subscriberId} Connection closed`);
     subscribers = subscribers.filter(sub => sub.id !== subscriberId);

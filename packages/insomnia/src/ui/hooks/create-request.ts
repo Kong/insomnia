@@ -1,4 +1,5 @@
 import {
+  CONTENT_TYPE_EVENT_STREAM,
   CONTENT_TYPE_GRAPHQL,
   CONTENT_TYPE_JSON,
   METHOD_GET,
@@ -46,7 +47,7 @@ export const setActiveRequest = async (
   });
 };
 
-export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL' | 'WebSocket';
+export type CreateRequestType = 'HTTP' | 'gRPC' | 'GraphQL' | 'WebSocket' | 'Event Stream';
 type RequestCreator = (input: {
   parentId: string;
   requestType: CreateRequestType;
@@ -83,6 +84,24 @@ export const createRequest: RequestCreator = async ({
           text: '',
         },
         name: 'New Request',
+      });
+      models.stats.incrementCreatedRequests();
+      setActiveRequest(request._id, workspaceId);
+      break;
+    }
+
+    case 'Event Stream': {
+      const request = await models.request.create({
+        parentId,
+        method: METHOD_GET,
+        url: 'http://localhost:4010/events',
+        headers: [
+          {
+            name: 'Accept',
+            value: CONTENT_TYPE_EVENT_STREAM,
+          },
+        ],
+        name: 'New Event Stream',
       });
       models.stats.incrementCreatedRequests();
       setActiveRequest(request._id, workspaceId);

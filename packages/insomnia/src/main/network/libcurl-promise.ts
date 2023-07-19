@@ -98,121 +98,18 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     fs.mkdirSync(responsesDir, { recursive: true });
 
     const responseBodyPath = path.join(responsesDir, uuidv4() + '.response');
-    const debugTimeline: ResponseTimelineEntry[] = [];
 
     const { requestId, req, finalUrl, settings, certificates, caCertficatePath, socketPath, authHeader } = options;
-    const curl = new Curl();
-
-    curl.setOpt(Curl.option.URL, finalUrl);
-    socketPath && curl.setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
-
-    curl.setOpt(Curl.option.VERBOSE, true); // Set all the basic options
-    curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
-    curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
-    // attempt to read CA Certificate PEM from disk, fallback to root certificates
     const caCert = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
-    curl.setOpt(Curl.option.CAINFO_BLOB, caCert);
 
-    certificates.forEach(validCert => {
-      const { passphrase, cert, key, pfx } = validCert;
-      if (cert) {
-        curl.setOpt(Curl.option.SSLCERT, cert);
-        curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
-        debugTimeline.push({ value: 'Adding SSL PEM certificate', name: 'Text', timestamp: Date.now() });
-      }
-      if (pfx) {
-        curl.setOpt(Curl.option.SSLCERT, pfx);
-        curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
-        debugTimeline.push({ value: 'Adding SSL P12 certificate', name: 'Text', timestamp: Date.now() });
-      }
-      if (key) {
-        curl.setOpt(Curl.option.SSLKEY, key);
-        debugTimeline.push({ value: 'Adding SSL KEY certificate', name: 'Text', timestamp: Date.now() });
-      }
-      if (passphrase) {
-        curl.setOpt(Curl.option.KEYPASSWD, passphrase);
-      }
+    const { curl, debugTimeline } = createConfiguredCurlInstance({
+      req,
+      finalUrl,
+      settings,
+      caCert,
+      certificates,
+      socketPath,
     });
-    const httpVersion = getHttpVersion(settings.preferredHttpVersion);
-    debugTimeline.push({ value: httpVersion.log, name: 'Text', timestamp: Date.now() });
-
-    if (httpVersion.curlHttpVersion) {
-      curl.setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
-    }
-
-    // Set maximum amount of redirects allowed
-    // NOTE: Setting this to -1 breaks some versions of libcurl
-    if (settings.maxRedirects > 0) {
-      curl.setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
-    }
-
-    if (!settings.proxyEnabled) {
-      curl.setOpt(Curl.option.PROXY, '');
-    } else {
-      const { protocol } = urlParse(req.url);
-      const { httpProxy, httpsProxy, noProxy } = settings;
-      const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
-      const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
-      debugTimeline.push({ value: `Enable network proxy for ${protocol || ''}`, name: 'Text', timestamp: Date.now() });
-      if (proxy) {
-        curl.setOpt(Curl.option.PROXY, proxy);
-        curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
-      }
-      if (noProxy) {
-        curl.setOpt(Curl.option.NOPROXY, noProxy);
-      }
-    }
-    const { timeout } = settings;
-    if (timeout <= 0) {
-      curl.setOpt(Curl.option.TIMEOUT_MS, 0);
-    } else {
-      curl.setOpt(Curl.option.TIMEOUT_MS, timeout);
-      debugTimeline.push({ value: `Enable timeout of ${timeout}ms`, name: 'Text', timestamp: Date.now() });
-    }
-    const { validateSSL } = settings;
-    if (!validateSSL) {
-      curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
-      curl.setOpt(Curl.option.SSL_VERIFYPEER, 0);
-    }
-    debugTimeline.push({ value: `${validateSSL ? 'Enable' : 'Disable'} SSL validation`, name: 'Text', timestamp: Date.now() });
-
-    const followRedirects = {
-      'off': false,
-      'on': true,
-      'global': settings.followRedirects,
-    }[req.settingFollowRedirects] ?? true;
-
-    curl.setOpt(Curl.option.FOLLOWLOCATION, followRedirects);
-
-    // Don't rebuild dot sequences in path
-    if (!req.settingRebuildPath) {
-      curl.setOpt(Curl.option.PATH_AS_IS, true);
-    }
-
-    if (req.settingSendCookies) {
-      const { cookieJar, cookies } = req;
-      curl.setOpt(Curl.option.COOKIEFILE, '');
-
-      for (const { name, value } of cookies) {
-        curl.setOpt(Curl.option.COOKIE, `${name}=${value}`);
-      }
-      // set-cookies from previous redirects
-      if (cookieJar.cookies.length) {
-        debugTimeline.push({ value: `Enable cookie sending with jar of ${cookieJar.cookies.length} cookie${cookieJar.cookies.length !== 1 ? 's' : ''}`, name: 'Text', timestamp: Date.now() });
-        for (const cookie of cookieJar.cookies) {
-          const setCookie = [
-            cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
-            cookie.hostOnly ? 'FALSE' : 'TRUE',
-            cookie.path,
-            cookie.secure ? 'TRUE' : 'FALSE',
-            cookie.expires ? Math.round(new Date(cookie.expires).getTime() / 1000) : 0,
-            cookie.key,
-            cookie.value,
-          ].join('\t');
-          curl.setOpt(Curl.option.COOKIELIST, setCookie);
-        }
-      }
-    }
     const { method, body } = req;
     // Only set CURLOPT_CUSTOMREQUEST if not HEAD or GET.
     // See https://curl.haxx.se/libcurl/c/CURLOPT_CUSTOMREQUEST.html
@@ -228,7 +125,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     const requestBody = parseRequestBody({ body, method });
     const requestBodyPath = await parseRequestBodyPath(body);
     const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
-    let requestFileDescriptor: number;
+    let requestFileDescriptor: number | undefined;
     const { authentication } = req;
     if (requestBodyPath) {
       // AWS IAM file upload not supported
@@ -241,39 +138,21 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       // read file into request and close file descriptor
       requestFileDescriptor = fs.openSync(requestBodyPath, 'r');
       curl.setOpt(Curl.option.READDATA, requestFileDescriptor);
-      curl.on('end', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
-      curl.on('error', () => closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath));
+      curl.on('end', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
+      curl.on('error', () => closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath));
     } else if (requestBody !== undefined) {
       curl.setOpt(Curl.option.POSTFIELDS, requestBody);
     }
 
-    // suppress node-libcurl default user-agent
-    curl.setOpt(Curl.option.USERAGENT, '');
-
     const headerStrings = parseHeaderStrings({ req, requestBody, requestBodyPath, finalUrl, authHeader });
     curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
-
-    const { headers } = req;
-    const { username, password, disabled } = authentication;
-    const isDigest = authentication.type === AUTH_DIGEST;
-    const isNLTM = authentication.type === AUTH_NTLM;
-    const isDigestOrNLTM = isDigest || isNLTM;
-    if (!hasAuthHeader(headers) && !disabled && isDigestOrNLTM) {
-      isDigest && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
-      isNLTM && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Ntlm);
-      curl.setOpt(Curl.option.USERNAME, username || '');
-      curl.setOpt(Curl.option.PASSWORD, password || '');
-    }
-    if (authentication.type === AUTH_NETRC) {
-      curl.setOpt(Curl.option.NETRC, CurlNetrc.Required);
-    }
 
     // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
     const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
     // cancel request by id map
     cancelCurlRequestHandlers[requestId] = () => {
       if (requestFileDescriptor && responseBodyPath) {
-        closeReadFunction(requestFileDescriptor, isMultipart, requestBodyPath);
+        closeReadFunction(isMultipart, requestFileDescriptor, requestBodyPath);
       }
       curl.close();
     };
@@ -281,6 +160,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     // set up response writer
     let responseBodyBytes = 0;
     curl.setOpt(Curl.option.WRITEFUNCTION, buffer => {
+      console.log('write', buffer.length);
       responseBodyBytes += buffer.length;
       responseBodyWriteStream.write(buffer);
       return buffer.length;
@@ -367,8 +247,155 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
   }
 });
 
-const closeReadFunction = (fd: number, isMultipart: boolean, path?: string) => {
-  fs.closeSync(fd);
+export const createConfiguredCurlInstance = ({
+  req,
+  finalUrl,
+  settings,
+  caCert,
+  certificates,
+  socketPath,
+}: {
+  req: RequestUsedHere;
+  finalUrl: string;
+  settings: SettingsUsedHere;
+  certificates: ClientCertificate[];
+  caCert: string;
+  socketPath?: string;
+}) => {
+  const debugTimeline: ResponseTimelineEntry[] = [];
+  const curl = new Curl();
+  curl.setOpt(Curl.option.URL, finalUrl);
+  socketPath && curl.setOpt(Curl.option.UNIX_SOCKET_PATH, socketPath);
+
+  curl.setOpt(Curl.option.VERBOSE, true); // Set all the basic options
+  curl.setOpt(Curl.option.NOPROGRESS, true); // True so debug function works
+  curl.setOpt(Curl.option.ACCEPT_ENCODING, ''); // True so curl doesn't print progress
+  // attempt to read CA Certificate PEM from disk, fallback to root certificates
+  curl.setOpt(Curl.option.CAINFO_BLOB, caCert);
+  certificates.forEach(validCert => {
+    const { passphrase, cert, key, pfx } = validCert;
+    if (cert) {
+      curl.setOpt(Curl.option.SSLCERT, cert);
+      curl.setOpt(Curl.option.SSLCERTTYPE, 'PEM');
+      debugTimeline.push({ value: 'Adding SSL PEM certificate', name: 'Text', timestamp: Date.now() });
+    }
+    if (pfx) {
+      curl.setOpt(Curl.option.SSLCERT, pfx);
+      curl.setOpt(Curl.option.SSLCERTTYPE, 'P12');
+      debugTimeline.push({ value: 'Adding SSL P12 certificate', name: 'Text', timestamp: Date.now() });
+    }
+    if (key) {
+      curl.setOpt(Curl.option.SSLKEY, key);
+      debugTimeline.push({ value: 'Adding SSL KEY certificate', name: 'Text', timestamp: Date.now() });
+    }
+    if (passphrase) {
+      curl.setOpt(Curl.option.KEYPASSWD, passphrase);
+    }
+  });
+  const httpVersion = getHttpVersion(settings.preferredHttpVersion);
+  debugTimeline.push({ value: httpVersion.log, name: 'Text', timestamp: Date.now() });
+
+  if (httpVersion.curlHttpVersion) {
+    curl.setOpt(Curl.option.HTTP_VERSION, httpVersion.curlHttpVersion);
+  }
+
+  // Set maximum amount of redirects allowed
+  // NOTE: Setting this to -1 breaks some versions of libcurl
+  if (settings.maxRedirects > 0) {
+    curl.setOpt(Curl.option.MAXREDIRS, settings.maxRedirects);
+  }
+
+  if (!settings.proxyEnabled) {
+    curl.setOpt(Curl.option.PROXY, '');
+  } else {
+    const { protocol } = urlParse(req.url);
+    const { httpProxy, httpsProxy, noProxy } = settings;
+    const proxyHost = protocol === 'https:' ? httpsProxy : httpProxy;
+    const proxy = proxyHost ? setDefaultProtocol(proxyHost) : null;
+    debugTimeline.push({ value: `Enable network proxy for ${protocol || ''}`, name: 'Text', timestamp: Date.now() });
+    if (proxy) {
+      curl.setOpt(Curl.option.PROXY, proxy);
+      curl.setOpt(Curl.option.PROXYAUTH, CurlAuth.Any);
+    }
+    if (noProxy) {
+      curl.setOpt(Curl.option.NOPROXY, noProxy);
+    }
+  }
+  const { timeout } = settings;
+  if (timeout <= 0) {
+    curl.setOpt(Curl.option.TIMEOUT_MS, 0);
+  } else {
+    curl.setOpt(Curl.option.TIMEOUT_MS, timeout);
+    debugTimeline.push({ value: `Enable timeout of ${timeout}ms`, name: 'Text', timestamp: Date.now() });
+  }
+  const { validateSSL } = settings;
+  if (!validateSSL) {
+    curl.setOpt(Curl.option.SSL_VERIFYHOST, 0);
+    curl.setOpt(Curl.option.SSL_VERIFYPEER, 0);
+  }
+  debugTimeline.push({ value: `${validateSSL ? 'Enable' : 'Disable'} SSL validation`, name: 'Text', timestamp: Date.now() });
+
+  const followRedirects = {
+    'off': false,
+    'on': true,
+    'global': settings.followRedirects,
+  }[req.settingFollowRedirects] ?? true;
+
+  curl.setOpt(Curl.option.FOLLOWLOCATION, followRedirects);
+
+  // Don't rebuild dot sequences in path
+  if (!req.settingRebuildPath) {
+    curl.setOpt(Curl.option.PATH_AS_IS, true);
+  }
+
+  if (req.settingSendCookies) {
+    const { cookieJar, cookies } = req;
+    curl.setOpt(Curl.option.COOKIEFILE, '');
+
+    for (const { name, value } of cookies) {
+      curl.setOpt(Curl.option.COOKIE, `${name}=${value}`);
+    }
+    // set-cookies from previous redirects
+    if (cookieJar.cookies.length) {
+      debugTimeline.push({ value: `Enable cookie sending with jar of ${cookieJar.cookies.length} cookie${cookieJar.cookies.length !== 1 ? 's' : ''}`, name: 'Text', timestamp: Date.now() });
+      for (const cookie of cookieJar.cookies) {
+        const setCookie = [
+          cookie.httpOnly ? `#HttpOnly_${cookie.domain}` : cookie.domain,
+          cookie.hostOnly ? 'FALSE' : 'TRUE',
+          cookie.path,
+          cookie.secure ? 'TRUE' : 'FALSE',
+          cookie.expires ? Math.round(new Date(cookie.expires).getTime() / 1000) : 0,
+          cookie.key,
+          cookie.value,
+        ].join('\t');
+        curl.setOpt(Curl.option.COOKIELIST, setCookie);
+      }
+    }
+  }
+
+  // suppress node-libcurl default user-agent
+  curl.setOpt(Curl.option.USERAGENT, '');
+  const { headers, authentication } = req;
+  const { username, password, disabled } = authentication;
+  const isDigest = authentication.type === AUTH_DIGEST;
+  const isNLTM = authentication.type === AUTH_NTLM;
+  const isDigestOrNLTM = isDigest || isNLTM;
+  if (!hasAuthHeader(headers) && !disabled && isDigestOrNLTM) {
+    isDigest && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
+    isNLTM && curl.setOpt(Curl.option.HTTPAUTH, CurlAuth.Ntlm);
+    curl.setOpt(Curl.option.USERNAME, username || '');
+    curl.setOpt(Curl.option.PASSWORD, password || '');
+  }
+  if (authentication.type === AUTH_NETRC) {
+    curl.setOpt(Curl.option.NETRC, CurlNetrc.Required);
+  }
+  return { curl, debugTimeline };
+};
+
+const closeReadFunction = (isMultipart: boolean, fd?: number, path?: string) => {
+  if (fd) {
+    fs.closeSync(fd);
+  }
   // NOTE: multipart files are combined before sending, so this file is deleted after
   // alt implementation to send one part at a time https://github.com/JCMais/node-libcurl/blob/develop/examples/04-multi.js
   if (isMultipart && path) {

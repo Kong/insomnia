@@ -13,6 +13,7 @@ import { exportAllWorkspaces } from '../export';
 import { insomniaFetch } from '../insomniaFetch';
 import installPlugin from '../install-plugin';
 import { axiosRequest } from '../network/axios-request';
+import { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
 import { WebSocketBridgeAPI } from '../network/websocket';
 import { gRPCBridgeAPI } from './grpc';
@@ -34,6 +35,7 @@ export interface MainBridgeAPI {
   on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => () => void;
   webSocket: WebSocketBridgeAPI;
   grpc: gRPCBridgeAPI;
+  curl: CurlBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   axiosRequest: typeof axiosRequest;

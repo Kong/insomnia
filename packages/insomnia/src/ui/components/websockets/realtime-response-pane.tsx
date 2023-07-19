@@ -4,16 +4,18 @@ import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { getSetCookieHeaders } from '../../../common/misc';
+import { CurlEvent } from '../../../main/network/curl';
 import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
 import { WebSocketEvent } from '../../../main/network/websocket';
+import { Response } from '../../../models/response';
 import { WebSocketResponse } from '../../../models/websocket-response';
-import { useWebSocketConnectionEvents } from '../../context/websocket-client/use-ws-connection-events';
+import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
 import { selectActiveResponse } from '../../redux/selectors';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
-import { EmptyStatePane } from '../panes/empty-state-pane';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
+import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
 import { SvgIcon } from '../svg-icon';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -82,46 +84,36 @@ const PaddedButton = styled('button')({
   padding: 'var(--padding-sm)',
 });
 
-export const WebSocketResponsePane: FC<{ requestId: string }> =
+export const RealtimeResponsePane: FC<{ requestId: string }> =
   ({
     requestId,
   }) => {
-    const response = useSelector(selectActiveResponse) as WebSocketResponse | null;
+    const response = useSelector(selectActiveResponse) as WebSocketResponse | Response | null;
     if (!response) {
       return (
         <Pane type="response">
           <PaneHeader />
-          <EmptyStatePane
-            icon={<i className="fa fa-paper-plane" />}
-            documentationLinks={[
-              {
-                title: 'Introduction to WebSockets in Insomnia',
-                url: 'https://docs.insomnia.rest/insomnia/requests',
-              },
-            ]}
-            title="Enter a URL and connect to a WebSocket server to start sending data"
-            secondaryAction="Select a payload type to send data to the connection"
-          />
+          <PlaceholderResponsePane />
         </Pane>
       );
     }
-    return <WebSocketActiveResponsePane requestId={requestId} response={response} />;
+    return <RealtimeActiveResponsePane requestId={requestId} response={response} />;
   };
 
-const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketResponse }> = ({
+const RealtimeActiveResponsePane: FC<{ requestId: string; response: WebSocketResponse | Response }> = ({
   requestId,
   response,
 }) => {
-  const [selectedEvent, setSelectedEvent] = useState<WebSocketEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CurlEvent | WebSocketEvent | null>(null);
   const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
-
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [clearEventsBefore, setClearEventsBefore] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [eventType, setEventType] = useState<WebSocketEvent['type']>();
-  const allEvents = useWebSocketConnectionEvents({ responseId: response._id });
-  const handleSelection = (event: WebSocketEvent) => {
-    setSelectedEvent((selected: WebSocketEvent | null) => selected?._id === event._id ? null : event);
+  const [eventType, setEventType] = useState<CurlEvent['type']>();
+  const protocol = response.type === 'WebSocketResponse' ? 'webSocket' : 'curl';
+  const allEvents = useRealtimeConnectionEvents({ responseId: response._id, protocol });
+  const handleSelection = (event: CurlEvent | WebSocketEvent) => {
+    setSelectedEvent((selected: CurlEvent | WebSocketEvent | null) => selected?._id === event._id ? null : event);
   };
 
   const events = allEvents.filter(event => {
@@ -163,12 +155,12 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      // @TODO: this needs to fs.watch or tail the file, instead of reading the whole thing on every event.
-      // or alternatively a throttle to keep it from reading too frequently
       const rawBuffer = await fs.promises.readFile(response.timelinePath);
       const timelineString = rawBuffer.toString();
       const timelineParsed = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e));
-      isMounted && setTimeline(timelineParsed);
+      if (isMounted) {
+        setTimeline(timelineParsed);
+      }
     };
     fn();
     return () => {
@@ -191,7 +183,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
           className="tall pane__header__right"
         />
       </PaneHeader>
-      <Tabs aria-label="Websocket response pane tabs">
+      <Tabs aria-label="Curl response pane tabs">
         <TabItem key="events" title="Events">
           <PaneBodyContent>
             {response.error ? <ResponseErrorViewer url={response.url} error={response.error} />
@@ -205,7 +197,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
                       gap: 'var(--padding-sm)',
                     }}
                   >
-                    <select onChange={e => setEventType(e.currentTarget.value as WebSocketEvent['type'])}>
+                    <select onChange={e => setEventType(e.currentTarget.value as CurlEvent['type'])}>
                       <option value="">All</option>
                       <option value="message">Message</option>
                       <option value="open">Open</option>
@@ -304,6 +296,7 @@ const WebSocketActiveResponsePane: FC<{ requestId: string; response: WebSocketRe
           <ResponseTimelineViewer
             key={response._id}
             timeline={timeline}
+            pinToBottom={true}
           />
         </TabItem>
       </Tabs>

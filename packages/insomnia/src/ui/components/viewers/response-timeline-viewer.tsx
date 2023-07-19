@@ -5,9 +5,10 @@ import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
 interface Props {
   timeline: ResponseTimelineEntry[];
+  pinToBottom?: boolean;
 }
 
-export const ResponseTimelineViewer: FC<Props> = ({ timeline }) => {
+export const ResponseTimelineViewer: FC<Props> = ({ timeline, pinToBottom }) => {
   const editorRef = useRef<CodeEditorHandle>(null);
   const rows = timeline
     .map(({ name, value }, i, all) => {
@@ -49,6 +50,7 @@ export const ResponseTimelineViewer: FC<Props> = ({ timeline }) => {
       defaultValue={rows}
       className="pad-left"
       mode="curl"
+      pinToBottom={pinToBottom}
     />
   );
 };

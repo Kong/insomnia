@@ -4,6 +4,7 @@ import React, { FC, useRef } from 'react';
 import { useMeasure } from 'react-use';
 import styled from 'styled-components';
 
+import { CurlEvent } from '../../../main/network/curl';
 import { WebSocketEvent } from '../../../main/network/websocket';
 import { SvgIcon, SvgIconProps } from '../svg-icon';
 
@@ -13,9 +14,9 @@ const Timestamp: FC<{ time: Date | number }> = ({ time }) => {
 };
 
 interface Props {
-  events: WebSocketEvent[];
+  events: WebSocketEvent[] | CurlEvent[];
   selectionId?: string;
-  onSelect: (event: WebSocketEvent) => void;
+  onSelect: (event: WebSocketEvent | CurlEvent) => void;
 }
 
 const Divider = styled('div')({
@@ -79,7 +80,7 @@ const EventIconCell = styled('div')({
   padding: 'var(--padding-xs)',
 });
 
-function getIcon(event: WebSocketEvent): SvgIconProps['icon'] {
+function getIcon(event: WebSocketEvent | CurlEvent): SvgIconProps['icon'] {
   switch (event.type) {
     case 'message': {
       if (event.direction === 'OUTGOING') {
@@ -111,7 +112,7 @@ const EventMessageCell = styled('div')({
   padding: 'var(--padding-xs)',
 });
 
-const getMessage = (event: WebSocketEvent): string => {
+const getMessage = (event: WebSocketEvent | CurlEvent): string => {
   switch (event.type) {
     case 'message': {
       if ('data' in event && typeof event.data === 'object') {

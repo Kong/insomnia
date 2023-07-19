@@ -136,6 +136,9 @@ const openWebSocketConnection = async (
   const caCertificate = (caCertficatePath && (await fs.promises.readFile(caCertficatePath)).toString()) || tls.rootCertificates.join('\n');
 
   try {
+    if (!options.url) {
+      throw new Error('URL is required');
+    }
     const readyStateChannel = `webSocket.${request._id}.readyState`;
 
     const reduceArrayToLowerCaseKeyedDictionary = (acc: { [key: string]: string }, { name, value }: BaseWebSocketRequest['headers'][0]) =>
@@ -249,8 +252,8 @@ const openWebSocketConnection = async (
       };
 
       const settings = await models.settings.getOrCreate();
-      models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
+      const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
       if (request.settingStoreCookies) {
         const setCookieStrings: string[] = getSetCookieHeaders(responseHeaders).map(h => h.value);
@@ -293,8 +296,8 @@ const openWebSocketConnection = async (
         settingStoreCookies: request.settingStoreCookies,
       };
       const settings = await models.settings.getOrCreate();
-      models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: null });
+      const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+      models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
       deleteRequestMaps(request._id, `Unexpected response ${incomingMessage.statusCode}`);
     });
 
@@ -380,8 +383,8 @@ const createErrorResponse = async (responseId: string, requestId: string, enviro
     statusMessage: 'Error',
     error: message,
   };
-  models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
-  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: null });
+  const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
+  models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: res._id });
 };
 
 const deleteRequestMaps = async (requestId: string, message: string, event?: WebSocketCloseEvent | WebSocketErrorEvent) => {

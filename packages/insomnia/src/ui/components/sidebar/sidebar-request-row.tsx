@@ -8,12 +8,12 @@ import { getMethodOverrideHeader } from '../../../common/misc';
 import { stats, workspaceMeta } from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
-import { isRequest, Request } from '../../../models/request';
+import { isEventStreamRequest, isRequest, Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
-import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
 import { createRequest, updateRequestMetaByParentId } from '../../hooks/create-request';
+import { ReadyState, useCurlReadyState, useWSReadyState } from '../../hooks/use-ready-state';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
 import type { DropdownHandle } from '../base/dropdown';
 import { Editable } from '../base/editable';
@@ -242,6 +242,10 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       methodTag = <GrpcTag />;
     } else if (isWebSocketRequest(request)) {
       methodTag = <WebSocketTag />;
+    } else if (isEventStreamRequest(request)) {
+      methodTag = (<div className="tag tag--no-bg tag--small">
+        <span className="tag__inner" style={{ color: 'var(--color-info)' }}>SSE</span>
+      </div>);
     } else if (isRequest(request)) {
       methodTag = <MethodTag method={request.method} override={methodOverrideValue} />;
     }
@@ -276,9 +280,10 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
                   />
                 )}
               />
-              {isWebSocketRequest(request) && (
+              {isWebSocketRequest(request) ?
                 <WebSocketSpinner requestId={request._id} />
-              )}
+                : <EventStreamSpinner requestId={request._id} />
+              }
             </div>
           </button>
           <div className="sidebar__actions">
@@ -330,4 +335,9 @@ export const SidebarRequestRow = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, t
 const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useWSReadyState(requestId);
   return readyState === ReadyState.OPEN ? <ConnectionCircle data-testid="WebSocketSpinner__Connected" /> : null;
+};
+
+const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
+  const readyState = useCurlReadyState(requestId);
+  return readyState ? <ConnectionCircle data-testid="EventStreamSpinner__Connected" /> : null;
 };

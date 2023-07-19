@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useInterval } from 'react-use';
 
-import { WebSocketEvent } from '../../../main/network/websocket';
+import { CurlEvent } from '../../main/network/curl';
+import { WebSocketEvent } from '../../main/network/websocket';
 
-export function useWebSocketConnectionEvents({ responseId }: { responseId: string }) {
-  const [events, setEvents] = useState<WebSocketEvent[]>([]);
+export function useRealtimeConnectionEvents({ responseId, protocol }: { responseId: string; protocol: 'curl' | 'webSocket' }) {
+  const [events, setEvents] = useState<CurlEvent[] | WebSocketEvent[]>([]);
 
   useEffect(() => {
     setEvents([]);
@@ -14,7 +15,7 @@ export function useWebSocketConnectionEvents({ responseId }: { responseId: strin
     () => {
       let isMounted = true;
       const fn = async () => {
-        const allEvents = await window.main.webSocket.event.findMany({ responseId });
+        const allEvents = await window.main[protocol].event.findMany({ responseId });
         if (isMounted) {
           setEvents(allEvents);
         }

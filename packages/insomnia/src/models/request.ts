@@ -115,6 +115,10 @@ export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => (
   model.type === type
 );
 
+export const isEventStreamRequest = (model: Pick<BaseModel, 'type'>) => (
+  isRequest(model) && model.headers?.find(h => h.name === 'Accept')?.value === 'text/event-stream'
+);
+
 export function init(): BaseRequest {
   return {
     url: '',

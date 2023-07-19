@@ -8,7 +8,7 @@ import * as models from '../../../models';
 import { Environment } from '../../../models/environment';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
-import { ReadyState, useWSReadyState } from '../../context/websocket-client/use-ws-ready-state';
+import { ReadyState, useWSReadyState } from '../../hooks/use-ready-state';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveRequestMeta, selectSettings } from '../../redux/selectors';
 import { TabItem, Tabs } from '../base/tabs';
@@ -36,19 +36,18 @@ const SendMessageForm = styled.form({
   position: 'relative',
   boxSizing: 'border-box',
 });
-const SendButton = styled.button<{ isConnected: boolean }>(({ isConnected }) =>
-  ({
-    padding: '0 var(--padding-md)',
-    marginLeft: 'var(--padding-xs)',
-    height: '100%',
-    border: '1px solid var(--hl-lg)',
-    borderRadius: 'var(--radius-md)',
-    background: isConnected ? 'var(--color-surprise)' : 'inherit',
-    color: isConnected ? 'var(--color-font-surprise)' : 'inherit',
-    ':hover': {
-      filter: 'brightness(0.8)',
-    },
-  }));
+const SendButton = styled.button<{ isConnected: boolean }>(({ isConnected }) => ({
+  padding: '0 var(--padding-md)',
+  marginLeft: 'var(--padding-xs)',
+  height: '100%',
+  border: '1px solid var(--hl-lg)',
+  borderRadius: 'var(--radius-md)',
+  background: isConnected ? 'var(--color-surprise)' : 'inherit',
+  color: isConnected ? 'var(--color-font-surprise)' : 'inherit',
+  ':hover': {
+    filter: 'brightness(0.8)',
+  },
+}));
 
 const PaneSendButton = styled.div({
   display: 'flex',

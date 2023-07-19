@@ -44,11 +44,18 @@ export const SidebarCreateDropdown = () => {
     >
       <DropdownItem aria-label='HTTP Request'>
         <ItemContent
-          // dataTestId='CreateHttpRequest'
           icon="plus-circle"
           label="HTTP Request"
           hint={hotKeyRegistry.request_createHTTP}
           onClick={() => create('HTTP')}
+        />
+      </DropdownItem>
+
+      <DropdownItem aria-label='Event Stream Request'>
+        <ItemContent
+          icon="plus-circle"
+          label="Event Stream Request"
+          onClick={() => create('Event Stream')}
         />
       </DropdownItem>
 
