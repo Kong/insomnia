@@ -63,7 +63,6 @@ export const init = async () => {
     console.log(`[updater] Downloaded ${releaseName}`);
     _sendUpdateStatus('Performing backup...');
     await exportAllWorkspaces();
-    await delay(1000 * 10); // Workaround early restart issues
     _sendUpdateStatus('Updated (Restart Required)');
 
     dialog.showMessageBox({
