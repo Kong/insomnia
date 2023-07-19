@@ -180,7 +180,7 @@ const Login = () => {
       </Button>
       <p
         style={{
-          color: 'var(--hl-xl)',
+          color: 'rgba(var(--color-font-rgb), 0.8)',
           fontSize: 'var(--font-size-sm)',
           textAlign: 'center',
         }}
@@ -188,7 +188,7 @@ const Login = () => {
         By signing up, you agree to the{' '}
         <a
           style={{
-            color: 'var(--hl-xl)',
+            color: 'rgba(var(--color-font-rgb), 0.8)',
           }}
           target="_blank"
           href="https://insomnia.rest/terms"
@@ -199,7 +199,7 @@ const Login = () => {
         and{' '}
         <a
           style={{
-            color: 'var(--hl-xl)',
+            color: 'rgba(var(--color-font-rgb), 0.8)',
           }}
           target="_blank"
           href="https://insomnia.rest/privacy"

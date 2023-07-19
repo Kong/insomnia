@@ -78,7 +78,7 @@ const Authorize = () => {
         </h4>
         <p
           style={{
-            color: 'var(--hl-xl)',
+            color: 'rgba(var(--color-font-rgb), 0.8)',
           }}
         >
           If your browser did not open, copy and paste the following URL into your browser:
@@ -105,7 +105,7 @@ const Authorize = () => {
         </div>
         <p
           style={{
-            color: 'var(--hl-xl)',
+            color: 'rgba(var(--color-font-rgb), 0.8)',
           }}
         >
           If your browser does not open the Insomnia app automatically you can manually add the generated token here:
