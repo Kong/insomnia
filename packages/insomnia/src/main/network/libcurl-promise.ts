@@ -160,7 +160,6 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     // set up response writer
     let responseBodyBytes = 0;
     curl.setOpt(Curl.option.WRITEFUNCTION, buffer => {
-      console.log('write', buffer.length);
       responseBodyBytes += buffer.length;
       responseBodyWriteStream.write(buffer);
       return buffer.length;
