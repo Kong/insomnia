@@ -1,13 +1,13 @@
 import { Readable } from 'node:stream';
 
-import { Curl, CurlFeature, CurlInfoDebug, HeaderInfo } from '@getinsomnia/node-libcurl';
+import { Curl, CurlFeature, HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { ipcMain } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import tls from 'tls';
 import { v4 as uuidV4 } from 'uuid';
 
-import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
+import { generateId, getSetCookieHeaders } from '../../common/misc';
 import * as models from '../../models';
 import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
