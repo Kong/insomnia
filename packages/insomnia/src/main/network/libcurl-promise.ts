@@ -122,8 +122,8 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.setOpt(Curl.option.CUSTOMREQUEST, method);
     }
 
-    const requestBody = parseRequestBody({ body, method });
     const requestBodyPath = await parseRequestBodyPath(body);
+    const requestBody = parseRequestBody({ body, method });
     const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
     let requestFileDescriptor: number | undefined;
     const { authentication } = req;

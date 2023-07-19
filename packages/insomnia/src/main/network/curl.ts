@@ -18,6 +18,7 @@ import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { createConfiguredCurlInstance } from './libcurl-promise';
+import { parseHeaderStrings } from './parse-header-strings';
 
 export interface CurlConnection extends Curl {
   _id: string;
@@ -147,7 +148,9 @@ const openCurlConnection = async (
     debugTimeline.forEach(entry => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(entry) + '\n'));
     CurlConnections.set(options.requestId, curl);
     CurlConnections.get(options.requestId)?.enable(CurlFeature.StreamResponse);
-
+    // TODO: add authHeader and request body?
+    const headerStrings = parseHeaderStrings({ req: request, finalUrl: options.url });
+    CurlConnections.get(options.requestId)?.setOpt(Curl.option.HTTPHEADER, headerStrings);
     CurlConnections.get(options.requestId)?.on('error', async (error, errorCode) => {
       const errorEvent: CurlErrorEvent = {
         _id: uuidV4(),
