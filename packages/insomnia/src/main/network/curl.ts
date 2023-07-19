@@ -329,7 +329,6 @@ const findMany = async (
     return [];
   }
   const body = await fs.promises.readFile(response.bodyPath);
-  // TODO: stop this being called with regular response bodies
   return body.toString().split('\n').filter(e => e?.trim())
     // Parse the message
     .map(e => JSON.parse(e))

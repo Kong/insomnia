@@ -155,8 +155,6 @@ const RealtimeActiveResponsePane: FC<{ requestId: string; response: WebSocketRes
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      // @TODO: this needs to fs.watch or tail the file, instead of reading the whole thing on every event.
-      // or alternatively a throttle to keep it from reading too frequently
       const rawBuffer = await fs.promises.readFile(response.timelinePath);
       const timelineString = rawBuffer.toString();
       const timelineParsed = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e));
