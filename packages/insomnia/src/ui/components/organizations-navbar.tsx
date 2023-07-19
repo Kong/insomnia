@@ -3,7 +3,7 @@ import { Link, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import { RootLoaderData } from '../routes/root';
+import { OrganizationLoaderData } from '../routes/organization';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { SvgIcon } from './svg-icon';
 import { Tooltip } from './tooltip';
@@ -69,7 +69,7 @@ const getNameInitials = (name: string) => {
 };
 
 export const OrganizationsNav: FC = () => {
-  const { organizations } = useRouteLoaderData('root') as RootLoaderData;
+  const { organizations } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { organizationId } = useParams() as { organizationId:string };
 
   return (

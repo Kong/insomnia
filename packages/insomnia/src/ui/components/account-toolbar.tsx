@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import * as session from '../../account/session';
 import { getAccountId } from '../../account/session';
 import { usePresenceContext } from '../context/app/presence-context';
-import { RootLoaderData } from '../routes/root';
+import { OrganizationLoaderData } from '../routes/organization';
 import { Avatar, AvatarGroup } from './avatar';
 import {
   Dropdown,
@@ -24,7 +24,7 @@ const Toolbar = styled.div({
 
 export const AccountToolbar = () => {
   const { presence } = usePresenceContext();
-  const data = useRouteLoaderData('root') as RootLoaderData;
+  const data = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { projectId, workspaceId } = useParams() as {
     workspaceId: string;
     projectId: string;

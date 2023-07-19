@@ -67,7 +67,6 @@ const router = createMemoryRouter(
     {
       path: '/',
       id: 'root',
-      loader: async (...args) => (await import('./routes/root')).loader(...args),
       element: <Root />,
       errorElement: <ErrorRoute />,
       children: [
@@ -86,6 +85,7 @@ const router = createMemoryRouter(
         },
         {
           path: 'organization',
+          id: '/organization',
           loader: async (...args) => (await import('./routes/organization')).loader(...args),
           element: <Suspense fallback={<AppLoadingIndicator />}><Organization /></Suspense>,
           children: [

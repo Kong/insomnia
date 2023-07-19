@@ -1,24 +1,18 @@
 import type { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
 import {
-  LoaderFunction,
   Outlet,
   useFetcher,
   useParams,
 } from 'react-router-dom';
 
-import { getCurrentSessionId } from '../../account/session';
 import { isDevelopment } from '../../common/constants';
 import * as models from '../../models';
-import { Organization } from '../../models/organization';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
 import { exchangeCodeForToken } from '../../sync/git/github-oauth-provider';
 import { exchangeCodeForGitLabToken } from '../../sync/git/gitlab-oauth-provider';
-import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import { MergeConflict } from '../../sync/types';
-import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { ErrorBoundary } from '../components/error-boundary';
 import { showError, showModal } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
@@ -29,110 +23,12 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../components/modals/settings-modal';
-import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { Toast } from '../components/toast';
 import { AppHooks } from '../containers/app-hooks';
 import { AIProvider } from '../context/app/ai-context';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { PresenceProvider } from '../context/app/presence-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
-import Modals from './modals';
-
-export interface RootLoaderData {
-  organizations: Organization[];
-  user: {
-    name: string;
-    picture: string;
-  };
-}
-
-export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
-  // Load all projects if the user is logged in
-  const sessionId = getCurrentSessionId();
-  if (sessionId) {
-    // await migrateLocalToCloudProjects();
-    try {
-      let vcs = getVCS();
-      if (!vcs) {
-        const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
-
-        console.log('Initializing VCS');
-        vcs = await initVCS(driver, async conflicts => {
-          return new Promise(resolve => {
-            showModal(SyncMergeModal, {
-              conflicts,
-              handleDone: (conflicts?: MergeConflict[]) => resolve(conflicts || []),
-            });
-          });
-        });
-      }
-
-      // Teams are now organizations
-      const teams = await window.main.insomniaFetch<{
-        created: string;
-        id: string;
-        ownerAccountId: string;
-        name: string;
-        isPersonal: boolean;
-        accounts: {
-          firstName: string;
-          lastName: string;
-          email: string;
-          id: string;
-          isAdmin: boolean;
-          dateAccepted: string;
-        }[];
-      }[]>({
-        method: 'GET',
-        path: '/api/teams',
-        sessionId,
-      });
-
-      const user = await window.main.insomniaFetch<{
-        name: string;
-        picture: string;
-      }>({
-        method: 'GET',
-        path: '/v1/user/profile',
-        sessionId,
-      });
-
-      return {
-        user,
-        organizations: teams.map(team => ({
-          _id: team.id,
-          name: team.name,
-          isPersonal: team.isPersonal,
-        })).sort((a, b) => a.name.localeCompare(b.name)).sort((a, b) => {
-          if (a.isPersonal && !b.isPersonal) {
-            return -1;
-          } else if (!a.isPersonal && b.isPersonal) {
-            return 1;
-          } else {
-            return 0;
-          }
-        }),
-      };
-    } catch (err) {
-      console.log('Failed to load Teams', err);
-      return {
-        user: {
-          name: '',
-          picture: '',
-        },
-        organizations: [],
-      };
-    }
-  }
-
-  return {
-    user: {
-      name: '',
-      picture: '',
-    },
-    organizations: [],
-  };
-};
 
 const Root = () => {
   const [importUri, setImportUri] = useState('');
@@ -299,7 +195,6 @@ const Root = () => {
           <AppHooks />
           <div className="app">
             <ErrorBoundary showAlert>
-              <Modals />
               {/* triggered by insomnia://app/import */}
               {importUri && (
                 <ImportModal

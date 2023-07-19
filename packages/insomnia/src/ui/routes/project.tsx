@@ -66,7 +66,7 @@ import { SidebarLayout } from '../components/sidebar-layout';
 import { Button } from '../components/themed-button/button';
 import { WorkspaceCard } from '../components/workspace-card';
 import { usePresenceContext } from '../context/app/presence-context';
-import { RootLoaderData } from './root';
+import { OrganizationLoaderData } from './organization';
 
 async function getAllTeamProjects(teamId: string) {
   const sessionId = getCurrentSessionId() || '';
@@ -281,7 +281,7 @@ const OrganizationProjectsSidebar: FC<{
   createNewDocument,
 }) => {
   const createNewProjectFetcher = useFetcher();
-  const { organizations } = useRouteLoaderData('root') as RootLoaderData;
+  const { organizations } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const navigate = useNavigate();
   const submit = useSubmit();
   const [searchParams] = useSearchParams();
@@ -628,7 +628,7 @@ interface WorkspaceWithMetadata {
   specFormat: 'openapi' | 'swagger' | null;
   name: string;
   apiSpec: ApiSpec | null;
-  specFormatVersion: string | null;
+specFormatVersion: string | null;
   workspace: Workspace;
 }
 
