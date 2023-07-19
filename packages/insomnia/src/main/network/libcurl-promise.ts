@@ -88,6 +88,7 @@ export interface ResponsePatch {
   url?: string;
 }
 const getDataDirectory = () => process.env.INSOMNIA_DATA_PATH || electron.app.getPath('userData');
+const responseBodyFileStreams = new Map<string, fs.WriteStream>();
 
 // NOTE: this is a dictionary of functions to close open listeners
 const cancelCurlRequestHandlers: Record<string, () => void> = {};
@@ -148,7 +149,8 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.setOpt(Curl.option.HTTPHEADER, headerStrings);
 
     // Create instance and handlers, poke value options in, set up write and debug callbacks, listen for events
-    const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
+    responseBodyFileStreams.set(options.requestId, fs.createWriteStream(responseBodyPath));
+
     // cancel request by id map
     cancelCurlRequestHandlers[requestId] = () => {
       if (requestFileDescriptor && responseBodyPath) {
@@ -162,7 +164,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     curl.setOpt(Curl.option.WRITEFUNCTION, buffer => {
       console.log('write', buffer.length);
       responseBodyBytes += buffer.length;
-      responseBodyWriteStream.write(buffer);
+      responseBodyFileStreams.get(requestId)?.write(buffer);
       return buffer.length;
     });
     // set up response logger
@@ -195,10 +197,9 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
     });
 
     // returns "rawHeaders" string in a buffer, rather than HeaderInfo[] type which is an object with deduped keys
-    // this provides support for multiple set-cookies and duplicated headers
+    // this provides support for multiple set-cookies and duplicated headers in response
     curl.enable(CurlFeature.Raw);
     // NOTE: legacy write end callback
-    curl.on('end', () => responseBodyWriteStream.end());
     curl.on('end', async (_1: any, _2: any, rawHeaders: Buffer) => {
       const patch = {
         bytesContent: responseBodyBytes,
@@ -207,18 +208,13 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
         url: curl.getInfo(Curl.info.EFFECTIVE_URL) as string,
       };
       curl.close();
-      await waitForStreamToFinish(responseBodyWriteStream);
-
       const headerResults = _parseHeaders(rawHeaders);
+      responseBodyFileStreams.get(requestId)?.end();
       resolve({ patch, debugTimeline, headerResults, responseBodyPath });
     });
-    // NOTE: legacy write end callback
-    curl.on('error', () => responseBodyWriteStream.end());
     curl.on('error', async (err, code) => {
       const elapsedTime = curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000;
       curl.close();
-      await waitForStreamToFinish(responseBodyWriteStream);
-
       let error = err + '';
       let statusMessage = 'Error';
 
@@ -231,7 +227,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
         error: error || 'Something went wrong',
         elapsedTime,
       };
-
+      responseBodyFileStreams.get(requestId)?.end();
       // NOTE: legacy, default headerResults
       resolve({ patch, debugTimeline, headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
     });
@@ -243,6 +239,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       error: error.message || 'Something went wrong',
       elapsedTime: 0,
     };
+    responseBodyFileStreams.get(options.requestId)?.end();
     resolve({ patch, debugTimeline: [], headerResults: [{ version: '', code: 0, reason: '', headers: [] }] });
   }
 });
