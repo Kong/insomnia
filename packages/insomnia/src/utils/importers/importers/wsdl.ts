@@ -48,17 +48,14 @@ const convertToPostman = (items: Swagger[]) => {
               {
                 key: 'SOAPAction',
                 value: api['x-ibm-soap']['soap-action'],
-                disabled: false,
               },
               {
                 key: 'Content-Type',
                 value: swagger.consumes[0],
-                disabled: false,
               },
               {
                 key: 'Accept',
                 value: swagger.produces[0],
-                disabled: false,
               },
             ],
             body: {

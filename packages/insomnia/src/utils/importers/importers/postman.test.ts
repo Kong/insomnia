@@ -33,6 +33,41 @@ describe('postman', () => {
   })) as HttpsSchemaGetpostmanComJsonCollectionV210;
 
   describe('headers', () => {
+    describe('properties', () => {
+      it('should import headers with all properties', () => {
+        const request: Request1 = {
+          header: [
+            {
+              key: 'X-Header1',
+              value: 'value1',
+              description: 'description1',
+            },
+            {
+              key: 'X-Header2',
+              value: 'value2',
+              disabled: true,
+            },
+          ],
+        };
+        const schema = postmanSchema({ requests: [request] });
+        const postman = new ImportPostman(schema);
+        const { headers } = postman.importRequestItem({ request }, 'n/a');
+
+        expect(headers).toEqual([
+          {
+            name: 'X-Header1',
+            value: 'value1',
+            description: 'description1',
+          },
+          {
+            name: 'X-Header2',
+            value: 'value2',
+            disabled: true,
+          },
+        ]);
+      });
+    });
+
     describe('awsv4', () => {
       it('should not duplicate headers', () => {
         const request: Request1 = {
