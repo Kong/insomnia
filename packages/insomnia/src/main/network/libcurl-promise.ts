@@ -122,8 +122,8 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       curl.setOpt(Curl.option.CUSTOMREQUEST, method);
     }
 
-    const requestBody = parseRequestBody({ body, method });
     const requestBodyPath = await parseRequestBodyPath(body);
+    const requestBody = parseRequestBody({ body, method });
     const isMultipart = body.mimeType === CONTENT_TYPE_FORM_DATA && requestBodyPath;
     let requestFileDescriptor: number | undefined;
     const { authentication } = req;
@@ -165,7 +165,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       responseBodyWriteStream.write(buffer);
       return buffer.length;
     });
-    // set up response logger
+
     curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
       const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
       const isEmpty = buffer.length === 0;
@@ -193,7 +193,6 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       debugTimeline.push({ name, value, timestamp: Date.now() });
       return 0;
     });
-
     // returns "rawHeaders" string in a buffer, rather than HeaderInfo[] type which is an object with deduped keys
     // this provides support for multiple set-cookies and duplicated headers
     curl.enable(CurlFeature.Raw);
@@ -389,6 +388,7 @@ export const createConfiguredCurlInstance = ({
   if (authentication.type === AUTH_NETRC) {
     curl.setOpt(Curl.option.NETRC, CurlNetrc.Required);
   }
+
   return { curl, debugTimeline };
 };
 
