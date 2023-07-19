@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useInterval } from 'react-use';
 
 export enum ReadyState {
   CONNECTING = 0,
@@ -6,52 +7,35 @@ export enum ReadyState {
   CLOSING = 2,
   CLOSED = 3,
 }
-export function useWSReadyState(requestId: string): ReadyState {
-  const [readyState, setReadyState] = useState<ReadyState>(ReadyState.CLOSED);
+
+export function useReadyState({ requestId, protocol }: { requestId: string; protocol: 'curl' | 'webSocket' }): boolean | ReadyState {
+  const [readyState, setReadyState] = useState<boolean | ReadyState>(false);
 
   useEffect(() => {
-    let isMounted = true;
-    window.main.webSocket.readyState.getCurrent({ requestId })
-      .then((currentReadyState: ReadyState) => {
-        isMounted && setReadyState(currentReadyState);
-      });
-
-    const unsubscribe = window.main.on(`webSocket.${requestId}.readyState`,
-      (_, incomingReadyState: ReadyState) => {
-        isMounted && setReadyState(incomingReadyState);
-      });
-
-    return () => {
-      isMounted = false;
-      unsubscribe();
-    };
-
+    setReadyState(false);
   }, [requestId]);
 
-  return readyState;
-}
-
-export function useCurlReadyState(requestId: string): boolean {
-  const [readyState, setReadyState] = useState<boolean>(false);
-
-  useEffect(() => {
-    let isMounted = true;
-    window.main.curl.readyState.getCurrent({ requestId })
-      .then((currentReadyState: boolean) => {
-        isMounted && setReadyState(currentReadyState);
-      });
-
-    const unsubscribe = window.main.on(`curl.${requestId}.readyState`,
-      (_, incomingReadyState: boolean) => {
-        isMounted && setReadyState(incomingReadyState);
-      });
-
-    return () => {
-      isMounted = false;
-      unsubscribe();
-    };
-
-  }, [requestId]);
+  useInterval(
+    () => {
+      let isMounted = true;
+      const fn = async () => {
+        window.main[protocol].readyState.getCurrent({ requestId })
+          .then((currentReadyState: boolean | ReadyState) => {
+            isMounted && setReadyState(currentReadyState);
+          });
+      };
+      fn();
+      const unsubscribe = window.main.on(`${protocol}.${requestId}.readyState`,
+        (_, incomingReadyState: boolean) => {
+          isMounted && setReadyState(incomingReadyState);
+        });
+      return () => {
+        isMounted = false;
+        unsubscribe();
+      };
+    },
+    500
+  );
 
   return readyState;
 }

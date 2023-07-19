@@ -13,7 +13,7 @@ import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { createRequest, updateRequestMetaByParentId } from '../../hooks/create-request';
-import { ReadyState, useCurlReadyState, useWSReadyState } from '../../hooks/use-ready-state';
+import { ReadyState, useReadyState } from '../../hooks/use-ready-state';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
 import type { DropdownHandle } from '../base/dropdown';
 import { Editable } from '../base/editable';
@@ -333,11 +333,11 @@ const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(_Sid
 export const SidebarRequestRow = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
 
 const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
-  const readyState = useWSReadyState(requestId);
+  const readyState = useReadyState({ requestId, protocol: 'webSocket' });
   return readyState === ReadyState.OPEN ? <ConnectionCircle data-testid="WebSocketSpinner__Connected" /> : null;
 };
 
 const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
-  const readyState = useCurlReadyState(requestId);
+  const readyState = useReadyState({ requestId, protocol: 'curl' });
   return readyState ? <ConnectionCircle data-testid="EventStreamSpinner__Connected" /> : null;
 };

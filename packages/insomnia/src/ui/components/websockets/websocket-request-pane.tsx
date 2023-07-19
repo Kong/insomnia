@@ -8,7 +8,7 @@ import * as models from '../../../models';
 import { Environment } from '../../../models/environment';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
-import { ReadyState, useWSReadyState } from '../../hooks/use-ready-state';
+import { ReadyState, useReadyState } from '../../hooks/use-ready-state';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveRequestMeta, selectSettings } from '../../redux/selectors';
 import { TabItem, Tabs } from '../base/tabs';
@@ -201,7 +201,7 @@ interface Props {
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environment }) => {
-  const readyState = useWSReadyState(request._id);
+  const readyState = useReadyState({ requestId: request._id, protocol: 'webSocket' });
   const { useBulkParametersEditor } = useSelector(selectSettings);
 
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;

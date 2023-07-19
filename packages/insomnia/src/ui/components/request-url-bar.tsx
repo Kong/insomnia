@@ -19,7 +19,7 @@ import { invariant } from '../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
-import { useCurlReadyState } from '../hooks/use-ready-state';
+import { useReadyState } from '../hooks/use-ready-state';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
@@ -392,7 +392,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }, []);
   const buttonText = isEventStreamRequest(request) ? 'Connect' : (downloadPath ? 'Download' : 'Send');
   const { url, method } = request;
-  const isEventStreamOpen = useCurlReadyState(request._id);
+  const isEventStreamOpen = useReadyState({ requestId: request._id, protocol: 'curl' });
   const isCancellable = currentInterval || currentTimeout || isEventStreamOpen;
   return (
     <div className="urlbar">
