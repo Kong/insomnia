@@ -123,7 +123,7 @@ module.exports = {
     'react/jsx-indent-props': [ERROR, 2],
     'react/prop-types': OFF(UNKNOWN),
     'react/function-component-definition': [ERROR, {
-      'namedComponents':  'arrow-function',
+      'namedComponents': 'arrow-function',
       'unnamedComponents': 'arrow-function',
     }],
     'react/jsx-closing-bracket-location': [ERROR, 'line-aligned'],
