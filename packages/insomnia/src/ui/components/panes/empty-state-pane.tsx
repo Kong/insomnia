@@ -78,7 +78,7 @@ const LinkIcon = styled(SvgIcon)({
 export const EmptyStatePane: FC<{
   icon: ReactNode;
   title: string;
-  secondaryAction: ReactNode;
+  secondaryAction?: ReactNode;
   documentationLinks: {
     title: string;
     url: string;
@@ -88,23 +88,22 @@ export const EmptyStatePane: FC<{
   title,
   secondaryAction,
   documentationLinks,
-}) => {
-  return (
-    <Panel>
-      <Wrapper>
-        <Icon>{icon}</Icon>
-        <Title>{title}</Title>
+}) => (<Panel>
+  <Wrapper>
+    <Icon>{icon}</Icon>
+    <Title>{title}</Title>
+    {Boolean(secondaryAction) &&
+      (<>
         <Divider />
         <SecondaryAction>{secondaryAction}</SecondaryAction>
-        <DocumentationLinks>
-          {documentationLinks.map(({ title, url }) => (
-            <StyledLink key={title} href={url}>
-              {title}
-              <LinkIcon icon="jump" />
-            </StyledLink>
-          ))}
-        </DocumentationLinks>
-      </Wrapper>
-    </Panel>
-  );
-};
+      </>)}
+    <DocumentationLinks>
+      {documentationLinks.map(({ title, url }) => (
+        <StyledLink key={title} href={url}>
+          {title}
+          <LinkIcon icon="jump" />
+        </StyledLink>
+      ))}
+    </DocumentationLinks>
+  </Wrapper>
+</Panel>);

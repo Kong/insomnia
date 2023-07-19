@@ -14,8 +14,8 @@ import { selectActiveResponse } from '../../redux/selectors';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
-import { EmptyStatePane } from '../panes/empty-state-pane';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
+import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
 import { SvgIcon } from '../svg-icon';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -93,12 +93,7 @@ export const RealtimeResponsePane: FC<{ requestId: string }> =
       return (
         <Pane type="response">
           <PaneHeader />
-          <EmptyStatePane
-            icon={<i className="fa fa-paper-plane" />}
-            documentationLinks={[]}
-            title="Enter a URL and connect to start receiving event stream data"
-            secondaryAction=""
-          />
+          <PlaceholderResponsePane />
         </Pane>
       );
     }

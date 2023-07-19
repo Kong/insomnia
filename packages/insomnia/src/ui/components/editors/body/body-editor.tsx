@@ -12,9 +12,10 @@ import {
 import { documentationLinks } from '../../../../common/documentation';
 import { getContentTypeHeader } from '../../../../common/misc';
 import * as models from '../../../../models';
-import type {
-  Request,
-  RequestBodyParameter,
+import {
+  isEventStreamRequest,
+  type Request,
+  type RequestBodyParameter,
 } from '../../../../models/request';
 import type { Workspace } from '../../../../models/workspace';
 import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
@@ -135,9 +136,14 @@ export const BodyEditor: FC<Props> = ({
     } else if (!isBodyEmpty) {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return <RawEditor uniquenessKey={uniqueKey} contentType={contentType || 'text/plain'} content={request.body.text || ''} onChange={handleRawChange} />;
-    } else {
-      return <EmptyStatePane icon={<SvgIcon icon="bug" />} documentationLinks={[documentationLinks.introductionToInsomnia]} secondaryAction="Select a body type from above to send data in the body of a request" title="Enter a URL and send to get a response" />;
+    } else if (isEventStreamRequest(request)) {
+      return <EmptyStatePane
+        icon={<i className="fa fa-paper-plane" />}
+        documentationLinks={[]}
+        title="Enter a URL and connect to start receiving event stream data"
+      />;
     }
+    return <EmptyStatePane icon={<SvgIcon icon="bug" />} documentationLinks={[documentationLinks.introductionToInsomnia]} secondaryAction="Select a body type from above to send data in the body of a request" title="Enter a URL and send to get a response" />;
   };
 
   return <NunjucksEnabledProvider disable={noRender}>{_render()}</NunjucksEnabledProvider>;
