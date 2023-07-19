@@ -863,8 +863,6 @@ export const setActiveEnvironmentAction: ActionFunction = async ({
 
   const environmentId = formData.get('environmentId');
 
-  console.log('environmentId', environmentId);
-
   invariant(typeof environmentId === 'string', 'Environment ID is required');
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
