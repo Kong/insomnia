@@ -8,7 +8,7 @@ import { getMethodOverrideHeader } from '../../../common/misc';
 import { stats, workspaceMeta } from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
-import { isRequest, Request } from '../../../models/request';
+import { isEventStreamRequest, isRequest, Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
@@ -242,6 +242,10 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       methodTag = <GrpcTag />;
     } else if (isWebSocketRequest(request)) {
       methodTag = <WebSocketTag />;
+    } else if (isEventStreamRequest(request)) {
+      methodTag = (<div className="tag tag--no-bg tag--small">
+        <span className="tag__inner" style={{ color: 'var(--color-info)' }}>SSE</span>
+      </div>);
     } else if (isRequest(request)) {
       methodTag = <MethodTag method={request.method} override={methodOverrideValue} />;
     }
