@@ -11,7 +11,6 @@ import * as models from '../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
 import { writeProtoFile } from '../../network/grpc/write-proto-file';
-import { SegmentEvent } from '../../ui/analytics';
 import { invariant } from '../../utils/invariant';
 
 const grpcCalls = new Map<string, Call>();
@@ -224,8 +223,6 @@ export const start = (
       }
       // Update request stats
       models.stats.incrementExecutedRequests();
-      window.main.trackSegmentEvent({ event: SegmentEvent.requestExecute });
-
       event.reply('grpc.start', request._id);
 
     } catch (error) {
