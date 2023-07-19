@@ -200,8 +200,9 @@ interface Props {
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
+// TODO: use the same readystate interface
 export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environment }) => {
-  const readyState = useReadyState({ requestId: request._id, protocol: 'webSocket' });
+  const readyState = useReadyState({ requestId: request._id, protocol: 'webSocket' }) as ReadyState;
   const { useBulkParametersEditor } = useSelector(selectSettings);
 
   const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
