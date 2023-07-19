@@ -1,13 +1,13 @@
 import { Readable } from 'node:stream';
 
-import { Curl, CurlFeature, HeaderInfo } from '@getinsomnia/node-libcurl';
+import { Curl, CurlFeature, CurlInfoDebug, HeaderInfo } from '@getinsomnia/node-libcurl';
 import electron, { ipcMain } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import tls from 'tls';
 import { v4 as uuidV4 } from 'uuid';
 
-import { generateId, getSetCookieHeaders } from '../../common/misc';
+import { describeByteSize, generateId, getSetCookieHeaders } from '../../common/misc';
 import * as models from '../../models';
 import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
@@ -138,7 +138,6 @@ const openCurlConnection = async (
     const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), options.url));
     const { curl, debugTimeline } = createConfiguredCurlInstance({
-      // TODO: get cookies here
       req: { ...request, cookieJar: options.cookieJar, cookies: [] },
       finalUrl: options.url,
       settings,
@@ -146,9 +145,10 @@ const openCurlConnection = async (
       certificates: filteredClientCertificates,
     });
     debugTimeline.forEach(entry => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(entry) + '\n'));
-    curl.enable(CurlFeature.StreamResponse);
+    CurlConnections.set(options.requestId, curl);
+    CurlConnections.get(options.requestId)?.enable(CurlFeature.StreamResponse);
 
-    curl.on('error', async (error, errorCode) => {
+    CurlConnections.get(options.requestId)?.on('error', async (error, errorCode) => {
       const errorEvent: CurlErrorEvent = {
         _id: uuidV4(),
         requestId: options.requestId,
@@ -169,7 +169,35 @@ const openCurlConnection = async (
       }
     });
 
-    curl.on('stream', async (stream: Readable, _code: number, [headersWithStatus]: HeaderInfo[]) => {
+    CurlConnections.get(options.requestId)?.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
+      const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
+      const isEmpty = buffer.length === 0;
+      // Don't show cookie setting because this will display every domain in the jar
+      const isAddCookie = infoType === CurlInfoDebug.Text && buffer.toString('utf8').indexOf('Added cookie') === 0;
+      if (isSSLData || isEmpty || isAddCookie) {
+        return 0;
+      }
+
+      // NOTE: resolves "Text" from CurlInfoDebug[CurlInfoDebug.Text]
+      let name = CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug;
+      let timelineMessage;
+      const isRequestData = infoType === CurlInfoDebug.DataOut;
+      if (isRequestData) {
+        // Ignore large post data messages
+        const isLessThan10KB = buffer.length / 1024 < (settings.maxTimelineDataSizeKB || 1);
+        timelineMessage = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
+      }
+      const isResponseData = infoType === CurlInfoDebug.DataIn;
+      if (isResponseData) {
+        timelineMessage = `Received ${describeByteSize(buffer.length)} chunk`;
+        name = 'Text';
+      }
+      const value = timelineMessage || buffer.toString('utf8');
+      timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ name, value, timestamp: Date.now() }) + '\n');
+      return 0;
+    });
+
+    CurlConnections.get(options.requestId)?.on('stream', async (stream: Readable, _code: number, [headersWithStatus]: HeaderInfo[]) => {
       event.sender.send(readyStateChannel, true);
       const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseHeadersAndBuildTimeline(options.url, headersWithStatus);
 
@@ -227,7 +255,6 @@ const openCurlConnection = async (
       event.sender.send(readyStateChannel, false);
     });
     curl.perform();
-    CurlConnections.set(options.requestId, curl);
   } catch (e) {
     console.error('unhandled error:', e);
 

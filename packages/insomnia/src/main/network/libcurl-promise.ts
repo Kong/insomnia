@@ -166,6 +166,33 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
       return buffer.length;
     });
 
+    curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
+      const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
+      const isEmpty = buffer.length === 0;
+      // Don't show cookie setting because this will display every domain in the jar
+      const isAddCookie = infoType === CurlInfoDebug.Text && buffer.toString('utf8').indexOf('Added cookie') === 0;
+      if (isSSLData || isEmpty || isAddCookie) {
+        return 0;
+      }
+
+      // NOTE: resolves "Text" from CurlInfoDebug[CurlInfoDebug.Text]
+      let name = CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug;
+      let timelineMessage;
+      const isRequestData = infoType === CurlInfoDebug.DataOut;
+      if (isRequestData) {
+        // Ignore large post data messages
+        const isLessThan10KB = buffer.length / 1024 < (settings.maxTimelineDataSizeKB || 1);
+        timelineMessage = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
+      }
+      const isResponseData = infoType === CurlInfoDebug.DataIn;
+      if (isResponseData) {
+        timelineMessage = `Received ${describeByteSize(buffer.length)} chunk`;
+        name = 'Text';
+      }
+      const value = timelineMessage || buffer.toString('utf8');
+      debugTimeline.push({ name, value, timestamp: Date.now() });
+      return 0;
+    });
     // returns "rawHeaders" string in a buffer, rather than HeaderInfo[] type which is an object with deduped keys
     // this provides support for multiple set-cookies and duplicated headers
     curl.enable(CurlFeature.Raw);
@@ -362,33 +389,6 @@ export const createConfiguredCurlInstance = ({
     curl.setOpt(Curl.option.NETRC, CurlNetrc.Required);
   }
 
-  curl.setOpt(Curl.option.DEBUGFUNCTION, (infoType, buffer) => {
-    const isSSLData = infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut;
-    const isEmpty = buffer.length === 0;
-    // Don't show cookie setting because this will display every domain in the jar
-    const isAddCookie = infoType === CurlInfoDebug.Text && buffer.toString('utf8').indexOf('Added cookie') === 0;
-    if (isSSLData || isEmpty || isAddCookie) {
-      return 0;
-    }
-
-    // NOTE: resolves "Text" from CurlInfoDebug[CurlInfoDebug.Text]
-    let name = CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug;
-    let timelineMessage;
-    const isRequestData = infoType === CurlInfoDebug.DataOut;
-    if (isRequestData) {
-      // Ignore large post data messages
-      const isLessThan10KB = buffer.length / 1024 < (settings.maxTimelineDataSizeKB || 1);
-      timelineMessage = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
-    }
-    const isResponseData = infoType === CurlInfoDebug.DataIn;
-    if (isResponseData) {
-      timelineMessage = `Received ${describeByteSize(buffer.length)} chunk`;
-      name = 'Text';
-    }
-    const value = timelineMessage || buffer.toString('utf8');
-    debugTimeline.push({ name, value, timestamp: Date.now() });
-    return 0;
-  });
   return { curl, debugTimeline };
 };
 
