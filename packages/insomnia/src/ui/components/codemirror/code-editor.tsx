@@ -95,6 +95,7 @@ export interface CodeEditorProps {
   onBlur?: () => void;
   onChange?: (value: string) => void;
   onClickLink?: CodeMirrorLinkClickCallback;
+  pinToBottom?: boolean;
   placeholder?: string;
   readOnly?: boolean;
   style?: Object;
@@ -159,6 +160,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   onBlur,
   onChange,
   onClickLink,
+  pinToBottom,
   placeholder,
   readOnly,
   style,
@@ -319,6 +321,19 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       if (isGraphqlWithChange) {
         // Don't allow non-breaking spaces because they break the GraphQL syntax
         change.update?.(change.from, change.to, change.text.map(normalizeIrregularWhitespace));
+      }
+      if (pinToBottom) {
+        const scrollInfo = doc.getScrollInfo();
+        const scrollPosition = scrollInfo.height - scrollInfo.clientHeight;
+        doc.scrollTo(0, scrollPosition);
+      }
+    });
+
+    codeMirror.current.on('change', (doc: CodeMirror.Editor) => {
+      if (pinToBottom) {
+        const scrollInfo = doc.getScrollInfo();
+        const scrollPosition = scrollInfo.height - scrollInfo.clientHeight;
+        doc.scrollTo(0, scrollPosition);
       }
     });
 

@@ -160,7 +160,9 @@ const RealtimeActiveResponsePane: FC<{ requestId: string; response: WebSocketRes
       const rawBuffer = await fs.promises.readFile(response.timelinePath);
       const timelineString = rawBuffer.toString();
       const timelineParsed = timelineString.split('\n').filter(e => e?.trim()).map(e => JSON.parse(e));
-      isMounted && setTimeline(timelineParsed);
+      if (isMounted) {
+        setTimeline(timelineParsed);
+      }
     };
     fn();
     return () => {
@@ -296,6 +298,7 @@ const RealtimeActiveResponsePane: FC<{ requestId: string; response: WebSocketRes
           <ResponseTimelineViewer
             key={response._id}
             timeline={timeline}
+            pinToBottom={true}
           />
         </TabItem>
       </Tabs>
