@@ -19,7 +19,7 @@ export const CheckForUpdatesButton: FC<Props> = ({ children, className }) => {
   return (
     <button
       className={className ?? ''}
-      disabled={disabled}
+      disabled={disabled || status !== 'Check now'}
       onClick={() => {
         window.main.manualUpdateCheck();
         // this is to prevent initiating update multiple times
