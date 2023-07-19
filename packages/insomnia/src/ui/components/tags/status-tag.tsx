@@ -15,8 +15,6 @@ export const StatusTag: FC<Props> = memo(({ statusMessage, statusCode, small, to
   let colorClass;
   let statusCodeToDisplay: string | number = statusCode;
   const firstChar = (statusCode + '')[0] || '';
-  const isStatusMessageUnknown = statusMessage === 'Unknown' || statusMessage === 'unknown';
-  const unknownStatusMessage = RESPONSE_CODE_REASONS[statusCode] || statusMessage;
 
   switch (firstChar) {
     case '1':
@@ -51,16 +49,19 @@ export const StatusTag: FC<Props> = memo(({ statusMessage, statusCode, small, to
   }
 
   const description = RESPONSE_CODE_DESCRIPTIONS[statusCode] || 'Unknown Response Code';
+  const isStatusMessageUnknown = statusMessage === 'Unknown' || statusMessage === 'unknown';
+  let statusMessageToShow = statusMessage || RESPONSE_CODE_REASONS[statusCode];
+  if (isStatusMessageUnknown) {
+    statusMessageToShow = RESPONSE_CODE_REASONS[statusCode] || statusMessage;
+  }
   return (
     <div
-      className={classnames('tag', colorClass, {
-        'tag--small': small,
-      })}
+      className={classnames('tag', colorClass, { 'tag--small': small })}
       data-testid="response-status-tag"
     >
       <Tooltip message={description} position="bottom" delay={tooltipDelay}>
         <strong>{statusCodeToDisplay}</strong>{' '}
-        {isStatusMessageUnknown ? unknownStatusMessage : statusMessage || RESPONSE_CODE_REASONS[statusCode]}
+        {statusMessageToShow}
       </Tooltip>
     </div>
   );
