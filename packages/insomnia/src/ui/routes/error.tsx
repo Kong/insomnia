@@ -8,8 +8,8 @@ import {
 } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { isDevelopment } from '../../common/constants';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
-import { DEFAULT_PROJECT_ID } from '../../models/project';
 import { Button } from '../components/themed-button';
 
 const Container = styled.div({
@@ -35,10 +35,15 @@ export const ErrorRoute: FC = () => {
 
     return err?.message || 'Unknown error';
   };
+  const getErrorStack = (err: any) => {
+    if (isRouteErrorResponse(err)) {
+      return err.error?.stack;
+    }
+    return err?.stack;
+  };
 
   const navigate = useNavigate();
   const navigation = useNavigation();
-
   const errorMessage = getErrorMessage(error);
 
   return (
@@ -50,10 +55,13 @@ export const ErrorRoute: FC = () => {
       <span style={{ color: 'var(--color-font)' }}>
         <code className="selectable" style={{ wordBreak: 'break-word', margin: 'var(--padding-sm)' }}>{errorMessage}</code>
       </span>
-      <Button onClick={() => navigate(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`)}>
+      <Button onClick={() => navigate(`/organization/${DEFAULT_ORGANIZATION_ID}`)}>
         Try to reload the app{' '}
         <span>{navigation.state === 'loading' ? <Spinner /> : null}</span>
       </Button>
+      {isDevelopment() && (
+        <code className="selectable" style={{ wordBreak: 'break-word', margin: 'var(--padding-sm)' }}>{getErrorStack(error)}</code>
+      )}
     </Container>
   );
 };

@@ -231,7 +231,7 @@ export interface WorkspaceEnvironmentsEditModalHandle {
   hide: () => void;
 }
 export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEditModalHandle, ModalProps>((props, ref) => {
-  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string}>();
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   const routeData = useRouteLoaderData(
     ':workspaceId'
   ) as WorkspaceLoaderData;
@@ -284,7 +284,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
       environmentId,
     },
     {
-      encType: 'application/json',
       method: 'post',
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/delete`,
     });
@@ -493,7 +492,6 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
                       duplicateEnvironmentFetcher.submit({
                         environmentId: activeEnvironment._id,
                       }, {
-                        encType: 'application/json',
                         method: 'post',
                         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/duplicate`,
                       });

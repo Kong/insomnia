@@ -839,7 +839,9 @@ export const duplicateEnvironmentAction: ActionFunction = async ({
   const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
-  const { environmentId } = await request.json();
+  const formData = await request.formData();
+
+  const environmentId = formData.get('environmentId');
 
   invariant(typeof environmentId === 'string', 'Environment ID is required');
 
@@ -861,15 +863,12 @@ export const setActiveEnvironmentAction: ActionFunction = async ({
 
   const environmentId = formData.get('environmentId');
 
-  console.log('environmentId', environmentId);
-
   invariant(typeof environmentId === 'string', 'Environment ID is required');
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
 
   invariant(workspaceMeta, 'Workspace meta not found');
 
-  // @TODO - Null vs undefined vs empty string
   await models.workspaceMeta.update(workspaceMeta, { activeEnvironmentId: environmentId || null });
 
   return null;
