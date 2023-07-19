@@ -504,11 +504,14 @@ export const GraphQLEditor: FC<Props> = ({
                   // again after a refresh
                   setState(state => ({ ...state, hideSchemaFetchErrors: false }));
                   setSchemaIsFetching(true);
-                  await fetchGraphQLSchemaForRequest({
+                  const newState = await fetchGraphQLSchemaForRequest({
                     requestId: request._id,
                     environmentId,
                     url: request.url,
                   });
+                  setSchemaFetchError(newState?.schemaFetchError);
+                  newState?.schema && setSchema(newState.schema);
+                  newState?.schema && setSchemaLastFetchTime(Date.now());
                   setSchemaIsFetching(false);
                 }}
               />
