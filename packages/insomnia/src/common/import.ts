@@ -2,7 +2,7 @@ import { readFile } from 'fs/promises';
 
 import { ApiSpec, isApiSpec } from '../models/api-spec';
 import { CookieJar, isCookieJar } from '../models/cookie-jar';
-import { BaseEnvironment, isEnvironment } from '../models/environment';
+import { BaseEnvironment, Environment, isEnvironment } from '../models/environment';
 import { GrpcRequest, isGrpcRequest } from '../models/grpc-request';
 import { BaseModel, getModel } from '../models/index';
 import * as models from '../models/index';
@@ -29,6 +29,10 @@ interface ConvertResult {
     resources: ExportedModel[];
   };
 }
+
+const isSubEnvironmentResource = (environment: Environment) => {
+  return !environment.parentId || environment.parentId.startsWith(models.environment.prefix) || environment.parentId.startsWith('__BASE_ENVIRONMENT_ID__');
+};
 
 export const isInsomniaV4Import = ({ id }: Pick<InsomniaImporter, 'id'>) =>
   id === 'insomnia-4';
@@ -178,6 +182,22 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
       !isEnvironment(resource)
   );
 
+  const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
+  invariant(baseEnvironment, 'Could not create base environment');
+
+  const subEnvironments = resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
+
+  for (const environment of subEnvironments) {
+    const model = getModel(environment.type);
+    model && ResourceIdMap.set(environment._id, generateId(model.prefix));
+
+    await db.docCreate(environment.type, {
+      ...environment,
+      _id: ResourceIdMap.get(environment._id),
+      parentId: baseEnvironment._id,
+    });
+  }
+
   // Create new ids for each resource below optionalResources
   for (const resource of optionalResources) {
     const model = getModel(resource.type);
@@ -311,7 +331,7 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
 
   // Use the first environment as the active one
   const subEnvironments =
-    resources.filter(isEnvironment).filter(env => env.parentId.startsWith(models.environment.prefix)) || [];
+    resources.filter(isEnvironment).filter(isSubEnvironmentResource) || [];
 
   if (subEnvironments.length > 0) {
     const firstSubEnvironment = subEnvironments[0];
