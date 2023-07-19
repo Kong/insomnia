@@ -1,3 +1,5 @@
+import '../css/styles.css';
+
 import type { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
 import {
