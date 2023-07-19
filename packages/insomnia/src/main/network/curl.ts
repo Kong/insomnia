@@ -157,7 +157,7 @@ const openCurlConnection = async (
       }
 
       // NOTE: resolves "Text" from CurlInfoDebug[CurlInfoDebug.Text]
-      const name = CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug;
+      let name = CurlInfoDebug[infoType] as keyof typeof CurlInfoDebug;
       let timelineMessage;
       const isRequestData = infoType === CurlInfoDebug.DataOut;
       if (isRequestData) {
@@ -166,10 +166,12 @@ const openCurlConnection = async (
         timelineMessage = isLessThan10KB ? buffer.toString('utf8') : `(${describeByteSize(buffer.length)} hidden)`;
       }
       const isResponseData = infoType === CurlInfoDebug.DataIn;
-      if (!isResponseData) {
-        const value = timelineMessage || buffer.toString('utf8');
-        timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ name, value, timestamp: Date.now() }) + '\n');
+      if (isResponseData) {
+        timelineMessage = `Received ${describeByteSize(buffer.length)} chunk`;
+        name = 'Text';
       }
+      const value = timelineMessage || buffer.toString('utf8');
+      debugTimeline.push({ name, value, timestamp: Date.now() });
       return 0;
     });
     curl.on('error', async (error, errorCode) => {
@@ -233,10 +235,7 @@ const openCurlConnection = async (
       }
       timeline.map(t => timelineFileStreams.get(options.requestId)?.write(JSON.stringify(t) + '\n'));
 
-      // we are going to write the response stream to this file
-      const writableStream = eventLogFileStreams.get(request._id);
-      // two ways to go here
-      invariant(writableStream, 'writableStream should be defined');
+      invariant(eventLogFileStreams.get(request._id), 'writableStream should be defined');
       for await (const chunk of stream) {
         const messageEvent: CurlMessageEvent = {
           _id: uuidV4(),
