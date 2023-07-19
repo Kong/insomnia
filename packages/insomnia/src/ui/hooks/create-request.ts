@@ -94,7 +94,7 @@ export const createRequest: RequestCreator = async ({
       const request = await models.request.create({
         parentId,
         method: METHOD_GET,
-        url: 'http://localhost:4010/events',
+        url: '',
         headers: [
           {
             name: 'Accept',
