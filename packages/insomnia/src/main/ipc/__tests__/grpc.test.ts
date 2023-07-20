@@ -45,6 +45,41 @@ describe('loadMethodsFromReflection', () => {
     });
   });
 
+  describe('format service reflection', () => {
+    beforeEach(() => {
+      globalBeforeEach();
+      // we want to test that the values that are passed to axios are returned in the config key
+      (grpcReflection.Client as unknown as jest.Mock).mockImplementation(() => ({
+        listServices: () => Promise.resolve(['FooService']),
+        fileContainingSymbol: async () => {
+          const parsed = protobuf.parse(`
+            syntax = "proto3";
+
+            message FooRequest {
+                string foo = 1;
+            }
+
+            message FooResponse {
+                string foo = 1;
+            }
+
+            service FooService {
+                rpc format (FooRequest) returns (FooResponse);
+            }`);
+          return parsed.root;
+        },
+      }));
+    });
+
+    it('parses methods', async () => {
+      const methods = await loadMethodsFromReflection({ url: 'foo.com', metadata: [] });
+      expect(methods).toStrictEqual([{
+        type: 'unary',
+        fullPath: '/FooService/format',
+      }]);
+    });
+  });
+
   describe('multiple service reflection', () => {
     beforeEach(() => {
       globalBeforeEach();
