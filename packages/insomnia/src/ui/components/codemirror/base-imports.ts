@@ -64,4 +64,3 @@ import './extensions/clickable';
 import './extensions/nunjucks-tags';
 // CSS
 import 'codemirror/lib/codemirror.css';
-import '../../css/editor/index.less';
