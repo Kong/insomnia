@@ -27,7 +27,6 @@ import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
 import { addSetCookiesToToughCookieJar } from '../../network/network';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
-import { ReadyState } from '../../ui/hooks/use-ready-state';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 
@@ -403,7 +402,7 @@ const deleteRequestMaps = async (requestId: string, message: string, event?: Web
 const getWebSocketReadyState = async (
   options: { requestId: string }
 ): Promise<boolean> => {
-  return WebSocketConnections.get(options.requestId)?.readyState === ReadyState.OPEN;
+  return WebSocketConnections.get(options.requestId)?.readyState === WebSocket.OPEN;
 };
 
 const sendPayload = async (ws: WebSocket, options: { payload: string; requestId: string }): Promise<void> => {

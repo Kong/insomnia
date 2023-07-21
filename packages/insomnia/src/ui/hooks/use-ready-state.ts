@@ -1,12 +1,5 @@
 import { useEffect, useState } from 'react';
 
-export enum ReadyState {
-  CONNECTING = 0,
-  OPEN = 1,
-  CLOSING = 2,
-  CLOSED = 3,
-}
-
 export function useReadyState({ requestId, protocol }: { requestId: string; protocol: 'curl' | 'webSocket' }): boolean {
   const [readyState, setReadyState] = useState<boolean>(false);
 
