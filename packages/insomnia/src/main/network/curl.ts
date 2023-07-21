@@ -94,7 +94,7 @@ interface OpenCurlRequestOptions {
   initialPayload?: string;
 }
 const openCurlConnection = async (
-  event: Electron.IpcMainInvokeEvent,
+  _event: Electron.IpcMainInvokeEvent,
   options: OpenCurlRequestOptions
 ): Promise<void> => {
   const existingConnection = CurlConnections.get(options.requestId);
