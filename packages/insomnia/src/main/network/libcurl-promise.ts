@@ -7,7 +7,6 @@ import { Curl, CurlAuth, CurlCode, CurlFeature, CurlHttpVersion, CurlInfoDebug, 
 import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
-import { Readable, Writable } from 'stream';
 import tls from 'tls';
 import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
@@ -426,27 +425,6 @@ export function _parseHeaders(buffer: Buffer): HeaderResult[] {
   });
 }
 
-// NOTE: legacy, suspicious, could be simplified
-async function waitForStreamToFinish(stream: Readable | Writable) {
-  return new Promise<void>(resolve => {
-    // @ts-expect-error -- access of internal values that are intended to be private.  We should _not_ do this.
-    if (stream._readableState?.finished) {
-      return resolve();
-    }
-
-    // @ts-expect-error -- access of internal values that are intended to be private.  We should _not_ do this.
-    if (stream._writableState?.finished) {
-      return resolve();
-    }
-
-    stream.on('close', () => {
-      resolve();
-    });
-    stream.on('error', () => {
-      resolve();
-    });
-  });
-}
 const parseRequestBody = ({ body, method }: { body: any; method: string }) => {
   const isUrlEncodedForm = body.mimeType === CONTENT_TYPE_FORM_URLENCODED;
   const expectsBody = ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase());
