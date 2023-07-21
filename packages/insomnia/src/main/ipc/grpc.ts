@@ -1,7 +1,7 @@
 import { Call, ClientDuplexStream, ClientReadableStream, ServiceError, StatusObject } from '@grpc/grpc-js';
 import { credentials, makeGenericClientConstructor, Metadata, status } from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
-import { AnyDefinition, EnumTypeDefinition, MessageTypeDefinition, PackageDefinition } from '@grpc/proto-loader';
+import { AnyDefinition, EnumTypeDefinition, MessageTypeDefinition, PackageDefinition, ServiceDefinition } from '@grpc/proto-loader';
 import electron, { ipcMain } from 'electron';
 import { IpcMainEvent } from 'electron';
 import * as grpcReflection from 'grpc-reflection-js';
@@ -91,7 +91,10 @@ const getMethodsFromReflection = async (host: string, metadata: GrpcRequestHeade
         try {
           console.log('[grpc] loading service from reflection:', service);
           const packageDefinition = protoLoader.loadFileDescriptorSetFromObject(descriptorMessage, {});
-          return getMethodsFromPackageDefinition(packageDefinition);
+          const serviceDefinition = asServiceDefinition(packageDefinition[service]);
+          invariant(serviceDefinition, `'${service}' was not a valid ServiceDefinition`);
+          const serviceMethods = Object.values(serviceDefinition);
+          return serviceMethods;
         } catch (e) {
           console.error(e);
           return [];
@@ -105,7 +108,7 @@ const getMethodsFromReflection = async (host: string, metadata: GrpcRequestHeade
     throw error;
   }
 };
-const loadMethodsFromReflection = async (options: { url: string; metadata: GrpcRequestHeader[] }): Promise<GrpcMethodInfo[]> => {
+export const loadMethodsFromReflection = async (options: { url: string; metadata: GrpcRequestHeader[] }): Promise<GrpcMethodInfo[]> => {
   invariant(options.url, 'gRPC request url not provided');
   const methods = await getMethodsFromReflection(options.url, options.metadata);
   return methods.map(method => ({
@@ -145,8 +148,24 @@ export const getSelectedMethod = async (request: GrpcRequest): Promise<MethodDef
 };
 export const getMethodsFromPackageDefinition = (packageDefinition: PackageDefinition): MethodDefs[] => {
   return Object.values(packageDefinition)
-    .filter((obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => !obj.format)
+    .filter(isServiceDefinition)
     .flatMap(Object.values);
+};
+
+const isServiceDefinition = (definition: AnyDefinition): definition is ServiceDefinition => {
+  return !!asServiceDefinition(definition);
+};
+const asServiceDefinition = (definition: AnyDefinition): ServiceDefinition | null => {
+  if (isMessageDefinition(definition) || isEnumDefinition(definition)) {
+    return null;
+  }
+  return definition;
+};
+const isMessageDefinition = (definition: AnyDefinition): definition is MessageTypeDefinition => {
+  return (definition as MessageTypeDefinition).format === 'Protocol Buffer 3 DescriptorProto';
+};
+const isEnumDefinition = (definition: AnyDefinition): definition is EnumTypeDefinition => {
+  return (definition as EnumTypeDefinition).format === 'Protocol Buffer 3 EnumDescriptorProto';
 };
 
 export const start = (
@@ -317,4 +336,8 @@ const filterDisabledMetaData = (metadata: GrpcRequestHeader[],): Metadata => {
 export type GrpcMethodType = 'unary' | 'server' | 'client' | 'bidi';
 const closeAll = (): void => grpcCalls.forEach(x => x.cancel());
 
-electron.app.on('window-all-closed', closeAll);
+if (typeof electron.app.on === 'function') {
+  electron.app.on('window-all-closed', closeAll);
+} else {
+  console.warn('electron.app.on is not a function. Are you running a test?');
+}
