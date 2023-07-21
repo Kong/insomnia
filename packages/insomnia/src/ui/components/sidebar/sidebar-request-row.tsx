@@ -13,7 +13,7 @@ import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { createRequest, updateRequestMetaByParentId } from '../../hooks/create-request';
-import { ReadyState, useReadyState } from '../../hooks/use-ready-state';
+import { useReadyState } from '../../hooks/use-ready-state';
 import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
 import type { DropdownHandle } from '../base/dropdown';
 import { Editable } from '../base/editable';
@@ -334,7 +334,7 @@ export const SidebarRequestRow = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, t
 
 const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useReadyState({ requestId, protocol: 'webSocket' });
-  return readyState === ReadyState.OPEN ? <ConnectionCircle data-testid="WebSocketSpinner__Connected" /> : null;
+  return readyState ? <ConnectionCircle data-testid="WebSocketSpinner__Connected" /> : null;
 };
 
 const EventStreamSpinner = ({ requestId }: { requestId: string }) => {

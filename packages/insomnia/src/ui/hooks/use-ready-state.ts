@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useInterval } from 'react-use';
 
 export enum ReadyState {
   CONNECTING = 0,
@@ -8,34 +7,35 @@ export enum ReadyState {
   CLOSED = 3,
 }
 
-export function useReadyState({ requestId, protocol }: { requestId: string; protocol: 'curl' | 'webSocket' }): boolean | ReadyState {
-  const [readyState, setReadyState] = useState<boolean | ReadyState>(false);
+export function useReadyState({ requestId, protocol }: { requestId: string; protocol: 'curl' | 'webSocket' }): boolean {
+  const [readyState, setReadyState] = useState<boolean>(false);
 
+  // get readyState when requestId or protocol changes
   useEffect(() => {
-    setReadyState(false);
-  }, [requestId]);
-
-  useInterval(
-    () => {
-      let isMounted = true;
-      const fn = async () => {
-        window.main[protocol].readyState.getCurrent({ requestId })
-          .then((currentReadyState: boolean | ReadyState) => {
-            isMounted && setReadyState(currentReadyState);
-          });
-      };
-      fn();
-      const unsubscribe = window.main.on(`${protocol}.${requestId}.readyState`,
-        (_, incomingReadyState: boolean) => {
-          isMounted && setReadyState(incomingReadyState);
+    let isMounted = true;
+    const fn = async () => {
+      window.main[protocol].readyState.getCurrent({ requestId })
+        .then((currentReadyState: boolean) => {
+          isMounted && setReadyState(currentReadyState);
         });
-      return () => {
-        isMounted = false;
-        unsubscribe();
-      };
-    },
-    500
-  );
+    };
+    fn();
+    return () => {
+      isMounted = false;
+    };
+  }, [protocol, requestId]);
+  // listen for readyState changes
+  useEffect(() => {
+    let isMounted = true;
+    const unsubscribe = window.main.on(`${protocol}.${requestId}.readyState`,
+      (_, incomingReadyState: boolean) => {
+        isMounted && setReadyState(incomingReadyState);
+      });
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [protocol, requestId]);
 
   return readyState;
 }

@@ -5,7 +5,6 @@ import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/r
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
-import { ReadyState } from '../../hooks/use-ready-state';
 import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
@@ -29,7 +28,7 @@ interface ActionBarProps {
   workspaceId: string;
   environmentId: string;
   defaultValue: string;
-  readyState: ReadyState;
+  readyState: boolean;
   onChange: (value: string) => void;
 }
 
@@ -68,7 +67,7 @@ export const ConnectionCircle = styled.span({
 });
 
 export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, environmentId, defaultValue, onChange, readyState }) => {
-  const isOpen = readyState === ReadyState.OPEN;
+  const isOpen = readyState;
   const oneLineEditorRef = useRef<OneLineEditorHandle>(null);
   useLayoutEffect(() => {
     oneLineEditorRef.current?.focusEnd();
@@ -126,7 +125,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
     },
   });
 
-  const isConnectingOrClosed = readyState === ReadyState.CONNECTING || readyState === ReadyState.CLOSED;
+  const isConnectingOrClosed = !readyState;
   return (
     <>
       {!isOpen && <WebSocketIcon>WS</WebSocketIcon>}
@@ -149,7 +148,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
             onKeyDown={createKeybindingsHandler({
               'Enter': () => handleSubmit(),
             })}
-            readOnly={readyState === ReadyState.OPEN}
+            readOnly={readyState}
             placeholder="wss://example.com/chat"
             defaultValue={defaultValue}
             onChange={onChange}
