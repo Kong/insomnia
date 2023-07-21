@@ -1,3 +1,4 @@
+import * as contentDisposition from 'content-disposition';
 import type { SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
@@ -125,7 +126,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       const responsePatch = await network.send(request._id, activeEnvironment?._id);
       const headers = responsePatch.headers || [];
       const header = getContentDispositionHeader(headers);
-      const nameFromHeader = header ? header.value : null;
+      const nameFromHeader = header ? contentDisposition.parse(header.value).parameters.filename : null;
 
       if (
         responsePatch.bodyPath &&
