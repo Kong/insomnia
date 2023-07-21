@@ -280,10 +280,8 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
                   />
                 )}
               />
-              {isWebSocketRequest(request) ?
-                <WebSocketSpinner requestId={request._id} />
-                : <EventStreamSpinner requestId={request._id} />
-              }
+              {isWebSocketRequest(request) && <WebSocketSpinner requestId={request._id} />}
+              {isEventStreamRequest(request) && <EventStreamSpinner requestId={request._id} />}
             </div>
           </button>
           <div className="sidebar__actions">
