@@ -150,12 +150,16 @@ function mockField(field: Field, stackDepth?: StackDepth): any {
     };
   }
 
-  if (field.resolvedType instanceof Type || !!field.resolvedType?.name) {
-    return mockTypeFields(field.resolvedType as Type, stackDepth);
-  }
-
   if (field.resolvedType instanceof Enum) {
     return mockEnum(field.resolvedType);
+  }
+
+  if (field.resolvedType) {
+    // Changed
+    if (!(field.resolvedType instanceof Type)) {
+      console.warn('Unknown resolved type: ', (field.resolvedType as any)?.name);
+    }
+    return mockTypeFields(field.resolvedType, stackDepth);
   }
 
   const mockPropertyValue = mockScalar(field.type, field.name);
@@ -209,7 +213,7 @@ function mockScalar(type: string, fieldName: string): any {
     case 'float':
       return 1.1;
     case 'bytes':
-      return Buffer.from([0xa1, 0xb2, 0xc3]).toString('base64');
+      return Buffer.from([0xa1, 0xb2, 0xc3]).toString('base64'); // Changed
     default:
       return null;
   }
