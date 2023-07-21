@@ -1,4 +1,4 @@
-import electron, { ipcMain } from 'electron';
+import electron, { BrowserWindow, ipcMain } from 'electron';
 import fs from 'fs';
 import { IncomingMessage } from 'http';
 import path from 'path';
@@ -102,7 +102,7 @@ interface OpenWebSocketRequestOptions {
   initialPayload?: string;
 }
 const openWebSocketConnection = async (
-  event: Electron.IpcMainInvokeEvent,
+  _event: Electron.IpcMainInvokeEvent,
   options: OpenWebSocketRequestOptions
 ): Promise<void> => {
   const existingConnection = WebSocketConnections.get(options.requestId);
@@ -311,7 +311,9 @@ const openWebSocketConnection = async (
 
       eventLogFileStreams.get(options.requestId)?.write(JSON.stringify(openEvent) + '\n');
       timelineFileStreams.get(options.requestId)?.write(JSON.stringify({ value: 'WebSocket connection established', name: 'Text', timestamp: Date.now() }) + '\n');
-      event.sender.send(readyStateChannel, ws.readyState);
+      for (const window of BrowserWindow.getAllWindows()) {
+        window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
+      }
 
       if (options.initialPayload) {
         sendPayload(ws, { requestId: options.requestId, payload: options.initialPayload });
@@ -344,7 +346,9 @@ const openWebSocketConnection = async (
 
       const message = `Closing connection with code ${code}`;
       deleteRequestMaps(request._id, message, closeEvent);
-      event.sender.send(readyStateChannel, ws.readyState);
+      for (const window of BrowserWindow.getAllWindows()) {
+        window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
+      }
     });
 
     ws.addEventListener('error', async ({ error, message }: ErrorEvent) => {
@@ -360,7 +364,9 @@ const openWebSocketConnection = async (
       };
 
       deleteRequestMaps(request._id, message, errorEvent);
-      event.sender.send(readyStateChannel, ws.readyState);
+      for (const window of BrowserWindow.getAllWindows()) {
+        window.webContents.send(readyStateChannel, ws.readyState === WebSocket.OPEN);
+      }
       if (error.code) {
         createErrorResponse(responseId, request._id, responseEnvironmentId, timelinePath, message || 'Something went wrong');
       }
@@ -401,8 +407,8 @@ const deleteRequestMaps = async (requestId: string, message: string, event?: Web
 
 const getWebSocketReadyState = async (
   options: { requestId: string }
-): Promise<WebSocketConnection['readyState']> => {
-  return WebSocketConnections.get(options.requestId)?.readyState ?? 0;
+): Promise<boolean> => {
+  return WebSocketConnections.get(options.requestId)?.readyState === WebSocket.OPEN;
 };
 
 const sendPayload = async (ws: WebSocket, options: { payload: string; requestId: string }): Promise<void> => {

@@ -8,7 +8,7 @@ import * as models from '../../../models';
 import { Environment } from '../../../models/environment';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
-import { ReadyState, useWSReadyState } from '../../hooks/use-ready-state';
+import { useReadyState } from '../../hooks/use-ready-state';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveRequestMeta, selectSettings } from '../../redux/selectors';
 import { TabItem, Tabs } from '../base/tabs';
@@ -111,7 +111,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
       const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
       const renderedMessage = await render(payload, renderContext);
       const readyState = await window.main.webSocket.readyState.getCurrent({ requestId: request._id });
-      if (readyState !== ReadyState.OPEN) {
+      if (!readyState) {
         const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
         const rendered = await render({
           url: request.url,
@@ -200,11 +200,12 @@ interface Props {
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
+// TODO: use the same readystate interface
 export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environment }) => {
-  const readyState = useWSReadyState(request._id);
+  const readyState = useReadyState({ requestId: request._id, protocol: 'webSocket' });
   const { useBulkParametersEditor } = useSelector(selectSettings);
 
-  const disabled = readyState === ReadyState.OPEN || readyState === ReadyState.CLOSING;
+  const disabled = readyState;
   const handleOnChange = (url: string) => {
     if (url !== request.url) {
       models.webSocketRequest.update(request, { url });
@@ -286,7 +287,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
               <SendButton
                 type="submit"
                 form="websocketMessageForm"
-                isConnected={readyState === ReadyState.OPEN}
+                isConnected={readyState}
               >
                 Send
               </SendButton>
@@ -341,7 +342,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
             key={uniqueKey}
             request={request}
             bulk={false}
-            isDisabled={readyState === ReadyState.OPEN}
+            isDisabled={readyState}
           />
         </TabItem>
         <TabItem

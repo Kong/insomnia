@@ -1,7 +1,7 @@
 import { Readable } from 'node:stream';
 
 import { Curl, CurlFeature, CurlInfoDebug, HeaderInfo } from '@getinsomnia/node-libcurl';
-import electron, { ipcMain } from 'electron';
+import electron, { BrowserWindow, ipcMain } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import tls from 'tls';
@@ -94,7 +94,7 @@ interface OpenCurlRequestOptions {
   initialPayload?: string;
 }
 const openCurlConnection = async (
-  event: Electron.IpcMainInvokeEvent,
+  _event: Electron.IpcMainInvokeEvent,
   options: OpenCurlRequestOptions
 ): Promise<void> => {
   const existingConnection = CurlConnections.get(options.requestId);
@@ -162,7 +162,9 @@ const openCurlConnection = async (
       };
       console.error('curl - error: ', error, errorCode);
       deleteRequestMaps(request._id, error.message, errorEvent);
-      event.sender.send(readyStateChannel, false);
+      for (const window of BrowserWindow.getAllWindows()) {
+        window.webContents.send(readyStateChannel, false);
+      }
       curl.close();
       if (errorCode) {
         const res = await models.response.getById(responseId);
@@ -201,7 +203,9 @@ const openCurlConnection = async (
     });
 
     CurlConnections.get(options.requestId)?.on('stream', async (stream: Readable, _code: number, [headersWithStatus]: HeaderInfo[]) => {
-      event.sender.send(readyStateChannel, true);
+      for (const window of BrowserWindow.getAllWindows()) {
+        window.webContents.send(readyStateChannel, true);
+      }
       const { timeline, responseHeaders, statusCode, statusMessage, httpVersion } = parseHeadersAndBuildTimeline(options.url, headersWithStatus);
 
       const responsePatch: Partial<Response> = {
@@ -254,8 +258,9 @@ const openCurlConnection = async (
       }
       // NOTE: this can only happen if the stream is closed cleanly by the remote server
       eventLogFileStreams.get(options.requestId)?.end();
-      console.log('response stream: ended');
-      event.sender.send(readyStateChannel, false);
+      for (const window of BrowserWindow.getAllWindows()) {
+        window.webContents.send(readyStateChannel, false);
+      }
     });
     curl.perform();
   } catch (e) {
@@ -299,7 +304,7 @@ const getCurlReadyState = async (
 };
 
 const closeCurlConnection = (
-  event: Electron.IpcMainInvokeEvent,
+  _event: Electron.IpcMainInvokeEvent,
   options: { requestId: string }
 ): void => {
   if (!CurlConnections.get(options.requestId)) {
@@ -319,7 +324,9 @@ const closeCurlConnection = (
   };
   CurlConnections.get(options.requestId)?.close();
   deleteRequestMaps(options.requestId, 'Closing connection', closeEvent);
-  event.sender.send(readyStateChannel, false);
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send(readyStateChannel, false);
+  }
 };
 
 const closeAllCurlConnections = (): void => CurlConnections.forEach(curl => curl.close());
