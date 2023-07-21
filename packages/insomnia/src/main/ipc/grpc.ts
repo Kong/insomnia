@@ -12,6 +12,7 @@ import type { GrpcRequest, GrpcRequestHeader } from '../../models/grpc-request';
 import { parseGrpcUrl } from '../../network/grpc/parse-grpc-url';
 import { writeProtoFile } from '../../network/grpc/write-proto-file';
 import { invariant } from '../../utils/invariant';
+import { MethodPayload, mockRequestMethods } from './automock';
 
 const grpcCalls = new Map<string, Call>();
 export interface GrpcIpcRequestParams {
@@ -74,6 +75,7 @@ interface MethodDefs {
   responseStream: boolean;
   requestSerialize: (value: any) => Buffer;
   responseDeserialize: (value: Buffer) => any;
+  getMocks?: () => MethodPayload;
 }
 const getMethodsFromReflection = async (host: string, metadata: GrpcRequestHeader[]): Promise<MethodDefs[]> => {
   try {
@@ -83,18 +85,26 @@ const getMethodsFromReflection = async (host: string, metadata: GrpcRequestHeade
       grpcOptions,
       filterDisabledMetaData(metadata)
     );
-    const services = await client.listServices() as string[];
+    const services = await client.listServices();
     const methodsPromises = services.map(async service => {
       const fileContainingSymbol = await client.fileContainingSymbol(service);
+      const fullService = fileContainingSymbol.lookupService(service);
+      const mockedRequestMethods = mockRequestMethods(fullService);
       const descriptorMessage = fileContainingSymbol.toDescriptor('proto3');
+      const packageDefinition = protoLoader.loadFileDescriptorSetFromObject(descriptorMessage, {});
       const tryToGetMethods = () => {
         try {
           console.log('[grpc] loading service from reflection:', service);
-          const packageDefinition = protoLoader.loadFileDescriptorSetFromObject(descriptorMessage, {});
           const serviceDefinition = asServiceDefinition(packageDefinition[service]);
           invariant(serviceDefinition, `'${service}' was not a valid ServiceDefinition`);
           const serviceMethods = Object.values(serviceDefinition);
-          return serviceMethods;
+          return serviceMethods.map(m => {
+            const methodName = Object.keys(mockedRequestMethods).find(name => m.path.endsWith(`/${name}`));
+            return {
+              ...m,
+              getMocks: methodName ? mockedRequestMethods[methodName] : undefined,
+            };
+          });
         } catch (e) {
           console.error(e);
           return [];
@@ -114,11 +124,13 @@ export const loadMethodsFromReflection = async (options: { url: string; metadata
   return methods.map(method => ({
     type: getMethodType(method),
     fullPath: method.path,
+    mocks: method.getMocks?.(),
   }));
 };
 export interface GrpcMethodInfo {
   type: GrpcMethodType;
   fullPath: string;
+  mocks?: MethodPayload;
 }
 export const getMethodType = ({ requestStream, responseStream }: any): GrpcMethodType => {
   if (requestStream && responseStream) {

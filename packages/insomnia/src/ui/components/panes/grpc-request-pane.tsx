@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from 'react';
+import React, { FunctionComponent, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
@@ -138,6 +138,21 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
 
     }
   };
+
+  useEffect(() => {
+    if (activeRequest.body.text) {
+      // If the user already has a body set, do not edit it
+      return;
+    }
+    if (method?.mocks?.plain) {
+      const newBodyText = JSON.stringify(method.mocks.plain, null, 2);
+      if (newBodyText !== activeRequest.body.text) {
+        models.grpcRequest.update(activeRequest, {
+          body: { ...activeRequest.body, text: newBodyText },
+        });
+      }
+    }
+  }, [activeRequest, method]);
 
   useDocBodyKeyboardShortcuts({
     request_send: handleRequestSend,
