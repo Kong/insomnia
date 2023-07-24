@@ -1,4 +1,4 @@
-import HTTPSnippet, { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
+import type { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
 import { exportHarRequest } from '../../../common/har';
@@ -12,8 +12,6 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 
-const DEFAULT_TARGET = HTTPSnippet.availableTargets().find(t => t.key === 'shell') as HTTPSnippetTarget;
-const DEFAULT_CLIENT = DEFAULT_TARGET?.clients.find(t => t.key === 'curl') as HTTPSnippetClient;
 const MODE_MAP: Record<string, string> = {
   c: 'clike',
   java: 'clike',
@@ -35,8 +33,9 @@ export interface GenerateCodeModalOptions {
 export interface State {
   cmd: string;
   request?: Request;
-  target: HTTPSnippetTarget;
-  client: HTTPSnippetClient;
+  target?: HTTPSnippetTarget;
+  client?: HTTPSnippetClient;
+  targets: HTTPSnippetTarget[];
 }
 export interface GenerateCodeModalHandle {
   show: (options: GenerateCodeModalOptions) => void;
@@ -58,29 +57,37 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
   const [state, setState] = useState<State>({
     cmd: '',
     request: undefined,
-    target: storedTarget || DEFAULT_TARGET,
-    client: storedClient || DEFAULT_CLIENT,
+    target: storedTarget,
+    client: storedClient,
+    targets: [],
   });
 
-  const generateCode = useCallback(async (request: Request, target: HTTPSnippetTarget, client: HTTPSnippetClient) => {
+  const generateCode = useCallback(async (request: Request, target?: HTTPSnippetTarget, client?: HTTPSnippetClient) => {
+    const HTTPSnippet = (await import('httpsnippet')).default;
+
+    const targets = HTTPSnippet.availableTargets();
+    const targetOrFallback = target || targets.find(t => t.key === 'shell') as HTTPSnippetTarget;
+    const clientOrFallback = client || targetOrFallback.clients.find(t => t.key === 'curl') as HTTPSnippetClient;
     // Some clients need a content-length for the request to succeed
-    const addContentLength = Boolean((TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key));
+    const addContentLength = Boolean((TO_ADD_CONTENT_LENGTH[targetOrFallback.key] || []).find(c => c === clientOrFallback.key));
     const har = await exportHarRequest(request._id, props.environmentId, addContentLength);
     // @TODO Should we throw instead?
     if (!har) {
       return;
     }
     const snippet = new HTTPSnippet(har);
-    const cmd = snippet.convert(target.key, client.key) || '';
+    const cmd = snippet.convert(targetOrFallback.key, clientOrFallback.key) || '';
+
     setState({
       request,
       cmd,
-      client,
-      target,
+      client:clientOrFallback,
+      target:targetOrFallback,
+      targets,
     });
     // Save client/target for next time
-    window.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(client));
-    window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(target));
+    window.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(clientOrFallback));
+    window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(targetOrFallback));
   }, [props.environmentId]);
 
   useImperativeHandle(ref, () => ({
@@ -96,8 +103,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
     },
   }), [generateCode, state]);
 
-  const { cmd, target, client, request } = state;
-  const targets = HTTPSnippet.availableTargets();
+  const { cmd, target, targets, client, request } = state;
   // NOTE: Just some extra precautions in case the target is messed up
   let clients: HTTPSnippetClient[] = [];
   if (target && Array.isArray(target.clients)) {
@@ -166,14 +172,14 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           &nbsp;&nbsp;
           <CopyButton content={cmd} className="pull-right" />
         </div>
-        <CodeEditor
+        {target && <CodeEditor
           placeholder="Generating code snippet..."
           className="border-top"
           key={Date.now()}
           mode={MODE_MAP[target.key] || target.key}
           ref={editorRef}
           defaultValue={cmd}
-        />
+        />}
       </ModalBody>
       <ModalFooter>
         <div className="margin-left italic txt-sm">
