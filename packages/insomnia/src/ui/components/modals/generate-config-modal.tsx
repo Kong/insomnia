@@ -1,9 +1,8 @@
 import React, { forwardRef, Key, useImperativeHandle, useRef, useState } from 'react';
+import YAML from 'yaml';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import type { ApiSpec } from '../../../models/api-spec';
-import type { ConfigGenerator } from '../../../plugins';
-import * as plugins from '../../../plugins';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
@@ -32,6 +31,19 @@ interface GenerateConfigModalOptions {
   apiSpec: ApiSpec;
   activeTabLabel: string;
 }
+
+export const configGenerators = [{
+  label: 'Declarative Config (Kong 3.x)',
+  docsLink: 'https://docs.insomnia.rest/insomnia/declarative-config',
+},
+{
+  label: 'Declarative Config (Legacy)',
+  docsLink: 'https://docs.insomnia.rest/insomnia/declarative-config',
+},
+{
+  label: 'Kong for Kubernetes',
+  docsLink: 'https://docs.insomnia.rest/insomnia/kong-for-kubernetes',
+}];
 export interface GenerateConfigModalHandle {
   show: (options: GenerateConfigModalOptions) => void;
   hide: () => void;
@@ -49,7 +61,7 @@ export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalPr
     },
     show: async options => {
       const configs: Config[] = [];
-      for (const p of await plugins.getConfigGenerators()) {
+      for (const p of configGenerators) {
         configs.push(await generateConfig(p, options.apiSpec));
       }
       const foundIndex = configs.findIndex(c => c.label === options.activeTabLabel);
@@ -61,15 +73,45 @@ export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalPr
     },
   }), []);
 
-  const generateConfig = async (generatePlugin: ConfigGenerator, apiSpec: ApiSpec): Promise<Config> => {
+  const generateConfig = async (generatePlugin: typeof configGenerators[0], apiSpec: ApiSpec): Promise<Config> => {
     try {
-      const result = await generatePlugin.generate(parseApiSpec(apiSpec.contents));
+      const { rawContents, formatVersion } = parseApiSpec(apiSpec.contents);
+      const isSupported = formatVersion && formatVersion.match(/^3./);
+      if (!isSupported) {
+        return {
+          content: '',
+          mimeType: 'text/yaml',
+          label: generatePlugin.label,
+          docsLink: generatePlugin.docsLink,
+          error: `Unsupported OpenAPI spec format ${formatVersion}`,
+        };
+      }
+
+      const o2k = await import('openapi-2-kong');
+      const type = generatePlugin.label === 'Kong for Kubernetes' ? 'kong-for-kubernetes' : 'kong-declarative-config';
+      if (generatePlugin.label === 'Declarative Config (Kong 3.x)') {
+        const r = await o2k.generateFromString(rawContents, type, [], false);
+        const yamlDocs = r.documents.map(d => YAML.stringify(d));
+
+        return {
+          // Join the YAML docs with "---" and strip any extra newlines surrounding them
+          content: yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n') || '',
+          mimeType: 'text/yaml',
+          label: generatePlugin.label,
+          docsLink: generatePlugin.docsLink,
+          error: null,
+        };
+      }
+      const r = await o2k.generateFromString(rawContents, type);
+      const yamlDocs = r.documents.map(d => YAML.stringify(d));
+
       return {
-        content: result.document || '',
+        // Join the YAML docs with "---" and strip any extra newlines surrounding them
+        content: yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n') || '',
         mimeType: 'text/yaml',
         label: generatePlugin.label,
         docsLink: generatePlugin.docsLink,
-        error: result.error || null,
+        error: null,
       };
     } catch (err) {
       return {

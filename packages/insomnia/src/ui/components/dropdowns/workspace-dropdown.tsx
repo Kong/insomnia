@@ -9,14 +9,14 @@ import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
 import { isDesign, Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
-import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
+import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { useAIContext } from '../../context/app/ai-context';
 import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { InsomniaAI } from '../insomnia-ai-icon';
 import { showError, showModal } from '../modals';
-import { showGenerateConfigModal } from '../modals/generate-config-modal';
+import { configGenerators, showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 
@@ -29,7 +29,6 @@ export const WorkspaceDropdown: FC = () => {
   const settings = useSelector(selectSettings);
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
-  const [configGeneratorPlugins, setConfigGeneratorPlugins] = useState<ConfigGenerator[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);
 
@@ -73,9 +72,7 @@ export const WorkspaceDropdown: FC = () => {
 
   const handleDropdownOpen = useCallback(async () => {
     const actionPlugins = await getWorkspaceActions();
-    const configGeneratorPlugins = await getConfigGenerators();
     setActionPlugins(actionPlugins);
-    setConfigGeneratorPlugins(configGeneratorPlugins);
   }, []);
 
   const handleShowExport = useCallback(() => {
@@ -162,9 +159,9 @@ export const WorkspaceDropdown: FC = () => {
       <DropdownSection
         aria-label='Config Generators Section'
         title="Config Generators"
-        items={isDesign(activeWorkspace) && configGeneratorPlugins.length > 0 ? configGeneratorPlugins : []}
+        items={isDesign(activeWorkspace) ? configGenerators : []}
       >
-        {(p: ConfigGenerator) =>
+        {p =>
           <DropdownItem
             key={`generateConfig-${p.label}`}
             aria-label={p.label}
