@@ -1,4 +1,6 @@
 import { format } from 'date-fns';
+import { JSONPath } from 'jsonpath-plus';
+import os from 'os';
 import * as uuid from 'uuid';
 
 import { TemplateTag } from '../../../plugins';
@@ -132,6 +134,49 @@ export const localTemplateTags: TemplateTag[] = [
             return uuid.v4();
           default:
             throw new Error(`Invalid UUID type "${uuidType}"`);
+        }
+      },
+    },
+  },
+  {
+    templateTag:{
+      displayName: 'OS',
+      name: 'os',
+      description: 'get OS info',
+      args: [
+        {
+          displayName: 'Function',
+          type: 'enum',
+          options: [
+            { displayName: 'arch', value: 'arch' },
+            { displayName: 'cpus', value: 'cpus' },
+            { displayName: 'freemem', value: 'freemem' },
+            { displayName: 'hostname', value: 'hostname' },
+            { displayName: 'platform', value: 'platform' },
+            { displayName: 'release', value: 'release' },
+            { displayName: 'userInfo', value: 'userInfo' },
+          ],
+        },
+        {
+          displayName: 'JSONPath Filter',
+          help: 'Some OS functions return objects. Use JSONPath queries to extract desired values.',
+          hide: args => !['userInfo', 'cpus'].includes(args[0].value),
+          type: 'string',
+        },
+      ],
+      run(context, fnName, filter) {
+        let value = os[fnName]();
+
+        if (JSONPath && ['userInfo', 'cpus'].includes(fnName)) {
+          try {
+            value = JSONPath({ json: value, path: filter })[0];
+          } catch (err) {}
+        }
+
+        if (typeof value !== 'string') {
+          return JSON.stringify(value);
+        } else {
+          return value;
         }
       },
     },
