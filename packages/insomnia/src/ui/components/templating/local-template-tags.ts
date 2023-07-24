@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { format } from 'date-fns';
+import fs from 'fs';
 import { JSONPath } from 'jsonpath-plus';
 import os from 'os';
 import * as uuid from 'uuid';
@@ -226,6 +227,26 @@ export const localTemplateTags: TemplateTag[] = [
         const hash = crypto.createHash(algorithm);
         hash.update(value || '', 'utf8');
         return hash.digest(encoding);
+      },
+    },
+  },
+  {
+    templateTag: {
+      name: 'file',
+      displayName: 'File',
+      description: 'read contents from a file',
+      args: [
+        {
+          displayName: 'Choose File',
+          type: 'file',
+        },
+      ],
+      run(context, path) {
+        if (!path) {
+          throw new Error('No file selected');
+        }
+
+        return fs.readFileSync(path, 'utf8');
       },
     },
   },
