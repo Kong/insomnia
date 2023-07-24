@@ -64,7 +64,6 @@
     "enquirer": "^2.3.6",
     "insomnia-plugin-core-themes": "^3.19.0-beta.4",
     "insomnia-plugin-default-headers": "^3.19.0-beta.4",
-    "insomnia-plugin-prompt": "^3.19.0-beta.4",
     "insomnia-plugin-request": "^3.19.0-beta.4",
     "insomnia-plugin-response": "^3.19.0-beta.4",
     "insomnia-send-request": "^3.19.0-beta.4",
