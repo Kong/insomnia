@@ -1,5 +1,4 @@
 import * as Hawk from 'hawk';
-import jwtAuthentication from 'jwt-authentication';
 
 import {
   AUTH_API_KEY,
@@ -115,7 +114,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
 
   if (authentication.type === AUTH_ASAP) {
     const { issuer, subject, audience, keyId, additionalClaims, privateKey } = authentication;
-    const generator = jwtAuthentication.client.create();
+    const generator = (await import('jwt-authentication')).client.create();
     let claims = {
       iss: issuer,
       sub: subject,
