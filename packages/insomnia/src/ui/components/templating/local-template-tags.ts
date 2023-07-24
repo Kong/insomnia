@@ -730,6 +730,7 @@ export const localTemplateTags: {
                   case 'Attr':
                     results.push({
                       outer: selectedValue.toString().trim(),
+                      // @ts-expect-error -- needs xpath types
                       inner: selectedValue.nodeValue,
                     });
                     break;
@@ -737,6 +738,7 @@ export const localTemplateTags: {
                   case 'Element':
                     results.push({
                       outer: selectedValue.toString().trim(),
+                      // @ts-expect-error -- needs xpath types
                       inner: selectedValue.childNodes.toString(),
                     });
                     break;
