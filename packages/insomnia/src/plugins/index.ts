@@ -215,7 +215,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
       }
 
       try {
-        const pluginJson = global.require(`${p}/package.json`);
+        const pluginJson = global.require(`${p}/package.json`) as unknown as { name: string };
 
         if (ignorePlugins.includes(pluginJson.name)) {
           continue;
