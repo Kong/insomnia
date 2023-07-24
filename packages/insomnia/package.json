@@ -69,7 +69,6 @@
     "html-entities": "^2.4.0",
     "httpsnippet": "^2.0.0",
     "iconv-lite": "^0.6.3",
-    "insomnia-plugin-base64": "^3.19.0-beta.4",
     "insomnia-plugin-cookie-jar": "^3.19.0-beta.4",
     "insomnia-plugin-core-themes": "^3.19.0-beta.4",
     "insomnia-plugin-default-headers": "^3.19.0-beta.4",
