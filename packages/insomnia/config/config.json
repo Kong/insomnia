@@ -20,7 +20,6 @@
     "insomnia-plugin-prompt",
     "insomnia-plugin-request",
     "insomnia-plugin-response",
-    "insomnia-plugin-cookie-jar",
     "insomnia-plugin-core-themes",
     "insomnia-plugin-default-headers"
   ]
