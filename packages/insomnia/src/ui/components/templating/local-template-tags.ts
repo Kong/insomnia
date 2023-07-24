@@ -10,6 +10,7 @@ import * as uuid from 'uuid';
 import { Response } from '../../../models/response';
 import { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
+import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 
 export const localTemplateTags: {
   templateTag: PluginTemplateTag;
@@ -768,6 +769,246 @@ export const localTemplateTags: {
           default:
             throw new Error(`Unknown field ${field}`);
         }
+      },
+    },
+  },
+  {
+    templateTag: {
+      name: 'request',
+      displayName: 'Request',
+      description: 'reference value from current request',
+      args: [
+        {
+          displayName: 'Attribute',
+          type: 'enum',
+          options: [
+            {
+              displayName: 'Name',
+              value: 'name',
+              description: 'name of request',
+            },
+            {
+              displayName: 'Folder',
+              value: 'folder',
+              description: 'name of parent folder (or workspace)',
+            },
+            {
+              displayName: 'URL',
+              value: 'url',
+              description: 'fully qualified URL',
+            },
+            {
+              displayName: 'Query Parameter',
+              value: 'parameter',
+              description: 'query parameter by name',
+            },
+            {
+              displayName: 'Header',
+              value: 'header',
+              description: 'header value by name',
+            },
+            {
+              displayName: 'Cookie',
+              value: 'cookie',
+              description: 'cookie value by name',
+            },
+            {
+              displayName: 'OAuth 2.0 Access Token',
+              value: 'oauth2',
+              /*
+                This value is left as is and not renamed to 'oauth2-access' so as to not
+                break the current release's usage of `oauth2`.
+              */
+            },
+            {
+              displayName: 'OAuth 2.0 Identity Token',
+              value: 'oauth2-identity',
+            },
+            {
+              displayName: 'OAuth 2.0 Refresh Token',
+              value: 'oauth2-refresh',
+            },
+          ],
+        },
+        {
+          type: 'string',
+          hide: args =>
+            ['url', 'oauth2', 'oauth2-identity', 'oauth2-refresh', 'name', 'folder'].includes(
+              args[0].value + '',
+            ),
+          displayName: args => {
+            switch (args[0].value) {
+              case 'cookie':
+                return 'Cookie Name';
+              case 'parameter':
+                return 'Query Parameter Name';
+              case 'header':
+                return 'Header Name';
+              default:
+                return 'Name';
+            }
+          },
+        },
+        {
+          hide: args => args[0].value !== 'folder',
+          displayName: 'Parent Index',
+          help: 'Specify an index (Starting at 0) for how high up the folder tree to look',
+          type: 'number',
+        },
+      ],
+
+      async run(context, attribute, name, folderIndex) {
+        const { meta } = context;
+
+        if (!meta.requestId || !meta.workspaceId) {
+          return null;
+        }
+
+        const request = await context.util.models.request.getById(meta.requestId);
+        const workspace = await context.util.models.workspace.getById(meta.workspaceId);
+
+        if (!request) {
+          throw new Error(`Request not found for ${meta.requestId}`);
+        }
+
+        if (!workspace) {
+          throw new Error(`Workspace not found for ${meta.workspaceId}`);
+        }
+        const params = [];
+        if (attribute === 'url') {
+          for (const p of request.parameters) {
+            params.push({
+              name: await context.util.render(p.name),
+              value: await context.util.render(p.value),
+            });
+          }
+          return smartEncodeUrl(joinUrlAndQueryString((await context.util.render(request.url)), buildQueryStringFromParams(params)), request.settingEncodeUrl);
+        }
+        if (attribute === 'cookie') {
+          if (!name) {
+            throw new Error('No cookie specified');
+          }
+
+          const cookieJar = await context.util.models.cookieJar.getOrCreateForWorkspace(workspace);
+          for (const p of request.parameters) {
+            params.push({
+              name: await context.util.render(p.name),
+              value: await context.util.render(p.value),
+            });
+          }
+          const url = smartEncodeUrl(joinUrlAndQueryString((await context.util.render(request.url)), buildQueryStringFromParams(params)), request.settingEncodeUrl);
+          return new Promise((resolve, reject) => {
+            let jar;
+            try {
+              // For some reason, fromJSON modifies `cookies`.
+              // Create a copy first just to be sure.
+              const copy = JSON.stringify({ cookies:cookieJar.cookies });
+              jar = CookieJar.fromJSON(copy);
+            } catch (error) {
+              console.log('[cookies] Failed to initialize cookie jar', error);
+              jar = new CookieJar();
+            }
+            jar.rejectPublicSuffixes = false;
+            jar.looseMode = true;
+
+            jar.getCookies(url, {}, (err, cookies) => {
+              if (err) {
+                console.warn(`Failed to find cookie for ${url}`, err);
+              }
+
+              if (!cookies || cookies.length === 0) {
+                reject(new Error(`No cookies in store for url "${url}"`));
+              }
+
+              const cookie = cookies.find(cookie => cookie.key === name);
+              if (!cookie) {
+                const names = cookies.map(c => `"${c.key}"`).join(',\n\t');
+                throw new Error(
+                  `No cookie with name "${name}".\nChoices are [\n\t${names}\n] for url "${url}"`,
+                );
+              } else {
+                resolve(cookie ? cookie.value : null);
+              }
+            });
+          });
+        }
+        if (attribute === 'parameter') {
+          if (!name) {
+            throw new Error('No query parameter specified');
+          }
+
+          const parameterNames = [];
+
+          if (request.parameters.length === 0) {
+            throw new Error('No query parameters available');
+          }
+
+          for (const queryParameter of request.parameters) {
+            const queryParameterName = await context.util.render(queryParameter.name);
+            parameterNames.push(queryParameterName);
+            if (queryParameterName.toLowerCase() === name.toLowerCase()) {
+              return context.util.render(queryParameter.value);
+            }
+          }
+
+          const parameterNamesStr = parameterNames.map(n => `"${n}"`).join(',\n\t');
+          throw new Error(
+            `No query parameter with name "${name}".\nChoices are [\n\t${parameterNamesStr}\n]`,
+          );
+        }
+        if (attribute === 'header') {
+          if (!name) {
+            throw new Error('No header specified');
+          }
+
+          const headerNames = [];
+
+          if (request.headers.length === 0) {
+            throw new Error('No headers available');
+          }
+
+          for (const header of request.headers) {
+            const headerName = await context.util.render(header.name);
+            headerNames.push(headerName);
+            if (headerName.toLowerCase() === name.toLowerCase()) {
+              return context.util.render(header.value);
+            }
+          }
+
+          const headerNamesStr = headerNames.map(n => `"${n}"`).join(',\n\t');
+          throw new Error(`No header with name "${name}".\nChoices are [\n\t${headerNamesStr}\n]`);
+        }
+        if (attribute === 'oauth2' || attribute === 'oauth2-identity' || attribute === 'oauth2-refresh') {
+          const access = await context.util.models.oAuth2Token.getByRequestId(request._id);
+          if (!access || !access.accessToken) {
+            throw new Error('No OAuth 2.0 access tokens found for request');
+          }
+          if (attribute === 'oauth2') {
+            return access.accessToken;
+          }
+          if (attribute === 'oauth2-identity') {
+            return access.identityToken;
+          }
+          if (attribute === 'oauth2-refresh') {
+            return access.refreshToken;
+          }
+        }
+        if (attribute === 'name') {
+          return request.name;
+        }
+        if (attribute === 'folder') {
+          const ancestors = await context.util.models.request.getAncestors(request);
+          const doc = ancestors[folderIndex || 0];
+          if (!doc) {
+            throw new Error(
+              `Could not get folder by index ${folderIndex}. Must be between 0-${ancestors.length -
+              1}`,
+            );
+          }
+          return doc ? doc.name : null;
+        }
+
+        return null;
       },
     },
   },

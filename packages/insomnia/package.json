@@ -71,7 +71,6 @@
     "iconv-lite": "^0.6.3",
     "insomnia-plugin-core-themes": "^3.19.0-beta.4",
     "insomnia-plugin-default-headers": "^3.19.0-beta.4",
-    "insomnia-plugin-request": "^3.19.0-beta.4",
     "insomnia-testing": "^3.19.0-beta.4",
     "isomorphic-git": "^1.10.4",
     "js-yaml": "^3.14.1",
