@@ -10,7 +10,7 @@ export interface NunjucksParsedTagArg {
   forceVariable?: boolean;
   placeholder?: string;
   help?: string;
-  displayName?: string;
+  displayName?: string | ((args: NunjucksParsedTagArg[]) => string);
   quotedBy?: '"' | "'";
   validate?: (value: any) => string;
   hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
