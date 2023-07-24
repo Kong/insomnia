@@ -19,7 +19,6 @@
   "plugins": [
     "insomnia-plugin-hash",
     "insomnia-plugin-file",
-    "insomnia-plugin-now",
     "insomnia-plugin-uuid",
     "insomnia-plugin-prompt",
     "insomnia-plugin-request",
