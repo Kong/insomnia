@@ -1,4 +1,3 @@
-import HTTPSnippet from 'httpsnippet';
 import React, { forwardRef, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -92,6 +91,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
     try {
       const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
       const har = await exportHarRequest(request._id, environmentId);
+      const HTTPSnippet = (await import('httpsnippet')).default;
       const snippet = new HTTPSnippet(har);
       const cmd = snippet.convert('shell', 'curl');
 

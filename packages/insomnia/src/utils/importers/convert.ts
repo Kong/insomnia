@@ -1,5 +1,4 @@
 import { ImportRequest } from './entities';
-import { importers } from './importers';
 import { setDefaults } from './utils';
 
 export interface InsomniaImporter {
@@ -20,6 +19,7 @@ export interface ConvertResult<T = {}> {
 }
 
 export const convert = async (rawData: string) => {
+  const importers = (await import('./importers')).importers;
   for (const importer of importers) {
     const resources = await importer.convert(rawData);
 

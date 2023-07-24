@@ -3,11 +3,9 @@ import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { SettingsOfType } from '../../../common/settings';
-import { getControlledStatus } from '../../../models/helpers/settings';
 import * as models from '../../../models/index';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
-import { ControlledSetting } from './controlled-setting';
 
 const Descriptions = styled.div({
   fontSize: 'var(--font-size-sm)',
@@ -25,11 +23,13 @@ export const BooleanSetting: FC<{
   help?: string;
   label: ReactNode;
   setting: SettingsOfType<boolean>;
+  disabled?: boolean;
 }> = ({
   descriptions,
   help,
   label,
   setting,
+  disabled = false,
 }) => {
   const settings = useSelector(selectSettings);
 
@@ -37,14 +37,12 @@ export const BooleanSetting: FC<{
     throw new Error(`Invalid boolean setting name ${setting}`);
   }
 
-  const { isControlled } = getControlledStatus(settings)(setting);
-
   const onChange = useCallback<ChangeEventHandler<HTMLInputElement>>(async ({ currentTarget: { checked } }) => {
     await models.settings.patch({ [setting]: checked });
   }, [setting]);
 
   return (
-    <ControlledSetting setting={setting}>
+    <>
       <div className="form-control form-control--thin">
         <label className="inline-block">
           {label}
@@ -54,7 +52,7 @@ export const BooleanSetting: FC<{
             name={setting}
             onChange={onChange}
             type="checkbox"
-            disabled={isControlled}
+            disabled={disabled}
           />
         </label>
       </div>
@@ -66,6 +64,6 @@ export const BooleanSetting: FC<{
           ))}
         </Descriptions>
       )}
-    </ControlledSetting>
+    </>
   );
 };

@@ -6,7 +6,6 @@ import { readFileSync } from 'fs';
 import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, Kind, NonNullTypeNode, OperationDefinitionNode, parse, typeFromAST } from 'graphql';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { Maybe } from 'graphql-language-service';
-import prettier from 'prettier';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useSelector } from 'react-redux';
@@ -238,9 +237,9 @@ export const GraphQLEditor: FC<Props> = ({
   }, [automaticFetch, environmentId, request._id, request.url, workspaceId]);
 
   const { editorIndentWithTabs, editorIndentSize } = useSelector(selectSettings);
-  const beautifyRequestBody = () => {
+  const beautifyRequestBody = async () => {
     const { body } = state;
-    const prettyQuery = prettier.format(body.query, {
+    const prettyQuery = (await import('prettier')).format(body.query, {
       parser: 'graphql',
       useTabs: editorIndentWithTabs,
       tabWidth: editorIndentSize,

@@ -66,9 +66,6 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
   // Return callback helper to send requests
   return async function sendRequest(requestId: string) {
     try {
-      plugins.ignorePlugin('insomnia-plugin-kong-declarative-config');
-      plugins.ignorePlugin('insomnia-plugin-kong-kubernetes-config');
-      plugins.ignorePlugin('insomnia-plugin-kong-portal');
       const {
         request,
         settings,

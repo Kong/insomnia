@@ -24,7 +24,6 @@ export interface Module {
   requestActions?: OmitInternal<RequestAction>[];
   workspaceActions?: OmitInternal<WorkspaceAction>[];
   documentActions?: OmitInternal<DocumentAction>[];
-  configGenerators?: OmitInternal<ConfigGenerator>[];
 }
 
 export interface Plugin {
@@ -79,17 +78,6 @@ export interface WorkspaceAction extends InternalProperties {
   ) => void | Promise<void>;
   label: string;
   icon?: string;
-}
-
-export interface ConfigGenerator extends InternalProperties {
-  label: string;
-  docsLink?: string;
-  generate: (
-    info: ParsedApiSpec,
-  ) => Promise<{
-    document?: string;
-    error?: string;
-  }>;
 }
 
 export interface DocumentAction extends InternalProperties {
@@ -392,22 +380,6 @@ export async function getThemes(): Promise<Theme[]> {
   return extensions;
 }
 
-export async function getConfigGenerators(): Promise<ConfigGenerator[]> {
-  let functions: ConfigGenerator[] = [];
-
-  for (const plugin of await getActivePlugins()) {
-    const moreFunctions = plugin.module.configGenerators || [];
-    functions = [
-      ...functions,
-      ...moreFunctions.map(p => ({
-        plugin,
-        ...p,
-      })),
-    ];
-  }
-
-  return functions;
-}
 const _defaultPluginConfig: PluginConfig = {
   disabled: false,
 };

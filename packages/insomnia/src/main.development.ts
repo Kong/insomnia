@@ -8,7 +8,6 @@ import appConfig from '../config/config.json';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
-import { validateInsomniaConfig } from './common/validate-insomnia-config';
 import { registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
@@ -58,15 +57,6 @@ app.on('web-contents-created', (_, contents) => {
 
 // When the app is first launched
 app.on('ready', async () => {
-
-  const { error } = validateInsomniaConfig();
-
-  if (error) {
-    electron.dialog.showErrorBox(error.title, error.message);
-    console.log('[config] Insomnia config is invalid, preventing app initialization');
-    app.exit(1);
-    return;
-  }
   registerElectronHandlers();
   registerMainHandlers();
   registergRPCHandlers();

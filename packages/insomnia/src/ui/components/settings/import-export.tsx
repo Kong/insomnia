@@ -8,7 +8,6 @@ import { exportAllToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { isRequestGroup } from '../../../models/request-group';
-import { importers } from '../../../utils/importers/importers';
 import { selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
@@ -56,7 +55,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     <Fragment>
       <div data-testid="import-export-tab">
         <div className="no-margin-top">
-          Import format will be automatically detected. Supported formats include: {importers.map(importer => importer.name).join(', ')}
+          Import format will be automatically detected.
         </div>
         <p>
           Your format isn't supported? <Link href={docsImportExport}>Add Your Own</Link>.

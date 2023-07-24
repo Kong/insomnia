@@ -36,8 +36,7 @@
     "test:watch": "jest --watch",
     "type-check": "tsc --noEmit --project tsconfig.build.json",
     "type-check:watch": "npm run type-check -- --watch",
-    "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/",
-    "generate-config": "esr ./src/utils/config/generated/generate.ts"
+    "convert-svg": "npm_config_yes=true npx @svgr/cli@6.4.0 --no-index --config-file svgr.config.js --out-dir src/ui/components/assets/svgr src/ui/components/assets/"
   },
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.3.6",
@@ -77,9 +76,6 @@
     "insomnia-plugin-file": "^3.19.0-beta.4",
     "insomnia-plugin-hash": "^3.19.0-beta.4",
     "insomnia-plugin-jsonpath": "^3.19.0-beta.4",
-    "insomnia-plugin-kong-declarative-config": "^3.19.0-beta.4",
-    "insomnia-plugin-kong-kubernetes-config": "^3.19.0-beta.4",
-    "insomnia-plugin-kong-portal": "^3.19.0-beta.4",
     "insomnia-plugin-now": "^3.19.0-beta.4",
     "insomnia-plugin-os": "^3.19.0-beta.4",
     "insomnia-plugin-prompt": "^3.19.0-beta.4",
