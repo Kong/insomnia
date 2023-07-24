@@ -321,7 +321,7 @@ export const TagEditor: FC<Props> = props => {
           });
           return null;
         }
-        const strValue = templateUtils.decodeEncoding(argData.value.toString());
+        const strValue = templateUtils.decodeEncoding(argData.value?.toString() || '');
         const isVariable = argData.type === 'variable';
 
         let argInput;
@@ -523,13 +523,13 @@ export const TagEditor: FC<Props> = props => {
                 type="button"
                 onClick={async () => {
                   const pluginTemplateTags = await plugins.getTemplateTags();
-                  const templateTags = [...pluginTemplateTags, ...localTemplateTags];
+                  const templateTags = [...pluginTemplateTags, ...localTemplateTags] as plugins.TemplateTag[];
                   const activeTemplateTag = templateTags.find(({ templateTag }) => {
                     return templateTag.name === state.activeTagData?.name;
                   });
-                  // @ts-expect-error -- TSCONVERSION activeTemplateTag can be undefined
-                  const helperContext: pluginContexts.PluginStore = { ...pluginContexts.store.init(activeTemplateTag.plugin) };
-                  await action.run(helperContext);
+                  if (activeTemplateTag?.plugin) {
+                    await action.run(pluginContexts.store.init(activeTemplateTag.plugin));
+                  }
                   update(
                     state.tagDefinitions,
                     state.activeTagDefinition,

@@ -6,8 +6,12 @@ import os from 'os';
 import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
 
-import { TemplateTag } from '../../../plugins';
-export const localTemplateTags: TemplateTag[] = [
+import { PluginTemplateTag } from '../../../templating/extensions';
+import { invariant } from '../../../utils/invariant';
+
+export const localTemplateTags: {
+  templateTag: PluginTemplateTag;
+}[] = [
   {
     templateTag: {
       name: 'base64',
@@ -36,9 +40,9 @@ export const localTemplateTags: TemplateTag[] = [
           placeholder: 'My text',
         },
       ],
-      run(context, action, kind, text) {
+      run(_context, action, kind, text) {
         text = text || '';
-
+        invariant(action === 'encode' || action === 'decode', 'invalid action');
         if (action === 'encode') {
           if (kind === 'normal') {
             return Buffer.from(text, 'utf8').toString('base64');
@@ -49,11 +53,8 @@ export const localTemplateTags: TemplateTag[] = [
               .replace(/\//g, '_')
               .replace(/=/g, '');
           }
-        } else if (action === 'decode') {
-          return Buffer.from(text, 'base64').toString('utf8');
-        } else {
-          throw new Error('Unsupported operation "' + action + '". Must be encode or decode.');
         }
+        return Buffer.from(text, 'base64').toString('utf8');
       },
     },
   },
@@ -81,7 +82,7 @@ export const localTemplateTags: TemplateTag[] = [
           hide: args => args[0].value !== 'custom',
         },
       ],
-      run(context, dateType = 'iso-8601', formatStr = '') {
+      run(_context, dateType = 'iso-8601', formatStr = '') {
         if (typeof dateType === 'string') {
           dateType = dateType.toLowerCase();
         }
@@ -121,14 +122,8 @@ export const localTemplateTags: TemplateTag[] = [
           ],
         },
       ],
-      run(context, uuidType = 'v4') {
-        if (typeof uuidType === 'number') {
-          uuidType += '';
-        } else if (typeof uuidType === 'string') {
-          uuidType = uuidType.toLowerCase();
-        }
-
-        switch (uuidType) {
+      run(_context, uuidType = 'v4') {
+        switch ((uuidType + '').toLowerCase()) {
           case '1':
           case 'v1':
             return uuid.v1();
@@ -163,11 +158,11 @@ export const localTemplateTags: TemplateTag[] = [
         {
           displayName: 'JSONPath Filter',
           help: 'Some OS functions return objects. Use JSONPath queries to extract desired values.',
-          hide: args => !['userInfo', 'cpus'].includes(args[0].value),
+          hide: args => !['userInfo', 'cpus'].includes(args[0].value + ''),
           type: 'string',
         },
       ],
-      run(context, fnName, filter) {
+      run(_context, fnName: 'arch' | 'cpus', filter) {
         let value = os[fnName]();
 
         if (JSONPath && ['userInfo', 'cpus'].includes(fnName)) {
@@ -215,7 +210,7 @@ export const localTemplateTags: TemplateTag[] = [
           placeholder: 'Value to hash',
         },
       ],
-      run(context, algorithm, encoding, value = '') {
+      run(_context, algorithm, encoding, value = '') {
         if (encoding !== 'hex' && encoding !== 'latin1' && encoding !== 'base64') {
           throw new Error(`Invalid encoding ${encoding}. Choices are hex, latin1, base64`);
         }
@@ -242,7 +237,7 @@ export const localTemplateTags: TemplateTag[] = [
           type: 'file',
         },
       ],
-      run(context, path) {
+      run(_context, path) {
         if (!path) {
           throw new Error('No file selected');
         }
@@ -267,7 +262,7 @@ export const localTemplateTags: TemplateTag[] = [
           type: 'string',
         },
       ],
-      run(context, jsonString, filter) {
+      run(_context, jsonString, filter) {
         let body;
         try {
           body = JSON.parse(jsonString);
@@ -364,7 +359,7 @@ export const localTemplateTags: TemplateTag[] = [
       displayName: 'Prompt',
       name: 'prompt',
       description: 'prompt user for input',
-      disablePreview: args => args[4] && args[4].value === true,
+      disablePreview: args => Boolean(args[4]) && args[4].value === true,
       args: [
         {
           displayName: 'Title',

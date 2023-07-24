@@ -181,7 +181,7 @@ async function getNunjucks(renderMode: string): Promise<NunjucksEnvironment> {
 
   try {
     const pluginTemplateTags = await plugins.getTemplateTags();
-    allTemplateTagPlugins = [...pluginTemplateTags, ...localTemplateTags];
+    allTemplateTagPlugins = [...pluginTemplateTags, ...localTemplateTags] as TemplateTag[];
   } finally {
     plugins.clearIgnores();
   }
