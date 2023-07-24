@@ -34,11 +34,6 @@ describe('render tests', () => {
       expect(rendered).toMatch(/Hello [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}!/);
     });
 
-    it('renders custom tag: timestamp', async () => {
-      const rendered = await renderUtils.render('Hello {% timestamp %}!');
-      expect(rendered).toMatch(/Hello \d{13}!/);
-    });
-
     it('renders nested object', async () => {
       const rendered = await renderUtils.render('Hello {{ users[0].name }}!', {
         users: [

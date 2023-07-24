@@ -6,7 +6,12 @@ import * as templating from './index';
 import { decodeEncoding } from './utils';
 
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
-
+export interface HelperContext {
+  context: any;
+  meta: any;
+  renderPurpose: any;
+  util: any;
+}
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;
@@ -99,7 +104,7 @@ export default class BaseExtension {
       .filter(a => a !== EMPTY_ARG)
       .map(decodeEncoding);
     // Define a helper context with utils
-    const helperContext = {
+    const helperContext: HelperContext = {
       ...pluginContexts.app.init(renderPurpose),
       // @ts-expect-error -- TSCONVERSION
       ...pluginContexts.store.init(this._plugin),

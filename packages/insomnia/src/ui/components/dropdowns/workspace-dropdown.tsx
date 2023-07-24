@@ -48,6 +48,7 @@ export const WorkspaceDropdown: FC = () => {
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };
+
       const docs = await db.withDescendants(workspace);
       const requests = docs
         .filter(isRequest)
