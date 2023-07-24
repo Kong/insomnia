@@ -65,7 +65,6 @@
     "insomnia-plugin-cookie-jar": "^3.19.0-beta.4",
     "insomnia-plugin-core-themes": "^3.19.0-beta.4",
     "insomnia-plugin-default-headers": "^3.19.0-beta.4",
-    "insomnia-plugin-jsonpath": "^3.19.0-beta.4",
     "insomnia-plugin-prompt": "^3.19.0-beta.4",
     "insomnia-plugin-request": "^3.19.0-beta.4",
     "insomnia-plugin-response": "^3.19.0-beta.4",
