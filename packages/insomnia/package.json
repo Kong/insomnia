@@ -76,7 +76,6 @@
     "insomnia-plugin-file": "^3.19.0-beta.4",
     "insomnia-plugin-hash": "^3.19.0-beta.4",
     "insomnia-plugin-jsonpath": "^3.19.0-beta.4",
-    "insomnia-plugin-kong-portal": "^3.19.0-beta.4",
     "insomnia-plugin-now": "^3.19.0-beta.4",
     "insomnia-plugin-os": "^3.19.0-beta.4",
     "insomnia-plugin-prompt": "^3.19.0-beta.4",

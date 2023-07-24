@@ -83,7 +83,6 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
   const workspaceName = getWorkspaceName(workspace, apiSpec);
 
   const { refresh, renderPluginDropdownItems } = useDocumentActionPlugins(props);
-
   return (
     <Fragment>
       <Dropdown

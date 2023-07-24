@@ -179,7 +179,6 @@ async function getNunjucks(renderMode: string): Promise<NunjucksEnvironment> {
   let allTemplateTagPlugins: TemplateTag[];
 
   try {
-    plugins.ignorePlugin('insomnia-plugin-kong-portal');
     allTemplateTagPlugins = await plugins.getTemplateTags();
   } finally {
     plugins.clearIgnores();
