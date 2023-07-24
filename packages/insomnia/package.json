@@ -73,7 +73,6 @@
     "insomnia-plugin-core-themes": "^3.19.0-beta.4",
     "insomnia-plugin-default-headers": "^3.19.0-beta.4",
     "insomnia-plugin-file": "^3.19.0-beta.4",
-    "insomnia-plugin-hash": "^3.19.0-beta.4",
     "insomnia-plugin-jsonpath": "^3.19.0-beta.4",
     "insomnia-plugin-prompt": "^3.19.0-beta.4",
     "insomnia-plugin-request": "^3.19.0-beta.4",
