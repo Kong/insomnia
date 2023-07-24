@@ -330,7 +330,37 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
 }
 
 export async function getRequestHooks(): Promise<RequestHook[]> {
-  let functions: RequestHook[] = [];
+  let functions: RequestHook[] = [{
+    plugin: {
+      name: 'default-headers',
+      description: 'Set default headers for all requests',
+      version: '0.0.0',
+      directory: '',
+      config: {
+        disabled: false,
+      },
+      module: {},
+    },
+    hook: context => {
+      const headers = context.request.getEnvironmentVariable('DEFAULT_HEADERS');
+      if (!headers) {
+        return;
+      }
+      for (const name of Object.keys(headers)) {
+        const value = headers[name];
+        if (context.request.hasHeader(name)) {
+          console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
+          continue;
+        }
+        if (value === 'null') {
+          context.request.removeHeader(name);
+          console.log(`[header] Remove default header ${name}`);
+        } else {
+          context.request.setHeader(name, value);
+          console.log(`[header] Set default header ${name}: ${value}`);
+        }
+      }
+    } }];
 
   for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.requestHooks || [];
