@@ -643,131 +643,125 @@ export const localTemplateTags: {
         const bodyBuffer = context.util.models.response.getBodyBuffer(response, '');
         const match = response.contentType && response.contentType.match(/charset=([\w-]+)/);
         const charset = match && match.length >= 2 ? match[1] : 'utf-8';
-        switch (field) {
-          case 'header':
-            if (!response.headers.length) {
-              throw new Error('No headers available');
-            }
-            const header = response.headers.find(h => h.name.toLowerCase() === sanitizedFilter.toLowerCase());
-            if (!header) {
-              const names = response.headers.map(c => `"${c.name}"`).join(',\n\t');
-              throw new Error(`No header with name "${sanitizedFilter}".\nChoices are [\n\t${names}\n]`);
-            }
-            return header.value;
+        if (field === 'url') {
+          return response.url;
+        }
+        if (field === 'raw') {
+          // Sometimes iconv conversion fails so fallback to regular buffer
+          try {
+            return iconv.decode(bodyBuffer, charset);
+          } catch (err) {
+            console.warn('[response] Failed to decode body', err);
+            return bodyBuffer.toString();
+          }
+        }
+        if (field === 'header') {
+          if (!response.headers.length) {
+            throw new Error('No headers available');
+          }
+          const header = response.headers.find(h => h.name.toLowerCase() === sanitizedFilter.toLowerCase());
+          if (!header) {
+            const names = response.headers.map(c => `"${c.name}"`).join(',\n\t');
+            throw new Error(`No header with name "${sanitizedFilter}".\nChoices are [\n\t${names}\n]`);
+          }
+          return header.value;
+        }
+        if (field === 'body') {
+          // Sometimes iconv conversion fails so fallback to regular buffer
+          let body;
+          try {
+            body = iconv.decode(bodyBuffer, charset);
+          } catch (err) {
+            console.warn('[response] Failed to decode body', err);
+            body = bodyBuffer.toString();
+          }
 
-          case 'url':
-            return response.url;
+          if (sanitizedFilter.indexOf('$') === 0) {
+            let bodyJSON;
+            let results;
 
-          case 'raw':
-            // Sometimes iconv conversion fails so fallback to regular buffer
             try {
-              return iconv.decode(bodyBuffer, charset);
+              bodyJSON = JSON.parse(body);
             } catch (err) {
-              console.warn('[response] Failed to decode body', err);
-              return bodyBuffer.toString();
+              throw new Error(`Invalid JSON: ${err.message}`);
             }
 
-          case 'body':
-            // Sometimes iconv conversion fails so fallback to regular buffer
-            let body;
             try {
-              body = iconv.decode(bodyBuffer, charset);
+              results = JSONPath({ json: bodyJSON, path: sanitizedFilter });
             } catch (err) {
-              console.warn('[response] Failed to decode body', err);
-              body = bodyBuffer.toString();
+              throw new Error(`Invalid JSONPath query: ${sanitizedFilter}`);
             }
 
-            if (sanitizedFilter.indexOf('$') === 0) {
-              let bodyJSON;
-              let results;
+            if (results.length === 0) {
+              throw new Error(`Returned no results: ${sanitizedFilter}`);
+            }
 
-              try {
-                bodyJSON = JSON.parse(body);
-              } catch (err) {
-                throw new Error(`Invalid JSON: ${err.message}`);
-              }
+            if (results.length > 1) {
+              return JSON.stringify(results);
+            }
 
-              try {
-                results = JSONPath({ json: bodyJSON, path: sanitizedFilter });
-              } catch (err) {
-                throw new Error(`Invalid JSONPath query: ${sanitizedFilter}`);
-              }
-
-              if (results.length === 0) {
-                throw new Error(`Returned no results: ${sanitizedFilter}`);
-              }
-
-              if (results.length > 1) {
-                return JSON.stringify(results);
-              }
-
-              if (typeof results[0] !== 'string') {
-                return JSON.stringify(results[0]);
-              } else {
-                return results[0];
-              }
+            if (typeof results[0] !== 'string') {
+              return JSON.stringify(results[0]);
             } else {
-              const DOMParser = (await import('xmldom')).DOMParser;
-              const dom = new DOMParser().parseFromString(body);
-              let selectedValues = [];
-              if (sanitizedFilter === undefined) {
-                throw new Error('Must pass an XPath query.');
-              }
-              try {
-                selectedValues = (await import('xpath')).select(sanitizedFilter, dom);
-                console.log(selectedValues);
+              return results[0];
+            }
+          } else {
+            const DOMParser = (await import('xmldom')).DOMParser;
+            const dom = new DOMParser().parseFromString(body);
+            let selectedValues = [];
+            if (sanitizedFilter === undefined) {
+              throw new Error('Must pass an XPath query.');
+            }
+            try {
+              selectedValues = (await import('xpath')).select(sanitizedFilter, dom);
+            } catch (err) {
+              throw new Error(`Invalid XPath query: ${sanitizedFilter}`);
+            }
+            const results = [];
+            // Functions return plain strings
+            if (typeof selectedValues === 'string') {
+              results.push({
+                outer: selectedValues,
+                inner: selectedValues,
+              });
+            } else {
+              for (const selectedValue of selectedValues || []) {
+                switch (selectedValue.constructor.name) {
+                  case 'Attr':
+                    results.push({
+                      outer: selectedValue.toString().trim(),
+                      inner: selectedValue.nodeValue,
+                    });
+                    break;
 
-              } catch (err) {
-                throw new Error(`Invalid XPath query: ${sanitizedFilter}`);
-              }
-              const results = [];
-              // Functions return plain strings
-              if (typeof selectedValues === 'string') {
-                results.push({
-                  outer: selectedValues,
-                  inner: selectedValues,
-                });
-              } else {
-                for (const selectedValue of selectedValues || []) {
-                  switch (selectedValue.constructor.name) {
-                    case 'Attr':
-                      results.push({
-                        outer: selectedValue.toString().trim(),
-                        inner: selectedValue.nodeValue,
-                      });
-                      break;
+                  case 'Element':
+                    results.push({
+                      outer: selectedValue.toString().trim(),
+                      inner: selectedValue.childNodes.toString(),
+                    });
+                    break;
 
-                    case 'Element':
-                      results.push({
-                        outer: selectedValue.toString().trim(),
-                        inner: selectedValue.childNodes.toString(),
-                      });
-                      break;
+                  case 'Text':
+                    results.push({
+                      outer: selectedValue.toString().trim(),
+                      inner: selectedValue.toString().trim(),
+                    });
+                    break;
 
-                    case 'Text':
-                      results.push({
-                        outer: selectedValue.toString().trim(),
-                        inner: selectedValue.toString().trim(),
-                      });
-                      break;
-
-                    default:
-                      break;
-                  }
+                  default:
+                    break;
                 }
               }
-
-              if (results.length === 0) {
-                throw new Error(`Returned no results: ${sanitizedFilter}`);
-              } else if (results.length > 1) {
-                throw new Error(`Returned more than one result: ${sanitizedFilter}`);
-              }
-
-              return results[0].inner;
             }
 
-          default:
-            throw new Error(`Unknown field ${field}`);
+            if (results.length === 0) {
+              throw new Error(`Returned no results: ${sanitizedFilter}`);
+            } else if (results.length > 1) {
+              throw new Error(`Returned more than one result: ${sanitizedFilter}`);
+            }
+
+            return results[0].inner;
+          }
         }
       },
     },
