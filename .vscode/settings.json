@@ -8,5 +8,5 @@
   "files.insertFinalNewline": true,
   "editor.formatOnSave": true,
   "editor.formatOnSaveMode": "modifications",
-  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "editor.defaultFormatter": "vscode.typescript-language-features",
 }
