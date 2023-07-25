@@ -1,6 +1,7 @@
 import React, { FC, Fragment } from 'react';
 import { useSelector } from 'react-redux';
 
+import * as session from '../../../account/session';
 import {
   EditorKeyMap,
   isDevelopment,
@@ -76,6 +77,8 @@ const DevelopmentOnlySettings: FC = () => {
 
 export const General: FC = () => {
   const settings = useSelector(selectSettings);
+  const isLoggedIn = session.isLoggedIn();
+
   return (
     <div className="pad-bottom">
       <div className="row-fill row-fill--top">
@@ -376,19 +379,14 @@ export const General: FC = () => {
         </Fragment>
       )}
 
-      <hr className="pad-top" />
-      <h2>Notifications</h2>
       {!updatesSupported() && (
-        <BooleanSetting
-          label="Do not notify of new releases"
-          setting="disableUpdateNotification"
-        />
+        <><hr className="pad-top" />
+          <h2>Notifications</h2>
+          <BooleanSetting
+            label="Do not notify of new releases"
+            setting="disableUpdateNotification"
+          /></>
       )}
-      <BooleanSetting
-        label="Do not tell me about premium features"
-        setting="disablePaidFeatureAds"
-        help="If checked, mute in-app notifications and other messaging about premium features."
-      />
 
       <hr className="pad-top" />
       <h2>Plugins</h2>
@@ -399,31 +397,22 @@ export const General: FC = () => {
         placeholder="~/.insomnia:/other/path"
       />
 
-      <hr className="pad-top" />
-      <h2>Network Activity</h2>
-      <BooleanSetting
-        descriptions={[
-          'In incognito mode, Insomnia will not make any network requests other than the requests you ask it to send.  You\'ll still be able to log in and manually sync collections, but any background network requests that are not the direct result of your actions will be disabled.',
-          'Note that, similar to incognito mode in Chrome, Insomnia cannot control the network behavior of any plugins you have installed.',
-        ]}
-        label="Incognito Mode"
-        setting="incognitoMode"
-      />
-
-      <BooleanSetting
-        descriptions={[
-          `Help Kong improve its products by sending anonymous data about features and plugins used, hardware and software configuration, statistics on number of requests, ${strings.collection.plural.toLowerCase()}, ${strings.document.plural.toLowerCase()}, etc.`,
-          'Please note that this will not include personal data or any sensitive information, such as request data, names, etc.',
-        ]}
-        label="Send Usage Statistics"
-        setting="enableAnalytics"
-      />
-
-      <BooleanSetting
-        descriptions={['Insomnia periodically makes background requests to api.insomnia.rest/notifications for things like email verification, out-of-date billing information, trial information.']}
-        label="Allow Notification Requests"
-        setting="allowNotificationRequests"
-      />
+      {!isLoggedIn && (
+        <>
+          <hr className="pad-top" />
+          <h2>Network Activity</h2>
+          <BooleanSetting
+            descriptions={[
+              `Help Kong improve its products by sending anonymous data about features and plugins used, hardware and software configuration, statistics on number of requests, ${strings.collection.plural.toLowerCase()}, ${strings.document.plural.toLowerCase()}, etc.`,
+              'Please note that this will not include personal data or any sensitive information, such as request data, names, etc.',
+            ]}
+            label="Send Anonymous Usage Statistics"
+            setting="enableAnalytics"
+            disabled={isLoggedIn}
+          />
+        </>
+      )
+      }
 
       <DevelopmentOnlySettings />
     </div>

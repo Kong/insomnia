@@ -1,5 +1,6 @@
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
@@ -11,11 +12,11 @@ import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { createRequest, CreateRequestType } from '../../hooks/create-request';
 import { createRequestGroup } from '../../hooks/create-request-group';
-import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
+import { selectHotKeyRegistry } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
-
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
   handleShowSettings: (requestGroup: RequestGroup) => any;
@@ -30,24 +31,24 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
   handleShowSettings,
   ...other
 }, ref) => {
+  const {
+    activeWorkspace,
+    activeEnvironment,
+    activeProject,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);
 
-  const activeProject = useSelector(selectActiveProject);
-  const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceId = activeWorkspace?._id;
-
   const create = useCallback((requestType: CreateRequestType) => {
-    if (activeWorkspaceId) {
+    if (activeWorkspace._id) {
       createRequest({
         parentId: requestGroup._id,
-        requestType, workspaceId: activeWorkspaceId,
+        requestType, workspaceId: activeWorkspace._id,
       });
     }
-  }, [activeWorkspaceId, requestGroup._id]);
+  }, [activeWorkspace._id, requestGroup._id]);
 
   useImperativeHandle(ref, () => ({
     show: () => {
@@ -102,12 +103,11 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
     setLoadingActions({ ...loadingActions, [label]: true });
 
     try {
-      const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
         ...pluginContexts.data.init(activeProject._id),
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
-        ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
+        ...(pluginContexts.network.init(activeEnvironment._id) as Record<string, any>),
       };
       const requests = await models.request.findByParentId(requestGroup._id);
       requests.sort((a, b) => a.metaSortKey - b.metaSortKey);

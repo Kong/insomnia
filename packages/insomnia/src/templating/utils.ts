@@ -1,17 +1,16 @@
 import objectPath from 'objectpath';
 
-import type { PluginStore } from '../plugins/context';
-import type { PluginArgumentEnumOption } from './extensions';
+import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
 
 export interface NunjucksParsedTagArg {
   type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model';
   encoding?: 'base64';
-  value: string | number | boolean;
+  value?: string | number | boolean;
   defaultValue?: string | number | boolean;
   forceVariable?: boolean;
   placeholder?: string;
   help?: string;
-  displayName?: string;
+  displayName?: DisplayName;
   quotedBy?: '"' | "'";
   validate?: (value: any) => string;
   hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
@@ -19,12 +18,13 @@ export interface NunjucksParsedTagArg {
   options?: PluginArgumentEnumOption[];
   itemTypes?: ('file' | 'directory')[];
   extensions?: string[];
+  description?: string;
 }
 
 export interface NunjucksActionTag {
   name: string;
   icon?: string;
-  run: (context: PluginStore) => Promise<void>;
+  run: (context: PluginTemplateTagActionContext) => Promise<void>;
 }
 
 export interface NunjucksParsedTag {
@@ -203,7 +203,7 @@ export function unTokenizeTag(tagData: NunjucksParsedTag) {
     if (['string', 'model', 'file', 'enum'].includes(arg.type)) {
       const q = arg.quotedBy || "'";
       const re = new RegExp(`([^\\\\])${q}`, 'g');
-      const str = arg.value.toString().replace(re, `$1\\${q}`);
+      const str = arg.value?.toString().replace(re, `$1\\${q}`);
       args.push(`${q}${str}${q}`);
     } else if (arg.type === 'boolean') {
       args.push(arg.value ? 'true' : 'false');

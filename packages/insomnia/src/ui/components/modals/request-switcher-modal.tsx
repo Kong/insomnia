@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import React, { forwardRef, Fragment, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { METHOD_GRPC } from '../../../common/constants';
 import { fuzzyMatchAll } from '../../../common/misc';
@@ -12,8 +13,8 @@ import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-
 import { Workspace } from '../../../models/workspace';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectActiveRequest, selectActiveWorkspace, selectActiveWorkspaceMeta, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { selectActiveRequest, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Highlight } from '../base/highlight';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -23,7 +24,6 @@ import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { WebSocketTag } from '../tags/websocket-tag';
 import { wrapToIndex } from './utils';
-
 interface State {
   searchString: string;
   workspacesForActiveProject: Workspace[];
@@ -67,10 +67,13 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     isModalVisible: true,
     title: null,
   });
-  const dispatch = useDispatch();
+  const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
+  const navigate = useNavigate();
   const activeRequest = useSelector(selectActiveRequest);
-  const workspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const {
+    activeWorkspace: workspace,
+    activeWorkspaceMeta,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   const requestMetas = useSelector(selectRequestMetas);
   const grpcRequestMetas = useSelector(selectGrpcRequestMetas);
@@ -163,7 +166,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     }
 
     const matchedWorkspaces = workspacesForActiveProject
-      .filter(w => w._id !== workspace?._id)
+      .filter(w => w._id !== workspace._id)
       .filter(w => {
         const name = w.name.toLowerCase();
         const toMatch = searchString.toLowerCase();
@@ -180,7 +183,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       matchedRequests: matchedRequests.slice(0, maxRequests),
       matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     }));
-  }, [state, getLastActiveRequestMap, workspaceRequestsAndRequestGroups, workspacesForActiveProject, activeRequest, isMatch, workspace?._id]);
+  }, [state, getLastActiveRequestMap, workspaceRequestsAndRequestGroups, workspacesForActiveProject, activeRequest, isMatch, workspace._id]);
 
   useImperativeHandle(ref, () => ({
     hide: () => {
@@ -206,21 +209,20 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     },
   }), [handleChangeValue]);
 
-  const activateWorkspaceAndHide = useCallback((workspace?: Workspace) => {
+  const activateWorkspaceAndHide = useCallback((workspace: Workspace) => {
     if (!workspace) {
       return;
     }
-    dispatch(activateWorkspace({ workspace }));
+    console.log(`[app] Activating workspace "${workspace.name}"`);
+    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}`);
     modalRef.current?.hide();
-  }, [dispatch]);
+  }, [navigate, organizationId, projectId]);
 
   const activateRequestAndHide = useCallback((request?: Request | WebSocketRequest | GrpcRequest) => {
     if (!request) {
       return;
     }
-    if (activeWorkspaceMeta) {
-      models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
-    }
+    models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
     updateRequestMetaByParentId(request._id, { lastActive: Date.now() });
     modalRef.current?.hide();
   }, [activeWorkspaceMeta]);

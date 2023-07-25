@@ -1,13 +1,13 @@
 import clone from 'clone';
 import { isValid } from 'date-fns';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
 import { cookieToString } from '../../../common/cookies';
 import * as models from '../../../models';
 import type { Cookie } from '../../../models/cookie-jar';
-import { selectActiveCookieJar } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -24,7 +24,8 @@ export interface CookieModifyModalHandle {
 export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>((_, ref) => {
   const modalRef = useRef<ModalHandle>(null);
   const [cookie, setCookie] = useState<Cookie | null>(null);
-  const activeCookieJar = useSelector(selectActiveCookieJar);
+  const { activeCookieJar } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+
   useImperativeHandle(ref, () => ({
     hide: () => {
       modalRef.current?.hide();

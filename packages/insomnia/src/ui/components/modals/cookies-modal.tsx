@@ -1,11 +1,11 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { fuzzyMatch } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Cookie } from '../../../models/cookie-jar';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
-import { selectActiveCookieJar } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -21,7 +21,7 @@ export const CookiesModal = forwardRef<CookiesModalHandle, ModalProps>((_, ref) 
   const { handleRender } = useNunjucks();
   const [filter, setFilter] = useState<string>('');
   const [visibleCookieIndexes, setVisibleCookieIndexes] = useState<number[] | null>(null);
-  const activeCookieJar = useSelector(selectActiveCookieJar);
+  const { activeCookieJar } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
   useImperativeHandle(ref, () => ({
     hide: () => {

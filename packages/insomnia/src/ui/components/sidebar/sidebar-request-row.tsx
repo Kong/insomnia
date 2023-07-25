@@ -1,7 +1,7 @@
 import classnames from 'classnames';
 import React, { FC, forwardRef, MouseEvent, ReactElement, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
@@ -14,7 +14,7 @@ import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { createRequest, updateRequestMetaByParentId } from '../../hooks/create-request';
 import { useReadyState } from '../../hooks/use-ready-state';
-import { selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import type { DropdownHandle } from '../base/dropdown';
 import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
@@ -27,7 +27,6 @@ import { MethodTag } from '../tags/method-tag';
 import { WebSocketTag } from '../tags/websocket-tag';
 import { ConnectionCircle } from '../websockets/action-bar';
 import { DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
-
 interface RawProps {
   disableDragAndDrop?: boolean;
   filter: string;
@@ -68,11 +67,14 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
   requestGroup,
 }, ref) => {
   const { handleRender } = useNunjucks();
-  const activeProject = useSelector(selectActiveProject);
-  const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
-  const activeWorkspaceId = activeWorkspace?._id;
+  const {
+    activeWorkspace,
+    activeWorkspaceMeta,
+    activeEnvironment,
+    activeProject,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+
+  const activeWorkspaceId = activeWorkspace._id;
   const [dragDirection, setDragDirection] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const handleSetActiveRequest = useCallback(() => {
@@ -236,7 +238,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
     );
   } else {
 
-    let methodTag = null;
+    let methodTag;
 
     if (isGrpcRequest(request)) {
       methodTag = <GrpcTag />;

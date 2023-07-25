@@ -5,6 +5,7 @@ import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
@@ -16,13 +17,13 @@ import { update } from '../../models/helpers/request-operations';
 import { isEventStreamRequest, isRequest, Request } from '../../models/request';
 import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
-import { invariant } from '../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import { selectActiveEnvironment, selectActiveRequest, selectActiveWorkspace, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
+import { selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
+import { WorkspaceLoaderData } from '../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
@@ -61,10 +62,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   uniquenessKey,
   setLoading,
 }, ref) => {
+  const {
+    activeWorkspace,
+    activeEnvironment,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const downloadPath = useSelector(selectResponseDownloadPath);
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
-  const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
   const activeRequest = useSelector(selectActiveRequest);
   const settings = useSelector(selectSettings);
   const methodDropdownRef = useRef<DropdownHandle>(null);
@@ -123,7 +126,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     });
     setLoading(true);
     try {
-      const responsePatch = await network.send(request._id, activeEnvironment?._id);
+      const responsePatch = await network.send(request._id, activeEnvironment._id);
       const headers = responsePatch.headers || [];
       const header = getContentDispositionHeader(headers);
       const nameFromHeader = header ? contentDisposition.parse(header.value).parameters.filename : null;
@@ -189,7 +192,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       await updateRequestMetaByParentId(request._id, { activeResponseId: null });
       setLoading(false);
     }
-  }, [activeEnvironment?._id, request, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  }, [activeEnvironment._id, request, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const handleSend = useCallback(async () => {
     if (!request) {
@@ -207,7 +210,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     });
     setLoading(true);
     try {
-      const responsePatch = await network.send(request._id, activeEnvironment?._id);
+      const responsePatch = await network.send(request._id, activeEnvironment._id);
       await models.response.create(responsePatch, settings.maxHistoryResponses);
     } catch (err) {
       if (err.type === 'render') {
@@ -232,7 +235,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     // Unset active response because we just made a new one
     await updateRequestMetaByParentId(request._id, { activeResponseId: null });
     setLoading(false);
-  }, [activeEnvironment?._id, request, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  }, [activeEnvironment._id, request, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const send = useCallback(() => {
     setCurrentTimeout(undefined);
@@ -242,8 +245,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
     if (isEventStreamRequest(request)) {
       const startListening = async () => {
-        invariant(activeWorkspace, 'activeWorkspace not found (remove with redux)');
-        const environmentId = activeEnvironment?._id;
+        const environmentId = activeEnvironment._id;
         const workspaceId = activeWorkspace._id;
         const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
         // Render any nunjucks tags in the url/headers/authentication settings/cookies
@@ -268,7 +270,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       return;
     }
     handleSend();
-  }, [activeEnvironment?._id, activeWorkspace, downloadPath, handleSend, request, sendThenSetFilePath]);
+  }, [activeEnvironment._id, activeWorkspace, downloadPath, handleSend, request, sendThenSetFilePath]);
 
   useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);

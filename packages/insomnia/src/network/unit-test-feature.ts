@@ -7,9 +7,6 @@ export function getSendRequestCallback(environmentId?: string) {
   return async function sendRequest(requestId: string) {
     stats.incrementExecutedRequests();
     try {
-      plugins.ignorePlugin('insomnia-plugin-kong-declarative-config');
-      plugins.ignorePlugin('insomnia-plugin-kong-kubernetes-config');
-      plugins.ignorePlugin('insomnia-plugin-kong-portal');
       // NOTE: unit tests will use the UI selected environment
       const res = await send(requestId, environmentId);
       const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;

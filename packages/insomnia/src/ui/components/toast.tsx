@@ -86,23 +86,16 @@ export const Toast: FC = () => {
     }
     const stats = await models.stats.get();
     const {
-      allowNotificationRequests,
-      disablePaidFeatureAds,
       disableUpdateNotification,
       updateAutomatically,
       updateChannel,
     } = await models.settings.getOrCreate();
-    if (!allowNotificationRequests) {
-      // if the user has specifically said they don't want to send notification requests, then exit early
-      return;
-    }
     let updatedNotification: ToastNotification | null = null;
     // Try fetching user notification
     try {
       const data = {
         app: getAppId(),
         autoUpdatesDisabled: !updateAutomatically,
-        disablePaidFeatureAds,
         disableUpdateNotification,
         firstLaunch: stats.created,
         launches: stats.launches, // Used for account verification notifications

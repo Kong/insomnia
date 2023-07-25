@@ -50,7 +50,7 @@ export async function trackSegmentEvent(
   properties?: Record<string, any>,
 ) {
   const settings = await models.settings.getOrCreate();
-  const allowAnalytics = settings.enableAnalytics && !process.env.INSOMNIA_INCOGNITO_MODE;
+  const allowAnalytics = settings.enableAnalytics || session.isLoggedIn();
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
@@ -78,7 +78,7 @@ export async function trackSegmentEvent(
 
 export async function trackPageView(name: string) {
   const settings = await models.settings.getOrCreate();
-  const allowAnalytics = settings.enableAnalytics && !process.env.INSOMNIA_INCOGNITO_MODE;
+  const allowAnalytics = settings.enableAnalytics || session.isLoggedIn();
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';

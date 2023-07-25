@@ -1,11 +1,11 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { strings } from '../../../common/strings';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { Button } from '../../components/themed-button';
-import { selectActiveWorkspace } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -31,6 +31,9 @@ export const SyncDeleteModal = forwardRef<SyncDeleteModalHandle, Props>(({ vcs }
     error: '',
     workspaceName: '',
   });
+  const {
+    activeWorkspace,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
   useImperativeHandle(ref, () => ({
     hide: () => modalRef.current?.hide(),
@@ -43,7 +46,6 @@ export const SyncDeleteModal = forwardRef<SyncDeleteModalHandle, Props>(({ vcs }
       modalRef.current?.show({ onHide });
     },
   }), []);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
   const onSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {

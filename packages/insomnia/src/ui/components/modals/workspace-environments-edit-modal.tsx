@@ -1,13 +1,11 @@
 import classnames from 'classnames';
 import React, { FC, forwardRef, Fragment, useImperativeHandle, useRef } from 'react';
 import { ListDropTargetDelegate, ListKeyboardDelegate, mergeProps, useDraggableCollection, useDraggableItem, useDropIndicator, useDroppableCollection, useDroppableItem, useFocusRing, useListBox, useOption } from 'react-aria';
-import { useSelector } from 'react-redux';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { DraggableCollectionState, DroppableCollectionState, Item, ListState, useDraggableCollectionState, useDroppableCollectionState, useListState } from 'react-stately';
 
 import { docsTemplateTags } from '../../../common/documentation';
 import type { Environment } from '../../../models/environment';
-import { selectActiveWorkspaceMeta } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { Editable } from '../base/editable';
@@ -30,12 +28,14 @@ interface SidebarListItemProps {
 const SidebarListItem: FC<SidebarListItemProps> = ({
   environment,
 }: SidebarListItemProps) => {
-  const workspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const {
+    activeWorkspaceMeta,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   return (
     <div
       className={classnames({
         'env-modal__sidebar-item': true,
-        'env-modal__sidebar-item--active': workspaceMeta?.activeEnvironmentId === environment._id,
+        'env-modal__sidebar-item--active': activeWorkspaceMeta.activeEnvironmentId === environment._id,
       })}
     >
       {environment.color ? (

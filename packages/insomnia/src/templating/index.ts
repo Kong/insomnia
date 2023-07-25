@@ -3,6 +3,7 @@ import nunjucks from 'nunjucks/browser/nunjucks';
 
 import type { TemplateTag } from '../plugins/index';
 import * as plugins from '../plugins/index';
+import { localTemplateTags } from '../ui/components/templating/local-template-tags';
 import BaseExtension from './base-extension';
 import type { NunjucksParsedTag } from './utils';
 
@@ -179,10 +180,8 @@ async function getNunjucks(renderMode: string): Promise<NunjucksEnvironment> {
   let allTemplateTagPlugins: TemplateTag[];
 
   try {
-    plugins.ignorePlugin('insomnia-plugin-kong-declarative-config');
-    plugins.ignorePlugin('insomnia-plugin-kong-kubernetes-config');
-    plugins.ignorePlugin('insomnia-plugin-kong-portal');
-    allTemplateTagPlugins = await plugins.getTemplateTags();
+    const pluginTemplateTags = await plugins.getTemplateTags();
+    allTemplateTagPlugins = [...pluginTemplateTags, ...localTemplateTags] as TemplateTag[];
   } finally {
     plugins.clearIgnores();
   }

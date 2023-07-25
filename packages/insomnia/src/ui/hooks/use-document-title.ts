@@ -1,25 +1,25 @@
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
-import { ACTIVITY_HOME, getProductName } from '../../common/constants';
-import { selectActiveActivity, selectActiveEnvironment, selectActiveProject, selectActiveRequest, selectActiveWorkspace, selectActiveWorkspaceName } from '../redux/selectors';
+import { getProductName } from '../../common/constants';
+import { selectActiveRequest } from '../redux/selectors';
+import { WorkspaceLoaderData } from '../routes/workspace';
 
 export const useDocumentTitle = () => {
-  const activeActivity = useSelector(selectActiveActivity);
-  const activeProject = useSelector(selectActiveProject);
-  const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const {
+    activeWorkspace,
+    activeEnvironment,
+    activeProject,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
-  const activeEnvironment = useSelector(selectActiveEnvironment);
   const activeRequest = useSelector(selectActiveRequest);
   // Update document title
   useEffect(() => {
     let title;
-    if (activeActivity === ACTIVITY_HOME) {
-      title = getProductName();
-    } else if (activeWorkspace && activeWorkspaceName) {
+    if (activeWorkspace && activeWorkspace.name) {
       title = activeProject.name;
-      title += ` - ${activeWorkspaceName}`;
+      title += ` - ${activeWorkspace.name}`;
       if (activeEnvironment) {
         title += ` (${activeEnvironment.name})`;
       }
@@ -28,6 +28,6 @@ export const useDocumentTitle = () => {
       }
     }
     document.title = title || getProductName();
-  }, [activeActivity, activeEnvironment, activeProject.name, activeRequest, activeWorkspace, activeWorkspaceName]);
+  }, [activeEnvironment, activeProject.name, activeRequest, activeWorkspace]);
 
 };

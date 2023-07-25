@@ -11,7 +11,7 @@ import type { BaseModel } from '../../../models/index';
 import { isRequest, Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
-import { getTemplateTags } from '../../../plugins';
+import * as plugins from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import * as templating from '../../../templating';
 import type {
@@ -23,6 +23,7 @@ import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { FileInputButton } from '../base/file-input-button';
 import { HelpTooltip } from '../help-tooltip';
+import { localTemplateTags } from './local-template-tags';
 
 interface Props {
   defaultValue: string;
@@ -320,7 +321,7 @@ export const TagEditor: FC<Props> = props => {
           });
           return null;
         }
-        const strValue = templateUtils.decodeEncoding(argData.value.toString());
+        const strValue = templateUtils.decodeEncoding(argData.value?.toString() || '');
         const isVariable = argData.type === 'variable';
 
         let argInput;
@@ -521,13 +522,14 @@ export const TagEditor: FC<Props> = props => {
                 className="btn btn--clicky btn--largest"
                 type="button"
                 onClick={async () => {
-                  const templateTags = await getTemplateTags();
+                  const pluginTemplateTags = await plugins.getTemplateTags();
+                  const templateTags = [...pluginTemplateTags, ...localTemplateTags] as plugins.TemplateTag[];
                   const activeTemplateTag = templateTags.find(({ templateTag }) => {
                     return templateTag.name === state.activeTagData?.name;
                   });
-                  // @ts-expect-error -- TSCONVERSION activeTemplateTag can be undefined
-                  const helperContext: pluginContexts.PluginStore = { ...pluginContexts.store.init(activeTemplateTag.plugin) };
-                  await action.run(helperContext);
+                  if (activeTemplateTag) {
+                    await action.run(pluginContexts.store.init(activeTemplateTag.plugin));
+                  }
                   update(
                     state.tagDefinitions,
                     state.activeTagDefinition,
