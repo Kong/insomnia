@@ -1,3 +1,5 @@
+import 'swagger-ui-dist/swagger-ui.css';
+
 import type { IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import { stat } from 'fs/promises';
@@ -30,19 +32,17 @@ import { Notice, NoticeTable } from '../components/notice-table';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { SpecEditorSidebar } from '../components/spec-editor/spec-editor-sidebar';
 import { Tooltip } from '../components/tooltip';
-import { superFaint } from '../css/css-in-js';
 import {
   useActiveApiSpecSyncVCSVersion,
   useGitVCSVersion,
 } from '../hooks/use-vcs-version';
-
 const EmptySpaceHelper = styled.div({
-  ...superFaint,
   display: 'flex',
   alignItems: 'flex-start',
   justifyContent: 'center',
   padding: '2em',
   textAlign: 'center',
+  opacity: 'calc(var(--opacity-subtle) * 0.8)',
 });
 
 export const Toolbar = styled.div({

@@ -1,7 +1,6 @@
 import React, { FC, ReactNode } from 'react';
 import styled from 'styled-components';
 
-import { superDuperFaint, superFaint, ultraFaint } from '../../css/css-in-js';
 import { Link } from '../base/link';
 import { SvgIcon } from '../svg-icon';
 
@@ -21,13 +20,13 @@ const Wrapper = styled.div({
   justifyContent: 'center',
   padding: 'var(--padding-md) var(--padding-xl)',
   textAlign: 'center',
-  ...superFaint,
+  opacity: 'calc(var(--opacity-subtle) * 0.8)',
 });
 
 const Icon = styled.div({
   fontSize: '9em',
   marginBottom: 'var(--padding-lg)',
-  ...superDuperFaint,
+  opacity: 'calc(var(--opacity-subtle) * 0.5)',
 });
 
 const Title = styled.div({
@@ -40,7 +39,7 @@ const Divider = styled.div({
   margin: 'var(--padding-md) 0',
   maxWidth: 500,
   width: 'calc(100% + var(--padding-xl))',
-  ...ultraFaint,
+  opacity: 'calc(var(--opacity-subtle) * 0.2)',
 });
 
 const SecondaryAction = styled.div({
