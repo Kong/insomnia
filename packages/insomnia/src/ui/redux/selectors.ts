@@ -40,7 +40,11 @@ export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, ent
   for (const value of Object.values(entities)) {
     for (const entity of value) {
       if (entity.parentId) {
-        parentLookupMap[entity.parentId] = [...parentLookupMap[entity.parentId], entity];
+        if (parentLookupMap[entity.parentId]) {
+          parentLookupMap[entity.parentId].push(entity);
+        } else {
+          parentLookupMap[entity.parentId] = [entity];
+        }
       }
     }
   }
