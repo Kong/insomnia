@@ -1,5 +1,4 @@
 import React, { FunctionComponent, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';

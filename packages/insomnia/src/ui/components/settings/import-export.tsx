@@ -31,7 +31,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
 
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
-  const projectName = workspaceData?.activeProject ?? getProductName();
+  const projectName = workspaceData?.activeProject.name ?? getProductName();
 
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   const workspaceRequestsAndRequestGroups = useSelector(selectWorkspaceRequestsAndRequestGroups);

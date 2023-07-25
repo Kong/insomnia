@@ -1,10 +1,8 @@
 import classNames from 'classnames';
 import React, { FC, Fragment, ReactNode } from 'react';
-import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import * as session from '../../account/session';
-import { selectIsLoggedIn } from '../redux/selectors';
 import { GitHubStarsButton } from './github-stars-button';
 import { InsomniaAILogo } from './insomnia-icon';
 const LogoWrapper = styled.div({

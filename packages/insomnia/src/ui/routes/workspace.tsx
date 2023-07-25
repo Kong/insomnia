@@ -2,6 +2,7 @@ import React from 'react';
 import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
 import * as models from '../../models';
+import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { GitRepository } from '../../models/git-repository';
 import { Project } from '../../models/project';
@@ -14,6 +15,7 @@ export interface WorkspaceLoaderData {
   activeProject: Project;
   gitRepository: GitRepository | null;
   activeEnvironment: Environment;
+  activeCookieJar: CookieJar;
   baseEnvironment: Environment;
   subEnvironments: Environment[];
 }
@@ -51,11 +53,15 @@ export const workspaceLoader: LoaderFunction = async ({
 
   const activeEnvironment = subEnvironments.find(({ _id }) => activeWorkspaceMeta.activeEnvironmentId === _id) || baseEnvironment;
 
+  const activeCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+  invariant(activeCookieJar, 'Cookie jar not found');
+
   return {
     activeWorkspace,
     activeProject,
     gitRepository,
     activeWorkspaceMeta,
+    activeCookieJar,
     activeEnvironment,
     subEnvironments,
     baseEnvironment,

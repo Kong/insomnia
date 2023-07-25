@@ -291,15 +291,6 @@ export const selectActiveRequest = createSelector(
   },
 );
 
-export const selectActiveCookieJar = createSelector(
-  selectEntitiesLists,
-  selectActiveWorkspace,
-  (entities, workspace) => {
-    const cookieJar = entities.cookieJars.find(cj => cj.parentId === workspace?._id);
-    return cookieJar || null;
-  },
-);
-
 export const selectActiveRequestMeta = createSelector(
   selectActiveRequest,
   selectEntitiesLists,
