@@ -1,5 +1,3 @@
-import 'swagger-ui-dist/swagger-ui.css';
-
 import type { IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import { stat } from 'fs/promises';
