@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect, useState } from 'react';
+import React, { FunctionComponent, useReducer, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
@@ -141,20 +141,19 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     }
   };
 
-  useEffect(() => {
-    if (activeRequest.body.text && activeRequest.body.text !== '{}') {
-      // If the user already has a body set, do not edit it
+  const [bodyPaneKey, forceNewBodyComponent] = useReducer((n: number) => n + 1, 0);
+  const useRequestStubs = async () => {
+    if (!method?.mocks) {
       return;
     }
-    if (method?.mocks) {
-      const newBodyText = JSON.stringify(method.mocks, null, 2);
-      if (newBodyText !== activeRequest.body.text) {
-        models.grpcRequest.update(activeRequest, {
-          body: { ...activeRequest.body, text: newBodyText },
-        });
-      }
+    const newBodyText = JSON.stringify(method.mocks, null, 2);
+    if (newBodyText !== activeRequest.body.text) {
+      await models.grpcRequest.update(activeRequest, {
+        body: { ...activeRequest.body, text: newBodyText },
+      });
+      setTimeout(() => forceNewBodyComponent());
     }
-  }, [activeRequest, method]);
+  };
 
   useDocBodyKeyboardShortcuts({
     request_send: handleRequestSend,
@@ -194,6 +193,16 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               />
               <Button
                 variant="text"
+                data-testid="button-use-request-stubs"
+                disabled={!method?.mocks}
+                onClick={useRequestStubs}
+              >
+                <Tooltip message="Click to replace body with request stubs" position="bottom" delay={500}>
+                  <i className="fa fa-code" />
+                </Tooltip>
+              </Button>
+              <Button
+                variant="text"
                 data-testid="button-server-reflection"
                 disabled={!activeRequest.url}
                 onClick={async () => {
@@ -229,7 +238,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             />
           </StyledUrlBar>
         </PaneHeader>
-        <PaneBody>
+        <PaneBody key={bodyPaneKey}>
           {methodType && (
             <Tabs aria-label="Grpc request pane tabs">
               <TabItem key="method-type" title={GrpcMethodTypeName[methodType]}>
