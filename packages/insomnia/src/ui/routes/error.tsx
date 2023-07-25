@@ -59,7 +59,7 @@ export const ErrorRoute: FC = () => {
         Try to reload the app{' '}
         <span>{navigation.state === 'loading' ? <Spinner /> : null}</span>
       </Button>
-      {isDevelopment() && (
+      {(isDevelopment() || process.env.PLAYWRIGHT) && (
         <code className="selectable" style={{ wordBreak: 'break-word', margin: 'var(--padding-sm)' }}>{getErrorStack(error)}</code>
       )}
     </Container>
