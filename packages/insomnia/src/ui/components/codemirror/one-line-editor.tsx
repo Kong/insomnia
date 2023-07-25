@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { EditorConfiguration } from 'codemirror';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import { useMount, useUnmount } from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '../../../common/constants';
@@ -13,9 +13,8 @@ import { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
-import { selectSettings } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
-
 export interface OneLineEditorProps {
   defaultValue: string;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
@@ -45,7 +44,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
 }, ref) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
-  const settings = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
   const { handleRender, handleGetRenderContext } = useNunjucks();
 
   useMount(() => {

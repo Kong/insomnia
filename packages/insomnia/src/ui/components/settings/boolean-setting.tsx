@@ -1,12 +1,11 @@
 import React, { ChangeEventHandler, FC, ReactNode, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { SettingsOfType } from '../../../common/settings';
 import * as models from '../../../models/index';
-import { selectSettings } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { HelpTooltip } from '../help-tooltip';
-
 const Descriptions = styled.div({
   fontSize: 'var(--font-size-sm)',
   opacity: 'var(--opacity-subtle)',
@@ -31,8 +30,9 @@ export const BooleanSetting: FC<{
   setting,
   disabled = false,
 }) => {
-  const settings = useSelector(selectSettings);
-
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
   if (!settings.hasOwnProperty(setting)) {
     throw new Error(`Invalid boolean setting name ${setting}`);
   }

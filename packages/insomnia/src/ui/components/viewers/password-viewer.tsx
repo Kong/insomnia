@@ -1,8 +1,8 @@
 import React, { FC, useCallback, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { selectSettings } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 
 const EyeIcon = styled.i({
   cursor: 'pointer',
@@ -32,7 +32,10 @@ export const PasswordViewer: FC<{
   text,
   maskText = true,
 }) => {
-  const { showPasswords } = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
+  const { showPasswords } = settings;
   const [mask, setMask] = useState<string | null>(null);
   useEffect(() => {
     if (maskText) {

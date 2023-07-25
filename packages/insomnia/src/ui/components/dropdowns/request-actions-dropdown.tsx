@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
@@ -16,7 +16,7 @@ import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectHotKeyRegistry } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -41,7 +41,10 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   request,
   requestGroup,
 }, ref) => {
-  const hotKeyRegistry = useSelector(selectHotKeyRegistry);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
+  const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
 

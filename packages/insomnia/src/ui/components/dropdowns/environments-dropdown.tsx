@@ -1,9 +1,8 @@
 import React, { FC, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import type { Environment } from '../../../models/environment';
-import { selectHotKeyRegistry } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -25,7 +24,10 @@ export const EnvironmentsDropdown: FC<Props> = () => {
   } = useRouteLoaderData(
     ':workspaceId'
   ) as WorkspaceLoaderData;
-  const hotKeyRegistry = useSelector(selectHotKeyRegistry);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
+  const { hotKeyRegistry } = settings;
   const setActiveEnvironmentFetcher = useFetcher();
   const dropdownRef = useRef<DropdownHandle>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);

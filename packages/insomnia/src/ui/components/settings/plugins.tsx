@@ -1,6 +1,6 @@
 import * as path from 'path';
 import React, { FC, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import {
   NPM_PACKAGE_BASE,
@@ -12,13 +12,12 @@ import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
-import { selectSettings } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { showAlert, showPrompt } from '../modals';
 import { Button } from '../themed-button';
-
 interface State {
   plugins: Plugin[];
   npmPluginValue: string;
@@ -44,7 +43,9 @@ export const Plugins: FC = () => {
     isRefreshingPlugins,
     npmPluginValue,
   } = state;
-  const settings = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
 
   useEffect(() => {
     refreshPlugins();

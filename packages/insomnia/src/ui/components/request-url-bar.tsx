@@ -22,7 +22,8 @@ import { SegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import { selectActiveRequest, selectHotKeyRegistry, selectResponseDownloadPath, selectSettings } from '../redux/selectors';
+import { selectActiveRequest, selectResponseDownloadPath } from '../redux/selectors';
+import { RootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
@@ -66,10 +67,12 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     activeWorkspace,
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
+  const { hotKeyRegistry } = settings;
   const downloadPath = useSelector(selectResponseDownloadPath);
-  const hotKeyRegistry = useSelector(selectHotKeyRegistry);
   const activeRequest = useSelector(selectActiveRequest);
-  const settings = useSelector(selectSettings);
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditorHandle>(null);

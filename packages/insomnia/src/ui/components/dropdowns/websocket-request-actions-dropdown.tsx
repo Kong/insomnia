@@ -1,15 +1,14 @@
 import React, { forwardRef, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectHotKeyRegistry } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
 import { showPrompt } from '../modals';
-
 interface Props extends Omit<DropdownProps, 'children' > {
   handleDuplicateRequest: Function;
   isPinned: Boolean;
@@ -23,7 +22,10 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
   handleShowSettings,
   request,
 }, ref) => {
-  const hotKeyRegistry = useSelector(selectHotKeyRegistry);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
+  const { hotKeyRegistry } = settings;
 
   const duplicate = useCallback(() => {
     handleDuplicateRequest(request);

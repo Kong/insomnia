@@ -1,12 +1,11 @@
 import React, { FC, forwardRef, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { COLLAPSE_SIDEBAR_REMS, DEFAULT_PANE_HEIGHT, DEFAULT_PANE_WIDTH, DEFAULT_SIDEBAR_WIDTH, MAX_PANE_HEIGHT, MAX_PANE_WIDTH, MAX_SIDEBAR_REMS, MIN_PANE_HEIGHT, MIN_PANE_WIDTH, MIN_SIDEBAR_REMS } from '../../common/constants';
 import { debounce } from '../../common/misc';
 import * as models from '../../models';
-import { selectSettings } from '../redux/selectors';
+import { RootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { ErrorBoundary } from './error-boundary';
 import { Sidebar } from './sidebar/sidebar';
@@ -202,7 +201,11 @@ export const SidebarLayout: FC<Props> = ({
   renderPaneTwo,
   renderPageSidebar,
 }) => {
-  const { forceVerticalLayout } = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
+  const { forceVerticalLayout } = settings;
+
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const { activeWorkspaceMeta } = workspaceData || {};
   const requestPaneRef = useRef<HTMLElement>(null);

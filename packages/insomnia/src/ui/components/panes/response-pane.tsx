@@ -2,6 +2,7 @@ import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -11,7 +12,8 @@ import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveResponse, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode, selectSettings } from '../../redux/selectors';
+import { selectActiveResponse, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
@@ -40,7 +42,9 @@ export const ResponsePane: FC<Props> = ({
   const response = useSelector(selectActiveResponse) as Response | null;
   const filterHistory = useSelector(selectResponseFilterHistory);
   const filter = useSelector(selectResponseFilter);
-  const settings = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
   const previewMode = useSelector(selectResponsePreviewMode);
   const handleSetFilter = async (responseFilter: string) => {
     if (!response) {

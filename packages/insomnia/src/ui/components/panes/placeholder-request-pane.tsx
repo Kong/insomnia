@@ -1,14 +1,17 @@
 import React, { FC, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { createRequest } from '../../hooks/create-request';
-import { selectSettings } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 export const PlaceholderRequestPane: FC = () => {
-  const { hotKeyRegistry } = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
+  const { hotKeyRegistry } = settings;
   const { workspaceId } = useParams<{ workspaceId: string }>();
   const createHttpRequest = useCallback(() => {
     if (workspaceId) {

@@ -1,19 +1,21 @@
 import React, { FC, memo } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { docsBase } from '../../../common/documentation';
-import { selectSettings } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { Link } from '../base/link';
 import { showModal } from '../modals/index';
 import { SettingsModal } from '../modals/settings-modal';
-
 interface Props {
   error: string;
   url: string;
 }
 export const ResponseErrorViewer: FC<Props> = memo(({ error }) => {
   let msg: React.ReactNode = null;
-  const { editorFontSize } = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
+  const { editorFontSize } = settings;
 
   if (error?.toLowerCase().indexOf('certificate') !== -1) {
     msg = (

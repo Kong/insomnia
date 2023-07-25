@@ -52,14 +52,6 @@ export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, ent
   return parentLookupMap;
 });
 
-export const selectStats = createSelector(
-  selectEntitiesLists,
-  entities => entities.stats[0] || models.stats.init());
-
-export const selectSettings = createSelector(
-  selectEntitiesLists,
-  entities => entities.settings[0] || models.settings.init());
-
 export const selectRequestMetas = createSelector(
   selectEntitiesLists,
   entities => entities.requestMetas,
@@ -70,14 +62,9 @@ export const selectGrpcRequestMetas = createSelector(
   entities => entities.grpcRequestMetas,
 );
 
-export const selectProjects = createSelector(
-  selectEntitiesLists,
-  entities => sortProjects(entities.projects),
-);
-
 export const selectRemoteProjects = createSelector(
-  selectProjects,
-  projects => projects.filter(isRemoteProject),
+  selectEntitiesLists,
+  entities => sortProjects(entities.projects).filter(isRemoteProject),
 );
 
 export const selectWorkspacesForActiveProject = createSelector(
@@ -87,11 +74,12 @@ export const selectWorkspacesForActiveProject = createSelector(
 );
 
 export const selectActiveWorkspace = createSelector(
-  selectWorkspacesForActiveProject,
+  selectEntitiesLists,
   (state: RootState) => state.global.activeWorkspaceId,
-  (workspaces, activeWorkspaceId) => {
-    const workspace = workspaces.find(workspace => workspace._id === activeWorkspaceId);
-    return workspace;
+  (state: RootState) => state.global.activeProjectId,
+  (entities, activeWorkspaceId, activeProjectId) => {
+    return entities.workspaces.filter(workspace => workspace.parentId === (activeProjectId || DEFAULT_PROJECT_ID))
+      .find(workspace => workspace._id === activeWorkspaceId);
   },
 );
 
@@ -99,60 +87,13 @@ export const selectActiveWorkspaceMeta = createSelector(
   selectActiveWorkspace,
   selectEntitiesLists,
   (activeWorkspace, entities) => {
-    const id = activeWorkspace ? activeWorkspace._id : 'n/a';
-    return entities.workspaceMetas.find(workspaceMeta => workspaceMeta.parentId === id);
+    return entities.workspaceMetas.find(workspaceMeta => workspaceMeta.parentId === activeWorkspace?._id);
   },
-);
-
-export const selectApiSpecs = createSelector(
-  selectEntitiesLists,
-  entities => entities.apiSpecs,
-);
-
-export const selectGitRepositories = createSelector(
-  selectEntitiesLists,
-  entities => entities.gitRepositories,
-);
-
-export const selectRequestGroups = createSelector(
-  selectEntitiesLists,
-  entities => entities.requestGroups,
 );
 
 export const selectRequestVersions = createSelector(
   selectEntitiesLists,
   entities => entities.requestVersions,
-);
-
-export const selectRequests = createSelector(
-  selectEntitiesLists,
-  entities => entities.requests,
-);
-
-export const selectActiveEnvironment = createSelector(
-  selectActiveWorkspaceMeta,
-  selectEntitiesLists,
-  (meta, entities) => {
-    if (!meta) {
-      return null;
-    }
-
-    return entities.environments.find(environment => environment._id === meta.activeEnvironmentId) || null;
-  },
-);
-
-export const selectActiveGitRepository = createSelector(
-  selectEntitiesLists,
-  selectActiveWorkspaceMeta,
-  (entities, activeWorkspaceMeta) => {
-    if (!activeWorkspaceMeta) {
-      return null;
-    }
-
-    const id = activeWorkspaceMeta ? activeWorkspaceMeta.gitRepositoryId : 'n/a';
-    const repo = entities.gitRepositories.find(r => r._id === id);
-    return repo || null;
-  },
 );
 
 export const selectCollapsedRequestGroups = createSelector(
@@ -281,17 +222,11 @@ export const selectResponseDownloadPath = createSelector(
   requestMeta => requestMeta?.downloadPath || null,
 );
 
-export const selectHotKeyRegistry = createSelector(
-  selectSettings,
-  settings => settings.hotKeyRegistry,
-);
-
 export const selectActiveRequestResponses = createSelector(
   selectActiveRequest,
   selectEntitiesLists,
-  selectActiveEnvironment,
-  selectSettings,
-  (activeRequest, entities, activeEnvironment, settings) => {
+  selectActiveWorkspace,
+  (activeRequest, entities, activeWorkspace) => {
     const requestId = activeRequest ? activeRequest._id : 'n/a';
 
     const responses: (Response | WebSocketResponse)[] = (activeRequest && isWebSocketRequest(activeRequest)) ? entities.webSocketResponses : entities.responses;
@@ -300,7 +235,9 @@ export const selectActiveRequestResponses = createSelector(
     return responses.filter(response => {
       const requestMatches = requestId === response.parentId;
 
-      if (settings.filterResponsesByEnv) {
+      if ((entities.settings[0] || models.settings.init()).filterResponsesByEnv) {
+        const meta = entities.workspaceMetas.find(workspaceMeta => workspaceMeta.parentId === activeWorkspace?._id);
+        const activeEnvironment = meta ? entities.environments.find(environment => environment._id === meta.activeEnvironmentId) : null;
         const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
         const environmentMatches = response.environmentId === activeEnvironmentId;
         return requestMatches && environmentMatches;

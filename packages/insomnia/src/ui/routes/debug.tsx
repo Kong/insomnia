@@ -41,8 +41,8 @@ import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { createRequestGroup } from '../hooks/create-request-group';
 import {
   selectActiveRequest,
-  selectSettings,
 } from '../redux/selectors';
+import { RootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 export interface GrpcMessage {
   id: string;
@@ -98,7 +98,9 @@ export const Debug: FC = () => {
     fn();
   }, [activeWorkspace]);
 
-  const settings = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
   const [runningRequests, setRunningRequests] = useState({});
   const setLoading = (isLoading: boolean) => {
     invariant(activeRequest, 'No active request');
