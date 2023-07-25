@@ -88,7 +88,7 @@ export const selectWorkspaces = createSelector(
 export const selectWorkspacesForActiveProject = createSelector(
   selectEntitiesLists,
   (state: RootState) => state.global.activeProjectId,
-  (entities, activeProjectId) => entities.workspaces.filter(workspace => workspace.parentId === (activeProjectId || DEFAULT_PROJECT_ID)._id),
+  (entities, activeProjectId) => entities.workspaces.filter(workspace => workspace.parentId === (activeProjectId || DEFAULT_PROJECT_ID)),
 );
 
 export const selectActiveWorkspace = createSelector(
