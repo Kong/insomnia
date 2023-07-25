@@ -66,7 +66,7 @@ function mockMethodReturnType(
     methods[method] = () => {
       let data = {};
       if (!mocks) {
-        data = mockTypeFields(messageType);
+        data = mockTypeFields(messageType, {});
       }
       return { plain: data, message: messageType.fromObject(data) };
     };
@@ -81,14 +81,14 @@ interface StackDepth {
 /**
  * Mock a field type
  */
-function mockTypeFields(type: Type, stackDepth: StackDepth = {}): object {
-  if (stackDepth[type.name] > MAX_STACK_SIZE) {
+function mockTypeFields(type: Type, stackDepth: StackDepth): object {
+  if (stackDepth[`$type.${type.name}`] > MAX_STACK_SIZE) {
     return {};
   }
-  if (!stackDepth[type.name]) {
-    stackDepth[type.name] = 0;
+  if (!stackDepth[`$type.${type.name}`]) {
+    stackDepth[`$type.${type.name}`] = 0;
   }
-  stackDepth[type.name]++;
+  stackDepth[`$type.${type.name}`]++;
 
   const fieldsData: { [key: string]: any } = {};
   if (!type.fieldsArray) {
@@ -121,7 +121,15 @@ function mockEnum(enumType: Enum): number {
 /**
  * Mock a field
  */
-function mockField(field: Field, stackDepth?: StackDepth): any {
+function mockField(field: Field, stackDepth: StackDepth): any {
+  if (stackDepth[`$field.${field.name}`] > MAX_STACK_SIZE) {
+    return {};
+  }
+  if (!stackDepth[`$field.${field.name}`]) {
+    stackDepth[`$field.${field.name}`] = 0;
+  }
+  stackDepth[`$field.${field.name}`]++;
+
   if (field instanceof MapField) {
     let mockPropertyValue = null;
     if (field.resolvedType === null) {
@@ -133,9 +141,9 @@ function mockField(field: Field, stackDepth?: StackDepth): any {
 
       if (resolvedType instanceof Type) {
         if (resolvedType.oneofs) {
-          mockPropertyValue = pickOneOf(resolvedType.oneofsArray);
+          mockPropertyValue = pickOneOf(resolvedType.oneofsArray, stackDepth);
         } else {
-          mockPropertyValue = mockTypeFields(resolvedType);
+          mockPropertyValue = mockTypeFields(resolvedType, stackDepth);
         }
       } else if (resolvedType instanceof Enum) {
         mockPropertyValue = mockEnum(resolvedType);
@@ -168,9 +176,9 @@ function mockField(field: Field, stackDepth?: StackDepth): any {
   }
 }
 
-function pickOneOf(oneofs: OneOf[]) {
+function pickOneOf(oneofs: OneOf[], stackDepth: StackDepth) {
   return oneofs.reduce((fields: {[key: string]: any}, oneOf) => {
-    fields[oneOf.name] = mockField(oneOf.fieldsArray[0]);
+    fields[oneOf.name] = mockField(oneOf.fieldsArray[0], stackDepth);
     return fields;
   }, {});
 }
