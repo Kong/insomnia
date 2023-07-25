@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   name: 'high-contrast-light',
   displayName: 'High Contrast',
   theme: {

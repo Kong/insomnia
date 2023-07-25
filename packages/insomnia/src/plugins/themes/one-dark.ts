@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   name: 'one-dark',
   displayName: 'One Dark',
   theme: {

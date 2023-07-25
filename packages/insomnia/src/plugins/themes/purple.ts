@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   name: 'purple',
   displayName: 'Purple',
   theme: {

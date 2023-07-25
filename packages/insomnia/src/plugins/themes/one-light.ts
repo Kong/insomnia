@@ -8,7 +8,7 @@ const sidebarBackground = {
   info: '#0184bc',
 };
 
-module.exports = {
+export default {
   name: 'one-light',
   displayName: 'One Light',
   theme: {

@@ -1,9 +1,9 @@
-module.exports = {
-  name: 'solarized-light',
-  displayName: 'Solarized Light',
+export default {
+  name: 'solarized-dark',
+  displayName: 'Solarized Dark',
   theme: {
     background: {
-      default: '#fdf6e3',
+      default: '#002b36',
       success: '#859900',
       notice: '#b58900',
       warning: '#cb4b16',
@@ -12,7 +12,7 @@ module.exports = {
       info: '#2aa198',
     },
     foreground: {
-      default: '#657b83',
+      default: '#839496',
     },
     highlight: {
       default: 'rgb(142, 149, 146)',
@@ -22,6 +22,13 @@ module.exports = {
       md: 'rgba(142, 149, 146, 0.3)',
       lg: 'rgba(142, 149, 146, 0.6)',
       xl: 'rgba(142, 149, 146, 0.8)',
+    },
+    styles: {
+      sidebar: {
+        highlight: {
+          default: 'rgb(88, 110, 117)',
+        },
+      }
     },
   },
 };

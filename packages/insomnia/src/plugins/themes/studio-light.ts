@@ -7,7 +7,7 @@ const background = {
   surprise: '#6030BF',
 };
 
-module.exports = {
+export default {
   name: 'studio-light',
   displayName: 'Designer Light',
   theme: {

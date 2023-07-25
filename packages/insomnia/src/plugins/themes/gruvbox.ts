@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   name: 'gruvbox-dark',
   displayName: 'Gruvbox Dark',
   theme: {

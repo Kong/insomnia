@@ -2,7 +2,6 @@ import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
 
-import appConfig from '../../config/config.json';
 import { ParsedApiSpec } from '../common/api-specs';
 import { resolveHomePath } from '../common/misc';
 import type { PluginConfig, PluginConfigMap } from '../common/settings';
@@ -14,7 +13,7 @@ import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/extensions/index';
 import { showError } from '../ui/components/modals/index';
 import type { PluginTheme } from './misc';
-
+import { themesFn } from './themes';
 export interface Module {
   templateTags?: PluginTemplateTag[];
   requestHooks?: ((requestContext: any) => void)[];
@@ -209,26 +208,6 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
       // "name": "module"
     };
 
-    for (const p of appConfig.plugins) {
-      if (ignorePlugins.includes(p)) {
-        continue;
-      }
-
-      try {
-        const pluginJson = global.require(`${p}/package.json`) as unknown as { name: string };
-
-        if (ignorePlugins.includes(pluginJson.name)) {
-          continue;
-        }
-
-        const pluginModule = global.require(p);
-
-        pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule, allConfigs);
-      } catch (err) {
-        console.error(`[plugin] Failed to load plugin: ${p}`, err);
-      }
-    }
-
     await _traversePluginPath(pluginMap, allPaths, allConfigs);
     plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
   }
@@ -394,27 +373,22 @@ export async function getResponseHooks(): Promise<ResponseHook[]> {
 }
 
 export async function getThemes(): Promise<Theme[]> {
-  let extensions: Theme[] = [
-    require('./themes/default'),
-    require('./themes/legacy'),
-    require('./themes/studio-light'),
-    require('./themes/studio-dark'),
-    require('./themes/material'),
-    require('./themes/simple-light'),
-    require('./themes/simple-dark'),
-    require('./themes/one-light'),
-    require('./themes/one-dark'),
-    require('./themes/purple'),
-    require('./themes/gruvbox'),
-    require('./themes/hyper'),
-    require('./themes/railscasts'),
-    require('./themes/solarized-light'),
-    require('./themes/solarized'),
-    require('./themes/solarized-dark'),
-    require('./themes/high-contrast-light'),
-    require('./themes/colorblind-dark'),
-  ];
+  const themes = await themesFn();
+  console.log('whats this1',  themes);
 
+  let extensions = themes.map(theme => ({
+    plugin: {
+      name: theme.name,
+      description: 'Built-in themes',
+      version: '0.0.0',
+      directory: '',
+      config: {
+        disabled: false,
+      },
+      module: {},
+    },
+    theme,
+  })) as Theme[];
   for (const plugin of await getActivePlugins()) {
     const themes = plugin.module.themes || [];
     extensions = [
