@@ -142,7 +142,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   };
 
   useEffect(() => {
-    if (activeRequest.body.text) {
+    if (activeRequest.body.text && activeRequest.body.text !== '{}') {
       // If the user already has a body set, do not edit it
       return;
     }
