@@ -28,7 +28,7 @@ export default {
         highlight: {
           default: 'rgb(88, 110, 117)',
         },
-      }
+      },
     },
   },
 };
