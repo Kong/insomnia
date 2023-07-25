@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import { useAsync } from 'react-use';
 import styled from 'styled-components';
 
@@ -12,8 +12,8 @@ import * as models from '../../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import { selectActiveEnvironment } from '../../redux/selectors';
 import { GrpcRequestState } from '../../routes/debug';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
 import { OneLineEditor } from '../codemirror/one-line-editor';
@@ -92,10 +92,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
-  const activeEnvironment = useSelector(selectActiveEnvironment);
-  const environmentId = activeEnvironment?._id || 'n/a';
+  const {
+    activeEnvironment,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const environmentId = activeEnvironment._id;
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniquenessKey = `${activeEnvironment?.modified}::${activeRequest?._id}::${gitVersion}::${activeRequestSyncVersion}`;
+  const uniquenessKey = `${activeEnvironment.modified}::${activeRequest?._id}::${gitVersion}::${activeRequestSyncVersion}`;
   const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
   const methodType = method?.type;
   const handleRequestSend = async () => {

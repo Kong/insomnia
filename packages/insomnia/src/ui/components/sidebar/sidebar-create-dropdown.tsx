@@ -1,32 +1,34 @@
 import React, { useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { createRequest, CreateRequestType } from '../../hooks/create-request';
 import { createRequestGroup } from '../../hooks/create-request-group';
-import { selectActiveWorkspace, selectHotKeyRegistry } from '../../redux/selectors';
+import { selectHotKeyRegistry } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
-
 export const SidebarCreateDropdown = () => {
   const hotKeyRegistry = useSelector(selectHotKeyRegistry);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceId = activeWorkspace?._id;
+  const {
+    activeWorkspace,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const create = useCallback((value: CreateRequestType) => {
-    if (activeWorkspaceId) {
+    if (activeWorkspace._id) {
       createRequest({
         requestType: value,
-        parentId: activeWorkspaceId,
-        workspaceId: activeWorkspaceId,
+        parentId: activeWorkspace._id,
+        workspaceId: activeWorkspace._id,
       });
     }
-  }, [activeWorkspaceId]);
+  }, [activeWorkspace._id]);
 
   const createGroup = useCallback(() => {
-    if (!activeWorkspaceId) {
+    if (!activeWorkspace._id) {
       return;
     }
 
-    createRequestGroup(activeWorkspaceId);
-  }, [activeWorkspaceId]);
+    createRequestGroup(activeWorkspace._id);
+  }, [activeWorkspace._id]);
   const dataTestId = 'SidebarCreateDropdown';
   return (
     <Dropdown

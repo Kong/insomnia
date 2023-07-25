@@ -22,19 +22,17 @@ import { database } from '../common/database';
 import { initializeLogging } from '../common/log';
 import * as models from '../models';
 import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
-import { DEFAULT_PROJECT_ID, isRemoteProject } from '../models/project';
+import { DEFAULT_PROJECT_ID } from '../models/project';
 import { initNewOAuthSession } from '../network/o-auth-2/get-token';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
 import { invariant } from '../utils/invariant';
 import { AppLoadingIndicator } from './components/app-loading-indicator';
-import { init as initStore, RootState } from './redux/modules';
+import { init as initStore } from './redux/modules';
 import {
-  setActiveActivity,
   setActiveProject,
   setActiveWorkspace,
 } from './redux/modules/global';
-import { selectActiveProject } from './redux/selectors';
 import { ErrorRoute } from './routes/error';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
@@ -500,7 +498,6 @@ function updateReduxNavigationState(store: Store, pathname: string) {
     store.dispatch(
       setActiveWorkspace(isActivityDebug?.params.workspaceId || '')
     );
-    store.dispatch(setActiveActivity(ACTIVITY_DEBUG));
   } else if (isActivityDesign) {
     currentActivity = ACTIVITY_SPEC;
     store.dispatch(
@@ -509,7 +506,6 @@ function updateReduxNavigationState(store: Store, pathname: string) {
     store.dispatch(
       setActiveWorkspace(isActivityDesign?.params.workspaceId || '')
     );
-    store.dispatch(setActiveActivity(ACTIVITY_SPEC));
   } else if (isActivityTest) {
     currentActivity = ACTIVITY_UNIT_TEST;
     store.dispatch(
@@ -518,13 +514,11 @@ function updateReduxNavigationState(store: Store, pathname: string) {
     store.dispatch(
       setActiveWorkspace(isActivityTest?.params.workspaceId || '')
     );
-    store.dispatch(setActiveActivity(ACTIVITY_UNIT_TEST));
   } else {
     currentActivity = ACTIVITY_HOME;
     store.dispatch(
       setActiveProject(isActivityHome?.params.projectId || '')
     );
-    store.dispatch(setActiveActivity(ACTIVITY_HOME));
   }
 
   return currentActivity;
@@ -549,45 +543,13 @@ async function renderApp() {
   // Synchronizes the Redux store with the router history
   // @HACK: This is temporary until we completely remove navigation through Redux
   const synchronizeRouterState = () => {
-    let currentActivity = (store.getState() as RootState).global.activeActivity;
     let currentPathname = router.state.location.pathname;
-
-    currentActivity = updateReduxNavigationState(store, router.state.location.pathname);
-
+    updateReduxNavigationState(store, router.state.location.pathname);
     router.subscribe(({ location }) => {
       if (location.pathname !== currentPathname) {
         currentPathname = location.pathname;
-        currentActivity = updateReduxNavigationState(store, location.pathname);
+        updateReduxNavigationState(store, location.pathname);
       }
-    });
-
-    store.subscribe(() => {
-      const state = store.getState() as RootState;
-      const activity = state.global.activeActivity;
-
-      const activeProject = selectActiveProject(state);
-      const organizationId = activeProject && isRemoteProject(activeProject) ? activeProject._id : DEFAULT_ORGANIZATION_ID;
-
-      if (activity !== currentActivity) {
-        currentActivity = activity;
-        const activeProjectId = activeProject ? activeProject._id : DEFAULT_PROJECT_ID;
-        if (activity === ACTIVITY_HOME) {
-          router.navigate(`/organization/${organizationId}/project/${activeProject._id}`);
-        } else if (activity === ACTIVITY_DEBUG) {
-          router.navigate(
-            `/organization/${organizationId}/project/${activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_DEBUG}`
-          );
-        } else if (activity === ACTIVITY_SPEC) {
-          router.navigate(
-            `/organization/${organizationId}/project/${activeProjectId}/workspace/${state.global.activeWorkspaceId}/${ACTIVITY_SPEC}`
-          );
-        } else if (activity === ACTIVITY_UNIT_TEST) {
-          router.navigate(
-            `/organization/${organizationId}/project/${state.global.activeProjectId}/workspace/${state.global.activeWorkspaceId}/test`
-          );
-        }
-      }
-
     });
   };
 

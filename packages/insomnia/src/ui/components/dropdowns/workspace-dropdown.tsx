@@ -1,10 +1,12 @@
 import React, { FC, useCallback, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { isLoggedIn } from '../../../account/session';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import { workspace } from '../../../models';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
 import { isDesign, Workspace } from '../../../models/workspace';
@@ -12,20 +14,23 @@ import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { useAIContext } from '../../context/app/ai-context';
-import { selectActiveApiSpec, selectActiveEnvironment, selectActiveProject, selectActiveWorkspace, selectActiveWorkspaceName, selectSettings } from '../../redux/selectors';
+import { selectSettings } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { InsomniaAI } from '../insomnia-ai-icon';
 import { showError, showModal } from '../modals';
 import { configGenerators, showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
-
 export const WorkspaceDropdown: FC = () => {
-  const activeEnvironment = useSelector(selectActiveEnvironment);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
-  const activeApiSpec = useSelector(selectActiveApiSpec);
-  const activeProject = useSelector(selectActiveProject);
+  const {
+    activeWorkspace,
+    activeEnvironment,
+    activeProject,
+    activeApiSpec,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const activeWorkspaceName = workspace.name;
+
   const settings = useSelector(selectSettings);
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
@@ -41,12 +46,11 @@ export const WorkspaceDropdown: FC = () => {
   const handlePluginClick = useCallback(async ({ action, plugin, label }: WorkspaceAction, workspace: Workspace) => {
     setLoadingActions({ ...loadingActions, [label]: true });
     try {
-      const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
         ...pluginContexts.data.init(activeProject._id),
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
-        ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
+        ...(pluginContexts.network.init(activeEnvironment._id) as Record<string, any>),
       };
 
       const docs = await db.withDescendants(workspace);
@@ -93,11 +97,6 @@ export const WorkspaceDropdown: FC = () => {
       activeTabLabel: label,
     });
   }, [activeApiSpec]);
-
-  if (!activeWorkspace) {
-    console.error('warning: tried to render WorkspaceDropdown without an activeWorkspace');
-    return null;
-  }
 
   return (
     <Dropdown

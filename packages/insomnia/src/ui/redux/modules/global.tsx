@@ -1,10 +1,6 @@
 import { combineReducers } from 'redux';
 
-import type { DashboardSortOrder, GlobalActivity } from '../../../common/constants';
-import {
-  ACTIVITY_HOME,
-  isValidActivity,
-} from '../../../common/constants';
+import type { DashboardSortOrder } from '../../../common/constants';
 import { DEFAULT_PROJECT_ID } from '../../../models/project';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
@@ -17,15 +13,6 @@ export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
-function activeActivityReducer(state: string | null = null, action: any) {
-  switch (action.type) {
-    case SET_ACTIVE_ACTIVITY:
-      return action.activity;
-
-    default:
-      return state;
-  }
-}
 
 function activeProjectReducer(state: string = DEFAULT_PROJECT_ID, action: any) {
   switch (action.type) {
@@ -71,7 +58,6 @@ export interface GlobalState {
   activeProjectId: string;
   dashboardSortOrder: DashboardSortOrder;
   activeWorkspaceId: string | null;
-  activeActivity: GlobalActivity | null;
   isLoggedIn: boolean;
 }
 
@@ -79,7 +65,6 @@ export const reducer = combineReducers<GlobalState>({
   dashboardSortOrder: dashboardSortOrderReducer,
   activeProjectId: activeProjectReducer,
   activeWorkspaceId: activeWorkspaceReducer,
-  activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
 });
 
@@ -91,36 +76,12 @@ export const loginStateChange = (loggedIn: boolean) => ({
   loggedIn,
 });
 
-/*
-  Go to an explicit activity
- */
-export const setActiveActivity = (activity: GlobalActivity) => {
-  activity = isValidActivity(activity) ? activity : ACTIVITY_HOME;
-  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
-  window.main.trackPageView({ name: activity });
-  return {
-    type: SET_ACTIVE_ACTIVITY,
-    activity,
-  };
-};
-
 export const setActiveProject = (projectId: string) => {
   const key = `${LOCALSTORAGE_PREFIX}::activeProjectId`;
   window.localStorage.setItem(key, JSON.stringify(projectId));
   return {
     type: SET_ACTIVE_PROJECT,
     projectId,
-  };
-};
-
-export const setDashboardSortOrder = (sortOrder: DashboardSortOrder) => {
-  const key = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
-  window.localStorage.setItem(key, JSON.stringify(sortOrder));
-  return {
-    type: SET_DASHBOARD_SORT_ORDER,
-    payload: {
-      sortOrder,
-    },
   };
 };
 

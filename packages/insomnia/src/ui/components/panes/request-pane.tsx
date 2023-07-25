@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { version } from '../../../../package.json';
@@ -14,7 +15,8 @@ import type { Settings } from '../../../models/settings';
 import { create, Workspace } from '../../../models/workspace';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import { selectActiveEnvironment, selectActiveRequestMeta } from '../../redux/selectors';
+import { selectActiveRequestMeta } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
@@ -31,7 +33,6 @@ import { RenderedQueryString } from '../rendered-query-string';
 import { RequestUrlBar, RequestUrlBarHandle } from '../request-url-bar';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
-
 const HeaderContainer = styled.div({
   display: 'flex',
   flexDirection: 'column',
@@ -268,7 +269,10 @@ export const RequestPane: FC<Props> = ({
   }, [request]);
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
-  const activeEnvironment = useSelector(selectActiveEnvironment);
+
+  const {
+    activeEnvironment,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const activeRequestMeta = useSelector(selectActiveRequestMeta);
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${activeEnvironment?.modified}::${request?._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;

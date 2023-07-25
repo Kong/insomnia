@@ -1,10 +1,9 @@
 import React, { FC, ReactNode, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { VCS } from '../../sync/vcs/vcs';
-import { selectActiveProject } from '../redux/selectors';
+import { WorkspaceLoaderData } from '../routes/workspace';
 import { showError } from './modals';
-
 interface Props {
   vcs: VCS;
   branch: string;
@@ -16,7 +15,9 @@ interface Props {
 
 export const SyncPullButton: FC<Props> = props => {
   const { className, children, disabled } = props;
-  const project = useSelector(selectActiveProject);
+  const {
+    activeProject,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [loading, setLoading] = useState(false);
   const onClick = async () => {
     const { vcs, onPull, branch } = props;
@@ -27,7 +28,7 @@ export const SyncPullButton: FC<Props> = props => {
     try {
       // Clone old VCS so we don't mess anything up while working on other projects
       await newVCS.checkout([], branch);
-      await newVCS.pull([], project.remoteId);
+      await newVCS.pull([], activeProject.remoteId);
     } catch (err) {
       showError({
         title: 'Pull Error',

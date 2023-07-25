@@ -1,7 +1,6 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 
-import { ACTIVITY_DEBUG } from '../common/constants';
 import * as models from '../models';
 import { Request } from '../models/request';
 import { RequestMeta } from '../models/request-meta';
@@ -21,7 +20,6 @@ export const createMockStoreWithRequest = async ({ requestPatch, requestMetaPatc
   const store = mockStore(await reduxStateForTest({
     activeProjectId: projectId,
     activeWorkspaceId: workspaceId,
-    activeActivity: ACTIVITY_DEBUG,
   }));
 
   return {

@@ -1,6 +1,7 @@
 import React, { FC, Fragment, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { getProductName } from '../../../common/constants';
 import { docsImportExport } from '../../../common/documentation';
@@ -8,7 +9,8 @@ import { exportAllToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { isRequestGroup } from '../../../models/request-group';
-import { selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
 import { AlertModal } from '../modals/alert-modal';
@@ -16,7 +18,6 @@ import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { ImportModal } from '../modals/import-modal';
 import { showModal } from '../modals/index';
 import { Button } from '../themed-button';
-
 interface Props {
   hideSettingsModal: () => void;
 }
@@ -27,9 +28,11 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     projectId,
     workspaceId,
   } = useParams() as { organizationId: string; projectId: string; workspaceId?: string };
-  const projectName = useSelector(selectActiveProjectName) ?? getProductName();
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
+
+  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
+  const activeWorkspaceName = workspaceData?.activeWorkspace.name;
+  const projectName = workspaceData?.activeProject.name ?? getProductName();
+
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   const workspaceRequestsAndRequestGroups = useSelector(selectWorkspaceRequestsAndRequestGroups);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -61,7 +64,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           Your format isn't supported? <Link href={docsImportExport}>Add Your Own</Link>.
         </p>
         <div className="pad-top">
-          {activeWorkspace ?
+          {workspaceData?.activeWorkspace ?
             (<Dropdown
               aria-label='Export Data Dropdown'
               triggerButton={
@@ -74,10 +77,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                 aria-label="Choose Export Type"
                 title="Choose Export Type"
               >
-                <DropdownItem aria-label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`}>
+                <DropdownItem aria-label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(workspaceData.activeWorkspace).singular}`}>
                   <ItemContent
                     icon="home"
-                    label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(activeWorkspace).singular}`}
+                    label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(workspaceData.activeWorkspace).singular}`}
                     onClick={showExportRequestsModal}
                   />
                 </DropdownItem>

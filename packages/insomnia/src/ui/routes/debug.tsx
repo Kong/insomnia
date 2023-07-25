@@ -1,6 +1,7 @@
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
@@ -39,13 +40,10 @@ import { WebSocketRequestPane } from '../components/websockets/websocket-request
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { createRequestGroup } from '../hooks/create-request-group';
 import {
-  selectActiveEnvironment,
   selectActiveRequest,
-  selectActiveWorkspace,
-  selectActiveWorkspaceMeta,
   selectSettings,
 } from '../redux/selectors';
-import { selectSidebarFilter } from '../redux/sidebar-selectors';
+import { WorkspaceLoaderData } from './workspace';
 export interface GrpcMessage {
   id: string;
   text: string;
@@ -74,9 +72,12 @@ const INITIAL_GRPC_REQUEST_STATE = {
 };
 
 export const Debug: FC = () => {
-  const activeEnvironment = useSelector(selectActiveEnvironment);
+  const {
+    activeWorkspace,
+    activeWorkspaceMeta,
+    activeEnvironment,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const activeRequest = useSelector(selectActiveRequest);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>([]);
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
@@ -90,18 +91,14 @@ export const Debug: FC = () => {
   }, []);
   useEffect(() => {
     const fn = async () => {
-      if (activeWorkspace) {
-        const children = await db.withDescendants(activeWorkspace);
-        const grpcRequests = children.filter(d => isGrpcRequest(d));
-        setGrpcStates(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
-      }
+      const children = await db.withDescendants(activeWorkspace);
+      const grpcRequests = children.filter(d => isGrpcRequest(d));
+      setGrpcStates(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
     };
     fn();
   }, [activeWorkspace]);
 
   const settings = useSelector(selectSettings);
-  const sidebarFilter = useSelector(selectSidebarFilter);
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const [runningRequests, setRunningRequests] = useState({});
   const setLoading = (isLoading: boolean) => {
     invariant(activeRequest, 'No active request');
@@ -192,27 +189,21 @@ export const Debug: FC = () => {
       },
     request_createHTTP:
       async () => {
-        if (activeWorkspace) {
-          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-          const request = await models.request.create({
-            parentId,
-            name: 'New Request',
-          });
-          if (activeWorkspaceMeta) {
-            await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
-          }
-          await updateRequestMetaByParentId(request._id, {
-            lastActive: Date.now(),
-          });
-          models.stats.incrementCreatedRequests();
-          window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType: 'HTTP' } });
-        }
+        const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+        const request = await models.request.create({
+          parentId,
+          name: 'New Request',
+        });
+        await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
+        await updateRequestMetaByParentId(request._id, {
+          lastActive: Date.now(),
+        });
+        models.stats.incrementCreatedRequests();
+        window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType: 'HTTP' } });
       },
     request_showCreateFolder:
       () => {
-        if (activeWorkspace) {
-          createRequestGroup(activeRequest ? activeRequest.parentId : activeWorkspace._id);
-        }
+        createRequestGroup(activeRequest ? activeRequest.parentId : activeWorkspace._id);
       },
     request_showRecent:
       () => showModal(RequestSwitcherModal, {
@@ -263,11 +254,11 @@ export const Debug: FC = () => {
 
         <SidebarFilter
           key={`${activeWorkspace._id}::filter`}
-          filter={sidebarFilter || ''}
+          filter={activeWorkspaceMeta.sidebarFilter || ''}
         />
 
         <SidebarChildren
-          filter={sidebarFilter || ''}
+          filter={activeWorkspaceMeta.sidebarFilter || ''}
         />
         <WorkspaceSyncDropdown />
       </Fragment>

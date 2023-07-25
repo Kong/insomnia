@@ -1,29 +1,29 @@
 import React, { FC, useCallback, useRef } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { SortOrder } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { sortMethodMap } from '../../../common/sorting';
 import * as models from '../../../models';
 import { isRequestGroup } from '../../../models/request-group';
-import { selectActiveWorkspace, selectActiveWorkspaceMeta } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarSortDropdown } from './sidebar-sort-dropdown';
-
 interface Props {
   filter: string;
 }
 
 export const SidebarFilter: FC<Props> = ({ filter }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+
+  const {
+    activeWorkspace,
+    activeWorkspaceMeta,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
   const handleClearFilter = useCallback(async () => {
-    if (activeWorkspaceMeta) {
-      await models.workspaceMeta.update(activeWorkspaceMeta, { sidebarFilter: '' });
-    }
+    await models.workspaceMeta.update(activeWorkspaceMeta, { sidebarFilter: '' });
     if (inputRef.current) {
       inputRef.current.value = '';
       inputRef.current.focus();
@@ -31,9 +31,7 @@ export const SidebarFilter: FC<Props> = ({ filter }) => {
   }, [activeWorkspaceMeta]);
 
   const handleOnChange = useCallback(async (event: React.SyntheticEvent<HTMLInputElement>) => {
-    if (activeWorkspaceMeta) {
-      await models.workspaceMeta.update(activeWorkspaceMeta, { sidebarFilter: event.currentTarget.value });
-    }
+    await models.workspaceMeta.update(activeWorkspaceMeta, { sidebarFilter: event.currentTarget.value });
   }, [activeWorkspaceMeta]);
 
   useDocBodyKeyboardShortcuts({
@@ -44,9 +42,6 @@ export const SidebarFilter: FC<Props> = ({ filter }) => {
 
   const sortSidebar = async (order: SortOrder, parentId?: string) => {
     let flushId: number | undefined;
-    if (!activeWorkspace) {
-      return;
-    }
     if (!parentId) {
       parentId = activeWorkspace._id;
       flushId = await db.bufferChanges();
