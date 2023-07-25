@@ -10,7 +10,7 @@ import { WorkspaceMeta } from '../../models/workspace-meta';
 import { invariant } from '../../utils/invariant';
 export interface WorkspaceLoaderData {
   activeWorkspace: Workspace;
-  activeWorkspaceMeta?: WorkspaceMeta;
+  activeWorkspaceMeta: WorkspaceMeta;
   activeProject: Project;
   gitRepository: GitRepository | null;
   activeEnvironment: Environment;
@@ -38,6 +38,7 @@ export const workspaceLoader: LoaderFunction = async ({
   const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
     workspaceId,
   );
+  invariant(activeWorkspaceMeta, 'Workspace meta not found');
   const gitRepository = await models.gitRepository.getById(
     activeWorkspaceMeta.gitRepositoryId || '',
   );
@@ -63,7 +64,7 @@ export const workspaceLoader: LoaderFunction = async ({
 
 const WorkspaceRoute = () => {
   const workspaceData = useLoaderData() as WorkspaceLoaderData;
-  const branch = workspaceData.activeWorkspaceMeta?.cachedGitRepositoryBranch;
+  const branch = workspaceData.activeWorkspaceMeta.cachedGitRepositoryBranch;
   return <Outlet key={branch} />;
 };
 

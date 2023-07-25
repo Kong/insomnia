@@ -1,5 +1,6 @@
 import React, { FC, Fragment } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { ErrorBoundary } from '../components/error-boundary';
 import { registerModal } from '../components/modals';
@@ -36,15 +37,13 @@ import { WrapperModal } from '../components/modals/wrapper-modal';
 import { useVCS } from '../hooks/use-vcs';
 import {
   selectActiveCookieJar,
-  selectActiveEnvironment,
-  selectActiveWorkspace,
 } from '../redux/selectors';
+import { WorkspaceLoaderData } from './workspace';
 
 const Modals: FC = () => {
   const activeCookieJar = useSelector(selectActiveCookieJar);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeEnvironment = useSelector(selectActiveEnvironment);
-
+  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
+  const { activeWorkspace, activeEnvironment } = workspaceData || {};
   const vcs = useVCS({
     workspaceId: activeWorkspace?._id,
   });

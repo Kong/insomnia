@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import React, { forwardRef, Fragment, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { METHOD_GRPC } from '../../../common/constants';
 import { fuzzyMatchAll } from '../../../common/misc';
@@ -13,7 +14,8 @@ import { Workspace } from '../../../models/workspace';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectActiveRequest, selectActiveWorkspace, selectActiveWorkspaceMeta, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { selectActiveRequest, selectActiveWorkspaceMeta, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Highlight } from '../base/highlight';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -23,7 +25,6 @@ import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { WebSocketTag } from '../tags/websocket-tag';
 import { wrapToIndex } from './utils';
-
 interface State {
   searchString: string;
   workspacesForActiveProject: Workspace[];
@@ -69,7 +70,9 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   });
   const dispatch = useDispatch();
   const activeRequest = useSelector(selectActiveRequest);
-  const workspace = useSelector(selectActiveWorkspace);
+  const {
+    activeWorkspace: workspace,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   const requestMetas = useSelector(selectRequestMetas);
@@ -163,7 +166,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     }
 
     const matchedWorkspaces = workspacesForActiveProject
-      .filter(w => w._id !== workspace?._id)
+      .filter(w => w._id !== workspace._id)
       .filter(w => {
         const name = w.name.toLowerCase();
         const toMatch = searchString.toLowerCase();
@@ -180,7 +183,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       matchedRequests: matchedRequests.slice(0, maxRequests),
       matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     }));
-  }, [state, getLastActiveRequestMap, workspaceRequestsAndRequestGroups, workspacesForActiveProject, activeRequest, isMatch, workspace?._id]);
+  }, [state, getLastActiveRequestMap, workspaceRequestsAndRequestGroups, workspacesForActiveProject, activeRequest, isMatch, workspace._id]);
 
   useImperativeHandle(ref, () => ({
     hide: () => {
@@ -206,7 +209,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     },
   }), [handleChangeValue]);
 
-  const activateWorkspaceAndHide = useCallback((workspace?: Workspace) => {
+  const activateWorkspaceAndHide = useCallback((workspace: Workspace) => {
     if (!workspace) {
       return;
     }

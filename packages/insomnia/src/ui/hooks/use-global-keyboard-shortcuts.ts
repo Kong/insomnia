@@ -1,4 +1,5 @@
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import * as models from '../../models';
 import * as plugins from '../../plugins';
@@ -6,13 +7,12 @@ import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
-import { selectActiveWorkspace, selectActiveWorkspaceMeta, selectSettings } from '../redux/selectors';
-
+import { selectSettings } from '../redux/selectors';
+import { WorkspaceLoaderData } from '../routes/workspace';
 export const useGlobalKeyboardShortcuts = () => {
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
+  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const settings = useSelector(selectSettings);
-
+  const { activeWorkspace, activeWorkspaceMeta } = workspaceData || {};
   useDocBodyKeyboardShortcuts({
     workspace_showSettings:
       () => activeWorkspace && showModal(WorkspaceSettingsModal),

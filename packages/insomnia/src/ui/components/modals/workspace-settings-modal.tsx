@@ -1,6 +1,7 @@
 import React, { FC, forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRevalidator } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { ACTIVITY_HOME } from '../../../common/constants';
@@ -13,7 +14,8 @@ import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
 import { invariant } from '../../../utils/invariant';
 import { setActiveActivity } from '../../redux/modules/global';
-import { selectActiveApiSpec, selectActiveWorkspace, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceMeta, selectActiveWorkspaceName } from '../../redux/selectors';
+import { selectActiveApiSpec, selectActiveWorkspaceClientCertificates, selectActiveWorkspaceMeta, selectActiveWorkspaceName } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { FileInputButton } from '../base/file-input-button';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -23,7 +25,6 @@ import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { HelpTooltip } from '../help-tooltip';
 import { MarkdownEditor } from '../markdown-editor';
 import { PasswordViewer } from '../viewers/password-viewer';
-
 const CertificateFields = styled.div({
   display: 'flex',
   flexDirection: 'column',
@@ -89,7 +90,10 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
   });
 
   const { revalidate } = useRevalidator();
-  const workspace = useSelector(selectActiveWorkspace);
+
+  const {
+    activeWorkspace: workspace,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const apiSpec = useSelector(selectActiveApiSpec);
   const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
   const clientCertificates = useSelector(selectActiveWorkspaceClientCertificates);
@@ -113,7 +117,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
       modalRef.current?.hide();
     },
     show: () => {
-      const hasDescription = !!workspace?.description;
+      const hasDescription = !!workspace.description;
       setState(state => ({
         ...state,
         showDescription: hasDescription,
@@ -122,7 +126,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
       }));
       modalRef.current?.show();
     },
-  }), [workspace?.description]);
+  }), [workspace.description]);
 
   const _handleClearAllResponses = async () => {
     if (!workspace) {
@@ -157,7 +161,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
     const certificate = {
       host,
       isPrivate,
-      parentId: workspace?._id,
+      parentId: workspace._id,
       passphrase: passphrase || null,
       disabled: false,
       cert: crtPath || null,
