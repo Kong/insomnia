@@ -45,8 +45,8 @@ There are a few notable directories inside it:
 Insomnia stores data in a few places:
 
 - A local in-memory NeDB database stores data for data models (requests, folder, workspaces, etc.).
-- A local Redux store contains an in-memory copy of all database entities.
-- Multiple React Context stores, defined in `/src/ui/context`.
+- localstorage
+- a fake localstorage api that writes to file and is used for window sizing
 
 > Note: NeDB is officially unmaintained (even for critical security bugs) and was last published in February 2016. Due to this, we hope to move away from it, however doing so is tricky because of how deeply tied it is to our architecture.
 
