@@ -15,7 +15,7 @@ import { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 
-const localTemplatePlugins: {templateTag:PluginTemplateTag}[] = [
+const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   {
     templateTag: {
       name: 'base64',
@@ -63,7 +63,7 @@ const localTemplatePlugins: {templateTag:PluginTemplateTag}[] = [
     },
   },
   {
-    templateTag:{
+    templateTag: {
       name: 'now',
       displayName: 'Timestamp',
       description: 'get the current time',
@@ -112,7 +112,7 @@ const localTemplatePlugins: {templateTag:PluginTemplateTag}[] = [
     },
   },
   {
-    templateTag:{
+    templateTag: {
       displayName: 'UUID',
       name: 'uuid',
       description: 'generate v1 or v4 UUIDs',
@@ -141,7 +141,7 @@ const localTemplatePlugins: {templateTag:PluginTemplateTag}[] = [
     },
   },
   {
-    templateTag:{
+    templateTag: {
       displayName: 'OS',
       name: 'os',
       description: 'get OS info',
@@ -172,7 +172,7 @@ const localTemplatePlugins: {templateTag:PluginTemplateTag}[] = [
         if (JSONPath && ['userInfo', 'cpus'].includes(fnName)) {
           try {
             value = JSONPath({ json: value, path: filter })[0];
-          } catch (err) {}
+          } catch (err) { }
         }
 
         if (typeof value !== 'string') {
@@ -290,7 +290,7 @@ const localTemplatePlugins: {templateTag:PluginTemplateTag}[] = [
     },
   },
   {
-    templateTag:  {
+    templateTag: {
       name: 'cookie',
       displayName: 'Cookie',
       description: 'reference a cookie value from the cookie jar',
@@ -325,7 +325,7 @@ const localTemplatePlugins: {templateTag:PluginTemplateTag}[] = [
           try {
             // For some reason, fromJSON modifies `cookies`.
             // Create a copy first just to be sure.
-            const copy = JSON.stringify({ cookies:cookieJar.cookies });
+            const copy = JSON.stringify({ cookies: cookieJar.cookies });
             jar = CookieJar.fromJSON(copy);
           } catch (error) {
             console.log('[cookies] Failed to initialize cookie jar', error);
@@ -359,7 +359,7 @@ const localTemplatePlugins: {templateTag:PluginTemplateTag}[] = [
     },
   },
   {
-    templateTag:  {
+    templateTag: {
       displayName: 'Prompt',
       name: 'prompt',
       description: 'prompt user for input',
@@ -718,7 +718,7 @@ const localTemplatePlugins: {templateTag:PluginTemplateTag}[] = [
             } catch (err) {
               throw new Error(`Invalid XPath query: ${sanitizedFilter}`);
             }
-            const results: {outer:string; inner:string}[] = [];
+            const results: { outer: string; inner: string }[] = [];
             // Functions return plain strings
             if (typeof selectedValues === 'string') {
               results.push({
@@ -899,7 +899,7 @@ const localTemplatePlugins: {templateTag:PluginTemplateTag}[] = [
             try {
               // For some reason, fromJSON modifies `cookies`.
               // Create a copy first just to be sure.
-              const copy = JSON.stringify({ cookies:cookieJar.cookies });
+              const copy = JSON.stringify({ cookies: cookieJar.cookies });
               jar = CookieJar.fromJSON(copy);
             } catch (error) {
               console.log('[cookies] Failed to initialize cookie jar', error);
