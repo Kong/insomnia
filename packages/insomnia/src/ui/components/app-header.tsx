@@ -3,10 +3,10 @@ import React, { FC, Fragment, ReactNode } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
+import * as session from '../../account/session';
 import { selectIsLoggedIn } from '../redux/selectors';
 import { GitHubStarsButton } from './github-stars-button';
 import { InsomniaAILogo } from './insomnia-icon';
-
 const LogoWrapper = styled.div({
   display: 'flex',
   justifyContent: 'center',
@@ -75,8 +75,6 @@ export const AppHeader: FC<AppHeaderProps> = ({
   gridCenter,
   gridRight,
 }) => {
-  const isLoggedIn = useSelector(selectIsLoggedIn);
-
   return (
     <Header
       gridLeft={(
@@ -84,7 +82,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
           <LogoWrapper>
             <InsomniaAILogo />
           </LogoWrapper>
-          {!isLoggedIn ? <GitHubStarsButton /> : null}
+          {!session.isLoggedIn() ? <GitHubStarsButton /> : null}
         </Fragment>
       )}
       gridCenter={gridCenter}

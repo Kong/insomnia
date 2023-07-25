@@ -9,7 +9,7 @@ import { exportAllToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { isRequestGroup } from '../../../models/request-group';
-import { selectActiveProjectName, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
@@ -28,10 +28,11 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     projectId,
     workspaceId,
   } = useParams() as { organizationId: string; projectId: string; workspaceId?: string };
-  const projectName = useSelector(selectActiveProjectName) ?? getProductName();
 
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
+  const projectName = workspaceData?.activeProject ?? getProductName();
+
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   const workspaceRequestsAndRequestGroups = useSelector(selectWorkspaceRequestsAndRequestGroups);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);

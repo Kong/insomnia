@@ -1,6 +1,7 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
@@ -9,7 +10,8 @@ import { Response } from '../../../models/response';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveEnvironment, selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
+import { selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { SizeTag } from '../tags/size-tag';
@@ -17,7 +19,6 @@ import { StatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
 import { URLTag } from '../tags/url-tag';
 import { TimeFromNow } from '../time-from-now';
-
 interface Props<GenericResponse extends Response | WebSocketResponse> {
   activeResponse: GenericResponse;
   className?: string;
@@ -30,7 +31,9 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   requestId,
 }: Props<GenericResponse>) => {
   const dropdownRef = useRef<DropdownHandle>(null);
-  const activeEnvironment = useSelector(selectActiveEnvironment);
+  const {
+    activeEnvironment,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const responses = useSelector(selectActiveRequestResponses) as GenericResponse[];
   const activeRequest = useSelector(selectActiveRequest);
   const requestVersions = useSelector(selectRequestVersions);
@@ -56,12 +59,11 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   }, []);
 
   const handleDeleteResponses = useCallback(async () => {
-    const environmentId = activeEnvironment ? activeEnvironment._id : null;
     if (isWebSocketResponse(activeResponse)) {
       window.main.webSocket.closeAll();
-      await models.webSocketResponse.removeForRequest(requestId, environmentId);
+      await models.webSocketResponse.removeForRequest(requestId, activeEnvironment._id);
     } else {
-      await models.response.removeForRequest(requestId, environmentId);
+      await models.response.removeForRequest(requestId, activeEnvironment._id);
     }
     if (activeRequest && activeRequest._id === requestId) {
       await updateRequestMetaByParentId(requestId, { activeResponseId: null });
