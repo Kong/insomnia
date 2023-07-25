@@ -54,13 +54,6 @@ initializeLogging();
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
-// let locationHistoryEntry = `/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`;
-// const prevLocationHistoryEntry = localStorage.getItem('locationHistoryEntry');
-
-// if (prevLocationHistoryEntry && matchPath({ path: '/organization/:organizationId', end: false }, prevLocationHistoryEntry)) {
-//   locationHistoryEntry = prevLocationHistoryEntry;
-// }
-
 const router = createMemoryRouter(
   // @TODO - Investigate file based routing to generate these routes:
   [
