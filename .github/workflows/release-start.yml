@@ -52,7 +52,7 @@ jobs:
           username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
 
       - name: Run bootstrap
-        run: npm run bootstrap
+        run: NODE_OPTIONS='--max_old_space_size=6144' npm run bootstrap
 
       - name: App version (stable)
         if: github.event.inputs.channel == 'stable'
