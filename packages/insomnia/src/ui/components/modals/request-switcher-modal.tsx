@@ -1,7 +1,7 @@
 import classnames from 'classnames';
 import React, { forwardRef, Fragment, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { METHOD_GRPC } from '../../../common/constants';
 import { fuzzyMatchAll } from '../../../common/misc';
@@ -13,7 +13,6 @@ import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-
 import { Workspace } from '../../../models/workspace';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveRequest, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Highlight } from '../base/highlight';
@@ -68,7 +67,8 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     isModalVisible: true,
     title: null,
   });
-  const dispatch = useDispatch();
+  const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
+  const navigate = useNavigate();
   const activeRequest = useSelector(selectActiveRequest);
   const {
     activeWorkspace: workspace,
@@ -213,9 +213,10 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     if (!workspace) {
       return;
     }
-    dispatch(activateWorkspace({ workspace }));
+    console.log(`[app] Activating workspace "${workspace.name}"`);
+    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}`);
     modalRef.current?.hide();
-  }, [dispatch]);
+  }, [navigate, organizationId, projectId]);
 
   const activateRequestAndHide = useCallback((request?: Request | WebSocketRequest | GrpcRequest) => {
     if (!request) {

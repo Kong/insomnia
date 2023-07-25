@@ -1,7 +1,7 @@
 import classnames from 'classnames';
 import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval, useMount } from 'react-use';
 
 import * as session from '../../../account/session';
@@ -19,7 +19,6 @@ import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-proj
 import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectRemoteProjects, selectSyncItems } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -80,7 +79,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     },
     remoteBackendProjects: [],
   });
-  const dispatch = useDispatch();
+  const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
+  const navigate = useNavigate();
   const remoteProjects = useSelector(selectRemoteProjects);
   const syncItems = useSelector(selectSyncItems);
   const {
@@ -170,7 +170,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects });
     if (pulledIntoProject.project._id !== project._id) {
       // If pulled into a different project, reactivate the workspace
-      dispatch(activateWorkspace({ workspaceId: workspace._id }));
+      navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}`);
       logCollectionMovedToProject(workspace, pulledIntoProject.project);
     }
     await refreshVCSAndRefetchRemote();

@@ -113,17 +113,6 @@ export const setActiveProject = (projectId: string) => {
   };
 };
 
-export const setDashboardSortOrder = (sortOrder: DashboardSortOrder) => {
-  const key = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
-  window.localStorage.setItem(key, JSON.stringify(sortOrder));
-  return {
-    type: SET_DASHBOARD_SORT_ORDER,
-    payload: {
-      sortOrder,
-    },
-  };
-};
-
 export const setActiveWorkspace = (workspaceId: string | null) => {
   const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
   window.localStorage.setItem(key, JSON.stringify(workspaceId));

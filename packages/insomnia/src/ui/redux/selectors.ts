@@ -80,11 +80,6 @@ export const selectRemoteProjects = createSelector(
   projects => projects.filter(isRemoteProject),
 );
 
-export const selectWorkspaces = createSelector(
-  selectEntitiesLists,
-  entities => entities.workspaces,
-);
-
 export const selectWorkspacesForActiveProject = createSelector(
   selectEntitiesLists,
   (state: RootState) => state.global.activeProjectId,
