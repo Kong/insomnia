@@ -14,7 +14,7 @@ import { Workspace } from '../../../models/workspace';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectActiveRequest, selectActiveWorkspaceMeta, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { selectActiveRequest, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Highlight } from '../base/highlight';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
@@ -72,8 +72,8 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   const activeRequest = useSelector(selectActiveRequest);
   const {
     activeWorkspace: workspace,
+    activeWorkspaceMeta,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const activeWorkspaceMeta = useSelector(selectActiveWorkspaceMeta);
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   const requestMetas = useSelector(selectRequestMetas);
   const grpcRequestMetas = useSelector(selectGrpcRequestMetas);
@@ -221,9 +221,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     if (!request) {
       return;
     }
-    if (activeWorkspaceMeta) {
-      models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
-    }
+    models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
     updateRequestMetaByParentId(request._id, { lastActive: Date.now() });
     modalRef.current?.hide();
   }, [activeWorkspaceMeta]);
