@@ -8,23 +8,6 @@
 @import 'lib/fontawesome/css/v4-font-face.css';
 @import 'lib/fontawesome/css/v4-shims.css';
 @import '../../../node_modules/swagger-ui-dist/swagger-ui.css';
-
-@namespace "http://www.w3.org/1999/xhtml";
-body {
-    -webkit-user-select: none;
-    cursor: default;
-}
-html, body {
-    overflow: hidden;
-}
-img, a {
-    -webkit-user-drag: none;
-}
-[contenteditable], input {
-    -webkit-user-select: auto;
-}
-
-
 /* Boilerplate */
 /* http://meyerweb.com/eric/tools/css/reset/
    v2.0 | 20110126
@@ -1356,6 +1339,525 @@ html {
   --font-ligatures: normal;
 }
 /* Components */
+.editor {
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-columns: 100%;
+}
+.editor[data-editor-type='password'] .CodeMirror-line {
+  -webkit-text-security: disc;
+}
+.editor[data-editor-type='password'] .CodeMirror-line [cm-text=''],
+.editor[data-editor-type='password'] .CodeMirror-line .CodeMirror-widget {
+  -webkit-text-security: none;
+}
+.editor .editor__container {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+.editor .CodeMirror {
+  z-index: 0;
+  line-height: 1.4em;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+}
+.editor .CodeMirror .cm-searching {
+  background: var(--hl-sm);
+  border-bottom: 1px solid var(--color-success);
+}
+.editor .editor__toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-top: 1px solid var(--hl-md);
+  height: var(--line-height-xs);
+  font-size: var(--font-size-sm);
+}
+.editor .editor__toolbar input {
+  font-family: var(--font-monospace);
+  margin-right: 0;
+  width: 100%;
+  margin-left: var(--padding-md);
+}
+.editor .editor__toolbar button {
+  color: var(--hl);
+  padding: var(--padding-xs) var(--padding-md);
+  height: 100%;
+}
+.editor .CodeMirror {
+  height: 100% !important;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-monospace);
+}
+.editor .CodeMirror .CodeMirror-line * {
+  font-variant-ligatures: var(--font-ligatures);
+}
+.editor .CodeMirror,
+.editor .cm-s-seti.CodeMirror,
+.editor .CodeMirror-scrollbar-filler,
+.editor .CodeMirror-gutter-filler {
+  background-color: transparent !important;
+  border: 0;
+}
+.editor .CodeMirror-linenumber {
+  color: var(--hl-xl) !important;
+}
+.editor .CodeMirror-foldgutter-folded,
+.editor .CodeMirror-foldgutter-open {
+  font-size: 1.2em;
+  font-family: 'Times New Roman', serif;
+  margin-left: -2px;
+}
+.editor .CodeMirror-guttermarker-subtle {
+  color: var(--hl-lg);
+}
+.editor .CodeMirror-guttermarker-subtle:hover {
+  color: var(--hl);
+}
+.editor .CodeMirror-gutters {
+  background-color: var(--color-bg);
+}
+.editor .CodeMirror-lint-marker-multiple {
+  padding: 0px 6px 0px 5px;
+  margin-right: 3px;
+}
+.editor .CodeMirror-scroll {
+  cursor: text;
+}
+.editor .CodeMirror-lines {
+  padding-bottom: 30px;
+}
+.editor .CodeMirror-lines .CodeMirror-placeholder {
+  color: var(--hl-lg);
+}
+.editor .CodeMirror-lint-marker-error {
+  width: 100%;
+  height: 1em;
+  display: flex;
+  background: none;
+  text-align: center;
+}
+.editor .CodeMirror-lint-marker-error::after {
+  color: var(--color-danger);
+  text-align: center;
+  width: 100%;
+  font-size: 0.7em;
+  content: '⬤';
+}
+.editor .CodeMirror-activeline-gutter,
+.editor .CodeMirror-activeline-background {
+  background-color: transparent;
+}
+.editor:not(.editor--readonly) .CodeMirror-focused .CodeMirror-activeline-gutter,
+.editor:not(.editor--readonly) .CodeMirror-focused .CodeMirror-activeline-background {
+  background-color: var(--hl-xs);
+}
+.editor.editor--readonly .CodeMirror-cursors {
+  visibility: hidden;
+}
+.editor.editor--dynamic-height .CodeMirror {
+  position: static;
+}
+.editor.editor--dynamic-height .CodeMirror-lines {
+  padding-bottom: 0.5em;
+}
+/*
+  We need to restyle CodeMirrow for raw editor
+*/
+.raw-editor .CodeMirror-lines {
+  padding: var(--padding-md);
+}
+.raw-editor .CodeMirror-wrap pre.CodeMirror-line,
+.raw-editor .CodeMirror-wrap pre.CodeMirror-line-like {
+  word-break: break-all;
+  line-height: normal;
+  padding: 1px 0px;
+}
+.editor.editor--single-line,
+.editor.editor--single-line * {
+  font-family: var(--font-default);
+}
+.editor.editor--single-line .CodeMirror > div > textarea {
+  /*
+     * This is the hidden div CodeMirror uses for stuff. By, default it's
+     * a 1000px absolutely positioned thing for doing work inside of. However, this
+     * means that the drag-n-drop shadow image is wider than it should be. So, we're
+     * constraining it here, which may break CM in weird ways, but doesn't seem to
+     * at first glance.
+     */
+  max-width: 5em !important;
+}
+.editor.editor--single-line .CodeMirror {
+  padding-left: inherit !important;
+  padding-right: inherit !important;
+  color: inherit !important;
+}
+.editor.editor--single-line .CodeMirror-lines {
+  margin-left: -4px;
+  padding: 0;
+}
+.editor.editor--single-line .CodeMirror-scroll {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.editor.editor--single-line .nunjucks-tag {
+  font-size: 0.8em !important;
+  padding-top: 0.3em;
+  padding-bottom: 0.3em;
+}
+.editor .CodeMirror-dialog {
+  background: var(--color-bg);
+  opacity: 0.95;
+  color: var(--hl);
+  border-color: var(--hl-md);
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 var(--padding-xs);
+  box-shadow: 0 0 1em rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  white-space: nowrap;
+}
+.editor .CodeMirror-dialog input {
+  font-family: var(--font-monospace) !important;
+  border: 0 !important;
+  height: 1em !important;
+  padding: 0 !important;
+  display: block;
+  width: 100% !important;
+  color: var(--color-font);
+  min-height: 1.5em;
+}
+.editor .CodeMirror-dialog * {
+  margin-left: 0.25em;
+  margin-right: 0.25em;
+}
+.editor .CodeMirror-dialog button {
+  color: var(--hl);
+}
+.editor .CodeMirror-dialog button:hover {
+  color: var(--color-font);
+}
+.CodeMirror-lint-tooltip {
+  max-width: 30em;
+  background-color: var(--color-bg);
+  color: var(--color-font);
+  border-color: var(--color-danger);
+  border-radius: 0;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-monospace);
+  padding: var(--padding-xs) var(--padding-sm);
+  z-index: 99999;
+}
+.CodeMirror-lint-tooltip .CodeMirror-lint-message-error {
+  background-image: none;
+  padding-left: 0;
+}
+.CodeMirror-lint-tooltip::after {
+  display: none;
+}
+.CodeMirror-hints {
+  border: 0;
+  padding: 0;
+  margin: 0.2em 0 0;
+  background: var(--color-bg);
+  box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
+  min-width: 20rem;
+  max-width: 40rem;
+  max-height: 19rem;
+  z-index: 999999;
+}
+.CodeMirror-hints li.CodeMirror-hint {
+  position: relative;
+  color: var(--color-font);
+  padding: 0 !important;
+  border-radius: 0;
+  display: grid;
+  grid-template-columns: var(--line-height-xxs) auto minmax(0, 0);
+  background: var(--color-bg);
+  font-size: var(--font-size-xs);
+}
+.CodeMirror-hints li.CodeMirror-hint.type--variable .label {
+  background: var(--color-surprise);
+  color: var(--color-font-surprise);
+}
+.CodeMirror-hints li.CodeMirror-hint.type--tag .label {
+  background: var(--color-info);
+  color: var(--color-font-info);
+}
+.CodeMirror-hints li.CodeMirror-hint.type--constant .label {
+  background: var(--color-success);
+  color: var(--color-font-success);
+}
+.CodeMirror-hints li.CodeMirror-hint.type--snippet .label {
+  background: var(--color-notice);
+  color: var(--color-font-notice);
+}
+.CodeMirror-hints li.CodeMirror-hint:not(.fancy-hint)::before {
+  margin-left: calc(var(--padding-sm) * -1);
+  content: '\1d43a';
+  background: var(--color-warning);
+  color: var(--color-font-warning);
+}
+.CodeMirror-hints li.CodeMirror-hint:not(.fancy-hint),
+.CodeMirror-hints li.CodeMirror-hint .name,
+.CodeMirror-hints li.CodeMirror-hint .value,
+.CodeMirror-hints li.CodeMirror-hint .label {
+  min-height: 100%;
+  line-height: var(--line-height-xxs);
+  padding: 0 var(--padding-sm) !important;
+  margin: 0;
+  box-sizing: border-box;
+}
+.CodeMirror-hints li.CodeMirror-hint:not(.fancy-hint),
+.CodeMirror-hints li.CodeMirror-hint .name,
+.CodeMirror-hints li.CodeMirror-hint .value {
+  background: var(--color-bg);
+  font-family: var(--font-monospace) !important;
+  width: 100%;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.CodeMirror-hints li.CodeMirror-hint .value {
+  text-align: right;
+  padding-left: var(--padding-lg);
+  font-style: italic;
+  font-size: 0.9em;
+}
+.CodeMirror-hints li.CodeMirror-hint:not(.fancy-hint)::before,
+.CodeMirror-hints li.CodeMirror-hint .label {
+  opacity: 0.8;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-default);
+  text-align: center;
+  width: var(--line-height-xxs);
+}
+.CodeMirror-hints li.CodeMirror-hint:hover,
+.CodeMirror-hints li.CodeMirror-hint.CodeMirror-hint-active {
+  background: var(--hl-xs);
+}
+.CodeMirror-hints li.CodeMirror-hint:hover .label,
+.CodeMirror-hints li.CodeMirror-hint.CodeMirror-hint-active .label {
+  opacity: 1;
+}
+.CodeMirror-hints li.CodeMirror-hint:hover .name,
+.CodeMirror-hints li.CodeMirror-hint.CodeMirror-hint-active .name,
+.CodeMirror-hints li.CodeMirror-hint:hover .value,
+.CodeMirror-hints li.CodeMirror-hint.CodeMirror-hint-active .value {
+  background: var(--hl-xs);
+}
+/* Based on Sublime Text's Monokai theme */
+.editor .CodeMirror {
+  color: var(--color-font);
+}
+.editor .CodeMirror-selected {
+  background: var(--color-font);
+  opacity: 0.2;
+}
+.editor .CodeMirror-gutters {
+  border-right: 0;
+}
+.editor .CodeMirror-guttermarker {
+  color: var(--color-font);
+}
+.editor .CodeMirror-guttermarker-subtle {
+  color: var(--hl-lg);
+}
+.editor .CodeMirror-linenumber {
+  color: var(--hl);
+}
+.editor .CodeMirror-cursor {
+  border-left: 1px solid var(--color-font);
+}
+.editor .CodeMirror-foldmarker {
+  color: var(--color-surprise);
+  text-shadow: none;
+  font-family: inherit;
+  line-height: 0.3;
+  cursor: pointer;
+  padding: 0 var(--padding-xs);
+}
+.editor .cm-animate-fat-cursor,
+.editor.cm-fat-cursor .CodeMirror-cursor {
+  background-color: rgba(255, 139, 147, 0.5) !important;
+  border-bottom: 2px solid #d60000 !important;
+  box-sizing: border-box;
+}
+.editor .cm-meta,
+.editor .cm-qualifier {
+  color: var(--color-font);
+}
+.editor .cm-atom {
+  color: var(--color-surprise);
+}
+.editor .cm-number {
+  color: var(--color-surprise);
+}
+.editor .cm-keyword {
+  color: var(--color-surprise);
+}
+.editor .cm-builtin {
+  color: var(--color-info);
+}
+.editor .cm-string {
+  color: var(--color-notice);
+}
+.editor .cm-attribute {
+  color: var(--color-success);
+}
+.editor .cm-property {
+  color: var(--color-success);
+}
+.editor .cm-variable {
+  color: var(--color-warning);
+}
+.editor .cm-variable-2 {
+  color: var(--color-info);
+}
+.editor .cm-variable-3 {
+  color: var(--color-surprise);
+}
+.editor .cm-def {
+  color: var(--color-warning);
+}
+.editor .cm-bracket {
+  color: var(--color-font);
+}
+.editor .cm-tag {
+  color: var(--color-danger);
+}
+.editor .cm-header {
+  color: var(--color-surprise);
+}
+.editor .cm-link {
+  color: var(--color-surprise);
+}
+.editor .cm-comment {
+  font-style: italic;
+  color: var(--hl);
+}
+.editor .cm-error {
+  background: var(--color-danger);
+  color: var(--color-font-danger);
+}
+.editor .cm-clickable {
+  text-decoration: underline;
+  cursor: pointer;
+}
+.editor .cm-clickable:hover {
+  text-decoration: underline;
+}
+.editor .CodeMirror-matchingbracket {
+  color: inherit !important;
+  text-decoration: underline;
+  text-decoration-color: var(--color-notice);
+  box-sizing: border-box;
+}
+.editor .cm-nunjucks-variable {
+  color: var(--color-surprise);
+}
+.editor .cm-curl-in {
+  color: var(--color-success);
+}
+.editor .cm-curl-out {
+  color: var(--color-notice);
+}
+.editor .cm-curl-data {
+  color: var(--color-surprise);
+}
+.editor .cm-curl-prefix {
+  opacity: 0.5;
+}
+.editor .cm-curl-header {
+  font-weight: bold;
+}
+.editor .cm-curl-comment {
+  color: var(--hl);
+  font-style: italic;
+}
+.editor .cm-nunjucks-tag {
+  color: var(--color-info);
+}
+.editor .cm-nunjucks-comment {
+  color: var(--hl);
+}
+.editor .nunjucks-tag {
+  font-family: var(--font-monospace) !important;
+  padding: 0.13em 0.5em;
+  box-sizing: border-box;
+  margin: 0 0.1em;
+  position: relative;
+  font-size: 0.9em;
+  line-height: 1em;
+  cursor: pointer;
+  white-space: nowrap;
+  text-shadow: 0 0 0.1em rgba(0, 0, 0, 0.4);
+}
+.editor .nunjucks-tag::after {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  content: ' ';
+  z-index: -1;
+  border-radius: 0.2em;
+  box-sizing: border-box;
+  box-shadow: inset 0 0 0.1em rgba(0, 0, 0, 0.4);
+  transition: background-color 300ms;
+  opacity: 0.8;
+  filter: grayscale(20%);
+}
+.editor .nunjucks-tag label {
+  padding: 0;
+  margin: 0;
+  display: inline;
+  font-style: italic;
+  font-size: 0.9em;
+}
+.editor .nunjucks-tag label i.fa {
+  font-family: FontAwesome, sans-serif !important;
+  font-size: 0.9em;
+  min-width: 1em;
+  margin: 0 0.5em 0 0;
+}
+.editor .nunjucks-tag.nunjucks-tag {
+  color: var(--color-font-info);
+}
+.editor .nunjucks-tag.nunjucks-tag::after {
+  background: var(--color-info);
+}
+.editor .nunjucks-tag.nunjucks-variable {
+  color: var(--color-font-surprise);
+}
+.editor .nunjucks-tag.nunjucks-variable::after {
+  background: var(--color-surprise);
+}
+.editor .nunjucks-tag:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.editor .nunjucks-tag[data-error='on'] {
+  color: var(--color-font-danger);
+}
+.editor .nunjucks-tag[data-error='on']::after {
+  background: var(--color-danger);
+}
+.editor .nunjucks-tag[data-ignore='on']::after {
+  background: var(--hl-xl);
+  color: bar(--color-font);
+}
 .app {
   position: relative;
   height: 100%;
