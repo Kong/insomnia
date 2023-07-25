@@ -72,12 +72,11 @@ function renderPaths({
   );
 }
 
-const Lines = styled('svg')(({ reverse = false }: { reverse?: boolean }) => ({
+const Lines = styled('svg')<{ reverse?: boolean }>(({ reverse = false }) => ({
   pointerEvents: 'none',
   maskSize: 'var(--trail-lines-width, auto) var(--trail-lines-height, auto)',
   maskPosition: 'top right',
   maskImage: 'linear-gradient(-90deg, rgba(0, 0, 0, 1) 80%, transparent)',
-
   WebkitMaskSize: 'var(--trail-lines-width, auto) var(--trail-lines-height, auto)',
   WebkitMaskPosition: 'top right',
   WebkitMaskImage: 'linear-gradient(-90deg, rgba(0, 0, 0, 1) 80%, transparent)',
