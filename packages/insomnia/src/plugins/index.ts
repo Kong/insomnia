@@ -13,7 +13,7 @@ import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/extensions/index';
 import { showError } from '../ui/components/modals/index';
 import type { PluginTheme } from './misc';
-import { themesFn } from './themes';
+import themes from './themes';
 export interface Module {
   templateTags?: PluginTemplateTag[];
   requestHooks?: ((requestContext: any) => void)[];
@@ -373,7 +373,6 @@ export async function getResponseHooks(): Promise<ResponseHook[]> {
 }
 
 export async function getThemes(): Promise<Theme[]> {
-  const themes = await themesFn();
   let extensions = themes.map(theme => ({
     plugin: {
       name: theme.name,
