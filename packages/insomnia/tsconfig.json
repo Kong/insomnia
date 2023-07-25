@@ -1,7 +1,6 @@
 {
   "extends": "./tsconfig.build.json",
   "include": [
-    "**/insomnia.config.json",
     ".eslintrc.js",
     "config",
     "electron-builder.config.js",

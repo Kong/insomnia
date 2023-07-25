@@ -13,7 +13,6 @@
   },
   "include": [
     "**/*.d.ts",
-    "**/insomnia.config.json",
     "package.json",
     "src",
   ],

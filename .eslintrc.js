@@ -20,7 +20,6 @@ module.exports = {
     project: [
       './tsconfig.eslint.json',
       './packages/*/tsconfig.json',
-      './plugins/*/tsconfig.json',
     ],
     tsconfigRootDir: __dirname,
     ecmaFeatures: {

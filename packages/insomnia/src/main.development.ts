@@ -4,7 +4,7 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 import path from 'path';
 
-import appConfig from '../config/config.json';
+import { userDataFolder } from '../config/config.json';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
@@ -39,7 +39,7 @@ if (envDataPath) {
 } else {
   // Explicitly set userData folder from config because it's sketchy to rely on electron-builder to use productName, which could be changed by accident.
   const defaultPath = app.getPath('userData');
-  const newPath = path.join(defaultPath, '../', isDevelopment() ? 'insomnia-app' : appConfig.userDataFolder);
+  const newPath = path.join(defaultPath, '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
   app.setPath('userData', newPath);
 }
 
