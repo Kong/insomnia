@@ -14,7 +14,7 @@ import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
 import { invariant } from '../../../utils/invariant';
 import { setActiveActivity } from '../../redux/modules/global';
-import { selectActiveApiSpec, selectActiveWorkspaceClientCertificates } from '../../redux/selectors';
+import { selectActiveWorkspaceClientCertificates } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { FileInputButton } from '../base/file-input-button';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
@@ -94,8 +94,8 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
   const {
     activeWorkspace: workspace,
     activeWorkspaceMeta,
+    activeApiSpec,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const apiSpec = useSelector(selectActiveApiSpec);
   const activeWorkspaceName = workspace.name;
   const clientCertificates = useSelector(selectActiveWorkspaceClientCertificates);
 
@@ -252,7 +252,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                       type="text"
                       placeholder="Awesome API"
                       defaultValue={activeWorkspaceName}
-                      onChange={event => workspaceOperations.rename(event.target.value, workspace, apiSpec)}
+                      onChange={event => workspaceOperations.rename(event.target.value, workspace, activeApiSpec)}
                     />
                   </label>
                 </div>

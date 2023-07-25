@@ -14,7 +14,7 @@ import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { useAIContext } from '../../context/app/ai-context';
-import { selectActiveApiSpec, selectSettings } from '../../redux/selectors';
+import { selectSettings } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { InsomniaAI } from '../insomnia-ai-icon';
@@ -27,9 +27,9 @@ export const WorkspaceDropdown: FC = () => {
     activeWorkspace,
     activeEnvironment,
     activeProject,
+    activeApiSpec,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const activeWorkspaceName = workspace.name;
-  const activeApiSpec = useSelector(selectActiveApiSpec);
 
   const settings = useSelector(selectSettings);
   const { hotKeyRegistry } = settings;

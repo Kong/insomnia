@@ -2,6 +2,7 @@ import React from 'react';
 import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
 import * as models from '../../models';
+import { ApiSpec } from '../../models/api-spec';
 import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { GitRepository } from '../../models/git-repository';
@@ -18,6 +19,7 @@ export interface WorkspaceLoaderData {
   activeCookieJar: CookieJar;
   baseEnvironment: Environment;
   subEnvironments: Environment[];
+  activeApiSpec: ApiSpec | null;
 }
 
 export const workspaceLoader: LoaderFunction = async ({
@@ -56,6 +58,8 @@ export const workspaceLoader: LoaderFunction = async ({
   const activeCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
   invariant(activeCookieJar, 'Cookie jar not found');
 
+  const activeApiSpec = await models.apiSpec.getByParentId(workspaceId);
+
   return {
     activeWorkspace,
     activeProject,
@@ -65,6 +69,7 @@ export const workspaceLoader: LoaderFunction = async ({
     activeEnvironment,
     subEnvironments,
     baseEnvironment,
+    activeApiSpec,
   };
 };
 
