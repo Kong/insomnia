@@ -34,7 +34,6 @@ import {
   setActiveProject,
   setActiveWorkspace,
 } from './redux/modules/global';
-import { selectActiveProject } from './redux/selectors';
 import { ErrorRoute } from './routes/error';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
@@ -565,7 +564,7 @@ async function renderApp() {
       const state = store.getState() as RootState;
       const activity = state.global.activeActivity;
 
-      const activeProject = selectActiveProject(state);
+      const activeProject = state.entities.projects[state.global.activeProjectId] || state.entities.projects[DEFAULT_PROJECT_ID];
       const organizationId = activeProject && isRemoteProject(activeProject) ? activeProject._id : DEFAULT_ORGANIZATION_ID;
 
       if (activity !== currentActivity) {

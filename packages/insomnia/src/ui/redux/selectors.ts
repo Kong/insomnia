@@ -25,10 +25,10 @@ type EntitiesLists = {
 export const selectEntitiesLists = createSelector(
   (state: RootState) => state.entities,
   entities => {
-    const entitiesLists: any = {};
-    for (const k of Object.keys(entities)) {
-      const entityMap = (entities as any)[k];
-      entitiesLists[k] = Object.keys(entityMap).map(id => entityMap[id]);
+    // transforms entities object from object keyed on id to array of entities containing id
+    const entitiesLists = {};
+    for (const [k, v] of Object.entries(entities)) {
+      entitiesLists[k] = Object.keys(v).map(id => v[id]);
     }
     return entitiesLists as EntitiesLists;
   },
@@ -36,17 +36,11 @@ export const selectEntitiesLists = createSelector(
 
 export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, entities => {
   const parentLookupMap: any = {};
-
-  for (const key of Object.keys(entities)) {
-    for (const entity of (entities as any)[key]) {
-      if (!entity.parentId) {
-        continue;
-      }
-
-      if (parentLookupMap[entity.parentId]) {
-        parentLookupMap[entity.parentId].push(entity);
-      } else {
-        parentLookupMap[entity.parentId] = [entity];
+  // group entities by parent
+  for (const value of Object.values(entities)) {
+    for (const entity of value) {
+      if (entity.parentId) {
+        parentLookupMap[entity.parentId] = [...parentLookupMap[entity.parentId], entity];
       }
     }
   }
@@ -82,14 +76,6 @@ export const selectRemoteProjects = createSelector(
   projects => projects.filter(isRemoteProject),
 );
 
-export const selectActiveProject = createSelector(
-  (state: RootState) => state.entities,
-  (state: RootState) => state.global.activeProjectId,
-  (entities, activeProjectId) => {
-    return entities.projects[activeProjectId] || entities.projects[DEFAULT_PROJECT_ID];
-  },
-);
-
 export const selectWorkspaces = createSelector(
   selectEntitiesLists,
   entities => entities.workspaces,
@@ -97,8 +83,8 @@ export const selectWorkspaces = createSelector(
 
 export const selectWorkspacesForActiveProject = createSelector(
   selectEntitiesLists,
-  selectActiveProject,
-  (entities, activeProject) => entities.workspaces.filter(workspace => workspace.parentId === activeProject._id),
+  (state: RootState) => state.global.activeProjectId,
+  (entities, activeProjectId) => entities.workspaces.filter(workspace => workspace.parentId === (activeProjectId || DEFAULT_PROJECT_ID)._id),
 );
 
 export const selectActiveWorkspace = createSelector(
