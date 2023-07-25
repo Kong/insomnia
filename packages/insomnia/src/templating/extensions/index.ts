@@ -9,7 +9,7 @@ import { HelperContext } from '../base-extension';
 import type { NunjucksActionTag, NunjucksParsedTagArg } from '../utils';
 export type PluginArgumentValue = string | number | boolean;
 
-type DisplayName = string | ((args: NunjucksParsedTagArg[]) => string);
+export type DisplayName = string | ((args: NunjucksParsedTagArg[]) => string);
 
 interface PluginArgumentBase {
   displayName: DisplayName;

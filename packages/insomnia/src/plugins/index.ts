@@ -14,6 +14,7 @@ import type { PluginTemplateTag } from '../templating/extensions/index';
 import { showError } from '../ui/components/modals/index';
 import type { PluginTheme } from './misc';
 import themes from './themes';
+
 export interface Module {
   templateTags?: PluginTemplateTag[];
   requestHooks?: ((requestContext: any) => void)[];
