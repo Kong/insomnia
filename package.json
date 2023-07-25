@@ -15,12 +15,7 @@
     "npm": ">=8.19.0"
   },
   "workspaces": [
-    "packages/insomnia",
-    "packages/insomnia-inso",
-    "packages/insomnia-send-request",
-    "packages/insomnia-smoke-test",
-    "packages/insomnia-testing",
-    "packages/openapi-2-kong"
+    "packages/*"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
