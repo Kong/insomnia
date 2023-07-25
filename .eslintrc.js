@@ -12,7 +12,7 @@ const {
 module.exports = {
   settings: {
     react: {
-      version: '17.0.2', // note: remember to always keep this in sync with `"react": "^17.0.2",` which is present in any package.json of a project using React.
+      version: '18.2.0',
     },
   },
   parser: '@typescript-eslint/parser',
@@ -118,7 +118,6 @@ module.exports = {
     'react/jsx-max-props-per-line': [ERROR, { maximum: 1, when: 'multiline' }],
     'react/jsx-uses-react': ERROR,
     'react/jsx-uses-vars': ERROR,
-    'react/jsx-indent': [ERROR, 2],
     'react/jsx-indent-props': [ERROR, 2],
     'react/prop-types': OFF(UNKNOWN),
     'react/function-component-definition': [ERROR, {
