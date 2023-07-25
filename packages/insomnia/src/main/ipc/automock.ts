@@ -1,6 +1,5 @@
 // From https://github.com/bloomrpc/bloomrpc-mock/blob/master/src/automock.ts
-import type { Field, Message, OneOf, Service } from 'protobufjs';
-import { Enum, MapField, Type } from 'protobufjs';
+import { Enum, Field, MapField, Message, OneOf, Service, Type } from 'protobufjs';
 import { v4 } from 'uuid';
 
 export interface MethodPayload {
@@ -150,16 +149,12 @@ function mockField(field: Field, stackDepth?: StackDepth): any {
     };
   }
 
-  if (field.resolvedType instanceof Enum) {
-    return mockEnum(field.resolvedType);
+  if (field.resolvedType instanceof Type) {
+    return mockTypeFields(field.resolvedType, stackDepth);
   }
 
-  if (field.resolvedType) {
-    // Changed
-    if (!(field.resolvedType instanceof Type)) {
-      console.warn('Unknown resolved type: ', (field.resolvedType as any)?.name);
-    }
-    return mockTypeFields(field.resolvedType, stackDepth);
+  if (field.resolvedType instanceof Enum) {
+    return mockEnum(field.resolvedType);
   }
 
   const mockPropertyValue = mockScalar(field.type, field.name);
@@ -213,7 +208,7 @@ function mockScalar(type: string, fieldName: string): any {
     case 'float':
       return 1.1;
     case 'bytes':
-      return Buffer.from([0xa1, 0xb2, 0xc3]).toString('base64'); // Changed
+      return Buffer.from([0xa1, 0xb2, 0xc3]);
     default:
       return null;
   }

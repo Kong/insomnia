@@ -144,8 +144,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
       // If the user already has a body set, do not edit it
       return;
     }
-    if (method?.mocks?.plain) {
-      const newBodyText = JSON.stringify(method.mocks.plain, null, 2);
+    if (method?.mocks) {
+      const newBodyText = JSON.stringify(method.mocks, null, 2);
       if (newBodyText !== activeRequest.body.text) {
         models.grpcRequest.update(activeRequest, {
           body: { ...activeRequest.body, text: newBodyText },

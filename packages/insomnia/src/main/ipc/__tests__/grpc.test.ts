@@ -41,6 +41,9 @@ describe('loadMethodsFromReflection', () => {
       expect(methods).toStrictEqual([{
         type: 'unary',
         fullPath: '/FooService/Foo',
+        mocks: {
+          foo: 'Hello',
+        },
       }]);
     });
   });
@@ -76,6 +79,9 @@ describe('loadMethodsFromReflection', () => {
       expect(methods).toStrictEqual([{
         type: 'unary',
         fullPath: '/FooService/format',
+        mocks: {
+          foo: 'Hello',
+        },
       }]);
     });
   });
@@ -123,9 +129,15 @@ describe('loadMethodsFromReflection', () => {
       expect(methods).toStrictEqual([{
         type: 'unary',
         fullPath: '/FooService/Foo',
+        mocks: {
+          foo: 'Hello',
+        },
       }, {
         type: 'unary',
         fullPath: '/BarService/Bar',
+        mocks: {
+          bar: 'Hello',
+        },
       }]);
     });
   });
