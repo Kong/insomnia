@@ -1,10 +1,9 @@
 import React, { FC, forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { useRevalidator } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { ACTIVITY_HOME } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { CaCertificate } from '../../../models/ca-certificate';
@@ -13,7 +12,6 @@ import * as workspaceOperations from '../../../models/helpers/workspace-operatio
 import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
 import { invariant } from '../../../utils/invariant';
-import { setActiveActivity } from '../../redux/modules/global';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { FileInputButton } from '../base/file-input-button';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
@@ -97,7 +95,8 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
     clientCertificates,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const activeWorkspaceName = workspace.name;
-
+  const navigate = useNavigate();
+  const { organizationId } = useParams() as { organizationId: string };
   const [caCert, setCaCert] = useState<CaCertificate | null>(null);
   useEffect(() => {
     if (!workspace) {
@@ -110,7 +109,6 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
     fn();
   }, [workspace]);
 
-  const dispatch = useDispatch();
   useImperativeHandle(ref, () => ({
     hide: () => {
       modalRef.current?.hide();
@@ -177,7 +175,8 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
     }
     await models.stats.incrementDeletedRequestsForDescendents(workspace);
     await models.workspace.remove(workspace);
-    dispatch(setActiveActivity(ACTIVITY_HOME));
+    navigate(`/organizations/${organizationId}`);
+
     modalRef.current?.hide();
   };
 

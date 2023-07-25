@@ -1,7 +1,7 @@
 import { createSelector } from 'reselect';
 import type { ValueOf } from 'type-fest';
 
-import { isWorkspaceActivity, PREVIEW_MODE_SOURCE } from '../../common/constants';
+import { PREVIEW_MODE_SOURCE } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
@@ -26,7 +26,7 @@ export const selectEntitiesLists = createSelector(
   (state: RootState) => state.entities,
   entities => {
     // transforms entities object from object keyed on id to array of entities containing id
-    const entitiesLists = {};
+    const entitiesLists: any = {};
     for (const [k, v] of Object.entries(entities)) {
       entitiesLists[k] = Object.keys(v).map(id => v[id]);
     }
@@ -89,15 +89,9 @@ export const selectWorkspacesForActiveProject = createSelector(
 export const selectActiveWorkspace = createSelector(
   selectWorkspacesForActiveProject,
   (state: RootState) => state.global.activeWorkspaceId,
-  (state: RootState) => state.global.activeActivity,
-  (workspaces, activeWorkspaceId, activeActivity) => {
-    // Only return an active workspace if we're in an activity
-    if (activeActivity && isWorkspaceActivity(activeActivity)) {
-      const workspace = workspaces.find(workspace => workspace._id === activeWorkspaceId);
-      return workspace;
-    }
-
-    return undefined;
+  (workspaces, activeWorkspaceId) => {
+    const workspace = workspaces.find(workspace => workspace._id === activeWorkspaceId);
+    return workspace;
   },
 );
 
@@ -337,9 +331,4 @@ export const selectActiveResponse = createSelector(
 export const selectSyncItems = createSelector(
   selectActiveWorkspaceEntities,
   getStatusCandidates,
-);
-
-export const selectActiveActivity = createSelector(
-  (state: RootState) => state.global,
-  global => global.activeActivity,
 );

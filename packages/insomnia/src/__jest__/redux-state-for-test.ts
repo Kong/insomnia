@@ -1,4 +1,3 @@
-import { ACTIVITY_HOME } from '../common/constants';
 import { database } from '../common/database';
 import { DEFAULT_PROJECT_ID, type } from '../models/project';
 import { RootState } from '../ui/redux/modules';
@@ -36,7 +35,6 @@ export const reduxStateForTest = async (global: Partial<GlobalState> = {}): Prom
     entities: entities.reducer(entities.initialEntitiesState, entities.initializeWith(allDocs)),
     global: {
       activeWorkspaceId: null,
-      activeActivity: ACTIVITY_HOME,
       activeProjectId: DEFAULT_PROJECT_ID,
       dashboardSortOrder: 'modified-desc',
       isLoggedIn: false,

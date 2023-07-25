@@ -2,12 +2,11 @@ import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { ACTIVITY_HOME, getProductName } from '../../common/constants';
-import { selectActiveActivity, selectActiveRequest } from '../redux/selectors';
+import { getProductName } from '../../common/constants';
+import { selectActiveRequest } from '../redux/selectors';
 import { WorkspaceLoaderData } from '../routes/workspace';
 
 export const useDocumentTitle = () => {
-  const activeActivity = useSelector(selectActiveActivity);
   const {
     activeWorkspace,
     activeEnvironment,
@@ -18,9 +17,7 @@ export const useDocumentTitle = () => {
   // Update document title
   useEffect(() => {
     let title;
-    if (activeActivity === ACTIVITY_HOME) {
-      title = getProductName();
-    } else if (activeWorkspace && activeWorkspace.name) {
+    if (activeWorkspace && activeWorkspace.name) {
       title = activeProject.name;
       title += ` - ${activeWorkspace.name}`;
       if (activeEnvironment) {
@@ -31,6 +28,6 @@ export const useDocumentTitle = () => {
       }
     }
     document.title = title || getProductName();
-  }, [activeActivity, activeEnvironment, activeProject.name, activeRequest, activeWorkspace]);
+  }, [activeEnvironment, activeProject.name, activeRequest, activeWorkspace]);
 
 };
