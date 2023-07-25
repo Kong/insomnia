@@ -374,8 +374,6 @@ export async function getResponseHooks(): Promise<ResponseHook[]> {
 
 export async function getThemes(): Promise<Theme[]> {
   const themes = await themesFn();
-  console.log('whats this1',  themes);
-
   let extensions = themes.map(theme => ({
     plugin: {
       name: theme.name,
