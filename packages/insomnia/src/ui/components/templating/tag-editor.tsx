@@ -527,7 +527,7 @@ export const TagEditor: FC<Props> = props => {
                   const activeTemplateTag = templateTags.find(({ templateTag }) => {
                     return templateTag.name === state.activeTagData?.name;
                   });
-                  if (activeTemplateTag?.plugin) {
+                  if (activeTemplateTag) {
                     await action.run(pluginContexts.store.init(activeTemplateTag.plugin));
                   }
                   update(

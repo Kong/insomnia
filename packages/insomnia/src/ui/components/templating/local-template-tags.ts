@@ -1008,4 +1008,16 @@ export const localTemplateTags: {
       },
     },
   },
-];
+].map(t => ({
+  plugin: {
+    name: t.templateTag.name,
+    description: 'Built-in plugin',
+    version: '0.0.0',
+    directory: '',
+    config: {
+      disabled: false,
+    },
+    module: {},
+  },
+  templateTag: t.templateTag,
+}));
