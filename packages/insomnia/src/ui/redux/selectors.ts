@@ -130,18 +130,6 @@ export const selectApiSpecs = createSelector(
   entities => entities.apiSpecs,
 );
 
-export const selectActiveApiSpec = createSelector(
-  selectApiSpecs,
-  selectActiveWorkspace,
-  (apiSpecs, activeWorkspace) => {
-    if (!activeWorkspace) {
-      // There should never be an active api spec without an active workspace
-      return undefined;
-    }
-    return apiSpecs.find(apiSpec => apiSpec.parentId === activeWorkspace._id);
-  }
-);
-
 export const selectGitRepositories = createSelector(
   selectEntitiesLists,
   entities => entities.gitRepositories,
@@ -172,12 +160,6 @@ export const selectActiveEnvironment = createSelector(
 
     return entities.environments.find(environment => environment._id === meta.activeEnvironmentId) || null;
   },
-);
-
-export const selectActiveWorkspaceClientCertificates = createSelector(
-  selectEntitiesLists,
-  selectActiveWorkspace,
-  (entities, activeWorkspace) => entities.clientCertificates.filter(c => c.parentId === activeWorkspace?._id),
 );
 
 export const selectActiveGitRepository = createSelector(

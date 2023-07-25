@@ -1,5 +1,5 @@
 import React, { FC, forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useRevalidator } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
@@ -14,7 +14,6 @@ import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
 import { invariant } from '../../../utils/invariant';
 import { setActiveActivity } from '../../redux/modules/global';
-import { selectActiveWorkspaceClientCertificates } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { FileInputButton } from '../base/file-input-button';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
@@ -95,9 +94,9 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
     activeWorkspace: workspace,
     activeWorkspaceMeta,
     activeApiSpec,
+    clientCertificates,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const activeWorkspaceName = workspace.name;
-  const clientCertificates = useSelector(selectActiveWorkspaceClientCertificates);
 
   const [caCert, setCaCert] = useState<CaCertificate | null>(null);
   useEffect(() => {
