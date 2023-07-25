@@ -6,7 +6,7 @@
   "author": "Kong <office@konghq.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Kong/insomnia.git",
+    "url": "git+https://github.com/Kong/insomnia.git",
     "directory": "packages/insomnia-testing"
   },
   "bugs": {
@@ -32,5 +32,7 @@
   "dependencies": {
     "chai": "^4.3.4",
     "mocha": "^8.3.2"
-  }
+  },
+  "homepage": "https://github.com/Kong/insomnia#readme",
+  "description": ""
 }

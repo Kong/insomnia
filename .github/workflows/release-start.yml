@@ -54,23 +54,19 @@ jobs:
       - name: Run bootstrap
         run: npm run bootstrap
 
-      - name: Lerna version (stable)
+      - name: App version (stable)
         if: github.event.inputs.channel == 'stable'
         run: npm run version -- --yes --no-push 'minor'
 
-      - name: Lerna version (alpha/beta)
+      - name: App version (alpha/beta)
         if: github.event.inputs.channel != 'stable'
         run: npm run version -- --yes --no-push --preid "${{ github.event.inputs.channel }}" "${{ github.event.inputs.iteration == '0' && 'preminor' || 'prerelease' }}"
 
       - name: Config version
         run: APP_VERSION="${{ env.RELEASE_VERSION }}" npm run app-bump-version
 
-      # https://github.com/lerna/lerna/issues/2832
-      - name: Update package-lock.json files
-        run: npx lerna clean --yes && npx lerna bootstrap --no-ci --ignore-scripts -- --package-lock-only --no-audit
-
       - name: Commit
-        run: git commit -am "Bump app version to ${{ env.RELEASE_VERSION }} and lerna package versions"
+        run: git commit -am "Bump app version to ${{ env.RELEASE_VERSION }}"
 
       - name: Push changes
         run: |
