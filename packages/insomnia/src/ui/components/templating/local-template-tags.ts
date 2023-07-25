@@ -6,15 +6,16 @@ import { JSONPath } from 'jsonpath-plus';
 import os from 'os';
 import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
+import type { SelectedValue } from 'xpath';
 
+import { Request, RequestParameter } from '../../../models/request';
 import { Response } from '../../../models/response';
+import { TemplateTag } from '../../../plugins';
 import { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 
-export const localTemplateTags: {
-  templateTag: PluginTemplateTag;
-}[] = [
+const localTemplatePlugins: {templateTag:PluginTemplateTag}[] = [
   {
     templateTag: {
       name: 'base64',
@@ -708,7 +709,7 @@ export const localTemplateTags: {
           } else {
             const DOMParser = (await import('xmldom')).DOMParser;
             const dom = new DOMParser().parseFromString(body);
-            let selectedValues = [];
+            let selectedValues: SelectedValue[] = [];
             if (sanitizedFilter === undefined) {
               throw new Error('Must pass an XPath query.');
             }
@@ -717,7 +718,7 @@ export const localTemplateTags: {
             } catch (err) {
               throw new Error(`Invalid XPath query: ${sanitizedFilter}`);
             }
-            const results = [];
+            const results: {outer:string; inner:string}[] = [];
             // Functions return plain strings
             if (typeof selectedValues === 'string') {
               results.push({
@@ -860,7 +861,7 @@ export const localTemplateTags: {
           return null;
         }
 
-        const request = await context.util.models.request.getById(meta.requestId);
+        const request: Request = await context.util.models.request.getById(meta.requestId);
         const workspace = await context.util.models.workspace.getById(meta.workspaceId);
 
         if (!request) {
@@ -870,7 +871,7 @@ export const localTemplateTags: {
         if (!workspace) {
           throw new Error(`Workspace not found for ${meta.workspaceId}`);
         }
-        const params = [];
+        const params: RequestParameter[] = [];
         if (attribute === 'url') {
           for (const p of request.parameters) {
             params.push({
@@ -933,7 +934,7 @@ export const localTemplateTags: {
             throw new Error('No query parameter specified');
           }
 
-          const parameterNames = [];
+          const parameterNames: string[] = [];
 
           if (request.parameters.length === 0) {
             throw new Error('No query parameters available');
@@ -957,7 +958,7 @@ export const localTemplateTags: {
             throw new Error('No header specified');
           }
 
-          const headerNames = [];
+          const headerNames: string[] = [];
 
           if (request.headers.length === 0) {
             throw new Error('No headers available');
@@ -1008,7 +1009,9 @@ export const localTemplateTags: {
       },
     },
   },
-].map(t => ({
+];
+
+export const localTemplateTags: TemplateTag[] = localTemplatePlugins.map(t => ({
   plugin: {
     name: t.templateTag.name,
     description: 'Built-in plugin',
