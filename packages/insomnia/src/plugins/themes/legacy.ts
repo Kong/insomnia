@@ -8,13 +8,13 @@ const sidebarBackground = {
   info: '#46c1e6',
 };
 
-module.exports = {
-  name: 'default',
-  displayName: 'Default',
+export default {
+  name: 'legacy',
+  displayName: 'Legacy',
   theme: {
     background: sidebarBackground,
     foreground: {
-      default: '#ddd',
+      default: '#eee',
     },
     styles: {
       transparentOverlay: {
@@ -27,7 +27,10 @@ module.exports = {
       },
       dialog: {
         background: {
-          default: '#2a2a2a',
+          default: '#fff',
+        },
+        foreground: {
+          default: '#333',
         },
       },
       appHeader: {

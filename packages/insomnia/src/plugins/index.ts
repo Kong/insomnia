@@ -2,7 +2,6 @@ import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
 
-import appConfig from '../../config/config.json';
 import { ParsedApiSpec } from '../common/api-specs';
 import { resolveHomePath } from '../common/misc';
 import type { PluginConfig, PluginConfigMap } from '../common/settings';
@@ -14,6 +13,7 @@ import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/extensions/index';
 import { showError } from '../ui/components/modals/index';
 import type { PluginTheme } from './misc';
+import themes from './themes';
 
 export interface Module {
   templateTags?: PluginTemplateTag[];
@@ -209,26 +209,6 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
       // "name": "module"
     };
 
-    for (const p of appConfig.plugins) {
-      if (ignorePlugins.includes(p)) {
-        continue;
-      }
-
-      try {
-        const pluginJson = global.require(`${p}/package.json`);
-
-        if (ignorePlugins.includes(pluginJson.name)) {
-          continue;
-        }
-
-        const pluginModule = global.require(p);
-
-        pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule, allConfigs);
-      } catch (err) {
-        console.error(`[plugin] Failed to load plugin: ${p}`, err);
-      }
-    }
-
     await _traversePluginPath(pluginMap, allPaths, allConfigs);
     plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
   }
@@ -330,7 +310,37 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
 }
 
 export async function getRequestHooks(): Promise<RequestHook[]> {
-  let functions: RequestHook[] = [];
+  let functions: RequestHook[] = [{
+    plugin: {
+      name: 'default-headers',
+      description: 'Set default headers for all requests',
+      version: '0.0.0',
+      directory: '',
+      config: {
+        disabled: false,
+      },
+      module: {},
+    },
+    hook: context => {
+      const headers = context.request.getEnvironmentVariable('DEFAULT_HEADERS');
+      if (!headers) {
+        return;
+      }
+      for (const name of Object.keys(headers)) {
+        const value = headers[name];
+        if (context.request.hasHeader(name)) {
+          console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
+          continue;
+        }
+        if (value === 'null') {
+          context.request.removeHeader(name);
+          console.log(`[header] Remove default header ${name}`);
+        } else {
+          context.request.setHeader(name, value);
+          console.log(`[header] Set default header ${name}: ${value}`);
+        }
+      }
+    } }];
 
   for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.requestHooks || [];
@@ -364,8 +374,19 @@ export async function getResponseHooks(): Promise<ResponseHook[]> {
 }
 
 export async function getThemes(): Promise<Theme[]> {
-  let extensions: Theme[] = [];
-
+  let extensions = themes.map(theme => ({
+    plugin: {
+      name: theme.name,
+      description: 'Built-in themes',
+      version: '0.0.0',
+      directory: '',
+      config: {
+        disabled: false,
+      },
+      module: {},
+    },
+    theme,
+  })) as Theme[];
   for (const plugin of await getActivePlugins()) {
     const themes = plugin.module.themes || [];
     extensions = [

@@ -1,6 +1,6 @@
-module.exports = {
-  name: 'solarized-light',
-  displayName: 'Solarized Light',
+export default {
+  name: 'solarized',
+  displayName: 'Solarized',
   theme: {
     background: {
       default: '#fdf6e3',
@@ -12,7 +12,7 @@ module.exports = {
       info: '#2aa198',
     },
     foreground: {
-      default: '#657b83',
+      default: '#556970',
     },
     highlight: {
       default: 'rgb(142, 149, 146)',
@@ -22,6 +22,24 @@ module.exports = {
       md: 'rgba(142, 149, 146, 0.3)',
       lg: 'rgba(142, 149, 146, 0.6)',
       xl: 'rgba(142, 149, 146, 0.8)',
+    },
+    styles: {
+      appHeader: {
+        background: {
+          default: '#002b36',
+        },
+      },
+      sidebar: {
+        background: {
+          default: '#002b36',
+        },
+        foreground: {
+          default: '#839496',
+        },
+        highlight: {
+          default: 'rgb(88, 110, 117)',
+        },
+      },
     },
   },
 };

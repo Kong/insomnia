@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   name: 'studio-colorful',
   displayName: 'Designer Dark',
   theme: {

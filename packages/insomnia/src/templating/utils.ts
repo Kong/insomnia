@@ -1,6 +1,6 @@
 import objectPath from 'objectpath';
 
-import type { PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
+import type { DisplayName, PluginArgumentEnumOption, PluginTemplateTagActionContext } from './extensions';
 
 export interface NunjucksParsedTagArg {
   type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model';
@@ -10,7 +10,7 @@ export interface NunjucksParsedTagArg {
   forceVariable?: boolean;
   placeholder?: string;
   help?: string;
-  displayName?: string;
+  displayName?: DisplayName;
   quotedBy?: '"' | "'";
   validate?: (value: any) => string;
   hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
