@@ -112,6 +112,10 @@ const Modals: FC = () => {
                 registerModal(instance, 'WorkspaceSettingsModal')
               }
             />
+
+            <RequestSwitcherModal
+              ref={instance => registerModal(instance, 'RequestSwitcherModal')}
+            />
           </>
         ) : null}
 
@@ -125,10 +129,6 @@ const Modals: FC = () => {
         />
         <ResponseDebugModal
           ref={instance => registerModal(instance, 'ResponseDebugModal')}
-        />
-
-        <RequestSwitcherModal
-          ref={instance => registerModal(instance, 'RequestSwitcherModal')}
         />
 
         <EnvironmentEditModal

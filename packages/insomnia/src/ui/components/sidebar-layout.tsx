@@ -203,10 +203,8 @@ export const SidebarLayout: FC<Props> = ({
   renderPageSidebar,
 }) => {
   const { forceVerticalLayout } = useSelector(selectSettings);
-  const {
-    activeWorkspaceMeta,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-
+  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
+  const { activeWorkspaceMeta } = workspaceData || {};
   const requestPaneRef = useRef<HTMLElement>(null);
   const responsePaneRef = useRef<HTMLElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
@@ -214,9 +212,9 @@ export const SidebarLayout: FC<Props> = ({
   const [draggingSidebar, setDraggingSidebar] = useState(false);
   const [draggingPaneHorizontal, setDraggingPaneHorizontal] = useState(false);
   const [draggingPaneVertical, setDraggingPaneVertical] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(activeWorkspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH);
-  const [paneWidth, setPaneWidth] = useState(activeWorkspaceMeta.paneWidth || DEFAULT_PANE_WIDTH);
-  const [paneHeight, setPaneHeight] = useState(activeWorkspaceMeta.paneHeight || DEFAULT_PANE_HEIGHT);
+  const [sidebarWidth, setSidebarWidth] = useState(activeWorkspaceMeta?.sidebarWidth || DEFAULT_SIDEBAR_WIDTH);
+  const [paneWidth, setPaneWidth] = useState(activeWorkspaceMeta?.paneWidth || DEFAULT_PANE_WIDTH);
+  const [paneHeight, setPaneHeight] = useState(activeWorkspaceMeta?.paneHeight || DEFAULT_PANE_HEIGHT);
 
   useEffect(() => {
     const unsubscribe = window.main.on('toggle-sidebar', () => {
@@ -264,7 +262,7 @@ export const SidebarLayout: FC<Props> = ({
   const handleMouseMove = useCallback((event: MouseEvent) => {
     if (draggingPaneHorizontal) {
       // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
-      const distance = (activeWorkspaceMeta.paneWidth || DEFAULT_PANE_WIDTH) - paneWidth;
+      const distance = (activeWorkspaceMeta?.paneWidth || DEFAULT_PANE_WIDTH) - paneWidth;
 
       if (!showDragOverlay && Math.abs(distance) > 0.02) {
         setShowDragOverlay(true);
@@ -282,7 +280,7 @@ export const SidebarLayout: FC<Props> = ({
       }
     } else if (draggingPaneVertical) {
       // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
-      const distance = (activeWorkspaceMeta.paneHeight || DEFAULT_PANE_HEIGHT) - paneHeight;
+      const distance = (activeWorkspaceMeta?.paneHeight || DEFAULT_PANE_HEIGHT) - paneHeight;
       /* % */
       if (!showDragOverlay && Math.abs(distance) > 0.02) {
         setShowDragOverlay(true);
@@ -299,7 +297,7 @@ export const SidebarLayout: FC<Props> = ({
       }
     } else if (draggingSidebar) {
       // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
-      const distance = (activeWorkspaceMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH) - sidebarWidth;
+      const distance = (activeWorkspaceMeta?.sidebarWidth || DEFAULT_SIDEBAR_WIDTH) - sidebarWidth;
       /* ems */
       if (!showDragOverlay && Math.abs(distance) > 2) {
         setShowDragOverlay(true);
@@ -316,7 +314,7 @@ export const SidebarLayout: FC<Props> = ({
         handleSetSidebarWidth(localSidebarWidth);
       }
     }
-  }, [activeWorkspaceMeta.paneHeight, activeWorkspaceMeta.paneWidth, activeWorkspaceMeta.sidebarWidth, draggingPaneHorizontal, draggingPaneVertical, draggingSidebar, handleSetPaneHeight, handleSetPaneWidth, handleSetSidebarWidth, paneHeight, paneWidth, showDragOverlay, sidebarWidth]);
+  }, [activeWorkspaceMeta?.paneHeight, activeWorkspaceMeta?.paneWidth, activeWorkspaceMeta?.sidebarWidth, draggingPaneHorizontal, draggingPaneVertical, draggingSidebar, handleSetPaneHeight, handleSetPaneWidth, handleSetSidebarWidth, paneHeight, paneWidth, showDragOverlay, sidebarWidth]);
 
   useEffect(() => {
     document.addEventListener('mouseup', handleMouseUp);

@@ -11,10 +11,8 @@ import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { type Response } from '../../models/response';
-import { UnitTestResult } from '../../models/unit-test-result';
 import { isWebSocketRequest, WebSocketRequest } from '../../models/websocket-request';
 import { type WebSocketResponse } from '../../models/websocket-response';
-import { isCollection } from '../../models/workspace';
 import { RootState } from './modules';
 
 type EntitiesLists = {
@@ -24,26 +22,14 @@ type EntitiesLists = {
 // ~~~~~~~~~ //
 // Selectors //
 // ~~~~~~~~~ //
-export const selectEntities = createSelector(
-  (state: RootState) => state.entities,
-  entities => entities,
-);
-
-export const selectGlobal = createSelector(
-  (state: RootState) => state.global,
-  global => global,
-);
-
 export const selectEntitiesLists = createSelector(
-  selectEntities,
+  (state: RootState) => state.entities,
   entities => {
     const entitiesLists: any = {};
-
     for (const k of Object.keys(entities)) {
       const entityMap = (entities as any)[k];
       entitiesLists[k] = Object.keys(entityMap).map(id => entityMap[id]);
     }
-
     return entitiesLists as EntitiesLists;
   },
 );
@@ -97,16 +83,11 @@ export const selectRemoteProjects = createSelector(
 );
 
 export const selectActiveProject = createSelector(
-  selectEntities,
+  (state: RootState) => state.entities,
   (state: RootState) => state.global.activeProjectId,
   (entities, activeProjectId) => {
     return entities.projects[activeProjectId] || entities.projects[DEFAULT_PROJECT_ID];
   },
-);
-
-export const selectDashboardSortOrder = createSelector(
-  selectGlobal,
-  global => global.dashboardSortOrder
 );
 
 export const selectWorkspaces = createSelector(
@@ -115,9 +96,9 @@ export const selectWorkspaces = createSelector(
 );
 
 export const selectWorkspacesForActiveProject = createSelector(
-  selectWorkspaces,
+  selectEntitiesLists,
   selectActiveProject,
-  (workspaces, activeProject) => workspaces.filter(workspace => workspace.parentId === activeProject._id),
+  (entities, activeProject) => entities.workspaces.filter(workspace => workspace.parentId === activeProject._id),
 );
 
 export const selectActiveWorkspace = createSelector(
@@ -135,11 +116,6 @@ export const selectActiveWorkspace = createSelector(
   },
 );
 
-export const selectWorkspaceMetas = createSelector(
-  selectEntitiesLists,
-  entities => entities.workspaceMetas,
-);
-
 export const selectActiveWorkspaceMeta = createSelector(
   selectActiveWorkspace,
   selectEntitiesLists,
@@ -154,27 +130,6 @@ export const selectApiSpecs = createSelector(
   entities => entities.apiSpecs,
 );
 
-export const selectWorkspacesWithResolvedNameForActiveProject = createSelector(
-  selectWorkspacesForActiveProject,
-  selectApiSpecs,
-  (workspaces, apiSpecs) => {
-    return workspaces.map(workspace => {
-      if (isCollection(workspace)) {
-        return workspace;
-      }
-
-      const apiSpec = apiSpecs.find(
-        apiSpec => apiSpec.parentId === workspace._id
-      );
-
-      return {
-        ...workspace,
-        name: apiSpec?.fileName || workspace.name,
-      };
-    });
-  }
-);
-
 export const selectActiveApiSpec = createSelector(
   selectApiSpecs,
   selectActiveWorkspace,
@@ -185,24 +140,6 @@ export const selectActiveApiSpec = createSelector(
     }
     return apiSpecs.find(apiSpec => apiSpec.parentId === activeWorkspace._id);
   }
-);
-
-export const selectActiveWorkspaceName = createSelector(
-  selectActiveWorkspace,
-  selectActiveApiSpec,
-  (activeWorkspace, activeApiSpec) => {
-    if (!activeWorkspace) {
-      // see above, but since the selectActiveWorkspace selector really can return undefined, we need to handle it here.
-      return undefined;
-    }
-
-    return isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec?.fileName;
-  }
-);
-
-export const selectEnvironments = createSelector(
-  selectEntitiesLists,
-  entities => entities.environments,
 );
 
 export const selectGitRepositories = createSelector(
@@ -227,13 +164,13 @@ export const selectRequests = createSelector(
 
 export const selectActiveEnvironment = createSelector(
   selectActiveWorkspaceMeta,
-  selectEnvironments,
-  (meta, environments) => {
+  selectEntitiesLists,
+  (meta, entities) => {
     if (!meta) {
       return null;
     }
 
-    return environments.find(environment => environment._id === meta.activeEnvironmentId) || null;
+    return entities.environments.find(environment => environment._id === meta.activeEnvironmentId) || null;
   },
 );
 
@@ -333,7 +270,7 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
 );
 
 export const selectActiveRequest = createSelector(
-  selectEntities,
+  (state: RootState) => state.entities,
   selectActiveWorkspaceMeta,
   (entities, workspaceMeta) => {
     const id = workspaceMeta?.activeRequestId || 'n/a';
@@ -445,6 +382,6 @@ export const selectSyncItems = createSelector(
 );
 
 export const selectActiveActivity = createSelector(
-  selectGlobal,
+  (state: RootState) => state.global,
   global => global.activeActivity,
 );
