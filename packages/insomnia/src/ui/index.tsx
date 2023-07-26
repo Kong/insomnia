@@ -190,6 +190,15 @@ const router = createMemoryRouter(
                               ],
                             },
                             {
+                              path: 'cookieJar',
+                              children: [
+                                {
+                                  path: 'update',
+                                  action: async (...args) => (await import('./routes/actions')).updateCookieJarAction(...args),
+                                },
+                              ],
+                            },
+                            {
                               path: 'test/*',
                               loader: async (...args) =>  (await import('./routes/unit-test')).loader(...args),
                               element: (
