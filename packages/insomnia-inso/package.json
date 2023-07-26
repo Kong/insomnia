@@ -20,7 +20,6 @@
     "inso": "bin/inso"
   },
   "scripts": {
-    "bootstrap": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "clean": "tsc --build tsconfig.build.json --clean",
     "postclean": "rimraf dist && rimraf binaries && rimraf compressed && rimraf artifacts",
