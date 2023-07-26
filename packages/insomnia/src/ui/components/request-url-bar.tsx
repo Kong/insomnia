@@ -394,8 +394,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
 
   const onMethodChange = useCallback((method: string) => requestFetcher.submit({ method },
     {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
       method: 'post',
+      encType: 'application/json',
     }), [organizationId, projectId, requestFetcher, requestId, workspaceId]);
 
   const handleSendDropdownHide = useCallback(() => {

@@ -2,9 +2,9 @@ import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import * as models from '../../models';
-import { GrpcRequest, GrpcRequestBody, GrpcRequestHeader, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
+import { isRequest, Request } from '../../models/request';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -89,92 +89,24 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
 };
-// react-router discourages non-string form data, but :guitar: :guitar: :guitar:
 export const updateHackRequestAction: ActionFunction = async ({ request, params }) => {
   const { requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
   const req = await requestOperations.getById(requestId);
   invariant(req, 'Request not found');
-  const formData = await request.formData();
-  const body = formData.get('body') as string | null;
-  const headers = formData.get('headers') as string | null;
-  if (body !== null) {
-    requestOperations.update(req, { body: JSON.parse(body) as RequestBody | GrpcRequestBody });
-  }
-  if (headers !== null) {
-    requestOperations.update(req, { headers: JSON.parse(headers) as RequestHeader[] });
-  }
-  const authentication = formData.get('authentication') as string | null;
-  if (authentication !== null) {
-    requestOperations.update(req, { authentication: JSON.parse(authentication) as RequestAuthentication });
-  }
-  const parameters = formData.get('parameters') as string | null;
-  if (parameters !== null) {
-    requestOperations.update(req, { parameters: JSON.parse(parameters) as RequestParameter[] });
-  }
-  const metadata = formData.get('metadata') as string | null;
-  if (metadata !== null) {
-    requestOperations.update(req, { metadata: JSON.parse(metadata) as GrpcRequestHeader[] });
-  }
-};
-// TODO: boolean serialisation needs a standard, here I am just using empty string as false. Not good.
-export const updateRequestSettingAction: ActionFunction = async ({ request, params }) => {
-  const { requestId } = params;
-  invariant(typeof requestId === 'string', 'Request ID is required');
-  const req = await requestOperations.getById(requestId);
-  invariant(req, 'Request not found');
-  const formData = await request.formData();
-
-  const settingSendCookies = formData.get('settingSendCookies') as string | null;
-  if (settingSendCookies !== null) {
-    requestOperations.update(req, { settingSendCookies: Boolean(settingSendCookies) });
-  }
-  const settingStoreCookies = formData.get('settingStoreCookies') as string | null;
-  if (settingStoreCookies !== null) {
-    requestOperations.update(req, { settingStoreCookies: Boolean(settingStoreCookies) });
-  }
-  const settingEncodeUrl = formData.get('settingEncodeUrl') as string | null;
-  if (settingEncodeUrl !== null) {
-    requestOperations.update(req, { settingEncodeUrl: Boolean(settingEncodeUrl) });
-  }
-};
-export const updateRequestAction: ActionFunction = async ({ request, params }) => {
-  const { requestId } = params;
-  invariant(typeof requestId === 'string', 'Request ID is required');
-  const req = await requestOperations.getById(requestId);
-  invariant(req, 'Request not found');
-
-  const formData = await request.formData();
-  const parentId = formData.get('parentId') as string | null;
-  if (parentId !== null) {
-    const workspace = await models.workspace.getById(parentId);
-    invariant(workspace, 'Workspace is required');
-    // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
-    // Move to top of sort order
-    requestOperations.update(req, { parentId, metaSortKey: -1e9 });
-  }
-  const name = formData.get('name') as string | null;
-  if (name !== null) {
-    requestOperations.update(req, { name });
-  }
-  const url = formData.get('url') as string | null;
-  if (url !== null) {
-    requestOperations.update(req, { url });
-  }
-  const method = formData.get('method') as string | null;
-  if (method !== null) {
-    requestOperations.update(req, { method });
-  }
-  const description = formData.get('description') as string | null;
-  if (description !== null) {
-    requestOperations.update(req, { description });
-  }
-  const settingFollowRedirects = formData.get('settingFollowRedirects') as Request['settingFollowRedirects'] | null;
-  if (settingFollowRedirects !== null) {
-    requestOperations.update(req, { settingFollowRedirects });
-  }
+  let patch = await request.json();
+  // const parentId = patch.parentId as string | null;
+  // if (parentId !== null) {
+  //   const workspace = await models.workspace.getById(parentId);
+  //   const requestGroup = await models.requestGroup.getById(parentId);
+  //   const hasWorkspaceOrRequestGroup = Boolean(workspace || requestGroup);
+  //   invariant(hasWorkspaceOrRequestGroup, 'Workspace/Folder is required');
+  //   // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
+  //   // Move to top of sort order
+  //   requestOperations.update(req, { parentId, metaSortKey: -1e9 });
+  // }
   if (isRequest(req)) {
-    let mimeType = formData.get('mimeType') as string | null;
+    let mimeType = patch.body?.mimeType as string | null;
     // TODO: This is a hack to get around the fact that we don't have a way to send null
     if (mimeType !== null) {
       if (mimeType === 'null') {
@@ -183,36 +115,35 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
       const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
       const savedRequestBody = !mimeType ? (req.body || {}) : {};
       await models.requestMeta.update(requestMeta, { savedRequestBody });
-      const res = updateMimeType(req, mimeType, requestMeta.savedRequestBody);
-      requestOperations.update(req, { body: res.body, headers: res.headers });
+      // TODO: make this less hacky
+      patch = updateMimeType(req, mimeType, requestMeta.savedRequestBody);
     }
   }
   if (isGrpcRequest(req)) {
-    const protoMethodName = formData.get('protoMethodName') as string | null;
-    if (protoMethodName !== null) {
-      models.grpcRequest.update(req, { protoMethodName });
-    }
-    const protoFileId = formData.get('protoFileId') as string | null;
+    const protoFileId = patch.protoFileId as string | null;
     if (protoFileId !== null) {
       models.grpcRequest.update(req, {
         protoFileId,
         protoMethodName: '',
       });
-    }
-    const text = formData.get('text') as string | null;
-    if (text !== null) {
-      models.grpcRequest.update(req, { body: { text } });
+      return null;
     }
   }
+  requestOperations.update(req, patch);
+  return null;
 };
 
-export const deleteRequestAction: ActionFunction = async ({ request }) => {
+export const deleteRequestAction: ActionFunction = async ({ request, params }) => {
+  const { organizationId, projectId, workspaceId } = params;
+
   const formData = await request.formData();
   const id = formData.get('id') as string;
   const req = await requestOperations.getById(id);
   invariant(req, 'Request not found');
   models.stats.incrementDeletedRequests();
   requestOperations.remove(req);
+  // TODO: redirect only if we are deleting the active request
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
 };
 
 export const duplicateRequestAction: ActionFunction = async ({ request, params }) => {

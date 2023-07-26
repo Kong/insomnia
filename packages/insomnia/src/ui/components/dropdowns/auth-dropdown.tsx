@@ -165,10 +165,11 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
         break;
       }
     }
-    requestFetcher.submit({ authentication: JSON.stringify(newAuthentication) },
+    requestFetcher.submit({ authentication: newAuthentication },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
         method: 'post',
+        encType: 'application/json',
       });
   }, [activeRequest, organizationId, projectId, requestFetcher, requestId, workspaceId]);
   const isCurrent = useCallback((type: AuthType) => {

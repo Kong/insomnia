@@ -42,10 +42,11 @@ export const RequestHeadersEditor: FC<Props> = ({
       });
     }
 
-    requestFetcher.submit({ headers: JSON.stringify(headers) },
+    requestFetcher.submit({ headers },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
         method: 'post',
+        encType: 'application/json',
       });
   }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
 
@@ -64,10 +65,11 @@ export const RequestHeadersEditor: FC<Props> = ({
   }
 
   const onChangeHeaders = useCallback((headers: RequestHeader[]) => {
-    requestFetcher.submit({ headers: JSON.stringify(headers) },
+    requestFetcher.submit(JSON.stringify({ headers }),
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
         method: 'post',
+        encType: 'application/json',
       });
   }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
 

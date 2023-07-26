@@ -64,8 +64,9 @@ export const ContentTypeDropdown: FC = () => {
     const mimeTypeHack = typeof mimeType === 'string' ? mimeType : 'null';
     requestFetcher.submit({ mimeType: mimeTypeHack },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
         method: 'post',
+        encType: 'application/json',
       });
     window.main.trackSegmentEvent({ event: SegmentEvent.requestBodyTypeSelect, properties: { type: mimeType } });
   };

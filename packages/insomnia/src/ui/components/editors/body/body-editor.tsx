@@ -40,45 +40,37 @@ export const BodyEditor: FC<Props> = ({
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
 
+  const updateRequest = useCallback((request: Partial<Request>) => {
+    requestFetcher.submit(JSON.stringify(request),
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        method: 'post',
+        encType: 'application/json',
+      });
+  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
   const handleRawChange = useCallback((rawValue: string) => {
     const body = typeof request.body.mimeType !== 'string'
       ? { text: rawValue }
       : { mimeType: request.body.mimeType.split(';')[0], text: rawValue };
-    requestFetcher.submit({ body: JSON.stringify(body) },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
-        method: 'post',
-      });
-  }, [organizationId, projectId, request.body.mimeType, requestFetcher, requestId, workspaceId]);
+    updateRequest({ body });
+  }, [request.body.mimeType, updateRequest]);
 
   const handleGraphQLChange = useCallback((content: string) => {
     const body = typeof CONTENT_TYPE_GRAPHQL !== 'string'
       ? { text: content }
       : { mimeType: CONTENT_TYPE_GRAPHQL.split(';')[0], text: content };
-    requestFetcher.submit({ body: JSON.stringify(body) },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
-        method: 'post',
-      });
-  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
+    updateRequest({ body });
+  }, [updateRequest]);
 
   const handleFormUrlEncodedChange = useCallback((params: RequestBodyParameter[]) => {
     const body = { mimeType: CONTENT_TYPE_FORM_URLENCODED, params };
-    requestFetcher.submit({ body: JSON.stringify(body) },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
-        method: 'post',
-      });
-  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
+    updateRequest({ body });
+  }, [updateRequest]);
 
   const handleFormChange = useCallback((parameters: RequestBodyParameter[]) => {
     const body = { mimeType: CONTENT_TYPE_FORM_DATA, params: parameters || [] };
-    requestFetcher.submit({ body: JSON.stringify(body) },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
-        method: 'post',
-      });
-  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
+    updateRequest({ body });
+  }, [updateRequest]);
 
   const handleFileChange = async (path: string) => {
     const headers = clone(request.headers);
@@ -86,11 +78,7 @@ export const BodyEditor: FC<Props> = ({
       mimeType: CONTENT_TYPE_FILE,
       fileName: path,
     };
-    requestFetcher.submit({ body: JSON.stringify(body) },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
-        method: 'post',
-      });
+    updateRequest({ body });
     let contentTypeHeader = getContentTypeHeader(headers);
 
     if (!contentTypeHeader) {
@@ -115,11 +103,7 @@ export const BodyEditor: FC<Props> = ({
         </p>,
         onDone: async (saidYes: boolean) => {
           if (saidYes) {
-            requestFetcher.submit({ headers: JSON.stringify(headers) },
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
-                method: 'post',
-              });
+            updateRequest({ headers });
           }
         },
       });

@@ -73,8 +73,9 @@ export const RequestPane: FC<Props> = ({
   const updateRequestUrl = (url: string) =>
     requestFetcher.submit({ url },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
         method: 'post',
+        encType: 'application/json',
       });
 
   const handleEditDescription = useCallback((forceEditMode: boolean) => {

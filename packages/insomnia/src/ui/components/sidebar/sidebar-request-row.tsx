@@ -127,8 +127,9 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
 
     requestFetcher.submit({ name },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update-hack`,
         method: 'post',
+        encType: 'application/json',
       });
     setIsEditing(false);
   }, [requestFetcher, organizationId, projectId, request, workspaceId]);

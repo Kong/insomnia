@@ -274,8 +274,9 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           readyState={readyState}
           onChange={url => requestFetcher.submit({ url },
             {
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
               method: 'post',
+              encType: 'application/json',
             })}
         />
       </PaneHeader>

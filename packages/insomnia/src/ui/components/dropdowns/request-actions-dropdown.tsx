@@ -119,8 +119,9 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       label: 'Name',
       onComplete: name => requestFetcher.submit({ name },
         {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update-hack`,
           method: 'post',
+          encType: 'application/json',
         }),
     });
   }, [requestFetcher, organizationId, projectId, request._id, request.name, workspaceId]);
