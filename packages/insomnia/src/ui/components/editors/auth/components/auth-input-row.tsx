@@ -1,10 +1,10 @@
 import React, { ComponentProps, FC, ReactNode, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import { useToggle } from 'react-use';
 
 import { toKebabCase } from '../../../../../common/misc';
 import { useActiveRequest } from '../../../../hooks/use-active-request';
-import { selectSettings } from '../../../../redux/selectors';
+import { RootLoaderData } from '../../../../routes/root';
 import { OneLineEditor } from '../../../codemirror/one-line-editor';
 import { AuthRow } from './auth-row';
 
@@ -17,7 +17,10 @@ interface Props extends Pick<ComponentProps<typeof OneLineEditor>, 'getAutocompl
 }
 
 export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, property, mask, help, disabled = false }) => {
-  const { showPasswords } = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
+  const { showPasswords } = settings;
   const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
 
   const [masked, toggleMask] = useToggle(true);

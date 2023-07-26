@@ -1,8 +1,8 @@
 import React, { FunctionComponent } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { selectSettings } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { Hotkey } from '../hotkey';
 import { showSettingsModal } from '../modals/settings-modal';
 import { SvgIcon } from '../svg-icon';
@@ -18,7 +18,10 @@ const StatusButton = styled(Button).attrs({
 });
 
 export const SettingsButton: FunctionComponent = () => {
-  const { hotKeyRegistry } = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
+  const { hotKeyRegistry } = settings;
   return (
     <Tooltip
       delay={1000}

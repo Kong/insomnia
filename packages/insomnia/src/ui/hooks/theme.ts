@@ -1,21 +1,24 @@
 import { ChangeEvent, useCallback, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import { useAsync } from 'react-use';
 
 import * as models from '../../models';
 import { ThemeSettings } from '../../models/settings';
 import { ColorScheme, getThemes } from '../../plugins';
 import { applyColorScheme, PluginTheme } from '../../plugins/misc';
-import { selectSettings } from '../redux/selectors';
+import { RootLoaderData } from '../routes/root';
 
 export const useThemes = () => {
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
   const {
     lightTheme,
     darkTheme,
     autoDetectColorScheme,
     theme,
     pluginConfig,
-  } = useSelector(selectSettings);
+  } = settings;
 
   const [themes, setThemes] = useState<PluginTheme[]>([]);
 

@@ -1,12 +1,14 @@
 import { useEffect, useLayoutEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import { usePrevious } from 'react-use';
 
 import { Settings } from '../../models/settings';
-import { selectSettings } from '../redux/selectors';
+import { RootLoaderData } from '../routes/root';
 
 const useRestartSetting = (setting: keyof Settings) => {
-  const settings = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
 
   const nextValue = settings[setting];
   const previousValue = usePrevious(nextValue);
@@ -29,7 +31,9 @@ const updateFontStyle = (key: string, value: string | null) => document?.querySe
 
 // as a general rule, if the body effect in this file is more than one line, extract into a separate function.
 export const useSettingsSideEffects = () => {
-  const settings = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
 
   useLayoutEffect(() => {
     updateFontStyle('--font-default', settings.fontInterface);

@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
@@ -10,7 +11,8 @@ import { WebSocketRequest } from '../../../models/websocket-request';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import { selectActiveRequestMeta, selectSettings } from '../../redux/selectors';
+import { selectActiveRequestMeta } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { TabItem, Tabs } from '../base/tabs';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
@@ -203,7 +205,10 @@ interface Props {
 // TODO: use the same readystate interface
 export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environment }) => {
   const readyState = useReadyState({ requestId: request._id, protocol: 'webSocket' });
-  const { useBulkParametersEditor } = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
+  const { useBulkParametersEditor } = settings;
 
   const disabled = readyState;
   const handleOnChange = (url: string) => {

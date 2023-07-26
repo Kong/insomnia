@@ -1,5 +1,4 @@
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
@@ -12,7 +11,7 @@ import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { createRequest, CreateRequestType } from '../../hooks/create-request';
 import { createRequestGroup } from '../../hooks/create-request-group';
-import { selectHotKeyRegistry } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
@@ -36,7 +35,10 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
     activeEnvironment,
     activeProject,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const hotKeyRegistry = useSelector(selectHotKeyRegistry);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
+  const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);

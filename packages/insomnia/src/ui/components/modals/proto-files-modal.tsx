@@ -42,9 +42,9 @@ const tryToSelectFolderPath = async () => {
   }
   return;
 };
-const isProtofileValid = (filePath: string) => {
+const isProtofileValid = async (filePath: string) => {
   try {
-    protoLoader.load(filePath, {
+    await protoLoader.load(filePath, {
       keepCase: true,
       longs: String,
       enums: String,
@@ -55,7 +55,7 @@ const isProtofileValid = (filePath: string) => {
   } catch (error) {
     showError({
       title: 'Invalid Proto File',
-      message: `The file ${filePath} and could not be parsed`,
+      message: `The file ${filePath} could not be parsed`,
       error,
     });
     return false;
@@ -205,7 +205,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave, reloadRe
     if (!filePath) {
       return;
     }
-    if (!isProtofileValid(filePath)) {
+    if (!await isProtofileValid(filePath)) {
       return;
     }
     const contents = await fs.promises.readFile(filePath, 'utf-8');
@@ -256,7 +256,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave, reloadRe
     if (!filePath) {
       return;
     }
-    if (!isProtofileValid(filePath)) {
+    if (!await isProtofileValid(filePath)) {
       return;
     }
     const contents = await fs.promises.readFile(filePath, 'utf-8');

@@ -1,10 +1,10 @@
 import React, { ChangeEvent, FC } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import { useToggle } from 'react-use';
 
 import { SettingsOfType } from '../../../common/settings';
 import * as models from '../../../models';
-import { selectSettings } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { HelpTooltip } from '../help-tooltip';
 
 export const MaskedSetting: FC<{
@@ -22,7 +22,9 @@ export const MaskedSetting: FC<{
 }) => {
   const [isHidden, setHidden] = useToggle(true);
 
-  const settings = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
 
   if (!settings.hasOwnProperty(setting)) {
     throw new Error(`Invalid setting name ${setting}`);

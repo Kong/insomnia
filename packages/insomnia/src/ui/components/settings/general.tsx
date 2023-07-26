@@ -1,10 +1,9 @@
 import React, { FC, Fragment } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import * as session from '../../../account/session';
 import {
   EditorKeyMap,
-  isDevelopment,
   isMac,
   MAX_EDITOR_FONT_SIZE,
   MAX_INTERFACE_FONT_SIZE,
@@ -15,12 +14,10 @@ import {
 import { docsKeyMaps } from '../../../common/documentation';
 import { HttpVersion, HttpVersions, UpdateChannel } from '../../../common/settings';
 import { strings } from '../../../common/strings';
-import * as models from '../../../models';
 import { initNewOAuthSession } from '../../../network/o-auth-2/get-token';
-import { selectSettings, selectStats } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { Link } from '../base/link';
 import { CheckForUpdatesButton } from '../check-for-updates-button';
-import { HelpTooltip } from '../help-tooltip';
 import { Tooltip } from '../tooltip';
 import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
@@ -41,42 +38,10 @@ const RestartTooltip: FC<{ message: string }> = ({ message }) => (
   </Fragment>
 );
 
-const DevelopmentOnlySettings: FC = () => {
-  const { launches } = useSelector(selectStats);
-
-  if (!isDevelopment()) {
-    return null;
-  }
-
-  return (
-    <>
-      <hr className="pad-top" />
-      <h2>Development</h2>
-
-      <div className="form-row pad-top-sm">
-        <div className="form-control form-control--outlined">
-          <label>
-            Stats.Launches
-            <HelpTooltip className="space-left">If you need this to be a certain value after restarting the app, then just subtract one from your desired value before you restart.  For example, if you want to simulate first launch, set it to 0 and when you reboot it will be 1.  Note that Shift+F5 does not actually restart since it only refreshes the renderer and thus will not increment `Stats.launches`.  This is because Stats.launches is incremented in the main process whereas refreshing the app with Shift+F5 doesn't retrigger that code path.</HelpTooltip>
-            <input
-              value={String(launches)}
-              min={0}
-              name="launches"
-              onChange={async event => {
-                const launches = parseInt(event.target.value, 10);
-                await models.stats.update({ launches });
-              }}
-              type={'number'}
-            />
-          </label>
-        </div>
-      </div>
-    </>
-  );
-};
-
 export const General: FC = () => {
-  const settings = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
   const isLoggedIn = session.isLoggedIn();
 
   return (
@@ -319,7 +284,7 @@ export const General: FC = () => {
 
       <hr className="pad-top" />
 
-      <h2>HTTP Network Proxy</h2>
+      <h2>Network Proxy</h2>
 
       <BooleanSetting
         label="Enable proxy"
@@ -329,14 +294,16 @@ export const General: FC = () => {
 
       <div className="form-row pad-top-sm">
         <MaskedSetting
-          label='HTTP proxy'
+          label='Proxy for HTTP'
           setting='httpProxy'
+          help="Enter a HTTP or SOCKS4/5 proxy starting with appropriate prefix from the following (http://, socks4://, socks5://)"
           placeholder="localhost:8005"
           disabled={!settings.proxyEnabled}
         />
         <MaskedSetting
-          label='HTTPS proxy'
+          label='Proxy for HTTPS'
           setting='httpsProxy'
+          help="Enter a HTTPS or SOCKS4/5 proxy starting with appropriate prefix from the following (https://, socks4://, socks5://)"
           placeholder="localhost:8005"
           disabled={!settings.proxyEnabled}
         />
@@ -413,8 +380,6 @@ export const General: FC = () => {
         </>
       )
       }
-
-      <DevelopmentOnlySettings />
     </div>
   );
 };
