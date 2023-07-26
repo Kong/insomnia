@@ -4,7 +4,6 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { useRouteLoaderData } from 'react-router-dom';
 import { useFetcher, useParams } from 'react-router-dom';
 import { Cookie as ToughCookie } from 'tough-cookie';
-import { JsonObject } from 'type-fest';
 
 import { cookieToString } from '../../../common/cookies';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
