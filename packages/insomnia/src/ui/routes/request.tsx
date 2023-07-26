@@ -89,7 +89,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
 };
-export const updateHackRequestAction: ActionFunction = async ({ request, params }) => {
+export const updateRequestAction: ActionFunction = async ({ request, params }) => {
   const { requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
   const req = await requestOperations.getById(requestId);
@@ -105,7 +105,7 @@ export const updateHackRequestAction: ActionFunction = async ({ request, params 
   //   // Move to top of sort order
   //   requestOperations.update(req, { parentId, metaSortKey: -1e9 });
   // }
-  if (isRequest(req)) {
+  if (isRequest(req) && patch.body) {
     let mimeType = patch.body?.mimeType as string | null;
     // TODO: This is a hack to get around the fact that we don't have a way to send null
     if (mimeType !== null) {

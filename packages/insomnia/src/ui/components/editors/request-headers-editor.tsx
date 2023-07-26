@@ -44,7 +44,7 @@ export const RequestHeadersEditor: FC<Props> = ({
 
     requestFetcher.submit({ headers },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
         method: 'post',
         encType: 'application/json',
       });
@@ -67,7 +67,7 @@ export const RequestHeadersEditor: FC<Props> = ({
   const onChangeHeaders = useCallback((headers: RequestHeader[]) => {
     requestFetcher.submit(JSON.stringify({ headers }),
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
         method: 'post',
         encType: 'application/json',
       });

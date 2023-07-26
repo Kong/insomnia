@@ -158,10 +158,6 @@ const router = createMemoryRouter(
                                       path: 'update',
                                       action: async (...args) => (await import('./routes/request')).updateRequestAction(...args),
                                     },
-                                    {
-                                      path: 'update-hack',
-                                      action: async (...args) => (await import('./routes/request')).updateHackRequestAction(...args),
-                                    },
                                   ],
                                 },
                                 {

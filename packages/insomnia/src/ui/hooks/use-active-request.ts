@@ -15,7 +15,7 @@ export const useActiveRequest = () => {
   const updateAuth = useCallback((authentication: RequestAuthentication) => {
     requestFetcher.submit({ authentication },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
         method: 'post',
         encType: 'application/json',
       });

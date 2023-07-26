@@ -42,7 +42,7 @@ export const RequestParametersEditor: FC<Props> = ({
     }
     requestFetcher.submit({ parameters },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
         method: 'post',
         encType: 'application/json',
       });
@@ -65,7 +65,7 @@ export const RequestParametersEditor: FC<Props> = ({
   const onChangeParameter = useCallback((parameters: RequestParameter[]) => {
     requestFetcher.submit(JSON.stringify({ parameters }),
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
         method: 'post',
         encType: 'application/json',
       });

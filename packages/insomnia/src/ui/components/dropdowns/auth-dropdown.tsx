@@ -167,7 +167,7 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
     }
     requestFetcher.submit({ authentication: newAuthentication },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
         method: 'post',
         encType: 'application/json',
       });

@@ -43,7 +43,7 @@ export const BodyEditor: FC<Props> = ({
   const updateRequest = useCallback((request: Partial<Request>) => {
     requestFetcher.submit(JSON.stringify(request),
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
         method: 'post',
         encType: 'application/json',
       });

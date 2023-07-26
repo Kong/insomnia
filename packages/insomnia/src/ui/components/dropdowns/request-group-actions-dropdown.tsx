@@ -101,7 +101,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
       label: 'Name',
       onComplete: name => requestFetcher.submit({ name },
         {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${requestGroup._id}/update-hack`,
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${requestGroup._id}/update`,
           method: 'post',
           encType: 'application/json',
         }),

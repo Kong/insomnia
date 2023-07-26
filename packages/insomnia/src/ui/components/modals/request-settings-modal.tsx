@@ -75,7 +75,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     invariant(activeWorkspaceIdToCopyTo, 'Workspace ID is required');
     requestFetcher.submit({ parentId: activeWorkspaceIdToCopyTo },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update-hack`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
         method: 'post',
         encType: 'application/json',
       });
@@ -107,7 +107,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     invariant(request, 'Request is required');
     requestFetcher.submit({ description },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update-hack`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
         method: 'post',
         encType: 'application/json',
       });
@@ -122,7 +122,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     invariant(request, 'Request is required');
     requestFetcher.submit({ name },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update-hack`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
         method: 'post',
         encType: 'application/json',
       });

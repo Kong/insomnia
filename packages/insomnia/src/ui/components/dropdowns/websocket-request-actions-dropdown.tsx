@@ -42,7 +42,7 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
       label: 'Name',
       onComplete: name => requestFetcher.submit({ name },
         {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update-hack`,
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
           method: 'post',
           encType: 'application/json',
         }),
