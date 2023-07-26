@@ -1,6 +1,7 @@
 import React, { FC } from 'react';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
+import { version } from '../../../../package.json';
 import {
   CONTENT_TYPE_EDN,
   CONTENT_TYPE_FILE,
@@ -254,6 +255,12 @@ export const updateMimeType = (
     headers.push({
       name: 'Content-Type',
       value: contentTypeHeaderValue || '',
+    });
+  }
+  if (!headers.find(h => h?.name?.toLowerCase() === 'user-agent')) {
+    headers.push({
+      name: 'User-Agent',
+      value: `Insomnia/${version}`,
     });
   }
   const oldBody = Object.keys(savedBody).length === 0 ? request.body : savedBody;
