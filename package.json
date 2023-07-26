@@ -26,7 +26,7 @@
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "lint:markdown": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
-    "bootstrap": " npx -y check-engine && npm install --workspaces",
+    "bootstrap": " npx -y check-engine && npm install --workspaces && npm run build --workspaces --if-present",
     "version": "TODO(filipe): ADD THIS",
     "clean": "npm run clean --workspaces --if-present && rimraf node_modules **/*.tsbuildinfo",
     "test": "npm run test --workspaces --if-present",
