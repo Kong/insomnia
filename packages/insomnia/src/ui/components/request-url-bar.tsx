@@ -443,87 +443,87 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               className="urlbar__send-btn"
               onClick={send}
             >
-              {buttonText}</button>
+                {buttonText}</button>
               {isEventStreamRequest(activeRequest) ? null : (<Dropdown
-              key="dropdown"
-              className="tall"
-              ref={dropdownRef}
-              aria-label="Request Options"
-              onClose={handleSendDropdownHide}
-              closeOnSelect={false}
-              triggerButton={
-                <StyledDropdownButton
-                  className="urlbar__send-context"
-                  removeBorderRadius={true}
+                key="dropdown"
+                className="tall"
+                ref={dropdownRef}
+                aria-label="Request Options"
+                onClose={handleSendDropdownHide}
+                closeOnSelect={false}
+                triggerButton={
+                  <StyledDropdownButton
+                    className="urlbar__send-context"
+                    removeBorderRadius={true}
+                  >
+                    <i className="fa fa-caret-down" />
+                  </StyledDropdownButton>
+                }
+              >
+                <DropdownSection
+                  aria-label="Basic Section"
+                  title="Basic"
                 >
-                  <i className="fa fa-caret-down" />
-                </StyledDropdownButton>
-              }
-            >
-              <DropdownSection
-                aria-label="Basic Section"
-                title="Basic"
-              >
-                <DropdownItem aria-label="send-now">
-                  <ItemContent
-                    icon="arrow-circle-o-right"
-                    label="Send Now"
-                    hint={hotKeyRegistry.request_send}
-                    onClick={send}
-                  />
-                </DropdownItem>
-                <DropdownItem aria-label='Generate Client Code'>
-                  <ItemContent
-                    icon="code"
-                    label="Generate Client Code"
-                    onClick={handleGenerateCode}
-                  />
-                </DropdownItem>
-              </DropdownSection>
-              <DropdownSection
-                aria-label="Advanced Section"
-                title="Advanced"
-              >
-                <DropdownItem aria-label='Send After Delay'>
-                  <ItemContent
-                    icon="clock-o"
-                    label="Send After Delay"
-                    onClick={handleSendAfterDelay}
-                  />
-                </DropdownItem>
-                <DropdownItem aria-label='Repeat on Interval'>
-                  <ItemContent
-                    icon="repeat"
-                    label="Repeat on Interval"
-                    onClick={handleSendOnInterval}
-                  />
-                </DropdownItem>
-                {downloadPath ? (
-                  <DropdownItem aria-label='Stop Auto-Download'>
+                  <DropdownItem aria-label="send-now">
                     <ItemContent
-                      icon="stop-circle"
-                      label="Stop Auto-Download"
-                      withPrompt
-                      onClick={handleClearDownloadLocation}
-                    />
-                  </DropdownItem>) :
-                  (<DropdownItem aria-label='Download After Send'>
-                    <ItemContent
-                      icon="download"
-                      label="Download After Send"
-                      onClick={downloadAfterSend}
+                      icon="arrow-circle-o-right"
+                      label="Send Now"
+                      hint={hotKeyRegistry.request_send}
+                      onClick={send}
                     />
                   </DropdownItem>
-                  )}
-                <DropdownItem aria-label='Send And Download'>
-                  <ItemContent
-                    icon="download"
-                    label="Send And Download"
-                    onClick={sendThenSetFilePath}
-                  />
-                </DropdownItem>
-              </DropdownSection>
-            </Dropdown>)}
+                  <DropdownItem aria-label='Generate Client Code'>
+                    <ItemContent
+                      icon="code"
+                      label="Generate Client Code"
+                      onClick={handleGenerateCode}
+                    />
+                  </DropdownItem>
+                </DropdownSection>
+                <DropdownSection
+                  aria-label="Advanced Section"
+                  title="Advanced"
+                >
+                  <DropdownItem aria-label='Send After Delay'>
+                    <ItemContent
+                      icon="clock-o"
+                      label="Send After Delay"
+                      onClick={handleSendAfterDelay}
+                    />
+                  </DropdownItem>
+                  <DropdownItem aria-label='Repeat on Interval'>
+                    <ItemContent
+                      icon="repeat"
+                      label="Repeat on Interval"
+                      onClick={handleSendOnInterval}
+                    />
+                  </DropdownItem>
+                  {downloadPath ? (
+                    <DropdownItem aria-label='Stop Auto-Download'>
+                      <ItemContent
+                        icon="stop-circle"
+                        label="Stop Auto-Download"
+                        withPrompt
+                        onClick={handleClearDownloadLocation}
+                      />
+                    </DropdownItem>) :
+                    (<DropdownItem aria-label='Download After Send'>
+                      <ItemContent
+                        icon="download"
+                        label="Download After Send"
+                        onClick={downloadAfterSend}
+                      />
+                    </DropdownItem>
+                    )}
+                  <DropdownItem aria-label='Send And Download'>
+                    <ItemContent
+                      icon="download"
+                      label="Send And Download"
+                      onClick={sendThenSetFilePath}
+                    />
+                  </DropdownItem>
+                </DropdownSection>
+              </Dropdown>)}
           </>
         )}
       </div>
