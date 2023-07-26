@@ -4,6 +4,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { useRouteLoaderData } from 'react-router-dom';
 import { useFetcher, useParams } from 'react-router-dom';
 import { Cookie as ToughCookie } from 'tough-cookie';
+import { JsonObject } from 'type-fest';
 
 import { cookieToString } from '../../../common/cookies';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
@@ -41,7 +42,7 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
     },
   }), [activeCookieJar.cookies]);
   const updateCookieJar = async (cookieJarId: string, patch: CookieJar) => {
-    updateCookieJarFetcher.submit({ patch, cookieJarId }, {
+    updateCookieJarFetcher.submit(JSON.stringify({ patch, cookieJarId }), {
       encType: 'application/json',
       method: 'post',
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cookieJar/update`,

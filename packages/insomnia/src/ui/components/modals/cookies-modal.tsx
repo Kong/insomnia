@@ -33,7 +33,7 @@ export const CookiesModal = forwardRef<CookiesModalHandle, ModalProps>((_, ref) 
     },
   }), []);
   const updateCookieJar = async (cookieJarId: string, patch: CookieJar) => {
-    updateCookieJarFetcher.submit({ patch, cookieJarId }, {
+    updateCookieJarFetcher.submit(JSON.stringify({ patch, cookieJarId }), {
       encType: 'application/json',
       method: 'post',
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cookieJar/update`,
