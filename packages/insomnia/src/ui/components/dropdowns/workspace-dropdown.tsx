@@ -5,7 +5,6 @@ import { isLoggedIn } from '../../../account/session';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
-import { workspace } from '../../../models';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
 import { isDesign, Workspace } from '../../../models/workspace';
@@ -28,7 +27,7 @@ export const WorkspaceDropdown: FC = () => {
     activeProject,
     activeApiSpec,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const activeWorkspaceName = workspace.name;
+  const activeWorkspaceName = activeApiSpec?.fileName || activeWorkspace.name;
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
