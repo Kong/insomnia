@@ -7,7 +7,7 @@ import * as requestOperations from '../../models/helpers/request-operations';
 import { isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
-import { SegmentEvent, trackSegmentEvent } from '../analytics';
+import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
 import { CreateRequestType } from '../hooks/create-request';
 
@@ -74,7 +74,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
   }
   invariant(typeof activeRequestId === 'string', 'Request ID is required');
   models.stats.incrementCreatedRequests();
-  trackSegmentEvent(SegmentEvent.requestCreate, { requestType });
+  window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType } });
 
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
 };

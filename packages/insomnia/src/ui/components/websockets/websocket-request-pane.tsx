@@ -203,7 +203,7 @@ interface Props {
 export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   const request = useRouteLoaderData('request/:requestId') as WebSocketRequest;
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-
+  const requestFetcher = useFetcher();
   const readyState = useReadyState({ requestId: request._id, protocol: 'webSocket' });
   const {
     settings,
