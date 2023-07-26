@@ -69,7 +69,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   } = useRouteLoaderData('root') as RootLoaderData;
   const { hotKeyRegistry } = settings;
   const downloadPath = useSelector(selectResponseDownloadPath);
-  const request = useRouteLoaderData('request/:requestId') as Request;
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const methodDropdownRef = useRef<DropdownHandle>(null);
@@ -78,7 +78,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleGenerateCode = () => {
-    showModal(GenerateCodeModal, { request });
+    showModal(GenerateCodeModal, { request: activeRequest });
   };
   const focusInput = useCallback(() => {
     if (inputRef.current) {
@@ -112,7 +112,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }
 
   const sendThenSetFilePath = useCallback(async (filePath?: string) => {
-    if (!request) {
+    if (!activeRequest) {
       return;
     }
 
@@ -122,13 +122,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       event: SegmentEvent.requestExecute,
       properties: {
         preferredHttpVersion: settings.preferredHttpVersion,
-        authenticationType: request.authentication?.type,
-        mimeType: request.body.mimeType,
+        authenticationType: activeRequest.authentication?.type,
+        mimeType: activeRequest.body.mimeType,
       },
     });
     setLoading(true);
     try {
-      const responsePatch = await network.send(request._id, activeEnvironment._id);
+      const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
       const headers = responsePatch.headers || [];
       const header = getContentDispositionHeader(headers);
       const nameFromHeader = header ? contentDisposition.parse(header.value).parameters.filename : null;
@@ -142,7 +142,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
         const extension = sanitizedExtension || 'unknown';
         const name =
-          nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
+          nameFromHeader || `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
         let filename: string | null;
 
         if (filePath) {
@@ -192,13 +192,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     } finally {
       // Unset active response because we just made a new one
       // TODO: remove this with the redux fallback to first element
-      await updateRequestMetaByParentId(request._id, { activeResponseId: null });
+      await updateRequestMetaByParentId(activeRequest._id, { activeResponseId: null });
       setLoading(false);
     }
-  }, [activeEnvironment._id, request, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const handleSend = useCallback(async () => {
-    if (!request) {
+    if (!activeRequest) {
       return;
     }
     // Update request stats
@@ -207,19 +207,19 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       event: SegmentEvent.requestExecute,
       properties: {
         preferredHttpVersion: settings.preferredHttpVersion,
-        authenticationType: request.authentication?.type,
-        mimeType: request.body.mimeType,
+        authenticationType: activeRequest.authentication?.type,
+        mimeType: activeRequest.body.mimeType,
       },
     });
     setLoading(true);
     try {
-      const responsePatch = await network.send(request._id, activeEnvironment._id);
+      const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
       const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
-      await updateRequestMetaByParentId(request._id, { activeResponseId: response._id });
+      await updateRequestMetaByParentId(activeRequest._id, { activeResponseId: response._id });
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {
-          request,
+          request: activeRequest,
           error: err,
         });
       } else {
@@ -237,9 +237,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       }
     }
     // Unset active response because we just made a new one
-    await updateRequestMetaByParentId(request._id, { activeResponseId: null });
+    await updateRequestMetaByParentId(activeRequest._id, { activeResponseId: null });
     setLoading(false);
-  }, [activeEnvironment._id, request, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const send = useCallback(() => {
     setCurrentTimeout(undefined);
@@ -247,22 +247,22 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       sendThenSetFilePath(downloadPath);
       return;
     }
-    if (isEventStreamRequest(request)) {
+    if (isEventStreamRequest(activeRequest)) {
       const startListening = async () => {
         const environmentId = activeEnvironment._id;
         const workspaceId = activeWorkspace._id;
-        const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+        const renderContext = await getRenderContext({ request: activeRequest, environmentId, purpose: RENDER_PURPOSE_SEND });
         // Render any nunjucks tags in the url/headers/authentication settings/cookies
         const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
         const rendered = await render({
-          url: request.url,
-          headers: request.headers,
-          authentication: request.authentication,
-          parameters: request.parameters.filter(p => !p.disabled),
+          url: activeRequest.url,
+          headers: activeRequest.headers,
+          authentication: activeRequest.authentication,
+          parameters: activeRequest.parameters.filter(p => !p.disabled),
           workspaceCookieJar,
         }, renderContext);
         window.main.curl.open({
-          requestId: request._id,
+          requestId: activeRequest._id,
           workspaceId,
           url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
           headers: rendered.headers,
@@ -274,13 +274,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       return;
     }
     handleSend();
-  }, [activeEnvironment._id, activeWorkspace, downloadPath, handleSend, request, sendThenSetFilePath]);
+  }, [activeEnvironment._id, activeWorkspace, downloadPath, handleSend, activeRequest, sendThenSetFilePath]);
 
   useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
   const handleStop = () => {
-    if (isEventStreamRequest(request)) {
-      window.main.curl.close({ requestId: request._id });
+    if (isEventStreamRequest(activeRequest)) {
+      window.main.curl.close({ requestId: activeRequest._id });
       return;
     }
     setCurrentInterval(null);
@@ -321,16 +321,16 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     if (canceled) {
       return;
     }
-    updateRequestMetaByParentId(request._id, { downloadPath: filePaths[0] });
-  }, [request._id]);
-  const handleClearDownloadLocation = () => updateRequestMetaByParentId(request._id, { downloadPath: null });
+    updateRequestMetaByParentId(activeRequest._id, { downloadPath: filePaths[0] });
+  }, [activeRequest._id]);
+  const handleClearDownloadLocation = () => updateRequestMetaByParentId(activeRequest._id, { downloadPath: null });
 
   useDocBodyKeyboardShortcuts({
     request_focusUrl: () => {
       inputRef.current?.selectAll();
     },
     request_send: () => {
-      if (request.url) {
+      if (activeRequest.url) {
         send();
       }
     },
@@ -350,10 +350,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       const { data } = await convert(text);
       const { resources } = data;
       const r = resources[0];
-      if (r && r._type === 'request' && request && isRequest(request)) {
+      if (r && r._type === 'request' && activeRequest && isRequest(activeRequest)) {
         // Only pull fields that we want to update
         return database.update({
-          ...request,
+          ...activeRequest,
           modified: Date.now(),
           url: r.url,
           method: r.method,
@@ -368,7 +368,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       console.error(error);
     }
     return null;
-  }, [request]);
+  }, [activeRequest]);
 
   const handleUrlChange = useCallback(async (url: string) => {
     const pastedText = lastPastedTextRef.current;
@@ -402,9 +402,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const handleSendDropdownHide = useCallback(() => {
     buttonRef.current?.blur();
   }, []);
-  const buttonText = isEventStreamRequest(request) ? 'Connect' : (downloadPath ? 'Download' : 'Send');
-  const { url, method } = request;
-  const isEventStreamOpen = useReadyState({ requestId: request._id, protocol: 'curl' });
+  const buttonText = isEventStreamRequest(activeRequest) ? 'Connect' : (downloadPath ? 'Download' : 'Send');
+  const { url, method } = activeRequest;
+  const isEventStreamOpen = useReadyState({ requestId: activeRequest._id, protocol: 'curl' });
   const isCancellable = currentInterval || currentTimeout || isEventStreamOpen;
   return (
     <div className="urlbar">
@@ -434,7 +434,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
             className="urlbar__send-btn"
             onClick={handleStop}
           >
-            {isEventStreamRequest(request) ? 'Disconnect' : 'Cancel'}
+            {isEventStreamRequest(activeRequest) ? 'Disconnect' : 'Cancel'}
           </button>
         ) : (
           <>
@@ -444,7 +444,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               onClick={send}
             >
               {buttonText}</button>
-            {isEventStreamRequest(request) ? null : (<Dropdown
+              {isEventStreamRequest(activeRequest) ? null : (<Dropdown
               key="dropdown"
               className="tall"
               ref={dropdownRef}

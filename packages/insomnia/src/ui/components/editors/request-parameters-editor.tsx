@@ -17,7 +17,7 @@ export const RequestParametersEditor: FC<Props> = ({
 }) => {
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const request = useRouteLoaderData('request/:requestId') as Request | WebSocketRequest;
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request | WebSocketRequest;
 
   const handleBulkUpdate = useCallback((paramsString: string) => {
     const parameters: {
@@ -49,7 +49,7 @@ export const RequestParametersEditor: FC<Props> = ({
   }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
 
   let paramsString = '';
-  for (const param of request.parameters) {
+  for (const param of activeRequest.parameters) {
     // Make sure it's not disabled
     if (param.disabled) {
       continue;
@@ -88,7 +88,7 @@ export const RequestParametersEditor: FC<Props> = ({
       namePlaceholder="name"
       valuePlaceholder="value"
       descriptionPlaceholder="description"
-      pairs={request.parameters}
+      pairs={activeRequest.parameters}
       onChange={onChangeParameter}
       isDisabled={disabled}
     />

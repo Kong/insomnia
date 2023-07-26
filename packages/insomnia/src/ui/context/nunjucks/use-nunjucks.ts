@@ -18,19 +18,19 @@ initializeNunjucksRenderPromiseCache();
  * Access to functions useful for Nunjucks rendering
  */
 export const useNunjucks = () => {
-  const request = useRouteLoaderData('request/:requestId') as Request;
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
   const {
     activeWorkspace,
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const fetchRenderContext = useCallback(async () => {
-    const ancestors = await getRenderContextAncestors(request || activeWorkspace);
+    const ancestors = await getRenderContextAncestors(activeRequest || activeWorkspace);
     return getRenderContext({
-      request: request || undefined,
+      request: activeRequest || undefined,
       environmentId: activeEnvironment._id,
       ancestors,
     });
-  }, [activeEnvironment._id, request, activeWorkspace]);
+  }, [activeEnvironment._id, activeRequest, activeWorkspace]);
 
   const handleGetRenderContext: HandleGetRenderContext = useCallback(async () => {
     const context = await fetchRenderContext();

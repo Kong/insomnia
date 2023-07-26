@@ -201,10 +201,10 @@ interface Props {
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
-  const request = useRouteLoaderData('request/:requestId') as WebSocketRequest;
+  const activeRequest = useRouteLoaderData('request/:requestId') as WebSocketRequest;
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const requestFetcher = useFetcher();
-  const readyState = useReadyState({ requestId: request._id, protocol: 'webSocket' });
+  const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'webSocket' });
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
@@ -248,12 +248,12 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
   };
 
   const handleEditDescription = useCallback(() => {
-    showModal(RequestSettingsModal, { request });
-  }, [request]);
+    showModal(RequestSettingsModal, { request: activeRequest });
+  }, [activeRequest]);
 
   const handleEditDescriptionAdd = useCallback(() => {
-    showModal(RequestSettingsModal, { request, forceEditMode: true });
-  }, [request]);
+    showModal(RequestSettingsModal, { request: activeRequest, forceEditMode: true });
+  }, [activeRequest]);
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
@@ -267,10 +267,10 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
       <PaneHeader>
         <WebSocketActionBar
           key={uniqueKey}
-          request={request}
+          request={activeRequest}
           workspaceId={workspaceId}
           environmentId={environment?._id || ''}
-          defaultValue={request.url}
+          defaultValue={activeRequest.url}
           readyState={readyState}
           onChange={url => requestFetcher.submit({ url },
             {
@@ -300,7 +300,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             </PaneSendButton>
             <WebSocketRequestForm
               key={uniqueKey}
-              request={request}
+              request={activeRequest}
               previewMode={previewMode}
               environmentId={environment?._id || ''}
               workspaceId={workspaceId}
@@ -324,7 +324,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                   key={uniqueKey}
                   errorClassName="tall wide vertically-align font-error pad text-center"
                 >
-                  <RenderedQueryString request={request} />
+                  <RenderedQueryString request={activeRequest} />
                 </ErrorBoundary>
               </code>
             </QueryEditorPreview>
@@ -354,7 +354,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           title={
             <>
               Docs
-              {request.description && (
+              {activeRequest.description && (
                 <span className="bubble space-left">
                   <i className="fa fa--skinny fa-check txt-xxs" />
                 </span>
@@ -362,7 +362,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             </>
           }
         >
-          {request.description ? (
+          {activeRequest.description ? (
             <div>
               <div className="pull-right pad bg-default">
                 <button className="btn btn--clicky" onClick={handleEditDescription}>
@@ -372,8 +372,8 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
               <div className="pad">
                 <ErrorBoundary errorClassName="font-error pad text-center">
                   <MarkdownPreview
-                    heading={request.name}
-                    markdown={request.description}
+                    heading={activeRequest.name}
+                    markdown={activeRequest.description}
                   />
                 </ErrorBoundary>
               </div>

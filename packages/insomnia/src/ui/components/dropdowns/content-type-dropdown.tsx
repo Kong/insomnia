@@ -27,11 +27,11 @@ import { showModal } from '../modals/index';
 const EMPTY_MIME_TYPE = null;
 
 export const ContentTypeDropdown: FC = () => {
-  const request = useRouteLoaderData('request/:requestId') as Request;
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const requestFetcher = useFetcher();
   const handleChangeMimeType = async (mimeType: string | null) => {
-    const { body } = request;
+    const { body } = activeRequest;
     const hasMimeType = 'mimeType' in body;
     if (hasMimeType && body.mimeType === mimeType) {
       // Nothing to do since the mimeType hasn't changed
@@ -71,13 +71,13 @@ export const ContentTypeDropdown: FC = () => {
     window.main.trackSegmentEvent({ event: SegmentEvent.requestBodyTypeSelect, properties: { type: mimeType } });
   };
 
-  const { body } = request;
+  const { body } = activeRequest;
   const hasMimeType = 'mimeType' in body;
   const hasParams = body && 'params' in body && body.params;
   const numBodyParams = hasParams ? body.params?.filter(({ disabled }) => !disabled).length : 0;
 
   const getIcon = (mimeType: string | null) => {
-    const contentType = request?.body && 'mimeType' in request.body ? request.body.mimeType : null;
+    const contentType = activeRequest?.body && 'mimeType' in activeRequest.body ? activeRequest.body.mimeType : null;
     const contentTypeFallback = typeof contentType === 'string' ? contentType : EMPTY_MIME_TYPE;
 
     return mimeType === contentTypeFallback ? 'check' : 'empty';

@@ -16,7 +16,7 @@ export const RequestHeadersEditor: FC<Props> = ({
   bulk,
   isDisabled,
 }) => {
-  const request = useRouteLoaderData('request/:requestId') as Request | WebSocketRequest;
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request | WebSocketRequest;
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
 
@@ -51,7 +51,7 @@ export const RequestHeadersEditor: FC<Props> = ({
   }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
 
   let headersString = '';
-  for (const header of request.headers) {
+  for (const header of activeRequest.headers) {
     // Make sure it's not disabled
     if (header.disabled) {
       continue;
@@ -90,12 +90,12 @@ export const RequestHeadersEditor: FC<Props> = ({
       namePlaceholder="header"
       valuePlaceholder="value"
       descriptionPlaceholder="description"
-      pairs={request.headers}
+      pairs={activeRequest.headers}
       handleGetAutocompleteNameConstants={getCommonHeaderNames}
       handleGetAutocompleteValueConstants={getCommonHeaderValues}
       onChange={onChangeHeaders}
       isDisabled={isDisabled}
-      isWebSocketRequest={isWebSocketRequest(request)}
+      isWebSocketRequest={isWebSocketRequest(activeRequest)}
     />
   );
 };

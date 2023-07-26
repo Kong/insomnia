@@ -20,30 +20,30 @@ export const PreviewModeDropdown: FC<Props> = ({
   download,
   copyToClipboard,
 }) => {
-  const request = useRouteLoaderData('request/:requestId') as Request;
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
   const previewMode = useSelector(selectResponsePreviewMode);
   const response = useSelector(selectActiveResponse);
 
   const handleClick = async (previewMode: PreviewMode) => {
-    return models.requestMeta.updateOrCreateByParentId(request._id, { previewMode });
+    return models.requestMeta.updateOrCreateByParentId(activeRequest._id, { previewMode });
   };
   const handleDownloadPrettify = useCallback(() => download(true), [download]);
 
   const handleDownloadNormal = useCallback(() => download(false), [download]);
 
   const exportAsHAR = useCallback(async () => {
-    if (!response || !request || !isRequest(request) || !isResponse(response)) {
+    if (!response || !activeRequest || !isRequest(activeRequest) || !isResponse(response)) {
       console.warn('Nothing to download');
       return;
     }
 
-    const data = await exportHarCurrentRequest(request, response);
+    const data = await exportHarCurrentRequest(activeRequest, response);
     const har = JSON.stringify(data, null, '\t');
 
     const { filePath } = await window.dialog.showSaveDialog({
       title: 'Export As HAR',
       buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.har`,
+      defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.har`,
     });
 
     if (!filePath) {
@@ -54,10 +54,10 @@ export const PreviewModeDropdown: FC<Props> = ({
       console.warn('Failed to export har', err);
     });
     to.end(har);
-  }, [request, response]);
+  }, [activeRequest, response]);
 
   const exportDebugFile = useCallback(async () => {
-    if (!response || !request || !isResponse(response)) {
+    if (!response || !activeRequest || !isResponse(response)) {
       console.warn('Nothing to download');
       return;
     }
@@ -71,7 +71,7 @@ export const PreviewModeDropdown: FC<Props> = ({
     const { canceled, filePath } = await window.dialog.showSaveDialog({
       title: 'Save Full Response',
       buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
+      defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
     });
 
     if (canceled) {
@@ -87,7 +87,7 @@ export const PreviewModeDropdown: FC<Props> = ({
         console.warn('Failed to save full response', err);
       });
     }
-  }, [request, response]);
+  }, [activeRequest, response]);
   const shouldPrettifyOption = response.contentType.includes('json');
 
   return (

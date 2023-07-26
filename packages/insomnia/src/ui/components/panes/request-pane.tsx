@@ -67,7 +67,7 @@ export const RequestPane: FC<Props> = ({
   settings,
   setLoading,
 }) => {
-  const request = useRouteLoaderData('request/:requestId') as Request;
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const updateRequestUrl = (url: string) =>
@@ -79,8 +79,8 @@ export const RequestPane: FC<Props> = ({
       });
 
   const handleEditDescription = useCallback((forceEditMode: boolean) => {
-    showModal(RequestSettingsModal, { request, forceEditMode });
-  }, [request]);
+    showModal(RequestSettingsModal, { request: activeRequest, forceEditMode });
+  }, [activeRequest]);
 
   const handleEditDescriptionAdd = useCallback(() => {
     handleEditDescription(true);
@@ -98,27 +98,27 @@ export const RequestPane: FC<Props> = ({
     let query;
 
     try {
-      query = extractQueryStringFromUrl(request.url);
+      query = extractQueryStringFromUrl(activeRequest.url);
     } catch (error) {
       console.warn('Failed to parse url to import querystring');
       return;
     }
 
     // Remove the search string (?foo=bar&...) from the Url
-    const url = request.url.replace(`?${query}`, '');
-    const parameters = [...request.parameters, ...deconstructQueryStringToParams(query)];
+    const url = activeRequest.url.replace(`?${query}`, '');
+    const parameters = [...activeRequest.parameters, ...deconstructQueryStringToParams(query)];
 
     // Only update if url changed
-    if (url !== request.url) {
+    if (url !== activeRequest.url) {
       database.update({
-        ...request,
+        ...activeRequest,
         modified: Date.now(),
         url,
         parameters,
         // Hack to force the ui to refresh. More info on use-vcs-version
       }, true);
     }
-  }, [request]);
+  }, [activeRequest]);
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
 
@@ -137,16 +137,16 @@ export const RequestPane: FC<Props> = ({
     uniqueKey,
   ]);
 
-  if (!request) {
+  if (!activeRequest) {
     return (
       <PlaceholderRequestPane />
     );
   }
 
-  const numParameters = request.parameters.filter(p => !p.disabled).length;
-  const numHeaders = request.headers.filter(h => !h.disabled).length;
-  const urlHasQueryParameters = request.url.indexOf('?') >= 0;
-  const contentType = getContentTypeFromHeaders(request.headers) || request.body.mimeType;
+  const numParameters = activeRequest.parameters.filter(p => !p.disabled).length;
+  const numHeaders = activeRequest.headers.filter(h => !h.disabled).length;
+  const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
+  const contentType = getContentTypeFromHeaders(activeRequest.headers) || activeRequest.body.mimeType;
   return (
     <Pane type="request">
       <PaneHeader>
@@ -166,7 +166,7 @@ export const RequestPane: FC<Props> = ({
         <TabItem key="content-type" title={<ContentTypeDropdown />}>
           <BodyEditor
             key={uniqueKey}
-            request={request}
+            request={activeRequest}
             environmentId={environmentId}
           />
         </TabItem>
@@ -184,7 +184,7 @@ export const RequestPane: FC<Props> = ({
                   key={uniqueKey}
                   errorClassName="tall wide vertically-align font-error pad text-center"
                 >
-                  <RenderedQueryString request={request} />
+                  <RenderedQueryString request={activeRequest} />
                 </ErrorBoundary>
               </code>
             </QueryEditorPreview>
@@ -241,7 +241,7 @@ export const RequestPane: FC<Props> = ({
           title={
             <>
               Docs
-              {request.description && (
+              {activeRequest.description && (
                 <span className="bubble space-left">
                   <i className="fa fa--skinny fa-check txt-xxs" />
                 </span>
@@ -250,7 +250,7 @@ export const RequestPane: FC<Props> = ({
           }
         >
           <PanelContainer className="tall">
-            {request.description ? (
+            {activeRequest.description ? (
               <div>
                 <div className="pull-right pad bg-default">
                   {/* @ts-expect-error -- TSCONVERSION the click handler expects a boolean prop... */}
@@ -261,8 +261,8 @@ export const RequestPane: FC<Props> = ({
                 <div className="pad">
                   <ErrorBoundary errorClassName="font-error pad text-center">
                     <MarkdownPreview
-                      heading={request.name}
-                      markdown={request.description}
+                      heading={activeRequest.name}
+                      markdown={activeRequest.description}
                     />
                   </ErrorBoundary>
                 </div>

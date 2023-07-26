@@ -37,7 +37,7 @@ interface Props {
 export const ResponsePane: FC<Props> = ({
   runningRequests,
 }) => {
-  const request = useRouteLoaderData('request/:requestId') as Request | null;
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request | null;
   const response = useSelector(selectActiveResponse) as Response | null;
   const filterHistory = useSelector(selectResponseFilterHistory);
   const filter = useSelector(selectResponseFilter);
@@ -76,7 +76,7 @@ export const ResponsePane: FC<Props> = ({
     }
   }, [handleGetResponseBody]);
   const handleDownloadResponseBody = useCallback(async (prettify: boolean) => {
-    if (!response || !request) {
+    if (!response || !activeRequest) {
       console.warn('Nothing to download');
       return;
     }
@@ -86,7 +86,7 @@ export const ResponsePane: FC<Props> = ({
     const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
       title: 'Save Response Body',
       buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
+      defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
     });
 
     if (canceled) {
@@ -120,9 +120,9 @@ export const ResponsePane: FC<Props> = ({
         to.end();
       });
     }
-  }, [request, response]);
+  }, [activeRequest, response]);
 
-  if (!request) {
+  if (!activeRequest) {
     return <BlankPane type="response" />;
   }
 
@@ -130,8 +130,8 @@ export const ResponsePane: FC<Props> = ({
   if (!response) {
     return (
       <PlaceholderResponsePane>
-        {runningRequests[request._id] && <ResponseTimer
-          handleCancel={() => cancelRequestById(request._id)}
+        {runningRequests[activeRequest._id] && <ResponseTimer
+          handleCancel={() => cancelRequestById(activeRequest._id)}
         />}
       </PlaceholderResponsePane>
     );
@@ -229,8 +229,8 @@ export const ResponsePane: FC<Props> = ({
         </TabItem>
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
-        {runningRequests[request._id] && <ResponseTimer
-          handleCancel={() => cancelRequestById(request._id)}
+        {runningRequests[activeRequest._id] && <ResponseTimer
+          handleCancel={() => cancelRequestById(activeRequest._id)}
         />}
       </ErrorBoundary>
     </Pane>
