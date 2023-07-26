@@ -284,7 +284,7 @@ export const General: FC = () => {
 
       <hr className="pad-top" />
 
-      <h2>HTTP Network Proxy</h2>
+      <h2>Network Proxy</h2>
 
       <BooleanSetting
         label="Enable proxy"
@@ -294,14 +294,16 @@ export const General: FC = () => {
 
       <div className="form-row pad-top-sm">
         <MaskedSetting
-          label='HTTP proxy'
+          label='Proxy for HTTP'
           setting='httpProxy'
+          help="Enter a HTTP or SOCKS4/5 proxy starting with appropriate prefix from the following (http://, socks4://, socks5://)"
           placeholder="localhost:8005"
           disabled={!settings.proxyEnabled}
         />
         <MaskedSetting
-          label='HTTPS proxy'
+          label='Proxy for HTTPS'
           setting='httpsProxy'
+          help="Enter a HTTPS or SOCKS4/5 proxy starting with appropriate prefix from the following (https://, socks4://, socks5://)"
           placeholder="localhost:8005"
           disabled={!settings.proxyEnabled}
         />
