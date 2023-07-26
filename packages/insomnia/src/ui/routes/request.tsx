@@ -2,7 +2,7 @@ import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import * as models from '../../models';
-import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isRequest, Request } from '../../models/request';
 import { WebSocketRequest } from '../../models/websocket-request';
@@ -119,16 +119,7 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
       patch = updateMimeType(req, mimeType, requestMeta.savedRequestBody);
     }
   }
-  if (isGrpcRequest(req)) {
-    const protoFileId = patch.protoFileId as string | null;
-    if (protoFileId !== null) {
-      models.grpcRequest.update(req, {
-        protoFileId,
-        protoMethodName: '',
-      });
-      return null;
-    }
-  }
+
   requestOperations.update(req, patch);
   return null;
 };

@@ -86,12 +86,13 @@ export const Debug: FC = () => {
   }, []);
   useEffect(() => {
     const fn = async () => {
-      const children = await db.withDescendants(activeWorkspace);
+      const workspace = await models.workspace.getById(workspaceId);
+      const children = await db.withDescendants(workspace);
       const grpcRequests = children.filter(d => isGrpcRequest(d));
       setGrpcStates(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
     };
     fn();
-  }, [activeWorkspace]);
+  }, [workspaceId]);
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;

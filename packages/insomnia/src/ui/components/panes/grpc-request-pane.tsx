@@ -91,7 +91,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   const {
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const environmentId = activeEnvironment?._id || 'n/a';
+  const environmentId = activeEnvironment._id;
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}`;
   const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
@@ -192,7 +192,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     const rendered = await render({ url: activeRequest.url, metadata: activeRequest.metadata }, renderContext);
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
                     setGrpcState({ ...grpcState, methods });
-                    updateRequest({ protoFileId: '' });
+                    updateRequest({ protoFileId: '', protoMethodName: '' });
                   } catch (error) {
                     showModal(ErrorModal, { error });
                   }
@@ -288,7 +288,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         onHide={() => setIsProtoModalOpen(false)}
         onSave={async (protoFileId: string) => {
           if (activeRequest.protoFileId !== protoFileId) {
-            updateRequest({ protoFileId });
+            updateRequest({ protoFileId, protoMethodName: '' });
             const methods = await window.main.grpc.loadMethods(protoFileId);
             setGrpcState({ ...grpcState, methods });
             setIsProtoModalOpen(false);
