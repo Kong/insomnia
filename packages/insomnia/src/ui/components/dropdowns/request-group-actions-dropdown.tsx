@@ -44,8 +44,9 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
   const create = useCallback((requestType: CreateRequestType) =>
-    requestFetcher.submit({ requestType, parentId: requestGroup?._id || '' },
+    requestFetcher.submit({ requestType, parentId: requestGroup._id },
       {
+        encType: 'application/json',
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
         method: 'post',
       }),

@@ -14,11 +14,12 @@ export const SidebarCreateDropdown = () => {
   const { hotKeyRegistry } = settings;
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
-  const create = useCallback((value: CreateRequestType) =>
-    requestFetcher.submit({ requestType:value, parentId: workspaceId  },
+  const create = useCallback((requestType: CreateRequestType) =>
+    requestFetcher.submit({ requestType, parentId: workspaceId },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
         method: 'post',
+        encType: 'application/json',
       }), [requestFetcher, organizationId, projectId, workspaceId]);
 
   const createGroup = useCallback(() => {

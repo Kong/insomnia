@@ -18,6 +18,7 @@ export const PlaceholderRequestPane: FC = () => {
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
         method: 'post',
+        encType: 'application/json',
       }), [requestFetcher, organizationId, projectId, workspaceId]);
 
   return (

@@ -142,6 +142,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
         method: 'post',
+        encType: 'application/json',
       });
   }, [requestGroup?._id, requestFetcher, organizationId, projectId, workspaceId]);
 

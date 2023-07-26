@@ -1,6 +1,6 @@
 import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
-import { CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
+import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import * as models from '../../models';
 import { GrpcRequest, GrpcRequestBody, GrpcRequestHeader, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import * as requestOperations from '../../models/helpers/request-operations';
@@ -9,7 +9,6 @@ import { WebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
-import { CreateRequestType } from '../hooks/create-request';
 
 export const loader: LoaderFunction = async ({ params }): Promise<Request | WebSocketRequest | GrpcRequest> => {
   const { requestId, workspaceId } = params;
@@ -31,10 +30,8 @@ export const loader: LoaderFunction = async ({ params }): Promise<Request | WebS
 export const createRequestAction: ActionFunction = async ({ request, params }) => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  const { requestType, parentId } = await request.json();
 
-  const formData = await request.formData();
-  const requestType = formData.get('requestType') as CreateRequestType;
-  const parentId = formData.get('parentId') as string | null;
   let activeRequestId;
   if (requestType === 'HTTP') {
     activeRequestId = (await models.request.create({
@@ -64,6 +61,20 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
         text: '',
       },
       name: 'New Request',
+    }))._id;
+  }
+  if (requestType === 'Event Stream') {
+    activeRequestId = (await models.request.create({
+      parentId: parentId || workspaceId,
+      method: METHOD_GET,
+      url: '',
+      headers: [
+        {
+          name: 'Accept',
+          value: CONTENT_TYPE_EVENT_STREAM,
+        },
+      ],
+      name: 'New Event Stream',
     }))._id;
   }
   if (requestType === 'WebSocket') {
