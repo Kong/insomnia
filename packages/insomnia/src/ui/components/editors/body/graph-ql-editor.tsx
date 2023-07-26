@@ -8,7 +8,7 @@ import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { Maybe } from 'graphql-language-service';
 import React, { FC, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import { useLocalStorage } from 'react-use';
 
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
@@ -21,7 +21,7 @@ import type { Request } from '../../../../models/request';
 import * as network from '../../../../network/network';
 import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
-import { selectSettings } from '../../../redux/selectors';
+import { RootLoaderData } from '../../../routes/root';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
@@ -235,8 +235,10 @@ export const GraphQLEditor: FC<Props> = ({
       isMounted = false;
     };
   }, [automaticFetch, environmentId, request._id, request.url, workspaceId]);
-
-  const { editorIndentWithTabs, editorIndentSize } = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
+  const { editorIndentWithTabs, editorIndentSize } = settings;
   const beautifyRequestBody = async () => {
     const { body } = state;
     const prettyQuery = (await import('prettier')).format(body.query, {

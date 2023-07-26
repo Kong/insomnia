@@ -3,7 +3,7 @@ import 'codemirror/addon/mode/overlay';
 import CodeMirror, { EnvironmentAutocompleteOptions, Hint, ShowHintOptions } from 'codemirror';
 
 import { getPlatformKeyCombinations } from '../../../../common/hotkeys';
-import { escapeHTML, escapeRegex, isNotNullOrUndefined } from '../../../../common/misc';
+import { escapeHTML, escapeRegex, fnOrString, isNotNullOrUndefined } from '../../../../common/misc';
 import { getDefaultFill, NunjucksParsedTag } from '../../../../templating/utils';
 import { isNunjucksMode } from '../modes/nunjucks';
 
@@ -453,10 +453,10 @@ function getCompletionHints(completionItems: CompletionItem[], segment: string, 
     const name = typeof item === 'string' ? item : item.name;
     const value = typeof item === 'string' ? '' : item.value ?? '';
     const displayName = item.displayName || name;
-    let defaultFill: string | (() => PromiseLike<unknown>) = '';
+    let defaultFill = '';
 
     if (isConstantCompletionItem(item) || isSnippetCompletionItem(item)) {
-      defaultFill = item.value;
+      defaultFill = fnOrString(item.value);
     } else if (isVariableCompletionItem(item)) {
       defaultFill = item.name;
     } else if (isTagCompletionItem(item)) {

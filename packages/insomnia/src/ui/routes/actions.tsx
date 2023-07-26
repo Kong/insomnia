@@ -873,3 +873,22 @@ export const setActiveEnvironmentAction: ActionFunction = async ({
 
   return null;
 };
+
+export const updateCookieJarAction: ActionFunction = async ({
+  request, params,
+}) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+
+  const { cookieJarId, patch } = await request.json();
+
+  invariant(typeof cookieJarId === 'string', 'Cookie Jar ID is required');
+
+  const cookieJar = await models.cookieJar.getById(cookieJarId);
+
+  invariant(cookieJar, 'Cookie Jar not found');
+
+  const updatedCookieJar = await models.cookieJar.update(cookieJar, patch);
+
+  return updatedCookieJar;
+};

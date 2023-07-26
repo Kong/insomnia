@@ -1,12 +1,10 @@
 import React, { FC, useCallback, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { isLoggedIn } from '../../../account/session';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
-import { workspace } from '../../../models';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
 import { isDesign, Workspace } from '../../../models/workspace';
@@ -14,7 +12,7 @@ import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { useAIContext } from '../../context/app/ai-context';
-import { selectSettings } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { InsomniaAI } from '../insomnia-ai-icon';
@@ -29,9 +27,10 @@ export const WorkspaceDropdown: FC = () => {
     activeProject,
     activeApiSpec,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const activeWorkspaceName = workspace.name;
-
-  const settings = useSelector(selectSettings);
+  const activeWorkspaceName = activeApiSpec?.fileName || activeWorkspace.name;
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});

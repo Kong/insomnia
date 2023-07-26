@@ -2,11 +2,11 @@ import clone from 'clone';
 import { isValid } from 'date-fns';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 import { Cookie as ToughCookie } from 'tough-cookie';
 
 import { cookieToString } from '../../../common/cookies';
-import * as models from '../../../models';
-import type { Cookie } from '../../../models/cookie-jar';
+import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -25,22 +25,30 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
   const modalRef = useRef<ModalHandle>(null);
   const [cookie, setCookie] = useState<Cookie | null>(null);
   const { activeCookieJar } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const updateCookieJarFetcher = useFetcher<CookieJar>();
 
   useImperativeHandle(ref, () => ({
     hide: () => {
       modalRef.current?.hide();
     },
     show: ({ cookie }) => {
-      if (!activeCookieJar?.cookies.find(c => c.id === cookie.id)) {
+      if (!activeCookieJar.cookies.find(c => c.id === cookie.id)) {
         return;
       }
       setCookie(cookie);
       modalRef.current?.show();
     },
-  }), [activeCookieJar?.cookies]);
-
+  }), [activeCookieJar.cookies]);
+  const updateCookieJar = async (cookieJarId: string, patch: CookieJar) => {
+    updateCookieJarFetcher.submit(JSON.stringify({ patch, cookieJarId }), {
+      encType: 'application/json',
+      method: 'post',
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cookieJar/update`,
+    });
+  };
   const handleCookieUpdate = async (nextCookie: any) => {
-    if (!cookie || !activeCookieJar) {
+    if (!cookie) {
       return;
     }
     const newcookie = clone(nextCookie);
@@ -54,13 +62,13 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
 
     // Clone so we don't modify the original
     const cookieJar = clone(activeCookieJar);
-    const index = cookieJar.cookies.findIndex(c => c.id === cookie.id);
+    const index = activeCookieJar.cookies.findIndex(c => c.id === cookie.id);
     if (index < 0) {
       console.warn(`Could not find cookie with id=${cookie.id} to edit`);
       return;
     }
     cookieJar.cookies = [...cookieJar.cookies.slice(0, index), newcookie, ...cookieJar.cookies.slice(index + 1)];
-    models.cookieJar.update(cookieJar);
+    updateCookieJar(cookieJar._id, cookieJar);
   };
 
   let localDateTime;

@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import * as themes from '../../plugins/misc';
-import { selectSettings } from '../redux/selectors';
+import { RootLoaderData } from '../routes/root';
 
 export const useThemeChange = () => {
-  const settings = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
   // Handle System Theme change
   useEffect(() => {
     const matches = window.matchMedia('(prefers-color-scheme: dark)');

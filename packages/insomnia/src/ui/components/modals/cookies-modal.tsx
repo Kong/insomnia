@@ -1,9 +1,8 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { fuzzyMatch } from '../../../common/misc';
-import * as models from '../../../models';
-import type { Cookie } from '../../../models/cookie-jar';
+import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
@@ -22,6 +21,8 @@ export const CookiesModal = forwardRef<CookiesModalHandle, ModalProps>((_, ref) 
   const [filter, setFilter] = useState<string>('');
   const [visibleCookieIndexes, setVisibleCookieIndexes] = useState<number[] | null>(null);
   const { activeCookieJar } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const updateCookieJarFetcher = useFetcher<CookieJar>();
 
   useImperativeHandle(ref, () => ({
     hide: () => {
@@ -31,7 +32,13 @@ export const CookiesModal = forwardRef<CookiesModalHandle, ModalProps>((_, ref) 
       modalRef.current?.show();
     },
   }), []);
-
+  const updateCookieJar = async (cookieJarId: string, patch: CookieJar) => {
+    updateCookieJarFetcher.submit(JSON.stringify({ patch, cookieJarId }), {
+      encType: 'application/json',
+      method: 'post',
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/cookieJar/update`,
+    });
+  };
   const filteredCookies = visibleCookieIndexes ? (activeCookieJar?.cookies || []).filter((_, i) => visibleCookieIndexes.includes(i)) : (activeCookieJar?.cookies || []);
   return (
     <Modal ref={modalRef} wide tall>
@@ -78,17 +85,17 @@ export const CookiesModal = forwardRef<CookiesModalHandle, ModalProps>((_, ref) 
                 handleDeleteAll={() => {
                   const updated = activeCookieJar;
                   updated.cookies = [];
-                  models.cookieJar.update(updated);
+                  updateCookieJar(activeCookieJar._id, updated);
                 }}
                 handleCookieAdd={cookie => {
                   const updated = activeCookieJar;
                   updated.cookies = [cookie, ...activeCookieJar.cookies];
-                  models.cookieJar.update(updated);
+                  updateCookieJar(activeCookieJar._id, updated);
                 }}
                 handleCookieDelete={cookie => {
                   const updated = activeCookieJar;
                   updated.cookies = activeCookieJar.cookies.filter(c => c.id !== cookie.id);
-                  models.cookieJar.update(updated);
+                  updateCookieJar(activeCookieJar._id, updated);
                 }}
                 // Set the domain to the filter so that it shows up if we're filtering
                 newCookieDomainName={filter || 'domain.com'}

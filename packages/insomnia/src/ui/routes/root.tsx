@@ -15,6 +15,7 @@ import { database } from '../../common/database';
 import * as models from '../../models';
 import { defaultOrganization, Organization } from '../../models/organization';
 import { isRemoteProject } from '../../models/project';
+import { Settings } from '../../models/settings';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
@@ -49,6 +50,7 @@ import { WorkspaceLoaderData } from './workspace';
 
 export interface RootLoaderData {
   organizations: Organization[];
+  settings: Settings;
 }
 
 export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
@@ -75,6 +77,7 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
 
   return {
     organizations: [defaultOrganization, ...remoteOrgs],
+    settings: await models.settings.getOrCreate(),
   };
 };
 

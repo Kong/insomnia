@@ -1,10 +1,10 @@
 import React, { ChangeEventHandler, FC, InputHTMLAttributes, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { snapNumberToLimits } from '../../../common/misc';
 import { SettingsOfType } from '../../../common/settings';
 import * as models from '../../../models/index';
-import { selectSettings } from '../../redux/selectors';
+import { RootLoaderData } from '../../routes/root';
 import { HelpTooltip } from '../help-tooltip';
 
 interface Props {
@@ -24,7 +24,9 @@ export const NumberSetting: FC<Props> = ({
   setting,
   step = 1,
 }) => {
-  const settings = useSelector(selectSettings);
+  const {
+    settings,
+  } = useRouteLoaderData('root') as RootLoaderData;
 
   if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
     throw new Error(`Invalid setting name ${setting}`);

@@ -85,7 +85,7 @@ export async function all() {
   return db.all<BaseModel>(type);
 }
 
-export async function getById(id: string) {
+export async function getById(id: string): Promise<CookieJar | null> {
   return db.get(type, id);
 }
 
