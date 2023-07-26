@@ -1,13 +1,14 @@
 import fs from 'fs';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import * as models from '../../../models';
-import { isRequest } from '../../../models/request';
+import { isRequest, Request } from '../../../models/request';
 import { isResponse } from '../../../models/response';
-import { selectActiveRequest, selectActiveResponse, selectResponsePreviewMode } from '../../redux/selectors';
+import { selectActiveResponse, selectResponsePreviewMode } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
 interface Props {
@@ -19,14 +20,11 @@ export const PreviewModeDropdown: FC<Props> = ({
   download,
   copyToClipboard,
 }) => {
-  const request = useSelector(selectActiveRequest);
+  const request = useRouteLoaderData('request/:requestId') as Request;
   const previewMode = useSelector(selectResponsePreviewMode);
   const response = useSelector(selectActiveResponse);
 
   const handleClick = async (previewMode: PreviewMode) => {
-    if (!request || !isRequest(request)) {
-      return;
-    }
     return models.requestMeta.updateOrCreateByParentId(request._id, { previewMode });
   };
   const handleDownloadPrettify = useCallback(() => download(true), [download]);

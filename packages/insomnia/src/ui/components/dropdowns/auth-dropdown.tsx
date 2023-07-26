@@ -1,16 +1,14 @@
 import React, { FC, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import {
   AuthType,
   getAuthTypeName,
   HAWK_ALGORITHM_SHA256,
 } from '../../../common/constants';
-import { update } from '../../../models/helpers/request-operations';
-import { RequestAuthentication } from '../../../models/request';
+import { Request, RequestAuthentication } from '../../../models/request';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
-import { selectActiveRequest } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -129,7 +127,9 @@ interface Props {
   disabled?: boolean;
 }
 export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = false }) => {
-  const activeRequest = useSelector(selectActiveRequest);
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
 
   const onClick = useCallback(async (type: AuthType) => {
     if (!activeRequest || !('authentication' in activeRequest)) {
@@ -165,8 +165,12 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
         break;
       }
     }
-    update(activeRequest, { authentication: newAuthentication });
-  }, [activeRequest]);
+    requestFetcher.submit({ authentication: JSON.stringify(newAuthentication) },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-hack`,
+        method: 'post',
+      });
+  }, [activeRequest, organizationId, projectId, requestFetcher, requestId, workspaceId]);
   const isCurrent = useCallback((type: AuthType) => {
     if (!activeRequest || !('authentication' in activeRequest)) {
       return false;

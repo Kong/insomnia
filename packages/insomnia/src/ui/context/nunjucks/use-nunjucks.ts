@@ -1,11 +1,10 @@
 import { useCallback } from 'react';
-import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render } from '../../../common/render';
+import { Request } from '../../../models/request';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { getKeys } from '../../../templating/utils';
-import { selectActiveRequest } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 let getRenderContextPromiseCache: any = {};
 
@@ -19,7 +18,7 @@ initializeNunjucksRenderPromiseCache();
  * Access to functions useful for Nunjucks rendering
  */
 export const useNunjucks = () => {
-  const request = useSelector(selectActiveRequest);
+  const request = useRouteLoaderData('request/:requestId') as Request;
   const {
     activeWorkspace,
     activeEnvironment,

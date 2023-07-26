@@ -1,12 +1,11 @@
 import React, { forwardRef, useCallback, useState } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import { Project } from '../../../models/project';
 import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
@@ -47,6 +46,8 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
   const onOpen = useCallback(async () => {
     const actionPlugins = await getRequestActions();
@@ -116,11 +117,13 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: name => {
-        requestOperations.update(request, { name });
-      },
+      onComplete: name => requestFetcher.submit({ name },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
+          method: 'post',
+        }),
     });
-  }, [request]);
+  }, [requestFetcher, organizationId, projectId, request._id, request.name, workspaceId]);
 
   const togglePin = useCallback(() => {
     updateRequestMetaByParentId(request._id, { pinned: !isPinned });
@@ -128,8 +131,12 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
   const deleteRequest = useCallback(() => {
     incrementDeletedRequests();
-    requestOperations.remove(request);
-  }, [request]);
+    requestFetcher.submit({ id: request._id },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
+        method: 'post',
+      });
+  }, [requestFetcher, organizationId, projectId, request._id, workspaceId]);
 
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);

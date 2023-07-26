@@ -1,18 +1,14 @@
 import React, { FC, useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { version } from '../../../../package.json';
-import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_POST } from '../../../common/constants';
+import { getContentTypeFromHeaders } from '../../../common/constants';
 import { database } from '../../../common/database';
-import { getContentTypeHeader } from '../../../common/misc';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { update } from '../../../models/helpers/request-operations';
-import { Request, RequestBody } from '../../../models/request';
+import { Request } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
-import { create, Workspace } from '../../../models/workspace';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveRequestMeta } from '../../redux/selectors';
@@ -62,167 +58,27 @@ const TabPanelBody = styled.div({
 
 interface Props {
   environmentId: string;
-  request?: Request | null;
   settings: Settings;
-  workspace: Workspace;
   setLoading: (l: boolean) => void;
 }
-export function newBodyGraphQL(rawBody: string): RequestBody {
-  try {
-    // Only strip the newlines if rawBody is a parsable JSON
-    JSON.parse(rawBody);
-    return {
-      mimeType: CONTENT_TYPE_GRAPHQL,
-      text: rawBody.replace(/\\\\n/g, ''),
-    };
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      return {
-        mimeType: CONTENT_TYPE_GRAPHQL,
-        text: rawBody,
-      };
-    } else {
-      throw error;
-    }
-  }
-}
-export function updateMimeType(
-  request: Request,
-  mimeType: string,
-  doCreate = false,
-  savedBody: RequestBody = {},
-) {
-  let headers = request.headers ? [...request.headers] : [];
-  const contentTypeHeader = getContentTypeHeader(headers);
-  // GraphQL uses JSON content-type
-  const contentTypeHeaderValue = mimeType === CONTENT_TYPE_GRAPHQL ? CONTENT_TYPE_JSON : mimeType;
 
-  // GraphQL must be POST
-  if (mimeType === CONTENT_TYPE_GRAPHQL) {
-    request.method = METHOD_POST;
-  }
-
-  // Check if we are converting to/from variants of XML or JSON
-  let leaveContentTypeAlone = false;
-
-  if (contentTypeHeader && mimeType) {
-    const current = contentTypeHeader.value;
-
-    if (current.includes('xml') && mimeType.includes('xml')) {
-      leaveContentTypeAlone = true;
-    } else if (current.includes('json') && mimeType.includes('json')) {
-      leaveContentTypeAlone = true;
-    }
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // 1. Update Content-Type header //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  const hasBody = typeof mimeType === 'string';
-
-  if (!hasBody) {
-    headers = headers.filter(h => h !== contentTypeHeader);
-  } else if (mimeType === CONTENT_TYPE_OTHER) {
-    // Leave headers alone
-  } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
-    contentTypeHeader.value = contentTypeHeaderValue;
-  } else if (mimeType && !contentTypeHeader) {
-    headers.push({
-      name: 'Content-Type',
-      value: contentTypeHeaderValue,
-    });
-  }
-  if (!headers.find(h => h?.name?.toLowerCase() === 'user-agent')) {
-    headers.push({
-      name: 'User-Agent',
-      value: `Insomnia/${version}`,
-    });
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // 2. Make a new request body //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  let body;
-  const oldBody = Object.keys(savedBody).length === 0 ? request.body : savedBody;
-
-  if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-    // Urlencoded
-    body = oldBody.params
-      ? {
-        mimeType: CONTENT_TYPE_FORM_URLENCODED,
-        params: oldBody.params,
-      } : {
-        mimeType: CONTENT_TYPE_FORM_URLENCODED,
-        params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
-      };
-  } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
-    // Form Data
-    body = oldBody.params
-      ? {
-        mimeType: CONTENT_TYPE_FORM_DATA,
-        params: oldBody.params || [],
-      } : {
-        mimeType: CONTENT_TYPE_FORM_DATA,
-        params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
-      };
-  } else if (mimeType === CONTENT_TYPE_FILE) {
-    // File
-    body = {
-      mimeType: CONTENT_TYPE_FILE,
-      fileName: '',
-    };
-  } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
-    if (contentTypeHeader) {
-      contentTypeHeader.value = CONTENT_TYPE_JSON;
-    }
-
-    body = newBodyGraphQL(oldBody.text || '');
-  } else if (typeof mimeType !== 'string') {
-    // No body
-    body = {};
-  } else {
-    // Raw Content-Type (ex: application/json)
-    body = typeof mimeType !== 'string' ? {
-      text: oldBody.text || '',
-    } : {
-      mimeType: mimeType.split(';')[0],
-      text: oldBody.text || '',
-    };
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // 2. create/update request //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~ //
-  if (doCreate) {
-    const newRequest: Request = Object.assign({}, request, {
-      headers,
-      body,
-    });
-    return create(newRequest);
-  } else {
-    return update(request, {
-      headers,
-      body,
-    });
-  }
-}
 export const RequestPane: FC<Props> = ({
   environmentId,
-  request,
   settings,
-  workspace,
   setLoading,
 }) => {
-
-  const updateRequestUrl = (request: Request, url: string) => {
-    if (request.url === url) {
-      return Promise.resolve(request);
-    }
-    return update(request, { url });
-  };
+  const request = useRouteLoaderData('request/:requestId') as Request;
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const updateRequestUrl = (url: string) =>
+    requestFetcher.submit({ url },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+        method: 'post',
+      });
 
   const handleEditDescription = useCallback((forceEditMode: boolean) => {
-    request && showModal(RequestSettingsModal, { request, forceEditMode });
+    showModal(RequestSettingsModal, { request, forceEditMode });
   }, [request]);
 
   const handleEditDescriptionAdd = useCallback(() => {
@@ -238,11 +94,6 @@ export const RequestPane: FC<Props> = ({
   }, [settings]);
 
   const handleImportQueryFromUrl = useCallback(() => {
-    if (!request) {
-      console.warn('Tried to import query when no request active');
-      return;
-    }
-
     let query;
 
     try {
@@ -275,13 +126,13 @@ export const RequestPane: FC<Props> = ({
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const activeRequestMeta = useSelector(selectActiveRequestMeta);
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${activeEnvironment?.modified}::${request?._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
+  const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
 
   const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
   useEffect(() => {
     requestUrlBarRef.current?.focusInput();
   }, [
-    request?._id, // happens when the user switches requests
+    requestId, // happens when the user switches requests
     uniqueKey,
   ]);
 
@@ -291,19 +142,6 @@ export const RequestPane: FC<Props> = ({
     );
   }
 
-  async function updateRequestMimeType(mimeType: string | null): Promise<Request | null> {
-    if (!request) {
-      console.warn('Tried to update request mime-type when no active request');
-      return null;
-    }
-    const requestMeta = await models.requestMeta.getOrCreateByParentId(request._id,);
-    // Switched to No body
-    const savedRequestBody = typeof mimeType !== 'string' ? request.body : {};
-    // Clear saved value in requestMeta
-    await models.requestMeta.update(requestMeta, { savedRequestBody });
-    // @ts-expect-error -- TSCONVERSION mimeType can be null when no body is selected but the updateMimeType logic needs to be reexamined
-    return updateMimeType(request, mimeType, false, requestMeta.savedRequestBody);
-  }
   const numParameters = request.parameters.filter(p => !p.disabled).length;
   const numHeaders = request.headers.filter(h => !h.disabled).length;
   const urlHasQueryParameters = request.url.indexOf('?') >= 0;
@@ -313,23 +151,21 @@ export const RequestPane: FC<Props> = ({
       <PaneHeader>
         <ErrorBoundary errorClassName="font-error pad text-center">
           <RequestUrlBar
-            key={request._id}
+            key={requestId}
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
             onUrlChange={updateRequestUrl}
-            handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspace._id, models.request.type, request?._id)}
+            handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            request={request}
             setLoading={setLoading}
           />
         </ErrorBoundary>
       </PaneHeader>
       <Tabs aria-label="Request pane tabs">
-        <TabItem key="content-type" title={<ContentTypeDropdown onChange={updateRequestMimeType} />}>
+        <TabItem key="content-type" title={<ContentTypeDropdown />}>
           <BodyEditor
             key={uniqueKey}
             request={request}
-            workspace={workspace}
             environmentId={environmentId}
           />
         </TabItem>
@@ -358,7 +194,6 @@ export const RequestPane: FC<Props> = ({
               >
                 <RequestParametersEditor
                   key={contentType}
-                  request={request}
                   bulk={settings.useBulkParametersEditor}
                 />
               </ErrorBoundary>
@@ -385,7 +220,6 @@ export const RequestPane: FC<Props> = ({
             <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
               <TabPanelBody>
                 <RequestHeadersEditor
-                  request={request}
                   bulk={settings.useBulkHeaderEditor}
                 />
               </TabPanelBody>

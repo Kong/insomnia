@@ -13,7 +13,7 @@ import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-
 import { Workspace } from '../../../models/workspace';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveRequest, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Highlight } from '../base/highlight';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
@@ -69,7 +69,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   });
   const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
   const navigate = useNavigate();
-  const activeRequest = useSelector(selectActiveRequest);
+  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
   const {
     activeWorkspace: workspace,
     activeWorkspaceMeta,

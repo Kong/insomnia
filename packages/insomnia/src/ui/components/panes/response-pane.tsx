@@ -32,13 +32,12 @@ import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
-  request?: Request | null;
   runningRequests: Record<string, number>;
 }
 export const ResponsePane: FC<Props> = ({
-  request,
   runningRequests,
 }) => {
+  const request = useRouteLoaderData('request/:requestId') as Request | null;
   const response = useSelector(selectActiveResponse) as Response | null;
   const filterHistory = useSelector(selectResponseFilterHistory);
   const filter = useSelector(selectResponseFilter);
@@ -150,7 +149,6 @@ export const ResponsePane: FC<Props> = ({
           </div>
           <ResponseHistoryDropdown
             activeResponse={response}
-            requestId={request._id}
             className="tall pane__header__right"
           />
         </PaneHeader>

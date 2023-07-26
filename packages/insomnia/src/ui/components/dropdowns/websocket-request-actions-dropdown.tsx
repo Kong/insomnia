@@ -1,8 +1,8 @@
 import React, { forwardRef, useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
@@ -26,6 +26,8 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { hotKeyRegistry } = settings;
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
   const duplicate = useCallback(() => {
     handleDuplicateRequest(request);
@@ -38,11 +40,13 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: name => {
-        requestOperations.update(request, { name });
-      },
+      onComplete: name => requestFetcher.submit({ name },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
+          method: 'post',
+        }),
     });
-  }, [request]);
+  }, [requestFetcher, organizationId, projectId, request._id, request.name, workspaceId]);
 
   const togglePin = useCallback(() => {
     updateRequestMetaByParentId(request._id, { pinned: !isPinned });
@@ -50,8 +54,12 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
 
   const deleteRequest = useCallback(() => {
     incrementDeletedRequests();
-    requestOperations.remove(request);
-  }, [request]);
+    requestFetcher.submit({ id: request._id },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
+        method: 'post',
+      });
+  }, [requestFetcher, organizationId, projectId, request._id, workspaceId]);
 
   return (
     <Dropdown
@@ -99,7 +107,6 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
       <DropdownSection aria-label='Settings section'>
         <DropdownItem aria-label='Settings'>
           <ItemContent
-            // dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`}
             icon="wrench"
             label="Settings"
             hint={hotKeyRegistry.request_showSettings}

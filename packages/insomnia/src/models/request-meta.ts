@@ -96,10 +96,3 @@ export async function updateOrCreateByParentId(parentId: string, patch: Partial<
 export function all() {
   return db.all<RequestMeta>(type);
 }
-
-// TODO: Ensure the parent of RequestMeta can only be a Request - INS-341
-// function expectParentToBeRequest(parentId: string) {
-//   if (!isRequestId(parentId)) {
-//     throw new Error('Expected the parent of RequestMeta to be a Request');
-//   }
-// }

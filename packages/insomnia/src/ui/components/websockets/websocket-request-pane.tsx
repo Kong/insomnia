@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
@@ -193,8 +193,6 @@ const WebSocketRequestForm: FC<FormProps> = ({
 };
 
 interface Props {
-  request: WebSocketRequest;
-  workspaceId: string;
   environment: Environment | null;
 }
 
@@ -202,8 +200,10 @@ interface Props {
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-// TODO: use the same readystate interface
-export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environment }) => {
+export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
+  const request = useRouteLoaderData('request/:requestId') as WebSocketRequest;
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+
   const readyState = useReadyState({ requestId: request._id, protocol: 'webSocket' });
   const {
     settings,
@@ -211,17 +211,13 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
   const { useBulkParametersEditor } = settings;
 
   const disabled = readyState;
-  const handleOnChange = (url: string) => {
-    if (url !== request.url) {
-      models.webSocketRequest.update(request, { url });
-    }
-  };
+
   const [previewMode, setPreviewMode] = useState(CONTENT_TYPE_JSON);
 
   useEffect(() => {
     let isMounted = true;
     const fn = async () => {
-      const payload = await models.webSocketPayload.getByParentId(request._id);
+      const payload = await models.webSocketPayload.getByParentId(requestId);
       if (isMounted && payload) {
         setPreviewMode(payload.mode);
       }
@@ -230,7 +226,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
     return () => {
       isMounted = false;
     };
-  }, [request._id]);
+  }, [requestId]);
 
   const changeMode = (mode: string) => {
     setPreviewMode(mode);
@@ -239,12 +235,12 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
 
   const upsertPayloadWithMode = async (mode: string) => {
     // @TODO: multiple payloads
-    const payload = await models.webSocketPayload.getByParentId(request._id);
+    const payload = await models.webSocketPayload.getByParentId(requestId);
     if (payload) {
       await models.webSocketPayload.update(payload, { mode });
     } else {
       await models.webSocketPayload.create({
-        parentId: request._id,
+        parentId: requestId,
         value: '',
         mode,
       });
@@ -264,7 +260,7 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
   const activeRequestMeta = useSelector(selectActiveRequestMeta);
 
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${environment?.modified}::${request?._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
+  const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
 
   return (
     <Pane type="request">
@@ -276,7 +272,11 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           environmentId={environment?._id || ''}
           defaultValue={request.url}
           readyState={readyState}
-          onChange={handleOnChange}
+          onChange={url => requestFetcher.submit({ url },
+            {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+              method: 'post',
+            })}
         />
       </PaneHeader>
       <Tabs aria-label="Websocket request pane tabs">
@@ -333,7 +333,6 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
                 errorClassName="tall wide vertically-align font-error pad text-center"
               >
                 <RequestParametersEditor
-                  request={request}
                   bulk={useBulkParametersEditor}
                   disabled={disabled}
                 />
@@ -345,7 +344,6 @@ export const WebSocketRequestPane: FC<Props> = ({ request, workspaceId, environm
           {disabled && <PaneReadOnlyBanner />}
           <RequestHeadersEditor
             key={uniqueKey}
-            request={request}
             bulk={false}
             isDisabled={readyState}
           />

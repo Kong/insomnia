@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
-import type { GrpcRequest } from '../../../models/grpc-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { GrpcRequestState } from '../../routes/debug';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -9,18 +9,19 @@ import { GrpcStatusTag } from '../tags/grpc-status-tag';
 import { GrpcTabbedMessages } from '../viewers/grpc-tabbed-messages';
 import { Pane, PaneBody, PaneHeader } from './pane';
 interface Props {
-  activeRequest: GrpcRequest;
   grpcState: GrpcRequestState;
 }
 
-export const GrpcResponsePane: FunctionComponent<Props> = ({ activeRequest, grpcState }) => {
+export const GrpcResponsePane: FunctionComponent<Props> = ({ grpcState }) => {
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const {
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { requestId } = useParams() as { requestId: string };
+
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniquenessKey = `${activeEnvironment.modified}::${activeRequest?._id}::${gitVersion}::${activeRequestSyncVersion}`;
+  const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}`;
 
   const { responseMessages, status, error } = grpcState;
   return (

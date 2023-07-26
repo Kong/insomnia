@@ -5,7 +5,7 @@ import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
@@ -13,7 +13,6 @@ import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../common/render';
 import * as models from '../../models';
-import { update } from '../../models/helpers/request-operations';
 import { isEventStreamRequest, isRequest, Request } from '../../models/request';
 import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
@@ -22,7 +21,7 @@ import { SegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import { selectActiveRequest, selectResponseDownloadPath } from '../redux/selectors';
+import { selectResponseDownloadPath } from '../redux/selectors';
 import { RootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
@@ -46,8 +45,7 @@ const StyledDropdownButton = styled(DropdownButton)({
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;
-  onUrlChange: (r: Request, url: string) => Promise<Request>;
-  request: Request;
+  onUrlChange: (url: string) => void;
   uniquenessKey: string;
   setLoading: (l: boolean) => void;
 }
@@ -59,7 +57,6 @@ export interface RequestUrlBarHandle {
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   handleAutocompleteUrls,
   onUrlChange,
-  request,
   uniquenessKey,
   setLoading,
 }, ref) => {
@@ -72,7 +69,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   } = useRouteLoaderData('root') as RootLoaderData;
   const { hotKeyRegistry } = settings;
   const downloadPath = useSelector(selectResponseDownloadPath);
-  const activeRequest = useSelector(selectActiveRequest);
+  const request = useRouteLoaderData('request/:requestId') as Request;
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditorHandle>(null);
@@ -192,6 +191,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       });
     } finally {
       // Unset active response because we just made a new one
+      // TODO: remove this with the redux fallback to first element
       await updateRequestMetaByParentId(request._id, { activeResponseId: null });
       setLoading(false);
     }
@@ -214,7 +214,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     setLoading(true);
     try {
       const responsePatch = await network.send(request._id, activeEnvironment._id);
-      await models.response.create(responsePatch, settings.maxHistoryResponses);
+      const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
+      await updateRequestMetaByParentId(request._id, { activeResponseId: response._id });
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {
@@ -349,10 +350,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       const { data } = await convert(text);
       const { resources } = data;
       const r = resources[0];
-      if (r && r._type === 'request' && activeRequest && isRequest(activeRequest)) {
+      if (r && r._type === 'request' && request && isRequest(request)) {
         // Only pull fields that we want to update
         return database.update({
-          ...activeRequest,
+          ...request,
           modified: Date.now(),
           url: r.url,
           method: r.method,
@@ -367,13 +368,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       console.error(error);
     }
     return null;
-  }, [activeRequest]);
+  }, [request]);
 
   const handleUrlChange = useCallback(async (url: string) => {
     const pastedText = lastPastedTextRef.current;
     // If no pasted text in the queue, just fire the regular change handler
     if (!pastedText) {
-      onUrlChange(request, url);
+      onUrlChange(url);
       return;
     }
     // Reset pasted text cache
@@ -382,16 +383,20 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     const importedRequest = await handleImport(pastedText);
     // Update depending on whether something was imported
     if (!importedRequest) {
-      onUrlChange(request, url);
+      onUrlChange(url);
     }
-  }, [handleImport, onUrlChange, request]);
+  }, [handleImport, onUrlChange]);
 
   const handleUrlPaste = useCallback((event: ClipboardEvent) => {
     // NOTE: We're not actually doing the import here to avoid races with onChange
     lastPastedTextRef.current = event.clipboardData?.getData('text/plain') || '';
   }, []);
 
-  const onMethodChange = useCallback((method: string) => update(request, { method }), [request]);
+  const onMethodChange = useCallback((method: string) => requestFetcher.submit({ method },
+    {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
+      method: 'post',
+    }), [organizationId, projectId, requestFetcher, requestId, workspaceId]);
 
   const handleSendDropdownHide = useCallback(() => {
     buttonRef.current?.blur();

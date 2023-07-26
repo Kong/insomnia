@@ -1,6 +1,7 @@
 import fs from 'fs';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
@@ -14,7 +15,6 @@ import { WebSocketPreviewModeDropdown } from './websocket-preview-dropdown';
 
 interface Props<T extends WebSocketEvent> {
   event: T;
-  requestId: string;
 }
 
 const PreviewPane = styled.div({
@@ -37,14 +37,12 @@ const PreviewPaneContents = styled.div({
   flexGrow: 1,
 });
 
-export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent>> = ({ event, requestId }) => {
-
+export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent>> = ({ event }) => {
+  const { requestId } = useParams() as { requestId: string };
   let raw = event.data.toString();
   // Best effort to parse the binary data as a string
   try {
-    // @ts-expect-error -- should be fine
     if ('data' in event && typeof event.data === 'object' && 'data' in event.data && Array.isArray(event.data.data)) {
-      // @ts-expect-error -- should be fine
       raw = Buffer.from(event.data.data).toString();
     }
   } catch (err) {
@@ -137,11 +135,9 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   );
 };
 
-export const EventView: FC<Props<CurlEvent | WebSocketEvent>> = ({ event, ...props }) => {
-  switch (event.type) {
-    case 'message':
-      return <MessageEventView event={event} {...props} />;
-    default:
-      return null;
+export const EventView: FC<Props<CurlEvent | WebSocketEvent>> = ({ event }) => {
+  if (event.type === 'message') {
+    return <MessageEventView event={event} />;
   }
+  return null;
 };

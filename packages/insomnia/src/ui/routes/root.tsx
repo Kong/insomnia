@@ -97,9 +97,7 @@ const Layout = styled.div({
 
 const Root = () => {
   const { revalidate } = useRevalidator();
-  const workspaceData = useRouteLoaderData(
-    ':workspaceId'
-  ) as WorkspaceLoaderData | null;
+  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
   const [importUri, setImportUri] = useState('');
 
   useEffect(() => {

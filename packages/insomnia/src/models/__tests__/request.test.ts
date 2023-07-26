@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { version } from '../../../package.json';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { CONTENT_TYPE_GRAPHQL } from '../../common/constants';
-import { newBodyGraphQL, updateMimeType } from '../../ui/components/panes/request-pane';
+import { newBodyGraphQL, updateMimeType } from '../../ui/components/dropdowns/content-type-dropdown';
 import * as models from '../index';
 
 describe('init()', () => {
@@ -193,7 +193,7 @@ describe('updateMimeType()', () => {
       },
     });
     expect(request).not.toBeNull();
-    const newRequest = await updateMimeType(request, 'application/json', false, {
+    const newRequest = await updateMimeType(request, 'application/json', {
       text: 'Saved Data',
     });
     expect(newRequest.body.text).toEqual('Saved Data');
@@ -208,7 +208,7 @@ describe('updateMimeType()', () => {
       },
     });
     expect(request).not.toBeNull();
-    const newRequest = await updateMimeType(request, 'application/json', false, {});
+    const newRequest = await updateMimeType(request, 'application/json', {});
     expect(newRequest.body.text).toEqual('My Data');
   });
 });
