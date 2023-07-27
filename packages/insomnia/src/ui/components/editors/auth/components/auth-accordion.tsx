@@ -2,9 +2,9 @@ import classnames from 'classnames';
 import React, { FC, PropsWithChildren } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import * as models from '../../../../../models';
 import { Request } from '../../../../../models/request';
 import { RequestAccordionKeys, RequestMeta } from '../../../../../models/request-meta';
+import { updateRequestMetaByParentId } from '../../../../hooks/create-request';
 import { RequestLoaderData } from '../../../../routes/request';
 
 interface Props {
@@ -18,7 +18,7 @@ export const AuthAccordion: FC<PropsWithChildren<Props>> = ({ accordionKey, labe
   const expanded = Boolean(activeRequestMeta?.expandedAccordionKeys[accordionKey]);
 
   const toggle = async () => {
-    await models.requestMeta.updateOrCreateByParentId(activeRequest._id, {
+    updateRequestMetaByParentId(activeRequest._id, {
       expandedAccordionKeys: {
         ...activeRequestMeta?.expandedAccordionKeys,
         [accordionKey]: !expanded,

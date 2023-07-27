@@ -107,16 +107,7 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
   const req = await requestOperations.getById(requestId);
   invariant(req, 'Request not found');
   let patch = await request.json();
-  // const parentId = patch.parentId as string | null;
-  // if (parentId !== null) {
-  //   const workspace = await models.workspace.getById(parentId);
-  //   const requestGroup = await models.requestGroup.getById(parentId);
-  //   const hasWorkspaceOrRequestGroup = Boolean(workspace || requestGroup);
-  //   invariant(hasWorkspaceOrRequestGroup, 'Workspace/Folder is required');
-  //   // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
-  //   // Move to top of sort order
-  //   requestOperations.update(req, { parentId, metaSortKey: -1e9 });
-  // }
+  // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
   if (isRequest(req) && patch.body) {
     const mimeType = patch.body?.mimeType as string | null;
     // TODO: This is a hack to get around the fact that we don't have a way to send null
@@ -166,6 +157,18 @@ export const duplicateRequestAction: ActionFunction = async ({ request, params }
   invariant(newRequest, 'Failed to duplicate request');
   models.stats.incrementCreatedRequests();
   return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${newRequest._id}`);
+};
+
+export const updateRequestMetaAction: ActionFunction = async ({ request, params }) => {
+  const { requestId } = params;
+  invariant(typeof requestId === 'string', 'Request ID is required');
+  const patch = await request.json();
+  if (isGrpcRequestId(requestId)) {
+    await models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
+    return null;
+  }
+  await models.requestMeta.updateOrCreateByParentId(requestId, patch);
+  return null;
 };
 
 // const RequestRoute = () => {

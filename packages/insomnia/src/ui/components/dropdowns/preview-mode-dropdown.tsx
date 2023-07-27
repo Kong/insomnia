@@ -9,6 +9,7 @@ import * as models from '../../../models';
 import { isRequest, Request } from '../../../models/request';
 import { RequestMeta } from '../../../models/request-meta';
 import { isResponse } from '../../../models/response';
+import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectActiveResponse } from '../../redux/selectors';
 import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -27,7 +28,7 @@ export const PreviewModeDropdown: FC<Props> = ({
   const response = useSelector(selectActiveResponse);
 
   const handleClick = async (previewMode: PreviewMode) => {
-    return models.requestMeta.updateOrCreateByParentId(activeRequest._id, { previewMode });
+    updateRequestMetaByParentId(activeRequest._id, { previewMode });
   };
   const handleDownloadPrettify = useCallback(() => download(true), [download]);
 
