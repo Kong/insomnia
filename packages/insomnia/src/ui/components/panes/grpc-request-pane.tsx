@@ -1,5 +1,5 @@
-import React, { FunctionComponent, useCallback, useState } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import React, { FunctionComponent, useState } from 'react';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useMount } from 'react-use';
 import styled from 'styled-components';
 
@@ -11,6 +11,7 @@ import { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
+import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { GrpcRequestState } from '../../routes/debug';
 import { RequestLoaderData } from '../../routes/request';
@@ -87,9 +88,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
-  const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-
+  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
+  const patchRequest = useRequestPatcher();
   const {
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
@@ -142,15 +142,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   useDocBodyKeyboardShortcuts({
     request_send: handleRequestSend,
   });
-  const updateRequest = useCallback((request: Partial<GrpcRequest>) => {
-    requestFetcher.submit(JSON.stringify(request),
-
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
-  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
 
   return (
     <>
@@ -164,7 +155,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 type="text"
                 defaultValue={activeRequest.url}
                 placeholder="grpcb.in:9000"
-                onChange={url => updateRequest({ url })}
+                onChange={url => patchRequest(requestId, { url })}
                 getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)}
               />
             </StyledUrlEditor>
@@ -174,7 +165,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 methods={methods}
                 selectedMethod={method}
                 handleChange={protoMethodName => {
-                  updateRequest({ protoMethodName });
+                  patchRequest(requestId, { protoMethodName });
                   setGrpcState({
                     ...grpcState,
                     requestMessages: [],
@@ -194,7 +185,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     const rendered = await render({ url: activeRequest.url, metadata: activeRequest.metadata }, renderContext);
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
                     setGrpcState({ ...grpcState, methods });
-                    updateRequest({ protoFileId: '', protoMethodName: '' });
+                    patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
                   } catch (error) {
                     showModal(ErrorModal, { error });
                   }
@@ -231,7 +222,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   tabNamePrefix="Stream"
                   messages={requestMessages}
                   bodyText={activeRequest.body.text}
-                  handleBodyChange={text => updateRequest({ body: { text } })}
+                  handleBodyChange={text => patchRequest(requestId, { body: { text } })}
                   showActions={running && canClientStream(methodType)}
                   handleStream={async () => {
                     const requestBody = await getRenderedGrpcRequestMessage({
@@ -267,7 +258,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       isDisabled={running}
                       handleGetAutocompleteNameConstants={getCommonHeaderNames}
                       handleGetAutocompleteValueConstants={getCommonHeaderValues}
-                      onChange={(metadata: GrpcRequestHeader[]) => updateRequest({ metadata })}
+                      onChange={(metadata: GrpcRequestHeader[]) => patchRequest(requestId, { metadata })}
                     />
                   </ErrorBoundary>
                 </PanelContainer>
@@ -290,7 +281,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         onHide={() => setIsProtoModalOpen(false)}
         onSave={async (protoFileId: string) => {
           if (activeRequest.protoFileId !== protoFileId) {
-            updateRequest({ protoFileId, protoMethodName: '' });
+            patchRequest(requestId, { protoFileId, protoMethodName: '' });
             const methods = await window.main.grpc.loadMethods(protoFileId);
             setGrpcState({ ...grpcState, methods });
             setIsProtoModalOpen(false);

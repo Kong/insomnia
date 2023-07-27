@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { version } from '../../../../package.json';
 import {
@@ -20,6 +20,7 @@ import { getContentTypeHeader } from '../../../common/misc';
 import { Request, RequestBody } from '../../../models/request';
 import { deconstructQueryStringToParams } from '../../../utils/url/querystring';
 import { SegmentEvent } from '../../analytics';
+import { useRequestPatcher } from '../../hooks/use-request';
 import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { AlertModal } from '../modals/alert-modal';
@@ -29,8 +30,8 @@ const EMPTY_MIME_TYPE = null;
 
 export const ContentTypeDropdown: FC = () => {
   const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const requestFetcher = useFetcher();
+  const patchRequest = useRequestPatcher();
+  const { requestId } = useParams() as { requestId: string };
   const handleChangeMimeType = async (mimeType: string | null) => {
     const { body } = activeRequest;
     const hasMimeType = 'mimeType' in body;
@@ -61,13 +62,7 @@ export const ContentTypeDropdown: FC = () => {
         addCancel: true,
       });
     }
-    // TODO: This is a hack to get around the fact that we don't have a way to send null
-    requestFetcher.submit({ body: { mimeType } },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
+    patchRequest(requestId, { body: { mimeType } });
     window.main.trackSegmentEvent({ event: SegmentEvent.requestBodyTypeSelect, properties: { type: mimeType } });
   };
 

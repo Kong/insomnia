@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useEffect, useRef } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
@@ -10,6 +10,7 @@ import { Request } from '../../../models/request';
 import { RequestMeta } from '../../../models/request-meta';
 import type { Settings } from '../../../models/settings';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
+import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -68,15 +69,8 @@ export const RequestPane: FC<Props> = ({
   setLoading,
 }) => {
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
-  const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const updateRequestUrl = (url: string) =>
-    requestFetcher.submit({ url },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
+  const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const patchRequest = useRequestPatcher();
 
   const handleEditDescription = useCallback((forceEditMode: boolean) => {
     showModal(RequestSettingsModal, { request: activeRequest, forceEditMode });
@@ -154,7 +148,7 @@ export const RequestPane: FC<Props> = ({
             key={requestId}
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
-            onUrlChange={updateRequestUrl}
+            onUrlChange={url => patchRequest(requestId, { url })}
             handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             setLoading={setLoading}

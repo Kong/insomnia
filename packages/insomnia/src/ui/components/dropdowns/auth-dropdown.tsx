@@ -1,5 +1,5 @@
 import React, { FC, useCallback } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import {
   AuthType,
@@ -9,6 +9,7 @@ import {
 import { Request, RequestAuthentication } from '../../../models/request';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
+import { useRequestPatcher } from '../../hooks/use-request';
 import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals';
@@ -129,9 +130,8 @@ interface Props {
 }
 export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = false }) => {
   const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
-  const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-
+  const { requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const patchRequest = useRequestPatcher();
   const onClick = useCallback(async (type: AuthType) => {
     if (!activeRequest || !('authentication' in activeRequest)) {
       return;
@@ -166,13 +166,8 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
         break;
       }
     }
-    requestFetcher.submit({ authentication: newAuthentication },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
-  }, [activeRequest, organizationId, projectId, requestFetcher, requestId, workspaceId]);
+    patchRequest(requestId, { authentication: newAuthentication });
+  }, [activeRequest, patchRequest, requestId]);
   const isCurrent = useCallback((type: AuthType) => {
     if (!activeRequest || !('authentication' in activeRequest)) {
       return false;

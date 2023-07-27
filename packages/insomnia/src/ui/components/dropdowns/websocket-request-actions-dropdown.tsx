@@ -5,7 +5,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 import { toKebabCase } from '../../../common/misc';
 import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { useRequestMetaPatcher } from '../../hooks/use-request';
+import { useRequestMetaPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
 import { showPrompt } from '../modals';
@@ -29,7 +29,7 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
   const { hotKeyRegistry } = settings;
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
-
+  const patchRequest = useRequestPatcher();
   const duplicate = useCallback(() => {
     handleDuplicateRequest(request);
   }, [handleDuplicateRequest, request]);
@@ -41,14 +41,9 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: name => requestFetcher.submit({ name },
-        {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
-          method: 'post',
-          encType: 'application/json',
-        }),
+      onComplete: name => patchRequest(request._id, { name }),
     });
-  }, [requestFetcher, organizationId, projectId, request._id, request.name, workspaceId]);
+  }, [request.name, request._id, patchRequest]);
 
   const togglePin = useCallback(() => {
     patchRequestMeta(request._id, { pinned: !isPinned });

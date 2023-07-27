@@ -1,17 +1,17 @@
 import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as models from '../../../models';
 import { Environment } from '../../../models/environment';
+import { RequestMeta } from '../../../models/request-meta';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
+import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import { selectActiveRequestMeta } from '../../redux/selectors';
 import { RequestLoaderData } from '../../routes/request';
 import { RootLoaderData } from '../../routes/root';
 import { TabItem, Tabs } from '../base/tabs';
@@ -202,10 +202,9 @@ interface Props {
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<WebSocketRequest, any>;
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<WebSocketRequest, RequestMeta>;
 
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const requestFetcher = useFetcher();
+  const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'webSocket' });
   const {
     settings,
@@ -259,10 +258,9 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
-  const activeRequestMeta = useSelector(selectActiveRequestMeta);
-
+  const patchRequest = useRequestPatcher();
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
+  const uniqueKey = `${environment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta.activeResponseId}`;
 
   return (
     <Pane type="request">
@@ -274,12 +272,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           environmentId={environment?._id || ''}
           defaultValue={activeRequest.url}
           readyState={readyState}
-          onChange={url => requestFetcher.submit({ url },
-            {
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
-              method: 'post',
-              encType: 'application/json',
-            })}
+          onChange={url => patchRequest(requestId, { url })}
         />
       </PaneHeader>
       <Tabs aria-label="Websocket request pane tabs">

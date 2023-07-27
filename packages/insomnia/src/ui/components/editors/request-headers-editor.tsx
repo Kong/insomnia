@@ -1,9 +1,10 @@
 import React, { FC, useCallback } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import type { Request, RequestHeader } from '../../../models/request';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
+import { useRequestPatcher } from '../../hooks/use-request';
 import { RequestLoaderData } from '../../routes/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
@@ -18,9 +19,8 @@ export const RequestHeadersEditor: FC<Props> = ({
   isDisabled,
 }) => {
   const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | WebSocketRequest, any>;
-
-  const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const patchRequest = useRequestPatcher();
+  const { requestId } = useParams() as { requestId: string };
 
   const handleBulkUpdate = useCallback((headersString: string) => {
     const headers: {
@@ -43,14 +43,8 @@ export const RequestHeadersEditor: FC<Props> = ({
         value,
       });
     }
-
-    requestFetcher.submit({ headers },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
-  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
+    patchRequest(requestId, { headers });
+  }, [patchRequest, requestId]);
 
   let headersString = '';
   for (const header of activeRequest.headers) {
@@ -67,13 +61,8 @@ export const RequestHeadersEditor: FC<Props> = ({
   }
 
   const onChangeHeaders = useCallback((headers: RequestHeader[]) => {
-    requestFetcher.submit(JSON.stringify({ headers }),
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
-  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
+    patchRequest(requestId, { headers });
+  }, [patchRequest, requestId]);
 
   if (bulk) {
     return (

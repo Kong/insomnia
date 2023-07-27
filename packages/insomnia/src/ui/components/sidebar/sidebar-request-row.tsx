@@ -13,6 +13,7 @@ import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-
 import { invariant } from '../../../utils/invariant';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
 import { useReadyState } from '../../hooks/use-ready-state';
+import { useRequestPatcher } from '../../hooks/use-request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import type { DropdownHandle } from '../base/dropdown';
 import { Editable } from '../base/editable';
@@ -72,6 +73,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
     activeEnvironment,
     activeProject,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const patchRequest = useRequestPatcher();
 
   const [dragDirection, setDragDirection] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
@@ -124,15 +126,9 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
     if (!request || !name) {
       return;
     }
-
-    requestFetcher.submit({ name },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
+    patchRequest(request._id, { name });
     setIsEditing(false);
-  }, [requestFetcher, organizationId, projectId, request, workspaceId]);
+  }, [request, patchRequest]);
 
   const handleRequestCreateFromEmpty = useCallback(() => {
     if (!requestGroup?._id) {

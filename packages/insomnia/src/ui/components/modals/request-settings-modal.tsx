@@ -9,6 +9,7 @@ import { isRequest, Request } from '../../../models/request';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { isWorkspace, Workspace } from '../../../models/workspace';
 import { invariant } from '../../../utils/invariant';
+import { useRequestPatcher } from '../../hooks/use-request';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -45,7 +46,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
   });
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
-
+  const patchRequest = useRequestPatcher();
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   useImperativeHandle(ref, () => ({
     hide: () => {
@@ -69,14 +70,9 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     },
   }), [workspacesForActiveProject]);
 
-  const updateRequest = (r: Partial<Request>) => {
+  const updateRequest = (req: Partial<Request>) => {
     invariant(state.request, 'Request is required');
-    requestFetcher.submit(JSON.stringify(r),
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${state.request._id}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
+    patchRequest(state.request._id, req);
   };
   const duplicateRequest = (r: Partial<Request>) => {
     invariant(state.request, 'Request is required');

@@ -14,7 +14,7 @@ import { incrementDeletedRequests } from '../../../models/stats';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
-import { useRequestMetaPatcher } from '../../hooks/use-request';
+import { useRequestMetaPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
@@ -44,6 +44,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const patchRequestMeta = useRequestMetaPatcher();
+  const patchRequest = useRequestPatcher();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
@@ -118,14 +119,9 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: name => requestFetcher.submit({ name },
-        {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
-          method: 'post',
-          encType: 'application/json',
-        }),
+      onComplete: name => patchRequest(request._id, { name }),
     });
-  }, [requestFetcher, organizationId, projectId, request._id, request.name, workspaceId]);
+  }, [request.name, request._id, patchRequest]);
 
   const togglePin = useCallback(() => {
     patchRequestMeta(request._id, { pinned: !isPinned });

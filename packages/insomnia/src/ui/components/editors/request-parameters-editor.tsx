@@ -1,8 +1,9 @@
 import React, { FC, useCallback } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { Request, RequestParameter } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
+import { useRequestPatcher } from '../../hooks/use-request';
 import { RequestLoaderData } from '../../routes/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
@@ -16,10 +17,9 @@ export const RequestParametersEditor: FC<Props> = ({
   bulk,
   disabled = false,
 }) => {
-  const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const { requestId } = useParams() as { requestId: string };
   const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | WebSocketRequest, any>;
-
+  const patchRequest = useRequestPatcher();
   const handleBulkUpdate = useCallback((paramsString: string) => {
     const parameters: {
       name: string;
@@ -41,13 +41,8 @@ export const RequestParametersEditor: FC<Props> = ({
         value,
       });
     }
-    requestFetcher.submit({ parameters },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
-  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
+    patchRequest(requestId, { parameters });
+  }, [patchRequest, requestId]);
 
   let paramsString = '';
   for (const param of activeRequest.parameters) {
@@ -64,13 +59,8 @@ export const RequestParametersEditor: FC<Props> = ({
   }
 
   const onChangeParameter = useCallback((parameters: RequestParameter[]) => {
-    requestFetcher.submit(JSON.stringify({ parameters }),
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
-  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
+    patchRequest(requestId, { parameters });
+  }, [patchRequest, requestId]);
 
   if (bulk) {
     return (

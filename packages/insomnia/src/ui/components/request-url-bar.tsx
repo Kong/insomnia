@@ -4,7 +4,7 @@ import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
@@ -19,6 +19,7 @@ import { convert } from '../../utils/importers/convert';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
 import { useReadyState } from '../hooks/use-ready-state';
+import { useRequestPatcher } from '../hooks/use-request';
 import { useRequestMetaPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { RequestLoaderData } from '../routes/request';
@@ -71,8 +72,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
   const downloadPath = activeRequestMeta.downloadPath;
   const patchRequestMeta = useRequestMetaPatcher();
-  const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const { requestId } = useParams() as { requestId: string };
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditorHandle>(null);
@@ -279,6 +279,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
 
   useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
+  const patchRequest = useRequestPatcher();
   const handleStop = () => {
     if (isEventStreamRequest(activeRequest)) {
       window.main.curl.close({ requestId: activeRequest._id });
@@ -393,13 +394,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     lastPastedTextRef.current = event.clipboardData?.getData('text/plain') || '';
   }, []);
 
-  const onMethodChange = useCallback((method: string) => requestFetcher.submit({ method },
-    {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
-      method: 'post',
-      encType: 'application/json',
-    }), [organizationId, projectId, requestFetcher, requestId, workspaceId]);
-
   const handleSendDropdownHide = useCallback(() => {
     buttonRef.current?.blur();
   }, []);
@@ -411,7 +405,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     <div className="urlbar">
       <MethodDropdown
         ref={methodDropdownRef}
-        onChange={methodValue => onMethodChange(methodValue)}
+        onChange={method => patchRequest(requestId, { method })}
         method={method}
       />
       <div className="urlbar__flex__right">

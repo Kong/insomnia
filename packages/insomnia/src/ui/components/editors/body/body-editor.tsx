@@ -1,7 +1,7 @@
 import clone from 'clone';
 import { lookup } from 'mime-types';
 import React, { FC, useCallback } from 'react';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import {
   CONTENT_TYPE_FILE,
@@ -18,6 +18,7 @@ import {
   type RequestBodyParameter,
 } from '../../../../models/request';
 import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
+import { useRequestPatcher } from '../../../hooks/use-request';
 import { AskModal } from '../../modals/ask-modal';
 import { showModal } from '../../modals/index';
 import { EmptyStatePane } from '../../panes/empty-state-pane';
@@ -37,40 +38,31 @@ export const BodyEditor: FC<Props> = ({
   request,
   environmentId,
 }) => {
-  const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-
-  const updateRequest = useCallback((request: Partial<Request>) => {
-    requestFetcher.submit(JSON.stringify(request),
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
-  }, [organizationId, projectId, requestFetcher, requestId, workspaceId]);
+  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
+  const patchRequest = useRequestPatcher();
   const handleRawChange = useCallback((rawValue: string) => {
     const body = typeof request.body.mimeType !== 'string'
       ? { text: rawValue }
       : { mimeType: request.body.mimeType.split(';')[0], text: rawValue };
-    updateRequest({ body });
-  }, [request.body.mimeType, updateRequest]);
+    patchRequest(requestId, { body });
+  }, [patchRequest, request.body.mimeType, requestId]);
 
   const handleGraphQLChange = useCallback((content: string) => {
     const body = typeof CONTENT_TYPE_GRAPHQL !== 'string'
       ? { text: content }
       : { mimeType: CONTENT_TYPE_GRAPHQL.split(';')[0], text: content };
-    updateRequest({ body });
-  }, [updateRequest]);
+    patchRequest(requestId, { body });
+  }, [patchRequest, requestId]);
 
   const handleFormUrlEncodedChange = useCallback((params: RequestBodyParameter[]) => {
     const body = { mimeType: CONTENT_TYPE_FORM_URLENCODED, params };
-    updateRequest({ body });
-  }, [updateRequest]);
+    patchRequest(requestId, { body });
+  }, [patchRequest, requestId]);
 
   const handleFormChange = useCallback((parameters: RequestBodyParameter[]) => {
     const body = { mimeType: CONTENT_TYPE_FORM_DATA, params: parameters || [] };
-    updateRequest({ body });
-  }, [updateRequest]);
+    patchRequest(requestId, { body });
+  }, [patchRequest, requestId]);
 
   const handleFileChange = async (path: string) => {
     const headers = clone(request.headers);
@@ -78,7 +70,7 @@ export const BodyEditor: FC<Props> = ({
       mimeType: CONTENT_TYPE_FILE,
       fileName: path,
     };
-    updateRequest({ body });
+    patchRequest(requestId, { body });
     let contentTypeHeader = getContentTypeHeader(headers);
 
     if (!contentTypeHeader) {
@@ -103,7 +95,7 @@ export const BodyEditor: FC<Props> = ({
         </p>,
         onDone: async (saidYes: boolean) => {
           if (saidYes) {
-            updateRequest({ headers });
+            patchRequest(requestId, { headers });
           }
         },
       });
