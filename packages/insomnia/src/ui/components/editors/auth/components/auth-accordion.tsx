@@ -4,7 +4,7 @@ import { useRouteLoaderData } from 'react-router-dom';
 
 import { Request } from '../../../../../models/request';
 import { RequestAccordionKeys, RequestMeta } from '../../../../../models/request-meta';
-import { useRequestMetaUpdateFetcher } from '../../../../hooks/create-request';
+import { useRequestMetaPatcher } from '../../../../hooks/create-request';
 import { RequestLoaderData } from '../../../../routes/request';
 
 interface Props {
@@ -16,9 +16,9 @@ export const AuthAccordion: FC<PropsWithChildren<Props>> = ({ accordionKey, labe
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
 
   const expanded = Boolean(activeRequestMeta?.expandedAccordionKeys[accordionKey]);
-  const updateRequestMetaByParentId = useRequestMetaUpdateFetcher();
+  const patchRequestMeta = useRequestMetaPatcher();
   const toggle = async () => {
-    updateRequestMetaByParentId(activeRequest._id, {
+    patchRequestMeta(activeRequest._id, {
       expandedAccordionKeys: {
         ...activeRequestMeta?.expandedAccordionKeys,
         [accordionKey]: !expanded,

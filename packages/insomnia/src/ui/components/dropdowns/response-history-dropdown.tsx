@@ -10,7 +10,7 @@ import { isRequest, Request } from '../../../models/request';
 import { Response } from '../../../models/response';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
-import { useRequestMetaUpdateFetcher } from '../../hooks/create-request';
+import { useRequestMetaPatcher } from '../../hooks/create-request';
 import { selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -31,7 +31,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
 }: Props<GenericResponse>) => {
   const { requestId } = useParams() as { requestId: string };
   const dropdownRef = useRef<DropdownHandle>(null);
-  const updateRequestMetaByParentId = useRequestMetaUpdateFetcher();
+  const patchRequestMeta = useRequestMetaPatcher();
   const {
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
@@ -55,8 +55,8 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
       await models.requestVersion.restore(activeResponse.requestVersionId);
     }
 
-    await updateRequestMetaByParentId(requestId, { activeResponseId: activeResponse._id });
-  }, [updateRequestMetaByParentId]);
+    await patchRequestMeta(requestId, { activeResponseId: activeResponse._id });
+  }, [patchRequestMeta]);
 
   const handleDeleteResponses = useCallback(async () => {
     if (isWebSocketResponse(activeResponse)) {
@@ -65,8 +65,8 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     } else {
       await models.response.removeForRequest(requestId, activeEnvironment._id);
     }
-    await updateRequestMetaByParentId(requestId, { activeResponseId: null });
-  }, [activeEnvironment._id, activeResponse, requestId, updateRequestMetaByParentId]);
+    await patchRequestMeta(requestId, { activeResponseId: null });
+  }, [activeEnvironment._id, activeResponse, requestId, patchRequestMeta]);
 
   const handleDeleteResponse = useCallback(async () => {
     let response: Response | WebSocketResponse | null = null;
@@ -87,9 +87,9 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
         await models.requestVersion.restore(response.requestVersionId);
       }
 
-      await updateRequestMetaByParentId(requestId, { activeResponseId: response?._id || null });
+      await patchRequestMeta(requestId, { activeResponseId: response?._id || null });
     }
-  }, [activeEnvironment?._id, activeResponse, requestId, updateRequestMetaByParentId]);
+  }, [activeEnvironment?._id, activeResponse, requestId, patchRequestMeta]);
 
   responses.forEach(response => {
     const responseTime = new Date(response.created);

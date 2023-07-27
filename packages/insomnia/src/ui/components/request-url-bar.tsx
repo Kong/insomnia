@@ -18,7 +18,7 @@ import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
-import { useRequestMetaUpdateFetcher } from '../hooks/create-request';
+import { useRequestMetaPatcher } from '../hooks/create-request';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { RequestLoaderData } from '../routes/request';
@@ -70,7 +70,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const { hotKeyRegistry } = settings;
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
   const downloadPath = activeRequestMeta.downloadPath;
-  const updateRequestMetaByParentId = useRequestMetaUpdateFetcher();
+  const patchRequestMeta = useRequestMetaPatcher();
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const methodDropdownRef = useRef<DropdownHandle>(null);
@@ -193,10 +193,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     } finally {
       // Unset active response because we just made a new one
       // TODO: remove this with the redux fallback to first element
-      await updateRequestMetaByParentId(activeRequest._id, { activeResponseId: null });
+      await patchRequestMeta(activeRequest._id, { activeResponseId: null });
       setLoading(false);
     }
-  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion, updateRequestMetaByParentId]);
+  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion, patchRequestMeta]);
 
   const handleSend = useCallback(async () => {
     if (!activeRequest) {
@@ -216,7 +216,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     try {
       const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
       const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
-      await updateRequestMetaByParentId(activeRequest._id, { activeResponseId: response._id });
+      await patchRequestMeta(activeRequest._id, { activeResponseId: response._id });
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {
@@ -238,9 +238,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       }
     }
     // Unset active response because we just made a new one
-    await updateRequestMetaByParentId(activeRequest._id, { activeResponseId: null });
+    await patchRequestMeta(activeRequest._id, { activeResponseId: null });
     setLoading(false);
-  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion, updateRequestMetaByParentId]);
+  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion, patchRequestMeta]);
 
   const send = useCallback(() => {
     setCurrentTimeout(undefined);
@@ -322,9 +322,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     if (canceled) {
       return;
     }
-    updateRequestMetaByParentId(activeRequest._id, { downloadPath: filePaths[0] });
-  }, [activeRequest._id, updateRequestMetaByParentId]);
-  const handleClearDownloadLocation = () => updateRequestMetaByParentId(activeRequest._id, { downloadPath: null });
+    patchRequestMeta(activeRequest._id, { downloadPath: filePaths[0] });
+  }, [activeRequest._id, patchRequestMeta]);
+  const handleClearDownloadLocation = () => patchRequestMeta(activeRequest._id, { downloadPath: null });
 
   useDocBodyKeyboardShortcuts({
     request_focusUrl: () => {

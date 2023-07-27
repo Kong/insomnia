@@ -35,7 +35,7 @@ import { SidebarFilter } from '../components/sidebar/sidebar-filter';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
-import { useRequestMetaUpdateFetcher } from '../hooks/create-request';
+import { useRequestMetaPatcher } from '../hooks/create-request';
 import { RequestLoaderData } from './request';
 import { RootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
@@ -75,7 +75,7 @@ export const Debug: FC = () => {
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>([]);
-  const updateRequestMetaByParentId = useRequestMetaUpdateFetcher();
+  const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
@@ -139,7 +139,7 @@ export const Debug: FC = () => {
       async () => {
         if (requestId) {
           const meta = isGrpcRequestId(requestId) ? await getGrpcRequestMetaByParentId(requestId) : await getRequestMetaByParentId(requestId);
-          updateRequestMetaByParentId(requestId, { pinned: !meta?.pinned });
+          patchRequestMeta(requestId, { pinned: !meta?.pinned });
         }
       },
     request_showSettings:
@@ -193,7 +193,7 @@ export const Debug: FC = () => {
           name: 'New Request',
         });
         await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
-        await updateRequestMetaByParentId(request._id, {
+        await patchRequestMeta(request._id, {
           lastActive: Date.now(),
         });
         models.stats.incrementCreatedRequests();

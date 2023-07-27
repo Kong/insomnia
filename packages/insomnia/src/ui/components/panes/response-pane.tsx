@@ -12,7 +12,7 @@ import { RequestMeta } from '../../../models/request-meta';
 import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
-import { useRequestMetaUpdateFetcher } from '../../hooks/create-request';
+import { useRequestMetaPatcher } from '../../hooks/create-request';
 import { selectActiveResponse } from '../../redux/selectors';
 import { RequestLoaderData } from '../../routes/request';
 import { RootLoaderData } from '../../routes/root';
@@ -43,7 +43,7 @@ export const ResponsePane: FC<Props> = ({
   const response = useSelector(selectActiveResponse) as Response | null;
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
   const filter = activeRequestMeta.responseFilter || '';
-  const updateRequestMetaByParentId = useRequestMetaUpdateFetcher();
+  const patchRequestMeta = useRequestMetaPatcher();
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
@@ -53,7 +53,7 @@ export const ResponsePane: FC<Props> = ({
       return;
     }
     const requestId = response.parentId;
-    await updateRequestMetaByParentId(requestId, { responseFilter });
+    await patchRequestMeta(requestId, { responseFilter });
     const meta = await models.requestMeta.getByParentId(requestId);
     if (!meta) {
       return;
@@ -64,7 +64,7 @@ export const ResponsePane: FC<Props> = ({
       return;
     }
     responseFilterHistory.unshift(responseFilter);
-    updateRequestMetaByParentId(requestId, { responseFilterHistory });
+    patchRequestMeta(requestId, { responseFilterHistory });
   };
   const handleGetResponseBody = useCallback(() => {
     if (!response) {
