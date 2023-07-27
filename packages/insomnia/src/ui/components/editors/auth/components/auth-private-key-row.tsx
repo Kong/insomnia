@@ -1,8 +1,11 @@
 import React, { FC, ReactNode, useCallback } from 'react';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../../../common/misc';
+import { Request } from '../../../../../models/request';
 import { useNunjucks } from '../../../../context/nunjucks/use-nunjucks';
-import { useActiveRequest } from '../../../../hooks/use-active-request';
+import { useRequestPatcher } from '../../../../hooks/use-request';
+import { RequestLoaderData } from '../../../../routes/request';
 import { showModal } from '../../../modals';
 import { CodePromptModal } from '../../../modals/code-prompt-modal';
 import { AuthRow } from './auth-row';
@@ -27,11 +30,12 @@ interface Props {
 }
 
 export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
-  const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
+  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const patchRequest = useRequestPatcher();
   const { handleGetRenderContext, handleRender } = useNunjucks();
 
   const privateKey = authentication[property];
-  const onChange = useCallback((value: string) => patchAuth({ [property]: value }), [patchAuth, property]);
+  const onChange = useCallback((value: string) => patchRequest(requestId, { authentication: { [property]: value } }), [patchRequest, property, requestId]);
 
   const editPrivateKey = () => {
     showModal(CodePromptModal, {

@@ -3,7 +3,9 @@ import { useRouteLoaderData } from 'react-router-dom';
 import { useToggle } from 'react-use';
 
 import { toKebabCase } from '../../../../../common/misc';
-import { useActiveRequest } from '../../../../hooks/use-active-request';
+import { Request } from '../../../../../models/request';
+import { useRequestPatcher } from '../../../../hooks/use-request';
+import { RequestLoaderData } from '../../../../routes/request';
 import { RootLoaderData } from '../../../../routes/root';
 import { OneLineEditor } from '../../../codemirror/one-line-editor';
 import { AuthRow } from './auth-row';
@@ -21,13 +23,13 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { showPasswords } = settings;
-  const { activeRequest: { authentication }, patchAuth } = useActiveRequest();
-
+  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const patchRequest = useRequestPatcher();
   const [masked, toggleMask] = useToggle(true);
   const canBeMasked = !showPasswords && mask;
   const isMasked = canBeMasked && masked;
 
-  const onChange = useCallback((value: string) => patchAuth({ [property]: value }), [patchAuth, property]);
+  const onChange = useCallback((value: string) => patchRequest(requestId, { authentication: { [property]: value } }), [patchRequest, property, requestId]);
 
   const id = toKebabCase(label);
 

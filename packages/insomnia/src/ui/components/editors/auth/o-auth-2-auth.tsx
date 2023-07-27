@@ -1,4 +1,5 @@
 import React, { ChangeEvent, FC, ReactNode, useEffect, useMemo, useState } from 'react';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { convertEpochToMilliseconds, toKebabCase } from '../../../../common/misc';
 import accessTokenUrls from '../../../../datasets/access-token-urls';
@@ -17,7 +18,7 @@ import {
 import { getOAuth2Token } from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/get-token';
 import { useNunjucks } from '../../../context/nunjucks/use-nunjucks';
-import { useActiveRequest } from '../../../hooks/use-active-request';
+import { RequestLoaderData } from '../../../routes/request';
 import { Link } from '../../base/link';
 import { showModal } from '../../modals';
 import { ResponseDebugModal } from '../../modals/response-debug-modal';
@@ -28,7 +29,6 @@ import { AuthInputRow } from './components/auth-input-row';
 import { AuthSelectRow } from './components/auth-select-row';
 import { AuthTableBody } from './components/auth-table-body';
 import { AuthToggleRow } from './components/auth-toggle-row';
-
 const getAuthorizationUrls = () => authorizationUrls;
 const getAccessTokenUrls = () => accessTokenUrls;
 
@@ -244,7 +244,8 @@ const getFieldsForGrantType = (authentication: Request['authentication']) => {
 };
 
 export const OAuth2Auth: FC = () => {
-  const { activeRequest: { authentication } } = useActiveRequest();
+  const { activeRequest: { authentication } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+
   const { basic, advanced } = getFieldsForGrantType(authentication);
 
   return (
@@ -330,7 +331,7 @@ const renderAccessTokenExpiry = (token?: Pick<OAuth2Token, 'accessToken' | 'expi
 };
 
 const OAuth2TokenInput: FC<{ token: OAuth2Token | null; label: string; property: keyof Pick<OAuth2Token, 'accessToken' | 'refreshToken' | 'identityToken'> }> = ({ token, label, property }) => {
-  const { activeRequest } = useActiveRequest();
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
 
   const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
     if (token) {
@@ -413,7 +414,7 @@ const OAuth2Error: FC<{ token: OAuth2Token | null }> = ({ token }) => {
 };
 
 const OAuth2Tokens: FC = () => {
-  const { activeRequest: { authentication, _id: requestId } } = useActiveRequest();
+  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
   const [token, setToken] = useState<OAuth2Token | null>(null);
   useEffect(() => {
     const fn = async () => {
