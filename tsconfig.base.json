@@ -21,5 +21,9 @@
     "target": "ES2019",
     "types": ["node"],
     "useUnknownInCatchVariables": false,
+    "paths": {
+      "insomnia-testing": ["./packages/insomnia-testing"],
+      "openapi-2-kong": ["./packages/openapi-2-kong"],
+    }
   },
 }

@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "version": "3.19.0-beta.9",
   "author": "Kong <office@konghq.com>",
-  "main": "dist/index.js",
+  "main": "src/index.ts",
   "types": "dist/index.d.ts",
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
