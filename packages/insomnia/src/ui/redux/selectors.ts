@@ -19,10 +19,7 @@ type EntitiesLists = {
   [K in keyof RootState['entities']]: ValueOf<RootState['entities'][K]>[];
 };
 
-// ~~~~~~~~~ //
-// Selectors //
-// ~~~~~~~~~ //
-export const selectEntitiesLists = createSelector(
+const selectEntitiesLists = createSelector(
   (state: RootState) => state.entities,
   entities => {
     // transforms entities object from object keyed on id to array of entities containing id
@@ -33,24 +30,6 @@ export const selectEntitiesLists = createSelector(
     return entitiesLists as EntitiesLists;
   },
 );
-
-export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, entities => {
-  const parentLookupMap: any = {};
-  // group entities by parent
-  for (const value of Object.values(entities)) {
-    for (const entity of value) {
-      if (entity.parentId) {
-        if (parentLookupMap[entity.parentId]) {
-          parentLookupMap[entity.parentId].push(entity);
-        } else {
-          parentLookupMap[entity.parentId] = [entity];
-        }
-      }
-    }
-  }
-
-  return parentLookupMap;
-});
 
 export const selectRequestMetas = createSelector(
   selectEntitiesLists,
@@ -83,38 +62,29 @@ export const selectActiveWorkspace = createSelector(
   },
 );
 
-export const selectActiveWorkspaceMeta = createSelector(
-  selectActiveWorkspace,
-  selectEntitiesLists,
-  (activeWorkspace, entities) => {
-    return entities.workspaceMetas.find(workspaceMeta => workspaceMeta.parentId === activeWorkspace?._id);
-  },
-);
-
 export const selectRequestVersions = createSelector(
   selectEntitiesLists,
   entities => entities.requestVersions,
 );
 
-export const selectCollapsedRequestGroups = createSelector(
-  selectEntitiesLists,
-  entities => {
-    const collapsed: Record<string, boolean> = {};
-
-    // Default all to collapsed
-    for (const requestGroup of entities.requestGroups) {
-      collapsed[requestGroup._id] = true;
+const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, entities => {
+  const parentLookupMap: any = {};
+  // group entities by parent
+  for (const value of Object.values(entities)) {
+    for (const entity of value) {
+      if (entity.parentId) {
+        if (parentLookupMap[entity.parentId]) {
+          parentLookupMap[entity.parentId].push(entity);
+        } else {
+          parentLookupMap[entity.parentId] = [entity];
+        }
+      }
     }
+  }
 
-    // Update those that have metadata (not all do)
-    for (const meta of entities.requestGroupMetas) {
-      collapsed[meta.parentId] = meta.collapsed;
-    }
-
-    return collapsed;
-  });
-
-export const selectActiveWorkspaceEntities = createSelector(
+  return parentLookupMap;
+});
+const selectActiveWorkspaceEntities = createSelector(
   selectActiveWorkspace,
   selectEntitiesChildrenMap,
   (activeWorkspace, childrenMap) => {
@@ -144,24 +114,6 @@ export const selectActiveWorkspaceEntities = createSelector(
   },
 );
 
-export const selectPinnedRequests = createSelector(selectEntitiesLists, entities => {
-  const pinned: Record<string, boolean> = {};
-  const requests = [...entities.requests, ...entities.grpcRequests, ...entities.webSocketRequests];
-  const requestMetas = [...entities.requestMetas, ...entities.grpcRequestMetas];
-
-  // Default all to unpinned
-  for (const request of requests) {
-    pinned[request._id] = false;
-  }
-
-  // Update those that have metadata (not all do)
-  for (const meta of requestMetas) {
-    pinned[meta.parentId] = meta.pinned;
-  }
-
-  return pinned;
-});
-
 export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   selectActiveWorkspaceEntities,
   entities => {
@@ -171,6 +123,13 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   },
 );
 
+const selectActiveWorkspaceMeta = createSelector(
+  selectActiveWorkspace,
+  selectEntitiesLists,
+  (activeWorkspace, entities) => {
+    return entities.workspaceMetas.find(workspaceMeta => workspaceMeta.parentId === activeWorkspace?._id);
+  },
+);
 export const selectActiveRequest = createSelector(
   (state: RootState) => state.entities,
   selectActiveWorkspaceMeta,
@@ -190,15 +149,6 @@ export const selectActiveRequest = createSelector(
     }
 
     return null;
-  },
-);
-
-export const selectActiveRequestMeta = createSelector(
-  selectActiveRequest,
-  selectEntitiesLists,
-  (activeRequest, entities) => {
-    const id = activeRequest?._id || 'n/a';
-    return entities.requestMetas.find(m => m.parentId === id);
   },
 );
 
@@ -228,7 +178,14 @@ export const selectActiveRequestResponses = createSelector(
       .sort((a, b) => (a.created > b.created ? -1 : 1));
   },
 );
-
+const selectActiveRequestMeta = createSelector(
+  selectActiveRequest,
+  selectEntitiesLists,
+  (activeRequest, entities) => {
+    const id = activeRequest?._id || 'n/a';
+    return entities.requestMetas.find(m => m.parentId === id);
+  },
+);
 export const selectActiveResponse = createSelector(
   selectActiveRequestMeta,
   selectActiveRequestResponses,
@@ -252,13 +209,13 @@ export const selectSyncItems = createSelector(
 
 type SidebarModel = Request | GrpcRequest | RequestGroup;
 
-export const shouldShowInSidebar = (model: BaseModel): boolean =>
+const shouldShowInSidebar = (model: BaseModel): boolean =>
   isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model) || isRequestGroup(model);
 
-export const shouldIgnoreChildrenOf = (model: SidebarModel): boolean =>
+const shouldIgnoreChildrenOf = (model: SidebarModel): boolean =>
   isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model);
 
-export const sortByMetaKeyOrId = (a: SidebarModel, b: SidebarModel): number => {
+const sortByMetaKeyOrId = (a: SidebarModel, b: SidebarModel): number => {
   if (a.metaSortKey === b.metaSortKey) {
     return a._id > b._id ? -1 : 1; // ascending
   } else {
@@ -278,10 +235,44 @@ export interface SidebarChildren {
   all: Child[];
   pinned: Child[];
 }
-export const selectSidebarFilter = createSelector(
+const selectSidebarFilter = createSelector(
   selectActiveWorkspaceMeta,
   activeWorkspaceMeta => activeWorkspaceMeta ? activeWorkspaceMeta.sidebarFilter : '',
 );
+const selectPinnedRequests = createSelector(selectEntitiesLists, entities => {
+  const pinned: Record<string, boolean> = {};
+  const requests = [...entities.requests, ...entities.grpcRequests, ...entities.webSocketRequests];
+  const requestMetas = [...entities.requestMetas, ...entities.grpcRequestMetas];
+
+  // Default all to unpinned
+  for (const request of requests) {
+    pinned[request._id] = false;
+  }
+
+  // Update those that have metadata (not all do)
+  for (const meta of requestMetas) {
+    pinned[meta.parentId] = meta.pinned;
+  }
+
+  return pinned;
+});
+const selectCollapsedRequestGroups = createSelector(
+  selectEntitiesLists,
+  entities => {
+    const collapsed: Record<string, boolean> = {};
+
+    // Default all to collapsed
+    for (const requestGroup of entities.requestGroups) {
+      collapsed[requestGroup._id] = true;
+    }
+
+    // Update those that have metadata (not all do)
+    for (const meta of entities.requestGroupMetas) {
+      collapsed[meta.parentId] = meta.collapsed;
+    }
+
+    return collapsed;
+  });
 export const selectSidebarChildren = createSelector(
   selectCollapsedRequestGroups,
   selectPinnedRequests,
