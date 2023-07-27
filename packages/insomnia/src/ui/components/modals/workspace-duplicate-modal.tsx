@@ -20,7 +20,6 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
   const { organizationId } = useParams<{organizationId: string}>();
   const { Form } = useFetcher();
   const modalRef = useRef<ModalHandle>(null);
-
   useEffect(() => {
     modalRef.current?.show();
   }, []);

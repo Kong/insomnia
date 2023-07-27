@@ -31,7 +31,6 @@ import { SyncHistoryModal } from '../components/modals/sync-history-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { SyncStagingModal } from '../components/modals/sync-staging-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
-import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
 import { WrapperModal } from '../components/modals/wrapper-modal';
 import { useVCS } from '../hooks/use-vcs';
 import { WorkspaceLoaderData } from './workspace';
@@ -96,16 +95,9 @@ const Modals: FC = () => {
                 />
               </>
             ) : null}
-
             <NunjucksModal
               ref={instance => registerModal(instance, 'NunjucksModal')}
               workspace={activeWorkspace}
-            />
-
-            <WorkspaceSettingsModal
-              ref={instance =>
-                registerModal(instance, 'WorkspaceSettingsModal')
-              }
             />
 
             <RequestSwitcherModal

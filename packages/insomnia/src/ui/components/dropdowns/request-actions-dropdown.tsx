@@ -202,6 +202,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
         <ItemContent
           icon="trash-o"
           label="Delete"
+          className="danger"
           hint={hotKeyRegistry.request_showDelete}
           withPrompt
           onClick={deleteRequest}

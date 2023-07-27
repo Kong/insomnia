@@ -1,18 +1,19 @@
-import React, { FC, forwardRef, ReactNode, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { FC, ReactNode, useEffect, useRef, useState } from 'react';
 import { useRevalidator } from 'react-router-dom';
-import { useRouteLoaderData } from 'react-router-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { ApiSpec } from '../../../models/api-spec';
 import { CaCertificate } from '../../../models/ca-certificate';
 import type { ClientCertificate } from '../../../models/client-certificate';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
+import { getWorkspaceName, Workspace } from '../../../models/workspace';
+import { WorkspaceMeta } from '../../../models/workspace-meta';
 import { invariant } from '../../../utils/invariant';
-import { WorkspaceLoaderData } from '../../routes/workspace';
 import { FileInputButton } from '../base/file-input-button';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -57,7 +58,7 @@ const CertificateField: FC<{
   );
 };
 
-export interface WorkspaceSettingsModalOptions {
+interface WorkspaceSettingsModalState {
   showAddCertificateForm: boolean;
   host: string;
   crtPath: string;
@@ -68,13 +69,18 @@ export interface WorkspaceSettingsModalOptions {
   showDescription: boolean;
   defaultPreviewMode: boolean;
 }
-export interface WorkspaceSettingsModalHandle {
-  show: (options: WorkspaceSettingsModalOptions) => void;
-  hide: () => void;
+interface Props extends ModalProps {
+  workspace: Workspace;
+  apiSpec: ApiSpec | null;
+  workspaceMeta: WorkspaceMeta;
+  clientCertificates: ClientCertificate[];
 }
-export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, ModalProps>((_, ref) => {
+export const WorkspaceSettingsModal = (props: Props) => {
+  const { workspace, apiSpec, workspaceMeta, clientCertificates, onHide } = props;
+  const hasDescription = !!workspace.description;
+
   const modalRef = useRef<ModalHandle>(null);
-  const [state, setState] = useState<WorkspaceSettingsModalOptions>({
+  const [state, setState] = useState<WorkspaceSettingsModalState>({
     showAddCertificateForm: false,
     host: '',
     crtPath: '',
@@ -82,22 +88,18 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
     pfxPath: '',
     passphrase: '',
     isPrivate: false,
-    showDescription: false,
-    defaultPreviewMode: false,
+    showDescription: hasDescription,
+    defaultPreviewMode: hasDescription,
   });
-
   const { revalidate } = useRevalidator();
-
-  const {
-    activeWorkspace: workspace,
-    activeWorkspaceMeta,
-    activeApiSpec,
-    clientCertificates,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const activeWorkspaceName = workspace.name;
+  const activeWorkspaceName = getWorkspaceName(workspace, apiSpec);
   const navigate = useNavigate();
   const { organizationId } = useParams() as { organizationId: string };
   const [caCert, setCaCert] = useState<CaCertificate | null>(null);
+  useEffect(() => {
+    modalRef.current?.show();
+  });
+
   useEffect(() => {
     if (!workspace) {
       return;
@@ -109,35 +111,16 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
     fn();
   }, [workspace]);
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: () => {
-      const hasDescription = !!workspace.description;
-      setState(state => ({
-        ...state,
-        showDescription: hasDescription,
-        defaultPreviewMode: hasDescription,
-        showAddCertificateForm: false,
-      }));
-      modalRef.current?.show();
-    },
-  }), [workspace.description]);
-
   const _handleClearAllResponses = async () => {
     if (!workspace) {
       return;
     }
-
     const docs = await db.withDescendants(workspace, models.request.type);
     const requests = docs.filter(isRequest);
-
     for (const req of requests) {
       await models.response.removeForRequest(req._id);
     }
     modalRef.current?.hide();
-
   };
 
   const _handleToggleCertificateForm = () => {
@@ -232,7 +215,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
   } = state;
 
   return (
-    <Modal ref={modalRef}>
+    <Modal ref={modalRef} onHide={onHide}>
       {workspace ?
         <ModalHeader key={`header::${workspace._id}`}>
           {getWorkspaceLabel(workspace).singular} Settings{' '}
@@ -250,7 +233,7 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                       type="text"
                       placeholder="Awesome API"
                       defaultValue={activeWorkspaceName}
-                      onChange={event => workspaceOperations.rename(event.target.value, workspace, activeApiSpec)}
+                      onChange={event => workspaceOperations.rename(event.target.value, workspace, apiSpec)}
                     />
                   </label>
                 </div>
@@ -511,20 +494,20 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
                   >
                     <input
                       type="checkbox"
-                      checked={Boolean(activeWorkspaceMeta?.gitRepositoryId)}
+                      checked={Boolean(workspaceMeta?.gitRepositoryId)}
                       onChange={async () => {
-                        if (activeWorkspaceMeta?.gitRepositoryId) {
-                          await models.workspaceMeta.update(activeWorkspaceMeta, {
+                        if (workspaceMeta?.gitRepositoryId) {
+                          await models.workspaceMeta.update(workspaceMeta, {
                             gitRepositoryId: null,
                           });
                         } else {
-                          invariant(activeWorkspaceMeta, 'Workspace meta not found');
+                          invariant(workspaceMeta, 'Workspace meta not found');
 
                           const repo = await models.gitRepository.create({
                             uri: '',
                           });
 
-                          await models.workspaceMeta.update(activeWorkspaceMeta, {
+                          await models.workspaceMeta.update(workspaceMeta, {
                             gitRepositoryId: repo._id,
                           });
                         }
@@ -544,5 +527,5 @@ export const WorkspaceSettingsModal = forwardRef<WorkspaceSettingsModalHandle, M
         </ModalBody> : null}
     </Modal>
   );
-});
+};
 WorkspaceSettingsModal.displayName = 'WorkspaceSettingsModal';

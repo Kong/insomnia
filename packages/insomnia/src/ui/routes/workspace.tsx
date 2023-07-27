@@ -7,7 +7,9 @@ import { ClientCertificate } from '../../models/client-certificate';
 import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { GitRepository } from '../../models/git-repository';
-import { Project } from '../../models/project';
+import { sortProjects } from '../../models/helpers/project';
+import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
+import { isRemoteProject, Project } from '../../models/project';
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { invariant } from '../../utils/invariant';
@@ -22,12 +24,13 @@ export interface WorkspaceLoaderData {
   subEnvironments: Environment[];
   activeApiSpec: ApiSpec | null;
   clientCertificates: ClientCertificate[];
+  projects: Project[];
 }
 
 export const workspaceLoader: LoaderFunction = async ({
   params,
 }): Promise<WorkspaceLoaderData> => {
-  const { projectId, workspaceId } = params;
+  const { projectId, workspaceId, organizationId } = params;
   invariant(workspaceId, 'Workspace ID is required');
   invariant(projectId, 'Project ID is required');
 
@@ -62,6 +65,14 @@ export const workspaceLoader: LoaderFunction = async ({
 
   const activeApiSpec = await models.apiSpec.getByParentId(workspaceId);
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const allProjects = await models.project.all();
+
+  const organizationProjects =
+    organizationId === DEFAULT_ORGANIZATION_ID
+      ? allProjects.filter(proj => !isRemoteProject(proj))
+      : [activeProject];
+
+  const projects = sortProjects(organizationProjects);
   return {
     activeWorkspace,
     activeProject,
@@ -73,6 +84,7 @@ export const workspaceLoader: LoaderFunction = async ({
     baseEnvironment,
     activeApiSpec,
     clientCertificates,
+    projects,
   };
 };
 

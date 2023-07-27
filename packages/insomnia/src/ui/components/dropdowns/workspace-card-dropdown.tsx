@@ -2,13 +2,15 @@ import React, { FC, Fragment, useCallback, useState } from 'react';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { parseApiSpec } from '../../../common/api-specs';
+import { getProductName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
-import getWorkspaceName from '../../../models/helpers/get-workspace-name';
+import { ClientCertificate } from '../../../models/client-certificate';
 import { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
-import { WorkspaceScopeKeys } from '../../../models/workspace';
+import { getWorkspaceName, WorkspaceScopeKeys } from '../../../models/workspace';
+import { WorkspaceMeta } from '../../../models/workspace-meta';
 import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
@@ -16,14 +18,19 @@ import { useLoadingRecord } from '../../hooks/use-loading-record';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import { AskModal } from '../modals/ask-modal';
+import { ExportRequestsModal } from '../modals/export-requests-modal';
+import { ImportModal } from '../modals/import-modal';
 import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
+import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 import { SvgIcon } from '../svg-icon';
 
 interface Props {
   workspace: Workspace;
+  workspaceMeta: WorkspaceMeta;
   apiSpec: ApiSpec | null;
   project: Project;
   projects: Project[];
+  clientCertificates: ClientCertificate[];
 }
 
 const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
@@ -75,13 +82,18 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 };
 
 export const WorkspaceCardDropdown: FC<Props> = props => {
-  const { workspace, apiSpec, projects } = props;
-  const { organizationId } = useParams<{ organizationId: string }>();
+  const { workspace, apiSpec, project, projects, workspaceMeta, clientCertificates } = props;
   const fetcher = useFetcher();
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const {
+    organizationId,
+    projectId,
+  } = useParams() as { organizationId: string; projectId: string };
 
   const workspaceName = getWorkspaceName(workspace, apiSpec);
-
+  const projectName = project.name ?? getProductName();
   const { refresh, renderPluginDropdownItems } = useDocumentActionPlugins(props);
   return (
     <Fragment>
@@ -97,12 +109,14 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
         <DropdownItem aria-label='Duplicate'>
           <ItemContent
             label="Duplicate"
+            icon="copy"
             onClick={() => setIsDuplicateModalOpen(true)}
           />
         </DropdownItem>
         <DropdownItem aria-label='Rename'>
           <ItemContent
             label="Rename"
+            icon="pen-to-square"
             onClick={() => {
               showPrompt({
                 title: `Rename ${getWorkspaceLabel(workspace).singular}`,
@@ -122,13 +136,36 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
             }}
           />
         </DropdownItem>
-
+        <DropdownSection aria-label='Meta section'>
+          <DropdownItem aria-label='Settings'>
+            <ItemContent
+              label="Settings"
+              icon="gear"
+              onClick={() => setIsSettingsModalOpen(true)}
+            />
+          </DropdownItem>
+          <DropdownItem aria-label='Import'>
+            <ItemContent
+              label="Import"
+              icon="file-import"
+              onClick={() => setIsImportModalOpen(true)}
+            />
+          </DropdownItem>
+          <DropdownItem aria-label='Export'>
+            <ItemContent
+              label="Export"
+              icon="file-export"
+              onClick={() => showModal(ExportRequestsModal)}
+            />
+          </DropdownItem>
+        </DropdownSection>
         {renderPluginDropdownItems()}
 
         <DropdownSection aria-label='Delete section'>
           <DropdownItem aria-label='Delete'>
             <ItemContent
               label="Delete"
+              icon="trash-o"
               className="danger"
               onClick={() => {
                 const label = getWorkspaceLabel(workspace);
@@ -161,6 +198,26 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           onHide={() => setIsDuplicateModalOpen(false)}
           workspace={workspace}
           projects={projects}
+        />
+      )}
+      {isImportModalOpen && (
+        <ImportModal
+          onHide={() => setIsImportModalOpen(false)}
+          from={{ type: 'file' }}
+          projectName={projectName}
+          workspaceName={workspaceName}
+          organizationId={organizationId}
+          defaultProjectId={projectId}
+          defaultWorkspaceId={workspace._id}
+        />
+      )}
+      {isSettingsModalOpen && (
+        <WorkspaceSettingsModal
+          workspace={workspace}
+          apiSpec={apiSpec}
+          workspaceMeta={workspaceMeta}
+          clientCertificates={clientCertificates}
+          onHide={() => setIsSettingsModalOpen(false)}
         />
       )}
     </Fragment>
