@@ -99,9 +99,9 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: name => requestFetcher.submit({ name },
+      onComplete: name => requestFetcher.submit({ _id: requestGroup._id, name },
         {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${requestGroup._id}/update`,
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/update`,
           method: 'post',
           encType: 'application/json',
         }),

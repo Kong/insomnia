@@ -180,16 +180,6 @@ const router = createMemoryRouter(
                                   path: 'request-group/update',
                                   action: async (...args) => (await import('./routes/request-group')).updateRequestGroupAction(...args),
                                 },
-                                {
-                                  path: 'request-group/:requestGroupId',
-                                  id: 'request-group/:requestGroupId',
-                                  children: [
-                                    {
-                                      path: 'update',
-                                      action: async (...args) => (await import('./routes/request-group')).updateRequestGroupAction(...args),
-                                    },
-                                  ],
-                                },
                               ],
                             },
                             {
