@@ -3,12 +3,14 @@ import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
+import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import * as models from '../../../models';
 import { isRequest, Request } from '../../../models/request';
+import { RequestMeta } from '../../../models/request-meta';
 import { isResponse } from '../../../models/response';
-import { selectActiveResponse, selectResponsePreviewMode } from '../../redux/selectors';
+import { selectActiveResponse } from '../../redux/selectors';
+import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
 interface Props {
@@ -20,8 +22,8 @@ export const PreviewModeDropdown: FC<Props> = ({
   download,
   copyToClipboard,
 }) => {
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
-  const previewMode = useSelector(selectResponsePreviewMode);
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
+  const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const response = useSelector(selectActiveResponse);
 
   const handleClick = async (previewMode: PreviewMode) => {

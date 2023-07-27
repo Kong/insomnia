@@ -8,11 +8,13 @@ import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Request } from '../../../models/request';
+import { RequestMeta } from '../../../models/request-meta';
 import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveResponse, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode } from '../../redux/selectors';
+import { selectActiveResponse } from '../../redux/selectors';
+import { RequestLoaderData } from '../../routes/request';
 import { RootLoaderData } from '../../routes/root';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
@@ -37,14 +39,14 @@ interface Props {
 export const ResponsePane: FC<Props> = ({
   runningRequests,
 }) => {
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request | null;
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
   const response = useSelector(selectActiveResponse) as Response | null;
-  const filterHistory = useSelector(selectResponseFilterHistory);
-  const filter = useSelector(selectResponseFilter);
+  const filterHistory = activeRequestMeta.responseFilterHistory || [];
+  const filter = activeRequestMeta.responseFilter || '';
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
-  const previewMode = useSelector(selectResponsePreviewMode);
+  const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const handleSetFilter = async (responseFilter: string) => {
     if (!response) {
       return;

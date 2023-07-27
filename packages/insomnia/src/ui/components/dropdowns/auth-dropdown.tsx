@@ -9,6 +9,7 @@ import {
 import { Request, RequestAuthentication } from '../../../models/request';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
+import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -127,7 +128,7 @@ interface Props {
   disabled?: boolean;
 }
 export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = false }) => {
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
 

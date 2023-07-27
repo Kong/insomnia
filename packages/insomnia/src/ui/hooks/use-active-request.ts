@@ -3,8 +3,9 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { Request, RequestAuthentication } from '../../models/request';
 import { WebSocketRequest } from '../../models/websocket-request';
+import { RequestLoaderData } from '../routes/request';
 export const useActiveRequest = () => {
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
 

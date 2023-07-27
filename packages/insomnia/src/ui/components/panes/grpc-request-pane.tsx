@@ -13,6 +13,7 @@ import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-reques
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { GrpcRequestState } from '../../routes/debug';
+import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
@@ -71,7 +72,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   setGrpcState,
   reloadRequests,
 }) => {
-  const activeRequest = useRouteLoaderData('request/:requestId') as GrpcRequest;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<GrpcRequest, any>;
+
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
   const { requestMessages, running, methods } = grpcState;
   useMount(async () => {

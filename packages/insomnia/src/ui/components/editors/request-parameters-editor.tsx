@@ -3,6 +3,7 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { Request, RequestParameter } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
+import { RequestLoaderData } from '../../routes/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
@@ -17,7 +18,7 @@ export const RequestParametersEditor: FC<Props> = ({
 }) => {
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request | WebSocketRequest;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | WebSocketRequest, any>;
 
   const handleBulkUpdate = useCallback((paramsString: string) => {
     const parameters: {

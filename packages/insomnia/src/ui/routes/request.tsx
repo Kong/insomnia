@@ -3,29 +3,40 @@ import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import * as models from '../../models';
 import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isRequest, Request } from '../../models/request';
+import { RequestMeta } from '../../models/request-meta';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
 
-export const loader: LoaderFunction = async ({ params }): Promise<Request | WebSocketRequest | GrpcRequest> => {
+export interface RequestLoaderData<A, B> {
+  activeRequest: A;
+  activeRequestMeta: B;
+}
+export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData<Request | WebSocketRequest | GrpcRequest, RequestMeta | GrpcRequestMeta>> => {
   const { requestId, workspaceId } = params;
   invariant(requestId, 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');
-  const req = await requestOperations.getById(requestId);
-  invariant(req, 'Request not found');
+  const activeRequest = await requestOperations.getById(requestId);
+  invariant(activeRequest, 'Request not found');
   const activeWorkspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   invariant(activeWorkspaceMeta, 'Active workspace meta not found');
   // NOTE: loaders shouldnt mutate data, this should be moved somewhere else
   models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: requestId });
   if (isGrpcRequestId(requestId)) {
-    models.grpcRequestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
+    return {
+      activeRequest,
+      activeRequestMeta: await models.grpcRequestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() }),
+    };
   } else {
-    models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
+    return {
+      activeRequest,
+      activeRequestMeta: await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() }),
+    };
   }
-  return req;
 };
 
 export const createRequestAction: ActionFunction = async ({ request, params }) => {

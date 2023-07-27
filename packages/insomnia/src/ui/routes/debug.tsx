@@ -36,6 +36,7 @@ import { SidebarLayout } from '../components/sidebar-layout';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
+import { RequestLoaderData } from './request';
 import { RootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 export interface GrpcMessage {
@@ -69,8 +70,8 @@ export const Debug: FC = () => {
     activeWorkspaceMeta,
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request | GrpcRequest | WebSocketRequest | null;
-
+  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | GrpcRequest | WebSocketRequest, any> | undefined;
+  const { activeRequest } = requestData || {};
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>([]);

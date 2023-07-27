@@ -1,5 +1,4 @@
 import React, { FC, useCallback, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -8,10 +7,11 @@ import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { Request } from '../../../models/request';
+import { RequestMeta } from '../../../models/request-meta';
 import type { Settings } from '../../../models/settings';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import { selectActiveRequestMeta } from '../../redux/selectors';
+import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
@@ -67,7 +67,7 @@ export const RequestPane: FC<Props> = ({
   settings,
   setLoading,
 }) => {
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const updateRequestUrl = (url: string) =>
@@ -125,7 +125,6 @@ export const RequestPane: FC<Props> = ({
   const {
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const activeRequestMeta = useSelector(selectActiveRequestMeta);
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
 

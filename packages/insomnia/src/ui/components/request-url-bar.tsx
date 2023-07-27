@@ -4,7 +4,6 @@ import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
@@ -14,6 +13,7 @@ import { getContentDispositionHeader } from '../../common/misc';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../common/render';
 import * as models from '../../models';
 import { isEventStreamRequest, isRequest, Request } from '../../models/request';
+import { RequestMeta } from '../../models/request-meta';
 import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
@@ -21,7 +21,7 @@ import { SegmentEvent } from '../analytics';
 import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import { selectResponseDownloadPath } from '../redux/selectors';
+import { RequestLoaderData } from '../routes/request';
 import { RootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
@@ -68,8 +68,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { hotKeyRegistry } = settings;
-  const downloadPath = useSelector(selectResponseDownloadPath);
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
+  const downloadPath = activeRequestMeta.downloadPath;
+
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const methodDropdownRef = useRef<DropdownHandle>(null);

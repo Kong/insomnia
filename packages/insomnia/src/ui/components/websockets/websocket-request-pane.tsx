@@ -12,11 +12,12 @@ import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../util
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { selectActiveRequestMeta } from '../../redux/selectors';
+import { RequestLoaderData } from '../../routes/request';
 import { RootLoaderData } from '../../routes/root';
 import { TabItem, Tabs } from '../base/tabs';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
-import { WebSocketPreviewModeDropdown } from '../dropdowns/websocket-preview-mode';
+import { WebSocketPreviewMode } from '../dropdowns/websocket-preview-mode';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { QueryEditorContainer, QueryEditorPreview } from '../editors/query-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
@@ -201,7 +202,8 @@ interface Props {
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
-  const activeRequest = useRouteLoaderData('request/:requestId') as WebSocketRequest;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<WebSocketRequest, any>;
+
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const requestFetcher = useFetcher();
   const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'webSocket' });
@@ -281,7 +283,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
         />
       </PaneHeader>
       <Tabs aria-label="Websocket request pane tabs">
-        <TabItem key="websocket-preview-mode" title={<WebSocketPreviewModeDropdown previewMode={previewMode} onClick={changeMode} />}>
+        <TabItem key="websocket-preview-mode" title={<WebSocketPreviewMode previewMode={previewMode} onClick={changeMode} />}>
           <div
             style={{
               display: 'flex',

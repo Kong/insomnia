@@ -1,14 +1,14 @@
 import fs from 'fs';
 import React, { FC, useCallback } from 'react';
-import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
 import { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
 import { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
 import { requestMeta } from '../../../models';
-import { selectResponsePreviewMode } from '../../redux/selectors';
+import { RequestMeta } from '../../../models/request-meta';
+import { RequestLoaderData } from '../../routes/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { showError } from '../modals';
 import { WebSocketPreviewModeDropdown } from './websocket-preview-dropdown';
@@ -81,8 +81,6 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
     window.clipboard.writeText(raw);
   }, [raw]);
 
-  const previewMode = useSelector(selectResponsePreviewMode);
-
   const setPreviewMode = async (previewMode: PreviewMode) => {
     return requestMeta.updateOrCreateByParentId(requestId, { previewMode });
   };
@@ -96,7 +94,8 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   } catch {
     // Can't parse as JSON.
   }
-
+  const { activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<any, RequestMeta>;
+  const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   return (
     <PreviewPane>
       <PreviewPaneButtons>

@@ -14,6 +14,7 @@ import { Workspace } from '../../../models/workspace';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { updateRequestMetaByParentId } from '../../hooks/create-request';
 import { selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Highlight } from '../base/highlight';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
@@ -69,7 +70,8 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   });
   const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
   const navigate = useNavigate();
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any> | undefined;
+  const { activeRequest } = requestData || {};
   const {
     activeWorkspace: workspace,
     activeWorkspaceMeta,

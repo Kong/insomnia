@@ -4,6 +4,7 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
 import type { Request, RequestHeader } from '../../../models/request';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
+import { RequestLoaderData } from '../../routes/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
@@ -16,7 +17,8 @@ export const RequestHeadersEditor: FC<Props> = ({
   bulk,
   isDisabled,
 }) => {
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request | WebSocketRequest;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | WebSocketRequest, any>;
+
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
 

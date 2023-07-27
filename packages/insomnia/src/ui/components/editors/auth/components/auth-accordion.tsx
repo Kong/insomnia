@@ -1,12 +1,11 @@
 import classnames from 'classnames';
 import React, { FC, PropsWithChildren } from 'react';
-import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import * as models from '../../../../../models';
 import { Request } from '../../../../../models/request';
-import { RequestAccordionKeys } from '../../../../../models/request-meta';
-import { selectActiveRequestMeta } from '../../../../redux/selectors';
+import { RequestAccordionKeys, RequestMeta } from '../../../../../models/request-meta';
+import { RequestLoaderData } from '../../../../routes/request';
 
 interface Props {
   label: string;
@@ -14,8 +13,7 @@ interface Props {
 }
 
 export const AuthAccordion: FC<PropsWithChildren<Props>> = ({ accordionKey, label, children }) => {
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
-  const activeRequestMeta = useSelector(selectActiveRequestMeta);
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
 
   const expanded = Boolean(activeRequestMeta?.expandedAccordionKeys[accordionKey]);
 

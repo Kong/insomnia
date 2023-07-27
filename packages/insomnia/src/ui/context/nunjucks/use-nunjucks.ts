@@ -5,6 +5,7 @@ import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, Ha
 import { Request } from '../../../models/request';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { getKeys } from '../../../templating/utils';
+import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 let getRenderContextPromiseCache: any = {};
 
@@ -18,7 +19,8 @@ initializeNunjucksRenderPromiseCache();
  * Access to functions useful for Nunjucks rendering
  */
 export const useNunjucks = () => {
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any> | undefined;
+  const { activeRequest } = requestData || {};
   const {
     activeWorkspace,
     activeEnvironment,

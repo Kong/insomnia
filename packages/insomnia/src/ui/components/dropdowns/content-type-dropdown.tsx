@@ -20,6 +20,7 @@ import { getContentTypeHeader } from '../../../common/misc';
 import { Request, RequestBody } from '../../../models/request';
 import { deconstructQueryStringToParams } from '../../../utils/url/querystring';
 import { SegmentEvent } from '../../analytics';
+import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { AlertModal } from '../modals/alert-modal';
 import { showModal } from '../modals/index';
@@ -27,7 +28,7 @@ import { showModal } from '../modals/index';
 const EMPTY_MIME_TYPE = null;
 
 export const ContentTypeDropdown: FC = () => {
-  const activeRequest = useRouteLoaderData('request/:requestId') as Request;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const requestFetcher = useFetcher();
   const handleChangeMimeType = async (mimeType: string | null) => {
