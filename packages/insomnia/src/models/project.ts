@@ -1,4 +1,3 @@
-import { getProductName } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
 import type { BaseModel } from './index';
