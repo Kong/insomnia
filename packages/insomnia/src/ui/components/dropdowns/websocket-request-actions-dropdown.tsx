@@ -5,7 +5,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 import { toKebabCase } from '../../../common/misc';
 import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { useRequestMetaPatcher } from '../../hooks/create-request';
+import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
 import { showPrompt } from '../modals';

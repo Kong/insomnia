@@ -9,7 +9,7 @@ import * as models from '../../../models';
 import { isRequest, Request } from '../../../models/request';
 import { RequestMeta } from '../../../models/request-meta';
 import { isResponse } from '../../../models/response';
-import { useRequestMetaPatcher } from '../../hooks/create-request';
+import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { selectActiveResponse } from '../../redux/selectors';
 import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';

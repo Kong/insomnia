@@ -4,7 +4,7 @@ import { useRouteLoaderData } from 'react-router-dom';
 
 import { Request } from '../../../../../models/request';
 import { RequestAccordionKeys, RequestMeta } from '../../../../../models/request-meta';
-import { useRequestMetaPatcher } from '../../../../hooks/create-request';
+import { useRequestMetaPatcher } from '../../../../hooks/use-request';
 import { RequestLoaderData } from '../../../../routes/request';
 
 interface Props {

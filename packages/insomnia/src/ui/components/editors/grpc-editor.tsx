@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 
 import * as models from '../../../models';
 import type { Response } from '../../../models/response';
-import { useRequestMetaPatcher } from '../../hooks/create-request';
+import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { selectActiveResponse } from '../../redux/selectors';
 import { CodeEditor } from '../codemirror/code-editor';
 

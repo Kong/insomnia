@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { useFetcher, useParams } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { CreateRequestType } from '../../hooks/create-request';
+import { CreateRequestType } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { showPrompt } from '../modals';

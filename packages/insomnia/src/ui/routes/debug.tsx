@@ -35,7 +35,7 @@ import { SidebarFilter } from '../components/sidebar/sidebar-filter';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
-import { useRequestMetaPatcher } from '../hooks/create-request';
+import { useRequestMetaPatcher } from '../hooks/use-request';
 import { RequestLoaderData } from './request';
 import { RootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
