@@ -1,11 +1,10 @@
 import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { getProductName } from '../../common/constants';
-import { selectActiveRequest } from '../redux/selectors';
+import { Request } from '../../models/request';
+import { RequestLoaderData } from '../routes/request';
 import { WorkspaceLoaderData } from '../routes/workspace';
-
 export const useDocumentTitle = () => {
   const {
     activeWorkspace,
@@ -13,7 +12,8 @@ export const useDocumentTitle = () => {
     activeProject,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
-  const activeRequest = useSelector(selectActiveRequest);
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+
   // Update document title
   useEffect(() => {
     let title;

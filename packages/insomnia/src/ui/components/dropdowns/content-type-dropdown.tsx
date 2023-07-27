@@ -1,6 +1,7 @@
-import React, { FC, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import React, { FC } from 'react';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 
+import { version } from '../../../../package.json';
 import {
   CONTENT_TYPE_EDN,
   CONTENT_TYPE_FILE,
@@ -13,29 +14,25 @@ import {
   CONTENT_TYPE_XML,
   CONTENT_TYPE_YAML,
   getContentTypeName,
+  METHOD_POST,
 } from '../../../common/constants';
-import { isWebSocketRequest } from '../../../models/websocket-request';
+import { getContentTypeHeader } from '../../../common/misc';
+import { Request, RequestBody } from '../../../models/request';
+import { deconstructQueryStringToParams } from '../../../utils/url/querystring';
 import { SegmentEvent } from '../../analytics';
-import { selectActiveRequest } from '../../redux/selectors';
+import { useRequestPatcher } from '../../hooks/use-request';
+import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { AlertModal } from '../modals/alert-modal';
 import { showModal } from '../modals/index';
 
-interface Props {
-  onChange: (mimeType: string | null) => void;
-}
-
 const EMPTY_MIME_TYPE = null;
 
-export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
-  const request = useSelector(selectActiveRequest);
-  const activeRequest = request && !isWebSocketRequest(request) ? request : null;
-
-  const handleChangeMimeType = useCallback(async (mimeType: string | null) => {
-    if (!activeRequest) {
-      return;
-    }
-
+export const ContentTypeDropdown: FC = () => {
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const patchRequest = useRequestPatcher();
+  const { requestId } = useParams() as { requestId: string };
+  const handleChangeMimeType = async (mimeType: string | null) => {
     const { body } = activeRequest;
     const hasMimeType = 'mimeType' in body;
     if (hasMimeType && body.mimeType === mimeType) {
@@ -65,14 +62,10 @@ export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
         addCancel: true,
       });
     }
-
-    onChange(mimeType);
+    patchRequest(requestId, { body: { mimeType } });
     window.main.trackSegmentEvent({ event: SegmentEvent.requestBodyTypeSelect, properties: { type: mimeType } });
-  }, [onChange, activeRequest]);
+  };
 
-  if (!activeRequest) {
-    return null;
-  }
   const { body } = activeRequest;
   const hasMimeType = 'mimeType' in body;
   const hasParams = body && 'params' in body && body.params;
@@ -204,4 +197,124 @@ export const ContentTypeDropdown: FC<Props> = ({ onChange }) => {
       </DropdownSection>
     </Dropdown>
   );
+};
+export function newBodyGraphQL(rawBody: string): RequestBody {
+  try {
+    // Only strip the newlines if rawBody is a parsable JSON
+    JSON.parse(rawBody);
+    return {
+      mimeType: CONTENT_TYPE_GRAPHQL,
+      text: rawBody.replace(/\\\\n/g, ''),
+    };
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      return {
+        mimeType: CONTENT_TYPE_GRAPHQL,
+        text: rawBody,
+      };
+    } else {
+      throw error;
+    }
+  }
+}
+export const updateMimeType = (
+  request: Request,
+  mimeType: string | null,
+  savedBody: RequestBody = {},
+) => {
+  let headers = request.headers ? [...request.headers] : [];
+  const contentTypeHeader = getContentTypeHeader(headers);
+  // GraphQL uses JSON content-type
+  const contentTypeHeaderValue = mimeType === CONTENT_TYPE_GRAPHQL ? CONTENT_TYPE_JSON : mimeType;
+  // GraphQL must be POST
+  if (mimeType === CONTENT_TYPE_GRAPHQL) {
+    request.method = METHOD_POST;
+  }
+  // Check if we are converting to/from variants of XML or JSON
+  let leaveContentTypeAlone = false;
+  if (contentTypeHeader && mimeType) {
+    const current = contentTypeHeader.value;
+    if (current.includes('xml') && mimeType.includes('xml')) {
+      leaveContentTypeAlone = true;
+    } else if (current.includes('json') && mimeType.includes('json')) {
+      leaveContentTypeAlone = true;
+    }
+  }
+  const hasBody = typeof mimeType === 'string';
+  if (!hasBody) {
+    headers = headers.filter(h => h !== contentTypeHeader);
+  } else if (mimeType === CONTENT_TYPE_OTHER) {
+    // Leave headers alone
+  } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
+    contentTypeHeader.value = contentTypeHeaderValue || '';
+  } else if (mimeType && !contentTypeHeader) {
+    headers.push({
+      name: 'Content-Type',
+      value: contentTypeHeaderValue || '',
+    });
+  }
+  if (!headers.find(h => h?.name?.toLowerCase() === 'user-agent')) {
+    headers.push({
+      name: 'User-Agent',
+      value: `Insomnia/${version}`,
+    });
+  }
+  const oldBody = Object.keys(savedBody).length === 0 ? request.body : savedBody;
+  if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+    return {
+      body: {
+        mimeType: CONTENT_TYPE_FORM_URLENCODED,
+        params: oldBody.params || (oldBody.text ? deconstructQueryStringToParams(oldBody.text) : []),
+      },
+      headers,
+    };
+  }
+  if (mimeType === CONTENT_TYPE_FORM_DATA) {
+    // Form Data
+    return {
+      body: oldBody.params
+        ? {
+          mimeType: CONTENT_TYPE_FORM_DATA,
+          params: oldBody.params || [],
+        } : {
+          mimeType: CONTENT_TYPE_FORM_DATA,
+          params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
+        },
+      headers,
+    };
+  }
+  if (mimeType === CONTENT_TYPE_FILE) {
+    return {
+      body: {
+        mimeType: CONTENT_TYPE_FILE,
+        fileName: '',
+      },
+      headers,
+    };
+  }
+  if (mimeType === CONTENT_TYPE_GRAPHQL) {
+    if (contentTypeHeader) {
+      contentTypeHeader.value = CONTENT_TYPE_JSON;
+    }
+    return {
+      body: newBodyGraphQL(oldBody.text || ''),
+      headers,
+    };
+  }
+  if (typeof mimeType !== 'string') {
+    return {
+      body: {},
+      headers,
+    };
+  }
+  // Raw Content-Type (ex: application/json)
+  return {
+    body: typeof mimeType !== 'string' ? {
+      text: oldBody.text || '',
+    } : {
+      mimeType: mimeType.split(';')[0],
+      text: oldBody.text || '',
+    },
+    headers,
+  };
 };

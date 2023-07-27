@@ -7,7 +7,7 @@ interface Props {
   previewMode: string;
   onClick: (previewMode: string) => void;
 }
-export const WebSocketPreviewModeDropdown: FC<Props> = ({ previewMode, onClick }) => {
+export const WebSocketPreviewMode: FC<Props> = ({ previewMode, onClick }) => {
   return (
     <Dropdown
       aria-label="Websocket Preview Mode Dropdown"

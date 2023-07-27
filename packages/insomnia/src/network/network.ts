@@ -116,10 +116,9 @@ const fetchRequestData = async (requestId: string) => {
 
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const environment = activeEnvironmentId ?
-    await models.environment.getById(activeEnvironmentId)
-    : await models.environment.getOrCreateForParentId(workspace._id);
-  invariant(environment, 'failed to find environment');
+  const activeEnvironment = activeEnvironmentId && await models.environment.getById(activeEnvironmentId);
+  const environment = activeEnvironment || await models.environment.getOrCreateForParentId(workspace._id);
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
   const settings = await models.settings.getOrCreate();
   invariant(settings, 'failed to create settings');

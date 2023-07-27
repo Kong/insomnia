@@ -1,13 +1,17 @@
 import fs from 'fs';
 import React, { FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
-import { getPreviewModeName, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
+import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import * as models from '../../../models';
-import { isRequest } from '../../../models/request';
+import { isRequest, Request } from '../../../models/request';
+import { RequestMeta } from '../../../models/request-meta';
 import { isResponse } from '../../../models/response';
-import { selectActiveRequest, selectActiveResponse, selectResponsePreviewMode } from '../../redux/selectors';
+import { useRequestMetaPatcher } from '../../hooks/use-request';
+import { selectActiveResponse } from '../../redux/selectors';
+import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
 interface Props {
@@ -19,33 +23,30 @@ export const PreviewModeDropdown: FC<Props> = ({
   download,
   copyToClipboard,
 }) => {
-  const request = useSelector(selectActiveRequest);
-  const previewMode = useSelector(selectResponsePreviewMode);
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
+  const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const response = useSelector(selectActiveResponse);
-
+  const patchRequestMeta = useRequestMetaPatcher();
   const handleClick = async (previewMode: PreviewMode) => {
-    if (!request || !isRequest(request)) {
-      return;
-    }
-    return models.requestMeta.updateOrCreateByParentId(request._id, { previewMode });
+    patchRequestMeta(activeRequest._id, { previewMode });
   };
   const handleDownloadPrettify = useCallback(() => download(true), [download]);
 
   const handleDownloadNormal = useCallback(() => download(false), [download]);
 
   const exportAsHAR = useCallback(async () => {
-    if (!response || !request || !isRequest(request) || !isResponse(response)) {
+    if (!response || !activeRequest || !isRequest(activeRequest) || !isResponse(response)) {
       console.warn('Nothing to download');
       return;
     }
 
-    const data = await exportHarCurrentRequest(request, response);
+    const data = await exportHarCurrentRequest(activeRequest, response);
     const har = JSON.stringify(data, null, '\t');
 
     const { filePath } = await window.dialog.showSaveDialog({
       title: 'Export As HAR',
       buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.har`,
+      defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.har`,
     });
 
     if (!filePath) {
@@ -56,10 +57,10 @@ export const PreviewModeDropdown: FC<Props> = ({
       console.warn('Failed to export har', err);
     });
     to.end(har);
-  }, [request, response]);
+  }, [activeRequest, response]);
 
   const exportDebugFile = useCallback(async () => {
-    if (!response || !request || !isResponse(response)) {
+    if (!response || !activeRequest || !isResponse(response)) {
       console.warn('Nothing to download');
       return;
     }
@@ -73,7 +74,7 @@ export const PreviewModeDropdown: FC<Props> = ({
     const { canceled, filePath } = await window.dialog.showSaveDialog({
       title: 'Save Full Response',
       buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
+      defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
     });
 
     if (canceled) {
@@ -89,7 +90,7 @@ export const PreviewModeDropdown: FC<Props> = ({
         console.warn('Failed to save full response', err);
       });
     }
-  }, [request, response]);
+  }, [activeRequest, response]);
   const shouldPrettifyOption = response.contentType.includes('json');
 
   return (

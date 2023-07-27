@@ -8,11 +8,13 @@ import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Request } from '../../../models/request';
+import { RequestMeta } from '../../../models/request-meta';
 import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveResponse, selectResponseFilter, selectResponseFilterHistory, selectResponsePreviewMode } from '../../redux/selectors';
+import { useRequestMetaPatcher } from '../../hooks/use-request';
+import { selectActiveResponse } from '../../redux/selectors';
+import { RequestLoaderData } from '../../routes/request';
 import { RootLoaderData } from '../../routes/root';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
@@ -32,26 +34,26 @@ import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
-  request?: Request | null;
   runningRequests: Record<string, number>;
 }
 export const ResponsePane: FC<Props> = ({
-  request,
   runningRequests,
 }) => {
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
   const response = useSelector(selectActiveResponse) as Response | null;
-  const filterHistory = useSelector(selectResponseFilterHistory);
-  const filter = useSelector(selectResponseFilter);
+  const filterHistory = activeRequestMeta.responseFilterHistory || [];
+  const filter = activeRequestMeta.responseFilter || '';
+  const patchRequestMeta = useRequestMetaPatcher();
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
-  const previewMode = useSelector(selectResponsePreviewMode);
+  const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const handleSetFilter = async (responseFilter: string) => {
     if (!response) {
       return;
     }
     const requestId = response.parentId;
-    await updateRequestMetaByParentId(requestId, { responseFilter });
+    await patchRequestMeta(requestId, { responseFilter });
     const meta = await models.requestMeta.getByParentId(requestId);
     if (!meta) {
       return;
@@ -62,7 +64,7 @@ export const ResponsePane: FC<Props> = ({
       return;
     }
     responseFilterHistory.unshift(responseFilter);
-    updateRequestMetaByParentId(requestId, { responseFilterHistory });
+    patchRequestMeta(requestId, { responseFilterHistory });
   };
   const handleGetResponseBody = useCallback(() => {
     if (!response) {
@@ -77,7 +79,7 @@ export const ResponsePane: FC<Props> = ({
     }
   }, [handleGetResponseBody]);
   const handleDownloadResponseBody = useCallback(async (prettify: boolean) => {
-    if (!response || !request) {
+    if (!response || !activeRequest) {
       console.warn('Nothing to download');
       return;
     }
@@ -87,7 +89,7 @@ export const ResponsePane: FC<Props> = ({
     const { canceled, filePath: outputPath } = await window.dialog.showSaveDialog({
       title: 'Save Response Body',
       buttonLabel: 'Save',
-      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
+      defaultPath: `${activeRequest.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
     });
 
     if (canceled) {
@@ -121,9 +123,9 @@ export const ResponsePane: FC<Props> = ({
         to.end();
       });
     }
-  }, [request, response]);
+  }, [activeRequest, response]);
 
-  if (!request) {
+  if (!activeRequest) {
     return <BlankPane type="response" />;
   }
 
@@ -131,8 +133,8 @@ export const ResponsePane: FC<Props> = ({
   if (!response) {
     return (
       <PlaceholderResponsePane>
-        {runningRequests[request._id] && <ResponseTimer
-          handleCancel={() => cancelRequestById(request._id)}
+        {runningRequests[activeRequest._id] && <ResponseTimer
+          handleCancel={() => cancelRequestById(activeRequest._id)}
         />}
       </PlaceholderResponsePane>
     );
@@ -150,7 +152,6 @@ export const ResponsePane: FC<Props> = ({
           </div>
           <ResponseHistoryDropdown
             activeResponse={response}
-            requestId={request._id}
             className="tall pane__header__right"
           />
         </PaneHeader>
@@ -231,8 +232,8 @@ export const ResponsePane: FC<Props> = ({
         </TabItem>
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
-        {runningRequests[request._id] && <ResponseTimer
-          handleCancel={() => cancelRequestById(request._id)}
+        {runningRequests[activeRequest._id] && <ResponseTimer
+          handleCancel={() => cancelRequestById(activeRequest._id)}
         />}
       </ErrorBoundary>
     </Pane>

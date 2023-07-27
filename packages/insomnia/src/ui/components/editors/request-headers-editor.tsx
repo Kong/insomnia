@@ -1,23 +1,27 @@
 import React, { FC, useCallback } from 'react';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
-import { update } from '../../../models/helpers/request-operations';
 import type { Request, RequestHeader } from '../../../models/request';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
+import { useRequestPatcher } from '../../hooks/use-request';
+import { RequestLoaderData } from '../../routes/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
   bulk: boolean;
   isDisabled?: boolean;
-  request: Request | WebSocketRequest;
 }
 
 export const RequestHeadersEditor: FC<Props> = ({
-  request,
   bulk,
   isDisabled,
 }) => {
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | WebSocketRequest, any>;
+  const patchRequest = useRequestPatcher();
+  const { requestId } = useParams() as { requestId: string };
+
   const handleBulkUpdate = useCallback((headersString: string) => {
     const headers: {
       name: string;
@@ -39,12 +43,11 @@ export const RequestHeadersEditor: FC<Props> = ({
         value,
       });
     }
-
-    update(request, { headers });
-  }, [request]);
+    patchRequest(requestId, { headers });
+  }, [patchRequest, requestId]);
 
   let headersString = '';
-  for (const header of request.headers) {
+  for (const header of activeRequest.headers) {
     // Make sure it's not disabled
     if (header.disabled) {
       continue;
@@ -58,8 +61,8 @@ export const RequestHeadersEditor: FC<Props> = ({
   }
 
   const onChangeHeaders = useCallback((headers: RequestHeader[]) => {
-    update(request, { headers });
-  }, [request]);
+    patchRequest(requestId, { headers });
+  }, [patchRequest, requestId]);
 
   if (bulk) {
     return (
@@ -78,12 +81,12 @@ export const RequestHeadersEditor: FC<Props> = ({
       namePlaceholder="header"
       valuePlaceholder="value"
       descriptionPlaceholder="description"
-      pairs={request.headers}
+      pairs={activeRequest.headers}
       handleGetAutocompleteNameConstants={getCommonHeaderNames}
       handleGetAutocompleteValueConstants={getCommonHeaderValues}
       onChange={onChangeHeaders}
       isDisabled={isDisabled}
-      isWebSocketRequest={isWebSocketRequest(request)}
+      isWebSocketRequest={isWebSocketRequest(activeRequest)}
     />
   );
 };

@@ -1,25 +1,23 @@
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import React, { FC, Fragment, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
-import { isGrpcRequest } from '../../models/grpc-request';
+import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
-import * as requestOperations from '../../models/helpers/request-operations';
-import { isEventStreamRequest, isRequest } from '../../models/request';
+import { isEventStreamRequest, isRequest, isRequestId, Request } from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
-import { isWebSocketRequest } from '../../models/websocket-request';
+import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
-import { showModal } from '../components/modals';
+import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { CookiesModal, showCookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
@@ -37,11 +35,8 @@ import { SidebarFilter } from '../components/sidebar/sidebar-filter';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
-import { updateRequestMetaByParentId } from '../hooks/create-request';
-import { createRequestGroup } from '../hooks/create-request-group';
-import {
-  selectActiveRequest,
-} from '../redux/selectors';
+import { useRequestMetaPatcher } from '../hooks/use-request';
+import { RequestLoaderData } from './request';
 import { RootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 export interface GrpcMessage {
@@ -58,7 +53,6 @@ export interface GrpcRequestState {
   status?: StatusObject;
   error?: ServiceError;
   methods: GrpcMethodInfo[];
-  reloadMethods: boolean;
 }
 
 const INITIAL_GRPC_REQUEST_STATE = {
@@ -68,7 +62,6 @@ const INITIAL_GRPC_REQUEST_STATE = {
   status: undefined,
   error: undefined,
   methods: [],
-  reloadMethods: true,
 };
 
 export const Debug: FC = () => {
@@ -77,8 +70,12 @@ export const Debug: FC = () => {
     activeWorkspaceMeta,
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const activeRequest = useSelector(selectActiveRequest);
+  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | GrpcRequest | WebSocketRequest, any> | undefined;
+  const { activeRequest } = requestData || {};
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>([]);
+  const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
@@ -91,29 +88,30 @@ export const Debug: FC = () => {
   }, []);
   useEffect(() => {
     const fn = async () => {
-      const children = await db.withDescendants(activeWorkspace);
+      const workspace = await models.workspace.getById(workspaceId);
+      const children = await db.withDescendants(workspace);
       const grpcRequests = children.filter(d => isGrpcRequest(d));
       setGrpcStates(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
     };
     fn();
-  }, [activeWorkspace]);
-
+  }, [workspaceId]);
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
+  const { sidebarFilter } = activeWorkspaceMeta;
   const [runningRequests, setRunningRequests] = useState({});
   const setLoading = (isLoading: boolean) => {
-    invariant(activeRequest, 'No active request');
+    invariant(requestId, 'No active request');
     setRunningRequests({
       ...runningRequests,
-      [activeRequest._id]: isLoading ? true : false,
+      [requestId]: isLoading ? true : false,
     });
   };
 
-  const grpcState = grpcStates.find(s => s.requestId === activeRequest?._id);
-  const setGrpcState = (newState: GrpcRequestState) => setGrpcStates(state => state.map(s => s.requestId === activeRequest?._id ? newState : s));
+  const grpcState = grpcStates.find(s => s.requestId === requestId);
+  const setGrpcState = (newState: GrpcRequestState) => setGrpcStates(state => state.map(s => s.requestId === requestId ? newState : s));
   const reloadRequests = (requestIds: string[]) => {
-    setGrpcStates(state => state.map(s => requestIds.includes(s.requestId) ? { ...s, reloadMethods: true } : s));
+    setGrpcStates(state => state.map(s => requestIds.includes(s.requestId) ? { ...s, methods: [] } : s));
   };
   useEffect(() => window.main.on('grpc.start', (_, id) => {
     setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, running: true } : s));
@@ -139,14 +137,14 @@ export const Debug: FC = () => {
   useDocBodyKeyboardShortcuts({
     request_togglePin:
       async () => {
-        if (activeRequest) {
-          const meta = isGrpcRequest(activeRequest) ? await getGrpcRequestMetaByParentId(activeRequest._id) : await getRequestMetaByParentId(activeRequest._id);
-          updateRequestMetaByParentId(activeRequest._id, { pinned: !meta?.pinned });
+        if (requestId) {
+          const meta = isGrpcRequestId(requestId) ? await getGrpcRequestMetaByParentId(requestId) : await getRequestMetaByParentId(requestId);
+          patchRequestMeta(requestId, { pinned: !meta?.pinned });
         }
       },
     request_showSettings:
       () => {
-        if (activeRequest && isRequest(activeRequest)) {
+        if (activeRequest) {
           showModal(RequestSettingsModal, { request: activeRequest });
         }
       },
@@ -158,8 +156,11 @@ export const Debug: FC = () => {
             message: `Really delete ${activeRequest.name}?`,
             onDone: async (confirmed: boolean) => {
               if (confirmed) {
-                await requestOperations.remove(activeRequest);
-                models.stats.incrementDeletedRequests();
+                requestFetcher.submit({ id: requestId },
+                  {
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
+                    method: 'post',
+                  });
               }
             },
           });
@@ -175,16 +176,11 @@ export const Debug: FC = () => {
             label: 'New Name',
             selectText: true,
             onComplete: async (name: string) => {
-              const newRequest = await requestOperations.duplicate(activeRequest, {
-                name,
-              });
-              if (activeWorkspaceMeta) {
-                await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: newRequest._id });
-              }
-              await updateRequestMetaByParentId(newRequest._id, {
-                lastActive: Date.now(),
-              });
-              models.stats.incrementCreatedRequests();
+              requestFetcher.submit({ name },
+                {
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/duplicate`,
+                  method: 'post',
+                });
             },
           });
         }
@@ -197,7 +193,7 @@ export const Debug: FC = () => {
           name: 'New Request',
         });
         await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
-        await updateRequestMetaByParentId(request._id, {
+        await patchRequestMeta(request._id, {
           lastActive: Date.now(),
         });
         models.stats.incrementCreatedRequests();
@@ -205,7 +201,19 @@ export const Debug: FC = () => {
       },
     request_showCreateFolder:
       () => {
-        createRequestGroup(activeRequest ? activeRequest.parentId : activeWorkspace._id);
+        const parentId = activeRequest ? activeRequest.parentId : workspaceId;
+        showPrompt({
+          title: 'New Folder',
+          defaultValue: 'My Folder',
+          submitName: 'Create',
+          label: 'Name',
+          selectText: true,
+          onComplete: name => requestFetcher.submit({ parentId, name },
+            {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+              method: 'post',
+            }),
+        });
       },
     request_showRecent:
       () => showModal(RequestSwitcherModal, {
@@ -241,11 +249,11 @@ export const Debug: FC = () => {
   const isRealtimeRequest = activeRequest && (isWebSocketRequest(activeRequest) || isEventStreamRequest(activeRequest));
   return (
     <SidebarLayout
-      renderPageSidebar={activeWorkspace ? <Fragment>
+      renderPageSidebar={workspaceId ? <Fragment>
         <div className="sidebar__menu">
           <EnvironmentsDropdown
             activeEnvironment={activeEnvironment}
-            workspaceId={activeWorkspace._id}
+            workspaceId={workspaceId}
           />
           <button className="btn btn--super-compact" onClick={showCookiesModal}>
             <div className="sidebar__menu__thing">
@@ -255,8 +263,8 @@ export const Debug: FC = () => {
         </div>
 
         <SidebarFilter
-          key={`${activeWorkspace._id}::filter`}
-          filter={activeWorkspaceMeta.sidebarFilter || ''}
+          key={`${workspaceId}::filter`}
+          filter={sidebarFilter || ''}
         />
 
         <SidebarChildren
@@ -265,40 +273,32 @@ export const Debug: FC = () => {
         <WorkspaceSyncDropdown />
       </Fragment>
         : null}
-      renderPaneOne={activeWorkspace ?
+      renderPaneOne={workspaceId ?
         <ErrorBoundary showAlert>
-          {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+          {isGrpcRequestId(requestId) && grpcState && (
             <GrpcRequestPane
-              activeRequest={activeRequest}
-              workspaceId={activeWorkspace._id}
               grpcState={grpcState}
               setGrpcState={setGrpcState}
               reloadRequests={reloadRequests}
             />)}
-          {activeRequest && isWebSocketRequest(activeRequest) && (
-            <WebSocketRequestPane
-              request={activeRequest}
-              workspaceId={activeWorkspace._id}
-              environment={activeEnvironment}
-            />)}
-          {activeRequest && isRequest(activeRequest) && (<RequestPane
+          {isWebSocketRequestId(requestId) && (
+            <WebSocketRequestPane environment={activeEnvironment} />)}
+          {isRequestId(requestId) && (<RequestPane
             environmentId={activeEnvironment ? activeEnvironment._id : ''}
-            request={activeRequest}
             settings={settings}
-            workspace={activeWorkspace}
             setLoading={setLoading}
           />)}
-          {!activeRequest && <PlaceholderRequestPane />}
+          {!requestId && <PlaceholderRequestPane />}
         </ErrorBoundary>
         : null}
       renderPaneTwo={
         <ErrorBoundary showAlert>
           {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
-            <GrpcResponsePane activeRequest={activeRequest} grpcState={grpcState} />)}
+            <GrpcResponsePane grpcState={grpcState} />)}
           {isRealtimeRequest && (
             <RealtimeResponsePane requestId={activeRequest._id} />)}
           {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
-            <ResponsePane request={activeRequest} runningRequests={runningRequests} />)}
+            <ResponsePane runningRequests={runningRequests} />)}
         </ErrorBoundary>}
     />
   );

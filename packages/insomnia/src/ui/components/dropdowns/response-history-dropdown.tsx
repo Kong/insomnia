@@ -2,6 +2,7 @@ import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'dat
 import React, { useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { decompressObject } from '../../../common/misc';
 import * as models from '../../../models/index';
@@ -9,8 +10,8 @@ import { isRequest, Request } from '../../../models/request';
 import { Response } from '../../../models/response';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveRequest, selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
+import { useRequestMetaPatcher } from '../../hooks/use-request';
+import { selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -22,20 +23,19 @@ import { TimeFromNow } from '../time-from-now';
 interface Props<GenericResponse extends Response | WebSocketResponse> {
   activeResponse: GenericResponse;
   className?: string;
-  requestId: string;
 }
 
 export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSocketResponse>({
   activeResponse,
   className,
-  requestId,
 }: Props<GenericResponse>) => {
+  const { requestId } = useParams() as { requestId: string };
   const dropdownRef = useRef<DropdownHandle>(null);
+  const patchRequestMeta = useRequestMetaPatcher();
   const {
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const responses = useSelector(selectActiveRequestResponses) as GenericResponse[];
-  const activeRequest = useSelector(selectActiveRequest);
   const requestVersions = useSelector(selectRequestVersions);
   const now = new Date();
   const categories: Record<string, GenericResponse[]> = {
@@ -55,8 +55,8 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
       await models.requestVersion.restore(activeResponse.requestVersionId);
     }
 
-    await updateRequestMetaByParentId(requestId, { activeResponseId: activeResponse._id });
-  }, []);
+    await patchRequestMeta(requestId, { activeResponseId: activeResponse._id });
+  }, [patchRequestMeta]);
 
   const handleDeleteResponses = useCallback(async () => {
     if (isWebSocketResponse(activeResponse)) {
@@ -65,10 +65,8 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     } else {
       await models.response.removeForRequest(requestId, activeEnvironment._id);
     }
-    if (activeRequest && activeRequest._id === requestId) {
-      await updateRequestMetaByParentId(requestId, { activeResponseId: null });
-    }
-  }, [activeEnvironment, activeRequest, activeResponse, requestId]);
+    await patchRequestMeta(requestId, { activeResponseId: null });
+  }, [activeEnvironment._id, activeResponse, requestId, patchRequestMeta]);
 
   const handleDeleteResponse = useCallback(async () => {
     let response: Response | WebSocketResponse | null = null;
@@ -89,9 +87,9 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
         await models.requestVersion.restore(response.requestVersionId);
       }
 
-      await updateRequestMetaByParentId(requestId, { activeResponseId: response?._id || null });
+      await patchRequestMeta(requestId, { activeResponseId: response?._id || null });
     }
-  }, [activeEnvironment?._id, activeResponse, requestId]);
+  }, [activeEnvironment?._id, activeResponse, requestId, patchRequestMeta]);
 
   responses.forEach(response => {
     const responseTime = new Date(response.created);
@@ -202,7 +200,6 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
           <ItemContent
             icon="fa-trash-o"
             label="Delete Current Response"
-            withPrompt
             onClick={handleDeleteResponse}
           />
         </DropdownItem>
@@ -210,7 +207,6 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
           <ItemContent
             icon="fa-trash-o"
             label="Clear History"
-            withPrompt
             onClick={handleDeleteResponses}
           />
         </DropdownItem>

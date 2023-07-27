@@ -12,8 +12,9 @@ import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { Workspace } from '../../../models/workspace';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
-import { selectActiveRequest, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { useRequestMetaPatcher } from '../../hooks/use-request';
+import { selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Highlight } from '../base/highlight';
 import { Modal, ModalHandle, ModalProps } from '../base/modal';
@@ -69,7 +70,8 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   });
   const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
   const navigate = useNavigate();
-  const activeRequest = useSelector(selectActiveRequest);
+  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any> | undefined;
+  const { activeRequest } = requestData || {};
   const {
     activeWorkspace: workspace,
     activeWorkspaceMeta,
@@ -78,7 +80,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   const requestMetas = useSelector(selectRequestMetas);
   const grpcRequestMetas = useSelector(selectGrpcRequestMetas);
   const workspaceRequestsAndRequestGroups = useSelector(selectWorkspaceRequestsAndRequestGroups);
-
+  const patchRequestMeta = useRequestMetaPatcher();
   /** Return array of path segments for given folders */
   const pathSegments = useCallback((requestOrRequestGroup: Request | WebSocketRequest | GrpcRequest | RequestGroup): string[] => {
     const folders = workspaceRequestsAndRequestGroups.filter(isRequestGroup)
@@ -223,9 +225,9 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
       return;
     }
     models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
-    updateRequestMetaByParentId(request._id, { lastActive: Date.now() });
+    patchRequestMeta(request._id, { lastActive: Date.now() });
     modalRef.current?.hide();
-  }, [activeWorkspaceMeta]);
+  }, [activeWorkspaceMeta, patchRequestMeta]);
 
   const activateCurrentIndex = useCallback(async () => {
     const { activeIndex, matchedRequests, matchedWorkspaces, searchString } = state;

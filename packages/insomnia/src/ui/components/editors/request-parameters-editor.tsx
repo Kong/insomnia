@@ -1,22 +1,25 @@
 import React, { FC, useCallback } from 'react';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { update } from '../../../models/helpers/request-operations';
-import type { Request, RequestParameter } from '../../../models/request';
+import { Request, RequestParameter } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
+import { useRequestPatcher } from '../../hooks/use-request';
+import { RequestLoaderData } from '../../routes/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
   bulk: boolean;
-  request: Request | WebSocketRequest;
   disabled?: boolean;
 }
 
 export const RequestParametersEditor: FC<Props> = ({
-  request,
   bulk,
   disabled = false,
 }) => {
+  const { requestId } = useParams() as { requestId: string };
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | WebSocketRequest, any>;
+  const patchRequest = useRequestPatcher();
   const handleBulkUpdate = useCallback((paramsString: string) => {
     const parameters: {
       name: string;
@@ -38,11 +41,11 @@ export const RequestParametersEditor: FC<Props> = ({
         value,
       });
     }
-    update(request, { parameters });
-  }, [request]);
+    patchRequest(requestId, { parameters });
+  }, [patchRequest, requestId]);
 
   let paramsString = '';
-  for (const param of request.parameters) {
+  for (const param of activeRequest.parameters) {
     // Make sure it's not disabled
     if (param.disabled) {
       continue;
@@ -56,8 +59,8 @@ export const RequestParametersEditor: FC<Props> = ({
   }
 
   const onChangeParameter = useCallback((parameters: RequestParameter[]) => {
-    update(request, { parameters });
-  }, [request]);
+    patchRequest(requestId, { parameters });
+  }, [patchRequest, requestId]);
 
   if (bulk) {
     return (
@@ -76,7 +79,7 @@ export const RequestParametersEditor: FC<Props> = ({
       namePlaceholder="name"
       valuePlaceholder="value"
       descriptionPlaceholder="description"
-      pairs={request.parameters}
+      pairs={activeRequest.parameters}
       onChange={onChangeParameter}
       isDisabled={disabled}
     />

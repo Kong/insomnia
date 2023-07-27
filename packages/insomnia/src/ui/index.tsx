@@ -144,6 +144,47 @@ const router = createMemoryRouter(
                                   <Debug />
                                 </Suspense>
                               ),
+                              children: [
+                                {
+                                  path: 'request/:requestId',
+                                  id: 'request/:requestId',
+                                  loader: async (...args) => (await import('./routes/request')).loader(...args),
+                                  children: [
+                                    {
+                                      path: 'duplicate',
+                                      action: async (...args) => (await import('./routes/request')).duplicateRequestAction(...args),
+                                    },
+                                    {
+                                      path: 'update',
+                                      action: async (...args) => (await import('./routes/request')).updateRequestAction(...args),
+                                    },
+                                    {
+                                      path: 'update-meta',
+                                      action: async (...args) => (await import('./routes/request')).updateRequestMetaAction(...args),
+                                    },
+                                  ],
+                                },
+                                {
+                                  path: 'request/new',
+                                  action: async (...args) => (await import('./routes/request')).createRequestAction(...args),
+                                },
+                                {
+                                  path: 'request/delete',
+                                  action: async (...args) => (await import('./routes/request')).deleteRequestAction(...args),
+                                },
+                                {
+                                  path: 'request-group/new',
+                                  action: async (...args) => (await import('./routes/request-group')).createRequestGroupAction(...args),
+                                },
+                                {
+                                  path: 'request-group/delete',
+                                  action: async (...args) => (await import('./routes/request-group')).deleteRequestGroupAction(...args),
+                                },
+                                {
+                                  path: 'request-group/update',
+                                  action: async (...args) => (await import('./routes/request-group')).updateRequestGroupAction(...args),
+                                },
+                              ],
                             },
                             {
                               path: `${ACTIVITY_SPEC}`,
@@ -535,7 +576,6 @@ function updateReduxNavigationState(store: Store, pathname: string) {
 
 async function renderApp() {
   await database.initClient();
-  await models.project.seed();
 
   await initPlugins();
 

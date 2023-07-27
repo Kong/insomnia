@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useState } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
-import { useAsync } from 'react-use';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useMount } from 'react-use';
 import styled from 'styled-components';
 
 import { getCommonHeaderNames, getCommonHeaderValues } from '../../../common/common-headers';
@@ -11,8 +11,10 @@ import { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
 import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
+import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { GrpcRequestState } from '../../routes/debug';
+import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
@@ -22,6 +24,7 @@ import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
+import { ErrorModal } from '../modals/error-modal';
 import { ProtoFilesModal } from '../modals/proto-files-modal';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { SvgIcon } from '../svg-icon';
@@ -31,8 +34,6 @@ import { GrpcTabbedMessages } from '../viewers/grpc-tabbed-messages';
 import { EmptyStatePane } from './empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from './pane';
 interface Props {
-  activeRequest: GrpcRequest;
-  workspaceId: string;
   grpcState: GrpcRequestState;
   setGrpcState: (states: GrpcRequestState) => void;
   reloadRequests: (requestIds: string[]) => void;
@@ -68,36 +69,33 @@ export const GrpcMethodTypeName = {
 } as const;
 
 export const GrpcRequestPane: FunctionComponent<Props> = ({
-  activeRequest,
-  workspaceId,
   grpcState,
   setGrpcState,
   reloadRequests,
 }) => {
-  const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
-  const { requestMessages, running, reloadMethods, methods } = grpcState;
-  useAsync(async () => {
-    // don't actually reload until the request has stopped running or if methods do not need to be reloaded
-    if (!reloadMethods || running) {
-      return;
-    }
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<GrpcRequest, any>;
 
+  const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
+  const { requestMessages, running, methods } = grpcState;
+  useMount(async () => {
     if (!activeRequest.protoFileId) {
       return;
     }
     console.log(`[gRPC] loading proto file methods pf=${activeRequest.protoFileId}`);
     const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
-    setGrpcState({ ...grpcState, methods, reloadMethods: false });
-  }, [reloadMethods, running, setGrpcState, grpcState, activeRequest.protoFileId]);
+    setGrpcState({ ...grpcState, methods });
+  });
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
+  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
+  const patchRequest = useRequestPatcher();
   const {
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const environmentId = activeEnvironment._id;
   // Reset the response pane state when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniquenessKey = `${activeEnvironment.modified}::${activeRequest?._id}::${gitVersion}::${activeRequestSyncVersion}`;
+  const uniquenessKey = `${activeEnvironment.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}`;
   const method = methods.find(c => c.fullPath === activeRequest.protoMethodName);
   const methodType = method?.type;
   const handleRequestSend = async () => {
@@ -157,8 +155,8 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 type="text"
                 defaultValue={activeRequest.url}
                 placeholder="grpcb.in:9000"
-                onChange={url => models.grpcRequest.update(activeRequest, { url })}
-                getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, activeRequest._id)}
+                onChange={url => patchRequest(requestId, { url })}
+                getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)}
               />
             </StyledUrlEditor>
             <StyledDropdownWrapper>
@@ -167,7 +165,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 methods={methods}
                 selectedMethod={method}
                 handleChange={protoMethodName => {
-                  models.grpcRequest.update(activeRequest, { protoMethodName });
+                  patchRequest(requestId, { protoMethodName });
                   setGrpcState({
                     ...grpcState,
                     requestMessages: [],
@@ -182,14 +180,15 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 data-testid="button-server-reflection"
                 disabled={!activeRequest.url}
                 onClick={async () => {
-                  const request = await models.grpcRequest.update(activeRequest, { protoMethodName: '', protoFileId: '' });
-                  const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-                  const rendered = await render({
-                    url: request.url,
-                    metadata: request.metadata,
-                  }, renderContext);
-                  const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
-                  setGrpcState({ ...grpcState, methods, reloadMethods: false });
+                  try {
+                    const renderContext = await getRenderContext({ request: activeRequest, environmentId, purpose: RENDER_PURPOSE_SEND });
+                    const rendered = await render({ url: activeRequest.url, metadata: activeRequest.metadata }, renderContext);
+                    const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
+                    setGrpcState({ ...grpcState, methods });
+                    patchRequest(requestId, { protoFileId: '', protoMethodName: '' });
+                  } catch (error) {
+                    showModal(ErrorModal, { error });
+                  }
                 }}
               >
                 <Tooltip message="Click to use server reflection" position="bottom" delay={500}>
@@ -209,7 +208,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             <GrpcSendButton
               running={running}
               methodType={methodType}
-              handleCancel={() => window.main.grpc.cancel(activeRequest._id)}
+              handleCancel={() => window.main.grpc.cancel(requestId)}
               handleStart={handleRequestSend}
             />
           </StyledUrlBar>
@@ -223,9 +222,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   tabNamePrefix="Stream"
                   messages={requestMessages}
                   bodyText={activeRequest.body.text}
-                  handleBodyChange={value => models.grpcRequest.update(activeRequest, {
-                    body: { ...activeRequest.body, text: value },
-                  })}
+                  handleBodyChange={text => patchRequest(requestId, { body: { text } })}
                   showActions={running && canClientStream(methodType)}
                   handleStream={async () => {
                     const requestBody = await getRenderedGrpcRequestMessage({
@@ -235,7 +232,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     });
                     const preparedMessage = {
                       body: requestBody,
-                      requestId: activeRequest._id,
+                      requestId,
                     };
                     window.main.grpc.sendMessage(preparedMessage);
                     setGrpcState({
@@ -247,7 +244,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     });
 
                   }}
-                  handleCommit={() => window.main.grpc.commit(activeRequest._id)}
+                  handleCommit={() => window.main.grpc.commit(requestId)}
                 />
               </TabItem>
               <TabItem key="headers" title="Headers">
@@ -258,9 +255,10 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       valuePlaceholder="value"
                       descriptionPlaceholder="description"
                       pairs={activeRequest.metadata}
+                      isDisabled={running}
                       handleGetAutocompleteNameConstants={getCommonHeaderNames}
                       handleGetAutocompleteValueConstants={getCommonHeaderValues}
-                      onChange={(metadata: GrpcRequestHeader[]) => models.grpcRequest.update(activeRequest, { metadata })}
+                      onChange={(metadata: GrpcRequestHeader[]) => patchRequest(requestId, { metadata })}
                     />
                   </ErrorBoundary>
                 </PanelContainer>
@@ -283,16 +281,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
         onHide={() => setIsProtoModalOpen(false)}
         onSave={async (protoFileId: string) => {
           if (activeRequest.protoFileId !== protoFileId) {
-            await models.grpcRequest.update(activeRequest, {
-              protoFileId,
-              body: {
-                text: '{}',
-              },
-              protoMethodName: '',
-            });
-            setGrpcState({ ...grpcState, reloadMethods: true });
+            patchRequest(requestId, { protoFileId, protoMethodName: '' });
+            const methods = await window.main.grpc.loadMethods(protoFileId);
+            setGrpcState({ ...grpcState, methods });
             setIsProtoModalOpen(false);
           }
+          setIsProtoModalOpen(false);
         }}
       />}
     </>

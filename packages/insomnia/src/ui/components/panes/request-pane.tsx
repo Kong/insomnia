@@ -1,21 +1,18 @@
 import React, { FC, useCallback, useEffect, useRef } from 'react';
-import { useSelector } from 'react-redux';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { version } from '../../../../package.json';
-import { CONTENT_TYPE_FILE, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, CONTENT_TYPE_OTHER, getContentTypeFromHeaders, METHOD_POST } from '../../../common/constants';
+import { getContentTypeFromHeaders } from '../../../common/constants';
 import { database } from '../../../common/database';
-import { getContentTypeHeader } from '../../../common/misc';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { update } from '../../../models/helpers/request-operations';
-import { Request, RequestBody } from '../../../models/request';
+import { Request } from '../../../models/request';
+import { RequestMeta } from '../../../models/request-meta';
 import type { Settings } from '../../../models/settings';
-import { create, Workspace } from '../../../models/workspace';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
+import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import { selectActiveRequestMeta } from '../../redux/selectors';
+import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
@@ -62,168 +59,22 @@ const TabPanelBody = styled.div({
 
 interface Props {
   environmentId: string;
-  request?: Request | null;
   settings: Settings;
-  workspace: Workspace;
   setLoading: (l: boolean) => void;
 }
-export function newBodyGraphQL(rawBody: string): RequestBody {
-  try {
-    // Only strip the newlines if rawBody is a parsable JSON
-    JSON.parse(rawBody);
-    return {
-      mimeType: CONTENT_TYPE_GRAPHQL,
-      text: rawBody.replace(/\\\\n/g, ''),
-    };
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      return {
-        mimeType: CONTENT_TYPE_GRAPHQL,
-        text: rawBody,
-      };
-    } else {
-      throw error;
-    }
-  }
-}
-export function updateMimeType(
-  request: Request,
-  mimeType: string,
-  doCreate = false,
-  savedBody: RequestBody = {},
-) {
-  let headers = request.headers ? [...request.headers] : [];
-  const contentTypeHeader = getContentTypeHeader(headers);
-  // GraphQL uses JSON content-type
-  const contentTypeHeaderValue = mimeType === CONTENT_TYPE_GRAPHQL ? CONTENT_TYPE_JSON : mimeType;
 
-  // GraphQL must be POST
-  if (mimeType === CONTENT_TYPE_GRAPHQL) {
-    request.method = METHOD_POST;
-  }
-
-  // Check if we are converting to/from variants of XML or JSON
-  let leaveContentTypeAlone = false;
-
-  if (contentTypeHeader && mimeType) {
-    const current = contentTypeHeader.value;
-
-    if (current.includes('xml') && mimeType.includes('xml')) {
-      leaveContentTypeAlone = true;
-    } else if (current.includes('json') && mimeType.includes('json')) {
-      leaveContentTypeAlone = true;
-    }
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // 1. Update Content-Type header //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  const hasBody = typeof mimeType === 'string';
-
-  if (!hasBody) {
-    headers = headers.filter(h => h !== contentTypeHeader);
-  } else if (mimeType === CONTENT_TYPE_OTHER) {
-    // Leave headers alone
-  } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
-    contentTypeHeader.value = contentTypeHeaderValue;
-  } else if (mimeType && !contentTypeHeader) {
-    headers.push({
-      name: 'Content-Type',
-      value: contentTypeHeaderValue,
-    });
-  }
-  if (!headers.find(h => h?.name?.toLowerCase() === 'user-agent')) {
-    headers.push({
-      name: 'User-Agent',
-      value: `Insomnia/${version}`,
-    });
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // 2. Make a new request body //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
-  let body;
-  const oldBody = Object.keys(savedBody).length === 0 ? request.body : savedBody;
-
-  if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
-    // Urlencoded
-    body = oldBody.params
-      ? {
-        mimeType: CONTENT_TYPE_FORM_URLENCODED,
-        params: oldBody.params,
-      } : {
-        mimeType: CONTENT_TYPE_FORM_URLENCODED,
-        params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
-      };
-  } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
-    // Form Data
-    body = oldBody.params
-      ? {
-        mimeType: CONTENT_TYPE_FORM_DATA,
-        params: oldBody.params || [],
-      } : {
-        mimeType: CONTENT_TYPE_FORM_DATA,
-        params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
-      };
-  } else if (mimeType === CONTENT_TYPE_FILE) {
-    // File
-    body = {
-      mimeType: CONTENT_TYPE_FILE,
-      fileName: '',
-    };
-  } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
-    if (contentTypeHeader) {
-      contentTypeHeader.value = CONTENT_TYPE_JSON;
-    }
-
-    body = newBodyGraphQL(oldBody.text || '');
-  } else if (typeof mimeType !== 'string') {
-    // No body
-    body = {};
-  } else {
-    // Raw Content-Type (ex: application/json)
-    body = typeof mimeType !== 'string' ? {
-      text: oldBody.text || '',
-    } : {
-      mimeType: mimeType.split(';')[0],
-      text: oldBody.text || '',
-    };
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~ //
-  // 2. create/update request //
-  // ~~~~~~~~~~~~~~~~~~~~~~~~ //
-  if (doCreate) {
-    const newRequest: Request = Object.assign({}, request, {
-      headers,
-      body,
-    });
-    return create(newRequest);
-  } else {
-    return update(request, {
-      headers,
-      body,
-    });
-  }
-}
 export const RequestPane: FC<Props> = ({
   environmentId,
-  request,
   settings,
-  workspace,
   setLoading,
 }) => {
-
-  const updateRequestUrl = (request: Request, url: string) => {
-    if (request.url === url) {
-      return Promise.resolve(request);
-    }
-    return update(request, { url });
-  };
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
+  const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const patchRequest = useRequestPatcher();
 
   const handleEditDescription = useCallback((forceEditMode: boolean) => {
-    request && showModal(RequestSettingsModal, { request, forceEditMode });
-  }, [request]);
+    showModal(RequestSettingsModal, { request: activeRequest, forceEditMode });
+  }, [activeRequest]);
 
   const handleEditDescriptionAdd = useCallback(() => {
     handleEditDescription(true);
@@ -238,98 +89,77 @@ export const RequestPane: FC<Props> = ({
   }, [settings]);
 
   const handleImportQueryFromUrl = useCallback(() => {
-    if (!request) {
-      console.warn('Tried to import query when no request active');
-      return;
-    }
-
     let query;
 
     try {
-      query = extractQueryStringFromUrl(request.url);
+      query = extractQueryStringFromUrl(activeRequest.url);
     } catch (error) {
       console.warn('Failed to parse url to import querystring');
       return;
     }
 
     // Remove the search string (?foo=bar&...) from the Url
-    const url = request.url.replace(`?${query}`, '');
-    const parameters = [...request.parameters, ...deconstructQueryStringToParams(query)];
+    const url = activeRequest.url.replace(`?${query}`, '');
+    const parameters = [...activeRequest.parameters, ...deconstructQueryStringToParams(query)];
 
     // Only update if url changed
-    if (url !== request.url) {
+    if (url !== activeRequest.url) {
       database.update({
-        ...request,
+        ...activeRequest,
         modified: Date.now(),
         url,
         parameters,
         // Hack to force the ui to refresh. More info on use-vcs-version
       }, true);
     }
-  }, [request]);
+  }, [activeRequest]);
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
 
   const {
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const activeRequestMeta = useSelector(selectActiveRequestMeta);
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
-  const uniqueKey = `${activeEnvironment?.modified}::${request?._id}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
+  const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
 
   const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
   useEffect(() => {
     requestUrlBarRef.current?.focusInput();
   }, [
-    request?._id, // happens when the user switches requests
+    requestId, // happens when the user switches requests
     uniqueKey,
   ]);
 
-  if (!request) {
+  if (!activeRequest) {
     return (
       <PlaceholderRequestPane />
     );
   }
 
-  async function updateRequestMimeType(mimeType: string | null): Promise<Request | null> {
-    if (!request) {
-      console.warn('Tried to update request mime-type when no active request');
-      return null;
-    }
-    const requestMeta = await models.requestMeta.getOrCreateByParentId(request._id,);
-    // Switched to No body
-    const savedRequestBody = typeof mimeType !== 'string' ? request.body : {};
-    // Clear saved value in requestMeta
-    await models.requestMeta.update(requestMeta, { savedRequestBody });
-    // @ts-expect-error -- TSCONVERSION mimeType can be null when no body is selected but the updateMimeType logic needs to be reexamined
-    return updateMimeType(request, mimeType, false, requestMeta.savedRequestBody);
-  }
-  const numParameters = request.parameters.filter(p => !p.disabled).length;
-  const numHeaders = request.headers.filter(h => !h.disabled).length;
-  const urlHasQueryParameters = request.url.indexOf('?') >= 0;
-  const contentType = getContentTypeFromHeaders(request.headers) || request.body.mimeType;
+  const numParameters = activeRequest.parameters.filter(p => !p.disabled).length;
+  const numHeaders = activeRequest.headers.filter(h => !h.disabled).length;
+  const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
+  const contentType = getContentTypeFromHeaders(activeRequest.headers) || activeRequest.body.mimeType;
   return (
     <Pane type="request">
       <PaneHeader>
         <ErrorBoundary errorClassName="font-error pad text-center">
           <RequestUrlBar
-            key={request._id}
+            key={requestId}
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
-            onUrlChange={updateRequestUrl}
-            handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspace._id, models.request.type, request?._id)}
+            onUrlChange={url => patchRequest(requestId, { url })}
+            handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-            request={request}
             setLoading={setLoading}
           />
         </ErrorBoundary>
       </PaneHeader>
       <Tabs aria-label="Request pane tabs">
-        <TabItem key="content-type" title={<ContentTypeDropdown onChange={updateRequestMimeType} />}>
+        <TabItem key="content-type" title={<ContentTypeDropdown />}>
           <BodyEditor
             key={uniqueKey}
-            request={request}
-            workspace={workspace}
+            request={activeRequest}
             environmentId={environmentId}
           />
         </TabItem>
@@ -347,7 +177,7 @@ export const RequestPane: FC<Props> = ({
                   key={uniqueKey}
                   errorClassName="tall wide vertically-align font-error pad text-center"
                 >
-                  <RenderedQueryString request={request} />
+                  <RenderedQueryString request={activeRequest} />
                 </ErrorBoundary>
               </code>
             </QueryEditorPreview>
@@ -358,7 +188,6 @@ export const RequestPane: FC<Props> = ({
               >
                 <RequestParametersEditor
                   key={contentType}
-                  request={request}
                   bulk={settings.useBulkParametersEditor}
                 />
               </ErrorBoundary>
@@ -385,7 +214,6 @@ export const RequestPane: FC<Props> = ({
             <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
               <TabPanelBody>
                 <RequestHeadersEditor
-                  request={request}
                   bulk={settings.useBulkHeaderEditor}
                 />
               </TabPanelBody>
@@ -406,7 +234,7 @@ export const RequestPane: FC<Props> = ({
           title={
             <>
               Docs
-              {request.description && (
+              {activeRequest.description && (
                 <span className="bubble space-left">
                   <i className="fa fa--skinny fa-check txt-xxs" />
                 </span>
@@ -415,7 +243,7 @@ export const RequestPane: FC<Props> = ({
           }
         >
           <PanelContainer className="tall">
-            {request.description ? (
+            {activeRequest.description ? (
               <div>
                 <div className="pull-right pad bg-default">
                   {/* @ts-expect-error -- TSCONVERSION the click handler expects a boolean prop... */}
@@ -426,8 +254,8 @@ export const RequestPane: FC<Props> = ({
                 <div className="pad">
                   <ErrorBoundary errorClassName="font-error pad text-center">
                     <MarkdownPreview
-                      heading={request.name}
-                      markdown={request.description}
+                      heading={activeRequest.name}
+                      markdown={activeRequest.description}
                     />
                   </ErrorBoundary>
                 </div>

@@ -1,16 +1,16 @@
 import React, { FC, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import {
   AuthType,
   getAuthTypeName,
   HAWK_ALGORITHM_SHA256,
 } from '../../../common/constants';
-import { update } from '../../../models/helpers/request-operations';
-import { RequestAuthentication } from '../../../models/request';
+import { Request, RequestAuthentication } from '../../../models/request';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
-import { selectActiveRequest } from '../../redux/selectors';
+import { useRequestPatcher } from '../../hooks/use-request';
+import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -129,8 +129,9 @@ interface Props {
   disabled?: boolean;
 }
 export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = false }) => {
-  const activeRequest = useSelector(selectActiveRequest);
-
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const patchRequest = useRequestPatcher();
   const onClick = useCallback(async (type: AuthType) => {
     if (!activeRequest || !('authentication' in activeRequest)) {
       return;
@@ -165,8 +166,8 @@ export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = f
         break;
       }
     }
-    update(activeRequest, { authentication: newAuthentication });
-  }, [activeRequest]);
+    patchRequest(requestId, { authentication: newAuthentication });
+  }, [activeRequest, patchRequest, requestId]);
   const isCurrent = useCallback((type: AuthType) => {
     if (!activeRequest || !('authentication' in activeRequest)) {
       return false;

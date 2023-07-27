@@ -1,6 +1,7 @@
 import clone from 'clone';
 import { lookup } from 'mime-types';
 import React, { FC, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 
 import {
   CONTENT_TYPE_FILE,
@@ -11,14 +12,13 @@ import {
 } from '../../../../common/constants';
 import { documentationLinks } from '../../../../common/documentation';
 import { getContentTypeHeader } from '../../../../common/misc';
-import * as models from '../../../../models';
 import {
   isEventStreamRequest,
   type Request,
   type RequestBodyParameter,
 } from '../../../../models/request';
-import type { Workspace } from '../../../../models/workspace';
 import { NunjucksEnabledProvider } from '../../../context/nunjucks/nunjucks-enabled-context';
+import { useRequestPatcher } from '../../../hooks/use-request';
 import { AskModal } from '../../modals/ask-modal';
 import { showModal } from '../../modals/index';
 import { EmptyStatePane } from '../../panes/empty-state-pane';
@@ -31,54 +31,38 @@ import { UrlEncodedEditor } from './url-encoded-editor';
 
 interface Props {
   request: Request;
-  workspace: Workspace;
   environmentId: string;
 }
 
 export const BodyEditor: FC<Props> = ({
   request,
-  workspace,
   environmentId,
 }) => {
+  const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
+  const patchRequest = useRequestPatcher();
   const handleRawChange = useCallback((rawValue: string) => {
-    models.request.update(request, {
-      body: typeof request.body.mimeType !== 'string' ? {
-        text: rawValue,
-      } : {
-        mimeType: request.body.mimeType.split(';')[0],
-        text: rawValue,
-      },
-    });
-  }, [request]);
+    const body = typeof request.body.mimeType !== 'string'
+      ? { text: rawValue }
+      : { mimeType: request.body.mimeType.split(';')[0], text: rawValue };
+    patchRequest(requestId, { body });
+  }, [patchRequest, request.body.mimeType, requestId]);
 
   const handleGraphQLChange = useCallback((content: string) => {
-    models.request.update(request, {
-      body: typeof CONTENT_TYPE_GRAPHQL !== 'string' ? {
-        text: content,
-      } : {
-        mimeType: CONTENT_TYPE_GRAPHQL.split(';')[0],
-        text: content,
-      },
-    });
-  }, [request]);
+    const body = typeof CONTENT_TYPE_GRAPHQL !== 'string'
+      ? { text: content }
+      : { mimeType: CONTENT_TYPE_GRAPHQL.split(';')[0], text: content };
+    patchRequest(requestId, { body });
+  }, [patchRequest, requestId]);
 
   const handleFormUrlEncodedChange = useCallback((params: RequestBodyParameter[]) => {
-    models.request.update(request, {
-      body: {
-        mimeType: CONTENT_TYPE_FORM_URLENCODED,
-        params,
-      },
-    });
-  }, [request]);
+    const body = { mimeType: CONTENT_TYPE_FORM_URLENCODED, params };
+    patchRequest(requestId, { body });
+  }, [patchRequest, requestId]);
 
   const handleFormChange = useCallback((parameters: RequestBodyParameter[]) => {
-    models.request.update(request, {
-      body: {
-        mimeType: CONTENT_TYPE_FORM_DATA,
-        params: parameters || [],
-      },
-    });
-  }, [request]);
+    const body = { mimeType: CONTENT_TYPE_FORM_DATA, params: parameters || [] };
+    patchRequest(requestId, { body });
+  }, [patchRequest, requestId]);
 
   const handleFileChange = async (path: string) => {
     const headers = clone(request.headers);
@@ -86,7 +70,7 @@ export const BodyEditor: FC<Props> = ({
       mimeType: CONTENT_TYPE_FILE,
       fileName: path,
     };
-    const newRequest = await models.request.update(request, { body });
+    patchRequest(requestId, { body });
     let contentTypeHeader = getContentTypeHeader(headers);
 
     if (!contentTypeHeader) {
@@ -111,7 +95,7 @@ export const BodyEditor: FC<Props> = ({
         </p>,
         onDone: async (saidYes: boolean) => {
           if (saidYes) {
-            models.request.update(newRequest, { headers });
+            patchRequest(requestId, { headers });
           }
         },
       });
@@ -132,7 +116,7 @@ export const BodyEditor: FC<Props> = ({
     } else if (mimeType === CONTENT_TYPE_FILE) {
       return <FileEditor key={uniqueKey} onChange={handleFileChange} path={fileName || ''} />;
     } else if (mimeType === CONTENT_TYPE_GRAPHQL) {
-      return <GraphQLEditor key={uniqueKey} uniquenessKey={uniqueKey} request={request} workspaceId={workspace._id} environmentId={environmentId} onChange={handleGraphQLChange} />;
+      return <GraphQLEditor key={uniqueKey} uniquenessKey={uniqueKey} request={request} workspaceId={workspaceId} environmentId={environmentId} onChange={handleGraphQLChange} />;
     } else if (!isBodyEmpty) {
       const contentType = getContentTypeFromHeaders(request.headers) || mimeType;
       return <RawEditor uniquenessKey={uniqueKey} contentType={contentType || 'text/plain'} content={request.body.text || ''} onChange={handleRawChange} />;

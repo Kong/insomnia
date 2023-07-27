@@ -1,36 +1,41 @@
 import React, { useCallback } from 'react';
+import { useFetcher, useParams } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { createRequest, CreateRequestType } from '../../hooks/create-request';
-import { createRequestGroup } from '../../hooks/create-request-group';
+import { CreateRequestType } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
-import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { showPrompt } from '../modals';
+
 export const SidebarCreateDropdown = () => {
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { hotKeyRegistry } = settings;
-  const {
-    activeWorkspace,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const create = useCallback((value: CreateRequestType) => {
-    if (activeWorkspace._id) {
-      createRequest({
-        requestType: value,
-        parentId: activeWorkspace._id,
-        workspaceId: activeWorkspace._id,
-      });
-    }
-  }, [activeWorkspace._id]);
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const create = useCallback((requestType: CreateRequestType) =>
+    requestFetcher.submit({ requestType, parentId: workspaceId },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+        method: 'post',
+        encType: 'application/json',
+      }), [requestFetcher, organizationId, projectId, workspaceId]);
 
   const createGroup = useCallback(() => {
-    if (!activeWorkspace._id) {
-      return;
-    }
-
-    createRequestGroup(activeWorkspace._id);
-  }, [activeWorkspace._id]);
+    showPrompt({
+      title: 'New Folder',
+      defaultValue: 'My Folder',
+      submitName: 'Create',
+      label: 'Name',
+      selectText: true,
+      onComplete: name => requestFetcher.submit({ parentId: workspaceId, name },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+          method: 'post',
+        }),
+    });
+  }, [requestFetcher, organizationId, projectId, workspaceId]);
   const dataTestId = 'SidebarCreateDropdown';
   return (
     <Dropdown
