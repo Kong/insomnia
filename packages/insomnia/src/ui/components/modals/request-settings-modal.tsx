@@ -69,48 +69,44 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     },
   }), [workspacesForActiveProject]);
 
-  async function handleMoveToWorkspace() {
-    const { activeWorkspaceIdToCopyTo, request } = state;
-    invariant(request, 'Request is required');
-    invariant(activeWorkspaceIdToCopyTo, 'Workspace ID is required');
-    requestFetcher.submit({ parentId: activeWorkspaceIdToCopyTo },
+  const updateRequest = (r: Partial<Request>) => {
+    invariant(state.request, 'Request is required');
+    requestFetcher.submit(JSON.stringify(r),
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${state.request._id}/update`,
         method: 'post',
         encType: 'application/json',
       });
+  };
+  const duplicateRequest = (r: Partial<Request>) => {
+    invariant(state.request, 'Request is required');
+    requestFetcher.submit(JSON.stringify(r),
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${state.request._id}/duplicate`,
+        method: 'post',
+        encType: 'application/json',
+      });
+  };
+  async function handleMoveToWorkspace() {
+    const { activeWorkspaceIdToCopyTo } = state;
+    invariant(activeWorkspaceIdToCopyTo, 'Workspace ID is required');
+    updateRequest({ parentId: activeWorkspaceIdToCopyTo });
   }
 
   async function handleCopyToWorkspace() {
-    const { activeWorkspaceIdToCopyTo, request } = state;
-    invariant(request, 'Request is required');
+    const { activeWorkspaceIdToCopyTo } = state;
     invariant(activeWorkspaceIdToCopyTo, 'Workspace ID is required');
-    requestFetcher.submit({ parentId: activeWorkspaceIdToCopyTo },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/duplicate`,
-        method: 'post',
-      });
+    duplicateRequest({ parentId: activeWorkspaceIdToCopyTo });
   }
   const { request, showDescription, defaultPreviewMode, activeWorkspaceIdToCopyTo, workspace } = state;
   const toggleCheckBox = async (event: any) => {
-    invariant(request, 'Request is required');
-    requestFetcher.submit({ [event.currentTarget.name]: event.currentTarget.checked ? true : false },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
+    updateRequest({ [event.currentTarget.name]: event.currentTarget.checked ? true : false });
+
     const updated = { ...state.request, [event.currentTarget.name]: event.currentTarget.checked } as Request;
     setState(state => ({ ...state, request: updated }));
   };
   const updateDescription = (description: string) => {
-    invariant(request, 'Request is required');
-    requestFetcher.submit({ description },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
+    updateRequest({ description });
     const updated = { ...state.request, description } as Request;
     setState({
       ...state,
@@ -119,13 +115,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     });
   };
   const updateName = (name: string) => {
-    invariant(request, 'Request is required');
-    requestFetcher.submit({ name },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
-        method: 'post',
-        encType: 'application/json',
-      });
+    updateRequest({ name });
     const updated = { ...state.request, name } as Request;
     setState(state => ({
       ...state,
