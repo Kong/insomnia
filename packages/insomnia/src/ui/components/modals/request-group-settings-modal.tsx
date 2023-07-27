@@ -82,7 +82,9 @@ export const RequestGroupSettingsModal = forwardRef<RequestGroupSettingsModalHan
       parentId: activeWorkspaceIdToCopyTo,
       name: requestGroup.name, // Because duplicating will add (Copy) suffix
     });
+    // TODO clean up this so it doesn't orphan descendants
     await models.requestGroup.remove(requestGroup);
+    modalRef.current?.hide();
   };
 
   const handleCopyToWorkspace = async () => {
