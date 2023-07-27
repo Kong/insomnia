@@ -248,31 +248,31 @@ export const Debug: FC = () => {
   }, [activeEnvironment?._id]);
   const isRealtimeRequest = activeRequest && (isWebSocketRequest(activeRequest) || isEventStreamRequest(activeRequest));
   return (
-      <SidebarLayout
-        renderPageSidebar={workspaceId ? <Fragment>
-          <div className="sidebar__menu">
-            <EnvironmentsDropdown
-              activeEnvironment={activeEnvironment}
-              workspaceId={workspaceId}
-            />
-            <button className="btn btn--super-compact" onClick={showCookiesModal}>
-              <div className="sidebar__menu__thing">
-                <span>Cookies</span>
-              </div>
-            </button>
-          </div>
-
-          <SidebarFilter
-            key={`${workspaceId}::filter`}
-            filter={sidebarFilter || ''}
+    <SidebarLayout
+      renderPageSidebar={workspaceId ? <Fragment>
+        <div className="sidebar__menu">
+          <EnvironmentsDropdown
+            activeEnvironment={activeEnvironment}
+            workspaceId={workspaceId}
           />
+          <button className="btn btn--super-compact" onClick={showCookiesModal}>
+            <div className="sidebar__menu__thing">
+              <span>Cookies</span>
+            </div>
+          </button>
+        </div>
+
+        <SidebarFilter
+          key={`${workspaceId}::filter`}
+          filter={sidebarFilter || ''}
+        />
         <SidebarChildren
           filter={sidebarFilter || ''}
         />
         <WorkspaceSyncDropdown />
       </Fragment>
         : null}
-        renderPaneOne={workspaceId ?
+      renderPaneOne={workspaceId ?
         <ErrorBoundary showAlert>
           {isGrpcRequestId(requestId) && grpcState && (
             <GrpcRequestPane
@@ -290,7 +290,7 @@ export const Debug: FC = () => {
           {!requestId && <PlaceholderRequestPane />}
         </ErrorBoundary>
         : null}
-        renderPaneTwo={
+      renderPaneTwo={
         <ErrorBoundary showAlert>
           {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
             <GrpcResponsePane grpcState={grpcState} />)}
@@ -299,7 +299,7 @@ export const Debug: FC = () => {
           {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
             <ResponsePane runningRequests={runningRequests} />)}
         </ErrorBoundary>}
-      />
+    />
   );
 };
 
