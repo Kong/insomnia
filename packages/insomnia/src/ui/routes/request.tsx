@@ -110,7 +110,6 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
   // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
   if (isRequest(req) && patch.body) {
     const mimeType = patch.body?.mimeType as string | null;
-    // TODO: This is a hack to get around the fact that we don't have a way to send null
     const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
     const savedRequestBody = !mimeType ? (req.body || {}) : {};
     await models.requestMeta.update(requestMeta, { savedRequestBody });
