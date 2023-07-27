@@ -14,7 +14,7 @@ import { incrementDeletedRequests } from '../../../models/stats';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
+import { useRequestMetaUpdateFetcher } from '../../hooks/create-request';
 import { RootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
@@ -43,6 +43,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
+  const updateRequestMetaByParentId = useRequestMetaUpdateFetcher();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
@@ -128,7 +129,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
 
   const togglePin = useCallback(() => {
     updateRequestMetaByParentId(request._id, { pinned: !isPinned });
-  }, [isPinned, request]);
+  }, [isPinned, request._id, updateRequestMetaByParentId]);
 
   const deleteRequest = useCallback(() => {
     incrementDeletedRequests();

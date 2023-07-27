@@ -35,7 +35,7 @@ import { SidebarFilter } from '../components/sidebar/sidebar-filter';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
-import { updateRequestMetaByParentId } from '../hooks/create-request';
+import { useRequestMetaUpdateFetcher } from '../hooks/create-request';
 import { RequestLoaderData } from './request';
 import { RootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
@@ -75,6 +75,7 @@ export const Debug: FC = () => {
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>([]);
+  const updateRequestMetaByParentId = useRequestMetaUpdateFetcher();
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
       for (const change of changes) {

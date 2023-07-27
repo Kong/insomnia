@@ -5,7 +5,7 @@ import { useFetcher, useParams } from 'react-router-dom';
 import { toKebabCase } from '../../../common/misc';
 import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
+import { useRequestMetaUpdateFetcher } from '../../hooks/create-request';
 import { RootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
 import { showPrompt } from '../modals';
@@ -25,6 +25,7 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
+  const updateRequestMetaByParentId = useRequestMetaUpdateFetcher();
   const { hotKeyRegistry } = settings;
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
@@ -51,7 +52,7 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
 
   const togglePin = useCallback(() => {
     updateRequestMetaByParentId(request._id, { pinned: !isPinned });
-  }, [isPinned, request]);
+  }, [isPinned, request._id, updateRequestMetaByParentId]);
 
   const deleteRequest = useCallback(() => {
     incrementDeletedRequests();

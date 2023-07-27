@@ -18,7 +18,7 @@ import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
-import { updateRequestMetaByParentId } from '../hooks/create-request';
+import { useRequestMetaUpdateFetcher } from '../hooks/create-request';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
 import { RequestLoaderData } from '../routes/request';
@@ -70,7 +70,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const { hotKeyRegistry } = settings;
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
   const downloadPath = activeRequestMeta.downloadPath;
-
+  const updateRequestMetaByParentId = useRequestMetaUpdateFetcher();
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const methodDropdownRef = useRef<DropdownHandle>(null);
@@ -196,7 +196,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       await updateRequestMetaByParentId(activeRequest._id, { activeResponseId: null });
       setLoading(false);
     }
-  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion, updateRequestMetaByParentId]);
 
   const handleSend = useCallback(async () => {
     if (!activeRequest) {
@@ -240,7 +240,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     // Unset active response because we just made a new one
     await updateRequestMetaByParentId(activeRequest._id, { activeResponseId: null });
     setLoading(false);
-  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion, updateRequestMetaByParentId]);
 
   const send = useCallback(() => {
     setCurrentTimeout(undefined);
@@ -323,7 +323,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       return;
     }
     updateRequestMetaByParentId(activeRequest._id, { downloadPath: filePaths[0] });
-  }, [activeRequest._id]);
+  }, [activeRequest._id, updateRequestMetaByParentId]);
   const handleClearDownloadLocation = () => updateRequestMetaByParentId(activeRequest._id, { downloadPath: null });
 
   useDocBodyKeyboardShortcuts({

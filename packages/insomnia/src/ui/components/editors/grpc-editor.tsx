@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 
 import * as models from '../../../models';
 import type { Response } from '../../../models/response';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
+import { useRequestMetaUpdateFetcher } from '../../hooks/create-request';
 import { selectActiveResponse } from '../../redux/selectors';
 import { CodeEditor } from '../codemirror/code-editor';
 
@@ -19,6 +19,7 @@ export const GRPCEditor: FunctionComponent<Props> = ({
   readOnly,
 }) => {
   const response = useSelector(selectActiveResponse) as Response | null;
+  const updateRequestMetaByParentId = useRequestMetaUpdateFetcher();
   const handleSetFilter = async (responseFilter: string) => {
     if (!response) {
       return;

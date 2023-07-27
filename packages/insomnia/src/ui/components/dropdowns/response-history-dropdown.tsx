@@ -10,7 +10,7 @@ import { isRequest, Request } from '../../../models/request';
 import { Response } from '../../../models/response';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
+import { useRequestMetaUpdateFetcher } from '../../hooks/create-request';
 import { selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -31,6 +31,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
 }: Props<GenericResponse>) => {
   const { requestId } = useParams() as { requestId: string };
   const dropdownRef = useRef<DropdownHandle>(null);
+  const updateRequestMetaByParentId = useRequestMetaUpdateFetcher();
   const {
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
@@ -55,7 +56,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     }
 
     await updateRequestMetaByParentId(requestId, { activeResponseId: activeResponse._id });
-  }, []);
+  }, [updateRequestMetaByParentId]);
 
   const handleDeleteResponses = useCallback(async () => {
     if (isWebSocketResponse(activeResponse)) {
@@ -65,7 +66,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
       await models.response.removeForRequest(requestId, activeEnvironment._id);
     }
     await updateRequestMetaByParentId(requestId, { activeResponseId: null });
-  }, [activeEnvironment, activeResponse, requestId]);
+  }, [activeEnvironment._id, activeResponse, requestId, updateRequestMetaByParentId]);
 
   const handleDeleteResponse = useCallback(async () => {
     let response: Response | WebSocketResponse | null = null;
@@ -88,7 +89,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
 
       await updateRequestMetaByParentId(requestId, { activeResponseId: response?._id || null });
     }
-  }, [activeEnvironment?._id, activeResponse, requestId]);
+  }, [activeEnvironment?._id, activeResponse, requestId, updateRequestMetaByParentId]);
 
   responses.forEach(response => {
     const responseTime = new Date(response.created);

@@ -163,6 +163,7 @@ export const updateRequestMetaAction: ActionFunction = async ({ request, params 
   const { requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
   const patch = await request.json();
+  console.log('patch', patch);
   if (isGrpcRequestId(requestId)) {
     await models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
     return null;

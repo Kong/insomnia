@@ -12,7 +12,7 @@ import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { Workspace } from '../../../models/workspace';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
+import { useRequestMetaUpdateFetcher } from '../../hooks/create-request';
 import { selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -80,7 +80,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
   const requestMetas = useSelector(selectRequestMetas);
   const grpcRequestMetas = useSelector(selectGrpcRequestMetas);
   const workspaceRequestsAndRequestGroups = useSelector(selectWorkspaceRequestsAndRequestGroups);
-
+  const updateRequestMetaByParentId = useRequestMetaUpdateFetcher();
   /** Return array of path segments for given folders */
   const pathSegments = useCallback((requestOrRequestGroup: Request | WebSocketRequest | GrpcRequest | RequestGroup): string[] => {
     const folders = workspaceRequestsAndRequestGroups.filter(isRequestGroup)
@@ -227,7 +227,7 @@ export const RequestSwitcherModal = forwardRef<RequestSwitcherModalHandle, Modal
     models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
     updateRequestMetaByParentId(request._id, { lastActive: Date.now() });
     modalRef.current?.hide();
-  }, [activeWorkspaceMeta]);
+  }, [activeWorkspaceMeta, updateRequestMetaByParentId]);
 
   const activateCurrentIndex = useCallback(async () => {
     const { activeIndex, matchedRequests, matchedWorkspaces, searchString } = state;

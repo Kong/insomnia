@@ -12,7 +12,7 @@ import { RequestMeta } from '../../../models/request-meta';
 import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
+import { useRequestMetaUpdateFetcher } from '../../hooks/create-request';
 import { selectActiveResponse } from '../../redux/selectors';
 import { RequestLoaderData } from '../../routes/request';
 import { RootLoaderData } from '../../routes/root';
@@ -43,6 +43,7 @@ export const ResponsePane: FC<Props> = ({
   const response = useSelector(selectActiveResponse) as Response | null;
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
   const filter = activeRequestMeta.responseFilter || '';
+  const updateRequestMetaByParentId = useRequestMetaUpdateFetcher();
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
