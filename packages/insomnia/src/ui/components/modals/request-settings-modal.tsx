@@ -96,7 +96,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     invariant(request, 'Request is required');
     requestFetcher.submit({ [event.currentTarget.name]: event.currentTarget.checked ? true : false },
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update-setting`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request._id}/update`,
         method: 'post',
         encType: 'application/json',
       });

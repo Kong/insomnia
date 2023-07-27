@@ -18,6 +18,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<Request | WebS
   invariant(req, 'Request not found');
   const activeWorkspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   invariant(activeWorkspaceMeta, 'Active workspace meta not found');
+  // NOTE: loaders shouldnt mutate data, this should be moved somewhere else
   models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: requestId });
   if (isGrpcRequestId(requestId)) {
     models.grpcRequestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
@@ -106,18 +107,13 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
   //   requestOperations.update(req, { parentId, metaSortKey: -1e9 });
   // }
   if (isRequest(req) && patch.body) {
-    let mimeType = patch.body?.mimeType as string | null;
+    const mimeType = patch.body?.mimeType as string | null;
     // TODO: This is a hack to get around the fact that we don't have a way to send null
-    if (mimeType !== null) {
-      if (mimeType === 'null') {
-        mimeType = null;
-      }
-      const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
-      const savedRequestBody = !mimeType ? (req.body || {}) : {};
-      await models.requestMeta.update(requestMeta, { savedRequestBody });
-      // TODO: make this less hacky
-      patch = updateMimeType(req, mimeType, requestMeta.savedRequestBody);
-    }
+    const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
+    const savedRequestBody = !mimeType ? (req.body || {}) : {};
+    await models.requestMeta.update(requestMeta, { savedRequestBody });
+    // TODO: make this less hacky
+    patch = updateMimeType(req, mimeType, requestMeta.savedRequestBody);
   }
 
   requestOperations.update(req, patch);

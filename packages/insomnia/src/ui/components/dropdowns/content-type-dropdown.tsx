@@ -61,8 +61,7 @@ export const ContentTypeDropdown: FC = () => {
       });
     }
     // TODO: This is a hack to get around the fact that we don't have a way to send null
-    const mimeTypeHack = typeof mimeType === 'string' ? mimeType : 'null';
-    requestFetcher.submit({ mimeType: mimeTypeHack },
+    requestFetcher.submit({ body: { mimeType } },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
         method: 'post',
