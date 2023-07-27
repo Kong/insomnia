@@ -660,7 +660,7 @@ export const loader: LoaderFunction = async ({
 
   const allProjects = await models.project.all();
 
-  invariant(project, 'Project was not found');
+  invariant(project, `Project: ${projectId} was not found`);
 
   const projectWorkspaces = await models.workspace.findByParentId(project._id);
 
