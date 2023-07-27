@@ -7,7 +7,7 @@ import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { selectSidebarChildren } from '../../redux/sidebar-selectors';
+import { selectSidebarChildren } from '../../redux/selectors';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarRequestGroupRow } from './sidebar-request-group-row';
 import { SidebarRequestRow } from './sidebar-request-row';
