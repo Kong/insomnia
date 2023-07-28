@@ -247,6 +247,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
     dropdown = (
       <div className={className}>
         <Dropdown
+          dataTestId='git-dropdown'
           className="wide tall"
           ref={dropdownRef}
           triggerButton={
@@ -306,7 +307,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
               <DropdownItem
                 key={item.id}
                 textValue='Use Insomnia Sync'
-                arial-label='Use Insomnia Sync'
+                aria-label='Use Insomnia Sync'
               >
                 <Button
                   variant='contained'
@@ -423,6 +424,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
     dropdown = (
       <div className={className}>
         <Dropdown
+          dataTestId='git-dropdown'
           className="wide tall"
           ref={dropdownRef}
           triggerButton={
@@ -467,7 +469,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
             {item => (
               <DropdownItem
                 key={item.id}
-                arial-label='Use Insomnia Sync'
+                aria-label='Use Insomnia Sync'
               >
                 <Button
                   variant='contained'
