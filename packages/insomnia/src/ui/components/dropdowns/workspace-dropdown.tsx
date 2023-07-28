@@ -8,7 +8,7 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
-import { getWorkspaceName, isDesign, Workspace } from '../../../models/workspace';
+import { isDesign, Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
@@ -37,12 +37,12 @@ export const WorkspaceDropdown: FC = () => {
     clientCertificates,
     projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const activeWorkspaceName = activeApiSpec?.fileName || activeWorkspace.name;
+  const activeWorkspaceName = activeWorkspace.name;
   const { settings } = useRouteLoaderData('root') as RootLoaderData;
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const workspaceName = getWorkspaceName(activeWorkspace, activeApiSpec);
+  const workspaceName = activeWorkspace.name;
   const projectName = activeProject.name ?? getProductName();
   const fetcher = useFetcher();
 
@@ -151,6 +151,7 @@ export const WorkspaceDropdown: FC = () => {
                     {
                       action: `/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/update`,
                       method: 'post',
+                      encType: 'application/json',
                     }
                   ),
               });
@@ -275,7 +276,6 @@ export const WorkspaceDropdown: FC = () => {
       {isSettingsModalOpen && (
         <WorkspaceSettingsModal
           workspace={activeWorkspace}
-          apiSpec={activeApiSpec}
           workspaceMeta={activeWorkspaceMeta}
           clientCertificates={clientCertificates}
           onHide={() => setIsSettingsModalOpen(false)}

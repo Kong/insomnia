@@ -1,18 +1,16 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useRevalidator } from 'react-router-dom';
+import { useFetcher, useRevalidator } from 'react-router-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { ApiSpec } from '../../../models/api-spec';
 import { CaCertificate } from '../../../models/ca-certificate';
 import type { ClientCertificate } from '../../../models/client-certificate';
-import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
-import { getWorkspaceName, Workspace } from '../../../models/workspace';
+import { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
 import { invariant } from '../../../utils/invariant';
 import { FileInputButton } from '../base/file-input-button';
@@ -72,11 +70,10 @@ interface WorkspaceSettingsModalState {
 }
 interface Props extends ModalProps {
   workspace: Workspace;
-  apiSpec: ApiSpec | null;
   workspaceMeta: WorkspaceMeta;
   clientCertificates: ClientCertificate[];
 }
-export const WorkspaceSettingsModal = ({ workspace, apiSpec, workspaceMeta, clientCertificates, onHide }: Props) => {
+export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertificates, onHide }: Props) => {
   const hasDescription = !!workspace.description;
 
   const modalRef = useRef<ModalHandle>(null);
@@ -92,13 +89,21 @@ export const WorkspaceSettingsModal = ({ workspace, apiSpec, workspaceMeta, clie
     defaultPreviewMode: hasDescription,
   });
   const { revalidate } = useRevalidator();
-  const activeWorkspaceName = getWorkspaceName(workspace, apiSpec);
-  const navigate = useNavigate();
-  const { organizationId } = useParams() as { organizationId: string };
+  const activeWorkspaceName = workspace.name;
   const [caCert, setCaCert] = useState<CaCertificate | null>(null);
   useEffect(() => {
     modalRef.current?.show();
   });
+
+  const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
+  const workspaceFetcher = useFetcher();
+  const workspacePatcher = (workspaceId: string, patch: Partial<Workspace>) => {
+    workspaceFetcher.submit({ ...patch, workspaceId }, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/update`,
+      method: 'post',
+      encType: 'application/json',
+    });
+  };
 
   useEffect(() => {
     if (!workspace) {
@@ -153,14 +158,11 @@ export const WorkspaceSettingsModal = ({ workspace, apiSpec, workspaceMeta, clie
     _handleToggleCertificateForm();
   };
   const _handleRemoveWorkspace = async () => {
-    if (!workspace) {
-      return;
-    }
-    await models.stats.incrementDeletedRequestsForDescendents(workspace);
-    await models.workspace.remove(workspace);
-    navigate(`/organizations/${organizationId}`);
-
-    modalRef.current?.hide();
+    const workspaceId = workspace._id;
+    workspaceFetcher.submit({ workspaceId }, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/delete`,
+      method: 'post',
+    });
   };
 
   const renderCertificate = (certificate: ClientCertificate) => {
@@ -234,7 +236,7 @@ export const WorkspaceSettingsModal = ({ workspace, apiSpec, workspaceMeta, clie
                         type="text"
                         placeholder="Awesome API"
                         defaultValue={activeWorkspaceName}
-                        onChange={event => workspaceOperations.rename(event.target.value, workspace, apiSpec)}
+                        onChange={event => workspacePatcher(workspace._id, { name: event.target.value })}
                       />
                     </label>
                   </div>
@@ -246,7 +248,7 @@ export const WorkspaceSettingsModal = ({ workspace, apiSpec, workspaceMeta, clie
                         placeholder="Write a description"
                         defaultValue={workspace.description}
                         onChange={(description: string) => {
-                          models.workspace.update(workspace, { description });
+                          workspacePatcher(workspace._id, { description });
                           if (state.defaultPreviewMode !== false) {
                             setState(state => ({
                               ...state,
@@ -312,6 +314,7 @@ export const WorkspaceSettingsModal = ({ workspace, apiSpec, workspaceMeta, clie
                           title="Enable or disable certificate"
                           onClick={async () => {
                             invariant(caCert, 'CA cert should exist');
+                            // TODO
                             const cert = await models.caCertificate.update(caCert, {
                               disabled: !caCert.disabled,
                             });

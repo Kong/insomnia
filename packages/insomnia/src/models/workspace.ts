@@ -2,7 +2,6 @@ import type { Merge } from 'type-fest';
 
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';
-import { ApiSpec } from './api-spec';
 import type { BaseModel } from './index';
 import * as models from './index';
 import { DEFAULT_PROJECT_ID, isProjectId } from './project';
@@ -40,10 +39,6 @@ export const isDesign = (workspace: Pick<Workspace, 'scope'>) => (
 export const isCollection = (workspace: Pick<Workspace, 'scope'>) => (
   workspace.scope === WorkspaceScopeKeys.collection
 );
-
-export const getWorkspaceName = (w: Workspace, s: ApiSpec | null) => {
-  return isDesign(w) ? (s?.fileName || 'my-spec.yaml') : w.name;
-};
 
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,

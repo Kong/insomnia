@@ -9,7 +9,7 @@ import type { ApiSpec } from '../../../models/api-spec';
 import { ClientCertificate } from '../../../models/client-certificate';
 import { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
-import { getWorkspaceName, WorkspaceScopeKeys } from '../../../models/workspace';
+import { WorkspaceScopeKeys } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
 import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
@@ -82,7 +82,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 };
 
 export const WorkspaceCardDropdown: FC<Props> = props => {
-  const { workspace, apiSpec, project, projects, workspaceMeta, clientCertificates } = props;
+  const { workspace, project, projects, workspaceMeta, clientCertificates } = props;
   const fetcher = useFetcher();
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -92,7 +92,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
     projectId,
   } = useParams() as { organizationId: string; projectId: string };
 
-  const workspaceName = getWorkspaceName(workspace, apiSpec);
+  const workspaceName = workspace.name;
   const projectName = project.name ?? getProductName();
   const { refresh, renderPluginDropdownItems } = useDocumentActionPlugins(props);
   return (
@@ -130,6 +130,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                     {
                       action: `/organization/${organizationId}/project/${workspace.parentId}/workspace/update`,
                       method: 'post',
+                      encType: 'application/json',
                     }
                   ),
               });
@@ -214,7 +215,6 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
       {isSettingsModalOpen && (
         <WorkspaceSettingsModal
           workspace={workspace}
-          apiSpec={apiSpec}
           workspaceMeta={workspaceMeta}
           clientCertificates={clientCertificates}
           onHide={() => setIsSettingsModalOpen(false)}
