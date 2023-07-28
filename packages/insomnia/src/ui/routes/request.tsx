@@ -104,7 +104,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
 export const updateRequestAction: ActionFunction = async ({ request, params }) => {
   const { requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
-  const req = await requestOperations.getById(requestId);
+  let req = await requestOperations.getById(requestId);
   invariant(req, 'Request not found');
   let patch = await request.json();
   // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
@@ -113,7 +113,8 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
     const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
     const savedRequestBody = !mimeType ? (req.body || {}) : {};
     await models.requestMeta.update(requestMeta, { savedRequestBody });
-    // TODO: make this less hacky
+    // TODO: make this less hacky, update expects latest req not patch
+    req = await requestOperations.update(req, patch);
     patch = updateMimeType(req, mimeType, requestMeta.savedRequestBody);
   }
 
