@@ -4,7 +4,6 @@ import React, { FC, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { markdownToHTML } from '../../common/markdown-to-html';
 import { HandleRender } from '../../common/render';
-import { useGatedNunjucks } from '../context/nunjucks/use-gated-nunjucks';
 
 interface Props {
   markdown: string;
@@ -17,14 +16,12 @@ export const MarkdownPreview: FC<Props> = ({ markdown, className, heading }) => 
   const divRef = useRef<HTMLDivElement>(null);
   const [compiled, setCompiled] = useState('');
   const [error, setError] = useState('');
-  const { handleRender } = useGatedNunjucks();
 
   useEffect(() => {
     let shouldUpdate = true;
     const fn = async () => {
       try {
-        const rendered = handleRender ? await handleRender(markdown) : markdown;
-        const compiled = markdownToHTML(rendered);
+        const compiled = markdownToHTML(markdown);
         shouldUpdate && setCompiled(compiled);
         shouldUpdate && setError('');
       } catch (err) {
@@ -36,7 +33,7 @@ export const MarkdownPreview: FC<Props> = ({ markdown, className, heading }) => 
     return () => {
       shouldUpdate = false;
     };
-  }, [handleRender, markdown]);
+  }, [markdown]);
   useLayoutEffect(() => {
     if (!divRef.current) {
       return;

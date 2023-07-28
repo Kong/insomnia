@@ -16,18 +16,17 @@ interface WorkspaceDuplicateModalProps extends ModalProps {
   projects: Project[];
 }
 
-export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ workspace, projects, ...modalProps }) => {
+export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ workspace, projects, onHide }) => {
   const { organizationId } = useParams<{organizationId: string}>();
   const { Form } = useFetcher();
   const modalRef = useRef<ModalHandle>(null);
-
   useEffect(() => {
     modalRef.current?.show();
   }, []);
 
   return (
     <OverlayContainer onClick={e => e.stopPropagation()}>
-      <Modal {...modalProps} ref={modalRef}>
+      <Modal onHide={onHide} ref={modalRef}>
         <ModalHeader>{`Duplicate ${workspace && getWorkspaceLabel(workspace).singular}`}</ModalHeader>
         <ModalBody className="wide">
           <Form

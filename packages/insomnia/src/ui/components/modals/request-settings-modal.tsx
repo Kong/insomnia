@@ -87,6 +87,7 @@ export const RequestSettingsModal = forwardRef<RequestSettingsModalHandle, Modal
     const { activeWorkspaceIdToCopyTo } = state;
     invariant(activeWorkspaceIdToCopyTo, 'Workspace ID is required');
     updateRequest({ parentId: activeWorkspaceIdToCopyTo });
+    modalRef.current?.hide();
   }
 
   async function handleCopyToWorkspace() {

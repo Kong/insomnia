@@ -29,7 +29,8 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
   const canBeMasked = !showPasswords && mask;
   const isMasked = canBeMasked && masked;
 
-  const onChange = useCallback((value: string) => patchRequest(requestId, { authentication: { [property]: value } }), [patchRequest, property, requestId]);
+  const onChange = useCallback((value: string) => patchRequest(requestId, { authentication: { ...authentication, [property]: value } }),
+    [authentication, patchRequest, property, requestId]);
 
   const id = toKebabCase(label);
 

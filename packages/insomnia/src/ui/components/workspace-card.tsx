@@ -9,9 +9,9 @@ import {
 } from '../../common/constants';
 import { fuzzyMatchAll } from '../../common/misc';
 import { strings } from '../../common/strings';
-import { ApiSpec } from '../../models/api-spec';
 import { Project } from '../../models/project';
-import { isDesign, Workspace } from '../../models/workspace';
+import { isDesign } from '../../models/workspace';
+import { WorkspaceWithMetadata } from '../routes/project';
 import { Highlight } from './base/highlight';
 import { Card } from './card';
 import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
@@ -35,19 +35,9 @@ const LabelIcon = styled.div({
 });
 
 export interface WorkspaceCardProps {
-  apiSpec: ApiSpec | null;
-  workspace: Workspace;
+  workspaceWithMetadata: WorkspaceWithMetadata;
   filter: string;
   activeProject: Project;
-  lastActiveBranch?: string | null;
-  lastModifiedTimestamp: number;
-  lastCommitTime?: number | null;
-  lastCommitAuthor?: string | null;
-  modifiedLocally?: number;
-  spec: Record<string, any> | null;
-  specFormat: 'openapi' | 'swagger' | null;
-  specFormatVersion: string | null;
-  hasUnsavedChanges: boolean;
   onSelect: (workspaceId: string, activity: GlobalActivity) => void;
   projects: Project[];
 }
@@ -76,22 +66,28 @@ export const getVersionDisplayment = (version?: string | number | null) => {
 };
 
 export const WorkspaceCard: FC<WorkspaceCardProps> = ({
-  apiSpec,
+  workspaceWithMetadata,
   filter,
-  lastActiveBranch,
-  lastModifiedTimestamp,
-  workspace,
   activeProject,
-  lastCommitTime,
-  modifiedLocally,
-  lastCommitAuthor,
-  spec,
-  specFormat,
-  specFormatVersion,
-  hasUnsavedChanges,
   projects,
   onSelect,
 }) => {
+  const {
+    apiSpec,
+    lastActiveBranch,
+    lastModifiedTimestamp,
+    workspace,
+    lastCommitTime,
+    modifiedLocally,
+    lastCommitAuthor,
+    spec,
+    specFormat,
+    specFormatVersion,
+    hasUnsavedChanges,
+    workspaceMeta,
+    clientCertificates,
+    caCertificate,
+  } = workspaceWithMetadata;
   let branch = lastActiveBranch;
 
   let log = <TimeFromNow timestamp={lastModifiedTimestamp} />;
@@ -182,8 +178,11 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
         <WorkspaceCardDropdown
           apiSpec={apiSpec}
           workspace={workspace}
+          workspaceMeta={workspaceMeta}
           project={activeProject}
           projects={projects}
+          clientCertificates={clientCertificates}
+          caCertificate={caCertificate}
         />
       }
       docFormat={format}
