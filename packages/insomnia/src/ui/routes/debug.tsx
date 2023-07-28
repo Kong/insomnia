@@ -180,6 +180,7 @@ export const Debug: FC = () => {
                 {
                   action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/duplicate`,
                   method: 'post',
+                  encType: 'application/json',
                 });
             },
           });

@@ -98,6 +98,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
         {
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request?._id}/duplicate`,
           method: 'post',
+          encType: 'application/json',
         }),
     });
   }, [requestFetcher, organizationId, projectId, request, workspaceId]);
