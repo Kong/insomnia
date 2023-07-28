@@ -5,7 +5,6 @@ import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
-import { caCertificate } from '../../../models';
 import type { ApiSpec } from '../../../models/api-spec';
 import { CaCertificate } from '../../../models/ca-certificate';
 import { ClientCertificate } from '../../../models/client-certificate';

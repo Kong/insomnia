@@ -9,7 +9,6 @@ import {
 } from '../../common/constants';
 import { fuzzyMatchAll } from '../../common/misc';
 import { strings } from '../../common/strings';
-import { caCertificate } from '../../models';
 import { Project } from '../../models/project';
 import { isDesign } from '../../models/workspace';
 import { WorkspaceWithMetadata } from '../routes/project';
@@ -87,7 +86,7 @@ export const WorkspaceCard: FC<WorkspaceCardProps> = ({
     hasUnsavedChanges,
     workspaceMeta,
     clientCertificates,
-    caCertificates,
+    caCertificate,
   } = workspaceWithMetadata;
   let branch = lastActiveBranch;
 
