@@ -35,7 +35,7 @@ export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
   const { handleGetRenderContext, handleRender } = useNunjucks();
 
   const privateKey = authentication[property];
-  const onChange = useCallback((value: string) => patchRequest(requestId, { authentication: { [property]: value } }), [patchRequest, property, requestId]);
+  const onChange = useCallback((value: string) => patchRequest(requestId, { authentication: { ...authentication, [property]: value } }), [authentication, patchRequest, property, requestId]);
 
   const editPrivateKey = () => {
     showModal(CodePromptModal, {
