@@ -41,6 +41,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
           <ItemContent
             icon="trash-o"
             label="Delete"
+            className="danger"
             withPrompt
             onClick={() =>
               deleteProjectFetcher.submit(

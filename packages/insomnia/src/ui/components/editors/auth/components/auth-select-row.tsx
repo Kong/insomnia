@@ -30,8 +30,8 @@ export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disab
     if (updatedValue === 'true' || updatedValue === 'false') {
       updatedValue = JSON.parse(updatedValue);
     }
-    patchRequest(requestId, { authentication: { [property]: updatedValue } });
-  }, [patchRequest, property, requestId]);
+    patchRequest(requestId, { authentication: { ...authentication, [property]: updatedValue } });
+  }, [authentication, patchRequest, property, requestId]);
 
   const id = toKebabCase(label);
 

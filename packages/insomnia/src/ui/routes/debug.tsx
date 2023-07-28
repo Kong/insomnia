@@ -12,7 +12,6 @@ import { isEventStreamRequest, isRequest, isRequestId, Request } from '../../mod
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
-import { SegmentEvent } from '../analytics';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
@@ -180,6 +179,7 @@ export const Debug: FC = () => {
                 {
                   action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/duplicate`,
                   method: 'post',
+                  encType: 'application/json',
                 });
             },
           });
@@ -188,16 +188,12 @@ export const Debug: FC = () => {
     request_createHTTP:
       async () => {
         const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-        const request = await models.request.create({
-          parentId,
-          name: 'New Request',
-        });
-        await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: request._id });
-        await patchRequestMeta(request._id, {
-          lastActive: Date.now(),
-        });
-        models.stats.incrementCreatedRequests();
-        window.main.trackSegmentEvent({ event: SegmentEvent.requestCreate, properties: { requestType: 'HTTP' } });
+        requestFetcher.submit({ requestType: 'HTTP', parentId },
+          {
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+            method: 'post',
+            encType: 'application/json',
+          });
       },
     request_showCreateFolder:
       () => {
@@ -266,9 +262,8 @@ export const Debug: FC = () => {
           key={`${workspaceId}::filter`}
           filter={sidebarFilter || ''}
         />
-
         <SidebarChildren
-          filter={activeWorkspaceMeta.sidebarFilter || ''}
+          filter={sidebarFilter || ''}
         />
         <WorkspaceSyncDropdown />
       </Fragment>

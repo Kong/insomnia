@@ -413,7 +413,7 @@ export const ImportModal: FC<ImportModalProps> = ({
   defaultWorkspaceId,
   organizationId,
   from,
-  ...modalProps
+  onHide,
 }) => {
   const modalRef = useRef<ModalHandle>(null);
   const scanResourcesFetcher = useFetcher<ScanForResourcesActionResult>();
@@ -432,8 +432,8 @@ export const ImportModal: FC<ImportModalProps> = ({
   const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspaces <= 1;
   const header = shouldImportToWorkspace ? `Import to "${workspaceName}" Workspace` : `Import to "${projectName}" Project`;
   return (
-    <OverlayContainer>
-      <Modal {...modalProps} ref={modalRef}>
+    <OverlayContainer onClick={e => e.stopPropagation()}>
+      <Modal ref={modalRef} onHide={onHide}>
         <ModalHeader>{header}</ModalHeader>
         {scanResourcesFetcher.data && scanResourcesFetcher.data.errors.length === 0 ? (
           <ImportResourcesForm

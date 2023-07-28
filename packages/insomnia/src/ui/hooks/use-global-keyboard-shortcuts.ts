@@ -5,7 +5,6 @@ import * as plugins from '../../plugins';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
-import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
 import { RootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
 export const useGlobalKeyboardShortcuts = () => {
@@ -13,10 +12,8 @@ export const useGlobalKeyboardShortcuts = () => {
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
-  const { activeWorkspace, activeWorkspaceMeta } = workspaceData || {};
+  const { activeWorkspaceMeta } = workspaceData || {};
   useDocBodyKeyboardShortcuts({
-    workspace_showSettings:
-      () => activeWorkspace && showModal(WorkspaceSettingsModal),
     plugin_reload:
       () => plugins.reloadPlugins(),
     environment_showVariableSourceAndValue:

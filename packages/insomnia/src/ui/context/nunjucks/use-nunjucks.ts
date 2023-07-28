@@ -20,19 +20,16 @@ initializeNunjucksRenderPromiseCache();
  */
 export const useNunjucks = () => {
   const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any> | undefined;
-  const { activeRequest } = requestData || {};
-  const {
-    activeWorkspace,
-    activeEnvironment,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+
   const fetchRenderContext = useCallback(async () => {
-    const ancestors = await getRenderContextAncestors(activeRequest || activeWorkspace);
+    const ancestors = await getRenderContextAncestors(requestData?.activeRequest || workspaceData?.activeWorkspace);
     return getRenderContext({
-      request: activeRequest || undefined,
-      environmentId: activeEnvironment._id,
+      request: requestData?.activeRequest || undefined,
+      environmentId: workspaceData?.activeEnvironment._id,
       ancestors,
     });
-  }, [activeEnvironment._id, activeRequest, activeWorkspace]);
+  }, [requestData?.activeRequest, workspaceData?.activeWorkspace, workspaceData?.activeEnvironment._id]);
 
   const handleGetRenderContext: HandleGetRenderContext = useCallback(async () => {
     const context = await fetchRenderContext();

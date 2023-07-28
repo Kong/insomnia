@@ -32,7 +32,7 @@ export const AuthToggleRow: FC<Props> = ({
   const patchRequest = useRequestPatcher();
 
   const databaseValue = Boolean(authentication[property]);
-  const toggle = useCallback((value?: boolean) => patchRequest(requestId, { authentication: { [property]: value } }), [patchRequest, property, requestId]);
+  const toggle = useCallback((value?: boolean) => patchRequest(requestId, { authentication: { ...authentication, [property]: value } }), [authentication, patchRequest, property, requestId]);
 
   const isActuallyOn = invert ? !databaseValue : databaseValue;
 

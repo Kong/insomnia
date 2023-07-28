@@ -7,15 +7,15 @@ import * as session from '../../account/session';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
 import { database } from '../../common/database';
+import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
-import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { UnitTest } from '../../models/unit-test';
-import { isCollection } from '../../models/workspace';
+import { isCollection, Workspace } from '../../models/workspace';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';
@@ -168,7 +168,7 @@ export const deleteWorkspaceAction: ActionFunction = async ({
   } catch (err) {
     console.warn('Failed to remove project from VCS', err);
   }
-
+  console.log(`redirecting to /organization/${organizationId}/project/${projectId}`);
   return redirect(`/organization/${organizationId}/project/${projectId}`);
 };
 
@@ -190,8 +190,21 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
 
   const duplicateToProject = await models.project.getById(projectId);
   invariant(duplicateToProject, 'Project not found');
-
-  const newWorkspace = await workspaceOperations.duplicate(workspace, {
+  async function duplicate(
+    workspace: Workspace,
+    { name, parentId }: Pick<Workspace, 'name' | 'parentId'>,
+  ) {
+    const newWorkspace = await db.duplicate(workspace, {
+      name,
+      parentId,
+    });
+    await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
+      fileName: name,
+    });
+    models.stats.incrementCreatedRequestsForDescendents(newWorkspace);
+    return newWorkspace;
+  }
+  const newWorkspace = await duplicate(workspace, {
     name,
     parentId: projectId,
   });
@@ -221,18 +234,9 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
 };
 
 export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
-  const formData = await request.formData();
-  const workspaceId = formData.get('workspaceId');
+  const patch = await request.json();
+  const workspaceId = patch.workspaceId;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-
-  const name = formData.get('name');
-  invariant(typeof name === 'string', 'Name is required');
-
-  const description = formData.get('description');
-  if (description) {
-    invariant(typeof description === 'string', 'Description is required');
-  }
-
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
 
@@ -241,14 +245,11 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
     invariant(apiSpec, 'No Api Spec found for this workspace');
 
     await models.apiSpec.update(apiSpec, {
-      fileName: name,
+      fileName: patch.name || workspace.name,
     });
   }
 
-  await models.workspace.update(workspace, {
-    name,
-    description: description || workspace.description,
-  });
+  await models.workspace.update(workspace, patch);
 
   return null;
 };
@@ -891,4 +892,48 @@ export const updateCookieJarAction: ActionFunction = async ({
   const updatedCookieJar = await models.cookieJar.update(cookieJar, patch);
 
   return updatedCookieJar;
+};
+
+export const createNewCaCertificateAction: ActionFunction = async ({ request }) => {
+  const patch = await request.json();
+  await models.caCertificate.create(patch);
+  return null;
+};
+
+export const updateCaCertificateAction: ActionFunction = async ({ request }) => {
+  const patch = await request.json();
+  const caCertificate = await models.caCertificate.getById(patch.parentId);
+  invariant(caCertificate, 'CA Certificate not found');
+  await models.caCertificate.update(caCertificate, patch);
+  return null;
+};
+
+export const deleteCaCertificateAction: ActionFunction = async ({ request }) => {
+  const { certificateId } = await request.json();
+  const caCertificate = await models.caCertificate.getById(certificateId);
+  invariant(caCertificate, 'CA Certificate not found');
+  await models.caCertificate.removeWhere(certificateId);
+  return null;
+};
+
+export const createNewClientCertificateAction: ActionFunction = async ({ request }) => {
+  const patch = await request.json();
+  await models.clientCertificate.create(patch);
+  return null;
+};
+
+export const updateClientCertificateAction: ActionFunction = async ({ request }) => {
+  const patch = await request.json();
+  const clientCertificate = await models.clientCertificate.getById(patch.parentId);
+  invariant(clientCertificate, 'CA Certificate not found');
+  await models.clientCertificate.update(clientCertificate, patch);
+  return null;
+};
+
+export const deleteClientCertificateAction: ActionFunction = async ({ request }) => {
+  const { certificateId } = await request.json();
+  const clientCertificate = await models.clientCertificate.getById(certificateId);
+  invariant(clientCertificate, 'CA Certificate not found');
+  await models.clientCertificate.remove(certificateId);
+  return null;
 };

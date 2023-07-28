@@ -1,7 +1,8 @@
 import React, { FC, useCallback, useRef, useState } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { isLoggedIn } from '../../../account/session';
+import { getProductName } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
@@ -11,27 +12,39 @@ import { isDesign, Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
+import { invariant } from '../../../utils/invariant';
 import { useAIContext } from '../../context/app/ai-context';
-import { RootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { InsomniaAI } from '../insomnia-ai-icon';
-import { showError, showModal } from '../modals';
+import { showError, showModal, showPrompt } from '../modals';
+import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { configGenerators, showGenerateConfigModal } from '../modals/generate-config-modal';
-import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
+import { ImportModal } from '../modals/import-modal';
+import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
+
 export const WorkspaceDropdown: FC = () => {
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  invariant(organizationId, 'Expected organizationId');
   const {
     activeWorkspace,
+    activeWorkspaceMeta,
     activeEnvironment,
     activeProject,
     activeApiSpec,
+    clientCertificates,
+    caCertificate,
+    projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const activeWorkspaceName = activeApiSpec?.fileName || activeWorkspace.name;
-  const {
-    settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
-  const { hotKeyRegistry } = settings;
+  const activeWorkspaceName = activeWorkspace.name;
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const workspaceName = activeWorkspace.name;
+  const projectName = activeProject.name ?? getProductName();
+  const fetcher = useFetcher();
+
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);
@@ -79,14 +92,6 @@ export const WorkspaceDropdown: FC = () => {
     setActionPlugins(actionPlugins);
   }, []);
 
-  const handleShowExport = useCallback(() => {
-    showModal(SettingsModal, { tab: TAB_INDEX_EXPORT });
-  }, []);
-
-  const handleShowWorkspaceSettings = useCallback(() => {
-    showModal(WorkspaceSettingsModal);
-  }, []);
-
   const handleGenerateConfig = useCallback((label: string) => {
     if (!activeApiSpec) {
       return;
@@ -98,115 +103,182 @@ export const WorkspaceDropdown: FC = () => {
   }, [activeApiSpec]);
 
   return (
-    <Dropdown
-      aria-label="Workspace Dropdown"
-      ref={dropdownRef}
-      closeOnSelect={false}
-      className="wide workspace-dropdown"
-      onOpen={handleDropdownOpen}
-      triggerButton={
-        <DropdownButton className="row">
-          <div
-            className="ellipsis"
-            style={{
-              maxWidth: '400px',
+    <>
+      <Dropdown
+        aria-label="Workspace Dropdown"
+        ref={dropdownRef}
+        closeOnSelect={false}
+        className="wide workspace-dropdown"
+        onOpen={handleDropdownOpen}
+        triggerButton={
+          <DropdownButton className="row">
+            <div
+              className="ellipsis"
+              style={{
+                maxWidth: '400px',
+              }}
+              title={activeWorkspaceName}
+            >
+              {activeWorkspaceName}
+            </div>
+            <i className="fa fa-caret-down space-left" />
+          </DropdownButton>
+        }
+      >
+        <DropdownItem aria-label='Duplicate'>
+          <ItemContent
+            label="Duplicate"
+            icon="copy"
+            onClick={() => setIsDuplicateModalOpen(true)}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label='Rename'>
+          <ItemContent
+            label="Rename"
+            icon="pen-to-square"
+            onClick={() => {
+              showPrompt({
+                title: `Rename ${getWorkspaceLabel(activeWorkspace).singular}`,
+                defaultValue: activeWorkspaceName,
+                submitName: 'Rename',
+                selectText: true,
+                label: 'Name',
+                onComplete: name =>
+                  fetcher.submit(
+                    { name, workspaceId: activeWorkspace._id },
+                    {
+                      action: `/organization/${organizationId}/project/${activeWorkspace.parentId}/workspace/update`,
+                      method: 'post',
+                      encType: 'application/json',
+                    }
+                  ),
+              });
             }}
-            title={activeWorkspaceName}
-          >
-            {activeWorkspaceName}
-          </div>
-          <i className="fa fa-caret-down space-left" />
-        </DropdownButton>
-      }
-    >
-      <DropdownItem aria-label={`${getWorkspaceLabel(activeWorkspace).singular} Settings`}>
-        <ItemContent
-          icon="wrench"
-          label={<>{getWorkspaceLabel(activeWorkspace).singular} Settings</>}
-          hint={hotKeyRegistry.workspace_showSettings}
-          onClick={handleShowWorkspaceSettings}
+          />
+        </DropdownItem>
+        <DropdownItem aria-label="Settings">
+          <ItemContent
+            icon="wrench"
+            label="Settings"
+            onClick={() => setIsSettingsModalOpen(true)}
+          />
+        </DropdownItem>
+
+        <DropdownItem aria-label='Import'>
+          <ItemContent
+            icon="file-import"
+            label="Import"
+            onClick={() => setIsImportModalOpen(true)}
+          />
+        </DropdownItem>
+
+        <DropdownItem aria-label='Export'>
+          <ItemContent
+            icon="file-export"
+            label="Export"
+            onClick={() => showModal(ExportRequestsModal)}
+          />
+        </DropdownItem>
+
+        <DropdownSection
+          aria-label='Plugins Section'
+          title="Plugins"
+        >
+          {actionPlugins.map((p: WorkspaceAction) => (
+            <DropdownItem
+              key={p.label}
+              aria-label={p.label}
+            >
+              <ItemContent
+                icon={loadingActions[p.label] ? 'refresh fa-spin' : p.icon || 'code'}
+                label={p.label}
+                stayOpenAfterClick
+                onClick={() => handlePluginClick(p, activeWorkspace)}
+              />
+            </DropdownItem>
+          ))}
+        </DropdownSection>
+
+        <DropdownSection
+          aria-label='Config Generators Section'
+          title="Config Generators"
+          items={isDesign(activeWorkspace) ? configGenerators : []}
+        >
+          {p =>
+            <DropdownItem
+              key={`generateConfig-${p.label}`}
+              aria-label={p.label}
+            >
+              <ItemContent
+                icon="code"
+                label={p.label}
+                onClick={() => handleGenerateConfig(p.label)}
+              />
+            </DropdownItem>
+          }
+        </DropdownSection>
+
+        <DropdownSection
+          aria-label='AI'
+          title="Insomnia AI"
+          items={isLoggedIn() && access.enabled && activeWorkspace.scope === 'design' ? [{
+            label: 'Auto-generate Tests For Collection',
+            key: 'insomnia-ai/generate-test-suite',
+            action: generateTests,
+          }] : []}
+        >
+          {item =>
+            <DropdownItem
+              key={`generateConfig-${item.label}`}
+              aria-label={item.label}
+            >
+              <ItemContent
+                icon={
+                  <span
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '0 var(--padding-xs)',
+                      width: 'unset',
+                    }}
+                  >
+                    <InsomniaAI />
+                  </span>}
+                isDisabled={loading}
+                label={item.label}
+                onClick={item.action}
+              />
+            </DropdownItem>
+          }
+        </DropdownSection>
+      </Dropdown>
+      {isDuplicateModalOpen && (
+        <WorkspaceDuplicateModal
+          onHide={() => setIsDuplicateModalOpen(false)}
+          workspace={activeWorkspace}
+          projects={projects}
         />
-      </DropdownItem>
-
-      <DropdownItem aria-label='Import/Export'>
-        <ItemContent
-          icon="share"
-          label="Import/Export"
-          onClick={handleShowExport}
+      )}
+      {isImportModalOpen && (
+        <ImportModal
+          onHide={() => setIsImportModalOpen(false)}
+          from={{ type: 'file' }}
+          projectName={projectName}
+          workspaceName={workspaceName}
+          organizationId={organizationId}
+          defaultProjectId={projectId}
+          defaultWorkspaceId={workspaceId}
         />
-      </DropdownItem>
-
-      <DropdownSection
-        aria-label='Plugins Section'
-        title="Plugins"
-      >
-        {actionPlugins.map((p: WorkspaceAction) => (
-          <DropdownItem
-            key={p.label}
-            aria-label={p.label}
-          >
-            <ItemContent
-              icon={loadingActions[p.label] ? 'refresh fa-spin' : p.icon || 'code'}
-              label={p.label}
-              stayOpenAfterClick
-              onClick={() => handlePluginClick(p, activeWorkspace)}
-            />
-          </DropdownItem>
-        ))}
-      </DropdownSection>
-
-      <DropdownSection
-        aria-label='Config Generators Section'
-        title="Config Generators"
-        items={isDesign(activeWorkspace) ? configGenerators : []}
-      >
-        {p =>
-          <DropdownItem
-            key={`generateConfig-${p.label}`}
-            aria-label={p.label}
-          >
-            <ItemContent
-              icon="code"
-              label={p.label}
-              onClick={() => handleGenerateConfig(p.label)}
-            />
-          </DropdownItem>
-        }
-      </DropdownSection>
-
-      <DropdownSection
-        aria-label='AI'
-        title="Insomnia AI"
-        items={isLoggedIn() && access.enabled && activeWorkspace.scope === 'design' ? [{
-          label: 'Auto-generate Tests For Collection',
-          key: 'insomnia-ai/generate-test-suite',
-          action: generateTests,
-        }] : []}
-      >
-        {item =>
-          <DropdownItem
-            key={`generateConfig-${item.label}`}
-            aria-label={item.label}
-          >
-            <ItemContent
-              icon={
-                <span
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '0 var(--padding-xs)',
-                    width: 'unset',
-                  }}
-                >
-                  <InsomniaAI />
-                </span>}
-              isDisabled={loading}
-              label={item.label}
-              onClick={item.action}
-            />
-          </DropdownItem>
-        }
-      </DropdownSection>
-    </Dropdown>
+      )}
+      {isSettingsModalOpen && (
+        <WorkspaceSettingsModal
+          workspace={activeWorkspace}
+          workspaceMeta={activeWorkspaceMeta}
+          clientCertificates={clientCertificates}
+          caCertificate={caCertificate}
+          onHide={() => setIsSettingsModalOpen(false)}
+        />
+      )}
+    </>
   );
 };

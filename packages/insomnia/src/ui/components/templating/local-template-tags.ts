@@ -577,7 +577,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error(`Could not find request ${id}`);
         }
 
-        const environmentId = context.context.getEnvironmentId();
+        const environmentId = context.context.getEnvironmentId?.();
         let response: Response = await context.util.models.response.getLatestForRequestId(id, environmentId);
 
         let shouldResend = false;

@@ -36,6 +36,8 @@ import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
+import { CaCertificate } from '../../models/ca-certificate';
+import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
 import {
   DEFAULT_ORGANIZATION_ID,
@@ -49,6 +51,7 @@ import {
   Project,
 } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
+import { WorkspaceMeta } from '../../models/workspace-meta';
 import { invariant } from '../../utils/invariant';
 import {
   Dropdown,
@@ -443,6 +446,7 @@ const OrganizationProjectsSidebar: FC<{
 
       <ProjectListContainer>
         <List
+          aria-label="files-list"
           key="files-list"
           selectionMode="single"
           disallowEmptySelection
@@ -580,7 +584,7 @@ const SidebarListItemTitle = ({ icon, label }: SidebarListItemTitleProps) => {
   );
 };
 
-interface WorkspaceWithMetadata {
+export interface WorkspaceWithMetadata {
   _id: string;
   hasUnsavedChanges: boolean;
   lastModifiedTimestamp: number;
@@ -595,6 +599,9 @@ interface WorkspaceWithMetadata {
   apiSpec: ApiSpec | null;
   specFormatVersion: string | null;
   workspace: Workspace;
+  workspaceMeta: WorkspaceMeta;
+  clientCertificates: ClientCertificate[];
+  caCertificate: CaCertificate | null;
 }
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
@@ -663,7 +670,6 @@ export const loader: LoaderFunction = async ({
   }
   invariant(project, 'Project was not found');
 
-  const allProjects = await models.project.all();
   const projectWorkspaces = await models.workspace.findByParentId(project._id);
 
   const getWorkspaceMetaData = async (workspace: Workspace): Promise<WorkspaceWithMetadata> => {
@@ -683,9 +689,8 @@ export const loader: LoaderFunction = async ({
       // TODO: Check for parse errors if it's an invalid spec
       }
     }
-    const workspaceMeta = await models.workspaceMeta.getByParentId(
-      workspace._id
-    );
+    const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+    invariant(workspaceMeta, 'WorkspaceMeta was not found');
     const lastActiveBranch = workspaceMeta?.cachedGitRepositoryBranch;
 
     const lastCommitAuthor = workspaceMeta?.cachedGitLastAuthor;
@@ -715,6 +720,8 @@ export const loader: LoaderFunction = async ({
       modifiedLocally > workspaceMeta?.cachedGitLastCommitTime
     );
     const name = isDesign(workspace) ? (apiSpec?.fileName || '') : workspace.name;
+    const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
+
     return {
       _id: workspace._id,
       hasUnsavedChanges,
@@ -729,6 +736,9 @@ export const loader: LoaderFunction = async ({
       name,
       apiSpec,
       specFormatVersion,
+      workspaceMeta,
+      clientCertificates,
+      caCertificate: await models.caCertificate.findByParentId(workspace._id),
       workspace: {
         ...workspace,
         name,
@@ -756,7 +766,7 @@ export const loader: LoaderFunction = async ({
     )?.indexes) : true)
     .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
 
-  // const allProjects = await models.project.all();
+  const allProjects = await models.project.all();
 
   const organizationProjects =
     organizationId === DEFAULT_ORGANIZATION_ID
@@ -986,7 +996,7 @@ const ProjectRoute: FC = () => {
               {hasWorkspaces &&
                 workspaces.map(workspace => (
                   <WorkspaceCard
-                    {...workspace}
+                    workspaceWithMetadata={workspace}
                     projects={projects}
                     key={workspace._id}
                     activeProject={activeProject}
