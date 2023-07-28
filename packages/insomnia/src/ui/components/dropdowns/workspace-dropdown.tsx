@@ -163,7 +163,6 @@ export const WorkspaceDropdown: FC = () => {
           <ItemContent
             icon="wrench"
             label="Settings"
-            hint={hotKeyRegistry.workspace_showSettings}
             onClick={() => setIsSettingsModalOpen(true)}
           />
         </DropdownItem>
