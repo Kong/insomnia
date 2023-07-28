@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
   await page.getByRole('menuitem', { name: 'HTTP Request' }).press('Enter');
 });
 
-test('Select body dropdown', async ({ page }) => {
+test('Request tabs', async ({ page }) => {
   await page.getByRole('button', { name: 'Body' }).click();
   await page.getByRole('menuitem', { name: 'JSON' }).click();
   await page.getByRole('tab', { name: 'Auth' }).click();
