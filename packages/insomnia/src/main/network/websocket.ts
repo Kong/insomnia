@@ -18,7 +18,6 @@ import { generateId, getSetCookieHeaders } from '../../common/misc';
 import { webSocketRequest } from '../../models';
 import * as models from '../../models';
 import { CookieJar } from '../../models/cookie-jar';
-import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
 import { BaseWebSocketRequest } from '../../models/websocket-request';
 import type { WebSocketResponse } from '../../models/websocket-response';
@@ -27,6 +26,7 @@ import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
 import { addSetCookiesToToughCookieJar } from '../../network/network';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
+import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 
@@ -126,8 +126,11 @@ const openWebSocketConnection = async (
   timelineFileStreams.set(options.requestId, fs.createWriteStream(timelinePath));
 
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(options.workspaceId);
-  const environmentId: string = workspaceMeta.activeEnvironmentId || 'n/a';
-  const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
+  // fallback to base environment
+  const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
+  const activeEnvironment = activeEnvironmentId && await models.environment.getById(activeEnvironmentId);
+  const environment = activeEnvironment || await models.environment.getOrCreateForParentId(options.workspaceId);
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
   const responseEnvironmentId = environment ? environment._id : null;
 
   const caCert = await models.caCertificate.findByParentId(options.workspaceId);

@@ -1,7 +1,6 @@
 import { createSelector } from 'reselect';
 import type { ValueOf } from 'type-fest';
 
-import { PREVIEW_MODE_SOURCE } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
@@ -200,26 +199,6 @@ export const selectActiveRequestMeta = createSelector(
     const id = activeRequest?._id || 'n/a';
     return entities.requestMetas.find(m => m.parentId === id);
   },
-);
-
-export const selectResponsePreviewMode = createSelector(
-  selectActiveRequestMeta,
-  requestMeta => requestMeta?.previewMode || PREVIEW_MODE_SOURCE,
-);
-
-export const selectResponseFilter = createSelector(
-  selectActiveRequestMeta,
-  requestMeta => requestMeta?.responseFilter || '',
-);
-
-export const selectResponseFilterHistory = createSelector(
-  selectActiveRequestMeta,
-  requestMeta => requestMeta?.responseFilterHistory || [],
-);
-
-export const selectResponseDownloadPath = createSelector(
-  selectActiveRequestMeta,
-  requestMeta => requestMeta?.downloadPath || null,
 );
 
 export const selectActiveRequestResponses = createSelector(

@@ -254,6 +254,7 @@ export async function render<T>(
           x = await templating.render(x, { context, path });
         }
       } catch (err) {
+        console.log(`Failed to render element ${path}`, x);
         if (errorMode !== KEEP_ON_ERROR) {
           throw err;
         }

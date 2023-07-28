@@ -4,8 +4,7 @@ import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
@@ -13,16 +12,17 @@ import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../common/render';
 import * as models from '../../models';
-import { update } from '../../models/helpers/request-operations';
 import { isEventStreamRequest, isRequest, Request } from '../../models/request';
+import { RequestMeta } from '../../models/request-meta';
 import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
-import { updateRequestMetaByParentId } from '../hooks/create-request';
 import { useReadyState } from '../hooks/use-ready-state';
+import { useRequestPatcher } from '../hooks/use-request';
+import { useRequestMetaPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import { selectActiveRequest, selectResponseDownloadPath } from '../redux/selectors';
+import { RequestLoaderData } from '../routes/request';
 import { RootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
@@ -46,8 +46,7 @@ const StyledDropdownButton = styled(DropdownButton)({
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;
-  onUrlChange: (r: Request, url: string) => Promise<Request>;
-  request: Request;
+  onUrlChange: (url: string) => void;
   uniquenessKey: string;
   setLoading: (l: boolean) => void;
 }
@@ -59,7 +58,6 @@ export interface RequestUrlBarHandle {
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   handleAutocompleteUrls,
   onUrlChange,
-  request,
   uniquenessKey,
   setLoading,
 }, ref) => {
@@ -71,15 +69,17 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { hotKeyRegistry } = settings;
-  const downloadPath = useSelector(selectResponseDownloadPath);
-  const activeRequest = useSelector(selectActiveRequest);
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
+  const downloadPath = activeRequestMeta.downloadPath;
+  const patchRequestMeta = useRequestMetaPatcher();
+  const { requestId } = useParams() as { requestId: string };
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditorHandle>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleGenerateCode = () => {
-    showModal(GenerateCodeModal, { request });
+    showModal(GenerateCodeModal, { request: activeRequest });
   };
   const focusInput = useCallback(() => {
     if (inputRef.current) {
@@ -113,7 +113,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   }
 
   const sendThenSetFilePath = useCallback(async (filePath?: string) => {
-    if (!request) {
+    if (!activeRequest) {
       return;
     }
 
@@ -123,13 +123,13 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       event: SegmentEvent.requestExecute,
       properties: {
         preferredHttpVersion: settings.preferredHttpVersion,
-        authenticationType: request.authentication?.type,
-        mimeType: request.body.mimeType,
+        authenticationType: activeRequest.authentication?.type,
+        mimeType: activeRequest.body.mimeType,
       },
     });
     setLoading(true);
     try {
-      const responsePatch = await network.send(request._id, activeEnvironment._id);
+      const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
       const headers = responsePatch.headers || [];
       const header = getContentDispositionHeader(headers);
       const nameFromHeader = header ? contentDisposition.parse(header.value).parameters.filename : null;
@@ -143,7 +143,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
         const extension = sanitizedExtension || 'unknown';
         const name =
-          nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
+          nameFromHeader || `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
         let filename: string | null;
 
         if (filePath) {
@@ -192,13 +192,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       });
     } finally {
       // Unset active response because we just made a new one
-      await updateRequestMetaByParentId(request._id, { activeResponseId: null });
+      // TODO: remove this with the redux fallback to first element
+      await patchRequestMeta(activeRequest._id, { activeResponseId: null });
       setLoading(false);
     }
-  }, [activeEnvironment._id, request, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion, patchRequestMeta]);
 
   const handleSend = useCallback(async () => {
-    if (!request) {
+    if (!activeRequest) {
       return;
     }
     // Update request stats
@@ -207,18 +208,19 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       event: SegmentEvent.requestExecute,
       properties: {
         preferredHttpVersion: settings.preferredHttpVersion,
-        authenticationType: request.authentication?.type,
-        mimeType: request.body.mimeType,
+        authenticationType: activeRequest.authentication?.type,
+        mimeType: activeRequest.body.mimeType,
       },
     });
     setLoading(true);
     try {
-      const responsePatch = await network.send(request._id, activeEnvironment._id);
-      await models.response.create(responsePatch, settings.maxHistoryResponses);
+      const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
+      const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
+      await patchRequestMeta(activeRequest._id, { activeResponseId: response._id });
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {
-          request,
+          request: activeRequest,
           error: err,
         });
       } else {
@@ -236,9 +238,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       }
     }
     // Unset active response because we just made a new one
-    await updateRequestMetaByParentId(request._id, { activeResponseId: null });
+    await patchRequestMeta(activeRequest._id, { activeResponseId: null });
     setLoading(false);
-  }, [activeEnvironment._id, request, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion, patchRequestMeta]);
 
   const send = useCallback(() => {
     setCurrentTimeout(undefined);
@@ -246,22 +248,22 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       sendThenSetFilePath(downloadPath);
       return;
     }
-    if (isEventStreamRequest(request)) {
+    if (isEventStreamRequest(activeRequest)) {
       const startListening = async () => {
         const environmentId = activeEnvironment._id;
         const workspaceId = activeWorkspace._id;
-        const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+        const renderContext = await getRenderContext({ request: activeRequest, environmentId, purpose: RENDER_PURPOSE_SEND });
         // Render any nunjucks tags in the url/headers/authentication settings/cookies
         const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
         const rendered = await render({
-          url: request.url,
-          headers: request.headers,
-          authentication: request.authentication,
-          parameters: request.parameters.filter(p => !p.disabled),
+          url: activeRequest.url,
+          headers: activeRequest.headers,
+          authentication: activeRequest.authentication,
+          parameters: activeRequest.parameters.filter(p => !p.disabled),
           workspaceCookieJar,
         }, renderContext);
         window.main.curl.open({
-          requestId: request._id,
+          requestId: activeRequest._id,
           workspaceId,
           url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
           headers: rendered.headers,
@@ -273,13 +275,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       return;
     }
     handleSend();
-  }, [activeEnvironment._id, activeWorkspace, downloadPath, handleSend, request, sendThenSetFilePath]);
+  }, [activeEnvironment._id, activeWorkspace, downloadPath, handleSend, activeRequest, sendThenSetFilePath]);
 
   useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);
+  const patchRequest = useRequestPatcher();
   const handleStop = () => {
-    if (isEventStreamRequest(request)) {
-      window.main.curl.close({ requestId: request._id });
+    if (isEventStreamRequest(activeRequest)) {
+      window.main.curl.close({ requestId: activeRequest._id });
       return;
     }
     setCurrentInterval(null);
@@ -320,16 +323,16 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     if (canceled) {
       return;
     }
-    updateRequestMetaByParentId(request._id, { downloadPath: filePaths[0] });
-  }, [request._id]);
-  const handleClearDownloadLocation = () => updateRequestMetaByParentId(request._id, { downloadPath: null });
+    patchRequestMeta(activeRequest._id, { downloadPath: filePaths[0] });
+  }, [activeRequest._id, patchRequestMeta]);
+  const handleClearDownloadLocation = () => patchRequestMeta(activeRequest._id, { downloadPath: null });
 
   useDocBodyKeyboardShortcuts({
     request_focusUrl: () => {
       inputRef.current?.selectAll();
     },
     request_send: () => {
-      if (request.url) {
+      if (activeRequest.url) {
         send();
       }
     },
@@ -373,7 +376,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     const pastedText = lastPastedTextRef.current;
     // If no pasted text in the queue, just fire the regular change handler
     if (!pastedText) {
-      onUrlChange(request, url);
+      onUrlChange(url);
       return;
     }
     // Reset pasted text cache
@@ -382,29 +385,27 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     const importedRequest = await handleImport(pastedText);
     // Update depending on whether something was imported
     if (!importedRequest) {
-      onUrlChange(request, url);
+      onUrlChange(url);
     }
-  }, [handleImport, onUrlChange, request]);
+  }, [handleImport, onUrlChange]);
 
   const handleUrlPaste = useCallback((event: ClipboardEvent) => {
     // NOTE: We're not actually doing the import here to avoid races with onChange
     lastPastedTextRef.current = event.clipboardData?.getData('text/plain') || '';
   }, []);
 
-  const onMethodChange = useCallback((method: string) => update(request, { method }), [request]);
-
   const handleSendDropdownHide = useCallback(() => {
     buttonRef.current?.blur();
   }, []);
-  const buttonText = isEventStreamRequest(request) ? 'Connect' : (downloadPath ? 'Download' : 'Send');
-  const { url, method } = request;
-  const isEventStreamOpen = useReadyState({ requestId: request._id, protocol: 'curl' });
+  const buttonText = isEventStreamRequest(activeRequest) ? 'Connect' : (downloadPath ? 'Download' : 'Send');
+  const { url, method } = activeRequest;
+  const isEventStreamOpen = useReadyState({ requestId: activeRequest._id, protocol: 'curl' });
   const isCancellable = currentInterval || currentTimeout || isEventStreamOpen;
   return (
     <div className="urlbar">
       <MethodDropdown
         ref={methodDropdownRef}
-        onChange={methodValue => onMethodChange(methodValue)}
+        onChange={method => patchRequest(requestId, { method })}
         method={method}
       />
       <div className="urlbar__flex__right">
@@ -428,7 +429,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
             className="urlbar__send-btn"
             onClick={handleStop}
           >
-            {isEventStreamRequest(request) ? 'Disconnect' : 'Cancel'}
+            {isEventStreamRequest(activeRequest) ? 'Disconnect' : 'Cancel'}
           </button>
         ) : (
           <>
@@ -437,87 +438,87 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               className="urlbar__send-btn"
               onClick={send}
             >
-              {buttonText}</button>
-            {isEventStreamRequest(request) ? null : (<Dropdown
-              key="dropdown"
-              className="tall"
-              ref={dropdownRef}
-              aria-label="Request Options"
-              onClose={handleSendDropdownHide}
-              closeOnSelect={false}
-              triggerButton={
-                <StyledDropdownButton
-                  className="urlbar__send-context"
-                  removeBorderRadius={true}
+                {buttonText}</button>
+              {isEventStreamRequest(activeRequest) ? null : (<Dropdown
+                key="dropdown"
+                className="tall"
+                ref={dropdownRef}
+                aria-label="Request Options"
+                onClose={handleSendDropdownHide}
+                closeOnSelect={false}
+                triggerButton={
+                  <StyledDropdownButton
+                    className="urlbar__send-context"
+                    removeBorderRadius={true}
+                  >
+                    <i className="fa fa-caret-down" />
+                  </StyledDropdownButton>
+                }
+              >
+                <DropdownSection
+                  aria-label="Basic Section"
+                  title="Basic"
                 >
-                  <i className="fa fa-caret-down" />
-                </StyledDropdownButton>
-              }
-            >
-              <DropdownSection
-                aria-label="Basic Section"
-                title="Basic"
-              >
-                <DropdownItem aria-label="send-now">
-                  <ItemContent
-                    icon="arrow-circle-o-right"
-                    label="Send Now"
-                    hint={hotKeyRegistry.request_send}
-                    onClick={send}
-                  />
-                </DropdownItem>
-                <DropdownItem aria-label='Generate Client Code'>
-                  <ItemContent
-                    icon="code"
-                    label="Generate Client Code"
-                    onClick={handleGenerateCode}
-                  />
-                </DropdownItem>
-              </DropdownSection>
-              <DropdownSection
-                aria-label="Advanced Section"
-                title="Advanced"
-              >
-                <DropdownItem aria-label='Send After Delay'>
-                  <ItemContent
-                    icon="clock-o"
-                    label="Send After Delay"
-                    onClick={handleSendAfterDelay}
-                  />
-                </DropdownItem>
-                <DropdownItem aria-label='Repeat on Interval'>
-                  <ItemContent
-                    icon="repeat"
-                    label="Repeat on Interval"
-                    onClick={handleSendOnInterval}
-                  />
-                </DropdownItem>
-                {downloadPath ? (
-                  <DropdownItem aria-label='Stop Auto-Download'>
+                  <DropdownItem aria-label="send-now">
                     <ItemContent
-                      icon="stop-circle"
-                      label="Stop Auto-Download"
-                      withPrompt
-                      onClick={handleClearDownloadLocation}
-                    />
-                  </DropdownItem>) :
-                  (<DropdownItem aria-label='Download After Send'>
-                    <ItemContent
-                      icon="download"
-                      label="Download After Send"
-                      onClick={downloadAfterSend}
+                      icon="arrow-circle-o-right"
+                      label="Send Now"
+                      hint={hotKeyRegistry.request_send}
+                      onClick={send}
                     />
                   </DropdownItem>
-                  )}
-                <DropdownItem aria-label='Send And Download'>
-                  <ItemContent
-                    icon="download"
-                    label="Send And Download"
-                    onClick={sendThenSetFilePath}
-                  />
-                </DropdownItem>
-              </DropdownSection>
-            </Dropdown>)}
+                  <DropdownItem aria-label='Generate Client Code'>
+                    <ItemContent
+                      icon="code"
+                      label="Generate Client Code"
+                      onClick={handleGenerateCode}
+                    />
+                  </DropdownItem>
+                </DropdownSection>
+                <DropdownSection
+                  aria-label="Advanced Section"
+                  title="Advanced"
+                >
+                  <DropdownItem aria-label='Send After Delay'>
+                    <ItemContent
+                      icon="clock-o"
+                      label="Send After Delay"
+                      onClick={handleSendAfterDelay}
+                    />
+                  </DropdownItem>
+                  <DropdownItem aria-label='Repeat on Interval'>
+                    <ItemContent
+                      icon="repeat"
+                      label="Repeat on Interval"
+                      onClick={handleSendOnInterval}
+                    />
+                  </DropdownItem>
+                  {downloadPath ? (
+                    <DropdownItem aria-label='Stop Auto-Download'>
+                      <ItemContent
+                        icon="stop-circle"
+                        label="Stop Auto-Download"
+                        withPrompt
+                        onClick={handleClearDownloadLocation}
+                      />
+                    </DropdownItem>) :
+                    (<DropdownItem aria-label='Download After Send'>
+                      <ItemContent
+                        icon="download"
+                        label="Download After Send"
+                        onClick={downloadAfterSend}
+                      />
+                    </DropdownItem>
+                    )}
+                  <DropdownItem aria-label='Send And Download'>
+                    <ItemContent
+                      icon="download"
+                      label="Send And Download"
+                      onClick={sendThenSetFilePath}
+                    />
+                  </DropdownItem>
+                </DropdownSection>
+              </Dropdown>)}
           </>
         )}
       </div>

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 
 import * as models from '../../../models';
 import type { Response } from '../../../models/response';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
+import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { selectActiveResponse } from '../../redux/selectors';
 import { CodeEditor } from '../codemirror/code-editor';
 
@@ -19,12 +19,13 @@ export const GRPCEditor: FunctionComponent<Props> = ({
   readOnly,
 }) => {
   const response = useSelector(selectActiveResponse) as Response | null;
+  const patchRequestMeta = useRequestMetaPatcher();
   const handleSetFilter = async (responseFilter: string) => {
     if (!response) {
       return;
     }
     const requestId = response.parentId;
-    await updateRequestMetaByParentId(requestId, { responseFilter });
+    await patchRequestMeta(requestId, { responseFilter });
     const meta = await models.requestMeta.getByParentId(requestId);
     if (!meta) {
       return;
@@ -35,7 +36,7 @@ export const GRPCEditor: FunctionComponent<Props> = ({
       return;
     }
     responseFilterHistory.unshift(responseFilter);
-    updateRequestMetaByParentId(requestId, { responseFilterHistory });
+    patchRequestMeta(requestId, { responseFilterHistory });
   };
   return (<CodeEditor
     defaultValue={content}

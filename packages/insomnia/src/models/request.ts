@@ -115,6 +115,10 @@ export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => (
   model.type === type
 );
 
+export const isRequestId = (id: string | null) => (
+  id?.startsWith(`${prefix}_`)
+);
+
 export const isEventStreamRequest = (model: Pick<BaseModel, 'type'>) => (
   isRequest(model) && model.headers?.find(h => h.name === 'Accept')?.value === 'text/event-stream'
 );

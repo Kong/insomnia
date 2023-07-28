@@ -84,24 +84,20 @@ const PaddedButton = styled('button')({
   padding: 'var(--padding-sm)',
 });
 
-export const RealtimeResponsePane: FC<{ requestId: string }> =
-  ({
-    requestId,
-  }) => {
-    const response = useSelector(selectActiveResponse) as WebSocketResponse | Response | null;
-    if (!response) {
-      return (
-        <Pane type="response">
-          <PaneHeader />
-          <PlaceholderResponsePane />
-        </Pane>
-      );
-    }
-    return <RealtimeActiveResponsePane requestId={requestId} response={response} />;
-  };
+export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
+  const response = useSelector(selectActiveResponse) as WebSocketResponse | Response | null;
+  if (!response) {
+    return (
+      <Pane type="response">
+        <PaneHeader />
+        <PlaceholderResponsePane />
+      </Pane>
+    );
+  }
+  return <RealtimeActiveResponsePane response={response} />;
+};
 
-const RealtimeActiveResponsePane: FC<{ requestId: string; response: WebSocketResponse | Response }> = ({
-  requestId,
+const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }> = ({
   response,
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<CurlEvent | WebSocketEvent | null>(null);
@@ -179,7 +175,6 @@ const RealtimeActiveResponsePane: FC<{ requestId: string; response: WebSocketRes
         </div>
         <ResponseHistoryDropdown
           activeResponse={response}
-          requestId={requestId}
           className="tall pane__header__right"
         />
       </PaneHeader>
@@ -246,7 +241,6 @@ const RealtimeActiveResponsePane: FC<{ requestId: string; response: WebSocketRes
                   <EventViewWrapper>
                     <EventView
                       key={selectedEvent._id}
-                      requestId={requestId}
                       event={selectedEvent}
                     />
                   </EventViewWrapper>

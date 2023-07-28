@@ -29,6 +29,7 @@ import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
   DashboardSortOrder,
+  getProductName,
 } from '../../common/constants';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
@@ -42,6 +43,7 @@ import {
   Organization,
 } from '../../models/organization';
 import {
+  DEFAULT_PROJECT_ID,
   isDefaultProject,
   isRemoteProject,
   Project,
@@ -650,18 +652,18 @@ export const loader: LoaderFunction = async ({
   const { projectId, organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'projectId parameter is required');
-
   const sortOrder = search.get('sortOrder') || 'modified-desc';
   const filter = search.get('filter') || '';
   const scope = search.get('scope') || 'all';
   const projectName = search.get('projectName') || '';
 
-  const project = await models.project.getById(projectId);
-
-  const allProjects = await models.project.all();
-
+  let project = await models.project.getById(projectId);
+  if (!project) {
+    project = await models.project.create({ _id: DEFAULT_PROJECT_ID, name: getProductName(), remoteId: null });
+  }
   invariant(project, 'Project was not found');
 
+  const allProjects = await models.project.all();
   const projectWorkspaces = await models.workspace.findByParentId(project._id);
 
   const getWorkspaceMetaData = async (workspace: Workspace): Promise<WorkspaceWithMetadata> => {

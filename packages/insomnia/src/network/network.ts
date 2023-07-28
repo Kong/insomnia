@@ -116,10 +116,9 @@ const fetchRequestData = async (requestId: string) => {
 
   // fallback to base environment
   const activeEnvironmentId = workspaceMeta.activeEnvironmentId;
-  const environment = activeEnvironmentId ?
-    await models.environment.getById(activeEnvironmentId)
-    : await models.environment.getOrCreateForParentId(workspace._id);
-  invariant(environment, 'failed to find environment');
+  const activeEnvironment = activeEnvironmentId && await models.environment.getById(activeEnvironmentId);
+  const environment = activeEnvironment || await models.environment.getOrCreateForParentId(workspace._id);
+  invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
   const settings = await models.settings.getOrCreate();
   invariant(settings, 'failed to create settings');
@@ -138,10 +137,8 @@ export const tryToInterpolateRequest = async (request: Request, environmentId: s
       extraInfo,
     });
   } catch (err) {
-    // @TODO Find a better way to detect missing environment variables in requests and show a more helpful error
     if ('type' in err && err.type === 'render') {
-      console.log(err);
-      throw new Error('Failed to run the request. This is likely due to missing environment variables that are referenced in the request.');
+      throw err;
     }
     throw new Error(`Failed to render request: ${request._id}`);
   }

@@ -80,7 +80,6 @@ module.exports = {
     'default-case': ERROR,
     'default-case-last': ERROR,
     'filenames/match-exported': [ERROR, 'kebab'],
-    'indent': [ERROR, 2, { SwitchCase: 1 }],
     'eol-last': [ERROR, 'always'],
     'eqeqeq': [ERROR, 'smart'],
     'arrow-parens': [ERROR, 'as-needed'],

@@ -1,11 +1,11 @@
 import React, { forwardRef, useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { toKebabCase } from '../../../common/misc';
-import * as requestOperations from '../../../models/helpers/request-operations';
 import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
-import { updateRequestMetaByParentId } from '../../hooks/create-request';
+import { useRequestMetaPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
 import { showPrompt } from '../modals';
@@ -25,8 +25,11 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
+  const patchRequestMeta = useRequestMetaPatcher();
   const { hotKeyRegistry } = settings;
-
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const patchRequest = useRequestPatcher();
   const duplicate = useCallback(() => {
     handleDuplicateRequest(request);
   }, [handleDuplicateRequest, request]);
@@ -38,20 +41,22 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: name => {
-        requestOperations.update(request, { name });
-      },
+      onComplete: name => patchRequest(request._id, { name }),
     });
-  }, [request]);
+  }, [request.name, request._id, patchRequest]);
 
   const togglePin = useCallback(() => {
-    updateRequestMetaByParentId(request._id, { pinned: !isPinned });
-  }, [isPinned, request]);
+    patchRequestMeta(request._id, { pinned: !isPinned });
+  }, [isPinned, request._id, patchRequestMeta]);
 
   const deleteRequest = useCallback(() => {
     incrementDeletedRequests();
-    requestOperations.remove(request);
-  }, [request]);
+    requestFetcher.submit({ id: request._id },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
+        method: 'post',
+      });
+  }, [requestFetcher, organizationId, projectId, request._id, workspaceId]);
 
   return (
     <Dropdown
@@ -99,7 +104,6 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
       <DropdownSection aria-label='Settings section'>
         <DropdownItem aria-label='Settings'>
           <ItemContent
-            // dataTestId={`DropdownItemSettings-${toKebabCase(request.name)}`}
             icon="wrench"
             label="Settings"
             hint={hotKeyRegistry.request_showSettings}

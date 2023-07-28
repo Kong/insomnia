@@ -1,11 +1,11 @@
 import { useCallback } from 'react';
-import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render } from '../../../common/render';
+import { Request } from '../../../models/request';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { getKeys } from '../../../templating/utils';
-import { selectActiveRequest } from '../../redux/selectors';
+import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 let getRenderContextPromiseCache: any = {};
 
@@ -19,19 +19,20 @@ initializeNunjucksRenderPromiseCache();
  * Access to functions useful for Nunjucks rendering
  */
 export const useNunjucks = () => {
-  const request = useSelector(selectActiveRequest);
+  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any> | undefined;
+  const { activeRequest } = requestData || {};
   const {
     activeWorkspace,
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const fetchRenderContext = useCallback(async () => {
-    const ancestors = await getRenderContextAncestors(request || activeWorkspace);
+    const ancestors = await getRenderContextAncestors(activeRequest || activeWorkspace);
     return getRenderContext({
-      request: request || undefined,
+      request: activeRequest || undefined,
       environmentId: activeEnvironment._id,
       ancestors,
     });
-  }, [activeEnvironment._id, request, activeWorkspace]);
+  }, [activeEnvironment._id, activeRequest, activeWorkspace]);
 
   const handleGetRenderContext: HandleGetRenderContext = useCallback(async () => {
     const context = await fetchRenderContext();

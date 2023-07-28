@@ -378,7 +378,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           <DropdownSection>
             <DropdownItem
               key='gitSync'
-              arial-label='Setup Git Sync'
+              aria-label='Setup Git Sync'
             >
               <Button
                 variant='contained'
@@ -421,7 +421,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             {p =>
               <DropdownItem
                 key={p.id}
-                arial-label={`Pull ${p.name}`}
+                aria-label={`Pull ${p.name}`}
               >
                 <ItemContent
                   icon="cloud-download"
@@ -537,7 +537,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         <DropdownSection>
           <DropdownItem
             key='gitSync'
-            arial-label='Setup Git Sync'
+            aria-label='Setup Git Sync'
           >
             <Button
               variant='contained'

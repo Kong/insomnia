@@ -1,5 +1,5 @@
 import React, { FC, ReactNode } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import {
   AUTH_API_KEY,
@@ -14,7 +14,8 @@ import {
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
 } from '../../../../common/constants';
-import { selectActiveRequest } from '../../../redux/selectors';
+import { Request } from '../../../../models/request';
+import { RequestLoaderData } from '../../../routes/request';
 import { ApiKeyAuth } from './api-key-auth';
 import { AsapAuth } from './asap-auth';
 import { AWSAuth } from './aws-auth';
@@ -28,13 +29,9 @@ import { OAuth1Auth } from './o-auth-1-auth';
 import { OAuth2Auth } from './o-auth-2-auth';
 
 export const AuthWrapper: FC<{ disabled?: boolean }> = ({ disabled = false }) => {
-  const request = useSelector(selectActiveRequest);
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
 
-  if (!request || !('authentication' in request)) {
-    return null;
-  }
-
-  const { authentication: { type } } = request;
+  const { authentication: { type } } = activeRequest;
 
   let authBody: ReactNode = null;
 

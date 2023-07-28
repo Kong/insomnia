@@ -1,20 +1,20 @@
 import fs from 'fs';
 import React, { FC, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE, PreviewMode } from '../../../common/constants';
 import { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
 import { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
 import { requestMeta } from '../../../models';
-import { selectResponsePreviewMode } from '../../redux/selectors';
+import { RequestMeta } from '../../../models/request-meta';
+import { RequestLoaderData } from '../../routes/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { showError } from '../modals';
 import { WebSocketPreviewModeDropdown } from './websocket-preview-dropdown';
 
 interface Props<T extends WebSocketEvent> {
   event: T;
-  requestId: string;
 }
 
 const PreviewPane = styled.div({
@@ -37,8 +37,8 @@ const PreviewPaneContents = styled.div({
   flexGrow: 1,
 });
 
-export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent>> = ({ event, requestId }) => {
-
+export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent>> = ({ event }) => {
+  const { requestId } = useParams() as { requestId: string };
   let raw = event.data.toString();
   // Best effort to parse the binary data as a string
   try {
@@ -81,8 +81,6 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
     window.clipboard.writeText(raw);
   }, [raw]);
 
-  const previewMode = useSelector(selectResponsePreviewMode);
-
   const setPreviewMode = async (previewMode: PreviewMode) => {
     return requestMeta.updateOrCreateByParentId(requestId, { previewMode });
   };
@@ -96,7 +94,8 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   } catch {
     // Can't parse as JSON.
   }
-
+  const { activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<any, RequestMeta>;
+  const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   return (
     <PreviewPane>
       <PreviewPaneButtons>
@@ -137,11 +136,9 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   );
 };
 
-export const EventView: FC<Props<CurlEvent | WebSocketEvent>> = ({ event, ...props }) => {
-  switch (event.type) {
-    case 'message':
-      return <MessageEventView event={event} {...props} />;
-    default:
-      return null;
+export const EventView: FC<Props<CurlEvent | WebSocketEvent>> = ({ event }) => {
+  if (event.type === 'message') {
+    return <MessageEventView event={event} />;
   }
+  return null;
 };

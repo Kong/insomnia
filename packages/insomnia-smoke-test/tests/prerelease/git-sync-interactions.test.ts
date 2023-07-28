@@ -29,7 +29,7 @@ test('Clone Repo with bad values', async ({ page }) => {
   await page.getByRole('heading', { name: 'Check status' }).click();
 
   // Check branch history
-  await page.getByRole('button', { name: 'main' }).click();
+  await page.getByTestId('git-dropdown').locator('button').click();
   await page.getByRole('menuitem', { name: 'History' }).click();
   await page.locator('text=Git History').click();
 
@@ -39,7 +39,7 @@ test('Clone Repo with bad values', async ({ page }) => {
   await page.locator('text=Done').click();
 
   // Create a branch and try to push with bad Git token
-  await page.getByRole('button', { name: 'main' }).click();
+  await page.getByTestId('git-dropdown').locator('button').click();
   await page.getByRole('menuitem', { name: 'Branches' }).click();
   await page.getByPlaceholder('testing-branch').fill('test123');
   await page.getByRole('button', { name: '+ Create' }).click();
