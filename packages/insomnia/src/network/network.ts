@@ -137,10 +137,8 @@ export const tryToInterpolateRequest = async (request: Request, environmentId: s
       extraInfo,
     });
   } catch (err) {
-    // @TODO Find a better way to detect missing environment variables in requests and show a more helpful error
     if ('type' in err && err.type === 'render') {
-      console.log(err);
-      throw new Error('Failed to run the request. This is likely due to missing environment variables that are referenced in the request.');
+      throw err;
     }
     throw new Error(`Failed to render request: ${request._id}`);
   }
