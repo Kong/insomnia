@@ -14,7 +14,6 @@ import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { invariant } from '../../../utils/invariant';
 import { useAIContext } from '../../context/app/ai-context';
-import { RootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { InsomniaAI } from '../insomnia-ai-icon';
@@ -39,7 +38,6 @@ export const WorkspaceDropdown: FC = () => {
     projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const activeWorkspaceName = activeWorkspace.name;
-  const { settings } = useRouteLoaderData('root') as RootLoaderData;
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
@@ -47,7 +45,6 @@ export const WorkspaceDropdown: FC = () => {
   const projectName = activeProject.name ?? getProductName();
   const fetcher = useFetcher();
 
-  const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<WorkspaceAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<DropdownHandle>(null);
