@@ -12,7 +12,6 @@ import { isEventStreamRequest, isRequest, isRequestId, Request } from '../../mod
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
-import { SegmentEvent } from '../analytics';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
