@@ -91,7 +91,6 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
   });
   const { revalidate } = useRevalidator();
   const activeWorkspaceName = workspace.name;
-  const [caCert, setCaCert] = useState<CaCertificate | null>(caCertificate);
   useEffect(() => {
     modalRef.current?.show();
   });
@@ -144,7 +143,7 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
       pfx: pfxPath || null,
     };
     workspaceFetcher.submit(certificate, {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/certificate/new`,
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/clientcert/new`,
       method: 'post',
       encType: 'application/json',
     });
@@ -178,7 +177,7 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
             title="Enable or disable certificate"
             onClick={() =>
               workspaceFetcher.submit({ parentId: certificate._id, disabled: !certificate.disabled }, {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/certificate/update`,
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/clientcert/update`,
                 method: 'post',
                 encType: 'application/json',
               })}
@@ -193,7 +192,7 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
             className="btn btn--super-compact width-auto"
             confirmMessage=""
             onClick={() => workspaceFetcher.submit({ certificateId: certificate._id }, {
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/certificate/delete`,
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/clientcert/delete`,
               method: 'post',
               encType: 'application/json',
             })}
@@ -296,45 +295,52 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
                     </label>
                     <div className="row-spaced">
                       <FileInputButton
-                        disabled={caCert !== null}
+                        disabled={caCertificate !== null}
                         className="btn btn--clicky"
                         name="PEM file"
                         onChange={async path => {
-                          const cert = await models.caCertificate.create({ parentId: workspace._id, path });
-                          setCaCert(cert);
+                          workspaceFetcher.submit({ parentId: workspace._id, path }, {
+                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/cacert/new`,
+                            method: 'post',
+                            encType: 'application/json',
+                          });
                         }}
-                        path={caCert?.path || ''}
+                        path={caCertificate?.path || ''}
                         showFileName
                         showFileIcon
                       />
                       <div className="no-wrap">
                         <button
-                          disabled={caCert === null}
+                          disabled={caCertificate === null}
                           className="btn btn--super-compact width-auto"
                           title="Enable or disable certificate"
                           onClick={async () => {
-                            invariant(caCert, 'CA cert should exist');
-                            // TODO
-                            const cert = await models.caCertificate.update(caCert, {
-                              disabled: !caCert.disabled,
+                            invariant(caCertificate, 'CA cert should exist');
+                            workspaceFetcher.submit({ parentId: caCertificate._id, disabled: !caCertificate.disabled }, {
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/clientcert/update`,
+                              method: 'post',
+                              encType: 'application/json',
                             });
-                            setCaCert(cert);
                           }}
                         >
-                          {caCert?.disabled !== false ? (
+                          {caCertificate?.disabled !== false ? (
                             <i className="fa fa-square-o" />
                           ) : (
                             <i className="fa fa-check-square-o" />
                           )}
                         </button>
                         <PromptButton
-                          disabled={caCert === null}
+                          disabled={caCertificate === null}
                           className="btn btn--super-compact width-auto"
                           confirmMessage=""
                           doneMessage=""
                           onClick={() => {
-                            models.caCertificate.removeWhere(workspace._id);
-                            setCaCert(null);
+                            invariant(caCertificate, 'CA cert should exist');
+                            workspaceFetcher.submit({ certificateId: caCertificate._id }, {
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/cacert/delete`,
+                              method: 'post',
+                              encType: 'application/json',
+                            });
                           }}
                         >
                           <i className="fa fa-trash-o" />

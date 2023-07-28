@@ -915,3 +915,25 @@ export const deleteCaCertificateAction: ActionFunction = async ({ request }) => 
   await models.caCertificate.removeWhere(certificateId);
   return null;
 };
+
+export const createNewClientCertificateAction: ActionFunction = async ({ request }) => {
+  const patch = await request.json();
+  await models.clientCertificate.create(patch);
+  return null;
+};
+
+export const updateClientCertificateAction: ActionFunction = async ({ request }) => {
+  const patch = await request.json();
+  const clientCertificate = await models.clientCertificate.getById(patch.parentId);
+  invariant(clientCertificate, 'CA Certificate not found');
+  await models.clientCertificate.update(clientCertificate, patch);
+  return null;
+};
+
+export const deleteClientCertificateAction: ActionFunction = async ({ request }) => {
+  const { certificateId } = await request.json();
+  const clientCertificate = await models.clientCertificate.getById(certificateId);
+  invariant(clientCertificate, 'CA Certificate not found');
+  await models.clientCertificate.remove(certificateId);
+  return null;
+};

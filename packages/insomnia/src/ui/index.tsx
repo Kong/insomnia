@@ -206,6 +206,41 @@ const router = createMemoryRouter(
                               ],
                             },
                             {
+                              path: 'cacert',
+                              children: [
+                                {
+                                  path: 'new',
+                                  action: async (...args) => (await import('./routes/actions')).createNewCaCertificateAction(...args),
+                                },
+                                {
+                                  path: 'update',
+                                  action: async (...args) => (await import('./routes/actions')).updateCaCertificateAction(...args),
+                                },
+                                {
+                                  path: 'delete',
+                                  action: async (...args) => (await import('./routes/actions')).deleteCaCertificateAction(...args),
+                                },
+
+                              ],
+                            },
+                            {
+                              path: 'clientcert',
+                              children: [
+                                {
+                                  path: 'new',
+                                  action: async (...args) => (await import('./routes/actions')).createNewClientCertificateAction(...args),
+                                },
+                                {
+                                  path: 'update',
+                                  action: async (...args) => (await import('./routes/actions')).updateClientCertificateAction(...args),
+                                },
+                                {
+                                  path: 'delete',
+                                  action: async (...args) => (await import('./routes/actions')).deleteClientCertificateAction(...args),
+                                },
+                              ],
+                            },
+                            {
                               path: 'environment',
                               children: [
                                 {
@@ -450,27 +485,6 @@ const router = createMemoryRouter(
                           path: 'update',
                           action: async (...args) =>
                             (await import('./routes/actions')).updateWorkspaceAction(
-                              ...args
-                            ),
-                        },
-                        {
-                          path: 'certificate/new',
-                          action: async (...args) =>
-                            (await import('./routes/actions')).createNewCaCertificateAction(
-                              ...args
-                            ),
-                        },
-                        {
-                          path: 'certificate/update',
-                          action: async (...args) =>
-                            (await import('./routes/actions')).updateCaCertificateAction(
-                              ...args
-                            ),
-                        },
-                        {
-                          path: 'certificate/delete',
-                          action: async (...args) =>
-                            (await import('./routes/actions')).deleteCaCertificateAction(
                               ...args
                             ),
                         },
