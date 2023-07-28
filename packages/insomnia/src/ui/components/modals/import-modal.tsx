@@ -432,7 +432,7 @@ export const ImportModal: FC<ImportModalProps> = ({
   const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspaces <= 1;
   const header = shouldImportToWorkspace ? `Import to "${workspaceName}" Workspace` : `Import to "${projectName}" Project`;
   return (
-    <OverlayContainer>
+    <OverlayContainer onClick={e => e.stopPropagation()}>
       <Modal ref={modalRef} onHide={onHide}>
         <ModalHeader>{header}</ModalHeader>
         {scanResourcesFetcher.data && scanResourcesFetcher.data.errors.length === 0 ? (

@@ -1,4 +1,5 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react';
+import { OverlayContainer } from 'react-aria';
 import { useRevalidator } from 'react-router-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
@@ -51,12 +52,12 @@ const CertificateField: FC<{
     display = <span className="monospace selectable">{value}</span>;
   }
 
-  return (
-    <span className="pad-right no-wrap">
-      <strong>{title}:</strong>{' '}{display}
-    </span>
-  );
-};
+    return (
+      <span className="pad-right no-wrap">
+        <strong>{title}:</strong>{' '}{display}
+      </span>
+    );
+  };
 
 interface WorkspaceSettingsModalState {
   showAddCertificateForm: boolean;
@@ -75,8 +76,7 @@ interface Props extends ModalProps {
   workspaceMeta: WorkspaceMeta;
   clientCertificates: ClientCertificate[];
 }
-export const WorkspaceSettingsModal = (props: Props) => {
-  const { workspace, apiSpec, workspaceMeta, clientCertificates, onHide } = props;
+export const WorkspaceSettingsModal = ({ workspace, apiSpec, workspaceMeta, clientCertificates, onHide }: Props) => {
   const hasDescription = !!workspace.description;
 
   const modalRef = useRef<ModalHandle>(null);
@@ -215,317 +215,319 @@ export const WorkspaceSettingsModal = (props: Props) => {
   } = state;
 
   return (
-    <Modal ref={modalRef} onHide={onHide}>
-      {workspace ?
-        <ModalHeader key={`header::${workspace._id}`}>
-          {getWorkspaceLabel(workspace).singular} Settings{' '}
-          <div className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
-        </ModalHeader> : null}
-      {workspace ?
-        <ModalBody key={`body::${workspace._id}`} noScroll>
-          <Tabs aria-label="Workspace settings tabs">
-            <TabItem key="overview" title="Overview">
-              <PanelContainer className="pad pad-top-sm">
-                <div className="form-control form-control--outlined">
-                  <label>
-                    Name
-                    <input
-                      type="text"
-                      placeholder="Awesome API"
-                      defaultValue={activeWorkspaceName}
-                      onChange={event => workspaceOperations.rename(event.target.value, workspace, apiSpec)}
-                    />
-                  </label>
-                </div>
-                <div>
-                  {showDescription ? (
-                    <MarkdownEditor
-                      className="margin-top"
-                      defaultPreviewMode={defaultPreviewMode}
-                      placeholder="Write a description"
-                      defaultValue={workspace.description}
-                      onChange={(description: string) => {
-                        models.workspace.update(workspace, { description });
-                        if (state.defaultPreviewMode !== false) {
-                          setState(state => ({
-                            ...state,
-                            defaultPreviewMode: false,
-                          }));
-                        }
-                      }}
-                    />
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setState({ ...state, showDescription: true });
-                      }}
-                      className="btn btn--outlined btn--super-duper-compact"
-                    >
-                      Add Description
-                    </button>
-                  )}
-                </div>
-                <h2>Actions</h2>
-                <div className="form-control form-control--padded">
-                  <PromptButton
-                    onClick={_handleRemoveWorkspace}
-                    className="width-auto btn btn--clicky inline-block"
-                  >
-                    <i className="fa fa-trash-o" /> Delete
-                  </PromptButton>
-                  <PromptButton
-                    onClick={_handleClearAllResponses}
-                    className="width-auto btn btn--clicky inline-block space-left"
-                  >
-                    <i className="fa fa-trash-o" /> Clear All Responses
-                  </PromptButton>
-                </div>
-              </PanelContainer>
-            </TabItem>
-            <TabItem key="client-certificates" title="Client Certificates">
-              <PanelContainer className="pad">
-                <div className="form-control form-control--outlined">
-                  <label>
-                    CA Certificate
-                    <HelpTooltip position="right" className="space-left">
-                      One or more PEM format certificates to trust when making requests.
-                    </HelpTooltip>
-                  </label>
-                  <div className="row-spaced">
-                    <FileInputButton
-                      disabled={caCert !== null}
-                      className="btn btn--clicky"
-                      name="PEM file"
-                      onChange={async path => {
-                        const cert = await models.caCertificate.create({ parentId: workspace._id, path });
-                        setCaCert(cert);
-                      }}
-                      path={caCert?.path || ''}
-                      showFileName
-                      showFileIcon
-                    />
-                    <div className="no-wrap">
+    <OverlayContainer>
+      <Modal ref={modalRef} onHide={onHide}>
+        {workspace ?
+          <ModalHeader key={`header::${workspace._id}`}>
+            {getWorkspaceLabel(workspace).singular} Settings{' '}
+            <div className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
+          </ModalHeader> : null}
+        {workspace ?
+          <ModalBody key={`body::${workspace._id}`} noScroll>
+            <Tabs aria-label="Workspace settings tabs">
+              <TabItem key="overview" title="Overview">
+                <PanelContainer className="pad pad-top-sm">
+                  <div className="form-control form-control--outlined">
+                    <label>
+                      Name
+                      <input
+                        type="text"
+                        placeholder="Awesome API"
+                        defaultValue={activeWorkspaceName}
+                        onChange={event => workspaceOperations.rename(event.target.value, workspace, apiSpec)}
+                      />
+                    </label>
+                  </div>
+                  <div>
+                    {showDescription ? (
+                      <MarkdownEditor
+                        className="margin-top"
+                        defaultPreviewMode={defaultPreviewMode}
+                        placeholder="Write a description"
+                        defaultValue={workspace.description}
+                        onChange={(description: string) => {
+                          models.workspace.update(workspace, { description });
+                          if (state.defaultPreviewMode !== false) {
+                            setState(state => ({
+                              ...state,
+                              defaultPreviewMode: false,
+                            }));
+                          }
+                        }}
+                      />
+                    ) : (
                       <button
-                        disabled={caCert === null}
-                        className="btn btn--super-compact width-auto"
-                        title="Enable or disable certificate"
-                        onClick={async () => {
-                          invariant(caCert, 'CA cert should exist');
-                          const cert = await models.caCertificate.update(caCert, {
-                            disabled: !caCert.disabled,
-                          });
+                        onClick={() => {
+                          setState({ ...state, showDescription: true });
+                        }}
+                        className="btn btn--outlined btn--super-duper-compact"
+                      >
+                        Add Description
+                      </button>
+                    )}
+                  </div>
+                  <h2>Actions</h2>
+                  <div className="form-control form-control--padded">
+                    <PromptButton
+                      onClick={_handleRemoveWorkspace}
+                      className="width-auto btn btn--clicky inline-block"
+                    >
+                      <i className="fa fa-trash-o" /> Delete
+                    </PromptButton>
+                    <PromptButton
+                      onClick={_handleClearAllResponses}
+                      className="width-auto btn btn--clicky inline-block space-left"
+                    >
+                      <i className="fa fa-trash-o" /> Clear All Responses
+                    </PromptButton>
+                  </div>
+                </PanelContainer>
+              </TabItem>
+              <TabItem key="client-certificates" title="Client Certificates">
+                <PanelContainer className="pad">
+                  <div className="form-control form-control--outlined">
+                    <label>
+                      CA Certificate
+                      <HelpTooltip position="right" className="space-left">
+                        One or more PEM format certificates to trust when making requests.
+                      </HelpTooltip>
+                    </label>
+                    <div className="row-spaced">
+                      <FileInputButton
+                        disabled={caCert !== null}
+                        className="btn btn--clicky"
+                        name="PEM file"
+                        onChange={async path => {
+                          const cert = await models.caCertificate.create({ parentId: workspace._id, path });
                           setCaCert(cert);
                         }}
-                      >
-                        {caCert?.disabled !== false ? (
-                          <i className="fa fa-square-o" />
-                        ) : (
-                          <i className="fa fa-check-square-o" />
-                        )}
-                      </button>
-                      <PromptButton
-                        disabled={caCert === null}
-                        className="btn btn--super-compact width-auto"
-                        confirmMessage=""
-                        doneMessage=""
-                        onClick={() => {
-                          models.caCertificate.removeWhere(workspace._id);
-                          setCaCert(null);
-                        }}
-                      >
-                        <i className="fa fa-trash-o" />
-                      </PromptButton>
+                        path={caCert?.path || ''}
+                        showFileName
+                        showFileIcon
+                      />
+                      <div className="no-wrap">
+                        <button
+                          disabled={caCert === null}
+                          className="btn btn--super-compact width-auto"
+                          title="Enable or disable certificate"
+                          onClick={async () => {
+                            invariant(caCert, 'CA cert should exist');
+                            const cert = await models.caCertificate.update(caCert, {
+                              disabled: !caCert.disabled,
+                            });
+                            setCaCert(cert);
+                          }}
+                        >
+                          {caCert?.disabled !== false ? (
+                            <i className="fa fa-square-o" />
+                          ) : (
+                            <i className="fa fa-check-square-o" />
+                          )}
+                        </button>
+                        <PromptButton
+                          disabled={caCert === null}
+                          className="btn btn--super-compact width-auto"
+                          confirmMessage=""
+                          doneMessage=""
+                          onClick={() => {
+                            models.caCertificate.removeWhere(workspace._id);
+                            setCaCert(null);
+                          }}
+                        >
+                          <i className="fa fa-trash-o" />
+                        </PromptButton>
+                      </div>
                     </div>
                   </div>
-                </div>
-                {!showAddCertificateForm ? (
-                  <div>
-                    {clientCertificates.length === 0 ? (
-                      <p className="notice surprise margin-top">
-                        You have not yet added any client certificates
-                      </p>
-                    ) : null}
+                  {!showAddCertificateForm ? (
+                    <div>
+                      {clientCertificates.length === 0 ? (
+                        <p className="notice surprise margin-top">
+                          You have not yet added any client certificates
+                        </p>
+                      ) : null}
 
-                    {!!sharedCertificates.length && (
-                      <div className="form-control form-control--outlined margin-top">
-                        <label>
-                          Shared Certificates
-                          <HelpTooltip position="right" className="space-left">
-                            Shared certificates will be synced.
-                          </HelpTooltip>
-                        </label>
-                        {sharedCertificates.map(renderCertificate)}
-                      </div>
-                    )}
+                      {!!sharedCertificates.length && (
+                        <div className="form-control form-control--outlined margin-top">
+                          <label>
+                            Shared Certificates
+                            <HelpTooltip position="right" className="space-left">
+                              Shared certificates will be synced.
+                            </HelpTooltip>
+                          </label>
+                          {sharedCertificates.map(renderCertificate)}
+                        </div>
+                      )}
 
-                    {!!privateCertificates.length && (
-                      <div className="form-control form-control--outlined margin-top">
-                        <label>
-                          Private Certificates
-                          <HelpTooltip position="right" className="space-left">
-                            Certificates will not be Git Synced.
-                          </HelpTooltip>
-                        </label>
-                        {privateCertificates.map(renderCertificate)}
+                      {!!privateCertificates.length && (
+                        <div className="form-control form-control--outlined margin-top">
+                          <label>
+                            Private Certificates
+                            <HelpTooltip position="right" className="space-left">
+                              Certificates will not be Git Synced.
+                            </HelpTooltip>
+                          </label>
+                          {privateCertificates.map(renderCertificate)}
+                        </div>
+                      )}
+                      <hr className="hr--spaced" />
+                      <div className="text-center">
+                        <button
+                          className="btn btn--clicky auto"
+                          onClick={_handleToggleCertificateForm}
+                        >
+                          New Certificate
+                        </button>
                       </div>
-                    )}
-                    <hr className="hr--spaced" />
-                    <div className="text-center">
-                      <button
-                        className="btn btn--clicky auto"
-                        onClick={_handleToggleCertificateForm}
-                      >
-                        New Certificate
-                      </button>
                     </div>
-                  </div>
-                ) : (
-                  <form onSubmit={_handleCreateCertificate}>
-                    <div className="form-control form-control--outlined no-pad-top">
-                      <label>
-                        Host
-                        <HelpTooltip position="right" className="space-left">
-                          The host for which this client certificate is valid. Port number is optional
-                          and * can be used as a wildcard.
-                        </HelpTooltip>
-                        <input
-                          type="text"
-                          required
-                          placeholder="my-api.com"
-                          autoFocus
-                          onChange={event => setState({ ...state, host: event.currentTarget.value })}
-                        />
-                      </label>
-                    </div>
-                    <div className="form-row">
-                      <div className="form-control width-auto">
+                  ) : (
+                    <form onSubmit={_handleCreateCertificate}>
+                      <div className="form-control form-control--outlined no-pad-top">
                         <label>
-                          PFX <span className="faint">(or PKCS12)</span>
-                          <FileInputButton
-                            className="btn btn--clicky"
-                            onChange={pfxPath => setState({ ...state, pfxPath })}
-                            path={pfxPath}
-                            showFileName
+                          Host
+                          <HelpTooltip position="right" className="space-left">
+                            The host for which this client certificate is valid. Port number is optional
+                            and * can be used as a wildcard.
+                          </HelpTooltip>
+                          <input
+                            type="text"
+                            required
+                            placeholder="my-api.com"
+                            autoFocus
+                            onChange={event => setState({ ...state, host: event.currentTarget.value })}
                           />
                         </label>
                       </div>
-                      <div className="text-center">
-                        <br />
-                        <br />
-                        &nbsp;&nbsp;Or&nbsp;&nbsp;
-                      </div>
-                      <div className="row-fill">
-                        <div className="form-control">
+                      <div className="form-row">
+                        <div className="form-control width-auto">
                           <label>
-                            CRT File
+                            PFX <span className="faint">(or PKCS12)</span>
                             <FileInputButton
                               className="btn btn--clicky"
-                              name="Cert"
-                              onChange={crtPath => setState({ ...state, crtPath })}
-                              path={crtPath}
+                              onChange={pfxPath => setState({ ...state, pfxPath })}
+                              path={pfxPath}
                               showFileName
                             />
                           </label>
                         </div>
-                        <div className="form-control">
-                          <label>
-                            Key File
-                            <FileInputButton
-                              className="btn btn--clicky"
-                              name="Key"
-                              onChange={keyPath => setState({ ...state, keyPath })}
-                              path={keyPath}
-                              showFileName
-                            />
-                          </label>
+                        <div className="text-center">
+                          <br />
+                          <br />
+                          &nbsp;&nbsp;Or&nbsp;&nbsp;
+                        </div>
+                        <div className="row-fill">
+                          <div className="form-control">
+                            <label>
+                              CRT File
+                              <FileInputButton
+                                className="btn btn--clicky"
+                                name="Cert"
+                                onChange={crtPath => setState({ ...state, crtPath })}
+                                path={crtPath}
+                                showFileName
+                              />
+                            </label>
+                          </div>
+                          <div className="form-control">
+                            <label>
+                              Key File
+                              <FileInputButton
+                                className="btn btn--clicky"
+                                name="Key"
+                                onChange={keyPath => setState({ ...state, keyPath })}
+                                path={keyPath}
+                                showFileName
+                              />
+                            </label>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="form-control form-control--outlined">
-                      <label>
-                        Passphrase
-                        <input
-                          type="password"
-                          placeholder="•••••••••••"
-                          onChange={event => setState({ ...state, passphrase: event.target.value })}
-                        />
-                      </label>
-                    </div>
-                    <div className="form-control form-control--slim">
-                      <label>
-                        Private
-                        <HelpTooltip className="space-left">
-                          Certificates will not be Git Synced
-                        </HelpTooltip>
-                        <input
-                          type="checkbox"
-                          // @ts-expect-error -- TSCONVERSION boolean not valid
-                          value={isPrivate}
-                          onChange={event => setState({ ...state, isPrivate: event.target.checked })}
-                        />
-                      </label>
-                    </div>
-                    <br />
-                    <div className="pad-top text-right">
-                      <button
-                        type="button"
-                        className="btn btn--super-compact space-right"
-                        onClick={_handleToggleCertificateForm}
-                      >
-                        Cancel
-                      </button>
-                      <button className="btn btn--clicky space-right" type="submit">
-                        Create Certificate
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </PanelContainer>
-            </TabItem>
-            <TabItem key="git-sybc" title="Git Sync">
-              <PanelContainer className="pad">
-                <div className="form-control form-control--outlined">
-                  <label
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 'var(--padding-xs)',
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={Boolean(workspaceMeta?.gitRepositoryId)}
-                      onChange={async () => {
-                        if (workspaceMeta?.gitRepositoryId) {
-                          await models.workspaceMeta.update(workspaceMeta, {
-                            gitRepositoryId: null,
-                          });
-                        } else {
-                          invariant(workspaceMeta, 'Workspace meta not found');
-
-                          const repo = await models.gitRepository.create({
-                            uri: '',
-                          });
-
-                          await models.workspaceMeta.update(workspaceMeta, {
-                            gitRepositoryId: repo._id,
-                          });
-                        }
-
-                        revalidate();
+                      <div className="form-control form-control--outlined">
+                        <label>
+                          Passphrase
+                          <input
+                            type="password"
+                            placeholder="•••••••••••"
+                            onChange={event => setState({ ...state, passphrase: event.target.value })}
+                          />
+                        </label>
+                      </div>
+                      <div className="form-control form-control--slim">
+                        <label>
+                          Private
+                          <HelpTooltip className="space-left">
+                            Certificates will not be Git Synced
+                          </HelpTooltip>
+                          <input
+                            type="checkbox"
+                            // @ts-expect-error -- TSCONVERSION boolean not valid
+                            value={isPrivate}
+                            onChange={event => setState({ ...state, isPrivate: event.target.checked })}
+                          />
+                        </label>
+                      </div>
+                      <br />
+                      <div className="pad-top text-right">
+                        <button
+                          type="button"
+                          className="btn btn--super-compact space-right"
+                          onClick={_handleToggleCertificateForm}
+                        >
+                          Cancel
+                        </button>
+                        <button className="btn btn--clicky space-right" type="submit">
+                          Create Certificate
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </PanelContainer>
+              </TabItem>
+              <TabItem key="git-sybc" title="Git Sync">
+                <PanelContainer className="pad">
+                  <div className="form-control form-control--outlined">
+                    <label
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--padding-xs)',
                       }}
-                    />
-                    Enable Git Sync
-                  </label>
-                  <p>
-                    By enabling Git Sync, you can sync your workspace with a Git repository. This will disable the ability to sync with Insomnia Sync.
-                  </p>
-                </div>
-              </PanelContainer>
-            </TabItem>
-          </Tabs>
-        </ModalBody> : null}
-    </Modal>
+                    >
+                      <input
+                        type="checkbox"
+                        checked={Boolean(workspaceMeta?.gitRepositoryId)}
+                        onChange={async () => {
+                          if (workspaceMeta?.gitRepositoryId) {
+                            await models.workspaceMeta.update(workspaceMeta, {
+                              gitRepositoryId: null,
+                            });
+                          } else {
+                            invariant(workspaceMeta, 'Workspace meta not found');
+
+                            const repo = await models.gitRepository.create({
+                              uri: '',
+                            });
+
+                            await models.workspaceMeta.update(workspaceMeta, {
+                              gitRepositoryId: repo._id,
+                            });
+                          }
+
+                          revalidate();
+                        }}
+                      />
+                      Enable Git Sync
+                    </label>
+                    <p>
+                      By enabling Git Sync, you can sync your workspace with a Git repository. This will disable the ability to sync with Insomnia Sync.
+                    </p>
+                  </div>
+                </PanelContainer>
+              </TabItem>
+            </Tabs>
+          </ModalBody> : null}
+      </Modal>
+    </OverlayContainer>
   );
 };
 WorkspaceSettingsModal.displayName = 'WorkspaceSettingsModal';

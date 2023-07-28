@@ -325,7 +325,7 @@ async function _applyRequestPluginHooks(
       ...pluginContexts.data.init(renderedContext.getProjectId()),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
-      ...(pluginContexts.network.init(renderedContext.getEnvironmentId()) as Record<string, any>),
+      ...(pluginContexts.network.init(renderedContext.getEnvironmentId?.()) as Record<string, any>),
     };
 
     try {
@@ -355,7 +355,7 @@ async function _applyResponsePluginHooks(
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
         ...(pluginContexts.response.init(newResponse) as Record<string, any>),
         ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),
-        ...(pluginContexts.network.init(renderedContext.getEnvironmentId()) as Record<string, any>),
+        ...(pluginContexts.network.init(renderedContext.getEnvironmentId?.()) as Record<string, any>),
       };
 
       try {
