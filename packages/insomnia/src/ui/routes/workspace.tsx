@@ -3,6 +3,7 @@ import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
+import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
 import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
@@ -24,6 +25,7 @@ export interface WorkspaceLoaderData {
   subEnvironments: Environment[];
   activeApiSpec: ApiSpec | null;
   clientCertificates: ClientCertificate[];
+  caCertificate: CaCertificate | null;
   projects: Project[];
 }
 
@@ -84,6 +86,7 @@ export const workspaceLoader: LoaderFunction = async ({
     baseEnvironment,
     activeApiSpec,
     clientCertificates,
+    caCertificate: await models.caCertificate.findByParentId(workspaceId),
     projects,
   };
 };

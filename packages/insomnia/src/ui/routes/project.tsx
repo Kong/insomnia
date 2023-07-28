@@ -36,6 +36,7 @@ import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
+import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
 import {
@@ -600,6 +601,7 @@ export interface WorkspaceWithMetadata {
   workspace: Workspace;
   workspaceMeta: WorkspaceMeta;
   clientCertificates: ClientCertificate[];
+  caCertificate: CaCertificate | null;
 }
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
@@ -736,6 +738,7 @@ export const loader: LoaderFunction = async ({
       specFormatVersion,
       workspaceMeta,
       clientCertificates,
+      caCertificate: await models.caCertificate.findByParentId(workspace._id),
       workspace: {
         ...workspace,
         name,

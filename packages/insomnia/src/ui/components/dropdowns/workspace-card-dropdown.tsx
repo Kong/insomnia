@@ -5,7 +5,9 @@ import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import { caCertificate } from '../../../models';
 import type { ApiSpec } from '../../../models/api-spec';
+import { CaCertificate } from '../../../models/ca-certificate';
 import { ClientCertificate } from '../../../models/client-certificate';
 import { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
@@ -31,6 +33,7 @@ interface Props {
   project: Project;
   projects: Project[];
   clientCertificates: ClientCertificate[];
+  caCertificate: CaCertificate | null;
 }
 
 const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
@@ -82,7 +85,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, project }: Props) => {
 };
 
 export const WorkspaceCardDropdown: FC<Props> = props => {
-  const { workspace, project, projects, workspaceMeta, clientCertificates } = props;
+  const { workspace, project, projects, workspaceMeta, clientCertificates, caCertificate } = props;
   const fetcher = useFetcher();
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -217,6 +220,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           workspace={workspace}
           workspaceMeta={workspaceMeta}
           clientCertificates={clientCertificates}
+          caCertificate={caCertificate}
           onHide={() => setIsSettingsModalOpen(false)}
         />
       )}

@@ -35,6 +35,7 @@ export const WorkspaceDropdown: FC = () => {
     activeProject,
     activeApiSpec,
     clientCertificates,
+    caCertificate,
     projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const activeWorkspaceName = activeWorkspace.name;
@@ -278,6 +279,7 @@ export const WorkspaceDropdown: FC = () => {
           workspace={activeWorkspace}
           workspaceMeta={activeWorkspaceMeta}
           clientCertificates={clientCertificates}
+          caCertificate={caCertificate}
           onHide={() => setIsSettingsModalOpen(false)}
         />
       )}

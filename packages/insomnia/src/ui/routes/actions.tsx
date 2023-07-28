@@ -893,3 +893,25 @@ export const updateCookieJarAction: ActionFunction = async ({
 
   return updatedCookieJar;
 };
+
+export const createNewCaCertificateAction: ActionFunction = async ({ request }) => {
+  const patch = await request.json();
+  await models.caCertificate.create(patch);
+  return null;
+};
+
+export const updateCaCertificateAction: ActionFunction = async ({ request }) => {
+  const patch = await request.json();
+  const caCertificate = await models.caCertificate.getById(patch.parentId);
+  invariant(caCertificate, 'CA Certificate not found');
+  await models.caCertificate.update(caCertificate, patch);
+  return null;
+};
+
+export const deleteCaCertificateAction: ActionFunction = async ({ request }) => {
+  const { certificateId } = await request.json();
+  const caCertificate = await models.caCertificate.getById(certificateId);
+  invariant(caCertificate, 'CA Certificate not found');
+  await models.caCertificate.removeWhere(certificateId);
+  return null;
+};

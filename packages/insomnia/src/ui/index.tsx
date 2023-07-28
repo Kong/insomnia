@@ -453,6 +453,27 @@ const router = createMemoryRouter(
                               ...args
                             ),
                         },
+                        {
+                          path: 'certificate/new',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).createNewCaCertificateAction(
+                              ...args
+                            ),
+                        },
+                        {
+                          path: 'certificate/update',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).updateCaCertificateAction(
+                              ...args
+                            ),
+                        },
+                        {
+                          path: 'certificate/delete',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).deleteCaCertificateAction(
+                              ...args
+                            ),
+                        },
                       ],
                     },
                     {

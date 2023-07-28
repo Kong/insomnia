@@ -1,3 +1,4 @@
+import { ca } from 'date-fns/locale';
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useFetcher, useRevalidator } from 'react-router-dom';
@@ -72,8 +73,9 @@ interface Props extends ModalProps {
   workspace: Workspace;
   workspaceMeta: WorkspaceMeta;
   clientCertificates: ClientCertificate[];
+  caCertificate: CaCertificate | null;
 }
-export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertificates, onHide }: Props) => {
+export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertificates, caCertificate, onHide }: Props) => {
   const hasDescription = !!workspace.description;
 
   const modalRef = useRef<ModalHandle>(null);
@@ -90,7 +92,7 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
   });
   const { revalidate } = useRevalidator();
   const activeWorkspaceName = workspace.name;
-  const [caCert, setCaCert] = useState<CaCertificate | null>(null);
+  const [caCert, setCaCert] = useState<CaCertificate | null>(caCertificate);
   useEffect(() => {
     modalRef.current?.show();
   });
@@ -104,17 +106,6 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
       encType: 'application/json',
     });
   };
-
-  useEffect(() => {
-    if (!workspace) {
-      return;
-    }
-    const fn = async () => {
-      const cert = await models.caCertificate.findByParentId(workspace._id);
-      cert && setCaCert(cert);
-    };
-    fn();
-  }, [workspace]);
 
   const _handleClearAllResponses = async () => {
     if (!workspace) {
@@ -153,8 +144,11 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
       key: keyPath || null,
       pfx: pfxPath || null,
     };
-    await models.clientCertificate.create(certificate);
-
+    workspaceFetcher.submit(certificate, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/certificate/new`,
+      method: 'post',
+      encType: 'application/json',
+    });
     _handleToggleCertificateForm();
   };
   const _handleRemoveWorkspace = async () => {
@@ -183,9 +177,12 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
           <button
             className="btn btn--super-compact width-auto"
             title="Enable or disable certificate"
-            onClick={() => models.clientCertificate.update(certificate, {
-              disabled: !certificate.disabled,
-            })}
+            onClick={() =>
+              workspaceFetcher.submit({ parentId: certificate._id, disabled: !certificate.disabled }, {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/certificate/update`,
+                method: 'post',
+                encType: 'application/json',
+              })}
           >
             {certificate.disabled ? (
               <i className="fa fa-square-o" />
@@ -196,7 +193,11 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
           <PromptButton
             className="btn btn--super-compact width-auto"
             confirmMessage=""
-            onClick={() => models.clientCertificate.remove(certificate)}
+            onClick={() => workspaceFetcher.submit({ certificateId: certificate._id }, {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/certificate/delete`,
+              method: 'post',
+              encType: 'application/json',
+            })}
           >
             <i className="fa fa-trash-o" />
           </PromptButton>
