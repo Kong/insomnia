@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useReducer, useState } from 'react';
+import React, { FunctionComponent, useState } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useMount } from 'react-use';
 import styled from 'styled-components';
@@ -20,6 +20,7 @@ import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
+import { GRPCEditor } from '../editors/grpc-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -30,7 +31,6 @@ import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { SvgIcon } from '../svg-icon';
 import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
-import { GrpcTabbedMessages } from '../viewers/grpc-tabbed-messages';
 import { EmptyStatePane } from './empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from './pane';
 interface Props {
@@ -139,20 +139,6 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     }
   };
 
-  const [bodyPaneKey, forceNewBodyComponent] = useReducer((n: number) => n + 1, 0);
-  const useRequestStubs = async () => {
-    if (!method?.mocks) {
-      return;
-    }
-    const newBodyText = JSON.stringify(method.mocks, null, 2);
-    if (newBodyText !== activeRequest.body.text) {
-      await models.grpcRequest.update(activeRequest, {
-        body: { ...activeRequest.body, text: newBodyText },
-      });
-      setTimeout(() => forceNewBodyComponent());
-    }
-  };
-
   useDocBodyKeyboardShortcuts({
     request_send: handleRequestSend,
   });
@@ -193,7 +179,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 variant="text"
                 data-testid="button-use-request-stubs"
                 disabled={!method?.mocks}
-                onClick={useRequestStubs}
+                onClick={() => {
+                  method?.mocks && patchRequest(requestId, { body: { ...activeRequest.body, text: JSON.stringify(method.mocks, null, 2) } });
+                }}
               >
                 <Tooltip message="Click to replace body with request stubs" position="bottom" delay={500}>
                   <i className="fa fa-code" />
@@ -237,39 +225,57 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             />
           </StyledUrlBar>
         </PaneHeader>
-        <PaneBody key={bodyPaneKey}>
+        <PaneBody>
           {methodType && (
             <Tabs aria-label="Grpc request pane tabs">
               <TabItem key="method-type" title={GrpcMethodTypeName[methodType]}>
-                <GrpcTabbedMessages
-                  uniquenessKey={uniquenessKey}
-                  tabNamePrefix="Stream"
-                  messages={requestMessages}
-                  bodyText={activeRequest.body.text}
-                  handleBodyChange={text => patchRequest(requestId, { body: { text } })}
-                  showActions={running && canClientStream(methodType)}
-                  handleStream={async () => {
-                    const requestBody = await getRenderedGrpcRequestMessage({
-                      request: activeRequest,
-                      environmentId,
-                      purpose: RENDER_PURPOSE_SEND,
-                    });
-                    const preparedMessage = {
-                      body: requestBody,
-                      requestId,
-                    };
-                    window.main.grpc.sendMessage(preparedMessage);
-                    setGrpcState({
-                      ...grpcState, requestMessages: [...requestMessages, {
-                        id: generateId(),
-                        text: preparedMessage.body.text || '',
-                        created: Date.now(),
-                      }],
-                    });
-
-                  }}
-                  handleCommit={() => window.main.grpc.commit(requestId)}
-                />
+                <>
+                  {running && canClientStream(methodType) && (
+                    <ActionButtonsContainer>
+                      <button
+                        className='btn btn--compact btn--clicky-small margin-left-sm bg-default'
+                        onClick={async () => {
+                          const requestBody = await getRenderedGrpcRequestMessage({
+                            request: activeRequest,
+                            environmentId,
+                            purpose: RENDER_PURPOSE_SEND,
+                          });
+                          const preparedMessage = {
+                            body: requestBody,
+                            requestId,
+                          };
+                          window.main.grpc.sendMessage(preparedMessage);
+                          setGrpcState({
+                            ...grpcState, requestMessages: [...requestMessages, {
+                              id: generateId(),
+                              text: preparedMessage.body.text || '',
+                              created: Date.now(),
+                            }],
+                          });
+                        }}
+                      >
+                        Stream <i className='fa fa-plus' />
+                      </button>
+                      <button
+                        className='btn btn--compact btn--clicky-small margin-left-sm bg-surprise'
+                        onClick={() => window.main.grpc.commit(requestId)}
+                      >
+                        Commit <i className='fa fa-arrow-right' />
+                      </button>
+                    </ActionButtonsContainer>
+                  )}
+                  <Tabs key={uniquenessKey} aria-label="Grpc tabbed messages tabs" isNested>
+                    {...[
+                      <TabItem key="body" title="Body">
+                        <GRPCEditor content={activeRequest.body.text} handleChange={text => patchRequest(requestId, { body: { text } })} />
+                      </TabItem>,
+                      ...requestMessages.sort((a, b) => a.created - b.created).map((m, index) => (
+                        <TabItem key={m.id} title={`Stream ${index + 1}`}>
+                          <GRPCEditor content={m.text} readOnly />
+                        </TabItem>
+                      ))]}
+                  </Tabs>
+                </>
               </TabItem>
               <TabItem key="headers" title="Headers">
                 <PanelContainer className="tall wide">
@@ -316,3 +322,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     </>
   );
 };
+const ActionButtonsContainer = styled.div({
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'flex-end',
+  boxSizing: 'border-box',
+  height: 'var(--line-height-sm)',
+  borderBottom: '1px solid var(--hl-lg)',
+  padding: 3,
+});

@@ -5,8 +5,9 @@ import { useParams } from 'react-router-dom';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { GrpcRequestState } from '../../routes/debug';
 import { WorkspaceLoaderData } from '../../routes/workspace';
+import { TabItem, Tabs } from '../base/tabs';
+import { GRPCEditor } from '../editors/grpc-editor';
 import { GrpcStatusTag } from '../tags/grpc-status-tag';
-import { GrpcTabbedMessages } from '../viewers/grpc-tabbed-messages';
 import { Pane, PaneBody, PaneHeader } from './pane';
 interface Props {
   grpcState: GrpcRequestState;
@@ -34,13 +35,12 @@ export const GrpcResponsePane: FunctionComponent<Props> = ({ grpcState }) => {
         </div>
       </PaneHeader>
       <PaneBody>
-        {!!responseMessages.length && (
-          <GrpcTabbedMessages
-            uniquenessKey={uniquenessKey}
-            tabNamePrefix="Response"
-            messages={responseMessages}
-          />
-        )}
+        <Tabs key={uniquenessKey} aria-label="Grpc tabbed messages tabs" isNested>
+          {responseMessages?.sort((a, b) => a.created - b.created).map((m, index) => (
+            <TabItem key={m.id} title={`Response ${index + 1}`}>
+              <GRPCEditor content={m.text} readOnly />
+            </TabItem>))}
+        </Tabs>
       </PaneBody>
     </Pane>
   );
