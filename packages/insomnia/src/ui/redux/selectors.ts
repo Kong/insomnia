@@ -31,28 +31,30 @@ const selectEntitiesLists = createSelector(
   },
 );
 
+// request switcher
 export const selectRequestMetas = createSelector(
   selectEntitiesLists,
   entities => entities.requestMetas,
 );
-
+// request switcher
 export const selectGrpcRequestMetas = createSelector(
   selectEntitiesLists,
   entities => entities.grpcRequestMetas,
 );
-
+// sync dropdown
 export const selectRemoteProjects = createSelector(
   selectEntitiesLists,
   entities => sortProjects(entities.projects).filter(isRemoteProject),
 );
 
+// list workspaces for move/copy switcher, and export
 export const selectWorkspacesForActiveProject = createSelector(
   selectEntitiesLists,
   (state: RootState) => state.global.activeProjectId,
   (entities, activeProjectId) => entities.workspaces.filter(workspace => workspace.parentId === (activeProjectId || DEFAULT_PROJECT_ID)),
 );
 
-export const selectActiveWorkspace = createSelector(
+const selectActiveWorkspace = createSelector(
   selectEntitiesLists,
   (state: RootState) => state.global.activeWorkspaceId,
   (state: RootState) => state.global.activeProjectId,
@@ -62,6 +64,7 @@ export const selectActiveWorkspace = createSelector(
   },
 );
 
+// response history list
 export const selectRequestVersions = createSelector(
   selectEntitiesLists,
   entities => entities.requestVersions,
@@ -114,6 +117,7 @@ const selectActiveWorkspaceEntities = createSelector(
   },
 );
 
+// switcher and export
 export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   selectActiveWorkspaceEntities,
   entities => {
@@ -130,6 +134,7 @@ const selectActiveWorkspaceMeta = createSelector(
     return entities.workspaceMetas.find(workspaceMeta => workspaceMeta.parentId === activeWorkspace?._id);
   },
 );
+// response history list
 export const selectActiveRequest = createSelector(
   (state: RootState) => state.entities,
   selectActiveWorkspaceMeta,
@@ -151,7 +156,7 @@ export const selectActiveRequest = createSelector(
     return null;
   },
 );
-
+// response history list
 export const selectActiveRequestResponses = createSelector(
   selectActiveRequest,
   selectEntitiesLists,
@@ -179,6 +184,7 @@ export const selectActiveRequestResponses = createSelector(
   },
 );
 
+// sync dropdown, branches, history and staging
 export const selectSyncItems = createSelector(
   selectActiveWorkspaceEntities,
   getStatusCandidates,
@@ -250,6 +256,7 @@ const selectCollapsedRequestGroups = createSelector(
 
     return collapsed;
   });
+// sidebar and export requests
 export const selectSidebarChildren = createSelector(
   selectCollapsedRequestGroups,
   selectPinnedRequests,
