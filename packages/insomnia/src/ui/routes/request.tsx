@@ -7,7 +7,9 @@ import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isRequest, Request } from '../../models/request';
 import { RequestMeta } from '../../models/request-meta';
-import { WebSocketRequest } from '../../models/websocket-request';
+import { Response } from '../../models/response';
+import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
+import { WebSocketResponse } from '../../models/websocket-response';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
@@ -15,6 +17,7 @@ import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
 export interface RequestLoaderData<A, B> {
   activeRequest: A;
   activeRequestMeta: B;
+  activeResponse: Response | WebSocketResponse | null;
 }
 export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData<Request | WebSocketRequest | GrpcRequest, RequestMeta | GrpcRequestMeta>> => {
   const { requestId, workspaceId } = params;
@@ -30,13 +33,29 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     return {
       activeRequest,
       activeRequestMeta: await models.grpcRequestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() }),
-    };
-  } else {
-    return {
-      activeRequest,
-      activeRequestMeta: await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() }),
+      activeResponse: null,
     };
   }
+  const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
+  invariant(activeRequestMeta, 'Request meta not found');
+  if (isWebSocketRequestId(requestId)) {
+    const activeResponse = activeRequestMeta.activeResponseId
+      ? await models.webSocketResponse.getById(activeRequestMeta.activeResponseId)
+      : await models.webSocketResponse.getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);
+    return {
+      activeRequest,
+      activeRequestMeta,
+      activeResponse,
+    };
+  }
+  const activeResponse = activeRequestMeta.activeResponseId
+    ? await models.response.getById(activeRequestMeta.activeResponseId)
+    : await models.response.getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);
+  return {
+    activeRequest,
+    activeRequestMeta,
+    activeResponse,
+  };
 };
 
 export const createRequestAction: ActionFunction = async ({ request, params }) => {

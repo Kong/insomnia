@@ -178,29 +178,6 @@ export const selectActiveRequestResponses = createSelector(
       .sort((a, b) => (a.created > b.created ? -1 : 1));
   },
 );
-const selectActiveRequestMeta = createSelector(
-  selectActiveRequest,
-  selectEntitiesLists,
-  (activeRequest, entities) => {
-    const id = activeRequest?._id || 'n/a';
-    return entities.requestMetas.find(m => m.parentId === id);
-  },
-);
-export const selectActiveResponse = createSelector(
-  selectActiveRequestMeta,
-  selectActiveRequestResponses,
-  (activeRequestMeta, responses) => {
-    const activeResponseId = activeRequestMeta ? activeRequestMeta.activeResponseId : 'n/a';
-
-    const activeResponse = responses.find(response => response._id === activeResponseId);
-
-    if (activeResponse) {
-      return activeResponse;
-    }
-
-    return responses[0] || null;
-  },
-);
 
 export const selectSyncItems = createSelector(
   selectActiveWorkspaceEntities,

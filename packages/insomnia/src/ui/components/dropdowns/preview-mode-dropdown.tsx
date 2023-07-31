@@ -1,6 +1,5 @@
 import fs from 'fs';
 import React, { FC, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
@@ -10,7 +9,6 @@ import { isRequest, Request } from '../../../models/request';
 import { RequestMeta } from '../../../models/request-meta';
 import { isResponse } from '../../../models/response';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import { selectActiveResponse } from '../../redux/selectors';
 import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
@@ -23,9 +21,8 @@ export const PreviewModeDropdown: FC<Props> = ({
   download,
   copyToClipboard,
 }) => {
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
+  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
-  const response = useSelector(selectActiveResponse);
   const patchRequestMeta = useRequestMetaPatcher();
   const handleClick = async (previewMode: PreviewMode) => {
     patchRequestMeta(activeRequest._id, { previewMode });
@@ -35,12 +32,12 @@ export const PreviewModeDropdown: FC<Props> = ({
   const handleDownloadNormal = useCallback(() => download(false), [download]);
 
   const exportAsHAR = useCallback(async () => {
-    if (!response || !activeRequest || !isRequest(activeRequest) || !isResponse(response)) {
+    if (!activeResponse || !activeRequest || !isRequest(activeRequest) || !isResponse(activeResponse)) {
       console.warn('Nothing to download');
       return;
     }
 
-    const data = await exportHarCurrentRequest(activeRequest, response);
+    const data = await exportHarCurrentRequest(activeRequest, activeResponse);
     const har = JSON.stringify(data, null, '\t');
 
     const { filePath } = await window.dialog.showSaveDialog({
@@ -57,15 +54,15 @@ export const PreviewModeDropdown: FC<Props> = ({
       console.warn('Failed to export har', err);
     });
     to.end(har);
-  }, [activeRequest, response]);
+  }, [activeRequest, activeResponse]);
 
   const exportDebugFile = useCallback(async () => {
-    if (!response || !activeRequest || !isResponse(response)) {
+    if (!activeResponse || !activeRequest || !isResponse(activeResponse)) {
       console.warn('Nothing to download');
       return;
     }
 
-    const timeline = models.response.getTimeline(response);
+    const timeline = models.response.getTimeline(activeResponse);
     const headers = timeline
       .filter(v => v.name === 'HeaderIn')
       .map(v => v.value)
@@ -80,7 +77,7 @@ export const PreviewModeDropdown: FC<Props> = ({
     if (canceled) {
       return;
     }
-    const readStream = models.response.getBodyStream(response);
+    const readStream = models.response.getBodyStream(activeResponse);
 
     if (readStream && filePath && typeof readStream !== 'string') {
       const to = fs.createWriteStream(filePath);
@@ -90,8 +87,8 @@ export const PreviewModeDropdown: FC<Props> = ({
         console.warn('Failed to save full response', err);
       });
     }
-  }, [activeRequest, response]);
-  const shouldPrettifyOption = response.contentType.includes('json');
+  }, [activeRequest, activeResponse]);
+  const shouldPrettifyOption = activeResponse.contentType.includes('json');
 
   return (
     <Dropdown
