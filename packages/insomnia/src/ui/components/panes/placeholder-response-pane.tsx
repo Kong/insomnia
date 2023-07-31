@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 import { keyboardShortcutDescriptions } from '../../../common/hotkeys';
 import { KeyboardShortcut } from '../../../common/settings';
-import { RootLoaderData } from '../../routes/root';
+import { OrganizationLoaderData } from '../../routes/organization';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
@@ -31,7 +31,7 @@ const Description = styled.div({
 export const PlaceholderResponsePane: FC<PropsWithChildren<{}>> = ({ children }) => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { hotKeyRegistry } = settings;
   return (
     <Pane type="response">

@@ -43,8 +43,6 @@ import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
 import {
-  DEFAULT_ORGANIZATION_ID,
-  defaultOrganization,
   Organization,
 } from '../../models/organization';
 import {
@@ -55,7 +53,6 @@ import {
 } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
-import { Team } from '../../sync/types';
 import { invariant } from '../../utils/invariant';
 import { AvatarGroup } from '../components/avatar';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
@@ -106,7 +103,7 @@ export interface WorkspaceWithMetadata {
   specFormat: 'openapi' | 'swagger' | null;
   name: string;
   apiSpec: ApiSpec | null;
-  specFormatVersion: string | null;
+specFormatVersion: string | null;
   workspace: Workspace;
   workspaceMeta: WorkspaceMeta;
   clientCertificates: ClientCertificate[];
@@ -133,29 +130,16 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
     if (match && match.params.organizationId && match.params.projectId) {
       let projectId = match.params.projectId;
-      const projectExists = await models.project.getById(projectId);
-      console.log({ projectExists, projectId, organizationId });
+      const existingProject = await models.project.getById(projectId);
 
-      if (!projectExists) {
+      if (!existingProject) {
         projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]?._id;
         if (!projectId) {
-          return redirect(`/organization/${organizationId}`);
+          return redirect('/organization');
         }
       }
 
       return redirect(`/organization/${match?.params.organizationId}/project/${projectId}`);
-    }
-  }
-
-  // Check if the org is the default org and redirect to the first local project
-  if (models.organization.DEFAULT_ORGANIZATION_ID === organizationId) {
-    const localProjects = (await models.project.all()).filter(
-      proj => !isRemoteProject(proj)
-    );
-    if (localProjects[0]?._id) {
-      return redirect(
-        `/organization/${organizationId}/project/${localProjects[0]._id}`
-      );
     }
   }
 
@@ -173,8 +157,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
         id: string;
         name: string;
-      }) => {
-      const project = await models.initModel<RemoteProject>(
+      }) => models.initModel<RemoteProject>(
         models.project.type,
         {
           _id: prj.id,
@@ -182,19 +165,15 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
           name: prj.name,
           parentId: organizationId,
         }
-      );
-
-      return project;
-    }));
+      )));
 
     await database.batchModifyDocs({ upsert: projectsToUpdate });
 
     return redirect(`/organization/${organizationId}/project/${projectsToUpdate[0]._id}`);
   } catch (err) {
     console.log(err);
-    return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${models.project.DEFAULT_PROJECT_ID}`);
+    return redirect('/organization');
   }
-
 };
 
 export interface ProjectLoaderData {
@@ -205,13 +184,16 @@ export interface ProjectLoaderData {
   projectsCount: number;
   activeProject: Project;
   projects: Project[];
-  organization: Organization;
 }
 
 export const loader: LoaderFunction = async ({
   params,
   request,
 }): Promise<ProjectLoaderData> => {
+  const sessionId = getCurrentSessionId();
+  if (!sessionId) {
+    throw redirect('/auth/login');
+  }
   const search = new URL(request.url).searchParams;
   const { organizationId } = params;
   let { projectId } = params;
@@ -236,12 +218,11 @@ export const loader: LoaderFunction = async ({
 
   invariant(project, 'Project was not found');
 
-  if (organizationId !== models.organization.DEFAULT_ORGANIZATION_ID) {
-    try {
-      console.log('Fetching projects for team', organizationId);
-      const remoteProjects = await getAllTeamProjects(organizationId);
+  try {
+    console.log('Fetching projects for team', organizationId);
+    const remoteProjects = await getAllTeamProjects(organizationId);
 
-      const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
+    const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
       id: string;
       name: string;
     }) => models.initModel<RemoteProject>(
@@ -254,18 +235,17 @@ export const loader: LoaderFunction = async ({
           }
         )));
 
-      await database.batchModifyDocs({ upsert: projectsToUpdate });
+    await database.batchModifyDocs({ upsert: projectsToUpdate });
 
-      if (!projectId || projectId === 'undefined') {
-        projectId = remoteProjects[0].id;
-      }
-    } catch (err) {
-      console.log(err);
-      throw redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${models.project.DEFAULT_PROJECT_ID}`);
+    if (!projectId || projectId === 'undefined') {
+      projectId = remoteProjects[0].id;
     }
+  } catch (err) {
+    console.log(err);
+    throw redirect('/organization');
   }
 
-  const projectWorkspaces = await models.workspace.findByParentId(project._id);
+  const projectWorkspaces = await models.workspace.findByParentId(projectId);
 
   const getWorkspaceMetaData = async (
     workspace: Workspace
@@ -374,56 +354,13 @@ export const loader: LoaderFunction = async ({
     .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
 
   const allProjects = await models.project.all();
-  const organizationProjects =
-    organizationId === DEFAULT_ORGANIZATION_ID
-      ? allProjects.filter(proj => !isRemoteProject(proj))
-      : allProjects.filter(proj => proj.parentId === organizationId);
+  const organizationProjects = allProjects.filter(proj => proj.parentId === organizationId);
 
   const projects = sortProjects(organizationProjects).filter(p =>
     p.name.toLowerCase().includes(projectName.toLowerCase())
   );
 
-  let organization = defaultOrganization;
-
-  if (organizationId !== DEFAULT_ORGANIZATION_ID) {
-    try {
-      const sessionId = getCurrentSessionId();
-
-      const response = await window.main.insomniaFetch<{
-        data: {
-          teams: Team[];
-        };
-      }>({
-        method: 'POST',
-        path: '/graphql',
-        sessionId,
-        data: {
-          query: `
-          query {
-            teams {
-              id
-              name
-            }
-          }
-        `,
-          variables: {},
-        },
-      });
-
-      const teams = response.data.teams;
-      const organizations = teams.map(t => ({
-        _id: t.id,
-        name: t.name,
-      }));
-
-      organization = organizations.find(organization => organization._id === organizationId) || defaultOrganization;
-    } catch (err) {
-      console.warn('Failed to fetch organization', err);
-    }
-  }
-
   return {
-    organization,
     workspaces,
     projects,
     projectsCount: organizationProjects.length,
@@ -443,7 +380,6 @@ const ProjectRoute: FC = () => {
     workspaces,
     activeProject,
     projects,
-    organization,
     allFilesCount,
     collectionsCount,
     documentsCount,
@@ -485,7 +421,7 @@ const ProjectRoute: FC = () => {
             scope: 'collection',
           },
           {
-            action: `/organization/${organization._id}/project/${activeProject._id}/workspace/new`,
+            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
             method: 'post',
           }
         );
@@ -507,7 +443,7 @@ const ProjectRoute: FC = () => {
             scope: 'design',
           },
           {
-            action: `/organization/${organization._id}/project/${activeProject._id}/workspace/new`,
+            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
             method: 'post',
           }
         );
@@ -652,74 +588,72 @@ const ProjectRoute: FC = () => {
                 <Heading className="p-[--padding-sm] uppercase text-xs">
                   Projects ({projectsCount})
                 </Heading>
-                {organizationId === DEFAULT_ORGANIZATION_ID && (
-                  <div className="flex justify-between gap-1 p-[--padding-sm]">
-                    <SearchField
-                      aria-label="Projects filter"
-                      className="group relative flex-1"
-                      defaultValue={searchParams.get('filter')?.toString() ?? ''}
-                      onChange={projectName => {
-                        setSearchParams({
-                          ...Object.fromEntries(searchParams.entries()),
-                          projectName,
-                        });
-                      }}
-                    >
-                      <Input
-                        placeholder="Filter"
-                        className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-                      />
-                      <div className="flex items-center px-2 absolute right-0 top-0 h-full">
-                        <Button className="flex group-data-[empty]:hidden items-center justify-center aspect-square w-5 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                          <Icon icon="close" />
-                        </Button>
-                      </div>
-                    </SearchField>
+                <div className="flex justify-between gap-1 p-[--padding-sm]">
+                  <SearchField
+                    aria-label="Projects filter"
+                    className="group relative flex-1"
+                    defaultValue={searchParams.get('filter')?.toString() ?? ''}
+                    onChange={projectName => {
+                      setSearchParams({
+                        ...Object.fromEntries(searchParams.entries()),
+                        projectName,
+                      });
+                    }}
+                  >
+                    <Input
+                      placeholder="Filter"
+                      className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                    />
+                    <div className="flex items-center px-2 absolute right-0 top-0 h-full">
+                      <Button className="flex group-data-[empty]:hidden items-center justify-center aspect-square w-5 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                        <Icon icon="close" />
+                      </Button>
+                    </div>
+                  </SearchField>
 
-                    <Button
-                      onPress={() => {
-                        if (activeProject.remoteId) {
-                          showAlert({
-                            title: 'This capability is coming soon',
-                            okLabel: 'Close',
-                            message: (
-                              <div>
-                                <p>
-                                  At the moment it is not possible to create more
-                                  cloud projects within a team in Insomnia.
-                                </p>
-                                <p>🚀 This feature is coming soon!</p>
-                              </div>
+                  <Button
+                    onPress={() => {
+                      if (activeProject.remoteId) {
+                        showAlert({
+                          title: 'This capability is coming soon',
+                          okLabel: 'Close',
+                          message: (
+                            <div>
+                              <p>
+                                At the moment it is not possible to create more
+                                cloud projects within a team in Insomnia.
+                              </p>
+                              <p>🚀 This feature is coming soon!</p>
+                            </div>
+                          ),
+                        });
+                      } else {
+                        const defaultValue = `My ${strings.project.singular}`;
+                        showPrompt({
+                          title: `Create New ${strings.project.singular}`,
+                          submitName: 'Create',
+                          placeholder: defaultValue,
+                          defaultValue,
+                          selectText: true,
+                          onComplete: async name =>
+                            createNewProjectFetcher.submit(
+                              {
+                                name,
+                              },
+                              {
+                                action: `/organization/${organizationId}/project/new`,
+                                method: 'post',
+                              }
                             ),
-                          });
-                        } else {
-                          const defaultValue = `My ${strings.project.singular}`;
-                          showPrompt({
-                            title: `Create New ${strings.project.singular}`,
-                            submitName: 'Create',
-                            placeholder: defaultValue,
-                            defaultValue,
-                            selectText: true,
-                            onComplete: async name =>
-                              createNewProjectFetcher.submit(
-                                {
-                                  name,
-                                },
-                                {
-                                  action: `/organization/${organizationId}/project/new`,
-                                  method: 'post',
-                                }
-                              ),
-                          });
-                        }
-                      }}
-                      aria-label="Create new Project"
-                      className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                    >
-                      <Icon icon="plus-circle" />
-                    </Button>
-                  </div>
-                )}
+                        });
+                      }
+                    }}
+                    aria-label="Create new Project"
+                    className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  >
+                    <Icon icon="plus-circle" />
+                  </Button>
+                </div>
 
                 <GridList
                   aria-label="Projects"

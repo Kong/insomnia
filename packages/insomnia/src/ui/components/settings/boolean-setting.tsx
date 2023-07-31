@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 import { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { RootLoaderData } from '../../routes/root';
+import { OrganizationLoaderData } from '../../routes/organization';
 import { HelpTooltip } from '../help-tooltip';
 const Descriptions = styled.div({
   fontSize: 'var(--font-size-sm)',
@@ -32,7 +32,7 @@ export const BooleanSetting: FC<{
 }) => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   if (!settings.hasOwnProperty(setting)) {
     throw new Error(`Invalid boolean setting name ${setting}`);
   }

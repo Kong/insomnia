@@ -16,7 +16,6 @@ import { GitRepository } from '../../models/git-repository';
 import { GrpcRequest } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { sortProjects } from '../../models/helpers/project';
-import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { isRemoteProject, Project } from '../../models/project';
 import { Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
@@ -110,10 +109,7 @@ export const workspaceLoader: LoaderFunction = async ({
 
   const allProjects = await models.project.all();
 
-  const organizationProjects =
-    organizationId === DEFAULT_ORGANIZATION_ID
-      ? allProjects.filter(proj => !isRemoteProject(proj))
-      : [activeProject];
+  const organizationProjects = allProjects.filter(proj => !isRemoteProject(proj));
 
   const projects = sortProjects(organizationProjects);
   const syncItemsList: (

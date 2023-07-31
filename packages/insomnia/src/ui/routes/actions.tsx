@@ -12,8 +12,6 @@ import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { getById, update } from '../../models/helpers/request-operations';
-import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
-import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
@@ -33,25 +31,18 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
 
-  if (organizationId !== DEFAULT_ORGANIZATION_ID) {
-    const sessionId = session.getCurrentSessionId();
-    invariant(sessionId, 'User must be logged in to create a project');
-    const response = await window.main.insomniaFetch<{ id: string }>({
-      path: `/v1/teams/${organizationId}/team-projects`,
-      method: 'POST',
-      data: {
-        name,
-      },
-      sessionId,
-    });
+  const sessionId = session.getCurrentSessionId();
+  invariant(sessionId, 'User must be logged in to create a project');
+  const response = await window.main.insomniaFetch<{ id: string }>({
+    path: `/v1/teams/${organizationId}/team-projects`,
+    method: 'POST',
+    data: {
+      name,
+    },
+    sessionId,
+  });
 
-    return redirect(`/organization/${organizationId}/project/${response.id}`);
-  } else {
-    const project = await models.project.create({ name });
-    window.main.trackSegmentEvent({ event: SegmentEvent.projectLocalCreate });
-    return redirect(`/organization/${organizationId}/project/${project._id}`);
-  }
-
+  return redirect(`/organization/${organizationId}/project/${response.id}`);
 };
 
 export const renameProjectAction: ActionFunction = async ({
@@ -70,30 +61,24 @@ export const renameProjectAction: ActionFunction = async ({
 
   invariant(project, 'Project not found');
 
-  if (isRemoteProject(project)) {
-    const sessionId = session.getCurrentSessionId();
-    invariant(sessionId, 'User must be logged in to rename a project');
+  const sessionId = session.getCurrentSessionId();
+  invariant(sessionId, 'User must be logged in to rename a project');
 
-    try {
-      await window.main.insomniaFetch({
-        path: `/v1/teams/${project.parentId}/team-projects/${projectId}`,
-        method: 'PATCH',
-        sessionId,
-        data: {
-          name,
-        },
-      });
-      await models.project.update(project, { name });
-      return null;
-    } catch (err) {
-      console.log(err);
-      return null;
-    }
+  try {
+    await window.main.insomniaFetch({
+      path: `/v1/teams/${project.parentId}/team-projects/${projectId}`,
+      method: 'PATCH',
+      sessionId,
+      data: {
+        name,
+      },
+    });
+    await models.project.update(project, { name });
+    return null;
+  } catch (err) {
+    console.log(err);
+    return null;
   }
-
-  await models.project.update(project, { name });
-
-  return null;
 };
 
 export const deleteProjectAction: ActionFunction = async ({ params }) => {
@@ -103,33 +88,24 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
 
-  if (organizationId !== DEFAULT_ORGANIZATION_ID) {
-    const sessionId = session.getCurrentSessionId();
-    invariant(sessionId, 'User must be logged in to delete a project');
+  const sessionId = session.getCurrentSessionId();
+  invariant(sessionId, 'User must be logged in to delete a project');
 
-    try {
-      await window.main.insomniaFetch({
-        path: `/v1/teams/${organizationId}/team-projects/${projectId}`,
-        method: 'DELETE',
-        sessionId,
-      });
+  try {
+    await window.main.insomniaFetch({
+      path: `/v1/teams/${organizationId}/team-projects/${projectId}`,
+      method: 'DELETE',
+      sessionId,
+    });
 
-      await models.stats.incrementDeletedRequestsForDescendents(project);
-      await models.project.remove(project);
+    await models.stats.incrementDeletedRequestsForDescendents(project);
+    await models.project.remove(project);
 
-      return redirect(`/organization/${organizationId}`);
-    } catch (err) {
-      console.log(err);
-      return null;
-    }
+    return redirect(`/organization/${organizationId}`);
+  } catch (err) {
+    console.log(err);
+    return null;
   }
-
-  await models.stats.incrementDeletedRequestsForDescendents(project);
-  await models.project.remove(project);
-
-  window.main.trackSegmentEvent({ event: SegmentEvent.projectLocalDelete });
-
-  return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`);
 };
 
 // Workspace
@@ -173,7 +149,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
   await database.flushChanges(flushId);
-  if (session.isLoggedIn() && isRemoteProject(project) && !workspaceMeta.gitRepositoryId) {
+  if (session.isLoggedIn() && !workspaceMeta.gitRepositoryId) {
     const vcs = getVCS();
     if (vcs) {
       await initializeLocalBackendProjectAndMarkForSync({
@@ -276,7 +252,7 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
   try {
     // Mark for sync if logged in and in the expected project
     const vcs = getVCS();
-    if (session.isLoggedIn() && vcs && isRemoteProject(duplicateToProject)) {
+    if (session.isLoggedIn() && vcs) {
       await initializeLocalBackendProjectAndMarkForSync({
         vcs: vcs.newInstance(),
         workspace: newWorkspace,

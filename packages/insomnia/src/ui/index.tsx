@@ -18,18 +18,20 @@ import {
 import { database } from '../common/database';
 import { initializeLogging } from '../common/log';
 import * as models from '../models';
-import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
-import { DEFAULT_PROJECT_ID } from '../models/project';
 import { initNewOAuthSession } from '../network/o-auth-2/get-token';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
 import { invariant } from '../utils/invariant';
 import { AppLoadingIndicator } from './components/app-loading-indicator';
+import Auth from './routes/auth';
+import Authorize from './routes/auth.authorize';
+import Login from './routes/auth.login';
 import { ErrorRoute } from './routes/error';
 import { shouldOrganizationsRevalidate } from './routes/organization';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
 
+const Organization = lazy(() => import('./routes/organization'));
 const Project = lazy(() => import('./routes/project'));
 const Workspace = lazy(() => import('./routes/workspace'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
@@ -42,21 +44,12 @@ initializeLogging();
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
-let locationHistoryEntry = `/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`;
-const prevLocationHistoryEntry = localStorage.getItem('locationHistoryEntry');
-
-if (prevLocationHistoryEntry && matchPath({ path: '/organization/:organizationId', end: false }, prevLocationHistoryEntry)) {
-  locationHistoryEntry = prevLocationHistoryEntry;
-}
-
 const router = createMemoryRouter(
   // @TODO - Investigate file based routing to generate these routes:
   [
     {
       path: '/',
       id: 'root',
-      loader: async (...args) =>
-        (await import('./routes/root')).loader(...args),
       element: <Root />,
       errorElement: <ErrorRoute />,
       children: [
@@ -87,9 +80,14 @@ const router = createMemoryRouter(
         {
           path: 'organization',
           id: '/organization',
-          shouldRevalidate: shouldOrganizationsRevalidate,
           loader: async (...args) => (await import('./routes/organization')).loader(...args),
+          shouldRevalidate: shouldOrganizationsRevalidate,
+          element: <Suspense fallback={<AppLoadingIndicator />}><Organization /></Suspense>,
           children: [
+            {
+              index: true,
+              loader: async (...args) => (await import('./routes/organization')).indexLoader(...args),
+            },
             {
               path: ':organizationId',
               children: [
@@ -778,12 +776,34 @@ const router = createMemoryRouter(
             },
           ],
         },
+        {
+          path: 'auth',
+          element: <Suspense fallback={<AppLoadingIndicator />}>
+            <Auth />
+          </Suspense>,
+          children: [
+            {
+              path: 'login',
+              action: async (...args) => (await import('./routes/auth.login')).action(...args),
+              element: <Login />,
+            },
+            {
+              path: 'logout',
+              action: async (...args) => (await import('./routes/auth.logout')).action(...args),
+            },
+            {
+              path: 'authorize',
+              action: async (...args) => (await import('./routes/auth.authorize')).action(...args),
+              element: <Authorize />,
+            },
+          ],
+        },
       ],
     },
   ],
   {
-    initialEntries: [locationHistoryEntry],
-  },
+    initialEntries: ['/organization'],
+  }
 );
 
 // Store the last location in local storage

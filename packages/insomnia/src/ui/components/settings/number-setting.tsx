@@ -3,7 +3,7 @@ import { useRouteLoaderData } from 'react-router-dom';
 
 import { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { RootLoaderData } from '../../routes/root';
+import { OrganizationLoaderData } from '../../routes/organization';
 import { HelpTooltip } from '../help-tooltip';
 
 interface Props {
@@ -35,7 +35,7 @@ export const NumberSetting: FC<Props> = ({
 }) => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
   if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
     throw new Error(`Invalid setting name ${setting}`);
