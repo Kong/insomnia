@@ -6,7 +6,7 @@ import { toKebabCase } from '../../../common/misc';
 import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { useRequestMetaPatcher, useRequestPatcher } from '../../hooks/use-request';
-import { RootLoaderData } from '../../routes/root';
+import { OrganizationLoaderData } from '../../routes/organization';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
 import { showPrompt } from '../modals';
 interface Props extends Omit<DropdownProps, 'children' > {
@@ -24,7 +24,7 @@ export const WebSocketRequestActionsDropdown = forwardRef<DropdownHandle, Props>
 }, ref) => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const patchRequestMeta = useRequestMetaPatcher();
   const { hotKeyRegistry } = settings;
   const requestFetcher = useFetcher();

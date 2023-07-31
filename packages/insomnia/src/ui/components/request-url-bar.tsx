@@ -22,8 +22,8 @@ import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestPatcher } from '../hooks/use-request';
 import { useRequestMetaPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
+import { OrganizationLoaderData } from '../routes/organization';
 import { RequestLoaderData } from '../routes/request';
-import { RootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
@@ -67,7 +67,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { hotKeyRegistry } = settings;
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
   const downloadPath = activeRequestMeta.downloadPath;

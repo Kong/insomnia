@@ -5,7 +5,7 @@ import tinykeys, { createKeybindingsHandler as _createKeybindingsHandler, KeyBin
 import { getPlatformKeyCombinations } from '../../common/hotkeys';
 import { keyboardKeys } from '../../common/keyboard-keys';
 import { KeyboardShortcut, KeyCombination } from '../../common/settings';
-import { RootLoaderData } from '../routes/root';
+import { OrganizationLoaderData } from '../routes/organization';
 
 const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyCombination): string =>
   `${meta ? 'Meta+' : ''}${alt ? 'Alt+' : ''}${ctrl ? 'Control+' : ''}${shift ? 'Shift+' : ''}` + Object.entries(keyboardKeys).find(([, { keyCode: kc }]) => kc === keyCode)?.[1].code;
@@ -13,7 +13,7 @@ const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyC
 export function useKeyboardShortcuts(getTarget: () => HTMLElement, listeners: { [key in KeyboardShortcut]?: (event: KeyboardEvent) => any }) {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { hotKeyRegistry } = settings;
 
   useEffect(() => {

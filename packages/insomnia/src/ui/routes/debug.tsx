@@ -36,7 +36,7 @@ import { RealtimeResponsePane } from '../components/websockets/realtime-response
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { useRequestMetaPatcher } from '../hooks/use-request';
 import { RequestLoaderData } from './request';
-import { RootLoaderData } from './root';
+import { OrganizationLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 export interface GrpcMessage {
   id: string;
@@ -96,7 +96,7 @@ export const Debug: FC = () => {
   }, [workspaceId]);
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { sidebarFilter } = activeWorkspaceMeta;
   const [runningRequests, setRunningRequests] = useState({});
   const setLoading = (isLoading: boolean) => {

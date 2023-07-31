@@ -4,7 +4,6 @@ import type { DashboardSortOrder } from '../../../common/constants';
 import { DEFAULT_PROJECT_ID } from '../../../models/project';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
-const LOGIN_STATE_CHANGE = 'global/login-state-change';
 export const SET_ACTIVE_PROJECT = 'global/activate-project';
 export const SET_DASHBOARD_SORT_ORDER = 'global/dashboard-sort-order';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
@@ -44,37 +43,21 @@ function activeWorkspaceReducer(state: string | null = null, action: any) {
   }
 }
 
-function loginStateChangeReducer(state = false, action: any) {
-  switch (action.type) {
-    case LOGIN_STATE_CHANGE:
-      return action.loggedIn;
-
-    default:
-      return state;
-  }
-}
-
 export interface GlobalState {
   activeProjectId: string;
   dashboardSortOrder: DashboardSortOrder;
   activeWorkspaceId: string | null;
-  isLoggedIn: boolean;
 }
 
 export const reducer = combineReducers<GlobalState>({
   dashboardSortOrder: dashboardSortOrderReducer,
   activeProjectId: activeProjectReducer,
   activeWorkspaceId: activeWorkspaceReducer,
-  isLoggedIn: loginStateChangeReducer,
 });
 
 // ~~~~~~~ //
 // ACTIONS //
 // ~~~~~~~ //
-export const loginStateChange = (loggedIn: boolean) => ({
-  type: LOGIN_STATE_CHANGE,
-  loggedIn,
-});
 
 export const setActiveProject = (projectId: string) => {
   const key = `${LOCALSTORAGE_PREFIX}::activeProjectId`;

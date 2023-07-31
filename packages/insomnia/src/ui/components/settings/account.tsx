@@ -1,23 +1,16 @@
 import React, { FC, Fragment, useCallback, useState } from 'react';
+import { useFetcher } from 'react-router-dom';
 
 import * as session from '../../../account/session';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
-import { hideAllModals, showModal } from '../modals/index';
-import { LoginModal } from '../modals/login-modal';
 
 export const Account: FC = () => {
   const [codeSent, setCodeSent] = useState(false);
   const [error, setError] = useState('');
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [finishedResetting, setFinishedResetting] = useState(false);
-
-  const handleLogin = useCallback((event: React.SyntheticEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    hideAllModals();
-    showModal(LoginModal);
-  }, []);
 
   const handleSubmitPasswordChange = useCallback(async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -55,9 +48,9 @@ export const Account: FC = () => {
     setFinishedResetting(false);
   }, [showChangePassword]);
 
-  const logout = useCallback(() => session.logout(), []);
+  const logoutFetcher = useFetcher();
 
-  return session.isLoggedIn() ? (
+  return (
     <Fragment>
       <div>
         <h2 className="no-margin-top">Welcome {session.getFirstName()}!</h2>
@@ -69,7 +62,15 @@ export const Account: FC = () => {
         <Link button href="https://app.insomnia.rest" className="btn btn--clicky">
           Manage Account
         </Link>
-        <PromptButton className="space-left btn btn--clicky" onClick={logout}>
+        <PromptButton
+          className="space-left btn btn--clicky"
+          onClick={() => {
+            logoutFetcher.submit({}, {
+              action: '/auth/logout',
+              method: 'POST',
+            });
+          }}
+        >
           Sign Out
         </PromptButton>
         <button
@@ -151,29 +152,5 @@ export const Account: FC = () => {
         </form>
       )}
     </Fragment>
-  ) : (
-    <Fragment>
-      <div className="notice pad surprise">
-        <h1 className="no-margin-top">Try Insomnia Sync!</h1>
-        <p>
-          Sync your data across devices or with a team
-          <br />
-          Keep synced data safe with end-to-end encryption
-          <br />
-          Prioritized email support
-          <br />
-        </p>
-        <br />
-        <div className="pad">
-          <Link button className="btn btn--clicky" href="https://insomnia.rest/pricing">
-            View plans <i className="fa fa-external-link" />
-          </Link>
-        </div>
-      </div>
-      <p>
-        Or{' '}<a href="#" onClick={handleLogin} className="theme--link">
-          Log In
-        </a>
-      </p>
-    </Fragment>);
+  );
 };

@@ -7,7 +7,7 @@ import { BaseModel } from '../../models';
 import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { sortProjects } from '../../models/helpers/project';
-import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
+import { isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { type Response } from '../../models/response';
@@ -49,7 +49,7 @@ export const selectRemoteProjects = createSelector(
 export const selectWorkspacesForActiveProject = createSelector(
   selectEntitiesLists,
   (state: RootState) => state.global.activeProjectId,
-  (entities, activeProjectId) => entities.workspaces.filter(workspace => workspace.parentId === (activeProjectId || DEFAULT_PROJECT_ID)),
+  (entities, activeProjectId) => entities.workspaces.filter(workspace => workspace.parentId === activeProjectId),
 );
 
 export const selectActiveWorkspace = createSelector(
@@ -57,7 +57,7 @@ export const selectActiveWorkspace = createSelector(
   (state: RootState) => state.global.activeWorkspaceId,
   (state: RootState) => state.global.activeProjectId,
   (entities, activeWorkspaceId, activeProjectId) => {
-    return entities.workspaces.filter(workspace => workspace.parentId === (activeProjectId || DEFAULT_PROJECT_ID))
+    return entities.workspaces.filter(workspace => workspace.parentId === activeProjectId)
       .find(workspace => workspace._id === activeWorkspaceId);
   },
 );

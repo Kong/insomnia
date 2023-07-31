@@ -9,7 +9,6 @@ import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { GitRepository } from '../../models/git-repository';
 import { sortProjects } from '../../models/helpers/project';
-import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { isRemoteProject, Project } from '../../models/project';
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
@@ -69,10 +68,7 @@ export const workspaceLoader: LoaderFunction = async ({
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const allProjects = await models.project.all();
 
-  const organizationProjects =
-    organizationId === DEFAULT_ORGANIZATION_ID
-      ? allProjects.filter(proj => !isRemoteProject(proj))
-      : [activeProject];
+  const organizationProjects = allProjects.filter(proj => !isRemoteProject(proj));
 
   const projects = sortProjects(organizationProjects);
   return {
