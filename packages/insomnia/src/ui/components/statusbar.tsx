@@ -1,7 +1,6 @@
 import React, { FC, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
-import { isLoggedIn, onLoginLogout } from '../../account/session';
 import { SettingsButton } from './buttons/settings-button';
 import { SvgIcon } from './svg-icon';
 import { Tooltip } from './tooltip';
@@ -29,17 +28,13 @@ const KongLink = styled.a({
 });
 
 export const NetworkStatus = () => {
-  const [status, setStatus] = useState<'online' | 'offline' | 'unauthorized'>(isLoggedIn() ? 'online' : 'unauthorized');
+  const [status, setStatus] = useState<'online' | 'offline'>('online');
 
   useEffect(() => {
     const handleOnline = () => setStatus('online');
     const handleOffline = () => setStatus('offline');
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-
-    onLoginLogout(isLoggedIn => {
-      setStatus(status => isLoggedIn ? status : 'unauthorized');
-    });
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -83,8 +78,7 @@ export const NetworkStatus = () => {
             fontSize: 'var(--font-size-xs)',
           }}
         >
-          {status === 'unauthorized' && 'Log in to sync your data'}
-          {status !== 'unauthorized' && status.charAt(0).toUpperCase() + status.slice(1)}
+          {status.charAt(0).toUpperCase() + status.slice(1)}
         </span>
       </div>
     </Tooltip>
