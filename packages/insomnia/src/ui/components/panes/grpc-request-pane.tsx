@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from 'react';
+import React, { FunctionComponent, useRef, useState } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useMount } from 'react-use';
 import styled from 'styled-components';
@@ -18,7 +18,7 @@ import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
-import { CodeEditor } from '../codemirror/code-editor';
+import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
 import { ErrorBoundary } from '../error-boundary';
@@ -85,7 +85,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     const methods = await window.main.grpc.loadMethods(activeRequest.protoFileId);
     setGrpcState({ ...grpcState, methods });
   });
-
+  const editorRef = useRef<CodeEditorHandle>(null);
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
@@ -180,7 +180,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 data-testid="button-use-request-stubs"
                 disabled={!method?.mocks}
                 onClick={() => {
-                  method?.mocks && patchRequest(requestId, { body: { ...activeRequest.body, text: JSON.stringify(method.mocks, null, 2) } });
+                  if (editorRef.current && method?.mocks) {
+                    editorRef.current.setValue(JSON.stringify(method.mocks, null, 2));
+                  }
                 }}
               >
                 <Tooltip message="Click to replace body with request stubs" position="bottom" delay={500}>
@@ -268,6 +270,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     {[
                       <TabItem key="body" title="Body">
                         <CodeEditor
+                          ref={editorRef}
                           defaultValue={activeRequest.body.text}
                           onChange={text => patchRequest(requestId, { body: { text } })}
                           mode="application/json"

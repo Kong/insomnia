@@ -131,7 +131,7 @@ export const loadMethodsFromReflection = async (options: { url: string; metadata
 export interface GrpcMethodInfo {
   type: GrpcMethodType;
   fullPath: string;
-  mocks?: {[key: string]: any};
+  mocks?: Record<string, any>;
 }
 export const getMethodType = ({ requestStream, responseStream }: any): GrpcMethodType => {
   if (requestStream && responseStream) {
