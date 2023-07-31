@@ -10,7 +10,7 @@ import {
 } from '../../../common/hotkeys';
 import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { RootLoaderData } from '../../routes/root';
+import { OrganizationLoaderData } from '../../routes/organization';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { Hotkey } from '../hotkey';
@@ -25,7 +25,7 @@ export const isKeyCombinationInRegistry = (pressedKeyComb: KeyCombination, hotKe
 export const Shortcuts: FC = () => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { hotKeyRegistry } = settings;
   const patchSettings = useSettingsPatcher();
 

@@ -6,6 +6,7 @@ type LoginCallback = (isLoggedIn: boolean) => void;
 
 export interface WhoamiResponse {
   sessionAge: number;
+  sessionExpiry: number;
   accountId: string;
   email: string;
   firstName: string;
@@ -29,6 +30,7 @@ export interface WhoamiResponse {
 export interface SessionData {
   accountId: string;
   id: string;
+  sessionExpiry: Date;
   email: string;
   firstName: string;
   lastName: string;
@@ -46,6 +48,7 @@ export function onLoginLogout(loginCallback: LoginCallback) {
 export async function absorbKey(sessionId: string, key: string) {
   // Get and store some extra info (salts and keys)
   const {
+    sessionExpiry,
     publicKey,
     encPrivateKey,
     encSymmetricKey,
@@ -55,9 +58,13 @@ export async function absorbKey(sessionId: string, key: string) {
     lastName,
   } = await _whoami(sessionId);
   const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
+
+  const sessionExpiryDate = new Date(Date.now() + (sessionExpiry * 1000));
+
   // Store the information for later
   setSessionData(
     sessionId,
+    sessionExpiryDate,
     accountId,
     firstName,
     lastName,
@@ -143,7 +150,17 @@ export function getPrivateKey() {
 
 export function getCurrentSessionId() {
   if (window) {
-    return window.localStorage.getItem('currentSessionId');
+    const sessionId = window.localStorage.getItem('currentSessionId');
+    try {
+      const { sessionExpiry } = JSON.parse(window.localStorage.getItem(_getSessionKey(sessionId)) || '{}');
+      const isExpired = sessionExpiry && new Date(sessionExpiry).getTime() < Date.now();
+      if (isExpired) {
+        return '';
+      }
+      return sessionId;
+    } catch (e) {
+      return '';
+    }
   } else {
     return '';
   }
@@ -195,6 +212,7 @@ export async function logout() {
 /** Set data for the new session and store it encrypted with the sessionId */
 export function setSessionData(
   id: string,
+  sessionExpiry: Date,
   accountId: string,
   firstName: string,
   lastName: string,
@@ -205,6 +223,7 @@ export function setSessionData(
 ) {
   const sessionData: SessionData = {
     id,
+    sessionExpiry,
     accountId,
     symmetricKey,
     publicKey,

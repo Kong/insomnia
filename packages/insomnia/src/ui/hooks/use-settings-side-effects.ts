@@ -3,12 +3,12 @@ import { useRouteLoaderData } from 'react-router-dom';
 import { usePrevious } from 'react-use';
 
 import { Settings } from '../../models/settings';
-import { RootLoaderData } from '../routes/root';
+import { OrganizationLoaderData } from '../routes/organization';
 
 const useRestartSetting = (setting: keyof Settings) => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
   const nextValue = settings[setting];
   const previousValue = usePrevious(nextValue);
@@ -33,7 +33,7 @@ const updateFontStyle = (key: string, value: string | null) => document?.querySe
 export const useSettingsSideEffects = () => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
   useLayoutEffect(() => {
     updateFontStyle('--font-default', settings.fontInterface);

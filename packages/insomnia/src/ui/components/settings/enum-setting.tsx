@@ -3,7 +3,7 @@ import { useRouteLoaderData } from 'react-router-dom';
 
 import { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { RootLoaderData } from '../../routes/root';
+import { OrganizationLoaderData } from '../../routes/organization';
 import { HelpTooltip } from '../help-tooltip';
 interface Props<T> {
   help?: ReactNode;
@@ -23,7 +23,7 @@ export const EnumSetting = <T extends string | number>({
 }: PropsWithChildren<Props<T>>) => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
 
   const patchSettings = useSettingsPatcher();
 

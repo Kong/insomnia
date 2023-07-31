@@ -21,7 +21,7 @@ import type { Request } from '../../../../models/request';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../../../network/network';
 import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
-import { RootLoaderData } from '../../../routes/root';
+import { OrganizationLoaderData } from '../../../routes/organization';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../../base/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../../codemirror/code-editor';
 import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
@@ -256,7 +256,7 @@ export const GraphQLEditor: FC<Props> = ({
   }, [automaticFetch, environmentId, request._id, request.url, workspaceId]);
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { editorIndentWithTabs, editorIndentSize } = settings;
   const beautifyRequestBody = async () => {
     const { body } = state;

@@ -2,7 +2,7 @@ import React, { FC, useCallback, useEffect, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { RootLoaderData } from '../../routes/root';
+import { OrganizationLoaderData } from '../../routes/organization';
 
 const EyeIcon = styled.i({
   cursor: 'pointer',
@@ -34,7 +34,7 @@ export const PasswordViewer: FC<{
 }) => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { showPasswords } = settings;
   const [mask, setMask] = useState<string | null>(null);
   useEffect(() => {

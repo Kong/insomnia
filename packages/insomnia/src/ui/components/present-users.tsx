@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 
+import { getAccountId } from '../../account/session';
 import { usePresenceContext } from '../context/app/presence-context';
 import { AvatarGroup } from './avatar';
 
@@ -15,22 +16,26 @@ export const PresentUsers = () => {
     return null;
   }
 
-  const activeUsers = presence.filter(p => {
-    return p.project === projectId && p.file === workspaceId;
-  });
+  const accountId = getAccountId();
+
+  const activeUsers = presence
+    .filter(p => {
+      return p.project === projectId && p.file === workspaceId;
+    })
+    .filter(p => p.acct !== accountId);
 
   return (
     <AvatarGroup
       animate
       size="medium"
-      items={activeUsers.map(activeUser => {
+      items={activeUsers.map(user => {
         return {
-          key: activeUser.acct,
+          key: user.acct,
           alt:
-            activeUser.firstName || activeUser.lastName
-              ? `${activeUser.firstName} ${activeUser.lastName}`
-              : activeUser.acct,
-          src: activeUser.avatar,
+            user.firstName || user.lastName
+              ? `${user.firstName} ${user.lastName}`
+              : user.acct,
+          src: user.avatar,
         };
       })}
     />

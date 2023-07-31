@@ -19,16 +19,15 @@ import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { useRequestMetaPatcher, useRequestPatcher } from '../../hooks/use-request';
-import { RootLoaderData } from '../../routes/root';
-import { type DropdownProps } from '../base/dropdown';
+import { OrganizationLoaderData } from '../../routes/organization';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 
-interface Props extends Omit<DropdownProps, 'children'> {
-  activeEnvironment: Environment;
+interface Props {
+  activeEnvironment?: Environment | null;
   activeProject: Project;
   isPinned: Boolean;
   request: Request | GrpcRequest | WebSocketRequest;
@@ -43,7 +42,7 @@ export const RequestActionsDropdown = ({
 }: Props) => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const patchRequestMeta = useRequestMetaPatcher();
   const patchRequest = useRequestPatcher();
   const { hotKeyRegistry } = settings;

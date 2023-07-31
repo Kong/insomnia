@@ -24,7 +24,6 @@ import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { showError, showModal } from '../modals';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
-import { LoginModal } from '../modals/login-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncDeleteModal } from '../modals/sync-delete-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
@@ -570,17 +569,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           aria-label='Sync Branches List'
           title={syncMenuHeader}
         >
-
-          <DropdownItem aria-label='Login'>
-            {!session.isLoggedIn() && (
-              <ItemContent
-                icon="sign-in"
-                label="Log In"
-                onClick={() => showModal(LoginModal)}
-              />
-            )}
-          </DropdownItem>
-
           <DropdownItem aria-label='Branches'>
             <ItemContent
               icon="code-fork"
