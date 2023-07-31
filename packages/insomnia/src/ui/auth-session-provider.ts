@@ -38,11 +38,17 @@ export async function submitAuthCode(code: string) {
   }
 }
 
-export async function getLoginUrl() {
+export function getLoginUrl() {
   const publicKey = window.localStorage.getItem('insomnia.publicKey');
   if (!publicKey) {
     console.log('No public key found');
     return '';
   }
-  return `${getAppWebsiteBaseURL()}/app/auth-app/?loginKey=${encodeURIComponent(publicKey)}`;
+
+  const url = new URL(getAppWebsiteBaseURL());
+
+  url.pathname = '/app/auth-app/';
+  url.searchParams.set('loginKey', encodeURIComponent(publicKey));
+
+  return url.toString();
 }

@@ -1,17 +1,10 @@
-import React, { FC, useEffect, useRef, useState } from 'react';
-import { Link, useLoaderData, useParams } from 'react-router-dom';
+import React, { FC } from 'react';
+import { Link, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
-import * as session from '../../account/session';
-import { isDefaultOrganization } from '../../models/organization';
-import { RootLoaderData } from '../routes/root';
-import { Link as ExternalLink } from './base/link';
-import { Modal, ModalHandle } from './base/modal';
-import { ModalBody } from './base/modal-body';
-import { ModalFooter } from './base/modal-footer';
-import { ModalHeader } from './base/modal-header';
-import { showAlert } from './modals';
-import { showLoginModal } from './modals/login-modal';
+import { getAppWebsiteBaseURL } from '../../common/constants';
+import { OrganizationLoaderData } from '../routes/organization';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { SvgIcon } from './svg-icon';
 import { Tooltip } from './tooltip';
 
@@ -55,68 +48,6 @@ const NavbarItem = styled(Link)<{
   outline: `3px solid ${$isActive ? 'var(--color-font)' : 'transparent'}`,
 }));
 
-const CreateButton = styled.button({
-  padding: 'var(--padding-sm)',
-  borderRadius: 'var(--radius-md)',
-  width: '27px',
-  height: '27px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  overflow: 'hidden',
-  borderWidth: '1px',
-  borderStyle: 'solid',
-  borderColor: 'transparent',
-});
-
-const SignupModal: FC<{onHide: () => void}> = ({
-  onHide,
-}) => {
-  const modalRef = useRef<ModalHandle>(null);
-
-  useEffect(() => {
-    modalRef.current?.show();
-  }, []);
-
-  return (
-    <Modal onHide={onHide} skinny ref={modalRef}>
-      <ModalHeader>Login or sign up</ModalHeader>
-      <ModalBody className="wide pad">
-        Log in or sign up to create a new organization with Insomnia.
-      </ModalBody>
-      <ModalFooter>
-        <div
-          style={{
-            display: 'flex',
-            gap: 'var(--padding-md)',
-          }}
-        >
-          <button
-            className="btn btn--outlined"
-            onClick={() => {
-              modalRef.current?.hide();
-              showLoginModal();
-            }}
-          >
-            Login
-          </button>
-
-          <ExternalLink
-            className="btn"
-            onClick={() => {
-              modalRef.current?.hide();
-            }}
-            button
-            href="https://app.insomnia.rest/app/signup/"
-          >
-            Sign Up
-          </ExternalLink>
-        </div>
-      </ModalFooter>
-    </Modal>
-  );
-};
-
 const getNameInitials = (name: string) => {
   // Split on whitespace and take first letter of each word
   const words = name.toUpperCase().split(' ');
@@ -138,60 +69,55 @@ const getNameInitials = (name: string) => {
 };
 
 export const OrganizationsNav: FC = () => {
-  const { organizations } = useLoaderData() as RootLoaderData;
+  const { organizations } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { organizationId } = useParams() as { organizationId:string };
-  const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
-  return (
-    <>
-      <Navbar>
-        <NavbarList>
-          {organizations.map(organization => {
-            return (
-              <li key={organization._id}>
-                <Tooltip position='right' message={organization.name}>
-                  <NavbarItem
-                    to={`/organization/${organization._id}`}
-                    $isActive={organizationId === organization._id}
-                  >
-                    {isDefaultOrganization(organization) ? (<i className='fa fa-home' />) : getNameInitials(organization.name)}
-                  </NavbarItem>
-                </Tooltip>
-              </li>
-            );
-          })}
-          <li>
-            <Tooltip position='right' message="Create new organization">
-              <CreateButton
-                type="button"
-                onClick={() => {
-                  if (session.isLoggedIn()) {
-                    showAlert({
-                      title: 'This capability is coming soon',
-                      message: (
-                        <div>
-                          <p>
-                            At the moment it is not possible to create more teams
-                            in Insomnia.
-                          </p>
-                          <p>
-                            🚀 This feature is coming soon!
-                          </p>
-                        </div>
-                      ),
-                    });
-                  } else {
-                    setIsSignupModalOpen(true);
-                  }
-                }}
-              >
 
+  return (
+    <Navbar>
+      <NavbarList>
+        {organizations.map(organization => {
+          return (
+            <li key={organization._id}>
+              <Tooltip position='right' message={organization.name}>
+                <NavbarItem
+                  to={`/organization/${organization._id}`}
+                  $isActive={organizationId === organization._id}
+                >
+                  {organization.isPersonal ? (<i className='fa fa-home' />) : getNameInitials(organization.name)}
+
+                </NavbarItem>
+              </Tooltip>
+            </li>
+          );
+        })}
+        <li>
+          <Dropdown
+            placement='right top'
+            triggerButton={
+              <DropdownButton>
                 <SvgIcon icon="plus" />
-              </CreateButton>
-            </Tooltip>
-          </li>
-        </NavbarList>
-      </Navbar>
-      {isSignupModalOpen ? <SignupModal onHide={() => setIsSignupModalOpen(false)} /> : null}
-    </>
+              </DropdownButton>
+            }
+          >
+            <DropdownItem>
+              <ItemContent
+                label="Join an organization"
+                onClick={() => {
+                  window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/teams`);
+                }}
+              />
+            </DropdownItem>
+            <DropdownItem>
+              <ItemContent
+                label="Create new organization"
+                onClick={() => {
+                  window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/teams`);
+                }}
+              />
+            </DropdownItem>
+          </Dropdown>
+        </li>
+      </NavbarList>
+    </Navbar>
   );
 };

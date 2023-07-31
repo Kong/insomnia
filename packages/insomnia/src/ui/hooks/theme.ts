@@ -5,13 +5,13 @@ import { useAsync } from 'react-use';
 import { ThemeSettings } from '../../models/settings';
 import { ColorScheme, getThemes } from '../../plugins';
 import { applyColorScheme, PluginTheme } from '../../plugins/misc';
-import { RootLoaderData } from '../routes/root';
+import { OrganizationLoaderData } from '../routes/organization';
 import { useSettingsPatcher } from './use-request';
 
 export const useThemes = () => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const {
     lightTheme,
     darkTheme,

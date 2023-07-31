@@ -34,8 +34,8 @@ import { SidebarLayout } from '../components/sidebar-layout';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { useRequestMetaPatcher } from '../hooks/use-request';
+import { OrganizationLoaderData } from './organization';
 import { GrpcRequestLoaderData, RequestLoaderData, WebSocketRequestLoaderData } from './request';
-import { RootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 export interface GrpcMessage {
   id: string;
@@ -107,7 +107,7 @@ export const Debug: FC = () => {
 
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { sidebarFilter } = activeWorkspaceMeta;
   const [runningRequests, setRunningRequests] = useState({});
   const setLoading = (isLoading: boolean) => {

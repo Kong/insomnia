@@ -13,7 +13,7 @@ import { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
-import { RootLoaderData } from '../../routes/root';
+import { OrganizationLoaderData } from '../../routes/organization';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 export interface OneLineEditorProps {
   defaultValue: string;
@@ -46,7 +46,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { handleRender, handleGetRenderContext } = useNunjucks();
 
   useMount(() => {

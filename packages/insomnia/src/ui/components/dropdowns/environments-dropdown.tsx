@@ -2,7 +2,7 @@ import React, { FC, useRef, useState } from 'react';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { type Environment } from '../../../models/environment';
-import { RootLoaderData } from '../../routes/root';
+import { OrganizationLoaderData } from '../../routes/organization';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -25,7 +25,7 @@ export const EnvironmentsDropdown: FC<Props> = ({ setEnvironmentModalOpen }) => 
   ) as WorkspaceLoaderData;
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { hotKeyRegistry } = settings;
   const setActiveEnvironmentFetcher = useFetcher();
   const dropdownRef = useRef<DropdownHandle>(null);

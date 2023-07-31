@@ -6,64 +6,57 @@
       http-equiv="Content-Security-Policy"
       content="font-src 'self' data:; connect-src * data: api: insomnia-event-source:; default-src * insomnia://*; img-src blob: data: * insomnia://*; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src blob: data: mediastream: * insomnia://*;"
     />
-    <link rel="stylesheet" href="./ui/css/index.less" />
+    <link rel="stylesheet" href="./ui/css/styles.css" />
   </head>
 
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="Content-Security-Policy"
-    content="font-src 'self' data:; connect-src * data:; default-src * insomnia://*; img-src blob: data: * insomnia://*; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src blob: data: mediastream: * insomnia://*;" />
-  <link rel="stylesheet" href="./ui/css/styles.css" />
-</head>
-
-<body class="w-full h-full">
-  <div id="root" class="w-full h-full">
-    <div id="app-loading-indicator" class="w-full h-full flex items-center justify-center fixed top-0 left-0">
-      <div class="relative">
-        <svg viewBox="0 0 378 378" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"
-          width="100">
-          <circle cx="36" cy="36" r="36" fill="none" stroke="var(--hl)" stroke-opacity="0.1" stroke-width="4px"
-            transform="translate(-323 -111) translate(359.016 147.016) scale(4.24956)"></circle>
-          <circle cx="36" cy="36" r="36" fill="none" stroke="var(--hl)" stroke-opacity="0.8" stroke-width="4px"
-            stroke-dasharray="56,172,0,0" transform="translate(-323 -111) translate(359.016 147.016) scale(4.24956)">
-            <animateTransform attributeName="transform" type="rotate" from="0 36 36" to="360 36 36" dur="0.8s"
-              repeatCount="indefinite" additive="sum"></animateTransform>
-          </circle>
-          <path
-            d="M19 37.033c9.96 0 18.033-8.073 18.033-18.033S28.96.967 19 .967.967 9.04.967 19 9.04 37.033 19 37.033z"
-            fill="#fff" fill-rule="nonzero" transform="translate(-323 -111) translate(431.258 219.258) scale(4.24956)">
-          </path>
-          <path
-            d="M19 0C8.506 0 0 8.506 0 19s8.506 19 19 19 19-8.506 19-19S29.494 0 19 0zm0 1.932c9.426 0 17.068 7.642 17.068 17.068 0 9.426-7.642 17.068-17.068 17.068-9.426 0-17.068-7.642-17.068-17.068C1.932 9.574 9.574 1.932 19 1.932z"
-            fill="#4000bf" fill-rule="nonzero"
-            transform="translate(-323 -111) translate(431.258 219.258) scale(4.24956)"></path>
-          <path
-            d="M19.214 5.474c7.47 0 13.525 6.057 13.525 13.526 0 7.469-6.055 13.526-13.525 13.526-7.47 0-13.526-6.057-13.526-13.526 0-1.825.362-3.567 1.019-5.156a5.266 5.266 0 004.243 2.15c2.885 0 5.26-2.375 5.26-5.261a5.263 5.263 0 00-2.15-4.242 13.5 13.5 0 015.154-1.017z"
-            fill="url(#_Linear1)" transform="translate(-323 -111) translate(431.258 219.258) scale(4.24956)"></path>
-          <defs>
-            <linearGradient id="_Linear1" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse"
-              gradientTransform="rotate(-90 25.87 6.655) scale(27.0508)">
-              <stop offset="0" stop-color="#7400e1"></stop>
-              <stop offset="1" stop-color="#4000bf"></stop>
-            </linearGradient>
-          </defs>
-        </svg>
+  <body class="w-full h-full">
+    <div id="root" class="w-full h-full">
+      <div id="app-loading-indicator" class="w-full h-full flex items-center justify-center fixed top-0 left-0">
+        <div class="relative">
+          <svg viewBox="0 0 378 378" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"
+            width="100">
+            <circle cx="36" cy="36" r="36" fill="none" stroke="var(--hl)" stroke-opacity="0.1" stroke-width="4px"
+              transform="translate(-323 -111) translate(359.016 147.016) scale(4.24956)"></circle>
+            <circle cx="36" cy="36" r="36" fill="none" stroke="var(--hl)" stroke-opacity="0.8" stroke-width="4px"
+              stroke-dasharray="56,172,0,0" transform="translate(-323 -111) translate(359.016 147.016) scale(4.24956)">
+              <animateTransform attributeName="transform" type="rotate" from="0 36 36" to="360 36 36" dur="0.8s"
+                repeatCount="indefinite" additive="sum"></animateTransform>
+            </circle>
+            <path
+              d="M19 37.033c9.96 0 18.033-8.073 18.033-18.033S28.96.967 19 .967.967 9.04.967 19 9.04 37.033 19 37.033z"
+              fill="#fff" fill-rule="nonzero" transform="translate(-323 -111) translate(431.258 219.258) scale(4.24956)">
+            </path>
+            <path
+              d="M19 0C8.506 0 0 8.506 0 19s8.506 19 19 19 19-8.506 19-19S29.494 0 19 0zm0 1.932c9.426 0 17.068 7.642 17.068 17.068 0 9.426-7.642 17.068-17.068 17.068-9.426 0-17.068-7.642-17.068-17.068C1.932 9.574 9.574 1.932 19 1.932z"
+              fill="#4000bf" fill-rule="nonzero"
+              transform="translate(-323 -111) translate(431.258 219.258) scale(4.24956)"></path>
+            <path
+              d="M19.214 5.474c7.47 0 13.525 6.057 13.525 13.526 0 7.469-6.055 13.526-13.525 13.526-7.47 0-13.526-6.057-13.526-13.526 0-1.825.362-3.567 1.019-5.156a5.266 5.266 0 004.243 2.15c2.885 0 5.26-2.375 5.26-5.261a5.263 5.263 0 00-2.15-4.242 13.5 13.5 0 015.154-1.017z"
+              fill="url(#_Linear1)" transform="translate(-323 -111) translate(431.258 219.258) scale(4.24956)"></path>
+            <defs>
+              <linearGradient id="_Linear1" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse"
+                gradientTransform="rotate(-90 25.87 6.655) scale(27.0508)">
+                <stop offset="0" stop-color="#7400e1"></stop>
+                <stop offset="1" stop-color="#4000bf"></stop>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
       </div>
     </div>
-  </div>
-  <div
-    id="dropdowns-container"
-    style="
-      z-index: 99999;
-      position: fixed;
-      right: -90000px;
-      top: -90000px;
-      width: 100vw;
-      height: 100vh;
-    "
-  ></div>
-  <div id="graphql-explorer-container"></div>
-  <script src="./renderer.ts" type="module"></script>
-</body>
+    <div
+      id="dropdowns-container"
+      style="
+        z-index: 99999;
+        position: fixed;
+        right: -90000px;
+        top: -90000px;
+        width: 100vw;
+        height: 100vh;
+      "
+    ></div>
+    <div id="graphql-explorer-container"></div>
+    <script src="./renderer.ts" type="module"></script>
+  </body>
 
 </html>

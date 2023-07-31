@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { RootLoaderData } from '../../routes/root';
+import { OrganizationLoaderData } from '../../routes/organization';
 import { Hotkey } from '../hotkey';
 import { showSettingsModal } from '../modals/settings-modal';
 import { SvgIcon } from '../svg-icon';
@@ -20,7 +20,7 @@ const StatusButton = styled(Button).attrs({
 export const SettingsButton: FunctionComponent = () => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
   const { hotKeyRegistry } = settings;
   return (
     <Tooltip

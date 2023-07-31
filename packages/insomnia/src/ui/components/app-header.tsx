@@ -84,11 +84,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
         </Fragment>
       )}
       gridCenter={gridCenter}
-      gridRight={
-        <Fragment>
-          {gridRight}
-        </Fragment>
-      }
+      gridRight={gridRight}
     />
   );
 };
