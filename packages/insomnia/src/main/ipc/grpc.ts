@@ -73,7 +73,7 @@ interface MethodDefs {
   responseStream: boolean;
   requestSerialize: (value: any) => Buffer;
   responseDeserialize: (value: Buffer) => any;
-  mocks?: {[key: string]: any};
+  example?: Record<string, any>;
 }
 const getMethodsFromReflection = async (host: string, metadata: GrpcRequestHeader[]): Promise<MethodDefs[]> => {
   try {
@@ -103,7 +103,7 @@ const getMethodsFromReflection = async (host: string, metadata: GrpcRequestHeade
             }
             return {
               ...m,
-              mocks: mockedRequestMethods[methodName]().plain,
+              example: mockedRequestMethods[methodName]().plain,
             };
           });
         } catch (e) {
@@ -125,13 +125,13 @@ export const loadMethodsFromReflection = async (options: { url: string; metadata
   return methods.map(method => ({
     type: getMethodType(method),
     fullPath: method.path,
-    mocks: method.mocks,
+    example: method.example,
   }));
 };
 export interface GrpcMethodInfo {
   type: GrpcMethodType;
   fullPath: string;
-  mocks?: Record<string, any>;
+  example?: Record<string, any>;
 }
 export const getMethodType = ({ requestStream, responseStream }: any): GrpcMethodType => {
   if (requestStream && responseStream) {

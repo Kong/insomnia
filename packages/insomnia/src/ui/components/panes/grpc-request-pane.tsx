@@ -178,14 +178,14 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
               <Button
                 variant="text"
                 data-testid="button-use-request-stubs"
-                disabled={!method?.mocks}
+                disabled={!method?.example}
                 onClick={() => {
-                  if (editorRef.current && method?.mocks) {
-                    editorRef.current.setValue(JSON.stringify(method.mocks, null, 2));
+                  if (editorRef.current && method?.example) {
+                    editorRef.current.setValue(JSON.stringify(method.example, null, 2));
                   }
                 }}
               >
-                <Tooltip message="Click to replace body with request stubs" position="bottom" delay={500}>
+                <Tooltip message="Click to replace body with an example" position="bottom" delay={500}>
                   <i className="fa fa-code" />
                 </Tooltip>
               </Button>
