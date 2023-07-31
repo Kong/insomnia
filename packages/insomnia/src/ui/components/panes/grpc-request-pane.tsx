@@ -18,9 +18,9 @@ import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
+import { CodeEditor } from '../codemirror/code-editor';
 import { OneLineEditor } from '../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
-import { GRPCEditor } from '../editors/grpc-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -265,15 +265,28 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     </ActionButtonsContainer>
                   )}
                   <Tabs key={uniquenessKey} aria-label="Grpc tabbed messages tabs" isNested>
-                    {...[
+                    {[
                       <TabItem key="body" title="Body">
-                        <GRPCEditor content={activeRequest.body.text} handleChange={text => patchRequest(requestId, { body: { text } })} />
+                        <CodeEditor
+                          defaultValue={activeRequest.body.text}
+                          onChange={text => patchRequest(requestId, { body: { text } })}
+                          mode="application/json"
+                          enableNunjucks
+                          showPrettifyButton={true}
+                        />
                       </TabItem>,
                       ...requestMessages.sort((a, b) => a.created - b.created).map((m, index) => (
                         <TabItem key={m.id} title={`Stream ${index + 1}`}>
-                          <GRPCEditor content={m.text} readOnly />
+                          <CodeEditor
+                            defaultValue={m.text}
+                            mode="application/json"
+                            enableNunjucks
+                            readOnly
+                            autoPrettify
+                          />
                         </TabItem>
-                      ))]}
+                      )),
+                    ]}
                   </Tabs>
                 </>
               </TabItem>
