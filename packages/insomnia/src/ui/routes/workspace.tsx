@@ -111,7 +111,6 @@ export const workspaceLoader: LoaderFunction = async ({
         children: isRequestGroup(c) ? next(c._id) : [],
       }));
   }
-  console.log('folderMetas', folderMetas.filter(m => m.collapsed));
   const requestTree = next(activeWorkspace._id);
   return {
     activeWorkspace,

@@ -19,7 +19,7 @@ import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-proj
 import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import { selectRemoteProjects, selectSyncItems } from '../../redux/selectors';
+import { selectSyncItems } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
@@ -81,11 +81,13 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   });
   const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
   const navigate = useNavigate();
-  const remoteProjects = useSelector(selectRemoteProjects);
   const syncItems = useSelector(selectSyncItems);
   const {
     activeWorkspaceMeta,
+    projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const remoteProjects = projects.filter(isRemoteProject);
+
   const refetchRemoteBranch = useCallback(async () => {
     if (session.isLoggedIn()) {
       try {

@@ -3,8 +3,7 @@ import type { ValueOf } from 'type-fest';
 
 import { BaseModel } from '../../models';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
-import { sortProjects } from '../../models/helpers/project';
-import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
+import { DEFAULT_PROJECT_ID } from '../../models/project';
 import { isRequest } from '../../models/request';
 import { RootState } from './modules';
 
@@ -22,22 +21,6 @@ const selectEntitiesLists = createSelector(
     }
     return entitiesLists as EntitiesLists;
   },
-);
-
-// request switcher
-export const selectRequestMetas = createSelector(
-  selectEntitiesLists,
-  entities => entities.requestMetas,
-);
-// request switcher
-export const selectGrpcRequestMetas = createSelector(
-  selectEntitiesLists,
-  entities => entities.grpcRequestMetas,
-);
-// sync dropdown
-export const selectRemoteProjects = createSelector(
-  selectEntitiesLists,
-  entities => sortProjects(entities.projects).filter(isRemoteProject),
 );
 
 // list workspaces for move/copy switcher, and export
@@ -101,36 +84,6 @@ const selectActiveWorkspaceEntities = createSelector(
     // Kick off the recursion
     addChildrenOf(activeWorkspace);
     return descendants;
-  },
-);
-
-const selectActiveWorkspaceMeta = createSelector(
-  selectActiveWorkspace,
-  selectEntitiesLists,
-  (activeWorkspace, entities) => {
-    return entities.workspaceMetas.find(workspaceMeta => workspaceMeta.parentId === activeWorkspace?._id);
-  },
-);
-// response history list
-export const selectActiveRequest = createSelector(
-  (state: RootState) => state.entities,
-  selectActiveWorkspaceMeta,
-  (entities, workspaceMeta) => {
-    const id = workspaceMeta?.activeRequestId || 'n/a';
-
-    if (id in entities.requests) {
-      return entities.requests[id];
-    }
-
-    if (id in entities.grpcRequests) {
-      return entities.grpcRequests[id];
-    }
-
-    if (id in entities.webSocketRequests) {
-      return entities.webSocketRequests[id];
-    }
-
-    return null;
   },
 );
 
