@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useRef } from 'react';
+import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -24,7 +24,6 @@ import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { MarkdownPreview } from '../markdown-preview';
-import { showModal } from '../modals';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
 import { RequestUrlBar, RequestUrlBarHandle } from '../request-url-bar';
@@ -71,15 +70,8 @@ export const RequestPane: FC<Props> = ({
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchRequest = useRequestPatcher();
-
-  const handleEditDescription = useCallback((forceEditMode: boolean) => {
-    showModal(RequestSettingsModal, { request: activeRequest, forceEditMode });
-  }, [activeRequest]);
-
-  const handleEditDescriptionAdd = useCallback(() => {
-    handleEditDescription(true);
-  }, [handleEditDescription]);
   const patchSettings = useSettingsPatcher();
+  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
 
   const handleImportQueryFromUrl = useCallback(() => {
     let query;
@@ -239,8 +231,7 @@ export const RequestPane: FC<Props> = ({
             {activeRequest.description ? (
               <div>
                 <div className="pull-right pad bg-default">
-                  {/* @ts-expect-error -- TSCONVERSION the click handler expects a boolean prop... */}
-                  <button className="btn btn--clicky" onClick={handleEditDescription}>
+                  <button className="btn btn--clicky" onClick={() => setIsRequestSettingsModalOpen(true)}>
                     Edit
                   </button>
                 </div>
@@ -267,10 +258,7 @@ export const RequestPane: FC<Props> = ({
                   </span>
                   <br />
                   <br />
-                  <button
-                    className="btn btn--clicky faint"
-                    onClick={handleEditDescriptionAdd}
-                  >
+                    <button className="btn btn--clicky faint" onClick={() => setIsRequestSettingsModalOpen(true)}>
                     Add Description
                   </button>
                 </p>
@@ -279,6 +267,12 @@ export const RequestPane: FC<Props> = ({
           </PanelContainer>
         </TabItem>
       </Tabs>
+      {isRequestSettingsModalOpen && (
+        <RequestSettingsModal
+          request={activeRequest}
+          onHide={() => setIsRequestSettingsModalOpen(false)}
+        />
+      )}
     </Pane>
   );
 };

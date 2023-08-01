@@ -21,7 +21,6 @@ import { AskModal } from '../components/modals/ask-modal';
 import { CookiesModal, showCookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
-import { RequestSettingsModal } from '../components/modals/request-settings-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
 import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
@@ -143,7 +142,8 @@ export const Debug: FC = () => {
     request_showSettings:
       () => {
         if (activeRequest) {
-          showModal(RequestSettingsModal, { request: activeRequest });
+          // TODO: fix this
+          // showModal(RequestSettingsModal, { request: activeRequest });
         }
       },
     request_showDelete:

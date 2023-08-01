@@ -19,7 +19,6 @@ import { LoginModal } from '../components/modals/login-modal';
 import { NunjucksModal } from '../components/modals/nunjucks-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
-import { RequestSettingsModal } from '../components/modals/request-settings-modal';
 import { ResponseDebugModal } from '../components/modals/response-debug-modal';
 import { SelectModal } from '../components/modals/select-modal';
 import { SettingsModal } from '../components/modals/settings-modal';
@@ -68,9 +67,6 @@ const Modals: FC = () => {
 
         <CodePromptModal
           ref={instance => registerModal(instance, 'CodePromptModal')}
-        />
-        <RequestSettingsModal
-          ref={instance => registerModal(instance, 'RequestSettingsModal')}
         />
 
         {activeWorkspace ? (

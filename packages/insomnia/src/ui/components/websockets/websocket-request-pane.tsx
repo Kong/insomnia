@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -247,14 +247,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
       });
     }
   };
-
-  const handleEditDescription = useCallback(() => {
-    showModal(RequestSettingsModal, { request: activeRequest });
-  }, [activeRequest]);
-
-  const handleEditDescriptionAdd = useCallback(() => {
-    showModal(RequestSettingsModal, { request: activeRequest, forceEditMode: true });
-  }, [activeRequest]);
+  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
@@ -360,7 +353,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           {activeRequest.description ? (
             <div>
               <div className="pull-right pad bg-default">
-                <button className="btn btn--clicky" onClick={handleEditDescription}>
+                <button className="btn btn--clicky" onClick={() => setIsRequestSettingsModalOpen(true)}>
                   Edit
                 </button>
               </div>
@@ -387,10 +380,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                 </span>
                 <br />
                 <br />
-                <button
-                  className="btn btn--clicky faint"
-                  onClick={handleEditDescriptionAdd}
-                >
+                  <button className="btn btn--clicky faint" onClick={() => setIsRequestSettingsModalOpen(true)}>
                   Add Description
                 </button>
               </p>
@@ -398,6 +388,12 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           )}
         </TabItem>
       </Tabs>
+      {isRequestSettingsModalOpen && (
+        <RequestSettingsModal
+          request={activeRequest}
+          onHide={() => setIsRequestSettingsModalOpen(false)}
+        />
+      )}
     </Pane>
   );
 };
