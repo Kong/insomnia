@@ -98,7 +98,6 @@
     "@develohpanda/fluent-builder": "^2.1.2",
     "@getinsomnia/api-client": "0.0.4",
     "@tailwindcss/typography": "^0.5.9",
-    "@tailwindcss/forms": "0.5.4",
     "@tanstack/react-virtual": "3.0.0-beta.18",
     "@testing-library/dom": "^8.13.0",
     "@testing-library/jest-dom": "^5.16.4",
