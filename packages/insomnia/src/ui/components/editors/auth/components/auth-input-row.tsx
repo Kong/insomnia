@@ -23,7 +23,7 @@ export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, prope
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { showPasswords } = settings;
-  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any, any>;
   const patchRequest = useRequestPatcher();
   const [masked, toggleMask] = useToggle(true);
   const canBeMasked = !showPasswords && mask;

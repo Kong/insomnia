@@ -14,7 +14,7 @@ interface Props {
 }
 
 export const AuthRow: FC<PropsWithChildren<Props>> = ({ labelFor, label, help, disabled, children }) => {
-  const { activeRequest: { authentication } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest: { authentication } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any, any>;
 
   return (
     <tr key={labelFor}>

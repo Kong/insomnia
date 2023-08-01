@@ -29,7 +29,7 @@ import { OAuth1Auth } from './o-auth-1-auth';
 import { OAuth2Auth } from './o-auth-2-auth';
 
 export const AuthWrapper: FC<{ disabled?: boolean }> = ({ disabled = false }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any, any>;
 
   const { authentication: { type } } = activeRequest;
 

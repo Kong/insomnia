@@ -129,7 +129,7 @@ interface Props {
   disabled?: boolean;
 }
 export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = false }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any, any>;
   const { requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchRequest = useRequestPatcher();
   const onClick = useCallback(async (type: AuthType) => {

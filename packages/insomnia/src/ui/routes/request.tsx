@@ -52,6 +52,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     : await models[responseModelName].getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);
   const allResponses = await models[responseModelName].findByParentId(requestId);
   const filteredResponses = allResponses
+    // @ts-expect-error -- fix this
     .filter((r: Response | WebSocketResponse) => r.environmentId === activeWorkspaceMeta.activeEnvironmentId);
   const responses = (filterResponsesByEnv ? filteredResponses : allResponses)
     .sort((a: BaseModel, b: BaseModel) => (a.created > b.created ? -1 : 1));
@@ -61,7 +62,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     activeResponse,
     responses,
     // TODO: filter down somehow
-    requestVersions: await models.requestVersion.all(),
+    requestVersions: await models.requestVersion.findByParentId(requestId),
   };
 };
 

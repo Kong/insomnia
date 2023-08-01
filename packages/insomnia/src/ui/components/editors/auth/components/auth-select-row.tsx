@@ -19,7 +19,7 @@ interface Props {
 }
 
 export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disabled }) => {
-  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any, any>;
   const patchRequest = useRequestPatcher();
 
   const selectedValue = authentication.hasOwnProperty(property) ? authentication[property] : options[0].value;

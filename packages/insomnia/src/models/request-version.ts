@@ -53,6 +53,10 @@ export function getById(id: string) {
   return db.get<RequestVersion>(type, id);
 }
 
+export function findByParentId(parentId: string) {
+  return db.find<RequestVersion>(type, { parentId });
+}
+
 export async function create(request: Request | WebSocketRequest | GrpcRequest) {
   if (!isRequest(request) && !isWebSocketRequest(request)) {
     throw new Error(`New ${type} was not given a valid ${request.type} instance`);

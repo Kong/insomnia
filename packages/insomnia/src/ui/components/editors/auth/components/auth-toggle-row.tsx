@@ -28,7 +28,7 @@ export const AuthToggleRow: FC<Props> = ({
   offTitle = 'Enable item',
   disabled = false,
 }) => {
-  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any, any>;
   const patchRequest = useRequestPatcher();
 
   const databaseValue = Boolean(authentication[property]);

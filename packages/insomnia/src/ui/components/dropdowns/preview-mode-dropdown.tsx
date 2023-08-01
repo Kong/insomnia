@@ -21,7 +21,7 @@ export const PreviewModeDropdown: FC<Props> = ({
   download,
   copyToClipboard,
 }) => {
-  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
+  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta, any>;
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const patchRequestMeta = useRequestMetaPatcher();
   const handleClick = async (previewMode: PreviewMode) => {

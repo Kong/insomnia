@@ -46,7 +46,6 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     week: [],
     other: [],
   };
-
   const handleSetActiveResponse = useCallback(async (requestId: string, activeResponse: Response | WebSocketResponse) => {
     if (isWebSocketResponse(activeResponse)) {
       window.main.webSocket.close({ requestId });
