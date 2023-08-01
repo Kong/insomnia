@@ -11,7 +11,6 @@ import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { EnvironmentEditModal } from '../components/modals/environment-edit-modal';
 import { ErrorModal } from '../components/modals/error-modal';
-import { ExportRequestsModal } from '../components/modals/export-requests-modal';
 import { FilterHelpModal } from '../components/modals/filter-help-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { GenerateConfigModal } from '../components/modals/generate-config-modal';
@@ -139,9 +138,6 @@ const Modals: FC = () => {
 
         <AddKeyCombinationModal
           ref={instance => registerModal(instance, 'AddKeyCombinationModal')}
-        />
-        <ExportRequestsModal
-          ref={instance => registerModal(instance, 'ExportRequestsModal')}
         />
 
       </ErrorBoundary>

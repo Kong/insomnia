@@ -17,7 +17,7 @@ import { useAIContext } from '../../context/app/ai-context';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { InsomniaAI } from '../insomnia-ai-icon';
-import { showError, showModal, showPrompt } from '../modals';
+import { showError, showPrompt } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { configGenerators, showGenerateConfigModal } from '../modals/generate-config-modal';
 import { ImportModal } from '../modals/import-modal';
@@ -40,6 +40,7 @@ export const WorkspaceDropdown: FC = () => {
   const activeWorkspaceName = activeWorkspace.name;
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const workspaceName = activeWorkspace.name;
   const projectName = activeProject.name ?? getProductName();
@@ -166,13 +167,13 @@ export const WorkspaceDropdown: FC = () => {
             />
           </DropdownItem>
 
-          <DropdownItem aria-label='Export'>
-            <ItemContent
-              icon="file-export"
-              label="Export"
-              onClick={() => showModal(ExportRequestsModal)}
-            />
-          </DropdownItem>
+        <DropdownItem aria-label='Export'>
+          <ItemContent
+            icon="file-export"
+            label="Export"
+            onClick={() => setIsExportModalOpen(true)}
+          />
+        </DropdownItem>
 
           <DropdownItem aria-label="Settings">
             <ItemContent
@@ -270,6 +271,11 @@ export const WorkspaceDropdown: FC = () => {
           organizationId={organizationId}
           defaultProjectId={projectId}
           defaultWorkspaceId={workspaceId}
+        />
+      )}
+      {isExportModalOpen && (
+        <ExportRequestsModal
+          onHide={() => setIsExportModalOpen(false)}
         />
       )}
       {isSettingsModalOpen && (

@@ -1,4 +1,5 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { OverlayContainer } from 'react-aria';
 import { useSelector } from 'react-redux';
 
 import { exportRequestsToFile } from '../../../common/export';
@@ -29,9 +30,8 @@ export interface ExportRequestsModalHandle {
   show: () => void;
   hide: () => void;
 }
-export const ExportRequestsModal = forwardRef<ExportRequestsModalHandle, ModalProps>((props, ref) => {
+export const ExportRequestsModal = ({ onHide }: ModalProps) => {
   const modalRef = useRef<ModalHandle>(null);
-  const [state, setState] = useState<State>({ treeRoot: null });
   const sidebarChildren = useSelector(selectSidebarChildren);
   const createNode = useCallback((item: Record<string, any>): Node => {
     const children: Node[] = item.children.map((child: Record<string, any>) => createNode(child));
@@ -50,39 +50,36 @@ export const ExportRequestsModal = forwardRef<ExportRequestsModalHandle, ModalPr
       selectedRequests: totalRequests, // Default select all
     };
   }, []);
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: () => {
-      modalRef.current?.show();
-      const childObjects = sidebarChildren.all;
-      const children: Node[] = childObjects.map(child => createNode(child));
-      const totalRequests = children
-        .map(child => child.totalRequests)
-        .reduce((acc, totalRequests) => acc + totalRequests, 0);
 
-      // @ts-expect-error -- TSCONVERSION missing property
-      const rootFolder: RequestGroup = {
-        ...models.requestGroup.init(),
-        _id: 'all',
-        type: models.requestGroup.type,
-        name: 'All requests',
-        parentId: '',
-        modified: 0,
-        created: 0,
-      };
-      setState({
-        treeRoot: {
-          doc: rootFolder,
-          collapsed: false,
-          children: children,
-          totalRequests: totalRequests,
-          selectedRequests: totalRequests, // Default select all
-        },
-      });
+  const childObjects = sidebarChildren.all;
+  const children: Node[] = childObjects.map(child => createNode(child));
+  const totalRequests = children
+    .map(child => child.totalRequests)
+    .reduce((acc, totalRequests) => acc + totalRequests, 0);
+
+  // @ts-expect-error -- TSCONVERSION missing property
+  const rootFolder: RequestGroup = {
+    ...models.requestGroup.init(),
+    _id: 'all',
+    type: models.requestGroup.type,
+    name: 'All requests',
+    parentId: '',
+    modified: 0,
+    created: 0,
+  };
+
+  const [state, setState] = useState<State>({
+    treeRoot: {
+      doc: rootFolder,
+      collapsed: false,
+      children: children,
+      totalRequests: totalRequests,
+      selectedRequests: totalRequests, // Default select all
     },
-  }), [createNode, sidebarChildren.all]);
+  });
+  useEffect(() => {
+    modalRef.current?.show();
+  }, []);
   const getSelectedRequestIds = (node: Node): string[] => {
     const docIsRequest = isRequest(node.doc) || isWebSocketRequest(node.doc) || isGrpcRequest(node.doc);
     if (docIsRequest && node.selectedRequests === node.totalRequests) {
@@ -168,32 +165,33 @@ export const ExportRequestsModal = forwardRef<ExportRequestsModalHandle, ModalPr
   const { treeRoot } = state;
   const isExportDisabled = treeRoot != null ? treeRoot.selectedRequests === 0 : false;
   return (
-    <Modal ref={modalRef} tall {...props}>
-      <ModalHeader>Select Requests to Export</ModalHeader>
-      <ModalBody>
-        <div className="requests-tree">
-          <Tree
-            root={treeRoot}
-            handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
-            handleSetItemSelected={handleSetItemSelected}
-          />
-        </div>
-      </ModalBody>
-      <ModalFooter>
-        <div>
-          <button className="btn" onClick={() => modalRef.current?.hide()}>
-            Cancel
-          </button>
-          <button
-            className="btn"
-            onClick={handleExport}
-            disabled={isExportDisabled}
-          >
-            Export
-          </button>
-        </div>
-      </ModalFooter>
-    </Modal>
+    <OverlayContainer>
+      <Modal ref={modalRef} tall onHide={onHide}>
+        <ModalHeader>Select Requests to Export</ModalHeader>
+        <ModalBody>
+          <div className="requests-tree">
+            <Tree
+              root={treeRoot}
+              handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
+              handleSetItemSelected={handleSetItemSelected}
+            />
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <div>
+            <button className="btn" onClick={() => modalRef.current?.hide()}>
+              Cancel
+            </button>
+            <button
+              className="btn"
+              onClick={handleExport}
+              disabled={isExportDisabled}
+            >
+              Export
+            </button>
+          </div>
+        </ModalFooter>
+      </Modal>
+    </OverlayContainer>
   );
-});
-ExportRequestsModal.displayName = 'ExportRequestsModal';
+};

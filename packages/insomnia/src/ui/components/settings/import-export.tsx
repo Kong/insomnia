@@ -14,7 +14,6 @@ import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } 
 import { Link } from '../base/link';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { ImportModal } from '../modals/import-modal';
-import { showModal } from '../modals/index';
 import { Button } from '../themed-button';
 interface Props {
   hideSettingsModal: () => void;
@@ -33,11 +32,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
 
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-
-  const showExportRequestsModal = useCallback(() => {
-    showModal(ExportRequestsModal);
-    hideSettingsModal();
-  }, [hideSettingsModal]);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const handleExportAllToFile = useCallback(() => {
     exportAllToFile(projectName, workspacesForActiveProject);
@@ -71,7 +66,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                   <ItemContent
                     icon="home"
                     label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(workspaceData.activeWorkspace).singular}`}
-                    onClick={showExportRequestsModal}
+                    onClick={() => setIsExportModalOpen(true)}
                   />
                 </DropdownItem>
                 <DropdownItem aria-label={`Export files from the "${projectName}" ${strings.project.singular}`}>
@@ -84,7 +79,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
               </DropdownSection>
             </Dropdown>) : (<Button onClick={handleExportAllToFile}>{`Export files from the "${projectName}" ${strings.project.singular}`}</Button>)
           }
-        &nbsp;&nbsp;
+          &nbsp;&nbsp;
           <Button
             style={{
               display: 'flex',
@@ -96,7 +91,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             <i className="fa fa-file-import" />
             {`Import to the "${projectName}" ${strings.project.singular}`}
           </Button>
-        &nbsp;&nbsp;
+          &nbsp;&nbsp;
           <Link href="https://insomnia.rest/create-run-button" className="btn btn--compact" button>
             Create Run Button
           </Link>
@@ -112,6 +107,11 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           organizationId={organizationId}
           defaultProjectId={projectId}
           defaultWorkspaceId={workspaceId}
+        />
+      )}
+      {isExportModalOpen && (
+        <ExportRequestsModal
+          onHide={() => setIsExportModalOpen(false)}
         />
       )}
     </Fragment>
