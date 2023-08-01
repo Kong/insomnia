@@ -261,7 +261,6 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
         <WebSocketActionBar
           key={uniqueKey}
           request={activeRequest}
-          workspaceId={workspaceId}
           environmentId={environment?._id || ''}
           defaultValue={activeRequest.url}
           readyState={readyState}

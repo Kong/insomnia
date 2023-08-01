@@ -155,6 +155,10 @@ const router = createMemoryRouter(
                                   loader: async (...args) => (await import('./routes/request')).loader(...args),
                                   children: [
                                     {
+                                      path: 'connect',
+                                      action: async (...args) => (await import('./routes/request')).connectAction(...args),
+                                    },
+                                    {
                                       path: 'duplicate',
                                       action: async (...args) => (await import('./routes/request')).duplicateRequestAction(...args),
                                     },

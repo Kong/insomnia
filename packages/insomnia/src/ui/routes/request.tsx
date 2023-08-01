@@ -3,10 +3,11 @@ import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
+import { CookieJar } from '../../models/cookie-jar';
 import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isRequest, Request } from '../../models/request';
+import { isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestHeader, RequestParameter } from '../../models/request';
 import { RequestMeta } from '../../models/request-meta';
 import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
@@ -195,6 +196,41 @@ export const updateRequestMetaAction: ActionFunction = async ({ request, params 
     return null;
   }
   await models.requestMeta.updateOrCreateByParentId(requestId, patch);
+  return null;
+};
+export interface ConnectActionParams {
+  url: string;
+  headers: RequestHeader[];
+  authentication: RequestAuthentication;
+  cookieJar: CookieJar;
+}
+export const connectAction: ActionFunction = async ({ request, params }) => {
+  const { requestId, workspaceId } = params;
+  invariant(typeof requestId === 'string', 'Request ID is required');
+  const req = await requestOperations.getById(requestId);
+  invariant(req, 'Request not found');
+  invariant(workspaceId, 'Workspace ID is required');
+  const rendered = await request.json() as ConnectActionParams;
+  if (isWebSocketRequestId(requestId)) {
+    window.main.webSocket.open({
+      requestId,
+      workspaceId,
+      url: rendered.url,
+      headers: rendered.headers,
+      authentication: rendered.authentication,
+      cookieJar: rendered.cookieJar,
+    });
+  }
+  if (isEventStreamRequest(req)) {
+    window.main.curl.open({
+      requestId,
+      workspaceId,
+      url: rendered.url,
+      headers: rendered.headers,
+      authentication: rendered.authentication,
+      cookieJar: rendered.cookieJar,
+    });
+  }
   return null;
 };
 

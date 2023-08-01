@@ -1,10 +1,12 @@
-import React, { FC, useCallback, useLayoutEffect, useRef } from 'react';
+import React, { FC, useLayoutEffect, useRef } from 'react';
+import { useFetcher, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
+import { ConnectActionParams } from '../../routes/request';
 import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
@@ -25,7 +27,6 @@ const Button = styled.button<{ warning?: boolean }>(({ warning }) => ({
 
 interface ActionBarProps {
   request: WebSocketRequest;
-  workspaceId: string;
   environmentId: string;
   defaultValue: string;
   readyState: boolean;
@@ -66,13 +67,24 @@ export const ConnectionCircle = styled.span({
   borderRadius: '50%',
 });
 
-export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, environmentId, defaultValue, onChange, readyState }) => {
+export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId, defaultValue, onChange, readyState }) => {
   const isOpen = readyState;
   const oneLineEditorRef = useRef<OneLineEditorHandle>(null);
   useLayoutEffect(() => {
     oneLineEditorRef.current?.focusEnd();
   }, []);
-  const handleSubmit = useCallback(async () => {
+
+  const fetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const connect = (connectParams: ConnectActionParams) => {
+    fetcher.submit(JSON.stringify(connectParams),
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
+        method: 'post',
+        encType: 'application/json',
+      });
+  };
+  const handleSubmit = async () => {
     if (isOpen) {
       window.main.webSocket.close({ requestId: request._id });
       return;
@@ -88,9 +100,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
         parameters: request.parameters.filter(p => !p.disabled),
         workspaceCookieJar,
       }, renderContext);
-      window.main.webSocket.open({
-        requestId: request._id,
-        workspaceId,
+      connect({
         url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
         headers: rendered.headers,
         authentication: rendered.authentication,
@@ -116,7 +126,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, workspaceId, e
         });
       }
     }
-  }, [environmentId, isOpen, request, workspaceId]);
+  };
 
   useDocBodyKeyboardShortcuts({
     request_send: () => handleSubmit(),
