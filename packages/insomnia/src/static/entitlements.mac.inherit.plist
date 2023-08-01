@@ -9,6 +9,6 @@
     <key>com.apple.security.cs.allow-dyld-environment-variables</key>
     <false/>
     <key>com.apple.security.cs.disable-library-validation</key>
-    <true/>
+    <false/>
   </dict>
 </plist>
