@@ -82,6 +82,10 @@ export function getById(id: string) {
   return db.get<WebSocketResponse>(type, id);
 }
 
+export function findByParentId(parentId: string) {
+  return db.find<WebSocketResponse>(type, { parentId: parentId });
+}
+
 export async function all() {
   return db.all<WebSocketResponse>(type);
 }

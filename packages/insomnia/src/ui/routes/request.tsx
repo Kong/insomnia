@@ -18,6 +18,7 @@ export interface RequestLoaderData<A, B> {
   activeRequest: A;
   activeRequestMeta: B;
   activeResponse: Response | WebSocketResponse | null;
+  responses: (Response | WebSocketResponse)[];
 }
 export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData<Request | WebSocketRequest | GrpcRequest, RequestMeta | GrpcRequestMeta>> => {
   const { requestId, workspaceId } = params;
@@ -34,6 +35,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
       activeRequest,
       activeRequestMeta: await models.grpcRequestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() }),
       activeResponse: null,
+      responses: [],
     };
   }
   const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
@@ -42,19 +44,23 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     const activeResponse = activeRequestMeta.activeResponseId
       ? await models.webSocketResponse.getById(activeRequestMeta.activeResponseId)
       : await models.webSocketResponse.getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);
+    const responses = await models.webSocketResponse.findByParentId(requestId);
     return {
       activeRequest,
       activeRequestMeta,
       activeResponse,
+      responses,
     };
   }
   const activeResponse = activeRequestMeta.activeResponseId
     ? await models.response.getById(activeRequestMeta.activeResponseId)
     : await models.response.getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);
+  const responses = await models.response.findByParentId(requestId);
   return {
     activeRequest,
     activeRequestMeta,
     activeResponse,
+    responses,
   };
 };
 
