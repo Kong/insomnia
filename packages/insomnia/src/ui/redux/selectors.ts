@@ -2,7 +2,6 @@ import { createSelector } from 'reselect';
 import type { ValueOf } from 'type-fest';
 
 import { fuzzyMatchAll } from '../../common/misc';
-import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
@@ -10,9 +9,7 @@ import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { type Response } from '../../models/response';
 import { isWebSocketRequest } from '../../models/websocket-request';
-import { type WebSocketResponse } from '../../models/websocket-response';
 import { RootState } from './modules';
 
 type EntitiesLists = {
@@ -144,33 +141,6 @@ export const selectActiveRequest = createSelector(
     }
 
     return null;
-  },
-);
-// response history list
-export const selectActiveRequestResponses = createSelector(
-  selectActiveRequest,
-  selectEntitiesLists,
-  selectActiveWorkspace,
-  (activeRequest, entities, activeWorkspace) => {
-    const requestId = activeRequest ? activeRequest._id : 'n/a';
-
-    const responses: (Response | WebSocketResponse)[] = (activeRequest && isWebSocketRequest(activeRequest)) ? entities.webSocketResponses : entities.responses;
-
-    // Filter responses down if the setting is enabled
-    return responses.filter(response => {
-      const requestMatches = requestId === response.parentId;
-
-      if ((entities.settings[0] || models.settings.init()).filterResponsesByEnv) {
-        const meta = entities.workspaceMetas.find(workspaceMeta => workspaceMeta.parentId === activeWorkspace?._id);
-        const activeEnvironment = meta ? entities.environments.find(environment => environment._id === meta.activeEnvironmentId) : null;
-        const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
-        const environmentMatches = response.environmentId === activeEnvironmentId;
-        return requestMatches && environmentMatches;
-      } else {
-        return requestMatches;
-      }
-    })
-      .sort((a, b) => (a.created > b.created ? -1 : 1));
   },
 );
 
