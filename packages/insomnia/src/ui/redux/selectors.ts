@@ -207,9 +207,8 @@ export const selectSidebarChildren = createSelector(
     if (!activeWorkspace) {
       return { all: [], pinned: [] };
     }
-    const pinnedChildren: Child[] = [];
 
-    function next(parentId: string, pinnedChildren: Child[]) {
+    function next(parentId: string): Child[] {
       return (childrenMap[parentId] || []).filter((model: BaseModel) => isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model) || isRequestGroup(model))
         .sort((a: SidebarModel, b: SidebarModel): number => {
           if (a.metaSortKey === b.metaSortKey) {
@@ -217,40 +216,30 @@ export const selectSidebarChildren = createSelector(
           } else {
             return a.metaSortKey < b.metaSortKey ? -1 : 1; // descending
           }
-        }).map((c: SidebarModel) => {
-          const child: Child = {
+        }).map((c: SidebarModel) => ({
             doc: c,
             hidden: false,
             collapsed: !!collapsed[c._id],
             pinned: !!pinned[c._id],
-            children: isRequestGroup(c) ? next(c._id, pinnedChildren) : [],
-          };
-          if (!!pinned[c._id]) {
-            pinnedChildren.push(child);
-          }
-          return child;
-        });
+          children: isRequestGroup(c) ? next(c._id) : [],
+        }));
     }
 
     function matchChildren(children: Child[], parentNames: string[] = []) {
-      // Bail early if no filter defined
-      if (!sidebarFilter) {
-        return children;
+      if (sidebarFilter) {
+        for (const child of children) {
+          // Gather all parents so we can match them too
+          matchChildren(child.children, [...parentNames, child.doc.name]);
+          // Update hidden state depending on whether it matched
+          child.hidden = !(child.children.find(c => c.hidden === false) || fuzzyMatchAll(sidebarFilter, [child.doc.name, isGrpcRequest(child.doc) ? 'gRPC' : isRequest(child.doc) ? child.doc.method : '', ...parentNames], { splitSpace: true }));
+        }
       }
-
-      for (const child of children) {
-        // Gather all parents so we can match them too
-        matchChildren(child.children, [...parentNames, child.doc.name]);
-        // Update hidden state depending on whether it matched
-        child.hidden = !(child.children.find(c => c.hidden === false) || fuzzyMatchAll(sidebarFilter, [child.doc.name, isGrpcRequest(child.doc) ? 'gRPC' : isRequest(child.doc) ? child.doc.method : '', ...parentNames], { splitSpace: true }));
-      }
-
       return children;
     }
-
+    const kids = next(activeWorkspace._id);
     return {
-      pinned: pinnedChildren,
-      all: matchChildren(next(activeWorkspace._id, pinnedChildren)),
+      pinned: kids.filter(k => k.pinned),
+      all: matchChildren(kids),
     };
   },
 );
