@@ -131,6 +131,7 @@ export const Debug: FC = () => {
   useEffect(() => window.main.on('grpc.status', (_, id, status) => {
     setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, status } : s));
   }), []);
+
   useDocBodyKeyboardShortcuts({
     request_togglePin:
       async () => {

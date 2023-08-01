@@ -1,15 +1,11 @@
 import { createSelector } from 'reselect';
 import type { ValueOf } from 'type-fest';
 
-import { fuzzyMatchAll } from '../../common/misc';
 import { BaseModel } from '../../models';
-import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
-import { isRequest, Request } from '../../models/request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { isWebSocketRequest } from '../../models/websocket-request';
+import { isRequest } from '../../models/request';
 import { RootState } from './modules';
 
 type EntitiesLists = {
@@ -142,104 +138,4 @@ export const selectActiveRequest = createSelector(
 export const selectSyncItems = createSelector(
   selectActiveWorkspaceEntities,
   getStatusCandidates,
-);
-
-type SidebarModel = Request | GrpcRequest | RequestGroup;
-
-interface Child {
-  doc: SidebarModel;
-  hidden: boolean;
-  collapsed: boolean;
-  pinned: boolean;
-  children: Child[];
-}
-
-export interface SidebarChildren {
-  all: Child[];
-  pinned: Child[];
-}
-const selectSidebarFilter = createSelector(
-  selectActiveWorkspaceMeta,
-  activeWorkspaceMeta => activeWorkspaceMeta ? activeWorkspaceMeta.sidebarFilter : '',
-);
-const selectPinnedRequests = createSelector(selectEntitiesLists, entities => {
-  const pinned: Record<string, boolean> = {};
-  const requests = [...entities.requests, ...entities.grpcRequests, ...entities.webSocketRequests];
-  const requestMetas = [...entities.requestMetas, ...entities.grpcRequestMetas];
-
-  // Default all to unpinned
-  for (const request of requests) {
-    pinned[request._id] = false;
-  }
-
-  // Update those that have metadata (not all do)
-  for (const meta of requestMetas) {
-    pinned[meta.parentId] = meta.pinned;
-  }
-
-  return pinned;
-});
-const selectCollapsedRequestGroups = createSelector(
-  selectEntitiesLists,
-  entities => {
-    const collapsed: Record<string, boolean> = {};
-
-    // Default all to collapsed
-    for (const requestGroup of entities.requestGroups) {
-      collapsed[requestGroup._id] = true;
-    }
-
-    // Update those that have metadata (not all do)
-    for (const meta of entities.requestGroupMetas) {
-      collapsed[meta.parentId] = meta.collapsed;
-    }
-
-    return collapsed;
-  });
-// sidebar and export requests
-export const selectSidebarChildren = createSelector(
-  selectCollapsedRequestGroups,
-  selectPinnedRequests,
-  selectActiveWorkspace,
-  selectEntitiesChildrenMap,
-  selectSidebarFilter,
-  (collapsed, pinned, activeWorkspace, childrenMap, sidebarFilter): SidebarChildren => {
-    if (!activeWorkspace) {
-      return { all: [], pinned: [] };
-    }
-
-    function next(parentId: string): Child[] {
-      return (childrenMap[parentId] || []).filter((model: BaseModel) => isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model) || isRequestGroup(model))
-        .sort((a: SidebarModel, b: SidebarModel): number => {
-          if (a.metaSortKey === b.metaSortKey) {
-            return a._id > b._id ? -1 : 1; // ascending
-          } else {
-            return a.metaSortKey < b.metaSortKey ? -1 : 1; // descending
-          }
-        }).map((c: SidebarModel) => ({
-            doc: c,
-            hidden: false,
-            collapsed: !!collapsed[c._id],
-            pinned: !!pinned[c._id],
-          children: isRequestGroup(c) ? next(c._id) : [],
-        }));
-    }
-
-    function matchChildren(children: Child[], parentNames: string[] = []) {
-      if (sidebarFilter) {
-        for (const child of children) {
-          // Gather all parents so we can match them too
-          matchChildren(child.children, [...parentNames, child.doc.name]);
-          // Update hidden state depending on whether it matched
-          child.hidden = !(child.children.find(c => c.hidden === false) || fuzzyMatchAll(sidebarFilter, [child.doc.name, isGrpcRequest(child.doc) ? 'gRPC' : isRequest(child.doc) ? child.doc.method : '', ...parentNames], { splitSpace: true }));
-        }
-      }
-      return children;
-    }
-    const kids = next(activeWorkspace._id);
-    return {
-      pinned: kids.filter(k => k.pinned),
-      all: matchChildren(kids),
-    };
-  },
 );

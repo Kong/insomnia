@@ -3,6 +3,7 @@ import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
 import { database } from '../../common/database';
 import * as models from '../../models';
+import { BaseModel } from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
@@ -14,7 +15,7 @@ import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { isRemoteProject, Project } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
-import { isRequestGroup } from '../../models/request-group';
+import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../models/websocket-request';
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
@@ -32,7 +33,14 @@ export interface WorkspaceLoaderData {
   clientCertificates: ClientCertificate[];
   caCertificate: CaCertificate | null;
   projects: Project[];
-  requests: (Request | WebSocketRequest | GrpcRequest | RequestGroup)[];
+  requestTree: Child[];
+}
+export interface Child {
+  doc: Request | GrpcRequest | WebSocketRequest | RequestGroup;
+  children: Child[];
+  collapsed: boolean;
+  hidden: boolean;
+  pinned: boolean;
 }
 
 export const workspaceLoader: LoaderFunction = async ({
@@ -82,6 +90,29 @@ export const workspaceLoader: LoaderFunction = async ({
 
   const projects = sortProjects(organizationProjects);
   const requests = (await database.withDescendants(activeWorkspace)).filter(d => isRequest(d) || isWebSocketRequest(d) || isGrpcRequest(d) || isRequestGroup(d)) as (Request | WebSocketRequest | GrpcRequest)[];
+  // TODO filter these
+  const requestMetas = await models.requestMeta.all();
+  const grpcRequestMetas = await models.grpcRequestMeta.all();
+  const metas = [...requestMetas, ...grpcRequestMetas];
+  const folderMetas = await models.requestGroupMeta.all();
+  function next(parentId: string): Child[] {
+    return requests.filter(r => r.parentId === parentId).filter((model: BaseModel) => isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model) || isRequestGroup(model))
+      .sort((a: Child['doc'], b: Child['doc']): number => {
+        if (a.metaSortKey === b.metaSortKey) {
+          return a._id > b._id ? -1 : 1; // ascending
+        } else {
+          return a.metaSortKey < b.metaSortKey ? -1 : 1; // descending
+        }
+      }).map((c: Child['doc']) => ({
+        doc: c,
+        pinned: metas.find(m => m.parentId === c._id)?.pinned || false,
+        collapsed: folderMetas.find(m => m.parentId === c._id)?.collapsed || false,
+        hidden: false,
+        children: isRequestGroup(c) ? next(c._id) : [],
+      }));
+  }
+  console.log('folderMetas', folderMetas.filter(m => m.collapsed));
+  const requestTree = next(activeWorkspace._id);
   return {
     activeWorkspace,
     activeProject,
@@ -95,7 +126,7 @@ export const workspaceLoader: LoaderFunction = async ({
     clientCertificates,
     caCertificate: await models.caCertificate.findByParentId(workspaceId),
     projects,
-    requests,
+    requestTree,
   };
 };
 

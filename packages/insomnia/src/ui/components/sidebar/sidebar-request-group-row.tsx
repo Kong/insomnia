@@ -5,6 +5,7 @@ import { DragSource, DragSourceSpec, DropTarget, DropTargetMonitor, DropTargetSp
 
 import * as models from '../../../models/index';
 import { RequestGroup } from '../../../models/request-group';
+import { useRequestGroupMetaPatcher } from '../../hooks/use-request';
 import { Highlight } from '../base/highlight';
 import { RequestGroupActionsDropdown, RequestGroupActionsDropdownHandle } from '../dropdowns/request-group-actions-dropdown';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
@@ -50,17 +51,13 @@ export const SidebarRequestGroupRowFC = forwardRef<SidebarRequestGroupRowHandle,
     'sidebar__row--dragging-above': isDraggingOver && dragDirection > 0,
     'sidebar__row--dragging-below': isDraggingOver && dragDirection < 0,
   });
+  const groupMetaPatcher = useRequestGroupMetaPatcher();
   // NOTE: We only want the button draggable, not the whole container (ie. no children)
   const button = connectDragSource(
     connectDropTarget(
       <button
         onClick={async () => {
-          const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroup._id);
-          if (requestGroupMeta) {
-            models.requestGroupMeta.update(requestGroupMeta, { collapsed: !isCollapsed });
-            return;
-          }
-          models.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: false });
+          groupMetaPatcher(requestGroup._id, { collapsed: !isCollapsed });
         }}
         onContextMenu={event => {
           event.preventDefault();

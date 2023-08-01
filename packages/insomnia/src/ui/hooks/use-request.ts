@@ -5,6 +5,7 @@ import { GrpcRequest } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { Request } from '../../models/request';
 import { RequestGroup } from '../../models/request-group';
+import { RequestGroupMeta } from '../../models/request-group-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { Settings } from '../../models/settings';
 import { WebSocketRequest } from '../../models/websocket-request';
@@ -39,6 +40,18 @@ export const useRequestGroupPatcher = () => {
   return (requestGroupId: string, patch: Partial<RequestGroup>) => {
     fetcher.submit(JSON.stringify(patch), {
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${requestGroupId}/update`,
+      method: 'post',
+      encType: 'application/json',
+    });
+  };
+};
+
+export const useRequestGroupMetaPatcher = () => {
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const fetcher = useFetcher();
+  return (requestGroupId: string, patch: Partial<RequestGroupMeta>) => {
+    fetcher.submit(patch, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${requestGroupId}/update-meta`,
       method: 'post',
       encType: 'application/json',
     });

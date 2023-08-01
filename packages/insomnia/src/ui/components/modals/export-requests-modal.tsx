@@ -4,7 +4,6 @@ import { useRouteLoaderData } from 'react-router-dom';
 
 import { exportRequestsToFile } from '../../../common/export';
 import * as models from '../../../models';
-import { BaseModel } from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
@@ -31,34 +30,13 @@ export interface ExportRequestsModalHandle {
   show: () => void;
   hide: () => void;
 }
-type SidebarModel = Request | GrpcRequest | RequestGroup;
-
-interface Child {
-  doc: SidebarModel;
-  children: Child[];
-}
 
 export const ExportRequestsModal = ({ onHide }: ModalProps) => {
   const modalRef = useRef<ModalHandle>(null);
   const {
-    activeWorkspace,
-    requests,
+    requestTree,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  function next(parentId: string): Child[] {
-    return requests.filter(r => r.parentId === parentId).filter((model: BaseModel) => isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model) || isRequestGroup(model))
-      .sort((a: SidebarModel, b: SidebarModel): number => {
-        if (a.metaSortKey === b.metaSortKey) {
-          return a._id > b._id ? -1 : 1; // ascending
-        } else {
-          return a.metaSortKey < b.metaSortKey ? -1 : 1; // descending
-        }
-      }).map((c: SidebarModel) => ({
-        doc: c,
-        hidden: false,
-        children: isRequestGroup(c) ? next(c._id) : [],
-      }));
-  }
-  const childObjects = next(activeWorkspace._id);
+
   const createNode = useCallback((item: Record<string, any>): Node => {
     const children: Node[] = item.children.map((child: Record<string, any>) => createNode(child));
     let totalRequests = children
@@ -77,7 +55,7 @@ export const ExportRequestsModal = ({ onHide }: ModalProps) => {
     };
   }, []);
 
-  const children: Node[] = childObjects.map(child => createNode(child));
+  const children: Node[] = requestTree.map(child => createNode(child));
   const totalRequests = children
     .map(child => child.totalRequests)
     .reduce((acc, totalRequests) => acc + totalRequests, 0);
