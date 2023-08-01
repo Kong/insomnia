@@ -37,7 +37,7 @@ export const SidebarRequestGroupRowFC = forwardRef<SidebarRequestGroupRowHandle,
   const [dragDirection, setDragDirection] = useState(0);
   const dropdownRef = useRef<RequestGroupActionsDropdownHandle>(null);
   const expandTagRef = useRef<HTMLDivElement>(null);
-
+  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
   useImperativeHandle(ref, () => ({
     setDragDirection,
     getExpandTag:() => expandTagRef.current,
@@ -99,9 +99,13 @@ export const SidebarRequestGroupRowFC = forwardRef<SidebarRequestGroupRowHandle,
         <div className="sidebar__actions">
           <RequestGroupActionsDropdown
             ref={dropdownRef}
-            handleShowSettings={() => showModal(RequestGroupSettingsModal, { requestGroup })}
+            handleShowSettings={() => setIsRequestSettingsModalOpen(true)}
             requestGroup={requestGroup}
           />
+          {isRequestSettingsModalOpen && <RequestGroupSettingsModal
+            requestGroup={requestGroup}
+            onHide={() => setIsRequestSettingsModalOpen(false)}
+          />}
         </div>
       </div>
       <ul className={classnames('sidebar__list', { 'sidebar__list--collapsed': isCollapsed })}>

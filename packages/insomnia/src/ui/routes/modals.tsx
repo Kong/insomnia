@@ -18,7 +18,6 @@ import { GenerateConfigModal } from '../components/modals/generate-config-modal'
 import { LoginModal } from '../components/modals/login-modal';
 import { NunjucksModal } from '../components/modals/nunjucks-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
-import { RequestGroupSettingsModal } from '../components/modals/request-group-settings-modal';
 import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
 import { ResponseDebugModal } from '../components/modals/response-debug-modal';
@@ -72,11 +71,6 @@ const Modals: FC = () => {
         />
         <RequestSettingsModal
           ref={instance => registerModal(instance, 'RequestSettingsModal')}
-        />
-        <RequestGroupSettingsModal
-          ref={instance =>
-            registerModal(instance, 'RequestGroupSettingsModal')
-          }
         />
 
         {activeWorkspace ? (
