@@ -8,6 +8,7 @@ import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isRequest, Request } from '../../models/request';
 import { RequestMeta } from '../../models/request-meta';
+import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
 import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
@@ -20,6 +21,7 @@ export interface RequestLoaderData<A, B> {
   activeRequestMeta: B;
   activeResponse: Response | WebSocketResponse | null;
   responses: (Response | WebSocketResponse)[];
+  requestVersions: RequestVersion[];
 }
 export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData<Request | WebSocketRequest | GrpcRequest, RequestMeta | GrpcRequestMeta>> => {
   const { requestId, workspaceId } = params;
@@ -37,6 +39,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
       activeRequestMeta: await models.grpcRequestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() }),
       activeResponse: null,
       responses: [],
+      requestVersions: [],
     };
   }
   const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
@@ -57,6 +60,8 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     activeRequestMeta,
     activeResponse,
     responses,
+    // TODO: filter down somehow
+    requestVersions: await models.requestVersion.all(),
   };
 };
 

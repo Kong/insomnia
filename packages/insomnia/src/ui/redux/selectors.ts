@@ -61,12 +61,6 @@ const selectActiveWorkspace = createSelector(
   },
 );
 
-// response history list
-export const selectRequestVersions = createSelector(
-  selectEntitiesLists,
-  entities => entities.requestVersions,
-);
-
 const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, entities => {
   const parentLookupMap: any = {};
   // group entities by parent

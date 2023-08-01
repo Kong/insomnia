@@ -1,6 +1,5 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { useCallback, useRef } from 'react';
-import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 
@@ -11,7 +10,6 @@ import { Response } from '../../../models/response';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import { selectRequestVersions } from '../../redux/selectors';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -38,8 +36,9 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const {
     responses,
+    requestVersions,
   } = useRouteLoaderData('request/:requestId') as RequestLoaderData<any, any>;
-  const requestVersions = useSelector(selectRequestVersions);
+  console.log('requestVersions', requestVersions);
   const now = new Date();
   const categories: Record<string, GenericResponse[]> = {
     minutes: [],
