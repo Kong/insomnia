@@ -21,7 +21,6 @@ import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestGroupSettingsModal } from '../components/modals/request-group-settings-modal';
 import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
-import { RequestSwitcherModal } from '../components/modals/request-switcher-modal';
 import { ResponseDebugModal } from '../components/modals/response-debug-modal';
 import { SelectModal } from '../components/modals/select-modal';
 import { SettingsModal } from '../components/modals/settings-modal';
@@ -98,10 +97,6 @@ const Modals: FC = () => {
             <NunjucksModal
               ref={instance => registerModal(instance, 'NunjucksModal')}
               workspace={activeWorkspace}
-            />
-
-            <RequestSwitcherModal
-              ref={instance => registerModal(instance, 'RequestSwitcherModal')}
             />
           </>
         ) : null}

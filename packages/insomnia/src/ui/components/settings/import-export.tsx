@@ -8,12 +8,10 @@ import { docsImportExport } from '../../../common/documentation';
 import { exportAllToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
-import { isRequestGroup } from '../../../models/request-group';
-import { selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
-import { AlertModal } from '../modals/alert-modal';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { ImportModal } from '../modals/import-modal';
 import { showModal } from '../modals/index';
@@ -34,20 +32,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const projectName = workspaceData?.activeProject.name ?? getProductName();
 
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
-  const workspaceRequestsAndRequestGroups = useSelector(selectWorkspaceRequestsAndRequestGroups);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const showExportRequestsModal = useCallback(() => {
-    if (!workspaceRequestsAndRequestGroups.filter(r => !isRequestGroup(r)).length) {
-      showModal(AlertModal, {
-        title: 'Cannot export',
-        message: <>There are no requests to export.</>,
-      });
-      return;
-    }
     showModal(ExportRequestsModal);
     hideSettingsModal();
-  }, [hideSettingsModal, workspaceRequestsAndRequestGroups]);
+  }, [hideSettingsModal]);
 
   const handleExportAllToFile = useCallback(() => {
     exportAllToFile(projectName, workspacesForActiveProject);

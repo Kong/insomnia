@@ -11,7 +11,7 @@ import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { type Response } from '../../models/response';
-import { isWebSocketRequest, WebSocketRequest } from '../../models/websocket-request';
+import { isWebSocketRequest } from '../../models/websocket-request';
 import { type WebSocketResponse } from '../../models/websocket-response';
 import { RootState } from './modules';
 
@@ -114,16 +114,6 @@ const selectActiveWorkspaceEntities = createSelector(
     // Kick off the recursion
     addChildrenOf(activeWorkspace);
     return descendants;
-  },
-);
-
-// switcher and export
-export const selectWorkspaceRequestsAndRequestGroups = createSelector(
-  selectActiveWorkspaceEntities,
-  entities => {
-    return entities.filter(
-      entity => isRequest(entity) || isWebSocketRequest(entity) || isGrpcRequest(entity) || isRequestGroup(entity),
-    ) as (Request | WebSocketRequest | GrpcRequest | RequestGroup)[];
   },
 );
 

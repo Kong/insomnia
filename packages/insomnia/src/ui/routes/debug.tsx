@@ -22,7 +22,6 @@ import { CookiesModal, showCookiesModal } from '../components/modals/cookies-mod
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
-import { RequestSwitcherModal } from '../components/modals/request-switcher-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
 import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
@@ -212,18 +211,9 @@ export const Debug: FC = () => {
         });
       },
     request_showRecent:
-      () => showModal(RequestSwitcherModal, {
-        disableInput: true,
-        maxRequests: 10,
-        maxWorkspaces: 0,
-        selectOnKeyup: true,
-        title: 'Recent Requests',
-        hideNeverActiveRequests: true,
-        // Add an open delay so the dialog won't show for quick presses
-        openDelay: 150,
-      }),
+      () => { },
     request_quickSwitch:
-      () => showModal(RequestSwitcherModal),
+      () => { },
     environment_showEditor:
       () => showModal(WorkspaceEnvironmentsEditModal),
     showCookiesEditor:
