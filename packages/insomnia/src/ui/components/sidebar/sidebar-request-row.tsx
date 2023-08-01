@@ -268,27 +268,25 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
             </div>
           </button>
           <div className="sidebar__actions">
-            {isWebSocketRequest(request) ? (
-              <WebSocketRequestActionsDropdown
+            {isWebSocketRequest(request) ?
+              (<WebSocketRequestActionsDropdown
                 ref={requestActionsDropdown}
                 handleDuplicateRequest={handleDuplicateRequest}
                 request={request}
                 isPinned={isPinned}
                 handleShowSettings={() => setIsRequestSettingsModalOpen(true)}
-
-              />
-            ) : (
-              <RequestActionsDropdown
+              />)
+              :
+              (<RequestActionsDropdown
                 ref={requestActionsDropdown}
                 handleDuplicateRequest={handleDuplicateRequest}
-                  handleShowSettings={() => setIsRequestSettingsModalOpen(true)}
+                handleShowSettings={() => setIsRequestSettingsModalOpen(true)}
                 request={request}
                 isPinned={isPinned}
                 requestGroup={requestGroup}
                 activeEnvironment={activeEnvironment}
                 activeProject={activeProject}
-              />
-            )}
+              />)}
           </div>
           {isRequestSettingsModalOpen && (
             <RequestSettingsModal
