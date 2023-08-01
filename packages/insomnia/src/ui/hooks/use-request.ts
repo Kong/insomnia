@@ -5,13 +5,14 @@ import { GrpcRequest } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { Request } from '../../models/request';
 import { RequestMeta } from '../../models/request-meta';
+import { Settings } from '../../models/settings';
 import { WebSocketRequest } from '../../models/websocket-request';
 
 export const useRequestPatcher = () => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
-  const requestMetaFetcher = useFetcher();
+  const fetcher = useFetcher();
   return (requestId: string, patch: Partial<GrpcRequest> | Partial<Request> | Partial<WebSocketRequest>) => {
-    requestMetaFetcher.submit(JSON.stringify(patch), {
+    fetcher.submit(JSON.stringify(patch), {
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update`,
       method: 'post',
       encType: 'application/json',
@@ -21,10 +22,21 @@ export const useRequestPatcher = () => {
 
 export const useRequestMetaPatcher = () => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
-  const requestMetaFetcher = useFetcher();
+  const fetcher = useFetcher();
   return (requestId: string, patch: Partial<GrpcRequestMeta> | Partial<RequestMeta>) => {
-    requestMetaFetcher.submit(patch, {
+    fetcher.submit(patch, {
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/update-meta`,
+      method: 'post',
+      encType: 'application/json',
+    });
+  };
+};
+
+export const useSettingsPatcher = () => {
+  const fetcher = useFetcher();
+  return (patch: Partial<Settings>) => {
+    fetcher.submit(JSON.stringify(patch), {
+      action: '/settings/update',
       method: 'post',
       encType: 'application/json',
     });

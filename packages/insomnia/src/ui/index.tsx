@@ -80,6 +80,10 @@ const router = createMemoryRouter(
           ],
         },
         {
+          path: 'settings/update',
+          action: async (...args) => (await import('./routes/actions')).updateSettingsAction(...args),
+        },
+        {
           path: 'organization',
           children: [
             {

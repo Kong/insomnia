@@ -937,3 +937,9 @@ export const deleteClientCertificateAction: ActionFunction = async ({ request })
   await models.clientCertificate.remove(certificateId);
   return null;
 };
+
+export const updateSettingsAction: ActionFunction = async ({ request }) => {
+  const patch = await request.json();
+  await models.settings.patch(patch);
+  return null;
+};
