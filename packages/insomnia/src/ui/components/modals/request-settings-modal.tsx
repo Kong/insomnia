@@ -19,10 +19,8 @@ import { MarkdownEditor } from '../markdown-editor';
 
 export interface RequestSettingsModalOptions {
   request: Request | GrpcRequest | WebSocketRequest;
-  forceEditMode?: boolean;
 }
 interface State {
-  showDescription: boolean;
   defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string | null;
 }
@@ -30,15 +28,12 @@ export interface RequestSettingsModalHandle {
   show: (options: RequestSettingsModalOptions) => void;
   hide: () => void;
 }
-export const RequestSettingsModal = ({ request, forceEditMode, onHide }: ModalProps & RequestSettingsModalOptions) => {
+export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSettingsModalOptions) => {
   const modalRef = useRef<ModalHandle>(null);
   const editorRef = useRef<CodeEditorHandle>(null);
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
-  console.log('RequestSettingsModal', { request, forceEditMode, onHide });
-  const hasDescription = !!request.description;
   const [state, setState] = useState<State>({
-    showDescription: forceEditMode || hasDescription,
-    defaultPreviewMode: hasDescription && !forceEditMode,
+    defaultPreviewMode: !!request?.description,
     activeWorkspaceIdToCopyTo: null,
   });
   useEffect(() => {
@@ -67,7 +62,7 @@ export const RequestSettingsModal = ({ request, forceEditMode, onHide }: ModalPr
     invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
     duplicateRequest({ parentId: state.activeWorkspaceIdToCopyTo });
   }
-  const { showDescription, defaultPreviewMode, activeWorkspaceIdToCopyTo } = state;
+  const { defaultPreviewMode, activeWorkspaceIdToCopyTo } = state;
   const toggleCheckBox = async (event: any) => {
     patchRequest(request._id, { [event.currentTarget.name]: event.currentTarget.checked ? true : false });
   };
@@ -102,25 +97,14 @@ export const RequestSettingsModal = ({ request, forceEditMode, onHide }: ModalPr
             </div>
             {request && isWebSocketRequest(request) && (
               <>
-                <>
-                  {showDescription ? (
-                    <MarkdownEditor
-                      ref={editorRef}
-                      className="margin-top"
-                      defaultPreviewMode={defaultPreviewMode}
-                      placeholder="Write a description"
-                      defaultValue={request.description}
-                      onChange={updateDescription}
-                    />
-                  ) : (
-                    <button
-                      onClick={() => setState(state => ({ ...state, showDescription: true }))}
-                      className="btn btn--outlined btn--super-duper-compact"
-                    >
-                      Add Description
-                    </button>
-                  )}
-                </>
+                <MarkdownEditor
+                  ref={editorRef}
+                  className="margin-top"
+                  defaultPreviewMode={defaultPreviewMode}
+                  placeholder="Write a description"
+                  defaultValue={request.description}
+                  onChange={updateDescription}
+                />
                 <>
                   <div className="pad-top pad-bottom">
                     <div className="form-control form-control--thin">
@@ -221,25 +205,14 @@ export const RequestSettingsModal = ({ request, forceEditMode, onHide }: ModalPr
             )}
             {request && isRequest(request) && (
               <>
-                <>
-                  {showDescription ? (
-                    <MarkdownEditor
-                      ref={editorRef}
-                      className="margin-top"
-                      defaultPreviewMode={defaultPreviewMode}
-                      placeholder="Write a description"
-                      defaultValue={request.description}
-                      onChange={updateDescription}
-                    />
-                  ) : (
-                    <button
-                      onClick={() => setState(state => ({ ...state, showDescription: true }))}
-                      className="btn btn--outlined btn--super-duper-compact"
-                    >
-                      Add Description
-                    </button>
-                  )}
-                </>
+                <MarkdownEditor
+                  ref={editorRef}
+                  className="margin-top"
+                  defaultPreviewMode={defaultPreviewMode}
+                  placeholder="Write a description"
+                  defaultValue={request.description}
+                  onChange={updateDescription}
+                />
                 <>
                   <div className="pad-top pad-bottom">
                     <div className="form-control form-control--thin">

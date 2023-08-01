@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 
-import * as models from '../../../models';
 import type { RequestGroup } from '../../../models/request-group';
 import { invariant } from '../../../utils/invariant';
+import { useRequestGroupPatcher } from '../../hooks/use-request';
 import { selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -16,73 +16,55 @@ import { MarkdownEditor } from '../markdown-editor';
 
 export interface RequestGroupSettingsModalOptions {
   requestGroup: RequestGroup;
-  forceEditMode?: boolean;
 }
 interface State {
-  showDescription: boolean;
   defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string | null;
 }
-export const RequestGroupSettingsModal = ({ requestGroup, forceEditMode, onHide }: ModalProps & {
+export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps & {
   requestGroup: RequestGroup;
   forceEditMode?: boolean;
 }) => {
   const modalRef = useRef<ModalHandle>(null);
   const editorRef = useRef<CodeEditorHandle>(null);
   const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
-  const hasDescription = !!requestGroup.description;
-  // Find this request workspace for filtering out of workspaces list
-  const { workspaceId } = useParams<{ workspaceId: string }>();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+
   const [state, setState] = useState<State>({
     activeWorkspaceIdToCopyTo: null,
-    showDescription: forceEditMode || hasDescription,
-    defaultPreviewMode: hasDescription && !forceEditMode,
+    defaultPreviewMode: !!requestGroup.description,
   });
+  const patchRequestGroup = useRequestGroupPatcher();
+  const requestFetcher = useFetcher();
+
+  const duplicateRequestGroup = (r: Partial<RequestGroup>) => {
+    requestFetcher.submit(JSON.stringify(r),
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${requestGroup._id}/duplicate`,
+        method: 'post',
+        encType: 'application/json',
+      });
+  };
   useEffect(() => {
     modalRef.current?.show();
   }, []);
 
   const handleMoveToWorkspace = async () => {
-    const { activeWorkspaceIdToCopyTo } = state;
-    if (!requestGroup || !activeWorkspaceIdToCopyTo) {
-      return;
-    }
-    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo);
-    if (!workspace) {
-      return;
-    }
-    // TODO: if there are gRPC requests in a request group
-    //  we should also copy the protofiles to the destination workspace - INS-267
-    await models.requestGroup.duplicate(requestGroup, {
-      metaSortKey: -1e9,
-      parentId: activeWorkspaceIdToCopyTo,
-      name: requestGroup.name, // Because duplicating will add (Copy) suffix
-    });
-    // TODO clean up this so it doesn't orphan descendants
-    await models.requestGroup.remove(requestGroup);
+    invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
+    patchRequestGroup(requestGroup._id, { parentId: state.activeWorkspaceIdToCopyTo });
     modalRef.current?.hide();
   };
 
   const handleCopyToWorkspace = async () => {
-    const { activeWorkspaceIdToCopyTo } = state;
-    if (!requestGroup || !activeWorkspaceIdToCopyTo) {
-      return;
-    }
-    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo);
-    if (!workspace) {
-      return;
-    }
-    const patch = {
+    invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
+    duplicateRequestGroup({
       metaSortKey: -1e9, // Move to top of sort order
       name: requestGroup.name, // Because duplicate will add (Copy) suffix if name is not provided in patch
-      parentId: activeWorkspaceIdToCopyTo,
-    };
-    await models.requestGroup.duplicate(requestGroup, patch);
-    models.stats.incrementCreatedRequests();
+      parentId: state.activeWorkspaceIdToCopyTo,
+    });
   };
 
   const {
-    showDescription,
     defaultPreviewMode,
     activeWorkspaceIdToCopyTo,
   } = state;
@@ -105,33 +87,22 @@ export const RequestGroupSettingsModal = ({ requestGroup, forceEditMode, onHide 
                 defaultValue={requestGroup?.name}
                 onChange={async event => {
                   invariant(requestGroup, 'No request group');
-                  const updatedRequestGroup = await models.requestGroup.update(requestGroup, { name: event.target.value });
-                  setState(state => ({ ...state, requestGroup: updatedRequestGroup }));
+                  patchRequestGroup(requestGroup._id, { name: event.target.value });
                 }}
               />
             </label>
           </div>
-          {showDescription ? (
-            <MarkdownEditor
-              ref={editorRef}
-              className="margin-top"
-              defaultPreviewMode={defaultPreviewMode}
-              placeholder="Write a description"
-              defaultValue={requestGroup?.description || ''}
-              onChange={async (description: string) => {
-                invariant(requestGroup, 'No request group');
-                const updated = await models.requestGroup.update(requestGroup, { description });
-                setState(state => ({ ...state, requestGroup: updated, defaultPreviewMode: false }));
-              }}
-            />
-          ) : (
-            <button
-              onClick={() => setState(state => ({ ...state, showDescription: true }))}
-              className="btn btn--outlined btn--super-duper-compact"
-            >
-              Add Description
-            </button>
-          )}
+          <MarkdownEditor
+            ref={editorRef}
+            className="margin-top"
+            defaultPreviewMode={defaultPreviewMode}
+            placeholder="Write a description"
+            defaultValue={requestGroup?.description || ''}
+            onChange={async (description: string) => {
+              invariant(requestGroup, 'No request group');
+              patchRequestGroup(requestGroup._id, { description });
+            }}
+          />
           <hr />
           <div className="form-row">
             <div className="form-control form-control--outlined">

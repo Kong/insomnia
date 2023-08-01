@@ -18,9 +18,7 @@ export const updateRequestGroupAction: ActionFunction = async ({ request }) => {
   invariant(typeof patch._id === 'string', 'Request Group ID is required');
   const reqGroup = await models.requestGroup.getById(patch._id);
   invariant(reqGroup, 'Request Group not found');
-  if (name !== null) {
-    models.requestGroup.update(reqGroup, patch);
-  }
+  models.requestGroup.update(reqGroup, patch);
   return null;
 };
 export const deleteRequestGroupAction: ActionFunction = async ({ request }) => {
