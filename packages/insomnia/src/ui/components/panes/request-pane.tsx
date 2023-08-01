@@ -10,7 +10,7 @@ import { Request } from '../../../models/request';
 import { RequestMeta } from '../../../models/request-meta';
 import type { Settings } from '../../../models/settings';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
-import { useRequestPatcher } from '../../hooks/use-request';
+import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -79,14 +79,7 @@ export const RequestPane: FC<Props> = ({
   const handleEditDescriptionAdd = useCallback(() => {
     handleEditDescription(true);
   }, [handleEditDescription]);
-
-  const handleUpdateSettingsUseBulkHeaderEditor = useCallback(() => {
-    models.settings.update(settings, { useBulkHeaderEditor: !settings.useBulkHeaderEditor });
-  }, [settings]);
-
-  const handleUpdateSettingsUseBulkParametersEditor = useCallback(() => {
-    models.settings.update(settings, { useBulkParametersEditor: !settings.useBulkParametersEditor });
-  }, [settings]);
+  const patchSettings = useSettingsPatcher();
 
   const handleImportQueryFromUrl = useCallback(() => {
     let query;
@@ -202,7 +195,7 @@ export const RequestPane: FC<Props> = ({
               </button>
               <button
                 className="btn btn--compact"
-                onClick={handleUpdateSettingsUseBulkParametersEditor}
+                onClick={() => patchSettings({ useBulkParametersEditor: !settings.useBulkParametersEditor })}
               >
                 {settings.useBulkParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
@@ -222,7 +215,7 @@ export const RequestPane: FC<Props> = ({
             <TabPanelFooter>
               <button
                 className="btn btn--compact"
-                onClick={handleUpdateSettingsUseBulkHeaderEditor}
+                onClick={() => patchSettings({ useBulkHeaderEditor: !settings.useBulkHeaderEditor })}
               >
                 {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>

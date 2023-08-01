@@ -47,6 +47,7 @@ import { AppHooks } from '../containers/app-hooks';
 import { AIProvider } from '../context/app/ai-context';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
+import { useSettingsPatcher } from '../hooks/use-request';
 import Modals from './modals';
 import { WorkspaceLoaderData } from './workspace';
 
@@ -101,6 +102,7 @@ const Root = () => {
   const { revalidate } = useRevalidator();
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
   const [importUri, setImportUri] = useState('');
+  const patchSettings = useSettingsPatcher();
 
   useEffect(() => {
     onLoginLogout(() => {
@@ -199,10 +201,7 @@ const Root = () => {
                     '0.0.1',
                     mainJsContent
                   );
-                  const settings = await models.settings.getOrCreate();
-                  await models.settings.update(settings, {
-                    theme: parsedTheme.name,
-                  });
+                  patchSettings({ theme: parsedTheme.name });
                   await reloadPlugins();
                   await setTheme(parsedTheme.name);
                   showModal(SettingsModal, { tab: TAB_INDEX_THEMES });
@@ -250,7 +249,7 @@ const Root = () => {
         }
       }
     );
-  }, []);
+  }, [patchSettings]);
 
   const { organizationId } = useParams() as {
     organizationId: string;
