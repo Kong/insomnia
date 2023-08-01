@@ -69,7 +69,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { hotKeyRegistry } = settings;
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta, any>;
   const downloadPath = activeRequestMeta.downloadPath;
   const patchRequestMeta = useRequestMetaPatcher();
   const { requestId } = useParams() as { requestId: string };

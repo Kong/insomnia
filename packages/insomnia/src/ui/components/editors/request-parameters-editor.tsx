@@ -18,7 +18,7 @@ export const RequestParametersEditor: FC<Props> = ({
   disabled = false,
 }) => {
   const { requestId } = useParams() as { requestId: string };
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | WebSocketRequest, any>;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | WebSocketRequest, any, any>;
   const patchRequest = useRequestPatcher();
   const handleBulkUpdate = useCallback((paramsString: string) => {
     const parameters: {

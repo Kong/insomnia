@@ -37,8 +37,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   const {
     responses,
     requestVersions,
-  } = useRouteLoaderData('request/:requestId') as RequestLoaderData<any, any>;
-  console.log('requestVersions', requestVersions);
+  } = useRouteLoaderData('request/:requestId') as RequestLoaderData<any, any, GenericResponse>;
   const now = new Date();
   const categories: Record<string, GenericResponse[]> = {
     minutes: [],
@@ -93,7 +92,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     }
   }, [activeEnvironment?._id, activeResponse, requestId, patchRequestMeta]);
 
-  responses.forEach(response => {
+  responses.forEach((response: GenericResponse) => {
     const responseTime = new Date(response.created);
 
     if (differenceInMinutes(now, responseTime) < 5) {

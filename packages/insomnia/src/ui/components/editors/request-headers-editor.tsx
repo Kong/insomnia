@@ -18,7 +18,7 @@ export const RequestHeadersEditor: FC<Props> = ({
   bulk,
   isDisabled,
 }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | WebSocketRequest, any>;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | WebSocketRequest, any, any>;
   const patchRequest = useRequestPatcher();
   const { requestId } = useParams() as { requestId: string };
 

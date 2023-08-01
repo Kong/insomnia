@@ -67,7 +67,7 @@ export const Debug: FC = () => {
     activeWorkspaceMeta,
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | GrpcRequest | WebSocketRequest, any> | undefined;
+  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | GrpcRequest | WebSocketRequest, any, any> | undefined;
   const { activeRequest } = requestData || {};
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };

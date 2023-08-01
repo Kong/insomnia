@@ -19,7 +19,7 @@ initializeNunjucksRenderPromiseCache();
  * Access to functions useful for Nunjucks rendering
  */
 export const useNunjucks = () => {
-  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any> | undefined;
+  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any, any> | undefined;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
   const fetchRenderContext = useCallback(async () => {

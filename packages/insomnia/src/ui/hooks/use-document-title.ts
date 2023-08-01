@@ -12,7 +12,7 @@ export const useDocumentTitle = () => {
     activeProject,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any, any>;
 
   // Update document title
   useEffect(() => {

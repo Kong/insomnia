@@ -94,7 +94,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   } catch {
     // Can't parse as JSON.
   }
-  const { activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<any, RequestMeta>;
+  const { activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<any, RequestMeta, any>;
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   return (
     <PreviewPane>

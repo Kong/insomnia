@@ -73,7 +73,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   setGrpcState,
   reloadRequests,
 }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<GrpcRequest, any>;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<GrpcRequest, any, any>;
 
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
   const { requestMessages, running, methods } = grpcState;

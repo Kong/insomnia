@@ -85,7 +85,7 @@ const PaddedButton = styled('button')({
 });
 
 export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
-  const { activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData<any, any>;
+  const { activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData<any, any, any>;
 
   if (!activeResponse) {
     return (

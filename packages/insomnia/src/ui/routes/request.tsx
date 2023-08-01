@@ -16,14 +16,14 @@ import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
 
-export interface RequestLoaderData<A, B> {
-  activeRequest: A;
-  activeRequestMeta: B;
-  activeResponse: Response | WebSocketResponse | null;
-  responses: (Response | WebSocketResponse)[];
+export interface RequestLoaderData<Req, Meta, Res> {
+  activeRequest: Req;
+  activeRequestMeta: Meta;
+  activeResponse: Res | null;
+  responses: Res[];
   requestVersions: RequestVersion[];
 }
-export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData<Request | WebSocketRequest | GrpcRequest, RequestMeta | GrpcRequestMeta>> => {
+export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData<Request | WebSocketRequest | GrpcRequest, RequestMeta | GrpcRequestMeta, Response | WebSocketResponse>> => {
   const { requestId, workspaceId } = params;
   invariant(requestId, 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');

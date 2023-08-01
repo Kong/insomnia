@@ -67,7 +67,7 @@ export const RequestPane: FC<Props> = ({
   settings,
   setLoading,
 }) => {
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta, any>;
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchRequest = useRequestPatcher();
   const patchSettings = useSettingsPatcher();
