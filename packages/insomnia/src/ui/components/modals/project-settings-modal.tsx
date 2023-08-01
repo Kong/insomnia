@@ -21,7 +21,7 @@ export const ProjectSettingsModal: FC<ProjectSettingsModalProps> = ({ project, o
 
   useEffect(() => {
     modalRef.current?.show();
-  });
+  }, []);
 
   const isRemote = isRemoteProject(project);
 

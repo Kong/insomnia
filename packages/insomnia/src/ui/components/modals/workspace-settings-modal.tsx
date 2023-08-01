@@ -93,7 +93,7 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
   const activeWorkspaceName = workspace.name;
   useEffect(() => {
     modalRef.current?.show();
-  });
+  }, []);
 
   const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
   const workspaceFetcher = useFetcher();
