@@ -2,6 +2,7 @@ import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import * as models from '../../models';
+import { BaseModel } from '../../models';
 import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
@@ -40,22 +41,17 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
   }
   const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
   invariant(activeRequestMeta, 'Request meta not found');
-  if (isWebSocketRequestId(requestId)) {
-    const activeResponse = activeRequestMeta.activeResponseId
-      ? await models.webSocketResponse.getById(activeRequestMeta.activeResponseId)
-      : await models.webSocketResponse.getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);
-    const responses = await models.webSocketResponse.findByParentId(requestId);
-    return {
-      activeRequest,
-      activeRequestMeta,
-      activeResponse,
-      responses,
-    };
-  }
+  const { filterResponsesByEnv } = await models.settings.getOrCreate();
+
+  const responseModelName = isWebSocketRequestId(requestId) ? 'webSocketResponse' : 'response';
   const activeResponse = activeRequestMeta.activeResponseId
-    ? await models.response.getById(activeRequestMeta.activeResponseId)
-    : await models.response.getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);
-  const responses = await models.response.findByParentId(requestId);
+    ? await models[responseModelName].getById(activeRequestMeta.activeResponseId)
+    : await models[responseModelName].getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);
+  const allResponses = await models[responseModelName].findByParentId(requestId);
+  const filteredResponses = allResponses
+    .filter((r: Response | WebSocketResponse) => r.environmentId === activeWorkspaceMeta.activeEnvironmentId);
+  const responses = (filterResponsesByEnv ? filteredResponses : allResponses)
+    .sort((a: BaseModel, b: BaseModel) => (a.created > b.created ? -1 : 1));
   return {
     activeRequest,
     activeRequestMeta,

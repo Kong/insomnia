@@ -11,7 +11,8 @@ import { Response } from '../../../models/response';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import { selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
+import { selectRequestVersions } from '../../redux/selectors';
+import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -35,7 +36,9 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   const {
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const responses = useSelector(selectActiveRequestResponses) as GenericResponse[];
+  const {
+    responses,
+  } = useRouteLoaderData('request/:requestId') as RequestLoaderData<any, any>;
   const requestVersions = useSelector(selectRequestVersions);
   const now = new Date();
   const categories: Record<string, GenericResponse[]> = {
