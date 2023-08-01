@@ -7,7 +7,6 @@ import * as models from '../../../models/index';
 import { RequestGroup } from '../../../models/request-group';
 import { Highlight } from '../base/highlight';
 import { RequestGroupActionsDropdown, RequestGroupActionsDropdownHandle } from '../dropdowns/request-group-actions-dropdown';
-import { showModal } from '../modals';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 import { DnDDragProps, DnDDropProps, DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 import { SidebarRequestRow } from './sidebar-request-row';
@@ -37,7 +36,7 @@ export const SidebarRequestGroupRowFC = forwardRef<SidebarRequestGroupRowHandle,
   const [dragDirection, setDragDirection] = useState(0);
   const dropdownRef = useRef<RequestGroupActionsDropdownHandle>(null);
   const expandTagRef = useRef<HTMLDivElement>(null);
-  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
+  const [isRequestGroupSettingsModalOpen, setIsRequestGroupSettingsModalOpen] = useState(false);
   useImperativeHandle(ref, () => ({
     setDragDirection,
     getExpandTag:() => expandTagRef.current,
@@ -99,12 +98,12 @@ export const SidebarRequestGroupRowFC = forwardRef<SidebarRequestGroupRowHandle,
         <div className="sidebar__actions">
           <RequestGroupActionsDropdown
             ref={dropdownRef}
-            handleShowSettings={() => setIsRequestSettingsModalOpen(true)}
+            handleShowSettings={() => setIsRequestGroupSettingsModalOpen(true)}
             requestGroup={requestGroup}
           />
-          {isRequestSettingsModalOpen && <RequestGroupSettingsModal
+          {isRequestGroupSettingsModalOpen && <RequestGroupSettingsModal
             requestGroup={requestGroup}
-            onHide={() => setIsRequestSettingsModalOpen(false)}
+            onHide={() => setIsRequestGroupSettingsModalOpen(false)}
           />}
         </div>
       </div>
