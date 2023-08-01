@@ -1,6 +1,7 @@
 import React from 'react';
 import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
+import { database } from '../../common/database';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
@@ -8,9 +9,13 @@ import { ClientCertificate } from '../../models/client-certificate';
 import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { GitRepository } from '../../models/git-repository';
+import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { isRemoteProject, Project } from '../../models/project';
+import { isRequest, Request } from '../../models/request';
+import { isRequestGroup } from '../../models/request-group';
+import { isWebSocketRequest, WebSocketRequest } from '../../models/websocket-request';
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { invariant } from '../../utils/invariant';
@@ -27,6 +32,7 @@ export interface WorkspaceLoaderData {
   clientCertificates: ClientCertificate[];
   caCertificate: CaCertificate | null;
   projects: Project[];
+  requests: (Request | WebSocketRequest | GrpcRequest | RequestGroup)[];
 }
 
 export const workspaceLoader: LoaderFunction = async ({
@@ -75,6 +81,7 @@ export const workspaceLoader: LoaderFunction = async ({
       : [activeProject];
 
   const projects = sortProjects(organizationProjects);
+  const requests = (await database.withDescendants(activeWorkspace)).filter(d => isRequest(d) || isWebSocketRequest(d) || isGrpcRequest(d) || isRequestGroup(d)) as (Request | WebSocketRequest | GrpcRequest)[];
   return {
     activeWorkspace,
     activeProject,
@@ -88,6 +95,7 @@ export const workspaceLoader: LoaderFunction = async ({
     clientCertificates,
     caCertificate: await models.caCertificate.findByParentId(workspaceId),
     projects,
+    requests,
   };
 };
 
