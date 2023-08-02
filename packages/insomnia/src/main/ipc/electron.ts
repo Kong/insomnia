@@ -26,9 +26,22 @@ export function registerElectronHandlers() {
       },
       { type: 'separator' },
       ...localTemplateTags.map(l => {
+        const hasSubmenu = l.templateTag.args?.[0]?.options?.length;
         const r = {
           label: fnOrString(l.templateTag.displayName),
-          submenu: l.templateTag.args?.[0]?.options?.map(s => ({ label: fnOrString(s.displayName) })) || [],
+          ...(hasSubmenu ? {} : {
+            click: () => {
+              event.sender.send('context-menu-command', 'open tag editor with parent settings');
+            },
+          }),
+          ...(hasSubmenu ? {
+            submenu: l.templateTag.args?.[0]?.options?.map(s => ({
+              label: fnOrString(s.displayName),
+              click: () => {
+                event.sender.send('context-menu-command', 'open tag editor with parent settings');
+              },
+            })),
+          } : {}),
         };
         return r;
       }),
