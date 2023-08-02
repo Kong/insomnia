@@ -1,6 +1,6 @@
 import classnames from 'classnames';
-import React, { FC, forwardRef, Fragment, useImperativeHandle, useRef } from 'react';
-import { ListDropTargetDelegate, ListKeyboardDelegate, mergeProps, useDraggableCollection, useDraggableItem, useDropIndicator, useDroppableCollection, useDroppableItem, useFocusRing, useListBox, useOption } from 'react-aria';
+import React, { FC, Fragment, useEffect, useRef } from 'react';
+import { ListDropTargetDelegate, ListKeyboardDelegate, mergeProps, OverlayContainer, useDraggableCollection, useDraggableItem, useDropIndicator, useDroppableCollection, useDroppableItem, useFocusRing, useListBox, useOption } from 'react-aria';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { DraggableCollectionState, DroppableCollectionState, Item, ListState, useDraggableCollectionState, useDroppableCollectionState, useListState } from 'react-stately';
 
@@ -226,11 +226,7 @@ const ReorderableListBox = props => {
   );
 };
 
-export interface WorkspaceEnvironmentsEditModalHandle {
-  show: () => void;
-  hide: () => void;
-}
-export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEditModalHandle, ModalProps>((props, ref) => {
+export const WorkspaceEnvironmentsEditModal = (props: ModalProps) => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   const routeData = useRouteLoaderData(
     ':workspaceId'
@@ -244,15 +240,9 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   const updateEnvironmentFetcher = useFetcher();
   const setActiveEnvironmentFetcher = useFetcher();
   const duplicateEnvironmentFetcher = useFetcher();
-
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: async () => {
-      modalRef.current?.show();
-    },
-  }), []);
+  useEffect(() => {
+    modalRef.current?.show();
+  }, []);
 
   if (!routeData) {
     return null;
@@ -272,10 +262,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
       setActiveEnvironmentFetcher.submit({
         environmentId,
       },
-      {
-        method: 'post',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-      });
+        {
+          method: 'post',
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
+        });
     }
   }
 
@@ -283,10 +273,10 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
     deleteEnvironmentFetcher.submit({
       environmentId,
     },
-    {
-      method: 'post',
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/delete`,
-    });
+      {
+        method: 'post',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/delete`,
+      });
   }
 
   const updateEnvironment = async (environmentId: string, patch: Partial<Environment>) => {
@@ -294,11 +284,11 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
       patch,
       environmentId,
     },
-    {
-      encType: 'application/json',
-      method: 'post',
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
-    });
+      {
+        encType: 'application/json',
+        method: 'post',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/update`,
+      });
   };
 
   function onReorder(e: any) {
@@ -319,233 +309,234 @@ export const WorkspaceEnvironmentsEditModal = forwardRef<WorkspaceEnvironmentsEd
   }
 
   return (
-    <Modal ref={modalRef} wide tall {...props}>
-      <ModalHeader>Manage Environments</ModalHeader>
-      <ModalBody noScroll className="env-modal">
-        <div className="env-modal__sidebar">
-          <div
-            className={classnames('env-modal__sidebar-root-item', {
-              'env-modal__sidebar-item--active': activeEnvironment._id === baseEnvironment._id,
-            })}
-          >
-            <button
-              onClick={() => {
-                if (environmentEditorRef.current?.isValid() && activeEnvironment._id !== baseEnvironment._id) {
-                  setActiveEnvironmentFetcher.submit({
-                    environmentId: baseEnvironment._id,
-                  },
-                  {
-                    method: 'post',
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-                  });
-                }
-              }}
+    <OverlayContainer>
+      <Modal ref={modalRef} wide tall onHide={props.onHide}>
+        <ModalHeader>Manage Environments</ModalHeader>
+        <ModalBody noScroll className="env-modal">
+          <div className="env-modal__sidebar">
+            <div
+              className={classnames('env-modal__sidebar-root-item', {
+                'env-modal__sidebar-item--active': activeEnvironment._id === baseEnvironment._id,
+              })}
             >
-              {ROOT_ENVIRONMENT_NAME}
-              <HelpTooltip className="space-left">
-                The variables in this environment are always available, regardless of which
-                sub-environment is active. Useful for storing default or fallback values.
-              </HelpTooltip>
-            </button>
-          </div>
-          <div className="pad env-modal__sidebar-heading">
-            <h3 className="no-margin">Sub Environments</h3>
-            <Dropdown
-              aria-label='Create Environment Dropdown'
-              triggerButton={
-                <DropdownButton
-                  data-testid='CreateEnvironmentDropdown'
-                >
-                  <i className="fa fa-plus-circle" />
-                  <i className="fa fa-caret-down" />
-                </DropdownButton>
-              }
-            >
-              <DropdownItem aria-label='Environment'>
-                <ItemContent
-                  icon="eye"
-                  label="Environment"
-                  onClick={async () => {
-                    createEnvironmentFetcher.submit({
-                      isPrivate: false,
+              <button
+                onClick={() => {
+                  if (environmentEditorRef.current?.isValid() && activeEnvironment._id !== baseEnvironment._id) {
+                    setActiveEnvironmentFetcher.submit({
+                      environmentId: baseEnvironment._id,
                     },
-                    {
-                      encType: 'application/json',
-                      method: 'post',
-                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/create`,
-                    });
-                  }}
-                />
-              </DropdownItem>
-              <DropdownItem aria-label='Private Environment'>
-                <ItemContent
-                  icon="eye-slash"
-                  label="Private Environment"
-                  onClick={async () => {
-                    createEnvironmentFetcher.submit({
-                      isPrivate: true,
-                    },
-                    {
-                      encType: 'application/json',
-                      method: 'post',
-                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/create`,
-                    });
-                  }}
-                />
-              </DropdownItem>
-            </Dropdown>
-          </div>
-          <ReorderableListBox
-            items={subEnvironments}
-            onSelectionChange={onSelectionChange}
-            onReorder={onReorder}
-            selectionMode="multiple"
-            selectionBehavior="replace"
-            aria-label="list of subenvironments"
-          >
-            {(environment: any) =>
-              <Item key={environment._id}>
-                {environment.name}
-              </Item>
-            }
-          </ReorderableListBox>
-        </div>
-        <div className="env-modal__main">
-          <div className="env-modal__main__header">
-            <h1>
-              {baseEnvironment._id === activeEnvironment._id ? (
-                ROOT_ENVIRONMENT_NAME
-              ) : (
-                <Editable
-                  singleClick
-                  className="wide"
-                  onSubmit={name => {
-                    if (activeEnvironment._id && name) {
-                      updateEnvironment(activeEnvironment._id, { name });
-                    }
-                  }}
-                  value={activeEnvironment.name}
-                />
-              )}
-            </h1>
-
-            {baseEnvironment._id !== activeEnvironment._id ? (
-              <Fragment>
-                <input
-                  className="hidden"
-                  type="color"
-                  ref={inputRef}
-                  onChange={event => updateEnvironment(activeEnvironment._id, { color: event.target.value })}
-                />
-
-                <Dropdown
-                  aria-label='Environment Color Dropdown'
-                  className="space-right"
-                  triggerButton={
-                    <DropdownButton
-                      className="btn btn--clicky"
-                      disableHoverBehavior={false}
-                    >
-                      {activeEnvironment.color && (
-                        <i
-                          className="fa fa-circle space-right"
-                          style={{
-                            color: activeEnvironment.color,
-                          }}
-                        />
-                      )}
-                      Color <i className="fa fa-caret-down" />
-                    </DropdownButton>
-                  }
-                >
-                  <DropdownItem aria-label={activeEnvironment.color ? 'Change Color' : 'Assign Color'}>
-                    <ItemContent
-                      icon="circle"
-                      label={activeEnvironment.color ? 'Change Color' : 'Assign Color'}
-                      iconStyle={{
-                        ...(activeEnvironment.color ? { color: activeEnvironment.color } : {}),
-                      }}
-                      onClick={() => {
-                        if (!activeEnvironment.color) {
-                          // TODO: fix magic-number. Currently this is the `surprise` background color for the default theme,
-                          // but we should be grabbing the actual value from the user's actual theme instead.
-                          updateEnvironment(activeEnvironment._id, { color: '#7d69cb' });
-                        }
-                        inputRef.current?.click();
-                      }}
-                    />
-                  </DropdownItem>
-
-                  <DropdownItem aria-label='Unset Color'>
-                    <ItemContent
-                      isDisabled={!activeEnvironment.color}
-                      icon="minus-circle"
-                      label="Unset Color"
-                      onClick={() => updateEnvironment(activeEnvironment._id, { color: null })}
-                    />
-                  </DropdownItem>
-                </Dropdown>
-
-                <button
-                  onClick={async () => {
-                    if (activeEnvironment) {
-                      duplicateEnvironmentFetcher.submit({
-                        environmentId: activeEnvironment._id,
-                      }, {
+                      {
                         method: 'post',
-                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/duplicate`,
+                        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
                       });
-                    }
-                  }}
-                  className="btn btn--clicky space-right"
-                >
-                  <i className="fa fa-copy" /> Duplicate
-                </button>
+                  }
+                }}
+              >
+                {ROOT_ENVIRONMENT_NAME}
+                <HelpTooltip className="space-left">
+                  The variables in this environment are always available, regardless of which
+                  sub-environment is active. Useful for storing default or fallback values.
+                </HelpTooltip>
+              </button>
+            </div>
+            <div className="pad env-modal__sidebar-heading">
+              <h3 className="no-margin">Sub Environments</h3>
+              <Dropdown
+                aria-label='Create Environment Dropdown'
+                triggerButton={
+                  <DropdownButton
+                    data-testid='CreateEnvironmentDropdown'
+                  >
+                    <i className="fa fa-plus-circle" />
+                    <i className="fa fa-caret-down" />
+                  </DropdownButton>
+                }
+              >
+                <DropdownItem aria-label='Environment'>
+                  <ItemContent
+                    icon="eye"
+                    label="Environment"
+                    onClick={async () => {
+                      createEnvironmentFetcher.submit({
+                        isPrivate: false,
+                      },
+                        {
+                          encType: 'application/json',
+                          method: 'post',
+                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/create`,
+                        });
+                    }}
+                  />
+                </DropdownItem>
+                <DropdownItem aria-label='Private Environment'>
+                  <ItemContent
+                    icon="eye-slash"
+                    label="Private Environment"
+                    onClick={async () => {
+                      createEnvironmentFetcher.submit({
+                        isPrivate: true,
+                      },
+                        {
+                          encType: 'application/json',
+                          method: 'post',
+                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/create`,
+                        });
+                    }}
+                  />
+                </DropdownItem>
+              </Dropdown>
+            </div>
+            <ReorderableListBox
+              items={subEnvironments}
+              onSelectionChange={onSelectionChange}
+              onReorder={onReorder}
+              selectionMode="multiple"
+              selectionBehavior="replace"
+              aria-label="list of subenvironments"
+            >
+              {(environment: any) =>
+                <Item key={environment._id}>
+                  {environment.name}
+                </Item>
+              }
+            </ReorderableListBox>
+          </div>
+          <div className="env-modal__main">
+            <div className="env-modal__main__header">
+              <h1>
+                {baseEnvironment._id === activeEnvironment._id ? (
+                  ROOT_ENVIRONMENT_NAME
+                ) : (
+                  <Editable
+                    singleClick
+                    className="wide"
+                    onSubmit={name => {
+                      if (activeEnvironment._id && name) {
+                        updateEnvironment(activeEnvironment._id, { name });
+                      }
+                    }}
+                    value={activeEnvironment.name}
+                  />
+                )}
+              </h1>
 
-                {activeEnvironment._id !== baseEnvironment._id && <PromptButton
-                  onClick={() => handleDeleteEnvironment(activeEnvironment._id)}
-                  className="btn btn--clicky"
-                >
-                  <i className="fa fa-trash-o" />
-                </PromptButton>}
-              </Fragment>
-            ) : null}
+              {baseEnvironment._id !== activeEnvironment._id ? (
+                <Fragment>
+                  <input
+                    className="hidden"
+                    type="color"
+                    ref={inputRef}
+                    onChange={event => updateEnvironment(activeEnvironment._id, { color: event.target.value })}
+                  />
+
+                  <Dropdown
+                    aria-label='Environment Color Dropdown'
+                    className="space-right"
+                    triggerButton={
+                      <DropdownButton
+                        className="btn btn--clicky"
+                        disableHoverBehavior={false}
+                      >
+                        {activeEnvironment.color && (
+                          <i
+                            className="fa fa-circle space-right"
+                            style={{
+                              color: activeEnvironment.color,
+                            }}
+                          />
+                        )}
+                        Color <i className="fa fa-caret-down" />
+                      </DropdownButton>
+                    }
+                  >
+                    <DropdownItem aria-label={activeEnvironment.color ? 'Change Color' : 'Assign Color'}>
+                      <ItemContent
+                        icon="circle"
+                        label={activeEnvironment.color ? 'Change Color' : 'Assign Color'}
+                        iconStyle={{
+                          ...(activeEnvironment.color ? { color: activeEnvironment.color } : {}),
+                        }}
+                        onClick={() => {
+                          if (!activeEnvironment.color) {
+                            // TODO: fix magic-number. Currently this is the `surprise` background color for the default theme,
+                            // but we should be grabbing the actual value from the user's actual theme instead.
+                            updateEnvironment(activeEnvironment._id, { color: '#7d69cb' });
+                          }
+                          inputRef.current?.click();
+                        }}
+                      />
+                    </DropdownItem>
+
+                    <DropdownItem aria-label='Unset Color'>
+                      <ItemContent
+                        isDisabled={!activeEnvironment.color}
+                        icon="minus-circle"
+                        label="Unset Color"
+                        onClick={() => updateEnvironment(activeEnvironment._id, { color: null })}
+                      />
+                    </DropdownItem>
+                  </Dropdown>
+
+                  <button
+                    onClick={async () => {
+                      if (activeEnvironment) {
+                        duplicateEnvironmentFetcher.submit({
+                          environmentId: activeEnvironment._id,
+                        }, {
+                          method: 'post',
+                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/duplicate`,
+                        });
+                      }
+                    }}
+                    className="btn btn--clicky space-right"
+                  >
+                    <i className="fa fa-copy" /> Duplicate
+                  </button>
+
+                  {activeEnvironment._id !== baseEnvironment._id && <PromptButton
+                    onClick={() => handleDeleteEnvironment(activeEnvironment._id)}
+                    className="btn btn--clicky"
+                  >
+                    <i className="fa fa-trash-o" />
+                  </PromptButton>}
+                </Fragment>
+              ) : null}
+            </div>
+            <div className="env-modal__editor">
+              <EnvironmentEditor
+                ref={environmentEditorRef}
+                key={`${activeEnvironment._id}`}
+                environmentInfo={{
+                  object: activeEnvironment.data,
+                  propertyOrder: activeEnvironment.dataPropertyOrder,
+                }}
+                onBlur={() => {
+                  // Only save if it's valid
+                  if (!environmentEditorRef.current || !environmentEditorRef.current?.isValid()) {
+                    return;
+                  }
+                  const data = environmentEditorRef.current?.getValue();
+                  if (activeEnvironment && data) {
+                    updateEnvironment(activeEnvironment._id, {
+                      data: data.object,
+                      dataPropertyOrder: data.propertyOrder,
+                    });
+                  }
+                }}
+              />
+            </div>
           </div>
-          <div className="env-modal__editor">
-            <EnvironmentEditor
-              ref={environmentEditorRef}
-              key={`${activeEnvironment._id}`}
-              environmentInfo={{
-                object: activeEnvironment.data,
-                propertyOrder: activeEnvironment.dataPropertyOrder,
-              }}
-              onBlur={() => {
-                // Only save if it's valid
-                if (!environmentEditorRef.current || !environmentEditorRef.current?.isValid()) {
-                  return;
-                }
-                const data = environmentEditorRef.current?.getValue();
-                if (activeEnvironment && data) {
-                  updateEnvironment(activeEnvironment._id, {
-                    data: data.object,
-                    dataPropertyOrder: data.propertyOrder,
-                  });
-                }
-              }}
-            />
+        </ModalBody>
+        <ModalFooter>
+          <div className="margin-left italic txt-sm">
+            * Environment data can be used for&nbsp;
+            <Link href={docsTemplateTags}>Nunjucks Templating</Link> in your requests
           </div>
-        </div>
-      </ModalBody>
-      <ModalFooter>
-        <div className="margin-left italic txt-sm">
-          * Environment data can be used for&nbsp;
-          <Link href={docsTemplateTags}>Nunjucks Templating</Link> in your requests
-        </div>
-        <button className="btn" onClick={() => modalRef.current?.hide()}>
-          Close
-        </button>
-      </ModalFooter>
-    </Modal>
+          <button className="btn" onClick={() => modalRef.current?.hide()}>
+            Close
+          </button>
+        </ModalFooter>
+      </Modal>
+    </OverlayContainer>
   );
-});
-WorkspaceEnvironmentsEditModal.displayName = 'WorkspaceEnvironmentsEditModal';
+};

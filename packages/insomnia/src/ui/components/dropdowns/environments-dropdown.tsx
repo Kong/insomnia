@@ -1,12 +1,11 @@
 import React, { FC, useRef, useState } from 'react';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import type { Environment } from '../../../models/environment';
+import { type Environment } from '../../../models/environment';
 import { RootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
-import { showModal } from '../modals/index';
 import { WorkspaceEnvironmentsEditModal } from '../modals/workspace-environments-edit-modal';
 import { Tooltip } from '../tooltip';
 
@@ -31,6 +30,7 @@ export const EnvironmentsDropdown: FC<Props> = () => {
   const setActiveEnvironmentFetcher = useFetcher();
   const dropdownRef = useRef<DropdownHandle>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
 
   useDocBodyKeyboardShortcuts({
     environment_showSwitchMenu: () => setIsDropdownOpen(true),
@@ -40,6 +40,7 @@ export const EnvironmentsDropdown: FC<Props> = () => {
   const description = (!activeEnvironment || activeEnvironment === baseEnvironment) ? 'No Environment' : activeEnvironment.name;
 
   return (
+    <>
     <Dropdown
       ref={dropdownRef}
       isOpen={isDropdownOpen}
@@ -117,14 +118,13 @@ export const EnvironmentsDropdown: FC<Props> = () => {
 
       <DropdownSection title="General">
         <DropdownItem>
-          <ItemContent
-            icon="wrench"
-            label="Manage Environments"
-            hint={hotKeyRegistry.environment_showEditor}
-            onClick={() => showModal(WorkspaceEnvironmentsEditModal)}
-          />
+            <ItemContent icon="wrench" label="Manage Environments" hint={hotKeyRegistry.environment_showEditor} onClick={() => setEnvironmentModalOpen(true)} />
         </DropdownItem>
       </DropdownSection>
     </Dropdown>
+      {isEnvironmentModalOpen && (
+        <WorkspaceEnvironmentsEditModal onHide={() => setEnvironmentModalOpen(false)} />)
+      }
+    </>
   );
 };

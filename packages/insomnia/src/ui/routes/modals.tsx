@@ -24,7 +24,6 @@ import { SyncDeleteModal } from '../components/modals/sync-delete-modal';
 import { SyncHistoryModal } from '../components/modals/sync-history-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { SyncStagingModal } from '../components/modals/sync-staging-modal';
-import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { WrapperModal } from '../components/modals/wrapper-modal';
 import { useVCS } from '../hooks/use-vcs';
 import { WorkspaceLoaderData } from './workspace';
@@ -114,12 +113,6 @@ const Modals: FC = () => {
             />
           </Fragment>
         ) : null}
-
-        <WorkspaceEnvironmentsEditModal
-          ref={instance =>
-            registerModal(instance, 'WorkspaceEnvironmentsEditModal')
-          }
-        />
 
         <AddKeyCombinationModal
           ref={instance => registerModal(instance, 'AddKeyCombinationModal')}
