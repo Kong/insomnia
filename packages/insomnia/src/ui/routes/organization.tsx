@@ -370,7 +370,7 @@ const OrganizationRoute = () => {
                           () => navigate('/auth/login')
                         }
                       >
-                        Login
+                        Log in
                       </Button>
                       <Button
                         onClick={() => navigate('/auth/login')}

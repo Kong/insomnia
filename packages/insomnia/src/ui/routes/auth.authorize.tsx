@@ -57,7 +57,7 @@ const Authorize = () => {
       </p>
       <p>
         A new page should have opened in your default web browser.
-        To continue, please login via the browser.
+        To continue, please log in via the browser.
       </p>
       <div
         style={{
@@ -142,7 +142,7 @@ const Authorize = () => {
               }}
             >
               <i className="fa fa-sign-in" aria-hidden="true" />
-              Login
+              Log in
             </button>
           </div>
         </form>

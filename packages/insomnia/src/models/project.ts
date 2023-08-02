@@ -89,8 +89,8 @@ export async function seed() {
     }
 
     if (!scratchPad) {
-      console.log('Initializing scratchPad');
-      await workspace.create({ _id: 'wrk_scratchpad', name: 'Scratchpad', parentId: DEFAULT_PROJECT_ID, scope: 'collection' });
+      console.log('Initializing Scratch Pad');
+      await workspace.create({ _id: 'wrk_scratchpad', name: 'Scratch Pad', parentId: DEFAULT_PROJECT_ID, scope: 'collection' });
     }
   } catch (err) {
     console.warn('Failed to create default project. It probably already exists', err);

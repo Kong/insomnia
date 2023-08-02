@@ -100,17 +100,18 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             </Dropdown>) : (<Button onClick={handleExportAllToFile}>{`Export files from the "${projectName}" ${strings.project.singular}`}</Button>)
           }
 
-          {workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace) ? null : <Button
+          <Button
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 'var(--padding-sm)',
             }}
+            disabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
             onClick={() => setIsImportModalOpen(true)}
           >
             <i className="fa fa-file-import" />
             {`Import to the "${projectName}" ${strings.project.singular}`}
-          </Button>}
+          </Button>
 
           <Button
             style={{
