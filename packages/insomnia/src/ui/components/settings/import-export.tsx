@@ -3,12 +3,14 @@ import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { isLoggedIn } from '../../../account/session';
 import { getProductName } from '../../../common/constants';
 import { docsImportExport } from '../../../common/documentation';
 import { exportAllToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { isRequestGroup } from '../../../models/request-group';
+import { isScratchpad } from '../../../models/workspace';
 import { selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -63,8 +65,11 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         <p>
           Your format isn't supported? <Link href={docsImportExport}>Add Your Own</Link>.
         </p>
-        <div className="pad-top">
+        <div className="flex pt-4 gap-4">
           {workspaceData?.activeWorkspace ?
+            isScratchpad(workspaceData.activeWorkspace) ?
+              <Button onClick={showExportRequestsModal}>Export the "{activeWorkspaceName}" {getWorkspaceLabel(workspaceData.activeWorkspace).singular}</Button>
+              :
             (<Dropdown
               aria-label='Export Data Dropdown'
               triggerButton={
@@ -94,8 +99,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
               </DropdownSection>
             </Dropdown>) : (<Button onClick={handleExportAllToFile}>{`Export files from the "${projectName}" ${strings.project.singular}`}</Button>)
           }
-        &nbsp;&nbsp;
-          <Button
+
+          {workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace) ? null : <Button
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -105,11 +110,20 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           >
             <i className="fa fa-file-import" />
             {`Import to the "${projectName}" ${strings.project.singular}`}
-          </Button>
-        &nbsp;&nbsp;
-          <Link href="https://insomnia.rest/create-run-button" className="btn btn--compact" button>
+          </Button>}
+
+          <Button
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--padding-sm)',
+            }}
+            disabled={!isLoggedIn()}
+            onClick={() => window.main.openInBrowser('https://insomnia.rest/create-run-button')}
+          >
+            <i className="fa fa-file-import" />
             Create Run Button
-          </Link>
+          </Button>
         </div>
         <p className="italic faint">* Tip: You can also paste Curl commands into the URL bar</p>
       </div>

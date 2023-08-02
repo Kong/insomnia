@@ -63,14 +63,9 @@ export const AI = () => {
   return (
     <Fragment>
       <div
-        className="notice pad surprise"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
+        className="notice pad surprise flex flex-col items-center gap-2"
       >
-        <h1 className="no-margin-top">Try Insomnia AI <InsomniaAI /></h1>
+        <h1 className="mt-0 flex items-center gap-2 text-xl">Try Insomnia AI <InsomniaAI /></h1>
         <p>
           Improve your productivity with Insomnia AI and perform complex operations in 1-click, like auto-generating API tests for your documents and collections.
           <br />
