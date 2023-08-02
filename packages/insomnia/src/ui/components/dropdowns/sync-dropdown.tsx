@@ -132,7 +132,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   }, REFRESH_PERIOD);
 
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
-
+  const [isSyncDeleteModalOpen, setIsSyncDeleteModalOpen] = useState(false);
   useMount(async () => {
     setState(state => ({
       ...state,
@@ -588,7 +588,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               icon="remove"
               isDisabled={historyCount === 0}
               label={<>Delete {strings.collection.singular}</>}
-              onClick={() => showModal(SyncDeleteModal, { onHide: refreshVCSAndRefetchRemote })}
+              onClick={() => setIsSyncDeleteModalOpen(true)}
             />
           </DropdownItem>
         </DropdownSection>
@@ -675,6 +675,14 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       {isGitRepoSettingsModalOpen && (
         <GitRepositorySettingsModal
           onHide={() => setIsGitRepoSettingsModalOpen(false)}
+        />
+      )}
+      {isSyncDeleteModalOpen && (
+        <SyncDeleteModal
+          onHide={() => {
+            refreshVCSAndRefetchRemote();
+            setIsSyncDeleteModalOpen(false);
+          }}
         />
       )}
     </div>
