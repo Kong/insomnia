@@ -2,12 +2,12 @@ import fs from 'fs';
 import React, { FC, useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES, PreviewMode } from '../../../common/constants';
+import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import * as models from '../../../models';
 import { isRequest, Request } from '../../../models/request';
 import { RequestMeta } from '../../../models/request-meta';
-import { isResponse } from '../../../models/response';
+import { isResponse, Response } from '../../../models/response';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -21,12 +21,9 @@ export const PreviewModeDropdown: FC<Props> = ({
   download,
   copyToClipboard,
 }) => {
-  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta, any>;
+  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta, Response>;
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const patchRequestMeta = useRequestMetaPatcher();
-  const handleClick = async (previewMode: PreviewMode) => {
-    patchRequestMeta(activeRequest._id, { previewMode });
-  };
   const handleDownloadPrettify = useCallback(() => download(true), [download]);
 
   const handleDownloadNormal = useCallback(() => download(false), [download]);
@@ -88,7 +85,7 @@ export const PreviewModeDropdown: FC<Props> = ({
       });
     }
   }, [activeRequest, activeResponse]);
-  const shouldPrettifyOption = activeResponse.contentType.includes('json');
+  const shouldPrettifyOption = activeResponse?.contentType.includes('json');
 
   return (
     <Dropdown
@@ -112,7 +109,7 @@ export const PreviewModeDropdown: FC<Props> = ({
             <ItemContent
               icon={previewMode === mode ? 'check' : 'empty'}
               label={getPreviewModeName(mode, true)}
-              onClick={() => handleClick(mode)}
+              onClick={() => patchRequestMeta(activeRequest._id, { previewMode: mode })}
             />
           </DropdownItem>
         )}

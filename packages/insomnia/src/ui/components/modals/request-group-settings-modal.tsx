@@ -23,7 +23,6 @@ interface State {
 }
 export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps & {
   requestGroup: RequestGroup;
-  forceEditMode?: boolean;
 }) => {
   const modalRef = useRef<ModalHandle>(null);
   const editorRef = useRef<CodeEditorHandle>(null);

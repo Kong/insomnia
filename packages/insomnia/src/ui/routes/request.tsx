@@ -7,7 +7,7 @@ import { CookieJar } from '../../models/cookie-jar';
 import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestHeader, RequestParameter } from '../../models/request';
+import { isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestHeader } from '../../models/request';
 import { RequestMeta } from '../../models/request-meta';
 import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
