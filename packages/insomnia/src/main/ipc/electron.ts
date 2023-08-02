@@ -1,8 +1,12 @@
 import type { MenuItemConstructorOptions, OpenDialogOptions, SaveDialogOptions } from 'electron';
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron';
 
+import { fnOrString } from '../../common/misc';
+import { localTemplateTags } from '../../ui/components/templating/local-template-tags';
+
 export function registerElectronHandlers() {
   ipcMain.on('show-context-menu', event => {
+    try {
     const template: MenuItemConstructorOptions[] = [
       {
         role: 'cut',
@@ -21,10 +25,20 @@ export function registerElectronHandlers() {
         },
       },
       { type: 'separator' },
-      { label: 'Menu Item 2', type: 'checkbox', checked: true },
+      ...localTemplateTags.map(l => {
+        const r = {
+          label: fnOrString(l.templateTag.displayName),
+          submenu: l.templateTag.args?.[0]?.options?.map(s => ({ label: fnOrString(s.displayName) })) || [],
+        };
+        return r;
+      }),
+
     ];
     const menu = Menu.buildFromTemplate(template);
     menu.popup({ window: BrowserWindow.fromWebContents(event.sender) });
+    } catch (e) {
+      console.error(e);
+    }
   });
   ipcMain.on('setMenuBarVisibility', (_, visible: boolean) => {
     BrowserWindow.getAllWindows()
