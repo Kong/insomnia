@@ -679,6 +679,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       )}
       {isSyncDeleteModalOpen && (
         <SyncDeleteModal
+          vcs={vcs}
           onHide={() => {
             refreshVCSAndRefetchRemote();
             setIsSyncDeleteModalOpen(false);

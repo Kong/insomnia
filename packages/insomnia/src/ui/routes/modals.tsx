@@ -103,10 +103,6 @@ const Modals: FC = () => {
               ref={instance => registerModal(instance, 'SyncBranchesModal')}
               vcs={vcs}
             />
-            <SyncDeleteModal
-              ref={instance => registerModal(instance, 'SyncDeleteModal')}
-              vcs={vcs}
-            />
             <SyncHistoryModal
               ref={instance => registerModal(instance, 'SyncHistoryModal')}
               vcs={vcs}
