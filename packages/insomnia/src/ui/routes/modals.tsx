@@ -20,7 +20,6 @@ import { ResponseDebugModal } from '../components/modals/response-debug-modal';
 import { SelectModal } from '../components/modals/select-modal';
 import { SettingsModal } from '../components/modals/settings-modal';
 import { SyncBranchesModal } from '../components/modals/sync-branches-modal';
-import { SyncDeleteModal } from '../components/modals/sync-delete-modal';
 import { SyncHistoryModal } from '../components/modals/sync-history-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { SyncStagingModal } from '../components/modals/sync-staging-modal';
