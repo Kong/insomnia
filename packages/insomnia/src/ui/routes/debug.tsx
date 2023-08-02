@@ -18,7 +18,7 @@ import { ErrorBoundary } from '../components/error-boundary';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
-import { CookiesModal, showCookiesModal } from '../components/modals/cookies-modal';
+import { CookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
@@ -72,6 +72,7 @@ export const Debug: FC = () => {
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>([]);
+  const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
@@ -217,8 +218,7 @@ export const Debug: FC = () => {
       () => { },
     environment_showEditor:
       () => showModal(WorkspaceEnvironmentsEditModal),
-    showCookiesEditor:
-      () => showModal(CookiesModal),
+    showCookiesEditor: () => setIsCookieModalOpen(true),
     request_showGenerateCodeEditor:
       () => {
         if (activeRequest && isRequest(activeRequest)) {
@@ -242,12 +242,17 @@ export const Debug: FC = () => {
             activeEnvironment={activeEnvironment}
             workspaceId={workspaceId}
           />
-          <button className="btn btn--super-compact" onClick={showCookiesModal}>
+          <button className="btn btn--super-compact" onClick={() => setIsCookieModalOpen(true)}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
             </div>
           </button>
         </div>
+        {isCookieModalOpen && (
+          <CookiesModal
+            onHide={() => setIsCookieModalOpen(false)}
+          />
+        )}
 
         <SidebarFilter
           key={`${workspaceId}::filter`}

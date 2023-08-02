@@ -1,7 +1,7 @@
-import React, { FC } from 'react';
+import React, { FC, useState } from 'react';
 import { Cookie } from 'tough-cookie';
 
-import { showCookiesModal } from '../modals/cookies-modal';
+import { CookiesModal } from '../modals/cookies-modal';
 
 interface Props {
   cookiesSent?: boolean | null;
@@ -10,6 +10,7 @@ interface Props {
 }
 
 export const ResponseCookiesViewer: FC<Props> = props => {
+  const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const renderRow = (h: any, i: number) => {
     let cookie: Cookie | undefined | null = null;
 
@@ -59,9 +60,14 @@ export const ResponseCookiesViewer: FC<Props> = props => {
       <tbody>{!headers.length ? renderRow(null, -1) : headers.map(renderRow)}</tbody>
     </table>
     <p className="pad-top">
-      <button className="pull-right btn btn--clicky" onClick={showCookiesModal}>
+      <button className="pull-right btn btn--clicky" onClick={() => setIsCookieModalOpen(true)}>
         Manage Cookies
       </button>
     </p>
+    {isCookieModalOpen && (
+      <CookiesModal
+        onHide={() => setIsCookieModalOpen(false)}
+      />
+    )}
   </div>;
 };

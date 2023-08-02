@@ -7,8 +7,6 @@ import { AddKeyCombinationModal } from '../components/modals/add-key-combination
 import { AlertModal } from '../components/modals/alert-modal';
 import { AskModal } from '../components/modals/ask-modal';
 import { CodePromptModal } from '../components/modals/code-prompt-modal';
-import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
-import { CookiesModal } from '../components/modals/cookies-modal';
 import { EnvironmentEditModal } from '../components/modals/environment-edit-modal';
 import { ErrorModal } from '../components/modals/error-modal';
 import { FilterHelpModal } from '../components/modals/filter-help-modal';
@@ -33,7 +31,7 @@ import { WorkspaceLoaderData } from './workspace';
 
 const Modals: FC = () => {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
-  const { activeWorkspace, activeEnvironment, activeCookieJar } = workspaceData || {};
+  const { activeWorkspace, activeEnvironment } = workspaceData || {};
   const vcs = useVCS({
     workspaceId: activeWorkspace?._id,
   });
@@ -70,19 +68,6 @@ const Modals: FC = () => {
 
         {activeWorkspace ? (
           <>
-            {/* TODO: Figure out why cookieJar is sometimes null */}
-            {activeCookieJar ? (
-              <>
-                <CookiesModal
-                  ref={instance => registerModal(instance, 'CookiesModal')}
-                />
-                <CookieModifyModal
-                  ref={instance =>
-                    registerModal(instance, 'CookieModifyModal')
-                  }
-                />
-              </>
-            ) : null}
             <NunjucksModal
               ref={instance => registerModal(instance, 'NunjucksModal')}
               workspace={activeWorkspace}
