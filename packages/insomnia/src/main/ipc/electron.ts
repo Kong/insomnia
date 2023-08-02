@@ -5,6 +5,16 @@ export function registerElectronHandlers() {
   ipcMain.on('show-context-menu', event => {
     const template: MenuItemConstructorOptions[] = [
       {
+        role: 'cut',
+      },
+      {
+        role: 'copy',
+      },
+      {
+        role: 'paste',
+      },
+      { type: 'separator' },
+      {
         label: 'Menu Item 1',
         click: () => {
           event.sender.send('context-menu-command', 'menu-item-1');
