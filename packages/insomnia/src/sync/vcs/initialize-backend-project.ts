@@ -1,12 +1,17 @@
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
+import { BaseModel, canSync } from '../../models';
 import { Project } from '../../models/project';
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { VCS } from './vcs';
 
 const blankStage = {};
+export const getStatusCandidates = (docs: BaseModel[]) => docs.filter(canSync).map((doc: BaseModel): StatusCandidate => ({
+  key: doc._id,
+  name: doc.name || '',
+  document: doc,
+}));
 
 export const initializeLocalBackendProjectAndMarkForSync = async ({ vcs, workspace }: { vcs: VCS; workspace: Workspace }) => {
   // Create local project

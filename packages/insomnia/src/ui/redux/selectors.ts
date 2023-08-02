@@ -1,10 +1,10 @@
 import { createSelector } from 'reselect';
 import type { ValueOf } from 'type-fest';
 
-import { BaseModel } from '../../models';
-import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
+import { BaseModel, canSync } from '../../models';
 import { DEFAULT_PROJECT_ID } from '../../models/project';
 import { isRequest } from '../../models/request';
+import { StatusCandidate } from '../../sync/types';
 import { RootState } from './modules';
 
 type EntitiesLists = {
@@ -90,5 +90,9 @@ const selectActiveWorkspaceEntities = createSelector(
 // sync dropdown, branches, history and staging
 export const selectSyncItems = createSelector(
   selectActiveWorkspaceEntities,
-  getStatusCandidates,
+  (docs: BaseModel[]) => docs.filter(canSync).map((doc: BaseModel): StatusCandidate => ({
+    key: doc._id,
+    name: doc.name || '',
+    document: doc,
+  })),
 );
