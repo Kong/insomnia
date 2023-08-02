@@ -21,6 +21,7 @@ import {
 import { database } from '../common/database';
 import { initializeLogging } from '../common/log';
 import * as models from '../models';
+import { DEFAULT_PROJECT_ID } from '../models/project';
 import { initNewOAuthSession } from '../network/o-auth-2/get-token';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
@@ -546,7 +547,7 @@ const router = createMemoryRouter(
     },
   ],
   {
-    initialEntries: ['/organization'],
+    initialEntries: [`/organization/${DEFAULT_PROJECT_ID}/project/${DEFAULT_PROJECT_ID}/workspace/wrk_scratchpad/debug`],
   }
 );
 
@@ -633,8 +634,10 @@ function updateReduxNavigationState(store: Store, pathname: string) {
 }
 
 async function renderApp() {
+  // Create Redux store
+  const store = await initStore();
   await database.initClient();
-
+  await models.project.seed();
   await initPlugins();
 
   const settings = await models.settings.getOrCreate();
@@ -645,8 +648,6 @@ async function renderApp() {
 
   await applyColorScheme(settings);
 
-  // Create Redux store
-  const store = await initStore();
   // Synchronizes the Redux store with the router history
   // @HACK: This is temporary until we completely remove navigation through Redux
   const synchronizeRouterState = () => {

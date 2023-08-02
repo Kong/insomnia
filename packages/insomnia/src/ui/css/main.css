@@ -823,9 +823,6 @@ a {
   font-weight: 600 !important;
   text-decoration: none;
 }
-a:not(.a--nocolor) {
-  color: var(--color-surprise);
-}
 a:hover {
   text-decoration: underline;
 }

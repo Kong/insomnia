@@ -1,6 +1,7 @@
 import React from 'react';
-import { ActionFunction, Form, redirect } from 'react-router-dom';
+import { ActionFunction, Form, Link, redirect } from 'react-router-dom';
 
+import { DEFAULT_PROJECT_ID } from '../../models/project';
 import { getLoginUrl } from '../auth-session-provider';
 import { Button } from '../components/themed-button';
 
@@ -44,173 +45,189 @@ export const action: ActionFunction = async ({
   return redirect('/auth/authorize');
 };
 
-const Login = () => {
-  return (
-    <Form
+const Login = () => (
+  <Form
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 'var(--padding-md)',
+    }}
+    method="POST"
+  >
+    <p
+      style={{
+        textAlign: 'center',
+        color: 'var(--color-font)',
+        fontSize: 'var(--font-size-xl)',
+        padding: '0 var(--padding-md)',
+      }}
+    >
+      Welcome to Insomnia
+    </p>
+    <Button
+      name="provider"
+      variant='outlined'
+      size="medium"
+      type="submit"
+      value="google"
+      style={{
+        width: '100%',
+        padding: 0,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          width: '100%',
+          height: '100%',
+          gap: 'var(--padding-md)',
+        }}
+      >
+        <div
+          style={{
+            width: '40px',
+            height: '100%',
+            borderRight: '1px solid var(--hl-sm)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'var(--hl-xs)',
+          }}
+        >
+          <GoogleIcon width="1em" />
+        </div>
+        <span>
+          Continue with Google
+        </span>
+      </div>
+    </Button>
+    <Button
+      name="provider"
+      value="github"
+      variant='outlined'
+      size="medium"
+      type="submit"
+      style={{
+        width: '100%',
+        padding: 0,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          width: '100%',
+          height: '100%',
+          gap: 'var(--padding-md)',
+        }}
+      >
+        <div
+          style={{
+            width: '40px',
+            height: '100%',
+            borderRight: '1px solid var(--hl-sm)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'var(--hl-xs)',
+          }}
+        >
+          <i className='fa fa-github' />
+        </div>
+        <span>
+          Continue with GitHub
+        </span>
+      </div>
+    </Button>
+    <Button
+      name="provider"
+      value="email"
+      variant='outlined'
+      size="medium"
+      type="submit"
+      style={{
+        width: '100%',
+        padding: 0,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          width: '100%',
+          height: '100%',
+          gap: 'var(--padding-md)',
+        }}
+      >
+        <div
+          style={{
+            width: '40px',
+            height: '100%',
+            borderRight: '1px solid var(--hl-sm)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'var(--hl-xs)',
+          }}
+        >
+          <i className='fa fa-envelope' />
+        </div>
+        <span>
+          Continue with Email
+        </span>
+      </div>
+    </Button>
+
+    <Link
+      to={`/organization/${DEFAULT_PROJECT_ID}/project/${DEFAULT_PROJECT_ID}/workspace/wrk_scratchpad/debug`}
       style={{
         display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--padding-md)',
+        justifyContent: 'center',
+        color: 'var(--color-font)',
+        gap: 'var(--padding-xs)',
+        paddingTop: '2rem',
       }}
-      method="POST"
     >
-      <p
-        style={{
-          textAlign: 'center',
-          color: 'var(--color-font)',
-          fontSize: 'var(--font-size-xl)',
-          padding: '0 var(--padding-md)',
-        }}
-      >
-        Welcome to Insomnia
-      </p>
-      <Button
-        name="provider"
-        variant='outlined'
-        size="medium"
-        type="submit"
-        value="google"
-        style={{
-          width: '100%',
-          padding: 0,
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            width: '100%',
-            height: '100%',
-            gap: 'var(--padding-md)',
-          }}
-        >
-          <div
-            style={{
-              width: '40px',
-              height: '100%',
-              borderRight: '1px solid var(--hl-sm)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'var(--hl-xs)',
-            }}
-          >
-            <GoogleIcon width="1em" />
-          </div>
-          <span>
-            Continue with Google
-          </span>
-        </div>
-      </Button>
-      <Button
-        name="provider"
-        value="github"
-        variant='outlined'
-        size="medium"
-        type="submit"
-        style={{
-          width: '100%',
-          padding: 0,
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            width: '100%',
-            height: '100%',
-            gap: 'var(--padding-md)',
-          }}
-        >
-          <div
-            style={{
-              width: '40px',
-              height: '100%',
-              borderRight: '1px solid var(--hl-sm)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'var(--hl-xs)',
-            }}
-          >
-            <i className='fa fa-github' />
-          </div>
-          <span>
-            Continue with GitHub
-          </span>
-        </div>
-      </Button>
-      <Button
-        name="provider"
-        value="email"
-        variant='outlined'
-        size="medium"
-        type="submit"
-        style={{
-          width: '100%',
-          padding: 0,
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            width: '100%',
-            height: '100%',
-            gap: 'var(--padding-md)',
-          }}
-        >
-          <div
-            style={{
-              width: '40px',
-              height: '100%',
-              borderRight: '1px solid var(--hl-sm)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'var(--hl-xs)',
-            }}
-          >
-            <i className='fa fa-envelope' />
-          </div>
-          <span>
-            Continue with Email
-          </span>
-        </div>
-      </Button>
-      <p
+      <div>
+        <i className='fa fa-edit' />
+      </div>
+      <span>
+        Or continue to Scratch Pad
+      </span>
+    </Link>
+    <p
+      style={{
+        color: 'rgba(var(--color-font-rgb), 0.8)',
+        fontSize: 'var(--font-size-sm)',
+        textAlign: 'center',
+      }}
+    >
+      By signing up, you agree to the{' '}
+      <a
         style={{
           color: 'rgba(var(--color-font-rgb), 0.8)',
-          fontSize: 'var(--font-size-sm)',
-          textAlign: 'center',
         }}
+        target="_blank"
+        href="https://insomnia.rest/terms"
+        rel="noreferrer"
       >
-        By signing up, you agree to the{' '}
-        <a
-          style={{
-            color: 'rgba(var(--color-font-rgb), 0.8)',
-          }}
-          target="_blank"
-          href="https://insomnia.rest/terms"
-          rel="noreferrer"
-        >
-          Terms of Service
-        </a>{' '}
-        and{' '}
-        <a
-          style={{
-            color: 'rgba(var(--color-font-rgb), 0.8)',
-          }}
-          target="_blank"
-          href="https://insomnia.rest/privacy"
-          rel="noreferrer"
-        >
-          Privacy Policy agreement
-        </a>
-        .
-      </p>
-    </Form>
-  );
-};
+        Terms of Service
+      </a>{' '}
+      and{' '}
+      <a
+        style={{
+          color: 'rgba(var(--color-font-rgb), 0.8)',
+        }}
+        target="_blank"
+        href="https://insomnia.rest/privacy"
+        rel="noreferrer"
+      >
+        Privacy Policy agreement
+      </a>
+      .
+    </p>
+  </Form>
+);
 
 export default Login;

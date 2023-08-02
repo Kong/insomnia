@@ -24,7 +24,7 @@ import {
 import { Item, ListProps, ListState, useListState } from 'react-stately';
 import styled from 'styled-components';
 
-import { getAccountId, getCurrentSessionId } from '../../account/session';
+import { getCurrentSessionId } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   ACTIVITY_DEBUG,
@@ -48,6 +48,7 @@ import {
 } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
+import { Team } from '../../sync/types';
 import { invariant } from '../../utils/invariant';
 import {
   Dropdown,
@@ -88,7 +89,7 @@ async function getAllTeamProjects(teamId: string) {
     sessionId,
   });
 
-  return response.data;
+  return response.data as Team[];
 }
 
 const StyledDropdownButton = styled(DropdownButton).attrs({
@@ -442,7 +443,6 @@ const OrganizationProjectsSidebar: FC<{
 
       <ProjectListContainer>
         <List
-          aria-label="files-list"
           key="files-list"
           aria-label='Files List'
           selectionMode="single"
