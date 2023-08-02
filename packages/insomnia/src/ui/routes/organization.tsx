@@ -1,7 +1,6 @@
 import { IpcRendererEvent } from 'electron';
 import React, { Fragment, useEffect, useState } from 'react';
 import { Link, LoaderFunction, Outlet, redirect, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
-import styled from 'styled-components';
 
 import { getCurrentSessionId, isLoggedIn } from '../../account/session';
 import { isDevelopment } from '../../common/constants';
@@ -388,7 +387,7 @@ const OrganizationRoute = () => {
                   <div className='flex items-center [grid-area:Banner] text-white bg-gradient-to-r from-[#7400e1] to-[#4000bf]'>
                     <div className='flex basis-[50px] h-full'>
                       <div
-                        className='border-r-[--hl-xl] border-r border-l border-l-[--hl-xl] box-border flex items-center justify-center w-full h-full'
+                        className='border-solid border-r-[--hl-xl] border-r border-l border-l-[--hl-xl] box-border flex items-center justify-center w-full h-full'
                       >
                         <i className="fa fa-edit" />
                       </div>
