@@ -62,6 +62,7 @@ const main: Window['main'] = {
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   axiosRequest: options => ipcRenderer.invoke('axiosRequest', options),
   insomniaFetch: options => ipcRenderer.invoke('insomniaFetch', options),
+  showContentMenu: () => ipcRenderer.send('show-context-menu'),
 };
 const dialog: Window['dialog'] = {
   showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),
