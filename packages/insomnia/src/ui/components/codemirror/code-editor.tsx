@@ -523,6 +523,10 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       style={style}
       data-editor-type="text"
       data-testid="CodeEditor"
+      onContextMenu={event => {
+        event.preventDefault();
+        window.main.showContentMenu();
+      }}
     >
       <div
         className={classnames('editor__container', 'input', className)}

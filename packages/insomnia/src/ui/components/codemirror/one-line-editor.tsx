@@ -212,6 +212,10 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       })}
       data-editor-type={type || 'text'}
       data-testid="OneLineEditor"
+      onContextMenu={event => {
+        event.preventDefault();
+        window.main.showContentMenu();
+      }}
     >
       <div className="editor__container input editor--single-line">
         <textarea
