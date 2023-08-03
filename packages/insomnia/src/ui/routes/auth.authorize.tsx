@@ -19,6 +19,7 @@ export const action: ActionFunction = async ({
   await submitAuthCode(data.code);
 
   console.log('Login successful');
+  window.localStorage.setItem('hasLoggedIn', 'true');
 
   const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
   await migrateCollectionsIntoRemoteProject(new VCS(driver));

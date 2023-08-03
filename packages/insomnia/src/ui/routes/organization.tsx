@@ -338,6 +338,8 @@ const OrganizationRoute = () => {
 
   const navigate = useNavigate();
 
+  const isScratchpadWorkspace = workspaceData?.activeWorkspace && isScratchpad(workspaceData.activeWorkspace);
+
   return (
     <PresenceProvider>
       <AIProvider>
@@ -355,7 +357,7 @@ const OrganizationRoute = () => {
                 />
               )}
               <Modals />
-              <div className={`relative h-full w-full grid ${isLoggedIn() ? 'app-grid-template-with-banner' : 'app-grid-template'}`}>
+              <div className={`relative h-full w-full grid ${isScratchpadWorkspace ? 'app-grid-template-with-banner' : 'app-grid-template'}`}>
                 <OrganizationsNav />
                 <AppHeader
                   gridCenter={
@@ -383,7 +385,7 @@ const OrganizationRoute = () => {
                   )
                   }
                 />
-                {workspaceData?.activeWorkspace && isScratchpad(workspaceData.activeWorkspace) ? (
+                {isScratchpadWorkspace ? (
                   <div className='flex items-center [grid-area:Banner] text-white bg-gradient-to-r from-[#7400e1] to-[#4000bf]'>
                     <div className='flex basis-[50px] h-full'>
                       <div

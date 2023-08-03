@@ -11,7 +11,6 @@
 .app-grid-template {
   grid-template:
     'Header Header' auto
-    'Banner Banner' 30px
     'Navbar Content' 1fr
     'Statusbar Statusbar' 30px [row-end]
     / 50px 1fr;
@@ -20,6 +19,7 @@
 .app-grid-template-with-banner {
   grid-template: 
     'Header Header' auto
+    'Banner Banner' 30px
     'Navbar Content' 1fr
     'Statusbar Statusbar' 30px [row-end]
     / 50px 1fr;

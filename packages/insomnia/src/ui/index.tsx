@@ -10,6 +10,7 @@ import {
 } from 'react-router-dom';
 import { Store } from 'redux';
 
+import { isLoggedIn } from '../account/session';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
@@ -51,6 +52,19 @@ initializeLogging();
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
+
+let initialEntry = isLoggedIn() ? '/organization' : `/organization/${DEFAULT_PROJECT_ID}/project/${DEFAULT_PROJECT_ID}/workspace/wrk_scratchpad/debug`;
+
+try {
+  const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
+
+  if (hasUserLoggedInBefore) {
+    initialEntry = '/auth/login';
+  }
+
+} catch (e) {
+  console.log('User has not logged in before.');
+}
 
 const router = createMemoryRouter(
   // @TODO - Investigate file based routing to generate these routes:
@@ -547,7 +561,7 @@ const router = createMemoryRouter(
     },
   ],
   {
-    initialEntries: [`/organization/${DEFAULT_PROJECT_ID}/project/${DEFAULT_PROJECT_ID}/workspace/wrk_scratchpad/debug`],
+    initialEntries: [initialEntry],
   }
 );
 
