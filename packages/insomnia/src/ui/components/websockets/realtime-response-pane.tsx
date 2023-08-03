@@ -10,7 +10,7 @@ import { WebSocketEvent } from '../../../main/network/websocket';
 import { Response } from '../../../models/response';
 import { WebSocketResponse } from '../../../models/websocket-response';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
-import { RequestLoaderData } from '../../routes/request';
+import { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
@@ -85,7 +85,7 @@ const PaddedButton = styled('button')({
 });
 
 export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
-  const { activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData<any, any, any>;
+  const { activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData | WebSocketRequestLoaderData;
 
   if (!activeResponse) {
     return (
@@ -176,7 +176,6 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
         </div>
         <ResponseHistoryDropdown
           activeResponse={response}
-          className="tall pane__header__right"
         />
       </PaneHeader>
       <Tabs aria-label="Curl response pane tabs">

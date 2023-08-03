@@ -17,14 +17,29 @@ import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
 
-export interface RequestLoaderData<Req, Meta, Res> {
-  activeRequest: Req;
-  activeRequestMeta: Meta;
-  activeResponse: Res | null;
-  responses: Res[];
+export interface WebSocketRequestLoaderData {
+  activeRequest: WebSocketRequest;
+  activeRequestMeta: RequestMeta;
+  activeResponse: WebSocketResponse | null;
+  responses: WebSocketResponse[];
   requestVersions: RequestVersion[];
 }
-export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData<Request | WebSocketRequest | GrpcRequest, RequestMeta | GrpcRequestMeta, Response | WebSocketResponse>> => {
+export interface GrpcRequestLoaderData {
+  activeRequest: GrpcRequest;
+  activeRequestMeta: GrpcRequestMeta;
+  activeResponse: null;
+  responses: [];
+  requestVersions: RequestVersion[];
+}
+export interface RequestLoaderData {
+  activeRequest: Request;
+  activeRequestMeta: RequestMeta;
+  activeResponse: Response | null;
+  responses: Response[];
+  requestVersions: RequestVersion[];
+}
+
+export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData | WebSocketRequestLoaderData | GrpcRequestLoaderData> => {
   const { requestId, workspaceId } = params;
   invariant(requestId, 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');
@@ -41,7 +56,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
       activeResponse: null,
       responses: [],
       requestVersions: [],
-    };
+    } as GrpcRequestLoaderData;
   }
   const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
   invariant(activeRequestMeta, 'Request meta not found');
@@ -63,7 +78,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     activeResponse,
     responses,
     requestVersions: await models.requestVersion.findByParentId(requestId),
-  };
+  } as RequestLoaderData | WebSocketRequestLoaderData;
 };
 
 export const createRequestAction: ActionFunction = async ({ request, params }) => {

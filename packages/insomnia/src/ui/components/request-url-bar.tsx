@@ -12,8 +12,7 @@ import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../common/render';
 import * as models from '../../models';
-import { isEventStreamRequest, isRequest, Request } from '../../models/request';
-import { RequestMeta } from '../../models/request-meta';
+import { isEventStreamRequest, isRequest } from '../../models/request';
 import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
@@ -69,7 +68,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { hotKeyRegistry } = settings;
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta, any>;
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const downloadPath = activeRequestMeta.downloadPath;
   const patchRequestMeta = useRequestMetaPatcher();
   const methodDropdownRef = useRef<DropdownHandle>(null);

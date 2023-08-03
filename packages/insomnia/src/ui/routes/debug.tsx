@@ -6,11 +6,11 @@ import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
-import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
-import { isEventStreamRequest, isRequest, isRequestId, Request } from '../../models/request';
+import { isEventStreamRequest, isRequest, isRequestId } from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
-import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
+import { isWebSocketRequest, isWebSocketRequestId } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
@@ -32,7 +32,7 @@ import { SidebarLayout } from '../components/sidebar-layout';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { useRequestMetaPatcher } from '../hooks/use-request';
-import { RequestLoaderData } from './request';
+import { GrpcRequestLoaderData, RequestLoaderData, WebSocketRequestLoaderData } from './request';
 import { RootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 export interface GrpcMessage {
@@ -82,7 +82,7 @@ export const Debug: FC = () => {
     activeEnvironment,
     grpcRequests,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | GrpcRequest | WebSocketRequest, any, any> | undefined;
+  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData | GrpcRequestLoaderData | WebSocketRequestLoaderData | undefined;
   const { activeRequest } = requestData || {};
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };

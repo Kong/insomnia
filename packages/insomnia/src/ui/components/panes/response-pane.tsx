@@ -6,9 +6,6 @@ import { useRouteLoaderData } from 'react-router-dom';
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
-import type { Request } from '../../../models/request';
-import type { RequestMeta } from '../../../models/request-meta';
-import type { Response } from '../../../models/response';
 import { cancelRequestById } from '../../../network/cancellation';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
@@ -37,7 +34,7 @@ interface Props {
 export const ResponsePane: FC<Props> = ({
   runningRequests,
 }) => {
-  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta, Response>;
+  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
   const filter = activeRequestMeta.responseFilter || '';
   const patchRequestMeta = useRequestMetaPatcher();
@@ -149,7 +146,6 @@ export const ResponsePane: FC<Props> = ({
           </div>
           <ResponseHistoryDropdown
             activeResponse={activeResponse}
-            className="tall pane__header__right"
           />
         </PaneHeader>
       )}

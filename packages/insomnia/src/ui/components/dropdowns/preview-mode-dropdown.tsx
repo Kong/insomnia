@@ -5,9 +5,8 @@ import { useRouteLoaderData } from 'react-router-dom';
 import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import * as models from '../../../models';
-import { isRequest, Request } from '../../../models/request';
-import { RequestMeta } from '../../../models/request-meta';
-import { isResponse, Response } from '../../../models/response';
+import { isRequest } from '../../../models/request';
+import { isResponse } from '../../../models/response';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
 import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -21,7 +20,7 @@ export const PreviewModeDropdown: FC<Props> = ({
   download,
   copyToClipboard,
 }) => {
-  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta, Response>;
+  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const patchRequestMeta = useRequestMetaPatcher();
   const handleDownloadPrettify = useCallback(() => download(true), [download]);

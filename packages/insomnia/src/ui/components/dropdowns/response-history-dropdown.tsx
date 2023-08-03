@@ -10,7 +10,7 @@ import { Response } from '../../../models/response';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import { RequestLoaderData } from '../../routes/request';
+import { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -19,15 +19,10 @@ import { StatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
 import { URLTag } from '../tags/url-tag';
 import { TimeFromNow } from '../time-from-now';
-interface Props<GenericResponse extends Response | WebSocketResponse> {
-  activeResponse: GenericResponse;
-  className?: string;
-}
 
-export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSocketResponse>({
+export const ResponseHistoryDropdown = ({
   activeResponse,
-  className,
-}: Props<GenericResponse>) => {
+}: { activeResponse: Response | WebSocketResponse }) => {
   const { requestId } = useParams() as { requestId: string };
   const dropdownRef = useRef<DropdownHandle>(null);
   const patchRequestMeta = useRequestMetaPatcher();
@@ -37,9 +32,9 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   const {
     responses,
     requestVersions,
-  } = useRouteLoaderData('request/:requestId') as RequestLoaderData<any, any, GenericResponse>;
+  } = useRouteLoaderData('request/:requestId') as RequestLoaderData | WebSocketRequestLoaderData;
   const now = new Date();
-  const categories: Record<string, GenericResponse[]> = {
+  const categories: Record<string, (Response | WebSocketResponse)[]> = {
     minutes: [],
     hours: [],
     today: [],
@@ -91,33 +86,19 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
     }
   }, [activeEnvironment?._id, activeResponse, requestId, patchRequestMeta]);
 
-  responses.forEach((response: GenericResponse) => {
+  responses.forEach((response: Response | WebSocketResponse) => {
     const responseTime = new Date(response.created);
-
-    if (differenceInMinutes(now, responseTime) < 5) {
-      categories.minutes.push(response);
-      return;
-    }
-
-    if (differenceInHours(now, responseTime) < 2) {
-      categories.hours.push(response);
-      return;
-    }
-
-    if (isToday(responseTime)) {
-      categories.today.push(response);
-      return;
-    }
-
-    if (isThisWeek(responseTime)) {
-      categories.week.push(response);
-      return;
-    }
-
-    categories.other.push(response);
+    const match = Object.entries({
+      'minutes': differenceInMinutes(now, responseTime) < 5,
+      'hours': differenceInHours(now, responseTime) < 2,
+      'today': isToday(responseTime),
+      'week': isThisWeek(responseTime),
+      'other': true,
+    }).find(([, value]) => value === true)?.[0] || 'other';
+    categories[match].push(response);
   });
 
-  const renderResponseRow = (response: GenericResponse) => {
+  const renderResponseRow = (response: Response | WebSocketResponse) => {
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
     const requestVersion = requestVersions.find(({ _id }) => _id === response.requestVersionId);
@@ -180,7 +161,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
       aria-label="Response history dropdown"
       key={activeResponse ? activeResponse._id : 'n/a'}
       closeOnSelect={false}
-      className={className}
+      className="tall pane__header__right"
       triggerButton={
         <DropdownButton className="btn btn--super-compact tall" title="Response history">
           {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}
