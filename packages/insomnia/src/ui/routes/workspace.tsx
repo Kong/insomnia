@@ -43,7 +43,9 @@ export interface Child {
   hidden: boolean;
   pinned: boolean;
 }
-
+type RequestCollection = RequestGroup & {
+  children: (Request | WebSocketRequest | GrpcRequest | (RequestGroup & RequestCollection))[];
+};
 export const workspaceLoader: LoaderFunction = async ({
   params,
 }): Promise<WorkspaceLoaderData> => {
@@ -82,6 +84,7 @@ export const workspaceLoader: LoaderFunction = async ({
 
   const activeApiSpec = await models.apiSpec.getByParentId(workspaceId);
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+
   const allProjects = await models.project.all();
 
   const organizationProjects =
@@ -90,31 +93,31 @@ export const workspaceLoader: LoaderFunction = async ({
       : [activeProject];
 
   const projects = sortProjects(organizationProjects);
-  const requestsAndFolders = (await database.withDescendants(activeWorkspace)).filter(d => isRequest(d) || isWebSocketRequest(d) || isGrpcRequest(d) || isRequestGroup(d)) as (Request | WebSocketRequest | GrpcRequest)[];
   const requestMetas = await models.requestMeta.all();
   const grpcRequestMetas = await models.grpcRequestMeta.all();
-  const metas = [...requestMetas, ...grpcRequestMetas].filter(m => requestsAndFolders.map(r => r._id).includes(m.parentId)).map(m => ({ parentId: m.parentId, pinned: m.pinned }));
-  const folderMetas = (await models.requestGroupMeta.all()).filter(m => requestsAndFolders.map(r => r._id).includes(m.parentId)).map(m => ({ parentId: m.parentId, collapsed: m.collapsed }));
-  function nextTreeNode(parentId: string): Child[] {
-    return requestsAndFolders.filter(r => r.parentId === parentId)
-      .filter((model: BaseModel) => isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model) || isRequestGroup(model))
-      .sort((a: Child['doc'], b: Child['doc']): number => {
-        // NOTE: legacy, make this better
-        if (a.metaSortKey === b.metaSortKey) {
-          return a._id > b._id ? -1 : 1; // ascending ids?
-        } else {
-          return a.metaSortKey < b.metaSortKey ? -1 : 1; // descending sort keys?
-        }
-      }).map((doc: Child['doc']) => ({
-        doc,
-        pinned: metas.find(m => m.parentId === doc._id)?.pinned || false,
-        collapsed: folderMetas.find(m => m.parentId === doc._id)?.collapsed || false,
-        hidden: false,
-        children: isRequestGroup(doc) ? nextTreeNode(doc._id) : [],
-      }));
-  }
-  const requestTree = nextTreeNode(activeWorkspace._id);
-  const grpcRequests = requestsAndFolders.filter(r => isGrpcRequest(r)) as GrpcRequest[];
+  const metas = [...requestMetas, ...grpcRequestMetas];
+  const folderMetas = (await models.requestGroupMeta.all());
+  const grpcRequestList: GrpcRequest[] = [];
+  const recurse = async ({ parentId }: { parentId: string }): Promise<Child[]> => {
+    const folders = await models.requestGroup.findByParentId(parentId);
+    const requests = await models.request.findByParentId(parentId);
+    const webSocketRequests = await models.webSocketRequest.findByParentId(parentId);
+    const grpcRequests = await models.grpcRequest.findByParentId(parentId);
+    // TODO: remove this state hack when the grpc responses go somewhere else
+    grpcRequests.map(r => grpcRequestList.push(r));
+
+    const childrenWithChildren = await Promise.all([...folders, ...requests, ...webSocketRequests, ...grpcRequests].map(async doc => ({
+      doc,
+      pinned: metas.find(m => m.parentId === doc._id)?.pinned || false,
+      collapsed: folderMetas.find(m => m.parentId === doc._id)?.collapsed || false,
+      hidden: false,
+      children: await recurse({ parentId: doc._id }),
+    })));
+    return childrenWithChildren;
+  };
+  const requestTree = await recurse({ parentId: activeWorkspace._id });
+
+  const grpcRequests = grpcRequestList;
   return {
     activeWorkspace,
     activeProject,
