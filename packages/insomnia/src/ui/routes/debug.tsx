@@ -35,8 +35,8 @@ import { SidebarLayout } from '../components/sidebar-layout';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { useRequestMetaPatcher } from '../hooks/use-request';
+import { OrganizationLoaderData } from './organization';
 import { RequestLoaderData } from './request';
-import { OrganizationLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 export interface GrpcMessage {
   id: string;

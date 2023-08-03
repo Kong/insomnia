@@ -3487,3 +3487,11 @@ input.editable {
   bottom: 0;
   z-index: 9999;
 }
+
+.servers {
+  margin-top: 1rem;
+}
+
+.pane-two {
+  z-index: 0;
+}

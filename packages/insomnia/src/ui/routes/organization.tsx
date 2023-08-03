@@ -61,19 +61,19 @@ export interface Metadata {
   organizationType: string;
 }
 
-const isPersonalOrganization = (organization: Organization) => organization.metadata.organizationType === 'personal';
+export const isPersonalOrganization = (organization: Organization) => organization.metadata.organizationType === 'personal';
 
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
     try {
-      const response = await window.main.insomniaFetch<OrganizationsResponse>({
+      const { organizations } = await window.main.insomniaFetch<OrganizationsResponse>({
         method: 'GET',
         path: '/v1/organizations',
         sessionId,
       });
 
-      const personalOrganization = response.organizations.find(isPersonalOrganization);
+      const personalOrganization = organizations.find(isPersonalOrganization);
 
       if (personalOrganization) {
         return redirect(`/organization/${personalOrganization.id}`);
