@@ -62,7 +62,6 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     activeRequestMeta,
     activeResponse,
     responses,
-    // TODO: filter down somehow
     requestVersions: await models.requestVersion.findByParentId(requestId),
   };
 };

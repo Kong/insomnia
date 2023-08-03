@@ -89,29 +89,30 @@ export const workspaceLoader: LoaderFunction = async ({
       : [activeProject];
 
   const projects = sortProjects(organizationProjects);
-  const requests = (await database.withDescendants(activeWorkspace)).filter(d => isRequest(d) || isWebSocketRequest(d) || isGrpcRequest(d) || isRequestGroup(d)) as (Request | WebSocketRequest | GrpcRequest)[];
-  // TODO filter these
+  const requestsAndFolders = (await database.withDescendants(activeWorkspace)).filter(d => isRequest(d) || isWebSocketRequest(d) || isGrpcRequest(d) || isRequestGroup(d)) as (Request | WebSocketRequest | GrpcRequest)[];
   const requestMetas = await models.requestMeta.all();
   const grpcRequestMetas = await models.grpcRequestMeta.all();
-  const metas = [...requestMetas, ...grpcRequestMetas];
-  const folderMetas = await models.requestGroupMeta.all();
-  function next(parentId: string): Child[] {
-    return requests.filter(r => r.parentId === parentId).filter((model: BaseModel) => isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model) || isRequestGroup(model))
+  const metas = [...requestMetas, ...grpcRequestMetas].filter(m => requestsAndFolders.map(r => r._id).includes(m.parentId)).map(m => ({ parentId: m.parentId, pinned: m.pinned }));
+  const folderMetas = (await models.requestGroupMeta.all()).filter(m => requestsAndFolders.map(r => r._id).includes(m.parentId)).map(m => ({ parentId: m.parentId, collapsed: m.collapsed }));
+  function nextTreeNode(parentId: string): Child[] {
+    return requestsAndFolders.filter(r => r.parentId === parentId)
+      .filter((model: BaseModel) => isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model) || isRequestGroup(model))
       .sort((a: Child['doc'], b: Child['doc']): number => {
+        // NOTE: legacy, make this better
         if (a.metaSortKey === b.metaSortKey) {
-          return a._id > b._id ? -1 : 1; // ascending
+          return a._id > b._id ? -1 : 1; // ascending ids?
         } else {
-          return a.metaSortKey < b.metaSortKey ? -1 : 1; // descending
+          return a.metaSortKey < b.metaSortKey ? -1 : 1; // descending sort keys?
         }
-      }).map((c: Child['doc']) => ({
-        doc: c,
-        pinned: metas.find(m => m.parentId === c._id)?.pinned || false,
-        collapsed: folderMetas.find(m => m.parentId === c._id)?.collapsed || false,
+      }).map((doc: Child['doc']) => ({
+        doc,
+        pinned: metas.find(m => m.parentId === doc._id)?.pinned || false,
+        collapsed: folderMetas.find(m => m.parentId === doc._id)?.collapsed || false,
         hidden: false,
-        children: isRequestGroup(c) ? next(c._id) : [],
+        children: isRequestGroup(doc) ? nextTreeNode(doc._id) : [],
       }));
   }
-  const requestTree = next(activeWorkspace._id);
+  const requestTree = nextTreeNode(activeWorkspace._id);
   return {
     activeWorkspace,
     activeProject,
