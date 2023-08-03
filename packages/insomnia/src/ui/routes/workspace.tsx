@@ -114,7 +114,7 @@ export const workspaceLoader: LoaderFunction = async ({
       }));
   }
   const requestTree = nextTreeNode(activeWorkspace._id);
-  const grpcRequests = requestsAndFolders.filter(r => isGrpcRequest(r));
+  const grpcRequests = requestsAndFolders.filter(r => isGrpcRequest(r)) as GrpcRequest[];
   return {
     activeWorkspace,
     activeProject,

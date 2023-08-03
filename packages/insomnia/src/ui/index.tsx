@@ -143,6 +143,7 @@ const router = createMemoryRouter(
                           children: [
                             {
                               path: `${ACTIVITY_DEBUG}`,
+                              loader: async (...args) => (await import('./routes/debug')).loader(...args),
                               element: (
                                 <Suspense fallback={<AppLoadingIndicator />}>
                                   <Debug />

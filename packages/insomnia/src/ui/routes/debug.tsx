@@ -1,10 +1,11 @@
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import React, { FC, Fragment, useEffect, useState } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { LoaderFunction, redirect, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
+import * as models from '../../models';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import { isEventStreamRequest, isRequest, isRequestId, Request } from '../../models/request';
@@ -58,7 +59,22 @@ const INITIAL_GRPC_REQUEST_STATE = {
   error: undefined,
   methods: [],
 };
-
+export const loader: LoaderFunction = async ({ params }) => {
+  if (!params.requestId) {
+    const { projectId, workspaceId, organizationId } = params;
+    invariant(workspaceId, 'Workspace ID is required');
+    invariant(projectId, 'Project ID is required');
+    const activeWorkspace = await models.workspace.getById(workspaceId);
+    invariant(activeWorkspace, 'Workspace not found');
+    const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+    invariant(activeWorkspaceMeta, 'Workspace meta not found');
+    const activeRequestId = activeWorkspaceMeta.activeRequestId;
+    if (activeRequestId) {
+      return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
+    }
+  }
+  return null;
+};
 export const Debug: FC = () => {
   const {
     activeWorkspace,
