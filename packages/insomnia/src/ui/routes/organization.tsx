@@ -5,7 +5,6 @@ import { Link, LoaderFunction, Outlet, redirect, useFetcher, useNavigate, usePar
 import { getCurrentSessionId, isLoggedIn } from '../../account/session';
 import { isDevelopment } from '../../common/constants';
 import * as models from '../../models';
-import { Organization } from '../../models/organization';
 import { Settings } from '../../models/settings';
 import { isScratchpad } from '../../models/workspace';
 import { reloadPlugins } from '../../plugins';
@@ -37,34 +36,47 @@ import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-co
 import Modals from './modals';
 import { WorkspaceLoaderData } from './workspace';
 
+interface OrganizationsResponse {
+  start: number;
+  limit: number;
+  length: number;
+  total: number;
+  next: string;
+  organizations: Organization[];
+}
+
+interface Organization {
+  id: string;
+  name: string;
+  display_name: string;
+  branding: Branding;
+  metadata: Metadata;
+}
+
+interface Branding {
+  logo_url: string;
+}
+
+export interface Metadata {
+  organizationType: string;
+}
+
+const isPersonalOrganization = (organization: Organization) => organization.metadata.organizationType === 'personal';
+
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
     try {
-      const teams = await window.main.insomniaFetch<{
-        created: string;
-        id: string;
-        ownerAccountId: string;
-        name: string;
-        isPersonal: boolean;
-        accounts: {
-          firstName: string;
-          lastName: string;
-          email: string;
-          id: string;
-          isAdmin: boolean;
-          dateAccepted: string;
-        }[];
-      }[]>({
+      const response = await window.main.insomniaFetch<OrganizationsResponse>({
         method: 'GET',
-        path: '/api/teams',
+        path: '/v1/organizations',
         sessionId,
       });
 
-      const personalTeam = teams.find(team => team.isPersonal);
+      const personalOrganization = response.organizations.find(isPersonalOrganization);
 
-      if (personalTeam) {
-        return redirect(`/organization/${personalTeam.id}`);
+      if (personalOrganization) {
+        return redirect(`/organization/${personalOrganization.id}`);
       }
     } catch (error) {
       console.log('Failed to load Teams', error);
@@ -104,24 +116,9 @@ export const loader: LoaderFunction = async () => {
         });
       }
 
-      // Teams are now organizations
-      const teams = await window.main.insomniaFetch<{
-        created: string;
-        id: string;
-        ownerAccountId: string;
-        name: string;
-        isPersonal: boolean;
-        accounts: {
-          firstName: string;
-          lastName: string;
-          email: string;
-          id: string;
-          isAdmin: boolean;
-          dateAccepted: string;
-        }[];
-      }[]>({
+      const { organizations } = await window.main.insomniaFetch<OrganizationsResponse>({
         method: 'GET',
-        path: '/api/teams',
+        path: '/v1/organizations',
         sessionId,
       });
 
@@ -137,14 +134,10 @@ export const loader: LoaderFunction = async () => {
       return {
         user,
         settings: await models.settings.getOrCreate(),
-        organizations: teams.map(team => ({
-          _id: team.id,
-          name: team.name,
-          isPersonal: team.isPersonal,
-        })).sort((a, b) => a.name.localeCompare(b.name)).sort((a, b) => {
-          if (a.isPersonal && !b.isPersonal) {
+        organizations: organizations.sort((a, b) => a.name.localeCompare(b.name)).sort((a, b) => {
+          if (isPersonalOrganization(a) && !isPersonalOrganization(b)) {
             return -1;
-          } else if (!a.isPersonal && b.isPersonal) {
+          } else if (!isPersonalOrganization(a) && isPersonalOrganization(b)) {
             return 1;
           } else {
             return 0;
