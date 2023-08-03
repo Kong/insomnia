@@ -21,6 +21,7 @@ import { AskModal } from '../components/modals/ask-modal';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
+import { RequestSettingsModal } from '../components/modals/request-settings-modal';
 import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
 import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
 import { PlaceholderRequestPane } from '../components/panes/placeholder-request-pane';
@@ -88,6 +89,7 @@ export const Debug: FC = () => {
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
+  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
@@ -151,8 +153,7 @@ export const Debug: FC = () => {
     request_showSettings:
       () => {
         if (activeRequest) {
-          // TODO: fix this
-          // showModal(RequestSettingsModal, { request: activeRequest });
+          setIsRequestSettingsModalOpen(true);
         }
       },
     request_showDelete:
@@ -219,7 +220,7 @@ export const Debug: FC = () => {
             }),
         });
       },
-      // TODO: fix these
+    // TODO: fix these
     request_showRecent:
       () => { },
     request_quickSwitch:
@@ -288,6 +289,12 @@ export const Debug: FC = () => {
             setLoading={setLoading}
           />)}
           {!requestId && <PlaceholderRequestPane />}
+          {isRequestSettingsModalOpen && activeRequest && (
+            <RequestSettingsModal
+              request={activeRequest}
+              onHide={() => setIsRequestSettingsModalOpen(false)}
+            />
+          )}
         </ErrorBoundary>
         : null}
       renderPaneTwo={
