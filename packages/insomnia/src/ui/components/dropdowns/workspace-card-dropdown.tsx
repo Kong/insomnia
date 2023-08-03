@@ -140,13 +140,6 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           />
         </DropdownItem>
         <DropdownSection aria-label='Meta section'>
-          <DropdownItem aria-label='Settings'>
-            <ItemContent
-              label="Settings"
-              icon="gear"
-              onClick={() => setIsSettingsModalOpen(true)}
-            />
-          </DropdownItem>
           <DropdownItem aria-label='Import'>
             <ItemContent
               label="Import"
@@ -159,6 +152,13 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
               label="Export"
               icon="file-export"
               onClick={() => showModal(ExportRequestsModal)}
+            />
+          </DropdownItem>
+          <DropdownItem aria-label='Settings'>
+            <ItemContent
+              label="Settings"
+              icon="gear"
+              onClick={() => setIsSettingsModalOpen(true)}
             />
           </DropdownItem>
         </DropdownSection>
