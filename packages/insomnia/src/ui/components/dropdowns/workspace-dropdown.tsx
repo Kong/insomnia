@@ -156,30 +156,32 @@ export const WorkspaceDropdown: FC = () => {
             }}
           />
         </DropdownItem>
-        <DropdownItem aria-label="Settings">
-          <ItemContent
-            icon="wrench"
-            label="Settings"
-            onClick={() => setIsSettingsModalOpen(true)}
-          />
-        </DropdownItem>
+        <DropdownSection aria-label='Meta section'>
 
-        <DropdownItem aria-label='Import'>
-          <ItemContent
-            icon="file-import"
-            label="Import"
-            onClick={() => setIsImportModalOpen(true)}
-          />
-        </DropdownItem>
+          <DropdownItem aria-label='Import'>
+            <ItemContent
+              icon="file-import"
+              label="Import"
+              onClick={() => setIsImportModalOpen(true)}
+            />
+          </DropdownItem>
 
-        <DropdownItem aria-label='Export'>
-          <ItemContent
-            icon="file-export"
-            label="Export"
-            onClick={() => showModal(ExportRequestsModal)}
-          />
-        </DropdownItem>
+          <DropdownItem aria-label='Export'>
+            <ItemContent
+              icon="file-export"
+              label="Export"
+              onClick={() => showModal(ExportRequestsModal)}
+            />
+          </DropdownItem>
 
+          <DropdownItem aria-label="Settings">
+            <ItemContent
+              icon="wrench"
+              label="Settings"
+              onClick={() => setIsSettingsModalOpen(true)}
+            />
+          </DropdownItem>
+        </DropdownSection>
         <DropdownSection
           aria-label='Plugins Section'
           title="Plugins"
