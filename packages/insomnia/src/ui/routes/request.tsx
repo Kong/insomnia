@@ -248,6 +248,55 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
   return null;
 };
 
+export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
+  const { workspaceId, requestId } = params;
+  invariant(typeof requestId === 'string', 'Request ID is required');
+  const req = await requestOperations.getById(requestId);
+  invariant(req, 'Request not found');
+  invariant(workspaceId, 'Workspace ID is required');
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  invariant(workspaceMeta, 'Active workspace meta not found');
+  if (isWebSocketRequestId(requestId)) {
+    await models.webSocketResponse.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
+  } else {
+    await models.response.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
+  }
+  return null;
+};
+
+export const deleteResponseAction: ActionFunction = async ({ request, params }) => {
+  const { workspaceId, requestId } = params;
+  invariant(typeof requestId === 'string', 'Request ID is required');
+  const req = await requestOperations.getById(requestId);
+  invariant(req, 'Request not found');
+  const { responseId } = await request.json();
+  invariant(typeof responseId === 'string', 'Response ID is required');
+  invariant(workspaceId, 'Workspace ID is required');
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  invariant(workspaceMeta, 'Active workspace meta not found');
+  if (isWebSocketRequestId(requestId)) {
+    const res = await models.webSocketResponse.getById(responseId);
+    invariant(res, 'Response not found');
+    await models.webSocketResponse.remove(res);
+    const response = await models.webSocketResponse.getLatestForRequest(requestId, workspaceMeta.activeEnvironmentId);
+    if (response?.requestVersionId) {
+      await models.requestVersion.restore(response.requestVersionId);
+    }
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: response?._id || null });
+  } else {
+    const res = await models.response.getById(responseId);
+    invariant(res, 'Response not found');
+    await models.response.remove(res);
+    const response = await models.response.getLatestForRequest(requestId, workspaceMeta.activeEnvironmentId);
+    if (response?.requestVersionId) {
+      await models.requestVersion.restore(response.requestVersionId);
+    }
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: response?._id || null });
+  }
+
+  return null;
+};
+
 // const RequestRoute = () => {
 //   const { requestId } = useParams() as { requestId: string };
 //   const activeEnvironment = useSelector(selectActiveEnvironment);

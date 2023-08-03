@@ -1,6 +1,6 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { useCallback, useRef } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useRouteLoaderData } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 
 import { decompressObject } from '../../../common/misc';
@@ -41,6 +41,10 @@ export const ResponseHistoryDropdown = ({
     week: [],
     other: [],
   };
+
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const fetcher = useFetcher();
+
   const handleSetActiveResponse = useCallback(async (requestId: string, activeResponse: Response | WebSocketResponse) => {
     if (isWebSocketResponse(activeResponse)) {
       window.main.webSocket.close({ requestId });
@@ -56,35 +60,26 @@ export const ResponseHistoryDropdown = ({
   const handleDeleteResponses = useCallback(async () => {
     if (isWebSocketResponse(activeResponse)) {
       window.main.webSocket.closeAll();
-      await models.webSocketResponse.removeForRequest(requestId, activeEnvironment._id);
-    } else {
-      await models.response.removeForRequest(requestId, activeEnvironment._id);
     }
-    await patchRequestMeta(requestId, { activeResponseId: null });
-  }, [activeEnvironment._id, activeResponse, requestId, patchRequestMeta]);
+    fetcher.submit({}, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/response/delete-all`,
+      method: 'post',
+      encType: 'application/json',
+    });
+  }, [activeResponse, fetcher, organizationId, projectId, requestId, workspaceId]);
 
   const handleDeleteResponse = useCallback(async () => {
-    let response: Response | WebSocketResponse | null = null;
     if (activeResponse) {
       if (isWebSocketResponse(activeResponse)) {
         window.main.webSocket.close({ requestId });
-        await models.webSocketResponse.remove(activeResponse);
-        const environmentId = activeEnvironment?._id || null;
-        response = await models.webSocketResponse.getLatestForRequest(requestId, environmentId);
-      } else {
-        await models.response.remove(activeResponse);
-        const environmentId = activeEnvironment?._id || null;
-        response = await models.response.getLatestForRequest(requestId, environmentId);
       }
-
-      if (response?.requestVersionId) {
-        // Deleting a response restores latest request body
-        await models.requestVersion.restore(response.requestVersionId);
-      }
-
-      await patchRequestMeta(requestId, { activeResponseId: response?._id || null });
     }
-  }, [activeEnvironment?._id, activeResponse, requestId, patchRequestMeta]);
+    fetcher.submit({ responseId: activeResponse._id }, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/response/delete`,
+      method: 'post',
+      encType: 'application/json',
+    });
+  }, [activeResponse, fetcher, requestId, organizationId, projectId, workspaceId]);
 
   responses.forEach((response: Response | WebSocketResponse) => {
     const responseTime = new Date(response.created);

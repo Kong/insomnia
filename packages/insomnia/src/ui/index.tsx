@@ -171,6 +171,14 @@ const router = createMemoryRouter(
                                       path: 'update-meta',
                                       action: async (...args) => (await import('./routes/request')).updateRequestMetaAction(...args),
                                     },
+                                    {
+                                      path: 'response/delete-all',
+                                      action: async (...args) => (await import('./routes/request')).deleteAllResponsesAction(...args),
+                                    },
+                                    {
+                                      path: 'response/delete',
+                                      action: async (...args) => (await import('./routes/request')).deleteResponseAction(...args),
+                                    },
                                   ],
                                 },
                                 {
