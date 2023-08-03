@@ -823,9 +823,6 @@ a {
   font-weight: 600 !important;
   text-decoration: none;
 }
-a:not(.a--nocolor) {
-  color: var(--color-surprise);
-}
 a:hover {
   text-decoration: underline;
 }
@@ -3489,4 +3486,12 @@ input.editable {
   top: 0;
   bottom: 0;
   z-index: 9999;
+}
+
+.servers {
+  margin-top: 1rem;
+}
+
+.pane-two {
+  z-index: 0;
 }

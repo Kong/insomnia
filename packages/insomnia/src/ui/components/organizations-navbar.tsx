@@ -3,7 +3,7 @@ import { Link, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import { OrganizationLoaderData } from '../routes/organization';
+import { isPersonalOrganization, OrganizationLoaderData } from '../routes/organization';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { SvgIcon } from './svg-icon';
 import { Tooltip } from './tooltip';
@@ -77,13 +77,13 @@ export const OrganizationsNav: FC = () => {
       <NavbarList>
         {organizations.map(organization => {
           return (
-            <li key={organization._id}>
-              <Tooltip position='right' message={organization.name}>
+            <li key={organization.id}>
+              <Tooltip position='right' message={organization.display_name}>
                 <NavbarItem
-                  to={`/organization/${organization._id}`}
-                  $isActive={organizationId === organization._id}
+                  to={`/organization/${organization.id}`}
+                  $isActive={organizationId === organization.id}
                 >
-                  {organization.isPersonal ? (<i className='fa fa-home' />) : getNameInitials(organization.name)}
+                  {isPersonalOrganization(organization) ? (<i className='fa fa-home' />) : getNameInitials(organization.display_name)}
 
                 </NavbarItem>
               </Tooltip>

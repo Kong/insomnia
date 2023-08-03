@@ -33,7 +33,7 @@ const LabelIcon = styled.div({
   alignItems: 'center',
   justifyContent: 'center',
   padding: '0.2rem',
-  height: '1rem',
+  height: '1.5rem',
 });
 
 export interface WorkspaceCardProps {

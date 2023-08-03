@@ -24,7 +24,7 @@ import {
 import { Item, ListProps, ListState, useListState } from 'react-stately';
 import styled from 'styled-components';
 
-import { getAccountId, getCurrentSessionId } from '../../account/session';
+import { getCurrentSessionId } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   ACTIVITY_DEBUG,
@@ -48,6 +48,7 @@ import {
 } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
+import { Team } from '../../sync/types';
 import { invariant } from '../../utils/invariant';
 import {
   Dropdown,
@@ -88,7 +89,7 @@ async function getAllTeamProjects(teamId: string) {
     sessionId,
   });
 
-  return response.data;
+  return response.data as Team[];
 }
 
 const StyledDropdownButton = styled(DropdownButton).attrs({
@@ -306,12 +307,12 @@ const OrganizationProjectsSidebar: FC<{
         >
           <DropdownSection items={organizations}>
             {organization => (
-              <DropdownItem key={organization._id}>
+              <DropdownItem key={organization.id}>
                 <ItemContent
-                  label={organization.name}
-                  isSelected={organization._id === organizationId}
+                  label={organization.display_name}
+                  isSelected={organization.id === organizationId}
                   onClick={() => {
-                    navigate(`/organization/${organization._id}`);
+                    navigate(`/organization/${organization.id}`);
                   }}
                 />
               </DropdownItem>
@@ -442,7 +443,6 @@ const OrganizationProjectsSidebar: FC<{
 
       <ProjectListContainer>
         <List
-          aria-label="files-list"
           key="files-list"
           aria-label='Files List'
           selectionMode="single"
@@ -729,8 +729,6 @@ export const loader: LoaderFunction = async ({
   const filter = search.get('filter') || '';
   const scope = search.get('scope') || 'all';
   const projectName = search.get('projectName') || '';
-  const project = await models.project.getById(projectId);
-  invariant(project, 'Project was not found');
 
   try {
     console.log('Fetching projects for team', organizationId);
@@ -758,6 +756,9 @@ export const loader: LoaderFunction = async ({
     console.log(err);
     throw redirect('/organization');
   }
+
+  const project = await models.project.getById(projectId);
+  invariant(project, 'Project was not found');
 
   const projectWorkspaces = await models.workspace.findByParentId(projectId);
 
@@ -885,7 +886,10 @@ const ProjectRoute: FC = () => {
     collectionsCount,
     documentsCount,
   } = useLoaderData() as ProjectLoaderData;
+
   const { organizationId } = useParams() as { organizationId: string };
+  const organizationData = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  const activeOrganization = organizationData?.organizations.find(org => org.id === organizationId);
   const [searchParams] = useSearchParams();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
@@ -958,7 +962,7 @@ const ProjectRoute: FC = () => {
           renderPageSidebar={
             <OrganizationProjectsSidebar
               organizationId={organizationId}
-              title={'TODO'}
+              title={activeOrganization?.display_name || ''}
               projects={projects}
               workspaces={workspaces.map(w => w.workspace)}
               activeProject={activeProject}

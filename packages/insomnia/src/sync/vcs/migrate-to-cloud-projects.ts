@@ -2,7 +2,7 @@ import { getCurrentSessionId } from '../../account/session';
 import { database } from '../../common/database';
 import * as models from '../../models';
 import { isRemoteProject } from '../../models/project';
-import { Workspace } from '../../models/workspace';
+import { isScratchpad, Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from './initialize-backend-project';
 import { getVCS } from './vcs';
@@ -77,9 +77,9 @@ export const migrateLocalToCloudProjects = async () => {
       });
 
       // For each workspace in the local project
-      const projectWorkspaces = await database.find<Workspace>(models.workspace.type, {
+      const projectWorkspaces = (await database.find<Workspace>(models.workspace.type, {
         parentId: localProject._id,
-      });
+      })).filter(isScratchpad);
 
       for (const workspace of projectWorkspaces) {
         // Update the workspace to point to the newly created project

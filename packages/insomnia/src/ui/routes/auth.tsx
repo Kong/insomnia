@@ -12,7 +12,6 @@ const Background = styled('div')({
   textAlign: 'center',
   display: 'flex',
   background: 'var(--color-bg)',
-  // background: 'linear-gradient(0deg, #35007F 0%, #4000BF 50%, #35007F 60.81%, #000000 93.75%)',
 });
 
 const Auth = () => {

@@ -1,13 +1,12 @@
 import { IpcRendererEvent } from 'electron';
-import React, { useEffect, useState } from 'react';
-import { LoaderFunction, Outlet, redirect, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
-import styled from 'styled-components';
+import React, { Fragment, useEffect, useState } from 'react';
+import { Link, LoaderFunction, Outlet, redirect, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { getCurrentSessionId } from '../../account/session';
+import { getCurrentSessionId, isLoggedIn } from '../../account/session';
 import { isDevelopment } from '../../common/constants';
 import * as models from '../../models';
-import { Organization } from '../../models/organization';
 import { Settings } from '../../models/settings';
+import { isScratchpad } from '../../models/workspace';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
@@ -27,6 +26,7 @@ import { SettingsModal, TAB_INDEX_PLUGINS, TAB_INDEX_THEMES } from '../component
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { OrganizationsNav } from '../components/organizations-navbar';
 import { StatusBar } from '../components/statusbar';
+import { Button } from '../components/themed-button';
 import { Toast } from '../components/toast';
 import { WorkspaceHeader } from '../components/workspace-header';
 import { AppHooks } from '../containers/app-hooks';
@@ -36,36 +36,52 @@ import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-co
 import Modals from './modals';
 import { WorkspaceLoaderData } from './workspace';
 
+interface OrganizationsResponse {
+  start: number;
+  limit: number;
+  length: number;
+  total: number;
+  next: string;
+  organizations: Organization[];
+}
+
+interface Organization {
+  id: string;
+  name: string;
+  display_name: string;
+  branding: Branding;
+  metadata: Metadata;
+}
+
+interface Branding {
+  logo_url: string;
+}
+
+export interface Metadata {
+  organizationType: string;
+}
+
+export const isPersonalOrganization = (organization: Organization) => organization.metadata.organizationType === 'personal';
+
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
-  if (!sessionId) {
-    throw redirect('/auth/login');
-  }
+  if (sessionId) {
+    try {
+      const { organizations } = await window.main.insomniaFetch<OrganizationsResponse>({
+        method: 'GET',
+        path: '/v1/organizations',
+        sessionId,
+      });
 
-  const teams = await window.main.insomniaFetch<{
-    created: string;
-    id: string;
-    ownerAccountId: string;
-    name: string;
-    isPersonal: boolean;
-    accounts: {
-      firstName: string;
-      lastName: string;
-      email: string;
-      id: string;
-      isAdmin: boolean;
-      dateAccepted: string;
-    }[];
-  }[]>({
-    method: 'GET',
-    path: '/api/teams',
-    sessionId,
-  });
+      const personalOrganization = organizations.find(isPersonalOrganization);
 
-  const personalTeam = teams.find(team => team.isPersonal);
-
-  if (personalTeam) {
-    return redirect(`/organization/${personalTeam.id}`);
+      if (personalOrganization) {
+        return redirect(`/organization/${personalOrganization.id}`);
+      }
+    } catch (error) {
+      console.log('Failed to load Teams', error);
+      return null;
+    }
   }
 
   return null;
@@ -83,49 +99,30 @@ export interface OrganizationLoaderData {
 export const loader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
 
-  if (!sessionId) {
-    throw redirect('/auth/login');
-  }
+  if (sessionId) {
+    try {
+      let vcs = getVCS();
+      if (!vcs) {
+        const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
 
-  // await migrateLocalToCloudProjects();
-  try {
-    let vcs = getVCS();
-    if (!vcs) {
-      const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
-
-      console.log('Initializing VCS');
-      vcs = await initVCS(driver, async conflicts => {
-        return new Promise(resolve => {
-          showModal(SyncMergeModal, {
-            conflicts,
-            handleDone: (conflicts?: MergeConflict[]) => resolve(conflicts || []),
+        console.log('Initializing VCS');
+        vcs = await initVCS(driver, async conflicts => {
+          return new Promise(resolve => {
+            showModal(SyncMergeModal, {
+              conflicts,
+              handleDone: (conflicts?: MergeConflict[]) => resolve(conflicts || []),
+            });
           });
         });
-      });
-    }
+      }
 
-    // Teams are now organizations
-    const teams = await window.main.insomniaFetch<{
-        created: string;
-        id: string;
-        ownerAccountId: string;
-        name: string;
-        isPersonal: boolean;
-        accounts: {
-          firstName: string;
-          lastName: string;
-          email: string;
-          id: string;
-          isAdmin: boolean;
-          dateAccepted: string;
-        }[];
-      }[]>({
+      const { organizations } = await window.main.insomniaFetch<OrganizationsResponse>({
         method: 'GET',
-        path: '/api/teams',
+        path: '/v1/organizations',
         sessionId,
       });
 
-    const user = await window.main.insomniaFetch<{
+      const user = await window.main.insomniaFetch<{
         name: string;
         picture: string;
       }>({
@@ -134,49 +131,41 @@ export const loader: LoaderFunction = async () => {
         sessionId,
       });
 
-    return {
-      user,
-      settings: await models.settings.getOrCreate(),
-      organizations: teams.map(team => ({
-        _id: team.id,
-        name: team.name,
-        isPersonal: team.isPersonal,
-      })).sort((a, b) => a.name.localeCompare(b.name)).sort((a, b) => {
-        if (a.isPersonal && !b.isPersonal) {
-          return -1;
-        } else if (!a.isPersonal && b.isPersonal) {
-          return 1;
-        } else {
-          return 0;
-        }
-      }),
-    };
-  } catch (err) {
-    console.log('Failed to load Teams', err);
-    return {
-      user: {
-        name: '',
-        picture: '',
-      },
-      settings: await models.settings.getOrCreate(),
-      organizations: [],
-    };
+      return {
+        user,
+        settings: await models.settings.getOrCreate(),
+        organizations: organizations.sort((a, b) => a.name.localeCompare(b.name)).sort((a, b) => {
+          if (isPersonalOrganization(a) && !isPersonalOrganization(b)) {
+            return -1;
+          } else if (!isPersonalOrganization(a) && isPersonalOrganization(b)) {
+            return 1;
+          } else {
+            return 0;
+          }
+        }),
+      };
+    } catch (err) {
+      console.log('Failed to load Teams', err);
+      return {
+        user: {
+          name: '',
+          picture: '',
+        },
+        settings: await models.settings.getOrCreate(),
+        organizations: [],
+      };
+    }
   }
-};
 
-const Layout = styled.div({
-  position: 'relative',
-  height: '100%',
-  width: '100%',
-  display: 'grid',
-  backgroundColor: 'var(--color-bg)',
-  gridTemplate: `
-    'Header Header' auto
-    'Navbar Content' 1fr
-    'Statusbar Statusbar' 30px [row-end]
-    / 50px 1fr;
-  `,
-});
+  return {
+    user: {
+      name: '',
+      picture: '',
+    },
+    settings: await models.settings.getOrCreate(),
+    organizations: [],
+  };
+};
 
 const OrganizationRoute = () => {
   const { organizationId } = useParams() as {
@@ -340,10 +329,9 @@ const OrganizationRoute = () => {
     ':workspaceId'
   ) as WorkspaceLoaderData | null;
 
-  const sessionId = getCurrentSessionId();
-  if (!sessionId) {
-    return null;
-  }
+  const navigate = useNavigate();
+
+  const isScratchpadWorkspace = workspaceData?.activeWorkspace && isScratchpad(workspaceData.activeWorkspace);
 
   return (
     <PresenceProvider>
@@ -362,17 +350,57 @@ const OrganizationRoute = () => {
                 />
               )}
               <Modals />
-              <Layout>
+              <div className={`relative h-full w-full grid ${isScratchpadWorkspace ? 'app-grid-template-with-banner' : 'app-grid-template'}`}>
                 <OrganizationsNav />
                 <AppHeader
                   gridCenter={
-                    workspaceData ? <WorkspaceHeader {...workspaceData} /> : null
+                    isLoggedIn() && workspaceData ? <WorkspaceHeader {...workspaceData} /> : null
                   }
-                  gridRight={<AccountToolbar />}
+                  gridRight={isLoggedIn() ? <AccountToolbar /> : (
+                    <Fragment>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={
+                          () => navigate('/auth/login')
+                        }
+                      >
+                        Log in
+                      </Button>
+                      <Button
+                        onClick={() => navigate('/auth/login')}
+                        size="small"
+                        variant="contained"
+                      >
+                        Sign Up
+                      </Button>
+                    </Fragment>
+                  )
+                  }
                 />
+                {isScratchpadWorkspace ? (
+                  <div className='flex items-center [grid-area:Banner] text-white bg-gradient-to-r from-[#7400e1] to-[#4000bf]'>
+                    <div className='flex basis-[50px] h-full'>
+                      <div
+                        className='border-solid border-r-[--hl-xl] border-r border-l border-l-[--hl-xl] box-border flex items-center justify-center w-full h-full'
+                      >
+                        <i className="fa fa-edit" />
+                      </div>
+                    </div>
+                    <div className='flex items-center px-[--padding-md] gap-[--padding-xs]'>
+                      Welcome to the Scratch Pad. To get the most out of Insomnia
+                      <Link
+                        to="/auth/login"
+                        className="font-bold text-white"
+                      >
+                        go to your projects →
+                      </Link>
+                    </div>
+                  </div>
+                ) : null}
                 <Outlet />
                 <StatusBar />
-              </Layout>
+              </div>
             </ErrorBoundary>
 
             <ErrorBoundary showAlert>

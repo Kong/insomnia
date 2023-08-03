@@ -19,6 +19,7 @@ export const action: ActionFunction = async ({
   await submitAuthCode(data.code);
 
   console.log('Login successful');
+  window.localStorage.setItem('hasLoggedIn', 'true');
 
   const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
   await migrateCollectionsIntoRemoteProject(new VCS(driver));
@@ -57,7 +58,7 @@ const Authorize = () => {
       </p>
       <p>
         A new page should have opened in your default web browser.
-        To continue, please login via the browser.
+        To continue, please log in via the browser.
       </p>
       <div
         style={{
@@ -142,7 +143,7 @@ const Authorize = () => {
               }}
             >
               <i className="fa fa-sign-in" aria-hidden="true" />
-              Login
+              Log in
             </button>
           </div>
         </form>

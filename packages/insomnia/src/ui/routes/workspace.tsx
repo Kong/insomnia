@@ -47,11 +47,14 @@ export interface Child {
 export const workspaceLoader: LoaderFunction = async ({
   params,
 }): Promise<WorkspaceLoaderData> => {
-  const { projectId, workspaceId, organizationId } = params;
+  const { projectId, workspaceId } = params;
   invariant(workspaceId, 'Workspace ID is required');
   invariant(projectId, 'Project ID is required');
 
+  console.log({ workspaceId });
+
   const activeWorkspace = await models.workspace.getById(workspaceId);
+
   invariant(activeWorkspace, 'Workspace not found');
 
   // I don't know what to say man, this is just how it is
