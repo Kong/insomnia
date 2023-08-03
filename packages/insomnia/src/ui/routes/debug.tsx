@@ -22,6 +22,7 @@ import { CookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
+import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
 import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
 import { PlaceholderRequestPane } from '../components/panes/placeholder-request-pane';
@@ -90,6 +91,8 @@ export const Debug: FC = () => {
   const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
+  const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
@@ -226,7 +229,7 @@ export const Debug: FC = () => {
     request_quickSwitch:
       () => { },
     environment_showEditor:
-      () => { },
+      () => setEnvironmentModalOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
     request_showGenerateCodeEditor:
       () => {
@@ -250,6 +253,7 @@ export const Debug: FC = () => {
           <EnvironmentsDropdown
             activeEnvironment={activeEnvironment}
             workspaceId={workspaceId}
+            setEnvironmentModalOpen={setEnvironmentModalOpen}
           />
           <button className="btn btn--super-compact" onClick={() => setIsCookieModalOpen(true)}>
             <div className="sidebar__menu__thing">
@@ -257,6 +261,9 @@ export const Debug: FC = () => {
             </div>
           </button>
         </div>
+        {isEnvironmentModalOpen && (
+          <WorkspaceEnvironmentsEditModal onHide={() => setEnvironmentModalOpen(false)} />)
+        }
         {isCookieModalOpen && (
           <CookiesModal
             onHide={() => setIsCookieModalOpen(false)}
