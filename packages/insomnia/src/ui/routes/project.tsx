@@ -53,6 +53,7 @@ import {
 } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
+import { Team } from '../../sync/types';
 import { invariant } from '../../utils/invariant';
 import { AvatarGroup } from '../components/avatar';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
@@ -204,20 +205,6 @@ export const loader: LoaderFunction = async ({
   const scope = search.get('scope') || 'all';
   const projectName = search.get('projectName') || '';
 
-  let project = await models.project.getById(projectId);
-  if (!project) {
-    const defaultProject = await models.project.getById(DEFAULT_PROJECT_ID);
-    project =
-      defaultProject ||
-      (await models.project.create({
-        _id: DEFAULT_PROJECT_ID,
-        name: getProductName(),
-        remoteId: null,
-      }));
-  }
-
-  invariant(project, 'Project was not found');
-
   try {
     console.log('Fetching projects for team', organizationId);
     const remoteProjects = await getAllTeamProjects(organizationId);
@@ -244,6 +231,20 @@ export const loader: LoaderFunction = async ({
     console.log(err);
     throw redirect('/organization');
   }
+
+  let project = await models.project.getById(projectId);
+  if (!project) {
+    const defaultProject = await models.project.getById(DEFAULT_PROJECT_ID);
+    project =
+      defaultProject ||
+      (await models.project.create({
+        _id: DEFAULT_PROJECT_ID,
+        name: getProductName(),
+        remoteId: null,
+      }));
+  }
+
+  invariant(project, 'Project was not found');
 
   const projectWorkspaces = await models.workspace.findByParentId(projectId);
 

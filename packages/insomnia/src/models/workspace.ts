@@ -161,3 +161,7 @@ function expectParentToBeProject(parentId?: string | null) {
     throw new Error('Expected the parent of a Workspace to be a Project');
   }
 }
+
+export function isScratchpad(workspace: Workspace) {
+  return workspace._id === 'wrk_scratchpad';
+}

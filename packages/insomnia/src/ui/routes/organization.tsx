@@ -30,9 +30,8 @@ import {
 } from '../../account/session';
 import { isDevelopment } from '../../common/constants';
 import * as models from '../../models';
-import { Organization } from '../../models/organization';
 import { Settings } from '../../models/settings';
-import { isDesign } from '../../models/workspace';
+import { isDesign, isScratchpad } from '../../models/workspace';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
@@ -87,39 +86,52 @@ const getNameInitials = (name: string) => {
 
   return `${firstWord.charAt(0)}${lastWord ? lastWord.charAt(0) : ''}`;
 };
+interface OrganizationsResponse {
+  start: number;
+  limit: number;
+  length: number;
+  total: number;
+  next: string;
+  organizations: Organization[];
+}
+
+interface Organization {
+  id: string;
+  name: string;
+  display_name: string;
+  branding: Branding;
+  metadata: Metadata;
+}
+
+interface Branding {
+  logo_url: string;
+}
+
+export interface Metadata {
+  organizationType: string;
+}
+
+export const isPersonalOrganization = (organization: Organization) => organization.metadata.organizationType === 'personal';
 
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
-  if (!sessionId) {
-    throw redirect('/auth/login');
-  }
+  if (sessionId) {
+    try {
+      const { organizations } = await window.main.insomniaFetch<OrganizationsResponse>({
+        method: 'GET',
+        path: '/v1/organizations',
+        sessionId,
+      });
 
-  const teams = await window.main.insomniaFetch<
-    {
-      created: string;
-      id: string;
-      ownerAccountId: string;
-      name: string;
-      isPersonal: boolean;
-      accounts: {
-        firstName: string;
-        lastName: string;
-        email: string;
-        id: string;
-        isAdmin: boolean;
-        dateAccepted: string;
-      }[];
-    }[]
-  >({
-    method: 'GET',
-    path: '/api/teams',
-    sessionId,
-  });
+      const personalOrganization = organizations.find(isPersonalOrganization);
 
-  const personalTeam = teams.find(team => team.isPersonal);
-
-  if (personalTeam) {
-    return redirect(`/organization/${personalTeam.id}`);
+      if (personalOrganization) {
+        return redirect(`/organization/${personalOrganization.id}`);
+      }
+    } catch (error) {
+      console.log('Failed to load Teams', error);
+      return null;
+    }
   }
 
   return null;
@@ -137,93 +149,72 @@ export interface OrganizationLoaderData {
 export const loader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
 
-  if (!sessionId) {
-    throw redirect('/auth/login');
-  }
+  if (sessionId) {
+    try {
+      let vcs = getVCS();
+      if (!vcs) {
+        const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
 
-  // await migrateLocalToCloudProjects();
-  try {
-    let vcs = getVCS();
-    if (!vcs) {
-      const driver = FileSystemDriver.create(
-        process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-      );
-
-      console.log('Initializing VCS');
-      vcs = await initVCS(driver, async conflicts => {
-        return new Promise(resolve => {
-          showModal(SyncMergeModal, {
-            conflicts,
-            handleDone: (conflicts?: MergeConflict[]) =>
-              resolve(conflicts || []),
+        console.log('Initializing VCS');
+        vcs = await initVCS(driver, async conflicts => {
+          return new Promise(resolve => {
+            showModal(SyncMergeModal, {
+              conflicts,
+              handleDone: (conflicts?: MergeConflict[]) => resolve(conflicts || []),
+            });
           });
         });
+      }
+
+      const { organizations } = await window.main.insomniaFetch<OrganizationsResponse>({
+        method: 'GET',
+        path: '/v1/organizations',
+        sessionId,
       });
-    }
 
-    // Teams are now organizations
-    const teams = await window.main.insomniaFetch<
-      {
-        created: string;
-        id: string;
-        ownerAccountId: string;
+      const user = await window.main.insomniaFetch<{
         name: string;
-        isPersonal: boolean;
-        accounts: {
-          firstName: string;
-          lastName: string;
-          email: string;
-          id: string;
-          isAdmin: boolean;
-          dateAccepted: string;
-        }[];
-      }[]
-    >({
-      method: 'GET',
-      path: '/api/teams',
-      sessionId,
-    });
+        picture: string;
+      }>({
+        method: 'GET',
+        path: '/v1/user/profile',
+        sessionId,
+      });
 
-    const user = await window.main.insomniaFetch<{
-      name: string;
-      picture: string;
-    }>({
-      method: 'GET',
-      path: '/v1/user/profile',
-      sessionId,
-    });
-
-    return {
-      user,
-      settings: await models.settings.getOrCreate(),
-      organizations: teams
-        .map(team => ({
-          _id: team.id,
-          name: team.name,
-          isPersonal: team.isPersonal,
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .sort((a, b) => {
-          if (a.isPersonal && !b.isPersonal) {
+      return {
+        user,
+        settings: await models.settings.getOrCreate(),
+        organizations: organizations.sort((a, b) => a.name.localeCompare(b.name)).sort((a, b) => {
+          if (isPersonalOrganization(a) && !isPersonalOrganization(b)) {
             return -1;
-          } else if (!a.isPersonal && b.isPersonal) {
+          } else if (!isPersonalOrganization(a) && isPersonalOrganization(b)) {
             return 1;
           } else {
             return 0;
           }
         }),
-    };
-  } catch (err) {
-    console.log('Failed to load Teams', err);
-    return {
-      user: {
-        name: '',
-        picture: '',
-      },
-      settings: await models.settings.getOrCreate(),
-      organizations: [],
-    };
+      };
+    } catch (err) {
+      console.log('Failed to load Teams', err);
+      return {
+        user: {
+          name: '',
+          picture: '',
+        },
+        settings: await models.settings.getOrCreate(),
+        organizations: [],
+      };
+    }
   }
+
+  return {
+    user: {
+      name: '',
+      picture: '',
+    },
+    settings: await models.settings.getOrCreate(),
+    organizations: [],
+  };
 };
 
 export const useOrganizationLoaderData = () => {
@@ -448,6 +439,8 @@ const OrganizationRoute = () => {
       ]
     : [];
 
+  const isScratchpadWorkspace = workspaceData?.activeWorkspace && isScratchpad(workspaceData.activeWorkspace);
+
   return (
     <PresenceProvider>
       <AIProvider>
@@ -575,10 +568,30 @@ const OrganizationRoute = () => {
                   )}
                 </div>
               </header>
+              {isScratchpadWorkspace ? (
+                  <div className='flex h-[30px] items-center [grid-area:Banner] text-white bg-gradient-to-r from-[#7400e1] to-[#4000bf]'>
+                    <div className='flex basis-[50px] h-full'>
+                      <div
+                        className='border-solid border-r-[--hl-xl] border-r border-l border-l-[--hl-xl] box-border flex items-center justify-center w-full h-full'
+                      >
+                        <Icon icon='edit' />
+                      </div>
+                    </div>
+                    <div className='flex items-center px-[--padding-md] gap-[--padding-xs]'>
+                      Welcome to the Scratch Pad. To get the most out of Insomnia
+                      <NavLink
+                        to="/auth/login"
+                        className="font-bold text-white"
+                      >
+                        go to your projects →
+                      </NavLink>
+                    </div>
+                  </div>
+                ) : null}
               <div className="[grid-area:Navbar]">
                 <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
                   {organizations.map(organization => (
-                    <TooltipTrigger key={organization._id}>
+                    <TooltipTrigger key={organization.id}>
                       <Link>
                         <NavLink
                           className={({ isActive }) =>
@@ -588,9 +601,9 @@ const OrganizationRoute = () => {
                                 : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
                             }`
                           }
-                          to={`/organization/${organization._id}`}
+                          to={`/organization/${organization.id}`}
                         >
-                          {organization.isPersonal ? (
+                          {isPersonalOrganization(organization) ? (
                             <Icon icon="home" />
                           ) : (
                             getNameInitials(organization.name)

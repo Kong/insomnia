@@ -1,12 +1,13 @@
 import React, { FC, Fragment, useCallback, useState } from 'react';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher, useNavigate } from 'react-router-dom';
 
 import * as session from '../../../account/session';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
+import { Button } from '../themed-button';
 
-export const Account: FC = () => {
+export const AccountSettings: FC = () => {
   const [codeSent, setCodeSent] = useState(false);
   const [error, setError] = useState('');
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -152,5 +153,38 @@ export const Account: FC = () => {
         </form>
       )}
     </Fragment>
+  );
+};
+
+export const Account = () => {
+  const navigate = useNavigate();
+  if (session.isLoggedIn()) {
+    return <AccountSettings />;
+  }
+
+  return (
+    <div className='flex flex-col gap-4'>
+      <div className="border-solid border-[--hl-md] notice surprise p-4 rounded-md">
+        Log in to Insomnia to manage your Account
+      </div>
+      <div className='flex gap-2'>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={
+            () => navigate('/auth/login')
+          }
+        >
+          Log in
+        </Button>
+        <Button
+          onClick={() => navigate('/auth/login')}
+          size="small"
+          variant="contained"
+        >
+          Sign Up
+        </Button>
+      </div>
+    </div>
   );
 };
