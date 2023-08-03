@@ -34,6 +34,7 @@ export interface WorkspaceLoaderData {
   caCertificate: CaCertificate | null;
   projects: Project[];
   requestTree: Child[];
+  grpcRequests: GrpcRequest[];
 }
 export interface Child {
   doc: Request | GrpcRequest | WebSocketRequest | RequestGroup;
@@ -113,6 +114,7 @@ export const workspaceLoader: LoaderFunction = async ({
       }));
   }
   const requestTree = nextTreeNode(activeWorkspace._id);
+  const grpcRequests = requestsAndFolders.filter(r => isGrpcRequest(r));
   return {
     activeWorkspace,
     activeProject,
@@ -127,6 +129,7 @@ export const workspaceLoader: LoaderFunction = async ({
     caCertificate: await models.caCertificate.findByParentId(workspaceId),
     projects,
     requestTree,
+    grpcRequests,
   };
 };
 

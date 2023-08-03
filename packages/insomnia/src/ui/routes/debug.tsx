@@ -5,7 +5,6 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
-import * as models from '../../models';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import { isEventStreamRequest, isRequest, isRequestId, Request } from '../../models/request';
@@ -65,12 +64,13 @@ export const Debug: FC = () => {
     activeWorkspace,
     activeWorkspaceMeta,
     activeEnvironment,
+    grpcRequests,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | GrpcRequest | WebSocketRequest, any, any> | undefined;
   const { activeRequest } = requestData || {};
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>([]);
+  const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
@@ -83,15 +83,7 @@ export const Debug: FC = () => {
       }
     });
   }, []);
-  useEffect(() => {
-    const fn = async () => {
-      const workspace = await models.workspace.getById(workspaceId);
-      const children = await db.withDescendants(workspace);
-      const grpcRequests = children.filter(d => isGrpcRequest(d));
-      setGrpcStates(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
-    };
-    fn();
-  }, [workspaceId]);
+
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
