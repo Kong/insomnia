@@ -804,7 +804,6 @@ strong {
   animation: AIfadeIn 0.5s 0.5s ease-in-out forwards;
 }
 /* Styles */
-
 /* Layout */
 .form-control {
   outline: none;
@@ -3465,4 +3464,12 @@ input.editable {
   top: 0;
   bottom: 0;
   z-index: 9999;
+}
+
+.servers {
+  margin-top: 1rem;
+}
+
+.pane-two {
+  z-index: 0;
 }

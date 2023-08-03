@@ -9,6 +9,7 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 
+import { isLoggedIn } from '../account/session';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
@@ -18,6 +19,7 @@ import {
 import { database } from '../common/database';
 import { initializeLogging } from '../common/log';
 import * as models from '../models';
+import { DEFAULT_PROJECT_ID } from '../models/project';
 import { initNewOAuthSession } from '../network/o-auth-2/get-token';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
@@ -43,6 +45,19 @@ initializeLogging();
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
+
+let initialEntry = isLoggedIn() ? '/organization' : `/organization/${DEFAULT_PROJECT_ID}/project/${DEFAULT_PROJECT_ID}/workspace/wrk_scratchpad/debug`;
+
+try {
+  const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
+
+  if (hasUserLoggedInBefore) {
+    initialEntry = '/auth/login';
+  }
+
+} catch (e) {
+  console.log('User has not logged in before.');
+}
 
 const router = createMemoryRouter(
   // @TODO - Investigate file based routing to generate these routes:
@@ -802,7 +817,7 @@ const router = createMemoryRouter(
     },
   ],
   {
-    initialEntries: ['/organization'],
+    initialEntries: [initialEntry],
   }
 );
 
@@ -822,7 +837,7 @@ router.subscribe(({ location }) => {
 
 async function renderApp() {
   await database.initClient();
-
+  await models.project.seed();
   await initPlugins();
 
   const settings = await models.settings.getOrCreate();
