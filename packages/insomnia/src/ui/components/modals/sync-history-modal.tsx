@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import * as session from '../../../account/session';
 import type { Snapshot } from '../../../sync/types';
 import { VCS } from '../../../sync/vcs/vcs';
-import { selectSyncItems } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -13,7 +14,6 @@ import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
 import { TimeFromNow } from '../time-from-now';
 import { Tooltip } from '../tooltip';
-
 type Props = ModalProps & {
   vcs: VCS;
   branch: string;
@@ -23,7 +23,9 @@ type Props = ModalProps & {
 export const SyncHistoryModal = ({ vcs, branch, history, onHide }: Props) => {
   const modalRef = useRef<ModalHandle>(null);
 
-  const syncItems = useSelector(selectSyncItems);
+  const {
+    syncItems,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   useEffect(() => {
     modalRef.current?.show();
   }, []);

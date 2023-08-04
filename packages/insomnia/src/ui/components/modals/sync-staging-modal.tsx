@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
@@ -8,7 +8,7 @@ import { BaseModel } from '../../../models';
 import type { DocumentKey, Stage, StageEntry, Status } from '../../../sync/types';
 import { describeChanges } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import { selectSyncItems } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -39,7 +39,9 @@ type LookupMap = Record<string, {
 
 export const SyncStagingModal = ({ vcs, branch, onSnapshot, handlePush, onHide }: Props) => {
   const modalRef = useRef<ModalHandle>(null);
-  const syncItems = useSelector(selectSyncItems);
+  const {
+    syncItems,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [state, setState] = useState<State>({
     status: {
       stage: {},
