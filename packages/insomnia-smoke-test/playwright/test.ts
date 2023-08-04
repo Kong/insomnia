@@ -16,6 +16,8 @@ interface EnvOptions {
   INSOMNIA_APP_WEBSITE_URL: string;
   INSOMNIA_GITHUB_API_URL: string;
   INSOMNIA_GITLAB_API_URL: string;
+  FORCE_HEIGHT: string;
+  FORCE_WIDTH: string;
 }
 
 export const test = baseTest.extend<{
@@ -30,6 +32,8 @@ export const test = baseTest.extend<{
       INSOMNIA_APP_WEBSITE_URL: webServerUrl + '/website',
       INSOMNIA_GITHUB_API_URL: webServerUrl + '/github-api/graphql',
       INSOMNIA_GITLAB_API_URL: webServerUrl + '/gitlab-api',
+      FORCE_HEIGHT: '1080',
+      FORCE_WIDTH: '1920',
     };
 
     const electronApp = await playwright._electron.launch({

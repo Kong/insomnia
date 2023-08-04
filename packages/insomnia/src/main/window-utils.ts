@@ -20,8 +20,9 @@ import LocalStorage from './local-storage';
 
 const { app, Menu, shell, dialog, clipboard, BrowserWindow } = electron;
 
-const DEFAULT_WIDTH = 1280;
-const DEFAULT_HEIGHT = 720;
+const DEFAULT_WIDTH = process.env.FORCE_WIDTH ? parseInt(process.env.FORCE_WIDTH, 10) : 1280;
+const DEFAULT_HEIGHT = process.env.FORCE_HEIGHT ? parseInt(process.env.FORCE_HEIGHT, 10) : 720;
+console.log(`[main] Default window size ${DEFAULT_WIDTH}x${DEFAULT_HEIGHT}`);
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
