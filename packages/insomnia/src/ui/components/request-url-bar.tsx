@@ -110,8 +110,16 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         setLoading(false);
         return;
       }
-
-      let filename = downloadPath;
+      let downloadPathAndName = '';
+      if (downloadPath) {
+        const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
+        const extension = sanitizedExtension || 'unknown';
+        const headers = responsePatch.headers || [];
+        const header = getContentDispositionHeader(headers);
+        const nameFromHeader = header ? contentDisposition.parse(header.value).parameters.filename : null;
+        const name = nameFromHeader || `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
+        downloadPathAndName = path.join(downloadPath, name);
+      }
       if (!downloadPath) {
         const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
         const { filePath } = await window.dialog.showSaveDialog({
@@ -125,16 +133,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           return;
         }
         window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-        filename = filePath;
+        downloadPathAndName = filePath;
       }
-      invariant(filename, 'filename should be set by now');
-      const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
-      const extension = sanitizedExtension || 'unknown';
-      const headers = responsePatch.headers || [];
-      const header = getContentDispositionHeader(headers);
-      const nameFromHeader = header ? contentDisposition.parse(header.value).parameters.filename : null;
-      const name = nameFromHeader || `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
-      const downloadPathAndName = path.join(filename, name);
+      invariant(downloadPathAndName, 'filename should be set by now');
+
       const to = fs.createWriteStream(downloadPathAndName);
       const readStream = models.response.getBodyStream(responsePatch);
       if (!readStream || typeof readStream === 'string') {
