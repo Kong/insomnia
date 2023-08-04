@@ -1,12 +1,12 @@
 import classnames from 'classnames';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { database as db, Operation } from '../../../common/database';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import { selectSyncItems } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -19,7 +19,6 @@ type Props = ModalProps & {
 
 interface State {
   error?: string;
-  newBranchName: string;
   currentBranch: string;
   branches: string[];
   remoteBranches: string[];
@@ -35,7 +34,6 @@ export const SyncBranchesModal = ({ vcs, onHide }: Props) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<State>({
     error: '',
-    newBranchName: '',
     branches: [],
     remoteBranches: [],
     currentBranch: '',
@@ -70,12 +68,14 @@ export const SyncBranchesModal = ({ vcs, onHide }: Props) => {
       }));
     }
   }, [vcs]);
-  refreshState();
   useEffect(() => {
     modalRef.current?.show();
-  }, []);
+    refreshState();
+  }, [refreshState]);
 
-  const syncItems = useSelector(selectSyncItems);
+  const {
+    syncItems,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   async function handleCheckout(branch: string) {
     try {
       const delta = await vcs.checkout(syncItems, branch);
@@ -133,17 +133,18 @@ export const SyncBranchesModal = ({ vcs, onHide }: Props) => {
     event.preventDefault();
     try {
       // Create new branch
-      const { newBranchName } = state;
+      const formData = new FormData(event.currentTarget);
+      const newBranchName = formData.get('newName') as string;
+      if (!newBranchName) {
+        return;
+      }
       await vcs.fork(newBranchName);
       // Checkout new branch
       const delta = await vcs.checkout(syncItems, newBranchName);
       await db.batchModifyDocs(delta as Operation);
       // Clear branch name and refresh things
       await refreshState();
-      setState(state => ({
-        ...state,
-        newBranchName: '',
-      }));
+
     } catch (err) {
       console.log('Failed to create', err.stack);
       setState(state => ({
@@ -152,7 +153,7 @@ export const SyncBranchesModal = ({ vcs, onHide }: Props) => {
       }));
     }
   };
-  const { branches, remoteBranches, currentBranch, newBranchName, error } = state;
+  const { branches, remoteBranches, currentBranch, error } = state;
 
   return (
     <OverlayContainer>
@@ -174,14 +175,13 @@ export const SyncBranchesModal = ({ vcs, onHide }: Props) => {
                   New Branch Name
                   <input
                     type="text"
-                    onChange={event => setState(state => ({ ...state, newBranchName: event.target.value }))}
+                    name="newName"
                     placeholder="testing-branch"
-                    value={newBranchName}
                   />
                 </label>
               </div>
               <div className="form-control form-control--no-label width-auto">
-                <button type="submit" className="btn btn--clicky" disabled={!newBranchName}>
+                <button type="submit" className="btn btn--clicky">
                   Create
                 </button>
               </div>
