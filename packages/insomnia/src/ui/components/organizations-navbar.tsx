@@ -3,6 +3,7 @@ import { Link, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getAppWebsiteBaseURL } from '../../common/constants';
+import { getLoginUrl } from '../auth-session-provider';
 import { isPersonalOrganization, OrganizationLoaderData } from '../routes/organization';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { SvgIcon } from './svg-icon';
@@ -103,7 +104,7 @@ export const OrganizationsNav: FC = () => {
               <ItemContent
                 label="Join an organization"
                 onClick={() => {
-                  window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/teams`);
+                  window.main.openInBrowser(getLoginUrl());
                 }}
               />
             </DropdownItem>
@@ -111,7 +112,7 @@ export const OrganizationsNav: FC = () => {
               <ItemContent
                 label="Create new organization"
                 onClick={() => {
-                  window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/teams`);
+                  window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/organization/create`);
                 }}
               />
             </DropdownItem>
