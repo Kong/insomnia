@@ -4,8 +4,8 @@ import { useToggle } from 'react-use';
 
 import { toKebabCase } from '../../../../../common/misc';
 import { useRequestPatcher } from '../../../../hooks/use-request';
-import { RequestLoaderData } from '../../../../routes/request';
 import { OrganizationLoaderData } from '../../../../routes/organization';
+import { RequestLoaderData } from '../../../../routes/request';
 import { OneLineEditor } from '../../../codemirror/one-line-editor';
 import { AuthRow } from './auth-row';
 

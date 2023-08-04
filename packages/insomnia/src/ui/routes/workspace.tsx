@@ -67,8 +67,6 @@ export const workspaceLoader: LoaderFunction = async ({
   invariant(workspaceId, 'Workspace ID is required');
   invariant(projectId, 'Project ID is required');
 
-  console.log({ workspaceId });
-
   const activeWorkspace = await models.workspace.getById(workspaceId);
 
   invariant(activeWorkspace, 'Workspace not found');
