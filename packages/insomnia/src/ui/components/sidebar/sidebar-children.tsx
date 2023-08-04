@@ -1,24 +1,13 @@
 import React, { FC, Fragment } from 'react';
 import ReactDOM from 'react-dom';
-import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { GrpcRequest } from '../../../models/grpc-request';
-import { Request } from '../../../models/request';
-import { isRequestGroup, RequestGroup } from '../../../models/request-group';
-import { WebSocketRequest } from '../../../models/websocket-request';
-import { selectSidebarChildren } from '../../redux/selectors';
+import { isRequestGroup } from '../../../models/request-group';
+import { Child, WorkspaceLoaderData } from '../../routes/workspace';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarRequestGroupRow } from './sidebar-request-group-row';
 import { SidebarRequestRow } from './sidebar-request-row';
 
-export interface Child {
-  doc: Request | GrpcRequest | WebSocketRequest | RequestGroup;
-  children: Child[];
-  collapsed: boolean;
-  hidden: boolean;
-  pinned: boolean;
-}
 export interface SidebarChildObjects {
   pinned: Child[];
   all: Child[];
@@ -34,10 +23,12 @@ interface Props {
 export const SidebarChildren: FC<Props> = ({
   filter,
 }) => {
-  const sidebarChildren = useSelector(selectSidebarChildren);
+  const {
+    requestTree,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
-  const { all, pinned } = sidebarChildren;
-  const showSeparator = sidebarChildren.pinned.length > 0;
+  const pinned = requestTree.filter((child: Child) => child.pinned);
+  const showSeparator = pinned.length > 0;
   const contextMenuPortal = ReactDOM.createPortal(
     <div className="hide">
       <SidebarCreateDropdown />
@@ -62,7 +53,7 @@ export const SidebarChildren: FC<Props> = ({
         <RecursiveSidebarRows
           filter={filter}
           isInPinnedList={false}
-          rows={all}
+          rows={requestTree}
         />
       </ul>
       {contextMenuPortal}

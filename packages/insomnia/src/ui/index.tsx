@@ -80,6 +80,10 @@ const router = createMemoryRouter(
           ],
         },
         {
+          path: 'settings/update',
+          action: async (...args) => (await import('./routes/actions')).updateSettingsAction(...args),
+        },
+        {
           path: 'organization',
           children: [
             {
@@ -139,6 +143,7 @@ const router = createMemoryRouter(
                           children: [
                             {
                               path: `${ACTIVITY_DEBUG}`,
+                              loader: async (...args) => (await import('./routes/debug')).loader(...args),
                               element: (
                                 <Suspense fallback={<AppLoadingIndicator />}>
                                   <Debug />
@@ -151,6 +156,10 @@ const router = createMemoryRouter(
                                   loader: async (...args) => (await import('./routes/request')).loader(...args),
                                   children: [
                                     {
+                                      path: 'connect',
+                                      action: async (...args) => (await import('./routes/request')).connectAction(...args),
+                                    },
+                                    {
                                       path: 'duplicate',
                                       action: async (...args) => (await import('./routes/request')).duplicateRequestAction(...args),
                                     },
@@ -161,6 +170,14 @@ const router = createMemoryRouter(
                                     {
                                       path: 'update-meta',
                                       action: async (...args) => (await import('./routes/request')).updateRequestMetaAction(...args),
+                                    },
+                                    {
+                                      path: 'response/delete-all',
+                                      action: async (...args) => (await import('./routes/request')).deleteAllResponsesAction(...args),
+                                    },
+                                    {
+                                      path: 'response/delete',
+                                      action: async (...args) => (await import('./routes/request')).deleteResponseAction(...args),
                                     },
                                   ],
                                 },
@@ -183,6 +200,10 @@ const router = createMemoryRouter(
                                 {
                                   path: 'request-group/update',
                                   action: async (...args) => (await import('./routes/request-group')).updateRequestGroupAction(...args),
+                                },
+                                {
+                                  path: 'request-group/:requestGroupId/update-meta',
+                                  action: async (...args) => (await import('./routes/request-group')).updateRequestGroupMetaAction(...args),
                                 },
                               ],
                             },

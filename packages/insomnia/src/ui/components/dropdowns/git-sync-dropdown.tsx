@@ -167,7 +167,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
     gitPushFetcher.state === 'loading' ||
     gitPullFetcher.state === 'loading';
 
-  const isSynced = Boolean(gitRepository?.uri && !isLoading && gitRepoDataFetcher.data && !('errors' in gitRepoDataFetcher.data));
+  const isSynced = Boolean(gitRepository?.uri && gitRepoDataFetcher.data && !('errors' in gitRepoDataFetcher.data));
 
   const { branches, branch: currentBranch } =
     gitRepoDataFetcher.data && 'branches' in gitRepoDataFetcher.data
@@ -263,6 +263,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
                 justifyContent: 'flex-start !important',
                 height: 'var(--line-height-sm)',
               }}
+              disabled={isLoading}
             >
               <div
                 style={{
@@ -289,7 +290,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
                         opacity: status?.localChanges ? 1 : 0.5,
                         color: status?.localChanges ? 'var(--color-notice)' : 'var(--color-hl)',
                       }}
-                    ><i className="fa fa-cube space-left" /></span>
+                    ><i className={`fa fa-${isLoading ? 'refresh fa-spin' : 'cube'} space-left`} /></span>
                   </Tooltip>
                 </div>
               </div>

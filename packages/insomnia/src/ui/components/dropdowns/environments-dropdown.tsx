@@ -1,22 +1,21 @@
 import React, { FC, useRef, useState } from 'react';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import type { Environment } from '../../../models/environment';
+import { type Environment } from '../../../models/environment';
 import { RootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
-import { showModal } from '../modals/index';
-import { WorkspaceEnvironmentsEditModal } from '../modals/workspace-environments-edit-modal';
 import { Tooltip } from '../tooltip';
 
 interface Props {
   activeEnvironment?: Environment | null;
   workspaceId: string;
+  setEnvironmentModalOpen: (isOpen: boolean) => void;
 }
 
-export const EnvironmentsDropdown: FC<Props> = () => {
-  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string}>();
+export const EnvironmentsDropdown: FC<Props> = ({ setEnvironmentModalOpen }) => {
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   const {
     baseEnvironment,
     activeEnvironment,
@@ -89,10 +88,10 @@ export const EnvironmentsDropdown: FC<Props> = () => {
                 setActiveEnvironmentFetcher.submit({
                   environmentId: environment._id,
                 },
-                {
-                  method: 'post',
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-                });
+                  {
+                    method: 'post',
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
+                  });
               }}
             />
           </DropdownItem>
@@ -107,22 +106,17 @@ export const EnvironmentsDropdown: FC<Props> = () => {
             setActiveEnvironmentFetcher.submit({
               environmentId: baseEnvironment._id,
             },
-            {
-              method: 'post',
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-            });
+              {
+                method: 'post',
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
+              });
           }}
         />
       </DropdownItem>
 
       <DropdownSection title="General">
         <DropdownItem>
-          <ItemContent
-            icon="wrench"
-            label="Manage Environments"
-            hint={hotKeyRegistry.environment_showEditor}
-            onClick={() => showModal(WorkspaceEnvironmentsEditModal)}
-          />
+          <ItemContent icon="wrench" label="Manage Environments" hint={hotKeyRegistry.environment_showEditor} onClick={() => setEnvironmentModalOpen(true)} />
         </DropdownItem>
       </DropdownSection>
     </Dropdown>

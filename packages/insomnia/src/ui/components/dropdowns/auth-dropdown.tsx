@@ -6,7 +6,7 @@ import {
   getAuthTypeName,
   HAWK_ALGORITHM_SHA256,
 } from '../../../common/constants';
-import { Request, RequestAuthentication } from '../../../models/request';
+import { RequestAuthentication } from '../../../models/request';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../../../network/o-auth-1/constants';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../../../network/o-auth-2/constants';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -129,7 +129,7 @@ interface Props {
   disabled?: boolean;
 }
 export const AuthDropdown: FC<Props> = ({ authTypes = defaultTypes, disabled = false }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchRequest = useRequestPatcher();
   const onClick = useCallback(async (type: AuthType) => {

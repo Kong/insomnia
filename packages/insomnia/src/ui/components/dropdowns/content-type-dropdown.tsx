@@ -29,7 +29,7 @@ import { showModal } from '../modals/index';
 const EMPTY_MIME_TYPE = null;
 
 export const ContentTypeDropdown: FC = () => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const patchRequest = useRequestPatcher();
   const { requestId } = useParams() as { requestId: string };
   const handleChangeMimeType = async (mimeType: string | null) => {

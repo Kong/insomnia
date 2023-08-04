@@ -1,16 +1,16 @@
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import React, { FC, Fragment, useEffect, useState } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { LoaderFunction, redirect, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
-import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
-import { isEventStreamRequest, isRequest, isRequestId, Request } from '../../models/request';
+import { isEventStreamRequest, isRequest, isRequestId } from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
-import { isWebSocketRequest, isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
+import { isWebSocketRequest, isWebSocketRequestId } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
@@ -18,11 +18,10 @@ import { ErrorBoundary } from '../components/error-boundary';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
-import { CookiesModal, showCookiesModal } from '../components/modals/cookies-modal';
+import { CookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
-import { RequestSwitcherModal } from '../components/modals/request-switcher-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { GrpcRequestPane } from '../components/panes/grpc-request-pane';
 import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
@@ -35,7 +34,7 @@ import { SidebarLayout } from '../components/sidebar-layout';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import { useRequestMetaPatcher } from '../hooks/use-request';
-import { RequestLoaderData } from './request';
+import { GrpcRequestLoaderData, RequestLoaderData, WebSocketRequestLoaderData } from './request';
 import { RootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 export interface GrpcMessage {
@@ -62,18 +61,38 @@ const INITIAL_GRPC_REQUEST_STATE = {
   error: undefined,
   methods: [],
 };
-
+export const loader: LoaderFunction = async ({ params }) => {
+  if (!params.requestId) {
+    const { projectId, workspaceId, organizationId } = params;
+    invariant(workspaceId, 'Workspace ID is required');
+    invariant(projectId, 'Project ID is required');
+    const activeWorkspace = await models.workspace.getById(workspaceId);
+    invariant(activeWorkspace, 'Workspace not found');
+    const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+    invariant(activeWorkspaceMeta, 'Workspace meta not found');
+    const activeRequestId = activeWorkspaceMeta.activeRequestId;
+    if (activeRequestId) {
+      return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
+    }
+  }
+  return null;
+};
 export const Debug: FC = () => {
   const {
     activeWorkspace,
     activeWorkspaceMeta,
     activeEnvironment,
+    grpcRequests,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request | GrpcRequest | WebSocketRequest, any> | undefined;
+  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData | GrpcRequestLoaderData | WebSocketRequestLoaderData | undefined;
   const { activeRequest } = requestData || {};
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>([]);
+  const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
+  const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
+  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
+  const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
@@ -85,15 +104,7 @@ export const Debug: FC = () => {
       }
     });
   }, []);
-  useEffect(() => {
-    const fn = async () => {
-      const workspace = await models.workspace.getById(workspaceId);
-      const children = await db.withDescendants(workspace);
-      const grpcRequests = children.filter(d => isGrpcRequest(d));
-      setGrpcStates(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
-    };
-    fn();
-  }, [workspaceId]);
+
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
@@ -133,6 +144,7 @@ export const Debug: FC = () => {
   useEffect(() => window.main.on('grpc.status', (_, id, status) => {
     setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, status } : s));
   }), []);
+
   useDocBodyKeyboardShortcuts({
     request_togglePin:
       async () => {
@@ -144,7 +156,7 @@ export const Debug: FC = () => {
     request_showSettings:
       () => {
         if (activeRequest) {
-          showModal(RequestSettingsModal, { request: activeRequest });
+          setIsRequestSettingsModalOpen(true);
         }
       },
     request_showDelete:
@@ -211,23 +223,14 @@ export const Debug: FC = () => {
             }),
         });
       },
+    // TODO: fix these
     request_showRecent:
-      () => showModal(RequestSwitcherModal, {
-        disableInput: true,
-        maxRequests: 10,
-        maxWorkspaces: 0,
-        selectOnKeyup: true,
-        title: 'Recent Requests',
-        hideNeverActiveRequests: true,
-        // Add an open delay so the dialog won't show for quick presses
-        openDelay: 150,
-      }),
+      () => { },
     request_quickSwitch:
-      () => showModal(RequestSwitcherModal),
+      () => { },
     environment_showEditor:
-      () => showModal(WorkspaceEnvironmentsEditModal),
-    showCookiesEditor:
-      () => showModal(CookiesModal),
+      () => setEnvironmentModalOpen(true),
+    showCookiesEditor: () => setIsCookieModalOpen(true),
     request_showGenerateCodeEditor:
       () => {
         if (activeRequest && isRequest(activeRequest)) {
@@ -250,13 +253,22 @@ export const Debug: FC = () => {
           <EnvironmentsDropdown
             activeEnvironment={activeEnvironment}
             workspaceId={workspaceId}
+            setEnvironmentModalOpen={setEnvironmentModalOpen}
           />
-          <button className="btn btn--super-compact" onClick={showCookiesModal}>
+          <button className="btn btn--super-compact" onClick={() => setIsCookieModalOpen(true)}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
             </div>
           </button>
         </div>
+        {isEnvironmentModalOpen && (
+          <WorkspaceEnvironmentsEditModal onHide={() => setEnvironmentModalOpen(false)} />)
+        }
+        {isCookieModalOpen && (
+          <CookiesModal
+            onHide={() => setIsCookieModalOpen(false)}
+          />
+        )}
 
         <SidebarFilter
           key={`${workspaceId}::filter`}
@@ -284,6 +296,12 @@ export const Debug: FC = () => {
             setLoading={setLoading}
           />)}
           {!requestId && <PlaceholderRequestPane />}
+          {isRequestSettingsModalOpen && activeRequest && (
+            <RequestSettingsModal
+              request={activeRequest}
+              onHide={() => setIsRequestSettingsModalOpen(false)}
+            />
+          )}
         </ErrorBoundary>
         : null}
       renderPaneTwo={

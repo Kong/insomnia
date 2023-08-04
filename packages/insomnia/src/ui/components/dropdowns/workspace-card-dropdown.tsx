@@ -88,6 +88,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
   const fetcher = useFetcher();
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const {
     organizationId,
@@ -151,7 +152,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
             <ItemContent
               label="Export"
               icon="file-export"
-              onClick={() => showModal(ExportRequestsModal)}
+              onClick={() => setIsExportModalOpen(true)}
             />
           </DropdownItem>
           <DropdownItem aria-label='Settings'>
@@ -212,6 +213,11 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
           organizationId={organizationId}
           defaultProjectId={projectId}
           defaultWorkspaceId={workspace._id}
+        />
+      )}
+      {isExportModalOpen && (
+        <ExportRequestsModal
+          onHide={() => setIsExportModalOpen(false)}
         />
       )}
       {isSettingsModalOpen && (

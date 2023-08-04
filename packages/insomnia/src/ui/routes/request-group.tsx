@@ -2,6 +2,7 @@ import { ActionFunction } from 'react-router-dom';
 
 import * as models from '../../models';
 import { RequestGroup } from '../../models/request-group';
+import { RequestGroupMeta } from '../../models/request-group-meta';
 import { invariant } from '../../utils/invariant';
 
 export const createRequestGroupAction: ActionFunction = async ({ request, params }) => {
@@ -18,9 +19,7 @@ export const updateRequestGroupAction: ActionFunction = async ({ request }) => {
   invariant(typeof patch._id === 'string', 'Request Group ID is required');
   const reqGroup = await models.requestGroup.getById(patch._id);
   invariant(reqGroup, 'Request Group not found');
-  if (name !== null) {
-    models.requestGroup.update(reqGroup, patch);
-  }
+  models.requestGroup.update(reqGroup, patch);
   return null;
 };
 export const deleteRequestGroupAction: ActionFunction = async ({ request }) => {
@@ -30,5 +29,18 @@ export const deleteRequestGroupAction: ActionFunction = async ({ request }) => {
   invariant(requestGroup, 'Request not found');
   models.stats.incrementDeletedRequestsForDescendents(requestGroup);
   models.requestGroup.remove(requestGroup);
+  return null;
+};
+
+export const updateRequestGroupMetaAction: ActionFunction = async ({ request, params }) => {
+  const { requestGroupId } = params;
+  invariant(typeof requestGroupId === 'string', 'Request Group ID is required');
+  const patch = await request.json() as Partial<RequestGroupMeta>;
+  const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroupId);
+  if (requestGroupMeta) {
+    models.requestGroupMeta.update(requestGroupMeta, patch);
+    return null;
+  }
+  models.requestGroupMeta.create({ parentId: requestGroupId, collapsed: false });
   return null;
 };

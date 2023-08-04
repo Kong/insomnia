@@ -1,18 +1,10 @@
 import { createSelector } from 'reselect';
 import type { ValueOf } from 'type-fest';
 
-import { fuzzyMatchAll } from '../../common/misc';
-import * as models from '../../models';
-import { BaseModel } from '../../models';
-import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
-import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
-import { sortProjects } from '../../models/helpers/project';
-import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
-import { isRequest, Request } from '../../models/request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { type Response } from '../../models/response';
-import { isWebSocketRequest, WebSocketRequest } from '../../models/websocket-request';
-import { type WebSocketResponse } from '../../models/websocket-response';
+import { BaseModel, canSync } from '../../models';
+import { DEFAULT_PROJECT_ID } from '../../models/project';
+import { isRequest } from '../../models/request';
+import { StatusCandidate } from '../../sync/types';
 import { RootState } from './modules';
 
 type EntitiesLists = {
@@ -31,28 +23,14 @@ const selectEntitiesLists = createSelector(
   },
 );
 
-export const selectRequestMetas = createSelector(
-  selectEntitiesLists,
-  entities => entities.requestMetas,
-);
-
-export const selectGrpcRequestMetas = createSelector(
-  selectEntitiesLists,
-  entities => entities.grpcRequestMetas,
-);
-
-export const selectRemoteProjects = createSelector(
-  selectEntitiesLists,
-  entities => sortProjects(entities.projects).filter(isRemoteProject),
-);
-
+// list workspaces for move/copy switcher, and export
 export const selectWorkspacesForActiveProject = createSelector(
   selectEntitiesLists,
   (state: RootState) => state.global.activeProjectId,
   (entities, activeProjectId) => entities.workspaces.filter(workspace => workspace.parentId === (activeProjectId || DEFAULT_PROJECT_ID)),
 );
 
-export const selectActiveWorkspace = createSelector(
+const selectActiveWorkspace = createSelector(
   selectEntitiesLists,
   (state: RootState) => state.global.activeWorkspaceId,
   (state: RootState) => state.global.activeProjectId,
@@ -60,11 +38,6 @@ export const selectActiveWorkspace = createSelector(
     return entities.workspaces.filter(workspace => workspace.parentId === (activeProjectId || DEFAULT_PROJECT_ID))
       .find(workspace => workspace._id === activeWorkspaceId);
   },
-);
-
-export const selectRequestVersions = createSelector(
-  selectEntitiesLists,
-  entities => entities.requestVersions,
 );
 
 const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, entities => {
@@ -114,235 +87,12 @@ const selectActiveWorkspaceEntities = createSelector(
   },
 );
 
-export const selectWorkspaceRequestsAndRequestGroups = createSelector(
-  selectActiveWorkspaceEntities,
-  entities => {
-    return entities.filter(
-      entity => isRequest(entity) || isWebSocketRequest(entity) || isGrpcRequest(entity) || isRequestGroup(entity),
-    ) as (Request | WebSocketRequest | GrpcRequest | RequestGroup)[];
-  },
-);
-
-const selectActiveWorkspaceMeta = createSelector(
-  selectActiveWorkspace,
-  selectEntitiesLists,
-  (activeWorkspace, entities) => {
-    return entities.workspaceMetas.find(workspaceMeta => workspaceMeta.parentId === activeWorkspace?._id);
-  },
-);
-export const selectActiveRequest = createSelector(
-  (state: RootState) => state.entities,
-  selectActiveWorkspaceMeta,
-  (entities, workspaceMeta) => {
-    const id = workspaceMeta?.activeRequestId || 'n/a';
-
-    if (id in entities.requests) {
-      return entities.requests[id];
-    }
-
-    if (id in entities.grpcRequests) {
-      return entities.grpcRequests[id];
-    }
-
-    if (id in entities.webSocketRequests) {
-      return entities.webSocketRequests[id];
-    }
-
-    return null;
-  },
-);
-
-export const selectActiveRequestResponses = createSelector(
-  selectActiveRequest,
-  selectEntitiesLists,
-  selectActiveWorkspace,
-  (activeRequest, entities, activeWorkspace) => {
-    const requestId = activeRequest ? activeRequest._id : 'n/a';
-
-    const responses: (Response | WebSocketResponse)[] = (activeRequest && isWebSocketRequest(activeRequest)) ? entities.webSocketResponses : entities.responses;
-
-    // Filter responses down if the setting is enabled
-    return responses.filter(response => {
-      const requestMatches = requestId === response.parentId;
-
-      if ((entities.settings[0] || models.settings.init()).filterResponsesByEnv) {
-        const meta = entities.workspaceMetas.find(workspaceMeta => workspaceMeta.parentId === activeWorkspace?._id);
-        const activeEnvironment = meta ? entities.environments.find(environment => environment._id === meta.activeEnvironmentId) : null;
-        const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
-        const environmentMatches = response.environmentId === activeEnvironmentId;
-        return requestMatches && environmentMatches;
-      } else {
-        return requestMatches;
-      }
-    })
-      .sort((a, b) => (a.created > b.created ? -1 : 1));
-  },
-);
-const selectActiveRequestMeta = createSelector(
-  selectActiveRequest,
-  selectEntitiesLists,
-  (activeRequest, entities) => {
-    const id = activeRequest?._id || 'n/a';
-    return entities.requestMetas.find(m => m.parentId === id);
-  },
-);
-export const selectActiveResponse = createSelector(
-  selectActiveRequestMeta,
-  selectActiveRequestResponses,
-  (activeRequestMeta, responses) => {
-    const activeResponseId = activeRequestMeta ? activeRequestMeta.activeResponseId : 'n/a';
-
-    const activeResponse = responses.find(response => response._id === activeResponseId);
-
-    if (activeResponse) {
-      return activeResponse;
-    }
-
-    return responses[0] || null;
-  },
-);
-
+// sync dropdown, branches, history and staging
 export const selectSyncItems = createSelector(
   selectActiveWorkspaceEntities,
-  getStatusCandidates,
-);
-
-type SidebarModel = Request | GrpcRequest | RequestGroup;
-
-const shouldShowInSidebar = (model: BaseModel): boolean =>
-  isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model) || isRequestGroup(model);
-
-const shouldIgnoreChildrenOf = (model: SidebarModel): boolean =>
-  isRequest(model) || isWebSocketRequest(model) || isGrpcRequest(model);
-
-const sortByMetaKeyOrId = (a: SidebarModel, b: SidebarModel): number => {
-  if (a.metaSortKey === b.metaSortKey) {
-    return a._id > b._id ? -1 : 1; // ascending
-  } else {
-    return a.metaSortKey < b.metaSortKey ? -1 : 1; // descending
-  }
-};
-
-interface Child {
-  doc: SidebarModel;
-  hidden: boolean;
-  collapsed: boolean;
-  pinned: boolean;
-  children: Child[];
-}
-
-export interface SidebarChildren {
-  all: Child[];
-  pinned: Child[];
-}
-const selectSidebarFilter = createSelector(
-  selectActiveWorkspaceMeta,
-  activeWorkspaceMeta => activeWorkspaceMeta ? activeWorkspaceMeta.sidebarFilter : '',
-);
-const selectPinnedRequests = createSelector(selectEntitiesLists, entities => {
-  const pinned: Record<string, boolean> = {};
-  const requests = [...entities.requests, ...entities.grpcRequests, ...entities.webSocketRequests];
-  const requestMetas = [...entities.requestMetas, ...entities.grpcRequestMetas];
-
-  // Default all to unpinned
-  for (const request of requests) {
-    pinned[request._id] = false;
-  }
-
-  // Update those that have metadata (not all do)
-  for (const meta of requestMetas) {
-    pinned[meta.parentId] = meta.pinned;
-  }
-
-  return pinned;
-});
-const selectCollapsedRequestGroups = createSelector(
-  selectEntitiesLists,
-  entities => {
-    const collapsed: Record<string, boolean> = {};
-
-    // Default all to collapsed
-    for (const requestGroup of entities.requestGroups) {
-      collapsed[requestGroup._id] = true;
-    }
-
-    // Update those that have metadata (not all do)
-    for (const meta of entities.requestGroupMetas) {
-      collapsed[meta.parentId] = meta.collapsed;
-    }
-
-    return collapsed;
-  });
-export const selectSidebarChildren = createSelector(
-  selectCollapsedRequestGroups,
-  selectPinnedRequests,
-  selectActiveWorkspace,
-  selectEntitiesChildrenMap,
-  selectSidebarFilter,
-  (collapsed, pinned, activeWorkspace, childrenMap, sidebarFilter): SidebarChildren => {
-    if (!activeWorkspace) {
-      return { all: [], pinned: [] };
-    }
-
-    function next(parentId: string, pinnedChildren: Child[]) {
-      const children: SidebarModel[] = (childrenMap[parentId] || [])
-        .filter(shouldShowInSidebar)
-        .sort(sortByMetaKeyOrId);
-
-      if (children.length > 0) {
-        return children.map(c => {
-          const child: Child = {
-            doc: c,
-            hidden: false,
-            collapsed: !!collapsed[c._id],
-            pinned: !!pinned[c._id],
-            children: [],
-          };
-
-          if (child.pinned) {
-            pinnedChildren.push(child);
-          }
-
-          // Don't add children of requests
-          child.children = shouldIgnoreChildrenOf(c) ? [] : next(c._id, pinnedChildren);
-          return child;
-        });
-      } else {
-        return [];
-      }
-    }
-
-    function matchChildren(children: Child[], parentNames: string[] = []) {
-      // Bail early if no filter defined
-      if (!sidebarFilter) {
-        return children;
-      }
-
-      for (const child of children) {
-        // Gather all parents so we can match them too
-        matchChildren(child.children, [...parentNames, child.doc.name]);
-        const hasMatchedChildren = child.children.find(c => c.hidden === false);
-        // Try to match request attributes
-        const name = child.doc.name;
-        const method = isGrpcRequest(child.doc) ? 'gRPC' : isRequest(child.doc) ? child.doc.method : '';
-        const match = fuzzyMatchAll(sidebarFilter, [name, method, ...parentNames], {
-          splitSpace: true,
-        });
-        // Update hidden state depending on whether it matched
-        const matched = hasMatchedChildren || match;
-        child.hidden = !matched;
-      }
-
-      return children;
-    }
-
-    const pinnedChildren: Child[] = [];
-    const childrenTree = next(activeWorkspace._id, pinnedChildren);
-    const matchedChildren = matchChildren(childrenTree);
-
-    return {
-      pinned: pinnedChildren,
-      all: matchedChildren,
-    };
-  },
+  (docs: BaseModel[]) => docs.filter(canSync).map((doc: BaseModel): StatusCandidate => ({
+    key: doc._id,
+    name: doc.name || '',
+    document: doc,
+  })),
 );

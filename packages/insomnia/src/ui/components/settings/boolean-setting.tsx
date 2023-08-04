@@ -1,9 +1,9 @@
-import React, { ChangeEventHandler, FC, ReactNode, useCallback } from 'react';
+import React, { FC, ReactNode } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { SettingsOfType } from '../../../common/settings';
-import * as models from '../../../models/index';
+import { useSettingsPatcher } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
 import { HelpTooltip } from '../help-tooltip';
 const Descriptions = styled.div({
@@ -36,10 +36,7 @@ export const BooleanSetting: FC<{
   if (!settings.hasOwnProperty(setting)) {
     throw new Error(`Invalid boolean setting name ${setting}`);
   }
-
-  const onChange = useCallback<ChangeEventHandler<HTMLInputElement>>(async ({ currentTarget: { checked } }) => {
-    await models.settings.patch({ [setting]: checked });
-  }, [setting]);
+  const patchSettings = useSettingsPatcher();
 
   return (
     <>
@@ -50,7 +47,7 @@ export const BooleanSetting: FC<{
           <input
             checked={Boolean(settings[setting])}
             name={setting}
-            onChange={onChange}
+            onChange={event => patchSettings({ [setting]: event.currentTarget.checked })}
             type="checkbox"
             disabled={disabled}
           />

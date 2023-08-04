@@ -2,7 +2,6 @@ import classnames from 'classnames';
 import React, { FC, PropsWithChildren, ReactNode } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { Request } from '../../../../../models/request';
 import { RequestLoaderData } from '../../../../routes/request';
 import { HelpTooltip } from '../../../help-tooltip';
 
@@ -14,7 +13,7 @@ interface Props {
 }
 
 export const AuthRow: FC<PropsWithChildren<Props>> = ({ labelFor, label, help, disabled, children }) => {
-  const { activeRequest: { authentication } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest: { authentication } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
 
   return (
     <tr key={labelFor}>

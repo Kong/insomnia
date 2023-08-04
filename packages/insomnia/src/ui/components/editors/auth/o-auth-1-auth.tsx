@@ -1,7 +1,6 @@
 import React, { FC } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { Request } from '../../../../models/request';
 import {
   OAuth1SignatureMethod,
   SIGNATURE_METHOD_HMAC_SHA1,
@@ -35,7 +34,7 @@ const signatureMethodOptions: {name: string; value: OAuth1SignatureMethod}[] = [
 }];
 
 export const OAuth1Auth: FC = () => {
-  const { activeRequest: { authentication: { signatureMethod } } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest: { authentication: { signatureMethod } } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
 
   return (
     <AuthTableBody>

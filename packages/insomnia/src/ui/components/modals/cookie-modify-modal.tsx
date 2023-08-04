@@ -1,6 +1,7 @@
 import clone from 'clone';
 import { isValid } from 'date-fns';
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { OverlayContainer } from 'react-aria';
 import { useRouteLoaderData } from 'react-router-dom';
 import { useFetcher, useParams } from 'react-router-dom';
 import { Cookie as ToughCookie } from 'tough-cookie';
@@ -17,29 +18,16 @@ import { OneLineEditor } from '../codemirror/one-line-editor';
 export interface CookieModifyModalOptions {
   cookie: Cookie;
 }
-export interface CookieModifyModalHandle {
-  show: (options: CookieModifyModalOptions) => void;
-  hide: () => void;
-}
-export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>((_, ref) => {
+
+export const CookieModifyModal = ((props: ModalProps & CookieModifyModalOptions) => {
   const modalRef = useRef<ModalHandle>(null);
-  const [cookie, setCookie] = useState<Cookie | null>(null);
+  const [cookie, setCookie] = useState<Cookie | null>(props.cookie);
   const { activeCookieJar } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   const updateCookieJarFetcher = useFetcher<CookieJar>();
-
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: ({ cookie }) => {
-      if (!activeCookieJar.cookies.find(c => c.id === cookie.id)) {
-        return;
-      }
-      setCookie(cookie);
-      modalRef.current?.show();
-    },
-  }), [activeCookieJar.cookies]);
+  useEffect(() => {
+    modalRef.current?.show();
+  }, []);
   const updateCookieJar = async (cookieJarId: string, patch: CookieJar) => {
     updateCookieJarFetcher.submit(JSON.stringify({ patch, cookieJarId }), {
       encType: 'application/json',
@@ -88,119 +76,120 @@ export const CookieModifyModal = forwardRef<CookieModifyModalHandle, ModalProps>
     }
   }
   return (
-    <Modal ref={modalRef}>
-      <ModalHeader>Edit Cookie</ModalHeader>
-      <ModalBody className="cookie-modify">
-        {activeCookieJar && cookie && (
-          <Tabs aria-label="Cookie modify tabs">
-            <TabItem key="friendly" title="Friendly">
-              <PanelContainer className="pad">
-                <div className="form-row">
-                  <div className="form-control form-control--outlined">
-                    <label data-testid="CookieKey">
-                      Key
-                      <OneLineEditor
-                        defaultValue={(cookie && cookie.key || '').toString()}
-                        onChange={value => handleCookieUpdate(Object.assign({}, cookie, { key: value.trim() }))}
-                      />
-                    </label>
+    <OverlayContainer>
+      <Modal ref={modalRef} onHide={props.onHide}>
+        <ModalHeader>Edit Cookie</ModalHeader>
+        <ModalBody className="cookie-modify">
+          {activeCookieJar && cookie && (
+            <Tabs aria-label="Cookie modify tabs">
+              <TabItem key="friendly" title="Friendly">
+                <PanelContainer className="pad">
+                  <div className="form-row">
+                    <div className="form-control form-control--outlined">
+                      <label data-testid="CookieKey">
+                        Key
+                        <OneLineEditor
+                          defaultValue={(cookie && cookie.key || '').toString()}
+                          onChange={value => handleCookieUpdate(Object.assign({}, cookie, { key: value.trim() }))}
+                        />
+                      </label>
+                    </div>
+                    <div className="form-control form-control--outlined">
+                      <label data-testid="CookieValue">
+                        Value
+                        <OneLineEditor
+                          defaultValue={(cookie && cookie.value || '').toString()}
+                          onChange={value => handleCookieUpdate(Object.assign({}, cookie, { value: value.trim() }))}
+                        />
+                      </label>
+                    </div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-control form-control--outlined">
+                      <label data-testid="CookieDomain">
+                        Domain
+                        <OneLineEditor
+                          defaultValue={(cookie && cookie.domain || '').toString()}
+                          onChange={value => handleCookieUpdate(Object.assign({}, cookie, { domain: value.trim() }))}
+                        />
+                      </label>
+                    </div>
+                    <div className="form-control form-control--outlined">
+                      <label data-testid="CookiePath">
+                        Path
+                        <OneLineEditor
+                          defaultValue={(cookie && cookie.path || '').toString()}
+                          onChange={value => handleCookieUpdate(Object.assign({}, cookie, { path: value.trim() }))}
+                        />
+                      </label>
+                    </div>
                   </div>
                   <div className="form-control form-control--outlined">
-                    <label data-testid="CookieValue">
-                      Value
-                      <OneLineEditor
-                        defaultValue={(cookie && cookie.value || '').toString()}
-                        onChange={value => handleCookieUpdate(Object.assign({}, cookie, { value: value.trim() }))}
-                      />
+                    <label data-testid="CookieExpires">
+                      Expires
+                      <input type="datetime-local" defaultValue={localDateTime} onChange={event => handleCookieUpdate(Object.assign({}, cookie, { expires: event.target.value }))} />
                     </label>
                   </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-control form-control--outlined">
-                    <label data-testid="CookieDomain">
-                      Domain
-                      <OneLineEditor
-                        defaultValue={(cookie && cookie.domain || '').toString()}
-                        onChange={value => handleCookieUpdate(Object.assign({}, cookie, { domain: value.trim() }))}
-                      />
-                    </label>
-                  </div>
-                  <div className="form-control form-control--outlined">
-                    <label data-testid="CookiePath">
-                      Path
-                      <OneLineEditor
-                        defaultValue={(cookie && cookie.path || '').toString()}
-                        onChange={value => handleCookieUpdate(Object.assign({}, cookie, { path: value.trim() }))}
-                      />
-                    </label>
-                  </div>
-                </div>
-                <div className="form-control form-control--outlined">
-                  <label data-testid="CookieExpires">
-                    Expires
-                    <input type="datetime-local" defaultValue={localDateTime} onChange={event => handleCookieUpdate(Object.assign({}, cookie, { expires: event.target.value }))} />
-                  </label>
-                </div>
-              </PanelContainer>
-              <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
-                <label>
-                  Secure
-                  <input
-                    className="space-left"
-                    type="checkbox"
-                    name="secure"
-                    defaultChecked={cookie.secure || false}
-                    onChange={event => handleCookieUpdate(Object.assign({}, cookie, { secure: event.target.checked }))}
-                  />
-                </label>
-                <label>
-                  httpOnly
-                  <input
-                    className="space-left"
-                    type="checkbox"
-                    name="httpOnly"
-                    defaultChecked={cookie.httpOnly || false}
-                    onChange={event => handleCookieUpdate(Object.assign({}, cookie, { httpOnly: event.target.checked }))}
-                  />
-                </label>
-              </div>
-            </TabItem>
-            <TabItem key="raw" title="Raw">
-              <PanelContainer className="pad">
-                <div className="form-control form-control--outlined">
+                </PanelContainer>
+                <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
                   <label>
-                    Raw Cookie String
+                    Secure
                     <input
-                      type="text"
-                      onChange={event => {
-                        try {
-                          // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
-                          const parsed = ToughCookie.parse(event.target.value)?.toJSON();
-                          if (parsed) {
-                            // Make sure cookie has an id
-                            parsed.id = cookie.id;
-                            handleCookieUpdate(parsed);
-                          }
-                        } catch (err) {
-                          console.warn(`Failed to parse cookie string "${event.target.value}"`, err);
-                          return;
-                        }
-                      }}
-                      defaultValue={rawDefaultValue}
+                      className="space-left"
+                      type="checkbox"
+                      name="secure"
+                      defaultChecked={cookie.secure || false}
+                      onChange={event => handleCookieUpdate(Object.assign({}, cookie, { secure: event.target.checked }))}
+                    />
+                  </label>
+                  <label>
+                    httpOnly
+                    <input
+                      className="space-left"
+                      type="checkbox"
+                      name="httpOnly"
+                      defaultChecked={cookie.httpOnly || false}
+                      onChange={event => handleCookieUpdate(Object.assign({}, cookie, { httpOnly: event.target.checked }))}
                     />
                   </label>
                 </div>
-              </PanelContainer>
-            </TabItem>
-          </Tabs>
-        )}
-      </ModalBody>
-      <ModalFooter>
-        <button className="btn" onClick={() => modalRef.current?.hide()}>
-          Done
-        </button>
-      </ModalFooter>
-    </Modal>
+              </TabItem>
+              <TabItem key="raw" title="Raw">
+                <PanelContainer className="pad">
+                  <div className="form-control form-control--outlined">
+                    <label>
+                      Raw Cookie String
+                      <input
+                        type="text"
+                        onChange={event => {
+                          try {
+                            // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
+                            const parsed = ToughCookie.parse(event.target.value)?.toJSON();
+                            if (parsed) {
+                              // Make sure cookie has an id
+                              parsed.id = cookie.id;
+                              handleCookieUpdate(parsed);
+                            }
+                          } catch (err) {
+                            console.warn(`Failed to parse cookie string "${event.target.value}"`, err);
+                            return;
+                          }
+                        }}
+                        defaultValue={rawDefaultValue}
+                      />
+                    </label>
+                  </div>
+                </PanelContainer>
+              </TabItem>
+            </Tabs>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <button className="btn" onClick={() => modalRef.current?.hide()}>
+            Done
+          </button>
+        </ModalFooter>
+      </Modal>
+    </OverlayContainer>
   );
 });
-CookieModifyModal.displayName = 'CookieModifyModal';

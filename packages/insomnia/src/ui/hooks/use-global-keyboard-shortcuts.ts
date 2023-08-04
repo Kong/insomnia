@@ -7,17 +7,20 @@ import { showModal } from '../components/modals';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import { RootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
+import { useSettingsPatcher } from './use-request';
 export const useGlobalKeyboardShortcuts = () => {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { activeWorkspaceMeta } = workspaceData || {};
+  const patchSettings = useSettingsPatcher();
+
   useDocBodyKeyboardShortcuts({
     plugin_reload:
       () => plugins.reloadPlugins(),
     environment_showVariableSourceAndValue:
-      () => models.settings.update(settings, { showVariableSourceAndValue: !settings.showVariableSourceAndValue }),
+      () => patchSettings({ showVariableSourceAndValue: !settings.showVariableSourceAndValue }),
     preferences_showGeneral:
       () => showModal(SettingsModal),
     preferences_showKeyboardShortcuts:

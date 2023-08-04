@@ -1,4 +1,5 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { OverlayContainer } from 'react-aria';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { strings } from '../../../common/strings';
@@ -16,16 +17,9 @@ type Props = ModalProps & {
 interface State {
   error?: string;
   workspaceName: string;
-  onHide?: () => void;
 }
-export interface SyncDeleteModalOptions {
-  onHide?: () => void;
-}
-export interface SyncDeleteModalHandle {
-  show: (options: SyncDeleteModalOptions) => void;
-  hide: () => void;
-}
-export const SyncDeleteModal = forwardRef<SyncDeleteModalHandle, Props>(({ vcs }, ref) => {
+
+export const SyncDeleteModal = ({ vcs, onHide }: Props) => {
   const modalRef = useRef<ModalHandle>(null);
   const [state, setState] = useState<State>({
     error: '',
@@ -35,17 +29,9 @@ export const SyncDeleteModal = forwardRef<SyncDeleteModalHandle, Props>(({ vcs }
     activeWorkspace,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
-  useImperativeHandle(ref, () => ({
-    hide: () => modalRef.current?.hide(),
-    show: ({ onHide }) => {
-      setState({
-        error: '',
-        workspaceName: '',
-        onHide,
-      });
-      modalRef.current?.show({ onHide });
-    },
-  }), []);
+  useEffect(() => {
+    modalRef.current?.show();
+  }, []);
   const onSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
@@ -56,7 +42,7 @@ export const SyncDeleteModal = forwardRef<SyncDeleteModalHandle, Props>(({ vcs }
         resourceType: strings.collection.singular.toLowerCase(),
       });
       modalRef.current?.hide();
-      state.onHide?.();
+      onHide?.();
     } catch (err) {
       setState(state => ({
         ...state,
@@ -67,29 +53,30 @@ export const SyncDeleteModal = forwardRef<SyncDeleteModalHandle, Props>(({ vcs }
   const { error, workspaceName } = state;
 
   return (
-    <Modal ref={modalRef} skinny>
-      <ModalHeader>Delete {strings.collection.singular}</ModalHeader>
-      <ModalBody className="wide pad-left pad-right text-center" noScroll>
-        {error && <p className="notice error margin-bottom-sm no-margin-top">{error}</p>}
-        <p className="selectable">
-          This will permanently delete the {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
-          {strings.collection.singular.toLowerCase()} remotely.
-        </p>
-        <p className="selectable">Please type {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>} to confirm.</p>
-        <form onSubmit={onSubmit}>
-          <div className="form-control form-control--outlined">
-            <input
-              type="text"
-              onChange={event => setState(state => ({ ...state, workspaceName: event.target.value }))}
-              value={workspaceName}
-            />
-            <Button bg="danger" disabled={workspaceName !== activeWorkspace?.name}>
-              Delete {strings.collection.singular}
-            </Button>
-          </div>
-        </form>
-      </ModalBody>
-    </Modal>
+    <OverlayContainer>
+      <Modal ref={modalRef} skinny onHide={onHide}>
+        <ModalHeader>Delete {strings.collection.singular}</ModalHeader>
+        <ModalBody className="wide pad-left pad-right text-center" noScroll>
+          {error && <p className="notice error margin-bottom-sm no-margin-top">{error}</p>}
+          <p className="selectable">
+            This will permanently delete the {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>}{' '}
+            {strings.collection.singular.toLowerCase()} remotely.
+          </p>
+          <p className="selectable">Please type {<strong style={{ whiteSpace: 'pre-wrap' }}>{activeWorkspace?.name}</strong>} to confirm.</p>
+          <form onSubmit={onSubmit}>
+            <div className="form-control form-control--outlined">
+              <input
+                type="text"
+                onChange={event => setState(state => ({ ...state, workspaceName: event.target.value }))}
+                value={workspaceName}
+              />
+              <Button bg="danger" disabled={workspaceName !== activeWorkspace?.name}>
+                Delete {strings.collection.singular}
+              </Button>
+            </div>
+          </form>
+        </ModalBody>
+      </Modal>
+    </OverlayContainer>
   );
-});
-SyncDeleteModal.displayName = 'SyncDeleteModal';
+};

@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
+import React, { FC, useEffect, useRef, useState } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -6,13 +6,12 @@ import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as models from '../../../models';
 import { Environment } from '../../../models/environment';
-import { RequestMeta } from '../../../models/request-meta';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
-import { RequestLoaderData } from '../../routes/request';
+import { WebSocketRequestLoaderData } from '../../routes/request';
 import { RootLoaderData } from '../../routes/root';
 import { TabItem, Tabs } from '../base/tabs';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
@@ -202,7 +201,7 @@ interface Props {
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
 export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<WebSocketRequest, RequestMeta>;
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as WebSocketRequestLoaderData;
 
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const readyState = useReadyState({ requestId: activeRequest._id, protocol: 'webSocket' });
@@ -247,14 +246,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
       });
     }
   };
-
-  const handleEditDescription = useCallback(() => {
-    showModal(RequestSettingsModal, { request: activeRequest });
-  }, [activeRequest]);
-
-  const handleEditDescriptionAdd = useCallback(() => {
-    showModal(RequestSettingsModal, { request: activeRequest, forceEditMode: true });
-  }, [activeRequest]);
+  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
 
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
@@ -268,7 +260,6 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
         <WebSocketActionBar
           key={uniqueKey}
           request={activeRequest}
-          workspaceId={workspaceId}
           environmentId={environment?._id || ''}
           defaultValue={activeRequest.url}
           readyState={readyState}
@@ -360,7 +351,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           {activeRequest.description ? (
             <div>
               <div className="pull-right pad bg-default">
-                <button className="btn btn--clicky" onClick={handleEditDescription}>
+                <button className="btn btn--clicky" onClick={() => setIsRequestSettingsModalOpen(true)}>
                   Edit
                 </button>
               </div>
@@ -387,10 +378,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                 </span>
                 <br />
                 <br />
-                <button
-                  className="btn btn--clicky faint"
-                  onClick={handleEditDescriptionAdd}
-                >
+                  <button className="btn btn--clicky faint" onClick={() => setIsRequestSettingsModalOpen(true)}>
                   Add Description
                 </button>
               </p>
@@ -398,6 +386,12 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           )}
         </TabItem>
       </Tabs>
+      {isRequestSettingsModalOpen && (
+        <RequestSettingsModal
+          request={activeRequest}
+          onHide={() => setIsRequestSettingsModalOpen(false)}
+        />
+      )}
     </Pane>
   );
 };

@@ -4,15 +4,12 @@ import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { docsTemplateTags } from '../../../common/documentation';
 import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
-import { isRequest } from '../../../models/request';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { RenderError } from '../../../templating';
 import { Link } from '../base/link';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import { RequestSettingsModal } from '../modals/request-settings-modal';
-import { showModal } from './index';
 export interface RequestRenderErrorModalOptions {
   error: RenderError | null;
   request: Request | WebSocketRequest | GrpcRequest | null;
@@ -55,17 +52,6 @@ export const RequestRenderErrorModal = forwardRef<RequestRenderErrorModalHandle,
               Failed to render <strong>{fullPath}</strong> prior to sending
             </p>
             <div className="pad-top-sm">
-              {error.path?.match(/^body/) && isRequest(request) && (
-                <button
-                  className="btn btn--clicky margin-right-sm"
-                  onClick={() => {
-                    modalRef.current?.hide();
-                    showModal(RequestSettingsModal, { request });
-                  }}
-                >
-                  Adjust Render Settings
-                </button>
-              )}
               <Link button href={docsTemplateTags} className="btn btn--clicky">
                 Templating Documentation <i className="fa fa-external-link" />
               </Link>

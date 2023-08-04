@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { getProductName } from '../../common/constants';
-import { Request } from '../../models/request';
 import { RequestLoaderData } from '../routes/request';
 import { WorkspaceLoaderData } from '../routes/workspace';
 export const useDocumentTitle = () => {
@@ -12,7 +11,7 @@ export const useDocumentTitle = () => {
     activeProject,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
 
   // Update document title
   useEffect(() => {

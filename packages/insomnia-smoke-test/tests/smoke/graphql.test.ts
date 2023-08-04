@@ -58,7 +58,7 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
   await page.getByRole('button', { name: 'GraphQL request' }).click();
 
   // Edit and prettify query
-  await page.locator('pre[role="presentation"]:has-text("hello,")').click();
+  await page.locator('pre[role="presentation"]:has-text("bearer")').click();
   await page.locator('.app').press('Enter');
   await page.locator('text=Prettify GraphQL').click();
   await page.click('[data-testid="request-pane"] >> text=Send');

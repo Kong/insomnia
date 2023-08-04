@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { getRenderContext, getRenderContextAncestors, HandleGetRenderContext, HandleRender, render } from '../../../common/render';
-import { Request } from '../../../models/request';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import { getKeys } from '../../../templating/utils';
 import { RequestLoaderData } from '../../routes/request';
@@ -19,7 +18,7 @@ initializeNunjucksRenderPromiseCache();
  * Access to functions useful for Nunjucks rendering
  */
 export const useNunjucks = () => {
-  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any> | undefined;
+  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData | undefined;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
   const fetchRenderContext = useCallback(async () => {

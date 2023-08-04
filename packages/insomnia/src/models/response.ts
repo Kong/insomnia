@@ -109,6 +109,10 @@ export function getById(id: string) {
   return db.get<Response>(type, id);
 }
 
+export function findByParentId(parentId: string) {
+  return db.find<Response>(type, { parentId: parentId });
+}
+
 export async function all() {
   return db.all<Response>(type);
 }

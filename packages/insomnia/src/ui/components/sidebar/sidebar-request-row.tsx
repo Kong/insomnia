@@ -20,7 +20,7 @@ import { Editable } from '../base/editable';
 import { Highlight } from '../base/highlight';
 import { RequestActionsDropdown } from '../dropdowns/request-actions-dropdown';
 import { WebSocketRequestActionsDropdown } from '../dropdowns/websocket-request-actions-dropdown';
-import { showModal, showPrompt } from '../modals/index';
+import { showPrompt } from '../modals/index';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
@@ -144,9 +144,7 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
       });
   }, [requestGroup?._id, requestFetcher, organizationId, projectId, workspaceId]);
 
-  const handleShowRequestSettings = useCallback(() => {
-    request && showModal(RequestSettingsModal, { request });
-  }, [request]);
+  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
 
   const [methodOverrideValue, setMethodOverrideValue] = useState<string | null>(null);
 
@@ -270,27 +268,32 @@ export const _SidebarRequestRow: FC<Props> = forwardRef(({
             </div>
           </button>
           <div className="sidebar__actions">
-            {isWebSocketRequest(request) ? (
-              <WebSocketRequestActionsDropdown
+            {isWebSocketRequest(request) ?
+              (<WebSocketRequestActionsDropdown
                 ref={requestActionsDropdown}
                 handleDuplicateRequest={handleDuplicateRequest}
                 request={request}
                 isPinned={isPinned}
-                handleShowSettings={handleShowRequestSettings}
-              />
-            ) : (
-              <RequestActionsDropdown
+                handleShowSettings={() => setIsRequestSettingsModalOpen(true)}
+              />)
+              :
+              (<RequestActionsDropdown
                 ref={requestActionsDropdown}
                 handleDuplicateRequest={handleDuplicateRequest}
-                handleShowSettings={handleShowRequestSettings}
+                handleShowSettings={() => setIsRequestSettingsModalOpen(true)}
                 request={request}
                 isPinned={isPinned}
                 requestGroup={requestGroup}
                 activeEnvironment={activeEnvironment}
                 activeProject={activeProject}
-              />
-            )}
+              />)}
           </div>
+          {isRequestSettingsModalOpen && (
+            <RequestSettingsModal
+              request={request}
+              onHide={() => setIsRequestSettingsModalOpen(false)}
+            />
+          )}
           {isPinned && (
             <div className="sidebar__item__icon-pin">
               <i className="fa fa-thumb-tack" />

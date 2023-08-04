@@ -19,7 +19,7 @@ import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-proj
 import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import { selectRemoteProjects, selectSyncItems } from '../../redux/selectors';
+import { selectSyncItems } from '../../redux/selectors';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
@@ -81,11 +81,13 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   });
   const { organizationId, projectId } = useParams<{ organizationId: string; projectId: string }>();
   const navigate = useNavigate();
-  const remoteProjects = useSelector(selectRemoteProjects);
   const syncItems = useSelector(selectSyncItems);
   const {
     activeWorkspaceMeta,
+    projects,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const remoteProjects = projects.filter(isRemoteProject);
+
   const refetchRemoteBranch = useCallback(async () => {
     if (session.isLoggedIn()) {
       try {
@@ -130,7 +132,10 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   }, REFRESH_PERIOD);
 
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
-
+  const [isSyncDeleteModalOpen, setIsSyncDeleteModalOpen] = useState(false);
+  // const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
+  // const [isSyncStagingModalOpen, setIsSyncStagingModalOpen] = useState(false);
+  const [isSyncBranchesModalOpen, setIsSyncBranchesModalOpen] = useState(false);
   useMount(async () => {
     setState(state => ({
       ...state,
@@ -577,7 +582,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             <ItemContent
               icon="code-fork"
               label="Branches"
-              onClick={() => showModal(SyncBranchesModal, { onHide: refreshVCSAndRefetchRemote })}
+              onClick={() => setIsSyncBranchesModalOpen(true)}
             />
           </DropdownItem>
 
@@ -586,7 +591,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               icon="remove"
               isDisabled={historyCount === 0}
               label={<>Delete {strings.collection.singular}</>}
-              onClick={() => showModal(SyncDeleteModal, { onHide: refreshVCSAndRefetchRemote })}
+              onClick={() => setIsSyncDeleteModalOpen(true)}
             />
           </DropdownItem>
         </DropdownSection>
@@ -673,6 +678,24 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       {isGitRepoSettingsModalOpen && (
         <GitRepositorySettingsModal
           onHide={() => setIsGitRepoSettingsModalOpen(false)}
+        />
+      )}
+      {isSyncDeleteModalOpen && (
+        <SyncDeleteModal
+          vcs={vcs}
+          onHide={() => {
+            refreshVCSAndRefetchRemote();
+            setIsSyncDeleteModalOpen(false);
+          }}
+        />
+      )}
+      {isSyncBranchesModalOpen && (
+        <SyncBranchesModal
+          vcs={vcs}
+          onHide={() => {
+            refreshVCSAndRefetchRemote();
+            setIsSyncBranchesModalOpen(false);
+          }}
         />
       )}
     </div>

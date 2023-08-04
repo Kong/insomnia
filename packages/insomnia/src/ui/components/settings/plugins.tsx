@@ -7,11 +7,11 @@ import {
   PLUGIN_HUB_BASE,
 } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
-import * as models from '../../../models';
 import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
+import { useSettingsPatcher } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
@@ -59,6 +59,7 @@ export const Plugins: FC = () => {
 
     setState(state => ({ ...state, plugins, isRefreshingPlugins: false }));
   }
+  const patchSettings = useSettingsPatcher();
 
   return (
     <div>
@@ -91,9 +92,7 @@ export const Plugins: FC = () => {
                       onChange={async event => {
                         const newConfig = { ...plugin.config, disabled: !event.target.checked };
                         setState(state => ({ ...state, isRefreshingPlugins: true }));
-                        await models.settings.update(settings, {
-                          pluginConfig: { ...settings.pluginConfig, [plugin.name]: newConfig },
-                        });
+                        patchSettings({ pluginConfig: { ...settings.pluginConfig, [plugin.name]: newConfig } });
                         refreshPlugins();
                       }}
                     />

@@ -2,7 +2,6 @@ import React, { FC, ReactNode, useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../../../common/misc';
-import { Request } from '../../../../../models/request';
 import { useNunjucks } from '../../../../context/nunjucks/use-nunjucks';
 import { useRequestPatcher } from '../../../../hooks/use-request';
 import { RequestLoaderData } from '../../../../routes/request';
@@ -30,7 +29,7 @@ interface Props {
 }
 
 export const AuthPrivateKeyRow: FC<Props> = ({ label, property, help }) => {
-  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const patchRequest = useRequestPatcher();
   const { handleGetRenderContext, handleRender } = useNunjucks();
 

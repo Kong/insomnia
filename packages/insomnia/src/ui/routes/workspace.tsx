@@ -8,9 +8,13 @@ import { ClientCertificate } from '../../models/client-certificate';
 import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { GitRepository } from '../../models/git-repository';
+import { GrpcRequest } from '../../models/grpc-request';
 import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { isRemoteProject, Project } from '../../models/project';
+import { Request } from '../../models/request';
+import { RequestGroup } from '../../models/request-group';
+import { WebSocketRequest } from '../../models/websocket-request';
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { invariant } from '../../utils/invariant';
@@ -27,6 +31,15 @@ export interface WorkspaceLoaderData {
   clientCertificates: ClientCertificate[];
   caCertificate: CaCertificate | null;
   projects: Project[];
+  requestTree: Child[];
+  grpcRequests: GrpcRequest[];
+}
+export interface Child {
+  doc: Request | GrpcRequest | WebSocketRequest | RequestGroup;
+  children: Child[];
+  collapsed: boolean;
+  hidden: boolean;
+  pinned: boolean;
 }
 
 export const workspaceLoader: LoaderFunction = async ({
@@ -67,6 +80,7 @@ export const workspaceLoader: LoaderFunction = async ({
 
   const activeApiSpec = await models.apiSpec.getByParentId(workspaceId);
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+
   const allProjects = await models.project.all();
 
   const organizationProjects =
@@ -75,6 +89,31 @@ export const workspaceLoader: LoaderFunction = async ({
       : [activeProject];
 
   const projects = sortProjects(organizationProjects);
+  const requestMetas = await models.requestMeta.all();
+  const grpcRequestMetas = await models.grpcRequestMeta.all();
+  const metas = [...requestMetas, ...grpcRequestMetas];
+  const folderMetas = (await models.requestGroupMeta.all());
+  const grpcRequestList: GrpcRequest[] = [];
+  const recurse = async ({ parentId }: { parentId: string }): Promise<Child[]> => {
+    const folders = await models.requestGroup.findByParentId(parentId);
+    const requests = await models.request.findByParentId(parentId);
+    const webSocketRequests = await models.webSocketRequest.findByParentId(parentId);
+    const grpcRequests = await models.grpcRequest.findByParentId(parentId);
+    // TODO: remove this state hack when the grpc responses go somewhere else
+    grpcRequests.map(r => grpcRequestList.push(r));
+
+    const childrenWithChildren = await Promise.all([...folders, ...requests, ...webSocketRequests, ...grpcRequests].map(async doc => ({
+      doc,
+      pinned: metas.find(m => m.parentId === doc._id)?.pinned || false,
+      collapsed: folderMetas.find(m => m.parentId === doc._id)?.collapsed || false,
+      hidden: false,
+      children: await recurse({ parentId: doc._id }),
+    })));
+    return childrenWithChildren;
+  };
+  const requestTree = await recurse({ parentId: activeWorkspace._id });
+
+  const grpcRequests = grpcRequestList;
   return {
     activeWorkspace,
     activeProject,
@@ -88,6 +127,8 @@ export const workspaceLoader: LoaderFunction = async ({
     clientCertificates,
     caCertificate: await models.caCertificate.findByParentId(workspaceId),
     projects,
+    requestTree,
+    grpcRequests,
   };
 };
 

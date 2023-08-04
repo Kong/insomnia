@@ -7,7 +7,6 @@ import { PREVIEW_MODE_FRIENDLY, PREVIEW_MODE_RAW, PREVIEW_MODE_SOURCE, PreviewMo
 import { CurlEvent, CurlMessageEvent } from '../../../main/network/curl';
 import { WebSocketEvent, WebSocketMessageEvent } from '../../../main/network/websocket';
 import { requestMeta } from '../../../models';
-import { RequestMeta } from '../../../models/request-meta';
 import { RequestLoaderData } from '../../routes/request';
 import { CodeEditor } from '../codemirror/code-editor';
 import { showError } from '../modals';
@@ -94,7 +93,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   } catch {
     // Can't parse as JSON.
   }
-  const { activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<any, RequestMeta>;
+  const { activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const previewMode = activeRequestMeta.previewMode || PREVIEW_MODE_SOURCE;
   return (
     <PreviewPane>

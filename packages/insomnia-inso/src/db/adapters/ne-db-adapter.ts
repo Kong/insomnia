@@ -1,4 +1,5 @@
-import fs from 'fs';
+import { stat } from 'node:fs/promises';
+
 import NeDB from 'nedb';
 import path from 'path';
 
@@ -8,7 +9,9 @@ import type { BaseModel } from '../models/types';
 
 const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
   // Confirm if db files exist
-  if (!fs.existsSync(path.join(dir, 'insomnia.Workspace.db'))) {
+  try {
+    await stat(path.join(dir, 'insomnia.Workspace.db'));
+  } catch (err) {
     return null;
   }
 

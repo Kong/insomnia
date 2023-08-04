@@ -2,8 +2,7 @@ import classnames from 'classnames';
 import React, { FC, PropsWithChildren } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { Request } from '../../../../../models/request';
-import { RequestAccordionKeys, RequestMeta } from '../../../../../models/request-meta';
+import { RequestAccordionKeys } from '../../../../../models/request-meta';
 import { useRequestMetaPatcher } from '../../../../hooks/use-request';
 import { RequestLoaderData } from '../../../../routes/request';
 
@@ -13,7 +12,7 @@ interface Props {
 }
 
 export const AuthAccordion: FC<PropsWithChildren<Props>> = ({ accordionKey, label, children }) => {
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
 
   const expanded = Boolean(activeRequestMeta?.expandedAccordionKeys[accordionKey]);
   const patchRequestMeta = useRequestMetaPatcher();

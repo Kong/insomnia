@@ -1,6 +1,6 @@
 import fs from 'fs';
 import React, { FC, useEffect, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -10,7 +10,7 @@ import { WebSocketEvent } from '../../../main/network/websocket';
 import { Response } from '../../../models/response';
 import { WebSocketResponse } from '../../../models/websocket-response';
 import { useRealtimeConnectionEvents } from '../../hooks/use-realtime-connection-events';
-import { selectActiveResponse } from '../../redux/selectors';
+import { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
 import { ErrorBoundary } from '../error-boundary';
@@ -85,8 +85,9 @@ const PaddedButton = styled('button')({
 });
 
 export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
-  const response = useSelector(selectActiveResponse) as WebSocketResponse | Response | null;
-  if (!response) {
+  const { activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData | WebSocketRequestLoaderData;
+
+  if (!activeResponse) {
     return (
       <Pane type="response">
         <PaneHeader />
@@ -94,7 +95,7 @@ export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
       </Pane>
     );
   }
-  return <RealtimeActiveResponsePane response={response} />;
+  return <RealtimeActiveResponsePane response={activeResponse} />;
 };
 
 const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }> = ({
@@ -175,7 +176,6 @@ const RealtimeActiveResponsePane: FC<{ response: WebSocketResponse | Response }>
         </div>
         <ResponseHistoryDropdown
           activeResponse={response}
-          className="tall pane__header__right"
         />
       </PaneHeader>
       <Tabs aria-label="Curl response pane tabs">

@@ -1,7 +1,6 @@
 import { differenceInHours, differenceInMinutes, isThisWeek, isToday } from 'date-fns';
 import React, { useCallback, useRef } from 'react';
-import { useSelector } from 'react-redux';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useRouteLoaderData } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 
 import { decompressObject } from '../../../common/misc';
@@ -11,7 +10,7 @@ import { Response } from '../../../models/response';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import { isWebSocketResponse, WebSocketResponse } from '../../../models/websocket-response';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
-import { selectActiveRequestResponses, selectRequestVersions } from '../../redux/selectors';
+import { RequestLoaderData, WebSocketRequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
@@ -20,31 +19,31 @@ import { StatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
 import { URLTag } from '../tags/url-tag';
 import { TimeFromNow } from '../time-from-now';
-interface Props<GenericResponse extends Response | WebSocketResponse> {
-  activeResponse: GenericResponse;
-  className?: string;
-}
 
-export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSocketResponse>({
+export const ResponseHistoryDropdown = ({
   activeResponse,
-  className,
-}: Props<GenericResponse>) => {
+}: { activeResponse: Response | WebSocketResponse }) => {
   const { requestId } = useParams() as { requestId: string };
   const dropdownRef = useRef<DropdownHandle>(null);
   const patchRequestMeta = useRequestMetaPatcher();
   const {
     activeEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const responses = useSelector(selectActiveRequestResponses) as GenericResponse[];
-  const requestVersions = useSelector(selectRequestVersions);
+  const {
+    responses,
+    requestVersions,
+  } = useRouteLoaderData('request/:requestId') as RequestLoaderData | WebSocketRequestLoaderData;
   const now = new Date();
-  const categories: Record<string, GenericResponse[]> = {
+  const categories: Record<string, (Response | WebSocketResponse)[]> = {
     minutes: [],
     hours: [],
     today: [],
     week: [],
     other: [],
   };
+
+  const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const fetcher = useFetcher();
 
   const handleSetActiveResponse = useCallback(async (requestId: string, activeResponse: Response | WebSocketResponse) => {
     if (isWebSocketResponse(activeResponse)) {
@@ -61,63 +60,40 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
   const handleDeleteResponses = useCallback(async () => {
     if (isWebSocketResponse(activeResponse)) {
       window.main.webSocket.closeAll();
-      await models.webSocketResponse.removeForRequest(requestId, activeEnvironment._id);
-    } else {
-      await models.response.removeForRequest(requestId, activeEnvironment._id);
     }
-    await patchRequestMeta(requestId, { activeResponseId: null });
-  }, [activeEnvironment._id, activeResponse, requestId, patchRequestMeta]);
+    fetcher.submit({}, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/response/delete-all`,
+      method: 'post',
+      encType: 'application/json',
+    });
+  }, [activeResponse, fetcher, organizationId, projectId, requestId, workspaceId]);
 
   const handleDeleteResponse = useCallback(async () => {
-    let response: Response | WebSocketResponse | null = null;
     if (activeResponse) {
       if (isWebSocketResponse(activeResponse)) {
         window.main.webSocket.close({ requestId });
-        await models.webSocketResponse.remove(activeResponse);
-        const environmentId = activeEnvironment?._id || null;
-        response = await models.webSocketResponse.getLatestForRequest(requestId, environmentId);
-      } else {
-        await models.response.remove(activeResponse);
-        const environmentId = activeEnvironment?._id || null;
-        response = await models.response.getLatestForRequest(requestId, environmentId);
       }
-
-      if (response?.requestVersionId) {
-        // Deleting a response restores latest request body
-        await models.requestVersion.restore(response.requestVersionId);
-      }
-
-      await patchRequestMeta(requestId, { activeResponseId: response?._id || null });
     }
-  }, [activeEnvironment?._id, activeResponse, requestId, patchRequestMeta]);
+    fetcher.submit({ responseId: activeResponse._id }, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/response/delete`,
+      method: 'post',
+      encType: 'application/json',
+    });
+  }, [activeResponse, fetcher, requestId, organizationId, projectId, workspaceId]);
 
-  responses.forEach(response => {
+  responses.forEach((response: Response | WebSocketResponse) => {
     const responseTime = new Date(response.created);
-
-    if (differenceInMinutes(now, responseTime) < 5) {
-      categories.minutes.push(response);
-      return;
-    }
-
-    if (differenceInHours(now, responseTime) < 2) {
-      categories.hours.push(response);
-      return;
-    }
-
-    if (isToday(responseTime)) {
-      categories.today.push(response);
-      return;
-    }
-
-    if (isThisWeek(responseTime)) {
-      categories.week.push(response);
-      return;
-    }
-
-    categories.other.push(response);
+    const match = Object.entries({
+      'minutes': differenceInMinutes(now, responseTime) < 5,
+      'hours': differenceInHours(now, responseTime) < 2,
+      'today': isToday(responseTime),
+      'week': isThisWeek(responseTime),
+      'other': true,
+    }).find(([, value]) => value === true)?.[0] || 'other';
+    categories[match].push(response);
   });
 
-  const renderResponseRow = (response: GenericResponse) => {
+  const renderResponseRow = (response: Response | WebSocketResponse) => {
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
     const requestVersion = requestVersions.find(({ _id }) => _id === response.requestVersionId);
@@ -180,7 +156,7 @@ export const ResponseHistoryDropdown = <GenericResponse extends Response | WebSo
       aria-label="Response history dropdown"
       key={activeResponse ? activeResponse._id : 'n/a'}
       closeOnSelect={false}
-      className={className}
+      className="tall pane__header__right"
       triggerButton={
         <DropdownButton className="btn btn--super-compact tall" title="Response history">
           {activeResponse && <TimeFromNow timestamp={activeResponse.created} titleCase />}

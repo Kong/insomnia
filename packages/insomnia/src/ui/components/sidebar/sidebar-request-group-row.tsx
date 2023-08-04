@@ -5,9 +5,9 @@ import { DragSource, DragSourceSpec, DropTarget, DropTargetMonitor, DropTargetSp
 
 import * as models from '../../../models/index';
 import { RequestGroup } from '../../../models/request-group';
+import { useRequestGroupMetaPatcher } from '../../hooks/use-request';
 import { Highlight } from '../base/highlight';
 import { RequestGroupActionsDropdown, RequestGroupActionsDropdownHandle } from '../dropdowns/request-group-actions-dropdown';
-import { showModal } from '../modals';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 import { DnDDragProps, DnDDropProps, DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 import { SidebarRequestRow } from './sidebar-request-row';
@@ -37,7 +37,7 @@ export const SidebarRequestGroupRowFC = forwardRef<SidebarRequestGroupRowHandle,
   const [dragDirection, setDragDirection] = useState(0);
   const dropdownRef = useRef<RequestGroupActionsDropdownHandle>(null);
   const expandTagRef = useRef<HTMLDivElement>(null);
-
+  const [isRequestGroupSettingsModalOpen, setIsRequestGroupSettingsModalOpen] = useState(false);
   useImperativeHandle(ref, () => ({
     setDragDirection,
     getExpandTag:() => expandTagRef.current,
@@ -51,17 +51,13 @@ export const SidebarRequestGroupRowFC = forwardRef<SidebarRequestGroupRowHandle,
     'sidebar__row--dragging-above': isDraggingOver && dragDirection > 0,
     'sidebar__row--dragging-below': isDraggingOver && dragDirection < 0,
   });
+  const groupMetaPatcher = useRequestGroupMetaPatcher();
   // NOTE: We only want the button draggable, not the whole container (ie. no children)
   const button = connectDragSource(
     connectDropTarget(
       <button
         onClick={async () => {
-          const requestGroupMeta = await models.requestGroupMeta.getByParentId(requestGroup._id);
-          if (requestGroupMeta) {
-            models.requestGroupMeta.update(requestGroupMeta, { collapsed: !isCollapsed });
-            return;
-          }
-          models.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: false });
+          groupMetaPatcher(requestGroup._id, { collapsed: !isCollapsed });
         }}
         onContextMenu={event => {
           event.preventDefault();
@@ -99,9 +95,13 @@ export const SidebarRequestGroupRowFC = forwardRef<SidebarRequestGroupRowHandle,
         <div className="sidebar__actions">
           <RequestGroupActionsDropdown
             ref={dropdownRef}
-            handleShowSettings={() => showModal(RequestGroupSettingsModal, { requestGroup })}
+            handleShowSettings={() => setIsRequestGroupSettingsModalOpen(true)}
             requestGroup={requestGroup}
           />
+          {isRequestGroupSettingsModalOpen && <RequestGroupSettingsModal
+            requestGroup={requestGroup}
+            onHide={() => setIsRequestGroupSettingsModalOpen(false)}
+          />}
         </div>
       </div>
       <ul className={classnames('sidebar__list', { 'sidebar__list--collapsed': isCollapsed })}>

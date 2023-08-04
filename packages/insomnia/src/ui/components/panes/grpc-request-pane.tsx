@@ -9,12 +9,12 @@ import { generateId } from '../../../common/misc';
 import { getRenderContext, getRenderedGrpcRequest, getRenderedGrpcRequestMessage, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import { GrpcMethodType } from '../../../main/ipc/grpc';
 import * as models from '../../../models';
-import type { GrpcRequest, GrpcRequestHeader } from '../../../models/grpc-request';
+import type { GrpcRequestHeader } from '../../../models/grpc-request';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { GrpcRequestState } from '../../routes/debug';
-import { RequestLoaderData } from '../../routes/request';
+import { GrpcRequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
@@ -73,7 +73,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   setGrpcState,
   reloadRequests,
 }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<GrpcRequest, any>;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as GrpcRequestLoaderData;
 
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
   const { requestMessages, running, methods } = grpcState;

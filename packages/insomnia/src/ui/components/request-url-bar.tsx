@@ -4,7 +4,7 @@ import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
 import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
@@ -12,8 +12,7 @@ import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../common/render';
 import * as models from '../../models';
-import { isEventStreamRequest, isRequest, Request } from '../../models/request';
-import { RequestMeta } from '../../models/request-meta';
+import { isEventStreamRequest, isRequest } from '../../models/request';
 import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
@@ -22,7 +21,7 @@ import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestPatcher } from '../hooks/use-request';
 import { useRequestMetaPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import { RequestLoaderData } from '../routes/request';
+import { ConnectActionParams, RequestLoaderData } from '../routes/request';
 import { RootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
@@ -69,10 +68,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { hotKeyRegistry } = settings;
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, RequestMeta>;
+  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const downloadPath = activeRequestMeta.downloadPath;
   const patchRequestMeta = useRequestMetaPatcher();
-  const { requestId } = useParams() as { requestId: string };
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
   const inputRef = useRef<OneLineEditorHandle>(null);
@@ -191,12 +189,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         ),
       });
     } finally {
-      // Unset active response because we just made a new one
-      // TODO: remove this with the redux fallback to first element
-      await patchRequestMeta(activeRequest._id, { activeResponseId: null });
       setLoading(false);
     }
-  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion, patchRequestMeta]);
+  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const handleSend = useCallback(async () => {
     if (!activeRequest) {
@@ -241,8 +236,17 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     await patchRequestMeta(activeRequest._id, { activeResponseId: null });
     setLoading(false);
   }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion, patchRequestMeta]);
-
-  const send = useCallback(() => {
+  const fetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const connect = (connectParams: ConnectActionParams) => {
+    fetcher.submit(JSON.stringify(connectParams),
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
+        method: 'post',
+        encType: 'application/json',
+      });
+  };
+  const send = () => {
     setCurrentTimeout(undefined);
     if (downloadPath) {
       sendThenSetFilePath(downloadPath);
@@ -262,9 +266,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           parameters: activeRequest.parameters.filter(p => !p.disabled),
           workspaceCookieJar,
         }, renderContext);
-        window.main.curl.open({
-          requestId: activeRequest._id,
-          workspaceId,
+        connect({
           url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
           headers: rendered.headers,
           authentication: rendered.authentication,
@@ -275,7 +277,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       return;
     }
     handleSend();
-  }, [activeEnvironment._id, activeWorkspace, downloadPath, handleSend, activeRequest, sendThenSetFilePath]);
+  };
 
   useInterval(send, currentInterval ? currentInterval : null);
   useTimeoutWhen(send, currentTimeout, !!currentTimeout);

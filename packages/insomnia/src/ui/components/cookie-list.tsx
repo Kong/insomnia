@@ -1,4 +1,4 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { Cookie as ToughCookie } from 'tough-cookie';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -6,7 +6,6 @@ import { cookieToString } from '../../common/cookies';
 import { Cookie } from '../../models/cookie-jar';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from './base/dropdown';
 import { PromptButton } from './base/prompt-button';
-import { showModal } from './modals';
 import { CookieModifyModal } from './modals/cookie-modify-modal';
 import { RenderedText } from './rendered-text';
 
@@ -27,6 +26,7 @@ const CookieRow: FC<{
   index: number;
   deleteCookie: (cookie: Cookie) => void;
 }> = ({ cookie, index, deleteCookie }) => {
+  const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const c = ToughCookie.fromJSON(cookie);
   const cookieString = c ? cookieToString(c) : '';
   return <tr className="selectable" key={index}>
@@ -39,7 +39,7 @@ const CookieRow: FC<{
     <td onClick={() => { }} className="text-right no-wrap">
       <button
         className="btn btn--super-compact btn--outlined"
-        onClick={() => showModal(CookieModifyModal, { cookie })}
+        onClick={() => setIsCookieModalOpen(true)}
         title="Edit cookie properties"
       >
         Edit
@@ -52,6 +52,12 @@ const CookieRow: FC<{
       >
         <i className="fa fa-trash-o" />
       </PromptButton>
+      {isCookieModalOpen && (
+        <CookieModifyModal
+          cookie={cookie}
+          onHide={() => setIsCookieModalOpen(false)}
+        />
+      )}
     </td>
   </tr>;
 

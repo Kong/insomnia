@@ -244,7 +244,7 @@ const getFieldsForGrantType = (authentication: Request['authentication']) => {
 };
 
 export const OAuth2Auth: FC = () => {
-  const { activeRequest: { authentication } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest: { authentication } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
 
   const { basic, advanced } = getFieldsForGrantType(authentication);
 
@@ -331,7 +331,7 @@ const renderAccessTokenExpiry = (token?: Pick<OAuth2Token, 'accessToken' | 'expi
 };
 
 const OAuth2TokenInput: FC<{ token: OAuth2Token | null; label: string; property: keyof Pick<OAuth2Token, 'accessToken' | 'refreshToken' | 'identityToken'> }> = ({ token, label, property }) => {
-  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
 
   const onChange = async ({ currentTarget: { value } }: ChangeEvent<HTMLInputElement>) => {
     if (token) {
@@ -414,7 +414,7 @@ const OAuth2Error: FC<{ token: OAuth2Token | null }> = ({ token }) => {
 };
 
 const OAuth2Tokens: FC = () => {
-  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const [token, setToken] = useState<OAuth2Token | null>(null);
   useEffect(() => {
     const fn = async () => {

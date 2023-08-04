@@ -2,7 +2,6 @@ import React, { ChangeEvent, FC, ReactNode, useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { toKebabCase } from '../../../../../common/misc';
-import { Request } from '../../../../../models/request';
 import { useRequestPatcher } from '../../../../hooks/use-request';
 import { RequestLoaderData } from '../../../../routes/request';
 import { AuthRow } from './auth-row';
@@ -19,7 +18,7 @@ interface Props {
 }
 
 export const AuthSelectRow: FC<Props> = ({ label, property, help, options, disabled }) => {
-  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData<Request, any>;
+  const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const patchRequest = useRequestPatcher();
 
   const selectedValue = authentication.hasOwnProperty(property) ? authentication[property] : options[0].value;

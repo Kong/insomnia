@@ -1,22 +1,46 @@
 import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
+import { delay } from '../../common/misc';
 import * as models from '../../models';
+import { BaseModel } from '../../models';
+import { CookieJar } from '../../models/cookie-jar';
 import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isRequest, Request } from '../../models/request';
+import { isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestHeader } from '../../models/request';
 import { RequestMeta } from '../../models/request-meta';
-import { WebSocketRequest } from '../../models/websocket-request';
+import { RequestVersion } from '../../models/request-version';
+import { Response } from '../../models/response';
+import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
+import { WebSocketResponse } from '../../models/websocket-response';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
 
-export interface RequestLoaderData<A, B> {
-  activeRequest: A;
-  activeRequestMeta: B;
+export interface WebSocketRequestLoaderData {
+  activeRequest: WebSocketRequest;
+  activeRequestMeta: RequestMeta;
+  activeResponse: WebSocketResponse | null;
+  responses: WebSocketResponse[];
+  requestVersions: RequestVersion[];
 }
-export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData<Request | WebSocketRequest | GrpcRequest, RequestMeta | GrpcRequestMeta>> => {
+export interface GrpcRequestLoaderData {
+  activeRequest: GrpcRequest;
+  activeRequestMeta: GrpcRequestMeta;
+  activeResponse: null;
+  responses: [];
+  requestVersions: RequestVersion[];
+}
+export interface RequestLoaderData {
+  activeRequest: Request;
+  activeRequestMeta: RequestMeta;
+  activeResponse: Response | null;
+  responses: Response[];
+  requestVersions: RequestVersion[];
+}
+
+export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData | WebSocketRequestLoaderData | GrpcRequestLoaderData> => {
   const { requestId, workspaceId } = params;
   invariant(requestId, 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');
@@ -25,18 +49,36 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
   const activeWorkspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   invariant(activeWorkspaceMeta, 'Active workspace meta not found');
   // NOTE: loaders shouldnt mutate data, this should be moved somewhere else
-  models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: requestId });
+  await models.workspaceMeta.update(activeWorkspaceMeta, { activeRequestId: requestId });
   if (isGrpcRequestId(requestId)) {
     return {
       activeRequest,
       activeRequestMeta: await models.grpcRequestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() }),
-    };
-  } else {
-    return {
-      activeRequest,
-      activeRequestMeta: await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() }),
-    };
+      activeResponse: null,
+      responses: [],
+      requestVersions: [],
+    } as GrpcRequestLoaderData;
   }
+  const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
+  invariant(activeRequestMeta, 'Request meta not found');
+  const { filterResponsesByEnv } = await models.settings.getOrCreate();
+
+  const responseModelName = isWebSocketRequestId(requestId) ? 'webSocketResponse' : 'response';
+  const activeResponse = activeRequestMeta.activeResponseId
+    ? await models[responseModelName].getById(activeRequestMeta.activeResponseId)
+    : await models[responseModelName].getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);
+  const allResponses = await models[responseModelName].findByParentId(requestId) as (Response | WebSocketResponse)[];
+  const filteredResponses = allResponses
+    .filter((r: Response | WebSocketResponse) => r.environmentId === activeWorkspaceMeta.activeEnvironmentId);
+  const responses = (filterResponsesByEnv ? filteredResponses : allResponses)
+    .sort((a: BaseModel, b: BaseModel) => (a.created > b.created ? -1 : 1));
+  return {
+    activeRequest,
+    activeRequestMeta,
+    activeResponse,
+    responses,
+    requestVersions: await models.requestVersion.findByParentId(requestId),
+  } as RequestLoaderData | WebSocketRequestLoaderData;
 };
 
 export const createRequestAction: ActionFunction = async ({ request, params }) => {
@@ -124,15 +166,20 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
 
 export const deleteRequestAction: ActionFunction = async ({ request, params }) => {
   const { organizationId, projectId, workspaceId } = params;
-
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   const formData = await request.formData();
   const id = formData.get('id') as string;
   const req = await requestOperations.getById(id);
   invariant(req, 'Request not found');
   models.stats.incrementDeletedRequests();
-  requestOperations.remove(req);
-  // TODO: redirect only if we are deleting the active request
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+  await requestOperations.remove(req);
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  invariant(workspaceMeta, 'Workspace meta not found');
+  if (workspaceMeta.activeRequestId === id) {
+    await models.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: null });
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+  }
+  return null;
 };
 
 export const duplicateRequestAction: ActionFunction = async ({ request, params }) => {
@@ -168,6 +215,92 @@ export const updateRequestMetaAction: ActionFunction = async ({ request, params 
     return null;
   }
   await models.requestMeta.updateOrCreateByParentId(requestId, patch);
+  return null;
+};
+export interface ConnectActionParams {
+  url: string;
+  headers: RequestHeader[];
+  authentication: RequestAuthentication;
+  cookieJar: CookieJar;
+}
+export const connectAction: ActionFunction = async ({ request, params }) => {
+  const { requestId, workspaceId } = params;
+  invariant(typeof requestId === 'string', 'Request ID is required');
+  const req = await requestOperations.getById(requestId);
+  invariant(req, 'Request not found');
+  invariant(workspaceId, 'Workspace ID is required');
+  const rendered = await request.json() as ConnectActionParams;
+  if (isWebSocketRequestId(requestId)) {
+    window.main.webSocket.open({
+      requestId,
+      workspaceId,
+      url: rendered.url,
+      headers: rendered.headers,
+      authentication: rendered.authentication,
+      cookieJar: rendered.cookieJar,
+    });
+  }
+  if (isEventStreamRequest(req)) {
+    window.main.curl.open({
+      requestId,
+      workspaceId,
+      url: rendered.url,
+      headers: rendered.headers,
+      authentication: rendered.authentication,
+      cookieJar: rendered.cookieJar,
+    });
+  }
+  // TODO: remove hack, show loading and reload after connection create response and set activeResponseId
+  await delay(2000);
+  return null;
+};
+
+export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
+  const { workspaceId, requestId } = params;
+  invariant(typeof requestId === 'string', 'Request ID is required');
+  const req = await requestOperations.getById(requestId);
+  invariant(req, 'Request not found');
+  invariant(workspaceId, 'Workspace ID is required');
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  invariant(workspaceMeta, 'Active workspace meta not found');
+  if (isWebSocketRequestId(requestId)) {
+    await models.webSocketResponse.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
+  } else {
+    await models.response.removeForRequest(requestId, workspaceMeta.activeEnvironmentId);
+  }
+  return null;
+};
+
+export const deleteResponseAction: ActionFunction = async ({ request, params }) => {
+  const { workspaceId, requestId } = params;
+  invariant(typeof requestId === 'string', 'Request ID is required');
+  const req = await requestOperations.getById(requestId);
+  invariant(req, 'Request not found');
+  const { responseId } = await request.json();
+  invariant(typeof responseId === 'string', 'Response ID is required');
+  invariant(workspaceId, 'Workspace ID is required');
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  invariant(workspaceMeta, 'Active workspace meta not found');
+  if (isWebSocketRequestId(requestId)) {
+    const res = await models.webSocketResponse.getById(responseId);
+    invariant(res, 'Response not found');
+    await models.webSocketResponse.remove(res);
+    const response = await models.webSocketResponse.getLatestForRequest(requestId, workspaceMeta.activeEnvironmentId);
+    if (response?.requestVersionId) {
+      await models.requestVersion.restore(response.requestVersionId);
+    }
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: response?._id || null });
+  } else {
+    const res = await models.response.getById(responseId);
+    invariant(res, 'Response not found');
+    await models.response.remove(res);
+    const response = await models.response.getLatestForRequest(requestId, workspaceMeta.activeEnvironmentId);
+    if (response?.requestVersionId) {
+      await models.requestVersion.restore(response.requestVersionId);
+    }
+    await models.requestMeta.updateOrCreateByParentId(requestId, { activeResponseId: response?._id || null });
+  }
+
   return null;
 };
 
