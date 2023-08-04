@@ -165,15 +165,20 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
 
 export const deleteRequestAction: ActionFunction = async ({ request, params }) => {
   const { organizationId, projectId, workspaceId } = params;
-
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
   const formData = await request.formData();
   const id = formData.get('id') as string;
   const req = await requestOperations.getById(id);
   invariant(req, 'Request not found');
   models.stats.incrementDeletedRequests();
-  requestOperations.remove(req);
-  // TODO: redirect only if we are deleting the active request
-  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+  await requestOperations.remove(req);
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  invariant(workspaceMeta, 'Workspace meta not found');
+  if (workspaceMeta.activeRequestId === id) {
+    await models.workspaceMeta.updateByParentId(workspaceId, { activeRequestId: null });
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+  }
+  return null;
 };
 
 export const duplicateRequestAction: ActionFunction = async ({ request, params }) => {
