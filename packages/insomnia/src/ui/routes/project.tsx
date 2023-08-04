@@ -466,6 +466,7 @@ const OrganizationProjectsSidebar: FC<{
             <SidebarListItemContent level={1}>
               <SidebarListItemTitle
                 icon="folder"
+                aria-label="All Files"
                 label={`All Files (${allFilesCount})`}
               />
             </SidebarListItemContent>
@@ -474,6 +475,7 @@ const OrganizationProjectsSidebar: FC<{
             <SidebarListItemContent level={2}>
               <SidebarListItemTitle
                 icon="file"
+                aria-label="Documents"
                 label={`Documents (${documentsCount})`}
               />
               <ListItemButton
@@ -488,6 +490,7 @@ const OrganizationProjectsSidebar: FC<{
           <Item key="collection" aria-label="Collections">
             <SidebarListItemContent level={2}>
               <SidebarListItemTitle
+                aria-label="Collections"
                 icon="bars"
                 label={`Collections (${collectionsCount})`}
               />
