@@ -21,7 +21,7 @@ test.describe('Debug-Sidebar', async () => {
       await page.getByRole('button', { name: 'example http' }).click();
       await page.locator('[data-testid="Dropdown-example-http"]').click();
       await page.getByRole('menuitem', { name: 'Settings' }).click();
-      await expect(page.locator('.app')).toContainText('Request Settings req');
+      await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
     });
@@ -30,7 +30,7 @@ test.describe('Debug-Sidebar', async () => {
       await page.getByRole('button', { name: 'example grpc' }).click();
       await page.locator('[data-testid="Dropdown-example-grpc"]').click();
       await page.getByRole('menuitem', { name: 'Settings' }).click();
-      await expect(page.locator('.app')).toContainText('Request Settings greq');
+      await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
     });
@@ -39,7 +39,7 @@ test.describe('Debug-Sidebar', async () => {
       await page.getByRole('button', { name: 'example websocket' }).click();
       await page.locator('[data-testid="Dropdown-example-websocket"]').click();
       await page.getByRole('menuitem', { name: 'Settings' }).click();
-      await expect(page.locator('.app')).toContainText('Request Settings ws-req');
+      await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
     });
@@ -48,7 +48,7 @@ test.describe('Debug-Sidebar', async () => {
       await page.getByRole('button', { name: 'example graphql' }).click();
       await page.locator('[data-testid="Dropdown-example-graphql"]').click();
       await page.getByRole('menuitem', { name: 'Settings' }).click();
-      await expect(page.locator('.app')).toContainText('Request Settings req');
+      await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
     });
@@ -57,7 +57,7 @@ test.describe('Debug-Sidebar', async () => {
       await page.getByRole('button', { name: 'test folder' }).click();
       await page.locator('[data-testid="Dropdown-test-folder"] button').click();
       await page.getByRole('menuitem', { name: 'Settings' }).click();
-      await expect(page.locator('.app')).toContainText('Folder Settings fld');
+      await page.getByRole('tab', { name: 'Preview' }).click();
     });
 
     test('Open properties of the collection', async ({ page }) => {
