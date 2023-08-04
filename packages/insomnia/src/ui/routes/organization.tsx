@@ -34,6 +34,7 @@ import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
 import { getVCS, initVCS } from '../../sync/vcs/vcs';
+import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { GitHubStarsButton } from '../components/github-stars-button';
@@ -41,9 +42,7 @@ import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
 import { InsomniaAILogo } from '../components/insomnia-icon';
 import { showModal } from '../components/modals';
-import {
-  showSettingsModal,
-} from '../components/modals/settings-modal';
+import { showSettingsModal } from '../components/modals/settings-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
@@ -97,17 +96,19 @@ export interface Metadata {
   organizationType: string;
 }
 
-export const isPersonalOrganization = (organization: Organization) => organization.metadata.organizationType === 'personal';
+export const isPersonalOrganization = (organization: Organization) =>
+  organization.metadata.organizationType === 'personal';
 
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
     try {
-      const { organizations } = await window.main.insomniaFetch<OrganizationsResponse>({
-        method: 'GET',
-        path: '/v1/organizations',
-        sessionId,
-      });
+      const { organizations } =
+        await window.main.insomniaFetch<OrganizationsResponse>({
+          method: 'GET',
+          path: '/v1/organizations',
+          sessionId,
+        });
 
       const personalOrganization = organizations.find(isPersonalOrganization);
 
@@ -139,24 +140,28 @@ export const loader: LoaderFunction = async () => {
     try {
       let vcs = getVCS();
       if (!vcs) {
-        const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
+        const driver = FileSystemDriver.create(
+          process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+        );
 
         console.log('Initializing VCS');
         vcs = await initVCS(driver, async conflicts => {
           return new Promise(resolve => {
             showModal(SyncMergeModal, {
               conflicts,
-              handleDone: (conflicts?: MergeConflict[]) => resolve(conflicts || []),
+              handleDone: (conflicts?: MergeConflict[]) =>
+                resolve(conflicts || []),
             });
           });
         });
       }
 
-      const { organizations } = await window.main.insomniaFetch<OrganizationsResponse>({
-        method: 'GET',
-        path: '/v1/organizations',
-        sessionId,
-      });
+      const { organizations } =
+        await window.main.insomniaFetch<OrganizationsResponse>({
+          method: 'GET',
+          path: '/v1/organizations',
+          sessionId,
+        });
 
       const user = await window.main.insomniaFetch<{
         name: string;
@@ -170,15 +175,20 @@ export const loader: LoaderFunction = async () => {
       return {
         user,
         settings: await models.settings.getOrCreate(),
-        organizations: organizations.sort((a, b) => a.name.localeCompare(b.name)).sort((a, b) => {
-          if (isPersonalOrganization(a) && !isPersonalOrganization(b)) {
-            return -1;
-          } else if (!isPersonalOrganization(a) && isPersonalOrganization(b)) {
-            return 1;
-          } else {
-            return 0;
-          }
-        }),
+        organizations: organizations
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .sort((a, b) => {
+            if (isPersonalOrganization(a) && !isPersonalOrganization(b)) {
+              return -1;
+            } else if (
+              !isPersonalOrganization(a) &&
+              isPersonalOrganization(b)
+            ) {
+              return 1;
+            } else {
+              return 0;
+            }
+          }),
       };
     } catch (err) {
       console.log('Failed to load Teams', err);
@@ -221,7 +231,8 @@ export const shouldOrganizationsRevalidate: ShouldRevalidateFunction = ({
 };
 
 const OrganizationRoute = () => {
-  const { organizations, settings, user } = useLoaderData() as OrganizationLoaderData;
+  const { organizations, settings, user } =
+    useLoaderData() as OrganizationLoaderData;
   const workspaceData = useRouteLoaderData(
     ':workspaceId',
   ) as WorkspaceLoaderData | null;
@@ -270,7 +281,9 @@ const OrganizationRoute = () => {
       ]
     : [];
 
-  const isScratchpadWorkspace = workspaceData?.activeWorkspace && isScratchpad(workspaceData.activeWorkspace);
+  const isScratchpadWorkspace =
+    workspaceData?.activeWorkspace &&
+    isScratchpad(workspaceData.activeWorkspace);
 
   return (
     <PresenceProvider>
@@ -326,7 +339,9 @@ const OrganizationRoute = () => {
                         <Button className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                           <Avatar
                             src={user?.picture}
-                            alt={`${getFirstName()?.charAt(0)}${getLastName()?.charAt(0)}`}
+                            alt={`${getFirstName()?.charAt(
+                              0,
+                            )}${getLastName()?.charAt(0)}`}
                           />
                           {`${getFirstName()} ${getLastName()}`}
                         </Button>
@@ -390,25 +405,20 @@ const OrganizationRoute = () => {
                 </div>
               </header>
               {isScratchpadWorkspace ? (
-                  <div className='flex h-[30px] items-center [grid-area:Banner] text-white bg-gradient-to-r from-[#7400e1] to-[#4000bf]'>
-                    <div className='flex basis-[50px] h-full'>
-                      <div
-                        className='border-solid border-r-[--hl-xl] border-r border-l border-l-[--hl-xl] box-border flex items-center justify-center w-full h-full'
-                      >
-                        <Icon icon='edit' />
-                      </div>
-                    </div>
-                    <div className='flex items-center px-[--padding-md] gap-[--padding-xs]'>
-                      Welcome to the Scratch Pad. To get the most out of Insomnia
-                      <NavLink
-                        to="/auth/login"
-                        className="font-bold text-white"
-                      >
-                        go to your projects →
-                      </NavLink>
+                <div className="flex h-[30px] items-center [grid-area:Banner] text-white bg-gradient-to-r from-[#7400e1] to-[#4000bf]">
+                  <div className="flex basis-[50px] h-full">
+                    <div className="border-solid border-r-[--hl-xl] border-r border-l border-l-[--hl-xl] box-border flex items-center justify-center w-full h-full">
+                      <Icon icon="edit" />
                     </div>
                   </div>
-                ) : null}
+                  <div className="flex items-center px-[--padding-md] gap-[--padding-xs]">
+                    Welcome to the Scratch Pad. To get the most out of Insomnia
+                    <NavLink to="/auth/login" className="font-bold text-white">
+                      go to your projects →
+                    </NavLink>
+                  </div>
+                </div>
+              ) : null}
               <div className="[grid-area:Navbar]">
                 <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
                   {organizations.map(organization => (
@@ -440,6 +450,44 @@ const OrganizationRoute = () => {
                       </Tooltip>
                     </TooltipTrigger>
                   ))}
+                  <MenuTrigger>
+                    <Button className="select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 box-border p-[--padding-sm] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center overflow-hidden outline-offset-[3px] hover:outline">
+                      <Icon icon="plus" />
+                    </Button>
+                    <Popover placement="left" className="min-w-max">
+                      <Menu
+                        onAction={action => {
+                          if (action === 'join-organization') {
+                            window.main.openInBrowser(getLoginUrl());
+                          }
+
+                          if (action === 'new-organization') {
+                            window.main.openInBrowser(
+                              `${getAppWebsiteBaseURL()}/app/organization/create`,
+                            );
+                          }
+                        }}
+                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      >
+                        <Item
+                          id="join-organization"
+                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                          aria-label="Join an organization"
+                        >
+                          <Icon icon="city" />
+                          <span>Join an organization</span>
+                        </Item>
+                        <Item
+                          id="new-organization"
+                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                          aria-label="Create new organization"
+                        >
+                          <Icon icon="sign-out" />
+                          <span>Create a new organization</span>
+                        </Item>
+                      </Menu>
+                    </Popover>
+                  </MenuTrigger>
                 </nav>
               </div>
               <Outlet />
