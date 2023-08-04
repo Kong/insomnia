@@ -1,6 +1,7 @@
 import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
+import { delay } from '../../common/misc';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { CookieJar } from '../../models/cookie-jar';
@@ -249,6 +250,8 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
       cookieJar: rendered.cookieJar,
     });
   }
+  // TODO: remove hack, show loading and reload after connection create response and set activeResponseId
+  await delay(2000);
   return null;
 };
 
