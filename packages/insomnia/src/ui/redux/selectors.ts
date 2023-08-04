@@ -23,13 +23,6 @@ const selectEntitiesLists = createSelector(
   },
 );
 
-// list workspaces for move/copy switcher, and export
-export const selectWorkspacesForActiveProject = createSelector(
-  selectEntitiesLists,
-  (state: RootState) => state.global.activeProjectId,
-  (entities, activeProjectId) => entities.workspaces.filter(workspace => workspace.parentId === (activeProjectId || DEFAULT_PROJECT_ID)),
-);
-
 const selectActiveWorkspace = createSelector(
   selectEntitiesLists,
   (state: RootState) => state.global.activeWorkspaceId,

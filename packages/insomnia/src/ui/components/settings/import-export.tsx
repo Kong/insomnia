@@ -1,6 +1,5 @@
-import React, { FC, Fragment, useCallback, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import React, { FC, Fragment, useEffect, useState } from 'react';
+import { useFetcher, useParams } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { getProductName } from '../../../common/constants';
@@ -8,7 +7,7 @@ import { docsImportExport } from '../../../common/documentation';
 import { exportAllToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
-import { selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { ProjectLoaderData } from '../../routes/project';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
@@ -30,14 +29,22 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
   const projectName = workspaceData?.activeProject.name ?? getProductName();
 
-  const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
+  const workspacesFetcher = useFetcher();
+  useEffect(() => {
+    const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
+    if (isIdleAndUninitialized) {
+      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
+    }
+  }, [organizationId, projectId, workspacesFetcher]);
+  const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData;
+  const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  const handleExportAllToFile = useCallback(() => {
+  const handleExportAllToFile = () => {
     exportAllToFile(projectName, workspacesForActiveProject);
     hideSettingsModal();
-  }, [hideSettingsModal, projectName, workspacesForActiveProject]);
+  };
 
   return (
     <Fragment>
