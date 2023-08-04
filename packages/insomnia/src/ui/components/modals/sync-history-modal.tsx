@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useSelector } from 'react-redux';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import * as session from '../../../account/session';

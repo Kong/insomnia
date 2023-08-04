@@ -68,7 +68,6 @@ The structure for smoke tests is explained in the smoke testing package: [`packa
 This is just a brief summary of Insomnia's current technical debt.
 
 - Loading large responses (~20 MB) can crash the app on weaker hardware.
-- An in-memory duplicate of the local DB is stored in Redux.
 - Bundling `libcurl` (native module) has caused many weeks of headaches trying to get builds working across Windows, Mac, and Linux. More expertise here is definitely needed.
 - All input fields that support features like templating or code completion are actually [CodeMirror](https://codemirror.net/6/) instances. This isn't really debt, but may affect things going forward.
 - Use of `libcurl` means Insomnia can't run in a web browser and can't support bidirectional socket communication.
