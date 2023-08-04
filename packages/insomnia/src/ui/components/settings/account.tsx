@@ -2,6 +2,7 @@ import React, { FC, Fragment, useCallback, useState } from 'react';
 import { useFetcher, useNavigate } from 'react-router-dom';
 
 import * as session from '../../../account/session';
+import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
@@ -60,7 +61,7 @@ export const AccountSettings: FC = () => {
           <code className="code--compact">{session.getEmail()}</code>
         </p>
         <br />
-        <Link button href="https://app.insomnia.rest" className="btn btn--clicky">
+        <Link button href={`${getAppWebsiteBaseURL()}/app/settings/account`} className="btn btn--clicky">
           Manage Account
         </Link>
         <PromptButton
