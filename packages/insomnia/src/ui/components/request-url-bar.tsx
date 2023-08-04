@@ -68,8 +68,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { hotKeyRegistry } = settings;
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const downloadPath = activeRequestMeta.downloadPath;
+  const { activeRequest, activeRequestMeta: { downloadPath } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const patchRequestMeta = useRequestMetaPatcher();
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
@@ -111,48 +110,51 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       if (!is2XXWithBodyPath) {
         // Save the bad responses so failures are shown still
         await models.response.create(responsePatch, settings.maxHistoryResponses);
+        setLoading(false);
+        return;
       }
-      if (is2XXWithBodyPath) {
-        const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
-        const extension = sanitizedExtension || 'unknown';
-        const name =
-          nameFromHeader || `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
-        let filename: string | null = null;
-        if (!downloadPath) {
-          const options: SaveDialogOptions = {
-            title: 'Select Download Location',
-            buttonLabel: 'Save',
-          };
-          const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
-          if (defaultPath) {
-            // NOTE: An error will be thrown if defaultPath is supplied but not a String
-            options.defaultPath = defaultPath;
-          }
-          const { filePath } = await window.dialog.showSaveDialog(options);
-          if (filePath) {
-            window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-            filename = filePath;
-          }
+      const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
+      const extension = sanitizedExtension || 'unknown';
+      const name =
+        nameFromHeader || `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
+      let filename: string | null = null;
+      if (!downloadPath) {
+        const options: SaveDialogOptions = {
+          title: 'Select Download Location',
+          buttonLabel: 'Save',
+        };
+        const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
+        if (defaultPath) {
+          // NOTE: An error will be thrown if defaultPath is supplied but not a String
+          options.defaultPath = defaultPath;
         }
-        if (downloadPath) {
-          filename = path.join(downloadPath, name);
+        const { filePath } = await window.dialog.showSaveDialog(options);
+        if (filePath) {
+          window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
+          filename = filePath;
         }
-        if (filename) {
-          const to = fs.createWriteStream(filename);
-          const readStream = models.response.getBodyStream(responsePatch);
-          if (!readStream || typeof readStream === 'string') {
-            return;
-          }
-          readStream.pipe(to);
-          readStream.on('end', async () => {
-            responsePatch.error = `Saved to ${filename}`;
-            await models.response.create(responsePatch, settings.maxHistoryResponses);
-          });
-          readStream.on('error', async err => {
-            console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
-            await models.response.create(responsePatch, settings.maxHistoryResponses);
-          });
+      }
+      if (downloadPath) {
+        filename = path.join(downloadPath, name);
+      }
+      if (filename) {
+        const to = fs.createWriteStream(filename);
+        const readStream = models.response.getBodyStream(responsePatch);
+        if (!readStream || typeof readStream === 'string') {
+          setLoading(false);
+          return;
         }
+        readStream.pipe(to);
+        readStream.on('end', async () => {
+          responsePatch.error = `Saved to ${filename}`;
+          await models.response.create(responsePatch, settings.maxHistoryResponses);
+          setLoading(false);
+        });
+        readStream.on('error', async err => {
+          console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
+          await models.response.create(responsePatch, settings.maxHistoryResponses);
+          setLoading(false);
+        });
       }
     } catch (err) {
       showAlert({
@@ -166,10 +168,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           </div>
         ),
       });
-    } finally {
       setLoading(false);
     }
-  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  }, [activeEnvironment._id, activeRequest._id, activeRequest.authentication?.type, activeRequest.body.mimeType, activeRequest.name, downloadPath, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const handleSend = useCallback(async () => {
     if (!activeRequest) {
