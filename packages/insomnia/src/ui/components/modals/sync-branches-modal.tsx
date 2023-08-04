@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 import { useSelector } from 'react-redux';
 
