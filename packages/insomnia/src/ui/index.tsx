@@ -5,6 +5,7 @@ import ReactDOM from 'react-dom/client';
 import {
   createMemoryRouter,
   matchPath,
+  Outlet,
   RouterProvider,
 } from 'react-router-dom';
 
@@ -145,6 +146,7 @@ const router = createMemoryRouter(
                                   path: 'request/:requestId',
                                   id: 'request/:requestId',
                                   loader: async (...args) => (await import('./routes/request')).loader(...args),
+                                  element: (<Outlet />),
                                   children: [
                                     {
                                       path: 'connect',

@@ -1,5 +1,4 @@
 import * as contentDisposition from 'content-disposition';
-import type { SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
@@ -15,6 +14,7 @@ import * as models from '../../models';
 import { isEventStreamRequest, isRequest } from '../../models/request';
 import * as network from '../../network/network';
 import { convert } from '../../utils/importers/convert';
+import { invariant } from '../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
 import { useReadyState } from '../hooks/use-ready-state';
@@ -68,8 +68,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { hotKeyRegistry } = settings;
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const downloadPath = activeRequestMeta.downloadPath;
+  const { activeRequest, activeRequestMeta: { downloadPath } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const patchRequestMeta = useRequestMetaPatcher();
   const methodDropdownRef = useRef<DropdownHandle>(null);
   const dropdownRef = useRef<DropdownHandle>(null);
@@ -90,31 +89,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
 
-  async function setFilePathAndStoreInLocalStorage() {
-    const options: SaveDialogOptions = {
-      title: 'Select Download Location',
-      buttonLabel: 'Save',
-    };
-    const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
-
-    if (defaultPath) {
-      // NOTE: An error will be thrown if defaultPath is supplied but not a String
-      options.defaultPath = defaultPath;
-    }
-
-    const { filePath } = await window.dialog.showSaveDialog(options);
-    if (!filePath) {
-      return null;
-    }
-    window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-    return filePath;
-  }
-
-  const sendThenSetFilePath = useCallback(async (filePath?: string) => {
-    if (!activeRequest) {
-      return;
-    }
-
+  const sendThenSetFilePath = useCallback(async () => {
     // Update request stats
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
@@ -128,54 +103,59 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     setLoading(true);
     try {
       const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
-      const headers = responsePatch.headers || [];
-      const header = getContentDispositionHeader(headers);
-      const nameFromHeader = header ? contentDisposition.parse(header.value).parameters.filename : null;
-
-      if (
-        responsePatch.bodyPath &&
-        responsePatch.statusCode &&
-        responsePatch.statusCode >= 200 &&
-        responsePatch.statusCode < 300
-      ) {
-        const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
-        const extension = sanitizedExtension || 'unknown';
-        const name =
-          nameFromHeader || `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
-        let filename: string | null;
-
-        if (filePath) {
-          filename = path.join(filePath, name);
-        } else {
-          filename = await setFilePathAndStoreInLocalStorage();
-        }
-
-        if (!filename) {
-          return;
-        }
-
-        const to = fs.createWriteStream(filename);
-        const readStream = models.response.getBodyStream(responsePatch);
-
-        if (!readStream || typeof readStream === 'string') {
-          return;
-        }
-
-        readStream.pipe(to);
-
-        readStream.on('end', async () => {
-          responsePatch.error = `Saved to ${filename}`;
-          await models.response.create(responsePatch, settings.maxHistoryResponses);
-        });
-
-        readStream.on('error', async err => {
-          console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
-          await models.response.create(responsePatch, settings.maxHistoryResponses);
-        });
-      } else {
+      const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
+      if (!is2XXWithBodyPath) {
         // Save the bad responses so failures are shown still
         await models.response.create(responsePatch, settings.maxHistoryResponses);
+        setLoading(false);
+        return;
       }
+      let downloadPathAndName = '';
+      if (downloadPath) {
+        const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
+        const extension = sanitizedExtension || 'unknown';
+        const headers = responsePatch.headers || [];
+        const header = getContentDispositionHeader(headers);
+        const nameFromHeader = header ? contentDisposition.parse(header.value).parameters.filename : null;
+        const name = nameFromHeader || `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
+        downloadPathAndName = path.join(downloadPath, name);
+      }
+      if (!downloadPath) {
+        const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
+        const { filePath } = await window.dialog.showSaveDialog({
+          title: 'Select Download Location',
+          buttonLabel: 'Save',
+          // NOTE: An error will be thrown if defaultPath is supplied but not a String
+          ...(defaultPath ? { defaultPath } : {}),
+        });
+        if (!filePath) {
+          setLoading(false);
+          return;
+        }
+        window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
+        downloadPathAndName = filePath;
+      }
+      invariant(downloadPathAndName, 'filename should be set by now');
+
+      const to = fs.createWriteStream(downloadPathAndName);
+      const readStream = models.response.getBodyStream(responsePatch);
+      if (!readStream || typeof readStream === 'string') {
+        setLoading(false);
+        return;
+      }
+      readStream.pipe(to);
+      readStream.on('end', async () => {
+        responsePatch.error = `Saved to ${downloadPathAndName}`;
+        await models.response.create(responsePatch, settings.maxHistoryResponses);
+        setLoading(false);
+        return;
+      });
+      readStream.on('error', async err => {
+        console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
+        await models.response.create(responsePatch, settings.maxHistoryResponses);
+        setLoading(false);
+        return;
+      });
     } catch (err) {
       showAlert({
         title: 'Unexpected Request Failure',
@@ -188,10 +168,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           </div>
         ),
       });
-    } finally {
       setLoading(false);
     }
-  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
+  }, [activeEnvironment._id, activeRequest._id, activeRequest.authentication?.type, activeRequest.body.mimeType, activeRequest.name, downloadPath, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
 
   const handleSend = useCallback(async () => {
     if (!activeRequest) {
@@ -232,8 +211,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         });
       }
     }
-    // Unset active response because we just made a new one
-    await patchRequestMeta(activeRequest._id, { activeResponseId: null });
     setLoading(false);
   }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion, patchRequestMeta]);
   const fetcher = useFetcher();
@@ -249,7 +226,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const send = () => {
     setCurrentTimeout(undefined);
     if (downloadPath) {
-      sendThenSetFilePath(downloadPath);
+      sendThenSetFilePath();
       return;
     }
     if (isEventStreamRequest(activeRequest)) {
