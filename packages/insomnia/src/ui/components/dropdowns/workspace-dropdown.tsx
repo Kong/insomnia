@@ -106,6 +106,7 @@ export const WorkspaceDropdown: FC = () => {
   return (
     <>
       <Dropdown
+        dataTestId='workspace-dropdown'
         aria-label="Workspace Dropdown"
         ref={dropdownRef}
         closeOnSelect={false}

@@ -26,7 +26,7 @@ test.describe('Plugins', async () => {
     await expect(page.locator('.app')).toContainText('This is a sample server Petstore server');
 
     // Open declarative config
-    await page.getByRole('button', { name: 'New Document' }).click();
+    await page.getByTestId('workspace-dropdown').locator('button').click();
     await page.getByRole('menuitem', { name: 'Declarative Config (Legacy)' }).click();
     // Check for declarative config contents
     await page.getByText('_format_version').click();
