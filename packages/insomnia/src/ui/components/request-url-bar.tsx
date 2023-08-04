@@ -1,5 +1,4 @@
 import * as contentDisposition from 'content-disposition';
-import type { SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
