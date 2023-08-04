@@ -66,9 +66,8 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
   const activeResponse = activeRequestMeta.activeResponseId
     ? await models[responseModelName].getById(activeRequestMeta.activeResponseId)
     : await models[responseModelName].getLatestForRequest(requestId, activeWorkspaceMeta.activeEnvironmentId);
-  const allResponses = await models[responseModelName].findByParentId(requestId);
+  const allResponses = await models[responseModelName].findByParentId(requestId) as (Response | WebSocketResponse)[];
   const filteredResponses = allResponses
-    // @ts-expect-error -- fix this
     .filter((r: Response | WebSocketResponse) => r.environmentId === activeWorkspaceMeta.activeEnvironmentId);
   const responses = (filterResponsesByEnv ? filteredResponses : allResponses)
     .sort((a: BaseModel, b: BaseModel) => (a.created > b.created ? -1 : 1));
