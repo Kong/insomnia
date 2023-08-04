@@ -290,7 +290,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
                         opacity: status?.localChanges ? 1 : 0.5,
                         color: status?.localChanges ? 'var(--color-notice)' : 'var(--color-hl)',
                       }}
-                    ><i className="fa fa-cube space-left" /></span>
+                    ><i className={`fa fa-${isLoading ? 'refresh fa-spin' : 'cube'} space-left`} /></span>
                   </Tooltip>
                 </div>
               </div>
