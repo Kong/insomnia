@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 import * as session from '../../account/session';
 import { getAccountId } from '../../account/session';
+import { getAppWebsiteBaseURL } from '../../common/constants';
 import { usePresenceContext } from '../context/app/presence-context';
 import { OrganizationLoaderData } from '../routes/organization';
 import { Avatar, AvatarGroup } from './avatar';
@@ -83,7 +84,7 @@ export const AccountToolbar = () => {
             icon="gear"
             label="Account Settings"
             stayOpenAfterClick
-            onClick={() => window.main.openInBrowser('https://app.insomnia.rest/app/account/')}
+            onClick={() => window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/settings/account`)}
           />
         </DropdownItem>
         <DropdownItem key="logout" aria-label="logout">
