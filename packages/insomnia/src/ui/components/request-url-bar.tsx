@@ -90,11 +90,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
 
-  const sendThenSetFilePath = useCallback(async (filePath?: string) => {
-    if (!activeRequest) {
-      return;
-    }
-
+  const sendThenSetFilePath = useCallback(async () => {
     // Update request stats
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
@@ -112,15 +108,17 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       const header = getContentDispositionHeader(headers);
       const nameFromHeader = header ? contentDisposition.parse(header.value).parameters.filename : null;
       const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
+      if (!is2XXWithBodyPath) {
+        // Save the bad responses so failures are shown still
+        await models.response.create(responsePatch, settings.maxHistoryResponses);
+      }
       if (is2XXWithBodyPath) {
         const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
         const extension = sanitizedExtension || 'unknown';
         const name =
           nameFromHeader || `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
         let filename: string | null = null;
-        if (filePath) {
-          filename = path.join(filePath, name);
-        } else {
+        if (!downloadPath) {
           const options: SaveDialogOptions = {
             title: 'Select Download Location',
             buttonLabel: 'Save',
@@ -135,6 +133,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
             window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
             filename = filePath;
           }
+        }
+        if (downloadPath) {
+          filename = path.join(downloadPath, name);
         }
         if (filename) {
           const to = fs.createWriteStream(filename);
@@ -152,9 +153,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
             await models.response.create(responsePatch, settings.maxHistoryResponses);
           });
         }
-      } else {
-        // Save the bad responses so failures are shown still
-        await models.response.create(responsePatch, settings.maxHistoryResponses);
       }
     } catch (err) {
       showAlert({
@@ -227,7 +225,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const send = () => {
     setCurrentTimeout(undefined);
     if (downloadPath) {
-      sendThenSetFilePath(downloadPath);
+      sendThenSetFilePath();
       return;
     }
     if (isEventStreamRequest(activeRequest)) {
