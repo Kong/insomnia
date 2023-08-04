@@ -1,6 +1,6 @@
 {
   "name": "insomnia",
-  "version": "2023.5.0-beta.8",
+  "version": "3.19.0-beta.8",
   "productName": "Insomnia",
   "private": true,
   "description": "The Collaborative API Design Tool",
@@ -69,7 +69,7 @@
     "html-entities": "^2.4.0",
     "httpsnippet": "^2.0.0",
     "iconv-lite": "^0.6.3",
-    "insomnia-testing": "^3.19.0-beta.7",
+    "insomnia-testing": "^3.19.0-beta.8",
     "isomorphic-git": "^1.10.4",
     "js-yaml": "^3.14.1",
     "jshint": "^2.13.6",
@@ -83,7 +83,7 @@
     "node-forge": "^1.3.1",
     "nunjucks": "^3.2.4",
     "oauth-1.0a": "^2.2.6",
-    "openapi-2-kong": "^3.19.0-beta.7",
+    "openapi-2-kong": "^3.19.0-beta.8",
     "papaparse": "^5.4.1",
     "prettier": "2.4.1",
     "shell-quote": "^1.8.1",
@@ -135,6 +135,7 @@
     "@types/ws": "^8.5.4",
     "@types/xmldom": "0.1.30",
     "@vitejs/plugin-react": "^2.2.0",
+    "autoprefixer": "^10.4.2",
     "buffer": "^6.0.3",
     "classnames": "^2.3.1",
     "codemirror": "^5.65.2",
@@ -162,6 +163,7 @@
     "ncp": "^2.0.0",
     "objectpath": "^2.0.0",
     "openapi-types": "^7.0.1",
+    "postcss": "^8.4.6",
     "react": "^18.2.0",
     "react-aria": "3.23.1",
     "react-dnd": "^7.4.5",
@@ -173,6 +175,7 @@
     "reselect": "^4.1.5",
     "srp-js": "^0.2.1",
     "styled-components": "^5.3.3",
+    "tailwindcss": "^3.3.3",
     "tinykeys": "^1.4.0",
     "type-fest": "^2.12.0",
     "typescript": "^4.5.5",
@@ -181,10 +184,7 @@
     "vkbeautify": "^0.99.1",
     "ws": "^8.13.0",
     "xmldom": "^0.6.0",
-    "xpath": "0.0.32",
-    "tailwindcss": "^3.3.3",
-    "autoprefixer": "^10.4.2",
-    "postcss": "^8.4.6"
+    "xpath": "0.0.32"
   },
   "dev": {
     "dev-server-port": 3334
