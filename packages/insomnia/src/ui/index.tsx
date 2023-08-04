@@ -2,19 +2,15 @@ import './rendererListeners';
 
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
-import { Provider } from 'react-redux';
 import {
   createMemoryRouter,
   matchPath,
   RouterProvider,
 } from 'react-router-dom';
-import { Store } from 'redux';
 
 import {
   ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
   ACTIVITY_SPEC,
-  ACTIVITY_UNIT_TEST,
   getProductName,
   isDevelopment,
 } from '../common/constants';
@@ -28,11 +24,6 @@ import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
 import { invariant } from '../utils/invariant';
 import { AppLoadingIndicator } from './components/app-loading-indicator';
-import { init as initStore } from './redux/modules';
-import {
-  setActiveProject,
-  setActiveWorkspace,
-} from './redux/modules/global';
 import { ErrorRoute } from './routes/error';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
@@ -562,74 +553,6 @@ router.subscribe(({ location }) => {
   match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, location.pathname);
 });
 
-function updateReduxNavigationState(store: Store, pathname: string) {
-  let currentActivity;
-  const isActivityHome = matchPath(
-    {
-      path: '/organization/:organizationId/project/:projectId',
-      end: true,
-    },
-    pathname
-  );
-
-  const isActivityDebug = matchPath(
-    {
-      path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_DEBUG}`,
-      end: false,
-    },
-    pathname
-  );
-
-  const isActivityDesign = matchPath(
-    {
-      path: `/organization/:organizationId/project/:projectId/workspace/:workspaceId/${ACTIVITY_SPEC}`,
-      end: false,
-    },
-    pathname
-  );
-
-  const isActivityTest = matchPath(
-    {
-      path: '/organization/:organizationId/project/:projectId/workspace/:workspaceId/test',
-      end: false,
-    },
-    pathname
-  );
-
-  if (isActivityDebug) {
-    currentActivity = ACTIVITY_DEBUG;
-    store.dispatch(
-      setActiveProject(isActivityDebug?.params.projectId || '')
-    );
-    store.dispatch(
-      setActiveWorkspace(isActivityDebug?.params.workspaceId || '')
-    );
-  } else if (isActivityDesign) {
-    currentActivity = ACTIVITY_SPEC;
-    store.dispatch(
-      setActiveProject(isActivityDesign?.params.projectId || '')
-    );
-    store.dispatch(
-      setActiveWorkspace(isActivityDesign?.params.workspaceId || '')
-    );
-  } else if (isActivityTest) {
-    currentActivity = ACTIVITY_UNIT_TEST;
-    store.dispatch(
-      setActiveProject(isActivityTest?.params.projectId || '')
-    );
-    store.dispatch(
-      setActiveWorkspace(isActivityTest?.params.workspaceId || '')
-    );
-  } else {
-    currentActivity = ACTIVITY_HOME;
-    store.dispatch(
-      setActiveProject(isActivityHome?.params.projectId || '')
-    );
-  }
-
-  return currentActivity;
-}
-
 async function renderApp() {
   await database.initClient();
 
@@ -643,31 +566,12 @@ async function renderApp() {
 
   await applyColorScheme(settings);
 
-  // Create Redux store
-  const store = await initStore();
-  // Synchronizes the Redux store with the router history
-  // @HACK: This is temporary until we completely remove navigation through Redux
-  const synchronizeRouterState = () => {
-    let currentPathname = router.state.location.pathname;
-    updateReduxNavigationState(store, router.state.location.pathname);
-    router.subscribe(({ location }) => {
-      if (location.pathname !== currentPathname) {
-        currentPathname = location.pathname;
-        updateReduxNavigationState(store, location.pathname);
-      }
-    });
-  };
-
-  synchronizeRouterState();
-
   const root = document.getElementById('root');
 
   invariant(root, 'Could not find root element');
 
   ReactDOM.createRoot(root).render(
-    <Provider store={store}>
-      <RouterProvider router={router} />
-    </Provider>
+    <RouterProvider router={router} />
   );
 }
 

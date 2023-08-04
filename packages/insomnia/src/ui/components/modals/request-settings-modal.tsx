@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useSelector } from 'react-redux';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import * as models from '../../../models';
@@ -9,7 +8,7 @@ import { isRequest, Request } from '../../../models/request';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
 import { invariant } from '../../../utils/invariant';
 import { useRequestPatcher } from '../../hooks/use-request';
-import { selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { ProjectLoaderData } from '../../routes/project';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -31,7 +30,16 @@ export interface RequestSettingsModalHandle {
 export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSettingsModalOptions) => {
   const modalRef = useRef<ModalHandle>(null);
   const editorRef = useRef<CodeEditorHandle>(null);
-  const workspacesForActiveProject = useSelector(selectWorkspacesForActiveProject);
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const workspacesFetcher = useFetcher();
+  useEffect(() => {
+    const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
+    if (isIdleAndUninitialized) {
+      workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
+    }
+  }, [organizationId, projectId, workspacesFetcher]);
+  const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData;
+  const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
   const [state, setState] = useState<State>({
     defaultPreviewMode: !!request?.description,
     activeWorkspaceIdToCopyTo: null,
@@ -41,7 +49,6 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   }, []);
 
   const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const patchRequest = useRequestPatcher();
 
   const duplicateRequest = (r: Partial<Request>) => {

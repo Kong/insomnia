@@ -1,5 +1,6 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { OverlayContainer } from 'react-aria';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
@@ -7,7 +8,7 @@ import { BaseModel } from '../../../models';
 import type { DocumentKey, Stage, StageEntry, Status } from '../../../sync/types';
 import { describeChanges } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import { selectSyncItems } from '../../redux/selectors';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -17,16 +18,16 @@ import { Tooltip } from '../tooltip';
 
 type Props = ModalProps & {
   vcs: VCS;
+  branch: string;
+  onSnapshot: () => Promise<void>;
+  handlePush: () => Promise<void>;
 };
 
 interface State {
   status: Status;
   message: string;
   error: string;
-  branch: string;
   lookupMap: LookupMap;
-  onSnapshot: () => Promise<void>;
-  handlePush: () => Promise<void>;
 }
 
 type LookupMap = Record<string, {
@@ -36,35 +37,23 @@ type LookupMap = Record<string, {
   checked: boolean;
 }>;
 
-export interface SyncStagingModalOptions {
-  onSnapshot: () => Promise<void>;
-  handlePush: () => Promise<void>;
-}
-
-export interface SyncStagingModalHandle {
-  show: (options: SyncStagingModalOptions) => void;
-  hide: () => void;
-}
-
-export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs }, ref) => {
+export const SyncStagingModal = ({ vcs, branch, onSnapshot, handlePush, onHide }: Props) => {
   const modalRef = useRef<ModalHandle>(null);
-  const syncItems = useSelector(selectSyncItems);
+  const {
+    syncItems,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const [state, setState] = useState<State>({
     status: {
       stage: {},
       unstaged: {},
       key: '',
     },
-    branch: '',
     error: '',
     message: '',
     lookupMap: {},
-    onSnapshot: async () => { },
-    handlePush: async () => { },
   });
 
   const refreshVCS = useCallback(async (newStage: Stage = {}) => {
-    const branch = await vcs.getBranch();
     const status = await vcs.status(syncItems, newStage);
     const lookupMap: LookupMap = {};
     const allKeys = [...Object.keys(status.stage), ...Object.keys(status.unstaged)];
@@ -91,27 +80,20 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
       lookupMap,
       error: '',
     }));
-  }, [syncItems, vcs]);
+  }, [branch, syncItems, vcs]);
 
-  useImperativeHandle(ref, () => ({
-    hide: () => {
-      modalRef.current?.hide();
-    },
-    show: async ({ onSnapshot, handlePush }) => {
-      modalRef.current?.show();
-      // Reset state
+  useEffect(() => {
+    modalRef.current?.show();
+    const fn = async () => {
       setState({
         status: {
           stage: {},
           unstaged: {},
           key: '',
         },
-        branch: '',
         error: '',
         message: '',
         lookupMap: {},
-        onSnapshot,
-        handlePush,
       });
       // Add everything to stage by default except new items
       const status: Status = await vcs.status(syncItems, {});
@@ -125,8 +107,9 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
       }
       const stage = await vcs.stage(status.stage, toStage);
       await refreshVCS(stage);
-    },
-  }), [refreshVCS, syncItems, vcs]);
+    };
+    fn();
+  }, [refreshVCS, syncItems, vcs]);
 
   const handleStageToggle = async (event: React.SyntheticEvent<HTMLInputElement>) => {
     const { status } = state;
@@ -164,7 +147,7 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
   const handleTakeSnapshotAndPush = async () => {
     const success = await handleTakeSnapshot();
     if (success) {
-      state.handlePush?.();
+      handlePush?.();
     }
   };
 
@@ -172,7 +155,6 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
     const {
       message,
       status: { stage },
-      onSnapshot,
     } = state;
     try {
       await vcs.takeSnapshot(stage, message);
@@ -190,7 +172,7 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
     return true;
   };
 
-  const { status, message, error, branch } = state;
+  const { status, message, error } = state;
   const allMap = { ...status.stage, ...status.unstaged };
   const addedKeys: string[] = Object.entries(allMap)
     .filter(([, value]) => 'added' in value)
@@ -200,65 +182,67 @@ export const SyncStagingModal = forwardRef<SyncStagingModalHandle, Props>(({ vcs
     .map(([key]) => key);
 
   return (
-    <Modal ref={modalRef}>
-      <ModalHeader>Create Snapshot</ModalHeader>
-      <ModalBody className="wide pad">
-        {error && (
-          <p className="notice error margin-bottom-sm no-margin-top">
-            <button className="pull-right icon" onClick={() => setState(state => ({ ...state, error: '' }))}>
-              <i className="fa fa-times" />
-            </button>
-            {error}
-          </p>
-        )}
-        <div className="form-group">
-          <div className="form-control form-control--outlined">
-            <label>
-              Snapshot Message
-              <textarea
-                cols={30}
-                rows={3}
-                onChange={event => setState(state => ({ ...state, message: event.target.value }))}
-                value={message}
-                placeholder="This is a helpful message that describe the changes made in this snapshot"
-                required
-              />
-            </label>
+    <OverlayContainer onClick={e => e.stopPropagation()}>
+      <Modal ref={modalRef} onHide={onHide}>
+        <ModalHeader>Create Snapshot</ModalHeader>
+        <ModalBody className="wide pad">
+          {error && (
+            <p className="notice error margin-bottom-sm no-margin-top">
+              <button className="pull-right icon" onClick={() => setState(state => ({ ...state, error: '' }))}>
+                <i className="fa fa-times" />
+              </button>
+              {error}
+            </p>
+          )}
+          <div className="form-group">
+            <div className="form-control form-control--outlined">
+              <label>
+                Snapshot Message
+                <textarea
+                  cols={30}
+                  rows={3}
+                  onChange={event => setState(state => ({ ...state, message: event.target.value }))}
+                  value={message}
+                  placeholder="This is a helpful message that describe the changes made in this snapshot"
+                  required
+                />
+              </label>
+            </div>
           </div>
-        </div>
-        <ChangesTable
-          keys={nonAddedKeys}
-          title='Modified Objects'
-          status={status}
-          lookupMap={state.lookupMap}
-          toggleAll={handleAllToggle}
-          toggleOne={handleStageToggle}
-        />
-        <ChangesTable
-          keys={addedKeys}
-          title='Unversioned Objects'
-          status={status}
-          lookupMap={state.lookupMap}
-          toggleAll={handleAllToggle}
-          toggleOne={handleStageToggle}
-        />
-      </ModalBody>
-      <ModalFooter>
-        <div className="margin-left italic txt-sm">
-          <i className="fa fa-code-fork" /> {branch}
-        </div>
-        <div>
-          <button className="btn" onClick={handleTakeSnapshot}>
-            Create
-          </button>
-          <button className="btn" onClick={handleTakeSnapshotAndPush}>
-            Create and Push
-          </button>
-        </div>
-      </ModalFooter>
-    </Modal>
+          <ChangesTable
+            keys={nonAddedKeys}
+            title='Modified Objects'
+            status={status}
+            lookupMap={state.lookupMap}
+            toggleAll={handleAllToggle}
+            toggleOne={handleStageToggle}
+          />
+          <ChangesTable
+            keys={addedKeys}
+            title='Unversioned Objects'
+            status={status}
+            lookupMap={state.lookupMap}
+            toggleAll={handleAllToggle}
+            toggleOne={handleStageToggle}
+          />
+        </ModalBody>
+        <ModalFooter>
+          <div className="margin-left italic txt-sm">
+            <i className="fa fa-code-fork" /> {branch}
+          </div>
+          <div>
+            <button className="btn" onClick={handleTakeSnapshot}>
+              Create
+            </button>
+            <button className="btn" onClick={handleTakeSnapshotAndPush}>
+              Create and Push
+            </button>
+          </div>
+        </ModalFooter>
+      </Modal>
+    </OverlayContainer>
   );
-});
+};
 
 interface OperationTooltipProps {
   entry: StageEntry;
@@ -380,4 +364,3 @@ const ChangesTable = ({
     </div>
   );
 };
-SyncStagingModal.displayName = 'SyncStagingModal';

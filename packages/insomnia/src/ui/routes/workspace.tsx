@@ -2,6 +2,7 @@ import React from 'react';
 import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
 import * as models from '../../models';
+import { canSync } from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
@@ -17,6 +18,7 @@ import { RequestGroup } from '../../models/request-group';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
+import { StatusCandidate } from '../../sync/types';
 import { invariant } from '../../utils/invariant';
 export interface WorkspaceLoaderData {
   activeWorkspace: Workspace;
@@ -33,6 +35,7 @@ export interface WorkspaceLoaderData {
   projects: Project[];
   requestTree: Child[];
   grpcRequests: GrpcRequest[];
+  syncItems: StatusCandidate[];
 }
 export interface Child {
   doc: Request | GrpcRequest | WebSocketRequest | RequestGroup;
@@ -94,6 +97,14 @@ export const workspaceLoader: LoaderFunction = async ({
   const metas = [...requestMetas, ...grpcRequestMetas];
   const folderMetas = (await models.requestGroupMeta.all());
   const grpcRequestList: GrpcRequest[] = [];
+  const syncItemsList: (Workspace | Environment | ApiSpec | Request | WebSocketRequest | GrpcRequest | RequestGroup)[] = [];
+  syncItemsList.push(activeWorkspace);
+  syncItemsList.push(baseEnvironment);
+  subEnvironments.forEach(e => syncItemsList.push(e));
+  if (activeApiSpec) {
+    syncItemsList.push(activeApiSpec);
+  }
+
   const recurse = async ({ parentId }: { parentId: string }): Promise<Child[]> => {
     const folders = await models.requestGroup.findByParentId(parentId);
     const requests = await models.request.findByParentId(parentId);
@@ -101,6 +112,10 @@ export const workspaceLoader: LoaderFunction = async ({
     const grpcRequests = await models.grpcRequest.findByParentId(parentId);
     // TODO: remove this state hack when the grpc responses go somewhere else
     grpcRequests.map(r => grpcRequestList.push(r));
+    folders.map(f => syncItemsList.push(f));
+    requests.map(r => syncItemsList.push(r));
+    webSocketRequests.map(r => syncItemsList.push(r));
+    grpcRequests.map(r => syncItemsList.push(r));
 
     const childrenWithChildren = await Promise.all([...folders, ...requests, ...webSocketRequests, ...grpcRequests].map(async doc => ({
       doc,
@@ -111,8 +126,13 @@ export const workspaceLoader: LoaderFunction = async ({
     })));
     return childrenWithChildren;
   };
-  const requestTree = await recurse({ parentId: activeWorkspace._id });
 
+  const requestTree = await recurse({ parentId: activeWorkspace._id });
+  const syncItems: StatusCandidate[] = syncItemsList.filter(canSync).map(i => ({
+    key: i._id,
+    name: i.name || '',
+    document: i,
+  }));
   const grpcRequests = grpcRequestList;
   return {
     activeWorkspace,
@@ -129,6 +149,7 @@ export const workspaceLoader: LoaderFunction = async ({
     projects,
     requestTree,
     grpcRequests,
+    syncItems,
   };
 };
 

@@ -1,6 +1,7 @@
 import React, { FC, Fragment } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { useVCS } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { registerModal } from '../components/modals';
 import { AddKeyCombinationModal } from '../components/modals/add-key-combination-modal';
@@ -19,11 +20,8 @@ import { RequestRenderErrorModal } from '../components/modals/request-render-err
 import { ResponseDebugModal } from '../components/modals/response-debug-modal';
 import { SelectModal } from '../components/modals/select-modal';
 import { SettingsModal } from '../components/modals/settings-modal';
-import { SyncHistoryModal } from '../components/modals/sync-history-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
-import { SyncStagingModal } from '../components/modals/sync-staging-modal';
 import { WrapperModal } from '../components/modals/wrapper-modal';
-import { useVCS } from '../hooks/use-vcs';
 import { WorkspaceLoaderData } from './workspace';
 
 const Modals: FC = () => {
@@ -90,16 +88,8 @@ const Modals: FC = () => {
 
         {activeWorkspace && vcs ? (
           <Fragment>
-            <SyncStagingModal
-              ref={instance => registerModal(instance, 'SyncStagingModal')}
-              vcs={vcs}
-            />
             <SyncMergeModal
               ref={instance => registerModal(instance, 'SyncMergeModal')}
-            />
-            <SyncHistoryModal
-              ref={instance => registerModal(instance, 'SyncHistoryModal')}
-              vcs={vcs}
             />
           </Fragment>
         ) : null}

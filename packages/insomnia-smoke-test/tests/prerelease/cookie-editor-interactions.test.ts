@@ -20,7 +20,7 @@ test.describe('Cookie editor', async () => {
     await page.click('button:has-text("Cookies")');
 
     // Edit existing cookie
-    await page.click('button:has-text("Edit")');
+    await page.getByRole('button', { name: 'Edit' }).first().click();
     await page.click('pre[role="presentation"]:has-text("bar")');
     await page.locator('[data-testid="CookieValue"] >> textarea').nth(1).fill('123');
     await page.locator('text=Done').nth(1).click();
@@ -28,7 +28,7 @@ test.describe('Cookie editor', async () => {
     // Create a new cookie
     await page.getByRole('button', { name: 'Actions' }).click();
     await page.getByRole('menuitem', { name: 'Add Cookie' }).click();
-    await page.getByText('Edit').first().click();
+    await page.getByRole('button', { name: 'Edit' }).first().click();
 
     // Try to replace text in Raw view
     await page.getByRole('tab', { name: 'Raw' }).click();
