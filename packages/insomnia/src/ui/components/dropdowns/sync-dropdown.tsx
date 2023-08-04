@@ -133,6 +133,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
 
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
   const [isSyncDeleteModalOpen, setIsSyncDeleteModalOpen] = useState(false);
+  // const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
+  // const [isSyncStagingModalOpen, setIsSyncStagingModalOpen] = useState(false);
+  const [isSyncBranchesModalOpen, setIsSyncBranchesModalOpen] = useState(false);
   useMount(async () => {
     setState(state => ({
       ...state,
@@ -579,7 +582,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             <ItemContent
               icon="code-fork"
               label="Branches"
-              onClick={() => showModal(SyncBranchesModal, { onHide: refreshVCSAndRefetchRemote })}
+              onClick={() => setIsSyncBranchesModalOpen(true)}
             />
           </DropdownItem>
 
@@ -683,6 +686,15 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           onHide={() => {
             refreshVCSAndRefetchRemote();
             setIsSyncDeleteModalOpen(false);
+          }}
+        />
+      )}
+      {isSyncBranchesModalOpen && (
+        <SyncBranchesModal
+          vcs={vcs}
+          onHide={() => {
+            refreshVCSAndRefetchRemote();
+            setIsSyncBranchesModalOpen(false);
           }}
         />
       )}
