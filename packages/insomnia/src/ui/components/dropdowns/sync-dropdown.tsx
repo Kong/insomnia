@@ -11,7 +11,7 @@ import { strings } from '../../../common/strings';
 import * as models from '../../../models';
 import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
-import { Status } from '../../../sync/types';
+import { Snapshot, Status } from '../../../sync/types';
 import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-backend-project';
 import { logCollectionMovedToProject } from '../../../sync/vcs/migrate-collections';
 import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-project-team';
@@ -51,6 +51,7 @@ interface State {
   };
   status: Status;
   initializing: boolean;
+  history: Snapshot[];
   historyCount: number;
   loadingPull: boolean;
   loadingProjectPull: boolean;
@@ -65,6 +66,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       ahead: 0,
       behind: 0,
     },
+    history: [],
     historyCount: 0,
     initializing: true,
     loadingPull: false,
@@ -112,11 +114,13 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     }
     const localBranches = (await vcs.getBranches()).sort();
     const currentBranch = await vcs.getBranch();
+    const history = await vcs.getHistory();
     const historyCount = await vcs.getHistoryCount();
     const status = await vcs.status(syncItems, {});
     setState(state => ({
       ...state,
       status,
+      history,
       historyCount,
       localBranches,
       currentBranch,
@@ -131,8 +135,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
 
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
   const [isSyncDeleteModalOpen, setIsSyncDeleteModalOpen] = useState(false);
-  // const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
-  // const [isSyncStagingModalOpen, setIsSyncStagingModalOpen] = useState(false);
+  const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
+  const [isSyncStagingModalOpen, setIsSyncStagingModalOpen] = useState(false);
   const [isSyncBranchesModalOpen, setIsSyncBranchesModalOpen] = useState(false);
   useMount(async () => {
     setState(state => ({
@@ -289,6 +293,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     localBranches,
     currentBranch,
     status,
+    history,
     historyCount,
     loadingPull,
     loadingPush,
@@ -627,7 +632,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               isDisabled={historyCount === 0}
               icon="clock-o"
               label="History"
-              onClick={() => showModal(SyncHistoryModal)}
+              onClick={() => setIsSyncHistoryModalOpen(true)}
             />
           </DropdownItem>
 
@@ -646,11 +651,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               isDisabled={!canCreateSnapshot}
               icon="cube"
               label="Create Snapshot"
-              onClick={() =>
-                showModal(SyncStagingModal, {
-                  onSnapshot: refreshVCSAndRefetchRemote,
-                  handlePush,
-                })
+              onClick={() => setIsSyncStagingModalOpen(true)
               }
             />
           </DropdownItem>
@@ -694,6 +695,28 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             refreshVCSAndRefetchRemote();
             setIsSyncBranchesModalOpen(false);
           }}
+        />
+      )}
+      {isSyncStagingModalOpen && (
+        <SyncStagingModal
+          vcs={vcs}
+          branch={currentBranch}
+          onSnapshot={refreshVCSAndRefetchRemote}
+          handlePush={handlePush}
+          onHide={() => setIsSyncStagingModalOpen(false)}
+        />
+      )}
+      {/* {isSyncMergeModalOpen && (
+        <SyncMergeModal
+          onHide={() => setIsSyncMergeModalOpen(false)}
+        />
+      )} */}
+      {isSyncHistoryModalOpen && (
+        <SyncHistoryModal
+          vcs={vcs}
+          branch={currentBranch}
+          history={history}
+          onHide={() => setIsSyncHistoryModalOpen(false)}
         />
       )}
     </div>
