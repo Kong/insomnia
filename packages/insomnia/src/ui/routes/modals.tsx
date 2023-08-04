@@ -1,6 +1,7 @@
 import React, { FC, Fragment } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { useVCS } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { registerModal } from '../components/modals';
 import { AddKeyCombinationModal } from '../components/modals/add-key-combination-modal';
@@ -21,7 +22,6 @@ import { SelectModal } from '../components/modals/select-modal';
 import { SettingsModal } from '../components/modals/settings-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { WrapperModal } from '../components/modals/wrapper-modal';
-import { useVCS } from '../hooks/use-vcs';
 import { WorkspaceLoaderData } from './workspace';
 
 const Modals: FC = () => {
