@@ -28,7 +28,7 @@ import {
   getLastName,
   isLoggedIn,
 } from '../../account/session';
-import { isDevelopment } from '../../common/constants';
+import { getAppWebsiteBaseURL, isDevelopment } from '../../common/constants';
 import * as models from '../../models';
 import { Settings } from '../../models/settings';
 import { isDesign, isScratchpad } from '../../models/workspace';
@@ -524,7 +524,7 @@ const OrganizationRoute = () => {
 
                               if (action === 'account-settings') {
                                 window.main.openInBrowser(
-                                  'https://app.insomnia.rest/app/account/',
+                                  `${getAppWebsiteBaseURL()}/app/settings/account`,
                                 );
                               }
                             }}
