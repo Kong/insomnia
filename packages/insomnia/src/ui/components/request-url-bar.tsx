@@ -90,26 +90,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
 
-  async function setFilePathAndStoreInLocalStorage() {
-    const options: SaveDialogOptions = {
-      title: 'Select Download Location',
-      buttonLabel: 'Save',
-    };
-    const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
-
-    if (defaultPath) {
-      // NOTE: An error will be thrown if defaultPath is supplied but not a String
-      options.defaultPath = defaultPath;
-    }
-
-    const { filePath } = await window.dialog.showSaveDialog(options);
-    if (!filePath) {
-      return null;
-    }
-    window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-    return filePath;
-  }
-
   const sendThenSetFilePath = useCallback(async (filePath?: string) => {
     if (!activeRequest) {
       return;
@@ -131,23 +111,33 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       const headers = responsePatch.headers || [];
       const header = getContentDispositionHeader(headers);
       const nameFromHeader = header ? contentDisposition.parse(header.value).parameters.filename : null;
-
-      if (
-        responsePatch.bodyPath &&
-        responsePatch.statusCode &&
-        responsePatch.statusCode >= 200 &&
-        responsePatch.statusCode < 300
-      ) {
+      const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
+      if (is2XXWithBodyPath) {
         const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
         const extension = sanitizedExtension || 'unknown';
         const name =
           nameFromHeader || `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
-        let filename: string | null;
+        let filename: string | null = null;
 
         if (filePath) {
           filename = path.join(filePath, name);
         } else {
-          filename = await setFilePathAndStoreInLocalStorage();
+          const options: SaveDialogOptions = {
+            title: 'Select Download Location',
+            buttonLabel: 'Save',
+          };
+          const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
+
+          if (defaultPath) {
+            // NOTE: An error will be thrown if defaultPath is supplied but not a String
+            options.defaultPath = defaultPath;
+          }
+
+          const { filePath } = await window.dialog.showSaveDialog(options);
+          if (filePath) {
+            window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
+            filename = filePath;
+          }
         }
 
         if (!filename) {
