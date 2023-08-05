@@ -6,8 +6,7 @@ import { ActionFunction, redirect } from 'react-router-dom';
 import * as session from '../../account/session';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
-import { database } from '../../common/database';
-import { database as db } from '../../common/database';
+import { database, database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
@@ -29,7 +28,8 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   const formData = await request.formData();
   const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
-  const project = await models.project.create({ name });
+  const project = await models.project.create({ name, dashboardSortOrder: 'modified-desc' });
+
   window.main.trackSegmentEvent({ event: SegmentEvent.projectLocalCreate });
   return redirect(`/organization/${organizationId}/project/${project._id}`);
 };
@@ -73,6 +73,21 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   window.main.trackSegmentEvent({ event: SegmentEvent.projectLocalDelete });
 
   return redirect(`/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`);
+};
+
+export const updateProjectAction: ActionFunction = async ({
+  request,
+  params,
+}) => {
+  const { projectId } = params;
+  invariant(projectId, 'Project ID is required');
+
+  const project = await models.project.getById(projectId);
+  invariant(project, 'Project not found');
+
+  const patch = await request.json();
+  await models.project.update(project, patch);
+  return null;
 };
 
 // Workspace

@@ -662,7 +662,6 @@ export const loader: LoaderFunction = async ({
   const { projectId, organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'projectId parameter is required');
-  const sortOrder = search.get('sortOrder') || 'modified-desc';
   const filter = search.get('filter') || '';
   const scope = search.get('scope') || 'all';
   const projectName = search.get('projectName') || '';
@@ -767,7 +766,10 @@ export const loader: LoaderFunction = async ({
       ],
       { splitSpace: true, loose: true }
     )?.indexes) : true)
-    .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
+    .sort((a, b) => {
+       const sortOrder = project?.dashboardSortOrder || 'modified-desc';
+       return sortMethodMap[sortOrder as DashboardSortOrder](a, b);
+    });
 
   const allProjects = await models.project.all();
 
@@ -820,8 +822,7 @@ const ProjectRoute: FC = () => {
   const submit = useSubmit();
   const navigate = useNavigate();
   const filter = searchParams.get('filter') || '';
-  const sortOrder =
-    (searchParams.get('sortOrder') as DashboardSortOrder) || 'modified-desc';
+  const sortOrder = activeProject.dashboardSortOrder || 'modified-desc';
   const [importModalType, setImportModalType] = useState<
     'uri' | 'file' | 'clipboard' | null
   >(null);
@@ -932,11 +933,15 @@ const ProjectRoute: FC = () => {
                 <div style={{ display: 'flex' }}>
                   <DashboardSortDropdown
                     value={sortOrder}
-                    onSelect={sortOrder => {
-                      submit({
-                        ...Object.fromEntries(searchParams.entries()),
-                        sortOrder,
-                      });
+                    onSelect={dashboardSortOrder => {
+                      submit(
+                        { dashboardSortOrder },
+                        {
+                          action: `/organization/${organizationId}/project/${activeProject._id}/update`,
+                          method: 'post',
+                          encType: 'application/json',
+                        }
+                      );
                     }}
                   />
                   {isRemoteProject(activeProject) && (

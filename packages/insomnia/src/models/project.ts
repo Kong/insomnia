@@ -1,3 +1,4 @@
+import { DashboardSortOrder } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
 import type { BaseModel } from './index';
@@ -18,6 +19,7 @@ export const projectHasSettings = (project: Pick<Project, '_id'>) => !isDefaultP
 
 interface CommonProject {
   name: string;
+  dashboardSortOrder: DashboardSortOrder;
 }
 
 export interface RemoteProject extends BaseModel, CommonProject {
@@ -41,7 +43,8 @@ export const isProjectId = (id: string | null) => (
 export function init(): Partial<Project> {
   return {
     name: 'My Project',
-    remoteId: null, // `null` is necessary for the model init logic to work properly
+    remoteId: null, // `null` is necessary for the model init logic to work properly,
+    dashboardSortOrder: 'modified-desc',
   };
 }
 
@@ -70,7 +73,7 @@ export function remove(project: Project) {
 }
 
 export function update(project: Project, patch: Partial<Project>) {
-  return db.docUpdate(project, patch);
+  return db.docUpdate<Project>(project, patch);
 }
 
 export async function all() {
