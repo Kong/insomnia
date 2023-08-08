@@ -1,4 +1,4 @@
-import { Stats } from 'mocha';
+import type { Stats } from 'mocha';
 
 interface TestErr {
   generatedMessage: boolean;
