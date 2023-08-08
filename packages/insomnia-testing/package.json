@@ -13,7 +13,7 @@
     "url": "https://github.com/Kong/insomnia/issues"
   },
   "main": "src/index.ts",
-  "types": "dist/index.d.ts",
+  "types": "src/index.ts",
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
     "clean": "tsc --build tsconfig.build.json --clean",

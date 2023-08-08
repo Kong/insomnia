@@ -1,3 +1,4 @@
+import type { TestResults } from './entities';
 export {
   runTests,
   runTestsCli,
@@ -5,4 +6,4 @@ export {
 
 export {
   TestResults,
-} from './entities';
+};

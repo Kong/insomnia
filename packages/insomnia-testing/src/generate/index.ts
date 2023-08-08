@@ -1,6 +1,8 @@
+import type { Test, TestSuite } from './generate';
+
 export {
-  Test,
-  TestSuite,
   generate,
   generateToFile,
 } from './generate';
+
+export { Test, TestSuite };
