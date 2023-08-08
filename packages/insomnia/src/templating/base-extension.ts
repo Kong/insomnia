@@ -156,6 +156,7 @@ export default class BaseExtension {
       return;
     }
 
+    // FIX THIS: this is throwing unhandled exceptions
     // If the result is a promise, resolve it async
     if (result instanceof Promise) {
       result
