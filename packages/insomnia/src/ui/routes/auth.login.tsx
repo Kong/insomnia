@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ActionFunction, Form, Link, redirect } from 'react-router-dom';
 
 import { DEFAULT_PROJECT_ID } from '../../models/project';
@@ -45,7 +45,7 @@ export const action: ActionFunction = async ({
   return redirect('/auth/authorize');
 };
 
-const Login = () => (
+const LoginView = () => (
   <Form
     style={{
       display: 'flex',
@@ -229,5 +229,48 @@ const Login = () => (
     </p>
   </Form>
 );
+
+const Login = () => {
+  const [_, refresh] = useState(0);
+  const apiURL = window.localStorage.getItem('insomnia::api_url');
+  const websiteURL = window.localStorage.getItem('insomnia::website_url');
+
+  if (apiURL && websiteURL) {
+    return (
+      <LoginView />
+    );
+  }
+
+  return (
+    <form
+      className='flex flex-col gap-3'
+      onSubmit={e => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+
+        const apiURL = formData.get('apiURL') as string;
+        const websiteURL = formData.get('websiteURL') as string;
+
+        window.localStorage.setItem('insomnia::api_url', apiURL);
+        window.localStorage.setItem('insomnia::website_url', websiteURL);
+        refresh(_ + 1);
+      }}
+    >
+      <label className="flex flex-col gap-2">
+        <span className='text-[--color-font]'>API Url</span>
+        <input className='p-2 bg-[--hl-md] rounded' name="apiURL" type="url" defaultValue={apiURL || ''} />
+      </label>
+      <label className="flex flex-col gap-2">
+        <span className='text-[--color-font]'>Website Url</span>
+        <input className='p-2 bg-[--hl-md] rounded' name="websiteURL" type="url" defaultValue={websiteURL || ''} />
+      </label>
+      <div>
+        <Button bg="surprise" variant='contained'>
+          Save
+        </Button>
+      </div>
+    </form>
+  );
+};
 
 export default Login;
