@@ -19,7 +19,6 @@
     "lint": "lerna run lint --stream --no-bail",
     "lint:markdown": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
     "bootstrap": " npx -y check-engine && npm install && lerna bootstrap && lerna run --stream bootstrap",
-    "version": "lerna version",
     "clean": "lerna run clean --stream && lerna clean --yes && rimraf node_modules **/*.tsbuildinfo",
     "test": "lerna run --stream test",
     "inso-start": "npm start --prefix packages/insomnia-inso",
