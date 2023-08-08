@@ -25,7 +25,7 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "lint:markdown": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
+    "lint:markdown": "npx markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
     "preinstall": "npx -y check-engine",
     "bootstrap": "npx -y check-engine && npm install --workspaces && npm run build --workspaces --if-present",
     "version": "TODO(filipe): ADD THIS",
