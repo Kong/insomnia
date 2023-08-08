@@ -40,19 +40,21 @@ jobs:
           ref: ${{ env.RELEASE_BRANCH }}
           persist-credentials: false
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: '.nvmrc'
-
       - name: Configure Git user
         id: configure_git_user
         uses: Homebrew/actions/git-user-config@master
         with:
           username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
 
-      - name: Run bootstrap
-        run: NODE_OPTIONS='--max_old_space_size=6144' npm run bootstrap
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install packages
+        run: npm ci
 
       - name: App version (stable)
         if: github.event.inputs.channel == 'stable'

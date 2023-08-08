@@ -178,7 +178,7 @@ jobs:
             git merge --no-ff release/<replaced with version>
 
             # Solve merge conflicts ...
-            # If there's package-lock conflicts, run `npm run bootstrap` and commit the package-lock changes
+            # If there's package-lock conflicts, run `npm install` and commit the package-lock changes
 
             git push
             ```
