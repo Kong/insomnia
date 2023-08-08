@@ -7,14 +7,14 @@ export interface InsomniaImporter {
   description: string;
 }
 
-export interface ConvertResult<T = {}> {
+export interface ConvertResult {
   type: InsomniaImporter;
   data: {
     _type: 'export';
     __export_format: 4;
     __export_date: string;
     __export_source: `insomnia.importers:v${string}`;
-    resources: ImportRequest<T>[];
+    resources: ImportRequest[];
   };
 }
 
@@ -31,7 +31,7 @@ export const convert = async (rawData: string) => {
       resources[0].environment = resources[0].variable;
     }
 
-    const convertedResult: ConvertResult = {
+    const convertedResult = {
       type: {
         id: importer.id,
         name: importer.name,
