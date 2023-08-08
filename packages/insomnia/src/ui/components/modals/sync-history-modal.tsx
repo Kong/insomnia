@@ -3,6 +3,7 @@ import { OverlayContainer } from 'react-aria';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import * as session from '../../../account/session';
+import { database as db } from '../../../common/database';
 import type { Snapshot } from '../../../sync/types';
 import { VCS } from '../../../sync/vcs/vcs';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -95,8 +96,7 @@ export const SyncHistoryModal = ({ vcs, branch, history, onHide }: Props) => {
                       className="btn btn--micro btn--outlined"
                       onClick={async () => {
                         const delta = await vcs.rollback(snapshot.id, syncItems);
-                        // @ts-expect-error -- TSCONVERSION
-                        await db.batchModifyDocs(delta);
+                        await db.batchModifyDocs(delta as any);
                       }}
                     >
                       Restore
