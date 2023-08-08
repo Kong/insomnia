@@ -33,9 +33,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
 
-      - name: Bootstrap packages
-        run: NODE_OPTIONS='--max_old_space_size=6144' npm run bootstrap
+      - name: Install packages
+        run: npm ci
 
       - name: Package app (MacOS only)
         if: matrix.os == 'macos-latest'
