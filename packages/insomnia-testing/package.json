@@ -27,7 +27,7 @@
     "@jest/globals": "^28.1.0",
     "@types/chai": "^4.2.15",
     "@types/mocha": "^8.2.1",
-    "typescript": "^4.5.5"
+    "typescript": "^5.1.6"
   },
   "dependencies": {
     "chai": "^4.3.4",
