@@ -13,6 +13,7 @@ import { ImportExport } from '../settings/import-export';
 import { Plugins } from '../settings/plugins';
 import { Shortcuts } from '../settings/shortcuts';
 import { ThemePanel } from '../settings/theme-panel';
+import { Button } from '../themed-button';
 import { showModal } from './index';
 
 export interface SettingsModalHandle {
@@ -40,6 +41,16 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
       modalRef.current?.show();
     },
   }), []);
+  const [_, refresh] = useState(0);
+  let apiURL = 'https://api.insomnia.rest';
+  let websiteURL = 'https://app.insomnia.rest';
+
+  try {
+    apiURL = window.localStorage.getItem('insomnia::api_url') || apiURL;
+    websiteURL = window.localStorage.getItem('insomnia::website_url') || websiteURL;
+  } catch (err) {
+    console.log(err);
+  }
 
   return (
     <Modal ref={modalRef} tall {...props}>
@@ -85,6 +96,38 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           <TabItem key="ai" title="AI">
             <PanelContainer className="pad">
               <AI />
+            </PanelContainer>
+          </TabItem>
+          <TabItem key="dev" title="Dev">
+            <PanelContainer className="pad">
+              <form
+                className='flex flex-col gap-3'
+                onSubmit={e => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+
+                  const apiURL = formData.get('apiURL') as string;
+                  const websiteURL = formData.get('websiteURL') as string;
+
+                  window.localStorage.setItem('insomnia::api_url', apiURL);
+                  window.localStorage.setItem('insomnia::website_url', websiteURL);
+                  refresh(_ + 1);
+                }}
+              >
+                <label className="flex flex-col gap-2">
+                  <span>API Url</span>
+                  <input className='p-2 bg-[--hl-md] rounded' name="apiURL" type="url" defaultValue={apiURL} />
+                </label>
+                <label className="flex flex-col gap-2">
+                  <span>Website Url</span>
+                  <input className='p-2 bg-[--hl-md] rounded' name="websiteURL" type="url" defaultValue={websiteURL} />
+                </label>
+                <div>
+                  <Button bg="surprise" variant='contained'>
+                    Save
+                  </Button>
+                </div>
+              </form>
             </PanelContainer>
           </TabItem>
         </Tabs>
