@@ -200,7 +200,7 @@ const ReorderableListBox = props => {
         const item = state.collection.getItem(key);
 
         return {
-          'text/plain': item.textValue,
+          'text/plain': item?.textValue,
         };
       });
     }),
