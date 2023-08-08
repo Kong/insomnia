@@ -14,7 +14,7 @@ const Timestamp: FC<{ time: Date | number }> = ({ time }) => {
 };
 
 interface Props {
-  events: WebSocketEvent[] | CurlEvent[];
+  events: (WebSocketEvent | CurlEvent)[];
   selectionId?: string;
   onSelect: (event: WebSocketEvent | CurlEvent) => void;
 }

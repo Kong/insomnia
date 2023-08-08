@@ -72,6 +72,7 @@ export function render(
     nj?.renderString(text, templatingContext, (err: Error | null, result: any) => {
       clearTimeout(id);
       if (err) {
+        console.log('Error rendering template', err);
         const sanitizedMsg = err.message
           .replace(/\(unknown path\)\s/, '')
           .replace(/\[Line \d+, Column \d*]/, '')
