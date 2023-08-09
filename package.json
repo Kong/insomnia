@@ -29,7 +29,6 @@
     "test": "npm run test --workspaces --if-present",
     "lint:markdown": "npx markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
     "preinstall": "npx -y check-engine",
-    "version": "TODO(filipe): ADD THIS",
     "clean": "git clean -dfX",
     "inso-start": "npm start --workspace=packages/insomnia-inso",
     "inso-package": "npm run build:sr --workspace=packages/insomnia && npm run package --workspace=packages/insomnia-inso",
