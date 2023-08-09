@@ -58,11 +58,11 @@ jobs:
 
       - name: App version (stable)
         if: github.event.inputs.channel == 'stable'
-        run: npm run version -- --yes --no-push 'minor'
+        run: npm --workspaces version minor
 
       - name: App version (alpha/beta)
         if: github.event.inputs.channel != 'stable'
-        run: npm run version -- --yes --no-push --preid "${{ github.event.inputs.channel }}" "${{ github.event.inputs.iteration == '0' && 'preminor' || 'prerelease' }}"
+        run: npm --workspaces version prerelease --preid "${{ github.event.inputs.channel }}"."${{ github.event.inputs.iteration == '0' && 'preminor' || 'prerelease' }}"
 
       - name: Config version
         run: APP_VERSION="${{ env.RELEASE_VERSION }}" npm run app-bump-version
