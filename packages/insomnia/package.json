@@ -143,7 +143,7 @@
     "esbuild-plugin-alias": "0.2.1",
     "esbuild-runner": "^2.2.2",
     "fuzzysort": "^1.2.1",
-    "graphql": "^16.3.0",
+    "graphql": "^16.7.1",
     "highlight.js": "^11.5.1",
     "httplease-asap": "^0.6.0",
     "jest": "^28.1.0",

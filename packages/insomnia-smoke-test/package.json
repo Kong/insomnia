@@ -40,7 +40,7 @@
     "express-basic-auth": "^1.2.0",
     "graphql-http": "^1.21.0",
     "faker": "^5.1.0",
-    "graphql": "^15.8.0",
+    "graphql": "^16.7.1",
     "jest": "^28.1.0",
     "oidc-provider": "^7.10.6",
     "uuid": "^8.3.2",
