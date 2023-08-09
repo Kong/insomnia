@@ -114,14 +114,8 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
 
   if (authentication.type === AUTH_ASAP) {
     const { issuer, subject, audience, keyId, additionalClaims, privateKey } = authentication;
-    const generator = (await import('jwt-authentication')).client.create();
-    let claims = {
-      iss: issuer,
-      sub: subject,
-      aud: audience,
-    };
-    let parsedAdditionalClaims;
 
+    let parsedAdditionalClaims;
     try {
       parsedAdditionalClaims = JSON.parse(additionalClaims || '{}');
     } catch (err) {
@@ -134,26 +128,21 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
           `additional-claims must be an object received: '${typeof parsedAdditionalClaims}' instead`,
         );
       }
-
-      claims = Object.assign(parsedAdditionalClaims, claims);
     }
-
-    const options = {
+    const generator = (await import('httplease-asap')).createAuthHeaderGenerator({
       privateKey,
-      kid: keyId,
-    };
-    return new Promise<Header>((resolve, reject) => {
-      generator.generateAuthorizationHeader(claims, options, (error, headerValue) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve({
-            name: 'Authorization',
-            value: headerValue,
-          });
-        }
-      });
+      issuer,
+      keyId,
+      audience,
+      subject,
+      additionalClaims: parsedAdditionalClaims,
+      tokenExpiryMs: 10 * 60 * 1000, // Optional, max is 1 hour. This is how long the generated token stays valid.
+      tokenMaxAgeMs: 9 * 60 * 1000, // Optional, must be less than tokenExpiryMs. How long to cache the token.
     });
+    return {
+      name: 'Authorization',
+      value: generator(),
+    };
   }
 
   return;
