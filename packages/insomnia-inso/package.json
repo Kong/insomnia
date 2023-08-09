@@ -21,8 +21,6 @@
   },
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "clean": "tsc --build tsconfig.build.json --clean",
-    "postclean": "rimraf dist && rimraf binaries && rimraf compressed && rimraf artifacts",
     "test": "echo 'fix these jest --runInBand'",
     "test:watch": "npm run test -- --watch",
     "test:snapshots": "npm run build && npm run test -- -u",
@@ -47,8 +45,7 @@
     "esbuild-runner": "^2.2.2",
     "execa": "^5.0.0",
     "jest": "^28.1.0",
-    "jest-mock": "^28.0.2",
-    "rimraf": "^5.0.1"
+    "jest-mock": "^28.0.2"
   },
   "dependencies": {
     "@stoplight/spectral-core": "^1.18.2",

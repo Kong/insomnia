@@ -8,7 +8,6 @@
   "types": "src/index.ts",
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "clean": "rimraf dist",
     "build": "tsc --build tsconfig.build.json",
     "test": "jest"
   },
