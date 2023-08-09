@@ -4,13 +4,10 @@
   "license": "Apache-2.0",
   "version": "3.19.0-beta.9",
   "author": "Kong <office@konghq.com>",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "scripts": {
-    "bootstrap": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "clean": "tsc --build tsconfig.build.json --clean",
-    "postclean": "rimraf dist",
     "build": "tsc --build tsconfig.build.json",
     "test": "jest"
   },
@@ -29,10 +26,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Kong/insomnia.git",
+    "url": "git+https://github.com/Kong/insomnia.git",
     "directory": "packages/openapi-2-kong"
   },
   "bugs": {
     "url": "https://github.com/Kong/insomnia/issues"
-  }
+  },
+  "description": "This module generates Kong Declarative Config and Kong for Kubernetes config, from OpenAPI 3.0 specifications.",
+  "homepage": "https://github.com/Kong/insomnia#readme"
 }

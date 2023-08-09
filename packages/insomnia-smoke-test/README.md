@@ -23,7 +23,7 @@ This project contains the smoke testing suite for Insomnia App.
 Prerequisites:
 
 - Clone the project
-- Run `npm run bootstrap`
+- Run `npm install`
 
 To run all tests:
 

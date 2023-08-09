@@ -97,6 +97,10 @@ declare module 'codemirror' {
   interface EditorEventMap {
     fold: (instance: Editor, from: Position) => void;
     unfold: (instance: Editor, from: Position) => void;
+    cut: (instance: Editor, e: ClipboardEvent) => void;
+    copy: (instance: Editor, e: ClipboardEvent) => void;
+    paste: (instance: Editor, e: ClipboardEvent) => void;
+
   }
 
   const keyNames: Record<number, string>;

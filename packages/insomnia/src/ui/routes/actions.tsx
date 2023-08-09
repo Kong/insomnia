@@ -1,5 +1,5 @@
 import type { IRuleResult } from '@stoplight/spectral-core';
-import { generate, runTests, Test } from 'insomnia-testing';
+import { generate, runTests, type Test } from 'insomnia-testing';
 import path from 'path';
 import { ActionFunction, redirect } from 'react-router-dom';
 

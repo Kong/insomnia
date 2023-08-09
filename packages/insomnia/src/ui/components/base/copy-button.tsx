@@ -5,7 +5,7 @@ import { Button, ButtonProps } from '../themed-button';
 
 interface Props extends ButtonProps {
   confirmMessage?: string;
-  content: string | Function;
+  content: string;
   title?: string;
 }
 
@@ -20,10 +20,9 @@ export const CopyButton: FC<Props> = ({
   const onClick = useCallback(async (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    const toCopy = typeof content === 'string' ? content : await content();
 
-    if (toCopy) {
-      window.clipboard.writeText(toCopy);
+    if (content) {
+      window.clipboard.writeText(content);
     }
     setshowConfirmation(true);
   }, [content]);

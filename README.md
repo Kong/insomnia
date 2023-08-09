@@ -40,13 +40,19 @@ This repository is structured as a monorepo and contains many Node.JS packages. 
 
 ```shell
 # Install and Link Dependencies
-npm run bootstrap
+npm i
+
+# Run Lint
+npm run lint
+
+# Run type checking
+npm run type-check
 
 # Run Tests
 npm test
 
 # Start App with Live Reload
-npm run app-start
+npm run dev
 ```
 
 ### Linux
@@ -76,7 +82,7 @@ sudo dnf install libcurl-devel
 
 </details>
 
-Also on Linux, if Electron is failing during the bootstrap process, run the following
+Also on Linux, if Electron is failing during the install process, run the following
 
 ```shell
 # Clear Electron install conflicts
@@ -101,7 +107,7 @@ You can use any editor you'd like, but make sure to have support/plugins for the
 
 ## Develop Inso CLI
 
-- Bootstrap: `npm run bootstrap`
+- `npm i`
 - Start the compiler in watch mode: `npm run inso-start`
 - Run: `./packages/insomnia-inso/bin/inso -v`
 

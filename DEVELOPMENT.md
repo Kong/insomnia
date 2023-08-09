@@ -19,10 +19,9 @@ There are a few more technologies and tools worth mentioning:
 
 ## Project Structure
 
-Insomnia uses [`lerna`](https://lerna.js.org/) to manage multiple npm packages within a single repository. There are currently two package locations:
+Insomnia uses [`npm workspaces`](https://docs.npmjs.com/cli/v9/using-npm/workspaces?v=true) to manage multiple npm packages within a single repository. There are currently the following package locations:
 
 - `/packages` contains related packages that are consumed by `insomnia` or externally.
-- `/plugins` contains plugin packages that are included by default with the application.
 
 ## The `insomnia` Main Package
 

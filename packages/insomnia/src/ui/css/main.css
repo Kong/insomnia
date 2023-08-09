@@ -7,7 +7,7 @@
 @import 'lib/fontawesome/css/brands.css';
 @import 'lib/fontawesome/css/v4-font-face.css';
 @import 'lib/fontawesome/css/v4-shims.css';
-@import '../../../node_modules/swagger-ui-dist/swagger-ui.css';
+@import '../../../../../node_modules/swagger-ui-dist/swagger-ui.css';
 /* Boilerplate */
 /* http://meyerweb.com/eric/tools/css/reset/
    v2.0 | 20110126

@@ -1,7 +1,7 @@
 import chai from 'chai';
 import { unlink, writeFileSync } from 'fs';
 import fs from 'fs';
-import Mocha, { Reporter, ReporterConstructor } from 'mocha';
+import Mocha, { type Reporter, type ReporterConstructor } from 'mocha';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
@@ -31,7 +31,6 @@ const runInternal = async <TReturn, TNetworkResponse>(
     globals: ['insomnia', 'chai'],
     bail,
     reporter,
-    // @ts-expect-error https://github.com/DefinitelyTyped/DefinitelyTyped/pull/51770
     fgrep: testFilter,
   });
 

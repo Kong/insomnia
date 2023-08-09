@@ -1,8 +1,4 @@
-/*
- * This is a stupid little mock that basically disabled encryption.
- * The reason it is needed is because the Forge module loader doesn't play along with Jest.
- */
-import forge from '../../node_modules/node-forge/lib/index';
+import forge from 'node-forge';
 
 // WARNING: changing this to `export default` will break the mock and be incredibly hard to debug. Ask me how I know.
 module.exports = {
