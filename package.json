@@ -23,18 +23,18 @@
     "packages/insomnia-smoke-test"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
+    "dev": "npm start --workspace=packages/insomnia",
     "lint": "npm run lint --workspaces --if-present",
+    "type-check": "npm run type-check --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
     "lint:markdown": "npx markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
     "preinstall": "npx -y check-engine",
-    "bootstrap": "npx -y check-engine && npm install --workspaces && npm run build --workspaces --if-present",
     "version": "TODO(filipe): ADD THIS",
     "clean": "git clean -dfX",
-    "test": "npm run test --workspaces --if-present",
     "inso-start": "npm start --workspace=packages/insomnia-inso",
     "inso-package": "npm run build:sr --workspace=packages/insomnia && npm run package --workspace=packages/insomnia-inso",
     "inso-package:artifacts": "npm run artifacts --workspace=packages/insomnia-inso",
-    "test:bundled-inso": "npm run bootstrap && npm run test:bundled-inso --workspace=packages/insomnia-inso",
+    "test:bundled-inso": "npm run build --workspace=packages/insomnia-inso && npm run test:bundled-inso --workspace=packages/insomnia-inso",
     "watch:app": "npm run build:main.min.js --workspace=packages/insomnia && npm run start:dev-server --workspace=packages/insomnia",
     "app-build": "npm run build --workspace=packages/insomnia",
     "app-package": "npm run build --workspace=packages/insomnia && npm run package --workspace=packages/insomnia",
@@ -43,10 +43,8 @@
     "test:smoke:build": "npm run test:build --workspace=packages/insomnia-smoke-test -- --project=Smoke",
     "test:smoke:package": "npm run test:package --workspace=packages/insomnia-smoke-test -- --project=Smoke",
     "test:smoke:cli": "npm run test:cli --workspace=packages/insomnia-smoke-test",
-    "type-check": "npm run type-check --workspaces --if-present",
     "changelog-image": "esr ./scripts/changelog-image/changelog-image.ts",
-    "download-all-npm-plugins": "esr ./scripts/download-all-npm-plugins.ts",
-    "dev": "npm start --workspace=packages/insomnia"
+    "download-all-npm-plugins": "esr ./scripts/download-all-npm-plugins.ts"
   },
   "devDependencies": {
     "@jest/globals": "^28.1.0",
