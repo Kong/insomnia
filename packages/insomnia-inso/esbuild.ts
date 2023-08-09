@@ -3,7 +3,7 @@ import { nodeExternalsPlugin } from 'esbuild-node-externals';
 
 const isProd = Boolean(process.env.NODE_ENV === 'production');
 const watch = Boolean(process.env.ESBUILD_WATCH);
-const version = process.env.VERSION || 'dev'
+const version = process.env.VERSION || 'dev';
 
 build({
   outfile: './dist/index.js',
@@ -13,7 +13,7 @@ build({
   target: 'node18',
   sourcemap: true,
   format: 'cjs',
-  tsconfig: 'tsconfig.build.json',
+  tsconfig: 'tsconfig.json',
   watch,
   plugins: [
     // Exclude node_modules from the bundle since they will be packaged with the cli

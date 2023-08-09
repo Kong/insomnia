@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.build.json",
+  "extends": "../../tsconfig.base.json",
   "include": [
     ".eslintrc.js",
     "esbuild.ts",
@@ -8,7 +8,16 @@
     "src",
   ],
   "exclude": [
+    "**/*.test.ts",
+    "**/@types/mocha",
+    "**/__mocks__/*",
+    "**/__snapshots__/**",
+    "assets",
+    "bin",
     "dist",
+    "jest.config.js",
     "node_modules",
+    "scripts",
+    "src/jest",
   ],
 }
