@@ -1,10 +1,10 @@
 import childProcess from 'child_process';
 import { readFileSync, writeFileSync } from 'fs';
 import fs from 'fs';
+import { rm } from 'fs/promises';
 import licenseChecker from 'license-checker';
 import { ncp } from 'ncp';
 import path from 'path';
-import { rm } from 'fs/promises';
 import * as vite from 'vite';
 
 import buildMainAndPreload from '../esbuild.main';
@@ -113,8 +113,7 @@ export const start = async () => {
 
   // Remove folders first
   console.log('[build] Removing existing directories');
-  await rm(path.resolve(__dirname, buildFolder), { recursive: true, force: true })
-
+  await rm(path.resolve(__dirname, buildFolder), { recursive: true, force: true });
 
   // Build the things
   console.log('[build] Building license list');
