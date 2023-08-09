@@ -67,8 +67,6 @@ export type CurlEvent =
   | CurlErrorEvent
   | CurlCloseEvent;
 
-export type CurlEventLog = CurlEvent[];
-
 const CurlConnections = new Map<string, Curl>();
 const eventLogFileStreams = new Map<string, fs.WriteStream>();
 const timelineFileStreams = new Map<string, fs.WriteStream>();

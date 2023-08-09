@@ -41,9 +41,7 @@ export const MessageEventView: FC<Props<CurlMessageEvent | WebSocketMessageEvent
   let raw = event.data.toString();
   // Best effort to parse the binary data as a string
   try {
-    // @ts-expect-error -- should be fine
     if ('data' in event && typeof event.data === 'object' && 'data' in event.data && Array.isArray(event.data.data)) {
-      // @ts-expect-error -- should be fine
       raw = Buffer.from(event.data.data).toString();
     }
   } catch (err) {
