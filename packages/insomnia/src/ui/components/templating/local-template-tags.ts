@@ -607,7 +607,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
         }
 
         // Make sure we only send the request once per render so we don't have infinite recursion
-        const requestChain = context.context.getExtraInfo('requestChain') || [];
+        const requestChain = context.context.getExtraInfo?.('requestChain') || [];
         if (requestChain.some((id: any) => id === request._id)) {
           console.log('[response tag] Preventing recursive render');
           shouldResend = false;
