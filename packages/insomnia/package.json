@@ -125,7 +125,7 @@
     "@types/vkbeautify": "^0.99.2",
     "@types/ws": "^8.5.4",
     "@types/xmldom": "0.1.30",
-    "@vitejs/plugin-react": "^2.2.0",
+    "@vitejs/plugin-react": "^4.0.4",
     "autoprefixer": "^10.4.2",
     "buffer": "^6.0.3",
     "classnames": "^2.3.1",
