@@ -37,7 +37,6 @@
     "watch:app": "npm run build:main.min.js --workspace=packages/insomnia && npm run start:dev-server --workspace=packages/insomnia",
     "app-build": "npm run build --workspace=packages/insomnia",
     "app-package": "npm run build --workspace=packages/insomnia && npm run package --workspace=packages/insomnia",
-    "app-bump-version": "npm run bump-version --workspace=packages/insomnia",
     "test:smoke:dev": "npm run test:dev --workspace=packages/insomnia-smoke-test -- --project=Smoke",
     "test:smoke:build": "npm run test:build --workspace=packages/insomnia-smoke-test -- --project=Smoke",
     "test:smoke:package": "npm run test:package --workspace=packages/insomnia-smoke-test -- --project=Smoke",
