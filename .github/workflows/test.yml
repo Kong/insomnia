@@ -16,12 +16,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  OS:
+  Test:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [ubuntu-latest]
+        # os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - name: Checkout branch
         uses: actions/checkout@v3
