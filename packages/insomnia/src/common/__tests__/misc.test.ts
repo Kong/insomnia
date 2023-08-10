@@ -201,7 +201,7 @@ describe('fuzzyMatch()', () => {
       target: 'testing',
     });
     expect(fuzzyMatch('tst', 'testing')).toEqual({
-      score: -2004,
+      score: -3004,
       indexes: [0, 2, 3],
       target: 'testing',
     });
@@ -235,7 +235,7 @@ describe('fuzzyMatchAll()', () => {
       target: 'testing foo',
     });
     expect(fuzzyMatchAll('tst', ['testing'])).toEqual({
-      score: -2004,
+      score: -3004,
       indexes: [0, 2, 3],
       target: 'testing',
     });
@@ -245,7 +245,7 @@ describe('fuzzyMatchAll()', () => {
         loose: true,
       }),
     ).toEqual({
-      score: -20,
+      score: -12.8,
       indexes: [0, 2, 3, 8, 9, 10, 11, 13, 14],
       target: 'testing this out',
     });

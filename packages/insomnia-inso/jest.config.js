@@ -4,6 +4,7 @@ module.exports = {
   globals: {
     'ts-jest': {
       isolatedModules: true,
+      tsconfig: '../../tsconfig.base.json',
     },
   },
   collectCoverage: true,

@@ -3,6 +3,7 @@ import { builtinModules } from 'module';
 import path from 'path';
 import { defineConfig } from 'vite';
 
+import testingPkgs from '../insomnia-testing/package.json';
 import pkg from './package.json';
 import { electronNodeRequire } from './vite-plugin-electron-node-require';
 
@@ -45,6 +46,7 @@ export default defineConfig(({ mode }) => {
         modules: [
           'electron',
           ...Object.keys(pkg.dependencies),
+          ...Object.keys(testingPkgs.dependencies),
           ...builtinModules.filter(m => m !== 'buffer'),
           ...builtinModules.map(m => `node:${m}`),
         ],

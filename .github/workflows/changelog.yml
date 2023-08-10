@@ -152,10 +152,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
 
-      - name: Bootstrap packages
-        run: npm run bootstrap
+      - name: Install packages
+        run: npm ci
 
       - name: Run changelog-image
         run: npm run changelog-image

@@ -33,9 +33,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
 
-      - name: Bootstrap packages
-        run: npm run bootstrap
+      - name: Install packages
+        run: npm ci
 
       - name: Package app (MacOS only)
         if: matrix.os == 'macos-latest'
@@ -176,7 +178,7 @@ jobs:
             git merge --no-ff release/<replaced with version>
 
             # Solve merge conflicts ...
-            # If there's package-lock conflicts, run `npm run bootstrap` and commit the package-lock changes
+            # If there's package-lock conflicts, run `npm install` and commit the package-lock changes
 
             git push
             ```

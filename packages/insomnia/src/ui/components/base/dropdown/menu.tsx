@@ -42,6 +42,7 @@ export const Menu = <T extends object>(props: Props<T>) => {
     <List {...menuProps} ref={ref} className="dropdown__menu">
       {[...state.collection].map((item: Node<T>) => {
         // If the item is a section and the section has items, render a MenuSection
+        // @ts-expect-error -- early deprecation
         if (item.type === 'section' && getItemCount(item.childNodes) !== 0) {
           return (
             <MenuSection

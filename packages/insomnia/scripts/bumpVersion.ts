@@ -1,8 +1,8 @@
 import { writeFileSync } from 'fs';
 import path from 'path';
 
+import packageLockConfig from '../../../package-lock.json';
 import packageConfig from '../package.json';
-import packageLockConfig from '../package-lock.json';
 
 // Start build if ran from CLI
 if (require.main === module) {

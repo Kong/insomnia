@@ -1,6 +1,6 @@
+import type { Test, TestSuite } from './generate';
+import type { TestResults } from './run';
 export {
-  Test,
-  TestSuite,
   generate,
   generateToFile,
 } from './generate';
@@ -8,5 +8,6 @@ export {
 export {
   runTests,
   runTestsCli,
-  TestResults,
 } from './run';
+
+export { Test, TestSuite, TestResults };

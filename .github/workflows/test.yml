@@ -30,9 +30,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
 
-      - name: Bootstrap packages
-        run: npm run bootstrap
+      - name: Install packages
+        run: npm ci
 
       - name: Lint
         if: matrix.os == 'ubuntu-latest'
@@ -50,8 +52,6 @@ jobs:
         run: npm test
 
       - name: Build app for smoke tests
-        env:
-          NODE_OPTIONS: "--max_old_space_size=6144"
         run: npm run app-build
 
       - name: Run Smoke tests (CI)
@@ -78,7 +78,10 @@ jobs:
         run: npm run test:bundled-inso
 
       - name: Package Inso CLI binary
-        run: npm run inso-package
+        run: |
+          echo "Replacing electron binary with node binary"
+          node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+          npm run inso-package
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 

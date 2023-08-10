@@ -20,14 +20,15 @@ const pathLookup: Record<string, string> = {
   darwin: path.join('mac', 'Insomnia.app', 'Contents', 'MacOS', 'Insomnia'),
   linux: path.join('linux-unpacked', 'insomnia'),
 };
-const insomniaBinary = path.join('dist', pathLookup[process.platform]);
-const electronBinary = path.join('node_modules', '.bin', process.platform === 'win32' ? 'electron.cmd' : 'electron');
+export const cwd = path.resolve(__dirname, '..', '..', 'insomnia');
+const repoRoot = path.resolve(__dirname, '..', '..', '..');
+const insomniaBinary = path.join(cwd, 'dist', pathLookup[process.platform]);
+const electronBinary = path.join(repoRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'electron.cmd' : 'electron');
 
 export const executablePath = bundleType() === 'package' ? insomniaBinary : electronBinary;
 
 // NOTE: main.min.js is built by app-build in /build and also by the watcher in /src
 export const mainPath = path.join(bundleType() === 'dev' ? 'src' : 'build', 'main.min.js');
-export const cwd = path.resolve(__dirname, '..', '..', 'insomnia');
 
 const hasMainBeenBuilt = fs.existsSync(path.resolve(cwd, mainPath));
 const hasBinaryBeenBuilt = fs.existsSync(path.resolve(cwd, insomniaBinary));

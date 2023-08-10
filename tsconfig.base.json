@@ -20,6 +20,6 @@
     "strict": true,
     "target": "ES2019",
     "types": ["node"],
-    "useUnknownInCatchVariables": false,
+    "useUnknownInCatchVariables": false
   },
 }

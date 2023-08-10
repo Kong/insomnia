@@ -40,37 +40,35 @@ jobs:
           ref: ${{ env.RELEASE_BRANCH }}
           persist-credentials: false
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: '.nvmrc'
-
       - name: Configure Git user
         id: configure_git_user
         uses: Homebrew/actions/git-user-config@master
         with:
           username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
 
-      - name: Run bootstrap
-        run: npm run bootstrap
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
 
-      - name: Lerna version (stable)
+      - name: Install packages
+        run: npm ci
+
+      - name: App version (stable)
         if: github.event.inputs.channel == 'stable'
-        run: npm run version -- --yes --no-push 'minor'
+        run: npm --workspaces version minor
 
-      - name: Lerna version (alpha/beta)
+      - name: App version (alpha/beta)
         if: github.event.inputs.channel != 'stable'
-        run: npm run version -- --yes --no-push --preid "${{ github.event.inputs.channel }}" "${{ github.event.inputs.iteration == '0' && 'preminor' || 'prerelease' }}"
+        run: npm --workspaces version prerelease --preid "${{ github.event.inputs.channel }}"."${{ github.event.inputs.iteration == '0' && 'preminor' || 'prerelease' }}"
 
       - name: Config version
         run: APP_VERSION="${{ env.RELEASE_VERSION }}" npm run app-bump-version
 
-      # https://github.com/lerna/lerna/issues/2832
-      - name: Update package-lock.json files
-        run: npx lerna clean --yes && npx lerna bootstrap --no-ci --ignore-scripts -- --package-lock-only --no-audit
-
       - name: Commit
-        run: git commit -am "Bump app version to ${{ env.RELEASE_VERSION }} and lerna package versions"
+        run: git commit -am "Bump app version to ${{ env.RELEASE_VERSION }}"
 
       - name: Push changes
         run: |

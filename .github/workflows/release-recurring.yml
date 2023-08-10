@@ -38,9 +38,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
 
-      - name: Bootstrap packages
-        run: npm run bootstrap
+      - name: Install packages
+        run: npm ci
 
       - name: Bump version
         shell: bash

@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Kong/insomnia.git",
+    "url": "git+https://github.com/Kong/insomnia.git",
     "directory": "packages/insomnia-smoke-test"
   },
   "bugs": {
@@ -48,5 +48,18 @@
     "uuid": "^8.3.2",
     "ws": "^8.13.0",
     "xvfb-maybe": "^0.2.1"
+  },
+  "description": "[![Playwright](https://img.shields.io/badge/playwright-blue.svg?style=for-the-badge&logo=playwright)](https://github.com/microsoft/playwright)",
+  "homepage": "https://github.com/Kong/insomnia#readme",
+  "main": ".eslintrc.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "dependencies": {
+    "depd": "^1.1.2",
+    "http-errors": "^1.8.0",
+    "statuses": "^1.5.0",
+    "toidentifier": "^1.0.0"
   }
 }

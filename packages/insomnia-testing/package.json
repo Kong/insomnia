@@ -6,19 +6,16 @@
   "author": "Kong <office@konghq.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Kong/insomnia.git",
+    "url": "git+https://github.com/Kong/insomnia.git",
     "directory": "packages/insomnia-testing"
   },
   "bugs": {
     "url": "https://github.com/Kong/insomnia/issues"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "scripts": {
-    "bootstrap": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx --cache",
-    "clean": "tsc --build tsconfig.build.json --clean",
-    "postclean": "rimraf dist",
     "test": "jest",
     "build": "tsc --build tsconfig.build.json",
     "watch": "npm run build -- --watch"
@@ -26,11 +23,13 @@
   "devDependencies": {
     "@jest/globals": "^28.1.0",
     "@types/chai": "^4.2.15",
-    "@types/mocha": "^8.2.1",
+    "@types/mocha": "^10.0.1",
     "typescript": "^5.1.6"
   },
   "dependencies": {
     "chai": "^4.3.4",
-    "mocha": "^8.3.2"
-  }
+    "mocha": "^10.2.0"
+  },
+  "homepage": "https://github.com/Kong/insomnia#readme",
+  "description": ""
 }
