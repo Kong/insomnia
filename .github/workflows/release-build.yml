@@ -1,7 +1,7 @@
 name: Release Build
 
 on:
-  push:
+  pull_request:
     branches:
       - 'release/**'
 
