@@ -1,5 +1,15 @@
 # CLI
 
+## install node version of libcurl
+
+npm install will download the electron version of libcurl but for inso we need the node version
+
+```shell
+node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+```
+
+to download the electron version of node-libcurl you should run npm run clean and npm install again
+
 ## Run CLI Smoke Tests
 
 ```shell
