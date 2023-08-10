@@ -76,6 +76,18 @@ jobs:
         with:
           username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
 
+      - name: (Re-run) App version (stable, no version doing patch)
+        if: github.event.inputs.channel == 'stable' && !github.event.inputs.version
+        run: npm --workspaces version patch
+
+      - name: (Re-run) App version (stable)
+        if: github.event.inputs.channel == 'stable' && github.event.inputs.version
+        run: npm --workspaces version "${{ github.event.inputs.version }}"
+
+      - name: (Re-run) App version (alpha/beta)
+        if: github.event.inputs.channel != 'stable'
+        run: npm --workspaces version --preid "${{ github.event.inputs.channel }}" prerelease
+
       - name: Git Commit
         run: git commit -am "Bump app version to ${{ env.RELEASE_VERSION }}"
 
