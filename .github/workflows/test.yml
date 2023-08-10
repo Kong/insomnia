@@ -17,12 +17,9 @@ concurrency:
 
 jobs:
   Test:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        # os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - name: Checkout branch
         uses: actions/checkout@v3
