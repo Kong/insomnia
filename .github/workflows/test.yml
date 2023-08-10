@@ -126,7 +126,6 @@ jobs:
 
       - name: Run Inso CLI smoke tests
         run: npm run test:smoke:cli
-
   SmokeTestPackagedInsomnia:
     runs-on: ${{ matrix.os }}
     strategy:
