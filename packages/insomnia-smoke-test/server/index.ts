@@ -1,15 +1,15 @@
 import crypto from 'node:crypto';
 
 import express from 'express';
-import { graphqlHTTP } from 'express-graphql';
 import { readFileSync } from 'fs';
+import { createHandler } from 'graphql-http/lib/use/http';
 import { createServer } from 'https';
 import { join } from 'path';
 
 import { basicAuthRouter } from './basic-auth';
 import githubApi from './github-api';
 import gitlabApi from './gitlab-api';
-import { root, schema } from './graphql';
+import { schema } from './graphql';
 import { startGRPCServer } from './grpc';
 import { oauthRoutes } from './oauth';
 import { startWebSocketServer } from './websocket';
@@ -54,11 +54,8 @@ app.get('/', (_req, res) => {
   res.status(200).send();
 });
 
-app.use('/graphql', graphqlHTTP({
-  schema: schema,
-  rootValue: root,
-  graphiql: true,
-}));
+app.all('/graphql', createHandler({ schema }));
+
 app.use(express.json()); // Used to parse JSON bodies
 
 // SSE routes

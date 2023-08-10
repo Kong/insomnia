@@ -19,7 +19,6 @@
   "exclude": [
     "**/*.test.ts",
     "**/*.test.tsx",
-    "**/@types/mocha",
     "**/__jest__",
     "**/__mocks__",
     "**/__snapshots__",

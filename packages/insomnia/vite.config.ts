@@ -46,13 +46,11 @@ export default defineConfig(({ mode }) => {
         modules: [
           'electron',
           ...Object.keys(pkg.dependencies),
-          ...Object.keys(testingPkgs.dependencies),
           ...builtinModules.filter(m => m !== 'buffer'),
           ...builtinModules.map(m => `node:${m}`),
         ],
       }),
       react({
-        fastRefresh: __DEV__,
         jsxRuntime: 'automatic',
         babel: {
           plugins: [

@@ -17,7 +17,6 @@
     "vite-plugin-electron-node-require"
   ],
   "exclude": [
-    "**/@types/mocha",
     "bin",
     "build",
     "config",
