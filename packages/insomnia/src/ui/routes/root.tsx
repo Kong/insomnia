@@ -2,20 +2,25 @@ import '../css/styles.css';
 
 import type { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-aria-components';
 import {
   LoaderFunction,
+  NavLink,
   Outlet,
+  useLoaderData,
   useParams,
   useRevalidator,
   useRouteLoaderData,
 } from 'react-router-dom';
-import styled from 'styled-components';
 
 import { isLoggedIn, onLoginLogout } from '../../account/session';
 import { isDevelopment } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { defaultOrganization, Organization } from '../../models/organization';
+import {
+  defaultOrganization,
+  isDefaultOrganization,
+  Organization } from '../../models/organization';
 import { isRemoteProject } from '../../models/project';
 import { Settings } from '../../models/settings';
 import { reloadPlugins } from '../../plugins';
@@ -28,7 +33,8 @@ import { getVCS } from '../../sync/vcs/vcs';
 import { submitAuthCode } from '../auth-session-provider';
 import { AccountToolbar } from '../components/account-toolbar';
 import { AppHeader } from '../components/app-header';
-import { ErrorBoundary } from '../components/error-boundary';
+import { SettingsButton } from '../components/buttons/settings-button';
+import { Icon } from '../components/icon';
 import { showError, showModal } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
 import { AskModal } from '../components/modals/ask-modal';
@@ -39,8 +45,6 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../components/modals/settings-modal';
-import { OrganizationsNav } from '../components/organizations-navbar';
-import { StatusBar } from '../components/statusbar';
 import { Toast } from '../components/toast';
 import { WorkspaceHeader } from '../components/workspace-header';
 import { AppHooks } from '../containers/app-hooks';
@@ -84,23 +88,32 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
   };
 };
 
-const Layout = styled.div({
-  position: 'relative',
-  height: '100%',
-  width: '100%',
-  display: 'grid',
-  backgroundColor: 'var(--color-bg)',
-  gridTemplate: `
-    'Header Header' auto
-    'Navbar Content' 1fr
-    'Statusbar Statusbar' 30px [row-end]
-    / 50px 1fr;
-  `,
-});
+const getNameInitials = (name: string) => {
+  // Split on whitespace and take first letter of each word
+  const words = name.toUpperCase().split(' ');
+  const firstWord = words[0];
+  const lastWord = words[words.length - 1];
+
+  // If there is only one word, just take the first letter
+  if (words.length === 1) {
+    return firstWord.charAt(0);
+  }
+
+  // If the first word is an emoji or an icon then just use that
+  const iconMatch = firstWord.match(/\p{Extended_Pictographic}/u);
+  if (iconMatch) {
+    return iconMatch[0];
+  }
+
+  return `${firstWord.charAt(0)}${lastWord ? lastWord.charAt(0) : ''}`;
+};
 
 const Root = () => {
   const { revalidate } = useRevalidator();
-  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
+  const { organizations } = useLoaderData() as RootLoaderData;
+  const workspaceData = useRouteLoaderData(
+    ':workspaceId'
+  ) as WorkspaceLoaderData | null;
   const [importUri, setImportUri] = useState('');
   const patchSettings = useSettingsPatcher();
 
@@ -260,33 +273,63 @@ const Root = () => {
       <NunjucksEnabledProvider>
         <AppHooks />
         <div className="app">
-          <ErrorBoundary showAlert>
-            <Modals />
-            {/* triggered by insomnia://app/import */}
-            {importUri && (
-              <ImportModal
-                onHide={() => setImportUri('')}
-                projectName="Insomnia"
-                organizationId={organizationId}
-                from={{ type: 'uri', defaultValue: importUri }}
-              />
-            )}
-            <Layout>
-              <OrganizationsNav />
-              <AppHeader
-                gridCenter={
-                  workspaceData ? <WorkspaceHeader {...workspaceData} /> : null
-                }
-                gridRight={<AccountToolbar />}
-              />
-              <Outlet />
-              <StatusBar />
-            </Layout>
-          </ErrorBoundary>
+          <Modals />
+          {/* triggered by insomnia://app/import */}
+          {importUri && (
+            <ImportModal
+              onHide={() => setImportUri('')}
+              projectName="Insomnia"
+              organizationId={organizationId}
+              from={{ type: 'uri', defaultValue: importUri }}
+            />
+          )}
+          <div className="w-full h-full divide-x divide-solid divide-y divide-[--hl-md] grid-template-app-layout grid relative bg-[--color-bg]">
+            <AppHeader
+              gridCenter={
+                workspaceData ? <WorkspaceHeader {...workspaceData} /> : null
+              }
+              gridRight={<AccountToolbar />}
+            />
+            <div className="[grid-area:Navbar]">
+              <nav className="flex flex-col items-center gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
+                {organizations.map(organization => (
+                  <NavLink
+                    className={({ isActive }) =>
+                      `select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] p-[--padding-sm] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${
+                        isActive
+                          ? 'outline-[--color-font]'
+                          : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
+                      }`
+                    }
+                    key={organization._id}
+                    to={`/organization/${organization._id}`}
+                  >
+                    {isDefaultOrganization(organization) ? (
+                      <Icon icon="home" />
+                    ) : (
+                      getNameInitials(organization.name)
+                    )}
+                  </NavLink>
+                ))}
+              </nav>
+            </div>
+            <Outlet />
+            <div className="relative [grid-area:Statusbar] flex items-center justify-between overflow-hidden">
+              <SettingsButton />
+              <Link>
+                <a
+                  className="flex gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
+                  href="https://konghq.com/"
+                >
+                  Made with
+                  <Icon className="text-[--color-surprise]" icon="heart" /> by
+                  Kong
+                </a>
+              </Link>
+            </div>
+          </div>
 
-          <ErrorBoundary showAlert>
-            <Toast />
-          </ErrorBoundary>
+          <Toast />
         </div>
       </NunjucksEnabledProvider>
     </AIProvider>
