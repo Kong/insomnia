@@ -12,39 +12,18 @@ on:
         - beta
         - stable
       version:
-        required: true
-        description: version of the release (e.g. 2022.1.0)
-      iteration:
         required: false
-        description: iteration of the release, used for non-stable releases (version-channel.iteration) (e.g. 0, 1, 2, 3 ...)
-        default: '0'
-
-env:
-  RELEASE_VERSION: ${{ github.event.inputs.version }}${{ github.event.inputs.channel != 'stable' && format('-{0}.{1}', github.event.inputs.channel, github.event.inputs.iteration) || '' }}
-  RELEASE_BRANCH: release/${{ github.event.inputs.version }}${{ github.event.inputs.channel != 'stable' && format('-{0}.{1}', github.event.inputs.channel, github.event.inputs.iteration) || '' }}
+        description: force version of the release (e.g. 2022.1.0)
 
 jobs:
   setup-release-branch:
     runs-on: ubuntu-latest
     steps:
-      - name: Create Branch # Create a branch if it doesn't exist
-        uses: peterjgrainger/action-create-branch@v2.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          branch: ${{ env.RELEASE_BRANCH }}
-
-      - name: Checkout branch # Check out the new branch
+      - name: Checkout branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ env.RELEASE_BRANCH }}
-          persist-credentials: false
-
-      - name: Configure Git user
-        id: configure_git_user
-        uses: Homebrew/actions/git-user-config@master
-        with:
-          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
+          ref: develop
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -56,36 +35,42 @@ jobs:
       - name: Install packages
         run: npm ci
 
+      - name: App version (stable, no version doing patch)
+        if: github.event.inputs.channel == 'stable' && !github.event.inputs.version
+        run: npm --workspaces version patch
+
       - name: App version (stable)
-        if: github.event.inputs.channel == 'stable'
-        run: npm --workspaces version minor
+        if: github.event.inputs.channel == 'stable' && github.event.inputs.version
+        run: npm --workspaces version "${{ github.event.inputs.version }}"
 
       - name: App version (alpha/beta)
         if: github.event.inputs.channel != 'stable'
-        run: npm --workspaces version prerelease --preid "${{ github.event.inputs.channel }}"."${{ github.event.inputs.iteration == '0' && 'preminor' || 'prerelease' }}"
+        run: npm --workspaces version --preid "${{ github.event.inputs.channel }}" prerelease
 
-      - name: Config version
-        run: APP_VERSION="${{ env.RELEASE_VERSION }}" npm run app-bump-version
+      - name: Get version
+        shell: bash
+        run: |
+          echo "RELEASE_VERSION=$(node -e "console.log(require('./packages/insomnia/package.json').version)")" >> $GITHUB_ENV
+          echo "RELEASE_BRANCH=release/$(node -e "console.log(require('./packages/insomnia/package.json').version)")" >> $GITHUB_ENV
 
-      - name: Commit
+      - name: Configure Git user
+        id: configure_git_user
+        uses: Homebrew/actions/git-user-config@master
+        with:
+          username: ${{ (github.event_name == 'workflow_dispatch' && github.actor) || 'insomnia-infra' }}
+
+      - name: Git create branch locally # Check out the new branch
+        run: git checkout -b ${{ env.RELEASE_BRANCH }}
+
+      - name: Git Commit
         run: git commit -am "Bump app version to ${{ env.RELEASE_VERSION }}"
 
-      - name: Push changes
+      - name: Git Push changes
         run: |
           remote_repo="https://${GITHUB_ACTOR}:${RELEASE_GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push "${remote_repo}" --follow-tags
         env:
           RELEASE_GH_TOKEN: ${{ secrets.RELEASE_GH_TOKEN }}
-
-  create-pull-request:
-    needs: setup-release-branch
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout branch # Check out the new branch
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ env.RELEASE_BRANCH }}
-          fetch-depth: 0
 
       - name: Run the Action
         uses: devops-infra/action-pull-request@v0.4.2
