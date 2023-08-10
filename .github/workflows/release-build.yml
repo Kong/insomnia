@@ -62,7 +62,10 @@ jobs:
           echo "INSO_VERSION=$(jq .version packages/insomnia-inso/package.json -rj)" >> $GITHUB_ENV
 
       - name: Package inso
-        run: npm run inso-package
+        run: |
+          echo "Replacing electron binary with node binary"
+          node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
+          npm run inso-package
         env:
           VERSION: ${{ env.INSO_VERSION }}
 
