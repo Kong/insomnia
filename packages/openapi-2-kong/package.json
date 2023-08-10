@@ -11,19 +11,6 @@
     "build": "tsc --build tsconfig.build.json",
     "test": "jest"
   },
-  "dependencies": {
-    "@apidevtools/swagger-parser": "10.1.0",
-    "openapi-types": "^8.0.0",
-    "slugify": "1.6.5",
-    "url-join": "^4.0.1",
-    "yaml": "^2.3.1"
-  },
-  "devDependencies": {
-    "@jest/globals": "^28.1.0",
-    "@types/url-join": "^4.0.1",
-    "jest": "^28.1.0",
-    "type-fest": "^2.12.0"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Kong/insomnia.git",
