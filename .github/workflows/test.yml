@@ -64,6 +64,33 @@ jobs:
         if: "startsWith(github.head_ref, 'release/')"
         run: npm run test:build --prefix packages/insomnia-smoke-test
 
+      - name: Upload smoke test screenshots
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
+          path: packages/insomnia-smoke-test/screenshots
+  InsoTestCLISmokeTest:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install packages
+        run: npm ci
+
       - name: Set Inso CLI variables
         id: inso-variables
         shell: bash
@@ -100,13 +127,6 @@ jobs:
       - name: Run Inso CLI smoke tests
         run: npm run test:smoke:cli
 
-      - name: Upload smoke test screenshots
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          if-no-files-found: ignore
-          name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
-          path: packages/insomnia-smoke-test/screenshots
   SmokeTestPackagedInsomnia:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -142,3 +162,11 @@ jobs:
         # Full Smoke test run, for Release PRs
         if: "startsWith(github.head_ref, 'release/')"
         run: npm run test:package --prefix packages/insomnia-smoke-test
+
+      - name: Upload smoke test screenshots
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-package-smoke-test-screenshots-${{ github.run_number }}
+          path: packages/insomnia-smoke-test/screenshots
