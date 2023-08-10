@@ -152,6 +152,10 @@ jobs:
           NODE_OPTIONS: '--max_old_space_size=6144'
           BUILD_TARGETS: 'dir'
 
+      - name: debug check dist folder after package
+        if: matrix.os == 'macos-latest'
+        run: ls -la packages/insomnia/dist
+
       - name: Run Smoke tests on Package (CI)
         # Partial Smoke test run, for regular CI triggers
         if: "!startsWith(github.head_ref, 'release/')"
