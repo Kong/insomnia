@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  OS:
+  LintTypeCheckTestAndSmokeTest:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -107,3 +107,38 @@ jobs:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
           path: packages/insomnia-smoke-test/screenshots
+  SmokeTestPackagedInsomnia:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install packages
+        run: npm ci
+
+      - name: Package app for smoke tests
+        run: npm run app-package
+        env:
+          NODE_OPTIONS: '--max_old_space_size=6144'
+          BUILD_TARGETS: 'dir'
+
+      - name: Run Smoke tests on Package (CI)
+        # Partial Smoke test run, for regular CI triggers
+        if: "!startsWith(github.head_ref, 'release/')"
+        run: npm run test:package --prefix packages/insomnia-smoke-test -- --project=Smoke
+
+      - name: Run Smoke tests on Package (Release)
+        # Full Smoke test run, for Release PRs
+        if: "startsWith(github.head_ref, 'release/')"
+        run: npm run test:package --prefix packages/insomnia-smoke-test
