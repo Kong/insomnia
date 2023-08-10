@@ -3,7 +3,6 @@ import { builtinModules } from 'module';
 import path from 'path';
 import { defineConfig } from 'vite';
 
-import testingPkgs from '../insomnia-testing/package.json';
 import pkg from './package.json';
 import { electronNodeRequire } from './vite-plugin-electron-node-require';
 
