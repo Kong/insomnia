@@ -22,6 +22,7 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v3
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           ref: develop
           fetch-depth: 0
 
