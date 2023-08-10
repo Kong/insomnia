@@ -9,7 +9,6 @@
   ],
   "exclude": [
     "**/*.test.ts",
-    "**/@types/mocha",
     "**/__mocks__/*",
     "**/__snapshots__/**",
     "assets",
