@@ -11,3 +11,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.grid-template-app-layout {
+  grid-template: 'Header Header' auto
+  'Navbar Content' 1fr
+  'Statusbar Statusbar' 30px [row-end]
+  / 50px 1fr;
+}
