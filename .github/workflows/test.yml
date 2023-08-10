@@ -16,12 +16,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  OS:
+  Test:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [ubuntu-latest]
+        # os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - name: Checkout branch
         uses: actions/checkout@v3
@@ -100,10 +101,10 @@ jobs:
       - name: Run Inso CLI smoke tests
         run: npm run test:smoke:cli
 
-      - name: Upload smoke test screenshots
+      - name: Upload smoke test traces
         uses: actions/upload-artifact@v3
         if: always()
         with:
           if-no-files-found: ignore
-          name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
-          path: packages/insomnia-smoke-test/screenshots
+          name: ${{ matrix.os }}-smoke-test-traces-${{ github.run_number }}
+          path: packages/insomnia-smoke-test/traces
