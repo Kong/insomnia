@@ -69,7 +69,7 @@ To open a local trace viewer for a given test output, run:
 
 ```shell
 # Example:
-npx playwright show-trace packages/insomnia-smoke-test/screenshots/app-can-send-requests/trace.zip
+npx playwright show-trace packages/insomnia-smoke-test/traces/app-can-send-requests/trace.zip
 ```
 
 Alternatively you can upload this trace to [trace.playwright.dev](https://trace.playwright.dev/).

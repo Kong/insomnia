@@ -31,7 +31,7 @@ const config: PlaywrightTestConfig = {
   reporter: process.env.CI ? 'github' : 'list',
   timeout: process.env.CI ? 60 * 1000 : 20 * 1000,
   forbidOnly: !!process.env.CI,
-  outputDir: 'screenshots',
+  outputDir: 'traces',
   testDir: 'tests',
   expect: {
     timeout: process.env.CI ? 25 * 1000 : 10 * 1000,
