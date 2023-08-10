@@ -54,7 +54,7 @@ app.get('/', (_req, res) => {
   res.status(200).send();
 });
 
-app.all('/graphql', createHandler({ schema, graphiql: true }));
+app.all('/graphql', createHandler({ schema }));
 
 app.use(express.json()); // Used to parse JSON bodies
 

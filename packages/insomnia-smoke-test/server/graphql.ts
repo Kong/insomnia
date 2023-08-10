@@ -11,6 +11,7 @@ export const schema = new GraphQLSchema({
       bearer: {
         type: new GraphQLEnumType({
           name: 'RingBearer',
+          description: 'Characters who at any time bore a Ring of Power.',
           values: {
             Frodo: { value: 0 },
             Bilbo: { value: 1 },
@@ -25,7 +26,7 @@ export const schema = new GraphQLSchema({
             Thrain: { value: 10 },
           },
         }),
-        resolve: () => 'Gandalf',
+        resolve: () => 3,
       },
     },
   }),
