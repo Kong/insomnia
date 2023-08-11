@@ -1,7 +1,7 @@
 import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
-import { delay } from '../../common/misc';
+import { ChangeBufferEvent, database } from '../../common/database';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { CookieJar } from '../../models/cookie-jar';
@@ -9,7 +9,7 @@ import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestHeader } from '../../models/request';
-import { RequestMeta } from '../../models/request-meta';
+import { isRequestMeta, RequestMeta } from '../../models/request-meta';
 import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
 import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
@@ -250,9 +250,18 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
       cookieJar: rendered.cookieJar,
     });
   }
-  // TODO: remove hack, show loading and reload after connection create response and set activeResponseId
-  await delay(2000);
-  return null;
+  // HACK: even more elaborate hack to get the request to update
+  return new Promise(resolve => {
+    database.onChange(async (changes: ChangeBufferEvent[]) => {
+      for (const change of changes) {
+        const [event, doc] = change;
+        if (isRequestMeta(doc) && doc.parentId === requestId && event === 'update') {
+          console.log('Response meta received', doc);
+          resolve(null);
+        }
+      }
+    });
+  });
 };
 
 export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
