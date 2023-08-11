@@ -54,12 +54,12 @@ jobs:
 
       - name: Run Smoke tests (CI)
         # Partial Smoke test run, for regular CI triggers
-        if: "!startsWith(github.head_ref, 'release/')"
+        if: ${{ !startsWith(github.head_ref, 'release/') }}
         run: npm run test:build --prefix packages/insomnia-smoke-test -- --project=Smoke
 
       - name: Run Smoke tests (Release)
         # Full Smoke test run, for Release PRs
-        if: "startsWith(github.head_ref, 'release/')"
+        if: ${{ startsWith(github.head_ref, 'release/') }}
         run: npm run test:build --prefix packages/insomnia-smoke-test
 
       - name: Set Inso CLI variables

@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   parse-version:
-    if: "startsWith(github.head_ref, 'release/') || github.event_name == 'workflow_dispatch'"
+    if: ${{ startsWith(github.head_ref, 'release/') || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -29,7 +29,7 @@ jobs:
           echo "RELEASE_VERSION=${{ github.event.inputs.version }} " >> $GITHUB_ENV
 
       - name: Set release version Env (pull_request)
-        if: "startsWith(github.head_ref, 'release/')"
+        if: ${{ startsWith(github.head_ref, 'release/') }}
         shell: bash
         run: |
           echo "RELEASE_VERSION=${BRANCH/release\//} " >> $GITHUB_ENV
