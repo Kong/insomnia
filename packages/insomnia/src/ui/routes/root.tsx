@@ -323,6 +323,7 @@ const Root = () => {
                     <Popover className="min-w-max">
                       <Menu
                         onAction={action => {
+                          console.log(action);
                           if (action === 'logout') {
                             logout();
                           }
@@ -336,7 +337,7 @@ const Root = () => {
                         className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                       >
                         <Item
-                          key="account-settings"
+                          id="account-settings"
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                           aria-label="Account settings"
                         >
@@ -344,7 +345,7 @@ const Root = () => {
                           <span>Account Settings</span>
                         </Item>
                         <Item
-                          key="logout"
+                          id="logout"
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                           aria-label="logout"
                         >
