@@ -172,6 +172,14 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         />
       </DropdownItem>
 
+      <DropdownItem aria-label='Event Stream Request'>
+        <ItemContent
+          icon="plus-circle"
+          label="Event Stream Request"
+          onClick={() => create('Event Stream')}
+        />
+      </DropdownItem>
+
       <DropdownItem aria-label='New GraphQL Request'>
         <ItemContent
           icon="plus-circle"

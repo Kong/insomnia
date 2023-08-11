@@ -8,6 +8,7 @@ export function getSendRequestCallback(environmentId?: string) {
     stats.incrementExecutedRequests();
     try {
       // NOTE: unit tests will use the UI selected environment
+      // TODO: unpack this and then unpack all other network.sends in order to match the realtime loading mechanism workaround
       const res = await send(requestId, environmentId);
       const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
       const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
