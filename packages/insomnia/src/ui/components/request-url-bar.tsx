@@ -10,6 +10,7 @@ import styled from 'styled-components';
 import { database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../common/render';
+import { ResponsePatch } from '../../main/network/libcurl-promise';
 import * as models from '../../models';
 import { isEventStreamRequest, isRequest } from '../../models/request';
 import * as network from '../../network/network';
@@ -75,9 +76,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const inputRef = useRef<OneLineEditorHandle>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const handleGenerateCode = () => {
-    showModal(GenerateCodeModal, { request: activeRequest });
-  };
   const focusInput = useCallback(() => {
     if (inputRef.current) {
       inputRef.current.focusEnd();
@@ -89,6 +87,69 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
 
+  const writeToDownloadPath = (downloadPathAndName: string, responsePatch: ResponsePatch) => {
+    invariant(downloadPathAndName, 'filename should be set by now');
+
+    const to = fs.createWriteStream(downloadPathAndName);
+    const readStream = models.response.getBodyStream(responsePatch);
+    if (!readStream || typeof readStream === 'string') {
+      setLoading(false);
+      return;
+    }
+    readStream.pipe(to);
+    readStream.on('end', async () => {
+      responsePatch.error = `Saved to ${downloadPathAndName}`;
+      await models.response.create(responsePatch, settings.maxHistoryResponses);
+      setLoading(false);
+      return;
+    });
+    readStream.on('error', async err => {
+      console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
+      await models.response.create(responsePatch, settings.maxHistoryResponses);
+      setLoading(false);
+      return;
+    });
+  };
+  const sendThenSetFilePath = async () => {
+    setLoading(true);
+    try {
+      const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
+      const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
+      if (!is2XXWithBodyPath) {
+        // Save the bad responses so failures are shown still
+        await models.response.create(responsePatch, settings.maxHistoryResponses);
+        setLoading(false);
+        return;
+      }
+      const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
+      const { filePath } = await window.dialog.showSaveDialog({
+        title: 'Select Download Location',
+        buttonLabel: 'Save',
+        // NOTE: An error will be thrown if defaultPath is supplied but not a String
+        ...(defaultPath ? { defaultPath } : {}),
+      });
+      if (!filePath) {
+        setLoading(false);
+        return;
+      }
+      window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
+      writeToDownloadPath(filePath, responsePatch);
+    } catch (err) {
+      showAlert({
+        title: 'Unexpected Request Failure',
+        message: (
+          <div>
+            <p>The request failed due to an unhandled error:</p>
+            <code className="wide selectable">
+              <pre>{err.message}</pre>
+            </code>
+          </div>
+        ),
+      });
+      setLoading(false);
+    }
+  };
+
   const fetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const connect = (connectParams: ConnectActionParams) => {
@@ -99,7 +160,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         encType: 'application/json',
       });
   };
-  const send = async () => {
+  const simpleSend = async () => {
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
       event: SegmentEvent.requestExecute,
@@ -122,52 +183,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           setLoading(false);
           return;
         }
-        let downloadPathAndName = '';
-        if (downloadPath) {
-          const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
-          const extension = sanitizedExtension || 'unknown';
-          const headers = responsePatch.headers || [];
-          const header = getContentDispositionHeader(headers);
-          const nameFromHeader = header ? contentDisposition.parse(header.value).parameters.filename : null;
-          const name = nameFromHeader || `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
-          downloadPathAndName = path.join(downloadPath, name);
-        }
-        if (!downloadPath) {
-          const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
-          const { filePath } = await window.dialog.showSaveDialog({
-            title: 'Select Download Location',
-            buttonLabel: 'Save',
-            // NOTE: An error will be thrown if defaultPath is supplied but not a String
-            ...(defaultPath ? { defaultPath } : {}),
-          });
-          if (!filePath) {
-            setLoading(false);
-            return;
-          }
-          window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-          downloadPathAndName = filePath;
-        }
-        invariant(downloadPathAndName, 'filename should be set by now');
-
-        const to = fs.createWriteStream(downloadPathAndName);
-        const readStream = models.response.getBodyStream(responsePatch);
-        if (!readStream || typeof readStream === 'string') {
-          setLoading(false);
-          return;
-        }
-        readStream.pipe(to);
-        readStream.on('end', async () => {
-          responsePatch.error = `Saved to ${downloadPathAndName}`;
-          await models.response.create(responsePatch, settings.maxHistoryResponses);
-          setLoading(false);
-          return;
-        });
-        readStream.on('error', async err => {
-          console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
-          await models.response.create(responsePatch, settings.maxHistoryResponses);
-          setLoading(false);
-          return;
-        });
+        const header = getContentDispositionHeader(responsePatch.headers || []);
+        const name = header
+          ? contentDisposition.parse(header.value).parameters.filename
+          : `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
+        writeToDownloadPath(path.join(downloadPath, name), responsePatch);
       } catch (err) {
         showAlert({
           title: 'Unexpected Request Failure',
@@ -180,8 +200,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
             </div>
           ),
         });
-        setLoading(false);
       }
+      setLoading(false);
       return;
     }
     if (isEventStreamRequest(activeRequest)) {
@@ -237,55 +257,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     setLoading(false);
   };
 
-  useInterval(send, currentInterval ? currentInterval : null);
-  useTimeoutWhen(send, currentTimeout, !!currentTimeout);
+  useInterval(simpleSend, currentInterval ? currentInterval : null);
+  useTimeoutWhen(simpleSend, currentTimeout, !!currentTimeout);
   const patchRequest = useRequestPatcher();
-  const handleStop = () => {
-    if (isEventStreamRequest(activeRequest)) {
-      window.main.curl.close({ requestId: activeRequest._id });
-      return;
-    }
-    setCurrentInterval(null);
-    setCurrentTimeout(undefined);
-  };
-
-  const handleSendOnInterval = useCallback(() => {
-    showPrompt({
-      inputType: 'decimal',
-      title: 'Send on Interval',
-      label: 'Interval in seconds',
-      defaultValue: '3',
-      submitName: 'Start',
-      onComplete: seconds => {
-        setCurrentInterval(+seconds * 1000);
-      },
-    });
-  }, []);
-
-  const handleSendAfterDelay = () => {
-    showPrompt({
-      inputType: 'decimal',
-      title: 'Send After Delay',
-      label: 'Delay in seconds',
-      defaultValue: '3',
-      onComplete: seconds => {
-        setCurrentTimeout(+seconds * 1000);
-      },
-    });
-  };
-
-  const downloadAfterSend = useCallback(async () => {
-    const { canceled, filePaths } = await window.dialog.showOpenDialog({
-      title: 'Select Download Location',
-      buttonLabel: 'Select',
-      properties: ['openDirectory'],
-    });
-    if (canceled) {
-      return;
-    }
-    patchRequestMeta(activeRequest._id, { downloadPath: filePaths[0] });
-  }, [activeRequest._id, patchRequestMeta]);
-  const handleClearDownloadLocation = () => patchRequestMeta(activeRequest._id, { downloadPath: null });
 
   useDocBodyKeyboardShortcuts({
     request_focusUrl: () => {
@@ -293,7 +267,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     },
     request_send: () => {
       if (activeRequest.url) {
-        send();
+        simpleSend();
       }
     },
     request_toggleHttpMethodMenu: () => {
@@ -380,23 +354,32 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           defaultValue={url}
           onChange={handleUrlChange}
           onKeyDown={createKeybindingsHandler({
-            'Enter': () => send(),
+            'Enter': () => simpleSend(),
           })}
         />
         {isCancellable ? (
           <button
             type="button"
             className="urlbar__send-btn"
-            onClick={handleStop}
+            onClick={() => {
+              if (isEventStreamRequest(activeRequest)) {
+                window.main.curl.close({ requestId: activeRequest._id });
+                return;
+              }
+              setCurrentInterval(null);
+              setCurrentTimeout(undefined);
+            }}
           >
             {isEventStreamRequest(activeRequest) ? 'Disconnect' : 'Cancel'}
           </button>
         ) : (
           <>
             <button
-              type="button"
+                onClick={simpleSend}
+
               className="urlbar__send-btn"
-              onClick={send}
+                type="button"
+
             >
                 {buttonText}</button>
               {isEventStreamRequest(activeRequest) ? null : (<Dropdown
@@ -424,14 +407,14 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                       icon="arrow-circle-o-right"
                       label="Send Now"
                       hint={hotKeyRegistry.request_send}
-                      onClick={send}
+                      onClick={simpleSend}
                     />
                   </DropdownItem>
                   <DropdownItem aria-label='Generate Client Code'>
                     <ItemContent
                       icon="code"
                       label="Generate Client Code"
-                      onClick={handleGenerateCode}
+                      onClick={() => showModal(GenerateCodeModal, { request: activeRequest })}
                     />
                   </DropdownItem>
                 </DropdownSection>
@@ -443,14 +426,31 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                     <ItemContent
                       icon="clock-o"
                       label="Send After Delay"
-                      onClick={handleSendAfterDelay}
+                      onClick={() => showPrompt({
+                        inputType: 'decimal',
+                        title: 'Send After Delay',
+                        label: 'Delay in seconds',
+                        defaultValue: '3',
+                        onComplete: seconds => {
+                          setCurrentTimeout(+seconds * 1000);
+                        },
+                      })}
                     />
                   </DropdownItem>
                   <DropdownItem aria-label='Repeat on Interval'>
                     <ItemContent
                       icon="repeat"
                       label="Repeat on Interval"
-                      onClick={handleSendOnInterval}
+                      onClick={() => showPrompt({
+                        inputType: 'decimal',
+                        title: 'Send on Interval',
+                        label: 'Interval in seconds',
+                        defaultValue: '3',
+                        submitName: 'Start',
+                        onComplete: seconds => {
+                          setCurrentInterval(+seconds * 1000);
+                        },
+                      })}
                     />
                   </DropdownItem>
                   {downloadPath ? (
@@ -459,14 +459,24 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                         icon="stop-circle"
                         label="Stop Auto-Download"
                         withPrompt
-                        onClick={handleClearDownloadLocation}
+                        onClick={() => patchRequestMeta(activeRequest._id, { downloadPath: null })}
                       />
                     </DropdownItem>) :
                     (<DropdownItem aria-label='Download After Send'>
                       <ItemContent
                         icon="download"
                         label="Download After Send"
-                        onClick={downloadAfterSend}
+                        onClick={async () => {
+                          const { canceled, filePaths } = await window.dialog.showOpenDialog({
+                            title: 'Select Download Location',
+                            buttonLabel: 'Select',
+                            properties: ['openDirectory'],
+                          });
+                          if (canceled) {
+                            return;
+                          }
+                          patchRequestMeta(activeRequest._id, { downloadPath: filePaths[0] });
+                        }}
                       />
                     </DropdownItem>
                     )}
