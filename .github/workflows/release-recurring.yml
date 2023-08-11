@@ -52,9 +52,6 @@ jobs:
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
-      - name: Remove me
-        run: ls -al /Users/runner/work/insomnia/insomnia/packages/insomnia/dist
-
       - name: Run critical test on packaged app
         run: npm run test:package --prefix packages/insomnia-smoke-test -- --project=Critical
 
