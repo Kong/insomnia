@@ -12,7 +12,8 @@ import { getContentDispositionHeader } from '../../common/misc';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../common/render';
 import { ResponsePatch } from '../../main/network/libcurl-promise';
 import * as models from '../../models';
-import { isEventStreamRequest, isRequest } from '../../models/request';
+import { CookieJar } from '../../models/cookie-jar';
+import { isEventStreamRequest, isRequest, Request } from '../../models/request';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { convert } from '../../utils/importers/convert';
 import { invariant } from '../../utils/invariant';
@@ -31,6 +32,7 @@ import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
+import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 
 const StyledDropdownButton = styled(DropdownButton)({
   '&:hover:not(:disabled)': {
@@ -120,6 +122,27 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         encType: 'application/json',
       });
   };
+  const tryToInterpolateOrShowRenderErrorModal = async ({ request, environmentId, workspaceCookieJar }: { request: Request; environmentId: string; workspaceCookieJar: CookieJar }) => {
+    try {
+      const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+      return await render({
+        url: request.url,
+        headers: request.headers,
+        authentication: request.authentication,
+        parameters: request.parameters.filter(p => !p.disabled),
+        workspaceCookieJar,
+      }, renderContext);
+    } catch (err) {
+      if (err.type === 'render') {
+        showModal(RequestRenderErrorModal, {
+          request: activeRequest,
+          error: err,
+        });
+        return;
+      }
+      throw err;
+    }
+  };
   const sendOrConnect = async (shouldPromptForPathAFterResponse?: boolean) => {
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
@@ -137,17 +160,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       const startListening = async () => {
         const environmentId = activeEnvironment._id;
         const workspaceId = activeWorkspace._id;
-        const renderContext = await getRenderContext({ request: activeRequest, environmentId, purpose: RENDER_PURPOSE_SEND });
         // Render any nunjucks tags in the url/headers/authentication settings/cookies
         const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-        const rendered = await render({
-          url: activeRequest.url,
-          headers: activeRequest.headers,
-          authentication: activeRequest.authentication,
-          parameters: activeRequest.parameters.filter(p => !p.disabled),
-          workspaceCookieJar,
-        }, renderContext);
-        connect({
+        const rendered = await tryToInterpolateOrShowRenderErrorModal({ request: activeRequest, environmentId, workspaceCookieJar });
+        rendered && connect({
           url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
           headers: rendered.headers,
           authentication: rendered.authentication,
@@ -338,7 +354,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           </button>
         ) : (<>
             <button
-              onClick={sendOrConnect}
+              onClick={() => sendOrConnect()}
               className="urlbar__send-btn"
               type="button"
 
