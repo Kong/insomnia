@@ -29,7 +29,6 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
   ...other
 }, ref) => {
   const {
-    activeEnvironment,
     activeProject,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const {
@@ -125,7 +124,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
         ...pluginContexts.data.init(activeProject._id),
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
-        ...(pluginContexts.network.init(activeEnvironment._id) as Record<string, any>),
+        ...(pluginContexts.network.init() as Record<string, any>),
       };
       const requests = await models.request.findByParentId(requestGroup._id);
       requests.sort((a, b) => a.metaSortKey - b.metaSortKey);
@@ -147,7 +146,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
 
     dropdownRef.current?.hide();
 
-  }, [dropdownRef, loadingActions, activeEnvironment, requestGroup, activeProject]);
+  }, [dropdownRef, loadingActions, requestGroup, activeProject]);
 
   return (
     <Dropdown
