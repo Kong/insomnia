@@ -15,10 +15,11 @@ import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
+import { RENDER_PURPOSE_SEND } from '../../../../common/render';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
-import * as network from '../../../../network/network';
+import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../../../network/network';
 import { invariant } from '../../../../utils/invariant';
 import { jsonPrettify } from '../../../../utils/prettify/json';
 import { RootLoaderData } from '../../../routes/root';
@@ -63,7 +64,6 @@ const isOperationDefinition = (def: DefinitionNode): def is OperationDefinitionN
 
 const fetchGraphQLSchemaForRequest = async ({
   requestId,
-  environmentId,
   url,
 }: {
   requestId: string;
@@ -74,9 +74,9 @@ const fetchGraphQLSchemaForRequest = async ({
     return;
   }
 
-  const request = await models.request.getById(requestId);
+  const req = await models.request.getById(requestId);
 
-  if (!request) {
+  if (!req) {
     return;
   }
 
@@ -87,10 +87,10 @@ const fetchGraphQLSchemaForRequest = async ({
       operationName: 'IntrospectionQuery',
     });
     const introspectionRequest = await db.upsert(
-      Object.assign({}, request, {
-        _id: request._id + '.graphql',
+      Object.assign({}, req, {
+        _id: req._id + '.graphql',
         settingMaxTimelineDataSize: 5000,
-        parentId: request._id,
+        parentId: req._id,
         isPrivate: true,
         // So it doesn't get synced or exported
         body: {
@@ -99,7 +99,22 @@ const fetchGraphQLSchemaForRequest = async ({
         },
       }),
     );
-    const response = await network.send(introspectionRequest._id, environmentId);
+    const { request,
+      environment,
+      settings,
+      clientCertificates,
+      caCert,
+      activeEnvironmentId } = await fetchRequestData(introspectionRequest._id);
+
+    const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
+    const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+    const res = await sendCurlAndWriteTimeline(
+      renderedRequest,
+      clientCertificates,
+      caCert,
+      settings,
+    );
+    const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
     const statusCode = response.statusCode || 0;
     if (!response) {
       return {

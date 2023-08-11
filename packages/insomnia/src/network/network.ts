@@ -15,7 +15,6 @@ import type { ExtraRenderInfo, RenderedRequest, RenderPurpose, RequestAndContext
 import {
   getRenderedRequestAndContext,
   RENDER_PURPOSE_NO_RENDER,
-  RENDER_PURPOSE_SEND,
 } from '../common/render';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
@@ -73,34 +72,7 @@ export async function sendWithSettings(
   return responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
 }
 
-// used by test feature, inso, and plugin api
-// not all need to be cancellable or to use curl
-export async function send(
-  requestId: string,
-  environmentId?: string,
-  extraInfo?: ExtraRenderInfo,
-) {
-  console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
-
-  const { request,
-    environment,
-    settings,
-    clientCertificates,
-    caCert,
-    activeEnvironmentId } = await fetchRequestData(requestId);
-
-  const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND, extraInfo);
-  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-  const response = await sendCurlAndWriteTimeline(
-    renderedRequest,
-    clientCertificates,
-    caCert,
-    settings,
-  );
-  return responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
-}
-
-const fetchRequestData = async (requestId: string) => {
+export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request');
   const ancestors = await db.withAncestors(request, [
@@ -224,8 +196,8 @@ export async function sendCurlAndWriteTimeline(
     ...patch,
   };
 }
-export const responseTransform = (patch: ResponsePatch, environmentId: string | null, renderedRequest: RenderedRequest, context: Record<string, any>) => {
-  const response = {
+export const responseTransform = async (patch: ResponsePatch, environmentId: string | null, renderedRequest: RenderedRequest, context: Record<string, any>) => {
+  const response: ResponsePatch = {
     ...patch,
     // important for filter by responses
     environmentId,
@@ -239,7 +211,7 @@ export const responseTransform = (patch: ResponsePatch, environmentId: string | 
     return response;
   }
   console.log(`[network] Response succeeded req=${patch.parentId} status=${response.statusCode || '?'}`,);
-  return _applyResponsePluginHooks(
+  return await _applyResponsePluginHooks(
     response,
     renderedRequest,
     context,

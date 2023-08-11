@@ -13,7 +13,7 @@ import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../common/rend
 import { ResponsePatch } from '../../main/network/libcurl-promise';
 import * as models from '../../models';
 import { isEventStreamRequest, isRequest } from '../../models/request';
-import * as network from '../../network/network';
+import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { convert } from '../../utils/importers/convert';
 import { invariant } from '../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
@@ -160,7 +160,22 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
 
     setLoading(true);
     try {
-      const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
+      const { request,
+        environment,
+        settings,
+        clientCertificates,
+        caCert,
+        activeEnvironmentId } = await fetchRequestData(requestId);
+
+      const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
+      const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+      const response = await sendCurlAndWriteTimeline(
+        renderedRequest,
+        clientCertificates,
+        caCert,
+        settings,
+      );
+      const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
       const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
       const isNormalRequestOrErrorCode = !downloadPath || !is2XXWithBodyPath;
       if (isNormalRequestOrErrorCode) {
