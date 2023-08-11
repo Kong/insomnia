@@ -31,7 +31,6 @@ import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
-import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 
 const StyledDropdownButton = styled(DropdownButton)({
   '&:hover:not(:disabled)': {
@@ -172,15 +171,40 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     });
     // reset timeout
     setCurrentTimeout(undefined);
+
+    if (isEventStreamRequest(activeRequest)) {
+      const startListening = async () => {
+        const environmentId = activeEnvironment._id;
+        const workspaceId = activeWorkspace._id;
+        const renderContext = await getRenderContext({ request: activeRequest, environmentId, purpose: RENDER_PURPOSE_SEND });
+        // Render any nunjucks tags in the url/headers/authentication settings/cookies
+        const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+        const rendered = await render({
+          url: activeRequest.url,
+          headers: activeRequest.headers,
+          authentication: activeRequest.authentication,
+          parameters: activeRequest.parameters.filter(p => !p.disabled),
+          workspaceCookieJar,
+        }, renderContext);
+        connect({
+          url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
+          headers: rendered.headers,
+          authentication: rendered.authentication,
+          cookieJar: rendered.workspaceCookieJar,
+        });
+      };
+      startListening();
+      return;
+    }
+
     setLoading(true);
-
-    const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
-
-    if (downloadPath) {
+    try {
+      const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
       const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
-      if (!is2XXWithBodyPath) {
-        // Save the bad responses so failures are shown still
-        await models.response.create(responsePatch, settings.maxHistoryResponses);
+      const isNormalRequestOrErrorCode = !downloadPath || !is2XXWithBodyPath;
+      if (isNormalRequestOrErrorCode) {
+        const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
+        await patchRequestMeta(activeRequest._id, { activeResponseId: response._id });
         setLoading(false);
         return;
       }
@@ -189,12 +213,19 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         ? contentDisposition.parse(header.value).parameters.filename
         : `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
       writeToDownloadPath(path.join(downloadPath, name), responsePatch);
-      setLoading(false);
-      return;
+    } catch (err) {
+      showAlert({
+        title: 'Unexpected Request Failure',
+        message: (
+          <div>
+            <p>The request failed due to an unhandled error:</p>
+            <code className="wide selectable">
+              <pre>{err.message}</pre>
+            </code>
+          </div>
+        ),
+      });
     }
-
-    const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
-    await patchRequestMeta(activeRequest._id, { activeResponseId: response._id });
     setLoading(false);
   };
 
