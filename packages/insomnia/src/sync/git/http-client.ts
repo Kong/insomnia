@@ -19,13 +19,9 @@ export const httpClient = {
         maxRedirects: 10,
       });
     } catch (err) {
-      if (!err.response) {
-        console.log('[git-http-client] Error thrown', err.message);
-        // NOTE: config.url is unreachable
-        throw err;
-      }
-      console.log('[git-http-client] Ignored Error', err.response);
-      response = err.response;
+      console.log('[git-http-client] Error thrown', err.message);
+      // NOTE: config.url is unreachable
+      throw err;
     }
 
     return {

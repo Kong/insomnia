@@ -40,22 +40,12 @@ export const axiosRequest = async (config: AxiosRequestConfig): Promise<AxiosRes
       };
     }
   }
-
-  console.log('[axios] Making request', finalConfig);
-  let response;
-
-  try {
-    response = await axios(finalConfig);
-  }  catch (err) {
-    if (!err.response) {
-      console.log('[git-http-client] Error thrown', err.message);
-      // NOTE: config.url is unreachable
-      console.log(err);
-      throw err;
-    }
-    console.log('[git-http-client] Ignored Error', err.response);
-    response = err.response;
+  // HACK: workaround for isomteric git needing 400 responses
+  if (config.responseType === 'arraybuffer') {
+    console.log('[git-sync] Overriding validateStatus to allow 400 responses');
+    finalConfig.validateStatus = status => status < 500;
   }
+  const response = await axios(finalConfig);
 
   if (isDevelopment()) {
     console.log('[axios] Response', {
