@@ -35,15 +35,12 @@ jobs:
         run: npm ci
 
       - name: Lint
-        if: matrix.os == 'ubuntu-latest'
         run: npm run lint
 
       - name: Lint markdown
-        if: matrix.os == 'ubuntu-latest'
         run: npm run lint:markdown
 
       - name: Type checks
-        if: matrix.os == 'ubuntu-latest'
         run: npm run type-check
 
       - name: Run tests
@@ -52,22 +49,22 @@ jobs:
       - name: Build app for smoke tests
         run: npm run app-build
 
-      - name: Run Smoke tests (CI)
+      - name: Run Smoke tests
         # Partial Smoke test run, for regular CI triggers
-        if: "!startsWith(github.head_ref, 'release/')"
+        if: ${{ !startsWith(github.head_ref, 'release/') }}
         run: npm run test:build --prefix packages/insomnia-smoke-test -- --project=Smoke
 
-      - name: Run Smoke tests (Release)
+      - name: Run Prerelease tests
         # Full Smoke test run, for Release PRs
-        if: "startsWith(github.head_ref, 'release/')"
-        run: npm run test:build --prefix packages/insomnia-smoke-test
+        if: ${{ startsWith(github.head_ref, 'release/') }}
+        run: npm run test:build --prefix packages/insomnia-smoke-test -- --project=Default
 
       - name: Set Inso CLI variables
         id: inso-variables
         shell: bash
         run: |
           INSO_VERSION="$(jq .version packages/insomnia-inso/package.json -rj)-run.${{ github.run_number }}"
-          PKG_NAME="inso-${{ matrix.os }}-$INSO_VERSION"
+          PKG_NAME="inso-ubuntu-latest-$INSO_VERSION"
 
           echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
           echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
@@ -100,8 +97,7 @@ jobs:
 
       - name: Upload smoke test traces
         uses: actions/upload-artifact@v3
-        if: always()
         with:
           if-no-files-found: ignore
-          name: ${{ matrix.os }}-smoke-test-traces-${{ github.run_number }}
+          name: ubuntu-smoke-test-traces-${{ github.run_number }}
           path: packages/insomnia-smoke-test/traces

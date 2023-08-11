@@ -18,7 +18,7 @@ env:
 jobs:
   build-and-upload-artifacts:
     # Skip jobs for release PRs
-    if: "!startsWith(github.head_ref, 'release/')"
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -51,6 +51,16 @@ jobs:
       - name: Package
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
+
+      - name: Run critical test on packaged app
+        run: npm run test:package --prefix packages/insomnia-smoke-test -- --project=Critical
+
+      - name: Upload smoke test traces
+        uses: actions/upload-artifact@v3
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-package-critical-test-traces-${{ github.run_number }}
+          path: packages/insomnia-smoke-test/traces
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
