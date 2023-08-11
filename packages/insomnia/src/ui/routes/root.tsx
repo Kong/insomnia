@@ -1,8 +1,17 @@
 import '../css/styles.css';
 
 import type { IpcRendererEvent } from 'electron';
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-aria-components';
+import React, { Fragment, useEffect, useState } from 'react';
+import {
+  Button,
+  Item,
+  Link,
+  Menu,
+  MenuTrigger,
+  Popover,
+  Tooltip,
+  TooltipTrigger,
+} from 'react-aria-components';
 import {
   LoaderFunction,
   NavLink,
@@ -13,7 +22,13 @@ import {
   useRouteLoaderData,
 } from 'react-router-dom';
 
-import { isLoggedIn, onLoginLogout } from '../../account/session';
+import {
+  getFirstName,
+  getLastName,
+  isLoggedIn,
+  logout,
+  onLoginLogout,
+} from '../../account/session';
 import { isDevelopment } from '../../common/constants';
 import { database } from '../../common/database';
 import * as models from '../../models';
@@ -31,20 +46,20 @@ import { exchangeCodeForGitLabToken } from '../../sync/git/gitlab-oauth-provider
 import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
 import { getVCS } from '../../sync/vcs/vcs';
 import { submitAuthCode } from '../auth-session-provider';
-import { AccountToolbar } from '../components/account-toolbar';
-import { AppHeader } from '../components/app-header';
-import { SettingsButton } from '../components/buttons/settings-button';
+import { GitHubStarsButton } from '../components/github-stars-button';
+import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
+import { InsomniaAILogo } from '../components/insomnia-icon';
 import { showError, showModal } from '../components/modals';
 import { AlertModal } from '../components/modals/alert-modal';
 import { AskModal } from '../components/modals/ask-modal';
 import { ImportModal } from '../components/modals/import-modal';
-import { LoginModal } from '../components/modals/login-modal';
+import { LoginModal, showLoginModal } from '../components/modals/login-modal';
 import {
   SettingsModal,
+  showSettingsModal,
   TAB_INDEX_PLUGINS,
-  TAB_INDEX_THEMES,
-} from '../components/modals/settings-modal';
+  TAB_INDEX_THEMES } from '../components/modals/settings-modal';
 import { Toast } from '../components/toast';
 import { WorkspaceHeader } from '../components/workspace-header';
 import { AppHooks } from '../containers/app-hooks';
@@ -110,7 +125,7 @@ const getNameInitials = (name: string) => {
 
 const Root = () => {
   const { revalidate } = useRevalidator();
-  const { organizations } = useLoaderData() as RootLoaderData;
+  const { organizations, settings } = useLoaderData() as RootLoaderData;
   const workspaceData = useRouteLoaderData(
     ':workspaceId'
   ) as WorkspaceLoaderData | null;
@@ -284,41 +299,137 @@ const Root = () => {
             />
           )}
           <div className="w-full h-full divide-x divide-solid divide-y divide-[--hl-md] grid-template-app-layout grid relative bg-[--color-bg]">
-            <AppHeader
-              gridCenter={
-                workspaceData ? <WorkspaceHeader {...workspaceData} /> : null
-              }
-              gridRight={<AccountToolbar />}
-            />
+            <header className="[grid-area:Header] grid grid-cols-3 items-center">
+              <div className="flex items-center">
+                <div className="flex w-[50px] py-2">
+                  <InsomniaAILogo />
+                </div>
+                {!isLoggedIn() ? <GitHubStarsButton /> : null}
+              </div>
+              <div className="flex items-center justify-center">
+                {workspaceData ? (
+                  <WorkspaceHeader {...workspaceData} />
+                ) : (
+                  <span />
+                )}
+              </div>
+              <div className="flex gap-[--padding-sm] items-center justify-end p-2">
+                {isLoggedIn() ? (
+                  <MenuTrigger>
+                    <Button className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                      <Icon icon="user" />{' '}
+                      {`${getFirstName()} ${getLastName()}`}
+                    </Button>
+                    <Popover className="min-w-max">
+                      <Menu
+                        onAction={action => {
+                          if (action === 'logout') {
+                            logout();
+                          }
+
+                          if (action === 'account-settings') {
+                            window.main.openInBrowser(
+                              'https://app.insomnia.rest/app/account/'
+                            );
+                          }
+                        }}
+                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      >
+                        <Item
+                          key="account-settings"
+                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                          aria-label="Account settings"
+                        >
+                          <Icon icon="gear" />
+                          <span>Account Settings</span>
+                        </Item>
+                        <Item
+                          key="logout"
+                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                          aria-label="logout"
+                        >
+                          <Icon icon="sign-out" />
+                          <span>Logout</span>
+                        </Item>
+                      </Menu>
+                    </Popover>
+                  </MenuTrigger>
+                ) : (
+                  <Fragment>
+                    <Button
+                      onPress={showLoginModal}
+                      className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    >
+                      Login
+                    </Button>
+                    <a
+                      className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)] focus:bg-[rgba(var(--color-surprise-rgb),0.9)] bg-[--color-surprise] font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                      href="https://app.insomnia.rest/app/signup/"
+                    >
+                      Sign Up
+                    </a>
+                  </Fragment>
+                )}
+              </div>
+            </header>
             <div className="[grid-area:Navbar]">
-              <nav className="flex flex-col items-center gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
+              <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
                 {organizations.map(organization => (
-                  <NavLink
-                    className={({ isActive }) =>
-                      `select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] p-[--padding-sm] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${
-                        isActive
-                          ? 'outline-[--color-font]'
-                          : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
-                      }`
-                    }
-                    key={organization._id}
-                    to={`/organization/${organization._id}`}
-                  >
-                    {isDefaultOrganization(organization) ? (
-                      <Icon icon="home" />
-                    ) : (
-                      getNameInitials(organization.name)
-                    )}
-                  </NavLink>
+                  <TooltipTrigger key={organization._id}>
+                    <Link>
+                      <NavLink
+                        className={({ isActive }) =>
+                          `select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] p-[--padding-sm] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${
+                            isActive
+                              ? 'outline-[--color-font]'
+                              : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
+                          }`
+                        }
+                        to={`/organization/${organization._id}`}
+                      >
+                        {isDefaultOrganization(organization) ? (
+                          <Icon icon="home" />
+                        ) : (
+                          getNameInitials(organization.name)
+                        )}
+                      </NavLink>
+                    </Link>
+                    <Tooltip
+                      placement="right"
+                      offset={8}
+                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                    >
+                      <span>{organization.name}</span>
+                    </Tooltip>
+                  </TooltipTrigger>
                 ))}
               </nav>
             </div>
             <Outlet />
             <div className="relative [grid-area:Statusbar] flex items-center justify-between overflow-hidden">
-              <SettingsButton />
+              <TooltipTrigger>
+                <Button
+                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                  onPress={showSettingsModal}
+                >
+                  <Icon icon="gear" /> Preferences
+                </Button>
+                <Tooltip
+                  placement="top"
+                  offset={8}
+                  className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                >
+                  Preferences
+                  <Hotkey
+                    keyBindings={
+                      settings.hotKeyRegistry.preferences_showGeneral
+                    }
+                  />
+                </Tooltip>
+              </TooltipTrigger>
               <Link>
                 <a
-                  className="flex gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
+                  className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
                   href="https://konghq.com/"
                 >
                   Made with
