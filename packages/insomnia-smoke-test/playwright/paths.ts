@@ -15,9 +15,10 @@ export const loadFixture = async (fixturePath: string) => {
 export const randomDataPath = () => path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuidv4()}`);
 export const INSOMNIA_DATA_PATH = randomDataPath();
 
+const macAppPath = bundleType() === 'package' ? 'mac-universal' : 'mac';
 const pathLookup: Record<string, string> = {
   win32: path.join('win-unpacked', 'Insomnia.exe'),
-  darwin: path.join(process.env.CI ? 'mac' : 'mac-universal', 'Insomnia.app', 'Contents', 'MacOS', 'Insomnia'),
+  darwin: path.join(macAppPath, 'Insomnia.app', 'Contents', 'MacOS', 'Insomnia'),
   linux: path.join('linux-unpacked', 'insomnia'),
 };
 export const cwd = path.resolve(__dirname, '..', '..', 'insomnia');
