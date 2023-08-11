@@ -89,8 +89,17 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
 
-  const sendThenSetFilePath = useCallback(async () => {
-    // Update request stats
+  const fetcher = useFetcher();
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
+  const connect = (connectParams: ConnectActionParams) => {
+    fetcher.submit(JSON.stringify(connectParams),
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
+        method: 'post',
+        encType: 'application/json',
+      });
+  };
+  const send = async () => {
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
       event: SegmentEvent.requestExecute,
@@ -100,104 +109,66 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         mimeType: activeRequest.body.mimeType,
       },
     });
-    setLoading(true);
-    try {
-      const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
-      const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
-      if (!is2XXWithBodyPath) {
-        // Save the bad responses so failures are shown still
-        await models.response.create(responsePatch, settings.maxHistoryResponses);
-        setLoading(false);
-        return;
-      }
-      let downloadPathAndName = '';
-      if (downloadPath) {
-        const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
-        const extension = sanitizedExtension || 'unknown';
-        const headers = responsePatch.headers || [];
-        const header = getContentDispositionHeader(headers);
-        const nameFromHeader = header ? contentDisposition.parse(header.value).parameters.filename : null;
-        const name = nameFromHeader || `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
-        downloadPathAndName = path.join(downloadPath, name);
-      }
-      if (!downloadPath) {
-        const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
-        const { filePath } = await window.dialog.showSaveDialog({
-          title: 'Select Download Location',
-          buttonLabel: 'Save',
-          // NOTE: An error will be thrown if defaultPath is supplied but not a String
-          ...(defaultPath ? { defaultPath } : {}),
-        });
-        if (!filePath) {
+    // reset timeout
+    setCurrentTimeout(undefined);
+    if (downloadPath) {
+      setLoading(true);
+      try {
+        const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
+        const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
+        if (!is2XXWithBodyPath) {
+          // Save the bad responses so failures are shown still
+          await models.response.create(responsePatch, settings.maxHistoryResponses);
           setLoading(false);
           return;
         }
-        window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-        downloadPathAndName = filePath;
-      }
-      invariant(downloadPathAndName, 'filename should be set by now');
+        let downloadPathAndName = '';
+        if (downloadPath) {
+          const sanitizedExtension = responsePatch.contentType && mimeExtension(responsePatch.contentType);
+          const extension = sanitizedExtension || 'unknown';
+          const headers = responsePatch.headers || [];
+          const header = getContentDispositionHeader(headers);
+          const nameFromHeader = header ? contentDisposition.parse(header.value).parameters.filename : null;
+          const name = nameFromHeader || `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
+          downloadPathAndName = path.join(downloadPath, name);
+        }
+        if (!downloadPath) {
+          const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
+          const { filePath } = await window.dialog.showSaveDialog({
+            title: 'Select Download Location',
+            buttonLabel: 'Save',
+            // NOTE: An error will be thrown if defaultPath is supplied but not a String
+            ...(defaultPath ? { defaultPath } : {}),
+          });
+          if (!filePath) {
+            setLoading(false);
+            return;
+          }
+          window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
+          downloadPathAndName = filePath;
+        }
+        invariant(downloadPathAndName, 'filename should be set by now');
 
-      const to = fs.createWriteStream(downloadPathAndName);
-      const readStream = models.response.getBodyStream(responsePatch);
-      if (!readStream || typeof readStream === 'string') {
-        setLoading(false);
-        return;
-      }
-      readStream.pipe(to);
-      readStream.on('end', async () => {
-        responsePatch.error = `Saved to ${downloadPathAndName}`;
-        await models.response.create(responsePatch, settings.maxHistoryResponses);
-        setLoading(false);
-        return;
-      });
-      readStream.on('error', async err => {
-        console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
-        await models.response.create(responsePatch, settings.maxHistoryResponses);
-        setLoading(false);
-        return;
-      });
-    } catch (err) {
-      showAlert({
-        title: 'Unexpected Request Failure',
-        message: (
-          <div>
-            <p>The request failed due to an unhandled error:</p>
-            <code className="wide selectable">
-              <pre>{err.message}</pre>
-            </code>
-          </div>
-        ),
-      });
-      setLoading(false);
-    }
-  }, [activeEnvironment._id, activeRequest._id, activeRequest.authentication?.type, activeRequest.body.mimeType, activeRequest.name, downloadPath, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion]);
-
-  const handleSend = useCallback(async () => {
-    if (!activeRequest) {
-      return;
-    }
-    // Update request stats
-    models.stats.incrementExecutedRequests();
-    window.main.trackSegmentEvent({
-      event: SegmentEvent.requestExecute,
-      properties: {
-        preferredHttpVersion: settings.preferredHttpVersion,
-        authenticationType: activeRequest.authentication?.type,
-        mimeType: activeRequest.body.mimeType,
-      },
-    });
-    setLoading(true);
-    try {
-      const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
-      const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
-      await patchRequestMeta(activeRequest._id, { activeResponseId: response._id });
-    } catch (err) {
-      if (err.type === 'render') {
-        showModal(RequestRenderErrorModal, {
-          request: activeRequest,
-          error: err,
+        const to = fs.createWriteStream(downloadPathAndName);
+        const readStream = models.response.getBodyStream(responsePatch);
+        if (!readStream || typeof readStream === 'string') {
+          setLoading(false);
+          return;
+        }
+        readStream.pipe(to);
+        readStream.on('end', async () => {
+          responsePatch.error = `Saved to ${downloadPathAndName}`;
+          await models.response.create(responsePatch, settings.maxHistoryResponses);
+          setLoading(false);
+          return;
         });
-      } else {
+        readStream.on('error', async err => {
+          console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
+          await models.response.create(responsePatch, settings.maxHistoryResponses);
+          setLoading(false);
+          return;
+        });
+      } catch (err) {
         showAlert({
           title: 'Unexpected Request Failure',
           message: (
@@ -209,24 +180,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
             </div>
           ),
         });
+        setLoading(false);
       }
-    }
-    setLoading(false);
-  }, [activeEnvironment._id, activeRequest, setLoading, settings.maxHistoryResponses, settings.preferredHttpVersion, patchRequestMeta]);
-  const fetcher = useFetcher();
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const connect = (connectParams: ConnectActionParams) => {
-    fetcher.submit(JSON.stringify(connectParams),
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
-        method: 'post',
-        encType: 'application/json',
-      });
-  };
-  const send = () => {
-    setCurrentTimeout(undefined);
-    if (downloadPath) {
-      sendThenSetFilePath();
       return;
     }
     if (isEventStreamRequest(activeRequest)) {
@@ -253,7 +208,33 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       startListening();
       return;
     }
-    handleSend();
+
+    setLoading(true);
+    try {
+      const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
+      const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
+      await patchRequestMeta(activeRequest._id, { activeResponseId: response._id });
+    } catch (err) {
+      if (err.type === 'render') {
+        showModal(RequestRenderErrorModal, {
+          request: activeRequest,
+          error: err,
+        });
+      } else {
+        showAlert({
+          title: 'Unexpected Request Failure',
+          message: (
+            <div>
+              <p>The request failed due to an unhandled error:</p>
+              <code className="wide selectable">
+                <pre>{err.message}</pre>
+              </code>
+            </div>
+          ),
+        });
+      }
+    }
+    setLoading(false);
   };
 
   useInterval(send, currentInterval ? currentInterval : null);
