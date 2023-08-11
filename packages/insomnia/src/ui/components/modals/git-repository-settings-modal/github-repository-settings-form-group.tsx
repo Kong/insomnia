@@ -389,7 +389,7 @@ const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
             </div>
             <div className="form-row">
               <input name="link" />
-              <Button name="add-token">Add</Button>
+              <Button bg="surprise" name="add-token">Authenticate</Button>
             </div>
           </label>
           {error && (

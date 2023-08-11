@@ -50,7 +50,7 @@ test('Sign in with GitHub', async ({ app, page }) => {
 
   await page.locator('input[name="link"]').fill(redirectUrl);
 
-  await page.getByRole('button', { name: 'Add' }).click();
+  await page.getByRole('button', { name: 'Authenticate' }).click();
 
   await page
     .locator('input[name="uri"]')
