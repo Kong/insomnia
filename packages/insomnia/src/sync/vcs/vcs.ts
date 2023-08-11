@@ -1123,6 +1123,7 @@ export class VCS {
     memberKeys: {
       accountId: string;
       publicKey: string;
+      autoLinked: boolean;
     }[];
   }> {
     console.log('[sync] Fetching team member keys', {
@@ -1137,6 +1138,7 @@ export class VCS {
             memberKeys {
               accountId
               publicKey
+              autoLinked
             }
           }
         }
@@ -1157,21 +1159,23 @@ export class VCS {
     teamPublicKeys?: {
       accountId: string;
       publicKey: string;
+      autoLinked: boolean;
     }[],
   ) {
     // Generate symmetric key for ResourceGroup
     const symmetricKey = await crypt.generateAES256Key();
     const symmetricKeyStr = JSON.stringify(symmetricKey);
 
-    const teamKeys: {accountId: string; encSymmetricKey: string}[] = [];
+    const teamKeys: { accountId: string; encSymmetricKey: string; autoLinked: boolean }[] = [];
 
     if (!teamId || !teamPublicKeys?.length) {
       throw new Error('teamId and teamPublicKeys must not be null or empty!');
     }
 
     // Encrypt the symmetric key with the public keys of all the team members, ourselves included
-    for (const { accountId, publicKey } of teamPublicKeys) {
+    for (const { accountId, publicKey, autoLinked } of teamPublicKeys) {
       teamKeys.push({
+        autoLinked,
         accountId,
         encSymmetricKey: crypt.encryptRSAWithJWK(JSON.parse(publicKey), symmetricKeyStr),
       });
