@@ -9,7 +9,7 @@ import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../util
 import { ConnectActionParams } from '../../routes/request';
 import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
-import { showAlert, showModal } from '../modals';
+import { showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { DisconnectButton } from './disconnect-button';
 
@@ -84,48 +84,44 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
         encType: 'application/json',
       });
   };
+
+  const tryToInterpolateOrShowRenderErrorModal = async ({ request, environmentId, payload }: { request: WebSocketRequest; environmentId: string; payload: any }): Promise<any> => {
+    try {
+      const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+      return await render(payload, renderContext);
+    } catch (error) {
+      if (error.type === 'render') {
+        showModal(RequestRenderErrorModal, { request, error });
+        return;
+      }
+      throw error;
+    }
+  };
   const handleSubmit = async () => {
     if (isOpen) {
       window.main.webSocket.close({ requestId: request._id });
       return;
     }
-    try {
-      const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-      // Render any nunjucks tags in the url/headers/authentication settings/cookies
-      const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-      const rendered = await render({
+    // Render any nunjucks tags in the url/headers/authentication settings/cookies
+    const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+    const rendered = await tryToInterpolateOrShowRenderErrorModal({
+      request,
+      environmentId,
+      payload: {
         url: request.url,
         headers: request.headers,
         authentication: request.authentication,
         parameters: request.parameters.filter(p => !p.disabled),
         workspaceCookieJar,
-      }, renderContext);
-      connect({
-        url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
-        headers: rendered.headers,
-        authentication: rendered.authentication,
-        cookieJar: rendered.workspaceCookieJar,
-      });
-    } catch (err) {
-      if (err.type === 'render') {
-        showModal(RequestRenderErrorModal, {
-          request,
-          error: err,
-        });
-      } else {
-        showAlert({
-          title: 'Unexpected Request Failure',
-          message: (
-            <div>
-              <p>The request failed due to an unhandled error:</p>
-              <code className="wide selectable">
-                <pre>{err.message}</pre>
-              </code>
-            </div>
-          ),
-        });
-      }
-    }
+      },
+    });
+    rendered && connect({
+      url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
+      headers: rendered.headers,
+      authentication: rendered.authentication,
+      cookieJar: rendered.workspaceCookieJar,
+    });
+
   };
 
   useDocBodyKeyboardShortcuts({

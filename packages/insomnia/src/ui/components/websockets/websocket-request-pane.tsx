@@ -107,21 +107,37 @@ const WebSocketRequestForm: FC<FormProps> = ({
 
     init();
   }, [request._id]);
+
+  const tryToInterpolateOrShowRenderErrorModal = async ({ request, environmentId, payload }: { request: WebSocketRequest; environmentId: string; payload: any }): Promise<any> => {
+    try {
+      const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+      return await render(payload, renderContext);
+    } catch (error) {
+      if (error.type === 'render') {
+        showModal(RequestRenderErrorModal, { request, error });
+        return;
+      }
+      throw error;
+    }
+  };
   // NOTE: Nunjucks interpolation can throw errors
   const interpolateOpenAndSend = async (payload: string) => {
     try {
-      const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-      const renderedMessage = await render(payload, renderContext);
+      const renderedMessage = await tryToInterpolateOrShowRenderErrorModal({ request, environmentId, payload });
       const readyState = await window.main.webSocket.readyState.getCurrent({ requestId: request._id });
       if (!readyState) {
         const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-        const rendered = await render({
-          url: request.url,
-          headers: request.headers,
-          authentication: request.authentication,
-          parameters: request.parameters.filter(p => !p.disabled),
-          workspaceCookieJar,
-        }, renderContext);
+        const rendered = await tryToInterpolateOrShowRenderErrorModal({
+          request,
+          environmentId,
+          payload: {
+            url: request.url,
+            headers: request.headers,
+            authentication: request.authentication,
+            parameters: request.parameters.filter(p => !p.disabled),
+            workspaceCookieJar,
+          },
+        });
         window.main.webSocket.open({
           requestId: request._id,
           workspaceId,

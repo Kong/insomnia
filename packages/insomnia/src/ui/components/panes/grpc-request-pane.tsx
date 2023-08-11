@@ -143,6 +143,19 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
     request_send: handleRequestSend,
   });
 
+  const tryToInterpolateOrShowRenderErrorModal = async ({ request, environmentId, payload }: { request: WebSocketRequest; environmentId: string; payload: any }): Promise<any> => {
+    try {
+      const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
+      return await render(payload, renderContext);
+    } catch (error) {
+      if (error.type === 'render') {
+        showModal(RequestRenderErrorModal, { request, error });
+        return;
+      }
+      throw error;
+    }
+  };
+
   return (
     <>
       <Pane type="request">
@@ -195,8 +208,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 disabled={!activeRequest.url}
                 onClick={async () => {
                   try {
-                    const renderContext = await getRenderContext({ request: activeRequest, environmentId, purpose: RENDER_PURPOSE_SEND });
-                    const rendered = await render({ url: activeRequest.url, metadata: activeRequest.metadata }, renderContext);
+                    const rendered = await tryToInterpolateOrShowRenderErrorModal({ request: activeRequest, environmentId, payload: { url: activeRequest.url, metadata: activeRequest.metadata } });
                     const methods = await window.main.grpc.loadMethodsFromReflection(rendered);
                     setGrpcState({ ...grpcState, methods });
                     patchRequest(requestId, { protoFileId: '', protoMethodName: '' });

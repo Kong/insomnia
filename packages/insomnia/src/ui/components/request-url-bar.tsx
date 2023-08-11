@@ -122,25 +122,17 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         encType: 'application/json',
       });
   };
-  const tryToInterpolateOrShowRenderErrorModal = async ({ request, environmentId, workspaceCookieJar }: { request: Request; environmentId: string; workspaceCookieJar: CookieJar }) => {
+
+  const tryToInterpolateOrShowRenderErrorModal = async ({ request, environmentId, payload }: { request: WebSocketRequest; environmentId: string; payload: any }): Promise<any> => {
     try {
       const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-      return await render({
-        url: request.url,
-        headers: request.headers,
-        authentication: request.authentication,
-        parameters: request.parameters.filter(p => !p.disabled),
-        workspaceCookieJar,
-      }, renderContext);
-    } catch (err) {
-      if (err.type === 'render') {
-        showModal(RequestRenderErrorModal, {
-          request: activeRequest,
-          error: err,
-        });
+      return await render(payload, renderContext);
+    } catch (error) {
+      if (error.type === 'render') {
+        showModal(RequestRenderErrorModal, { request, error });
         return;
       }
-      throw err;
+      throw error;
     }
   };
   const sendOrConnect = async (shouldPromptForPathAFterResponse?: boolean) => {
@@ -162,7 +154,17 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         const workspaceId = activeWorkspace._id;
         // Render any nunjucks tags in the url/headers/authentication settings/cookies
         const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-        const rendered = await tryToInterpolateOrShowRenderErrorModal({ request: activeRequest, environmentId, workspaceCookieJar });
+        const rendered = await tryToInterpolateOrShowRenderErrorModal({
+          request: activeRequest,
+          environmentId,
+          payload: {
+            url: activeRequest.url,
+            headers: activeRequest.headers,
+            authentication: activeRequest.authentication,
+            parameters: activeRequest.parameters.filter(p => !p.disabled),
+            workspaceCookieJar,
+          },
+        });
         rendered && connect({
           url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
           headers: rendered.headers,
