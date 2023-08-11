@@ -172,88 +172,29 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     });
     // reset timeout
     setCurrentTimeout(undefined);
+    setLoading(true);
+
+    const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
+
     if (downloadPath) {
-      setLoading(true);
-      try {
-        const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
-        const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
-        if (!is2XXWithBodyPath) {
-          // Save the bad responses so failures are shown still
-          await models.response.create(responsePatch, settings.maxHistoryResponses);
-          setLoading(false);
-          return;
-        }
-        const header = getContentDispositionHeader(responsePatch.headers || []);
-        const name = header
-          ? contentDisposition.parse(header.value).parameters.filename
-          : `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
-        writeToDownloadPath(path.join(downloadPath, name), responsePatch);
-      } catch (err) {
-        showAlert({
-          title: 'Unexpected Request Failure',
-          message: (
-            <div>
-              <p>The request failed due to an unhandled error:</p>
-              <code className="wide selectable">
-                <pre>{err.message}</pre>
-              </code>
-            </div>
-          ),
-        });
+      const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
+      if (!is2XXWithBodyPath) {
+        // Save the bad responses so failures are shown still
+        await models.response.create(responsePatch, settings.maxHistoryResponses);
+        setLoading(false);
+        return;
       }
+      const header = getContentDispositionHeader(responsePatch.headers || []);
+      const name = header
+        ? contentDisposition.parse(header.value).parameters.filename
+        : `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
+      writeToDownloadPath(path.join(downloadPath, name), responsePatch);
       setLoading(false);
       return;
     }
-    if (isEventStreamRequest(activeRequest)) {
-      const startListening = async () => {
-        const environmentId = activeEnvironment._id;
-        const workspaceId = activeWorkspace._id;
-        const renderContext = await getRenderContext({ request: activeRequest, environmentId, purpose: RENDER_PURPOSE_SEND });
-        // Render any nunjucks tags in the url/headers/authentication settings/cookies
-        const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-        const rendered = await render({
-          url: activeRequest.url,
-          headers: activeRequest.headers,
-          authentication: activeRequest.authentication,
-          parameters: activeRequest.parameters.filter(p => !p.disabled),
-          workspaceCookieJar,
-        }, renderContext);
-        connect({
-          url: joinUrlAndQueryString(rendered.url, buildQueryStringFromParams(rendered.parameters)),
-          headers: rendered.headers,
-          authentication: rendered.authentication,
-          cookieJar: rendered.workspaceCookieJar,
-        });
-      };
-      startListening();
-      return;
-    }
 
-    setLoading(true);
-    try {
-      const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
-      const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
-      await patchRequestMeta(activeRequest._id, { activeResponseId: response._id });
-    } catch (err) {
-      if (err.type === 'render') {
-        showModal(RequestRenderErrorModal, {
-          request: activeRequest,
-          error: err,
-        });
-      } else {
-        showAlert({
-          title: 'Unexpected Request Failure',
-          message: (
-            <div>
-              <p>The request failed due to an unhandled error:</p>
-              <code className="wide selectable">
-                <pre>{err.message}</pre>
-              </code>
-            </div>
-          ),
-        });
-      }
-    }
+    const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
+    await patchRequestMeta(activeRequest._id, { activeResponseId: response._id });
     setLoading(false);
   };
 
