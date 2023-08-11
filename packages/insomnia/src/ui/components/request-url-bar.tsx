@@ -344,13 +344,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           >
             {isEventStreamRequest(activeRequest) ? 'Disconnect' : 'Cancel'}
           </button>
-        ) : (
-          <>
+        ) : (<>
             <button
-                onClick={simpleSend}
-
+              onClick={simpleSend}
               className="urlbar__send-btn"
-                type="button"
+              type="button"
 
             >
                 {buttonText}</button>
@@ -461,8 +459,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                   </DropdownItem>
                 </DropdownSection>
               </Dropdown>)}
-          </>
-        )}
+        </>)}
       </div>
     </div>
   );
