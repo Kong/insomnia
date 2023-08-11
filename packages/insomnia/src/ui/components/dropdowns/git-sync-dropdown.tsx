@@ -71,9 +71,11 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
       gitRepoDataFetcher.state === 'idle' &&
       !gitRepoDataFetcher.data
     ) {
-      gitRepoDataFetcher.load(
-        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/repo`
-      );
+      console.log('[git:fetcher] Fetching git repo data');
+      gitRepoDataFetcher.submit({}, {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/repo`,
+        method: 'post',
+      });
     }
   }, [
     gitRepoDataFetcher,
@@ -89,9 +91,11 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
 
   useEffect(() => {
     if (shouldFetchGitRepoStatus) {
-      gitStatusFetcher.load(
-        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/status`
-      );
+      console.log('[git:fetcher] Fetching git repo status');
+      gitStatusFetcher.submit({}, {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/status`,
+        method: 'post',
+      });
     }
   }, [gitStatusFetcher, organizationId, projectId, shouldFetchGitRepoStatus, workspaceId]);
 
