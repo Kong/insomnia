@@ -3,6 +3,7 @@ import '../css/styles.css';
 import type { IpcRendererEvent } from 'electron';
 import React, { Fragment, useEffect, useState } from 'react';
 import {
+  Breadcrumbs,
   Button,
   Item,
   Link,
@@ -46,6 +47,7 @@ import { exchangeCodeForGitLabToken } from '../../sync/git/gitlab-oauth-provider
 import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
 import { getVCS } from '../../sync/vcs/vcs';
 import { submitAuthCode } from '../auth-session-provider';
+import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { GitHubStarsButton } from '../components/github-stars-button';
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
@@ -61,7 +63,6 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES } from '../components/modals/settings-modal';
 import { Toast } from '../components/toast';
-import { WorkspaceHeader } from '../components/workspace-header';
 import { AppHooks } from '../containers/app-hooks';
 import { AIProvider } from '../context/app/ai-context';
 import withDragDropContext from '../context/app/drag-drop-context';
@@ -283,6 +284,29 @@ const Root = () => {
     organizationId: string;
   };
 
+  const crumbs = workspaceData
+    ? [
+        {
+          id: workspaceData.activeProject._id,
+          label: workspaceData.activeProject.name,
+          node: (
+            <Link data-testid="project">
+              <NavLink
+                to={`/organization/${organizationId}/project/${workspaceData.activeProject._id}`}
+              >
+                {workspaceData.activeProject.name}
+              </NavLink>
+            </Link>
+          ),
+        },
+        {
+          id: workspaceData.activeWorkspace._id,
+          label: workspaceData.activeWorkspace.name,
+          node: <WorkspaceDropdown />,
+        },
+      ]
+    : [];
+
   return (
     <AIProvider>
       <NunjucksEnabledProvider>
@@ -307,11 +331,13 @@ const Root = () => {
                 {!isLoggedIn() ? <GitHubStarsButton /> : null}
               </div>
               <div className="flex items-center justify-center">
-                {workspaceData ? (
-                  <WorkspaceHeader {...workspaceData} />
-                ) : (
-                  <span />
-                )}
+                <Breadcrumbs items={crumbs}>
+                  {item => (
+                    <Item key={item.id} id={item.id}>
+                      {item.node}
+                    </Item>
+                  )}
+                </Breadcrumbs>
               </div>
               <div className="flex gap-[--padding-sm] items-center justify-end p-2">
                 {isLoggedIn() ? (
