@@ -3,15 +3,21 @@ import { PlaywrightTestConfig } from '@playwright/test';
 const config: PlaywrightTestConfig = {
   projects: [
     {
-      // Run all tests
+      // Run all tests, runs only on Release PR test workflow
       name: 'Default',
-      testMatch: /.*.test.ts/,
+      testMatch: /prerelease\/.*.test.ts/,
       retries: 0,
     },
     {
-      // High-confidence smoke/sanity checks
+      // High-confidence smoke/sanity checks, runs on non-release PR test workflow
       name: 'Smoke',
       testMatch: /smoke\/.*.test.ts/,
+      retries: 0,
+    },
+    {
+      // Single critical path test, runs on release recurring
+      name: 'Critical',
+      testMatch: /critical\/.*.test.ts/,
       retries: 0,
     },
   ],
