@@ -37,41 +37,6 @@ import { getAuthHeader, getAuthQueryParams } from './authentication';
 import { cancellableCurlRequest } from './cancellation';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
-// used for oauth grant types
-// creates a new request with the patch args
-// and uses env and settings from workspace
-// not cancellable but currently is
-// used indirectly by send and getAuthHeader to fetch tokens
-// @TODO unpack oauth into regular timeline and remove oauth timeine dialog
-export async function sendWithSettings(
-  requestId: string,
-  requestPatch: Record<string, any>,
-) {
-  console.log(`[network] Sending with settings req=${requestId}`);
-  const { request,
-    environment,
-    settings,
-    clientCertificates,
-    caCert,
-    activeEnvironmentId } = await fetchRequestData(requestId);
-
-  const newRequest: Request = await models.initModel(models.request.type, requestPatch, {
-    _id: request._id + '.other',
-    parentId: request._id,
-  });
-
-  const renderResult = await tryToInterpolateRequest(newRequest, environment._id);
-  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-
-  const response = await sendCurlAndWriteTimeline(
-    renderResult.request,
-    clientCertificates,
-    caCert,
-    { ...settings, validateSSL: settings.validateAuthSSL },
-  );
-  return responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
-}
-
 export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request');
