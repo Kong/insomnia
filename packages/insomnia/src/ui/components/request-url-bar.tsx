@@ -109,45 +109,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       return;
     });
   };
-  const sendThenSetFilePath = async () => {
-    setLoading(true);
-    try {
-      const responsePatch = await network.send(activeRequest._id, activeEnvironment._id);
-      const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
-      if (!is2XXWithBodyPath) {
-        // Save the bad responses so failures are shown still
-        await models.response.create(responsePatch, settings.maxHistoryResponses);
-        setLoading(false);
-        return;
-      }
-      const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
-      const { filePath } = await window.dialog.showSaveDialog({
-        title: 'Select Download Location',
-        buttonLabel: 'Save',
-        // NOTE: An error will be thrown if defaultPath is supplied but not a String
-        ...(defaultPath ? { defaultPath } : {}),
-      });
-      if (!filePath) {
-        setLoading(false);
-        return;
-      }
-      window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-      writeToDownloadPath(filePath, responsePatch);
-    } catch (err) {
-      showAlert({
-        title: 'Unexpected Request Failure',
-        message: (
-          <div>
-            <p>The request failed due to an unhandled error:</p>
-            <code className="wide selectable">
-              <pre>{err.message}</pre>
-            </code>
-          </div>
-        ),
-      });
-      setLoading(false);
-    }
-  };
 
   const fetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
@@ -159,7 +120,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         encType: 'application/json',
       });
   };
-  const simpleSend = async () => {
+  const sendOrConnect = async () => {
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
       event: SegmentEvent.requestExecute,
@@ -208,11 +169,27 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         setLoading(false);
         return;
       }
-      const header = getContentDispositionHeader(responsePatch.headers || []);
-      const name = header
-        ? contentDisposition.parse(header.value).parameters.filename
-        : `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
-      writeToDownloadPath(path.join(downloadPath, name), responsePatch);
+      if (downloadPath) {
+        const header = getContentDispositionHeader(responsePatch.headers || []);
+        const name = header
+          ? contentDisposition.parse(header.value).parameters.filename
+          : `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
+        writeToDownloadPath(path.join(downloadPath, name), responsePatch);
+      } else {
+        const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
+        const { filePath } = await window.dialog.showSaveDialog({
+          title: 'Select Download Location',
+          buttonLabel: 'Save',
+          // NOTE: An error will be thrown if defaultPath is supplied but not a String
+          ...(defaultPath ? { defaultPath } : {}),
+        });
+        if (!filePath) {
+          setLoading(false);
+          return;
+        }
+        window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
+        writeToDownloadPath(filePath, responsePatch);
+      }
     } catch (err) {
       showAlert({
         title: 'Unexpected Request Failure',
@@ -229,8 +206,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     setLoading(false);
   };
 
-  useInterval(simpleSend, currentInterval ? currentInterval : null);
-  useTimeoutWhen(simpleSend, currentTimeout, !!currentTimeout);
+  useInterval(sendOrConnect, currentInterval ? currentInterval : null);
+  useTimeoutWhen(sendOrConnect, currentTimeout, !!currentTimeout);
   const patchRequest = useRequestPatcher();
 
   useDocBodyKeyboardShortcuts({
@@ -239,7 +216,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     },
     request_send: () => {
       if (activeRequest.url) {
-        simpleSend();
+        sendOrConnect();
       }
     },
     request_toggleHttpMethodMenu: () => {
@@ -326,7 +303,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           defaultValue={url}
           onChange={handleUrlChange}
           onKeyDown={createKeybindingsHandler({
-            'Enter': () => simpleSend(),
+            'Enter': () => sendOrConnect(),
           })}
         />
         {isCancellable ? (
@@ -346,7 +323,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           </button>
         ) : (<>
             <button
-              onClick={simpleSend}
+              onClick={sendOrConnect}
               className="urlbar__send-btn"
               type="button"
 
@@ -373,12 +350,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                   title="Basic"
                 >
                   <DropdownItem aria-label="send-now">
-                    <ItemContent
-                      icon="arrow-circle-o-right"
-                      label="Send Now"
-                      hint={hotKeyRegistry.request_send}
-                      onClick={simpleSend}
-                    />
+                  <ItemContent icon="arrow-circle-o-right" label="Send Now" hint={hotKeyRegistry.request_send} onClick={sendOrConnect} />
                   </DropdownItem>
                   <DropdownItem aria-label='Generate Client Code'>
                     <ItemContent
@@ -423,16 +395,16 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                       })}
                     />
                   </DropdownItem>
-                  {downloadPath ? (
-                    <DropdownItem aria-label='Stop Auto-Download'>
+                {downloadPath
+                  ? (<DropdownItem aria-label='Stop Auto-Download'>
                       <ItemContent
                         icon="stop-circle"
                         label="Stop Auto-Download"
                         withPrompt
                         onClick={() => patchRequestMeta(activeRequest._id, { downloadPath: null })}
                       />
-                    </DropdownItem>) :
-                    (<DropdownItem aria-label='Download After Send'>
+                  </DropdownItem>)
+                  : (<DropdownItem aria-label='Download After Send'>
                       <ItemContent
                         icon="download"
                         label="Download After Send"
@@ -448,14 +420,9 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                           patchRequestMeta(activeRequest._id, { downloadPath: filePaths[0] });
                         }}
                       />
-                    </DropdownItem>
-                    )}
+                  </DropdownItem>)}
                   <DropdownItem aria-label='Send And Download'>
-                    <ItemContent
-                      icon="download"
-                      label="Send And Download"
-                      onClick={sendThenSetFilePath}
-                    />
+                  <ItemContent icon="download" label="Send And Download" onClick={sendOrConnect} />
                   </DropdownItem>
                 </DropdownSection>
               </Dropdown>)}
