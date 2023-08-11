@@ -7,6 +7,6 @@
   },
   "files.insertFinalNewline": true,
   "editor.formatOnSave": true,
-  "editor.formatOnSaveMode": "modifications",
-  "editor.defaultFormatter": "vscode.typescript-language-features",
+  "editor.formatOnSaveMode": "modificationsIfAvailable",
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
 }

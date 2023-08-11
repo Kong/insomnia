@@ -9,13 +9,9 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "strictNullChecks": true,
-    "types": ["node", "vite/client"],
+    "types": ["node", "vite/client"]
   },
-  "include": [
-    "**/*.d.ts",
-    "package.json",
-    "src",
-  ],
+  "include": ["**/*.d.ts", "package.json", "src"],
   "exclude": [
     "**/*.test.ts",
     "**/*.test.tsx",
@@ -32,6 +28,6 @@
     "node_modules",
     "src/coverage",
     "src/main.min.js",
-    "src/preload.js",
-  ],
+    "src/preload.js"
+  ]
 }

@@ -79,7 +79,7 @@
     "nunjucks": "^3.2.4",
     "oauth-1.0a": "^2.2.6",
     "papaparse": "^5.4.1",
-    "prettier": "2.4.1",
+    "prettier": "^3.0.1",
     "shell-quote": "^1.8.1",
     "swagger-ui-dist": "5.0.0-alpha.6",
     "tough-cookie": "^4.1.3",
