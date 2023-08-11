@@ -120,7 +120,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         encType: 'application/json',
       });
   };
-  const sendOrConnect = async () => {
+  const sendOrConnect = async (shouldPromptForPathAFterResponse?: boolean) => {
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
       event: SegmentEvent.requestExecute,
@@ -177,8 +177,8 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       );
       const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
       const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
-      const isNormalRequestOrErrorCode = !downloadPath || !is2XXWithBodyPath;
-      if (isNormalRequestOrErrorCode) {
+      const shouldWriteToFile = shouldPromptForPathAFterResponse && is2XXWithBodyPath;
+      if (!shouldWriteToFile) {
         const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
         await patchRequestMeta(activeRequest._id, { activeResponseId: response._id });
         setLoading(false);
@@ -437,7 +437,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                       />
                   </DropdownItem>)}
                   <DropdownItem aria-label='Send And Download'>
-                  <ItemContent icon="download" label="Send And Download" onClick={sendOrConnect} />
+                  <ItemContent icon="download" label="Send And Download" onClick={() => sendOrConnect(true)} />
                   </DropdownItem>
                 </DropdownSection>
               </Dropdown>)}
