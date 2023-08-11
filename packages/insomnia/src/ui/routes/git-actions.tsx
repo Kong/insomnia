@@ -52,7 +52,7 @@ export type GitRepoLoaderData =
       errors: string[];
     };
 
-export const gitRepoLoader: LoaderFunction = async ({
+export const gitRepoAction: ActionFunction = async ({
   params,
 }): Promise<GitRepoLoaderData> => {
   try {
@@ -1271,7 +1271,7 @@ export interface GitStatusResult {
   };
 }
 
-export const gitStatusLoader: LoaderFunction = async ({
+export const gitStatusAction: ActionFunction = async ({
   params,
 }): Promise<GitStatusResult> => {
   const { workspaceId } = params;

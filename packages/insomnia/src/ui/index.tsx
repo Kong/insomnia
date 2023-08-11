@@ -410,7 +410,7 @@ const router = createMemoryRouter(
                               children: [
                                 {
                                   path: 'status',
-                                  loader: async (...args) => (await import('./routes/git-actions')).gitStatusLoader(...args),
+                                  action: async (...args) => (await import('./routes/git-actions')).gitStatusAction(...args),
                                 },
                                 {
                                   path: 'changes',
@@ -459,7 +459,7 @@ const router = createMemoryRouter(
                                 },
                                 {
                                   path: 'repo',
-                                  loader: async (...args) => (await import('./routes/git-actions')).gitRepoLoader(...args),
+                                  action: async (...args) => (await import('./routes/git-actions')).gitRepoAction(...args),
                                 },
                                 {
                                   path: 'update',
