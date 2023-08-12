@@ -1,29 +1,23 @@
-import * as contentDisposition from 'content-disposition';
-import fs from 'fs';
-import { extension as mimeExtension } from 'mime-types';
-import path from 'path';
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
 import { database } from '../../common/database';
-import { getContentDispositionHeader } from '../../common/misc';
 import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../common/render';
-import { ResponsePatch } from '../../main/network/libcurl-promise';
 import * as models from '../../models';
-import { CookieJar } from '../../models/cookie-jar';
 import { isEventStreamRequest, isRequest, Request } from '../../models/request';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
+import { WebSocketRequest } from '../../models/websocket-request';
+import { fetchRequestData, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { convert } from '../../utils/importers/convert';
-import { invariant } from '../../utils/invariant';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
 import { useReadyState } from '../hooks/use-ready-state';
 import { useRequestPatcher } from '../hooks/use-request';
 import { useRequestMetaPatcher } from '../hooks/use-request';
 import { useTimeoutWhen } from '../hooks/useTimeoutWhen';
-import { ConnectActionParams, RequestLoaderData } from '../routes/request';
+import { ConnectActionParams, RequestLoaderData, SendActionParams } from '../routes/request';
 import { RootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
@@ -87,32 +81,15 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
 
   const [currentInterval, setCurrentInterval] = useState<number | null>(null);
   const [currentTimeout, setCurrentTimeout] = useState<number | undefined>(undefined);
-
-  const writeToDownloadPath = (downloadPathAndName: string, responsePatch: ResponsePatch) => {
-    invariant(downloadPathAndName, 'filename should be set by now');
-
-    const to = fs.createWriteStream(downloadPathAndName);
-    const readStream = models.response.getBodyStream(responsePatch);
-    if (!readStream || typeof readStream === 'string') {
-      setLoading(false);
-      return;
-    }
-    readStream.pipe(to);
-    readStream.on('end', async () => {
-      responsePatch.error = `Saved to ${downloadPathAndName}`;
-      await models.response.create(responsePatch, settings.maxHistoryResponses);
-      setLoading(false);
-      return;
-    });
-    readStream.on('error', async err => {
-      console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
-      await models.response.create(responsePatch, settings.maxHistoryResponses);
-      setLoading(false);
-      return;
-    });
-  };
-
   const fetcher = useFetcher();
+  // TODO: unpick this loading hack
+  useEffect(() => {
+    if (fetcher.state !== 'idle') {
+      setLoading(true);
+    } else {
+      setLoading(false);
+    }
+  }, [fetcher.state, setLoading]);
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const connect = (connectParams: ConnectActionParams) => {
     fetcher.submit(JSON.stringify(connectParams),
@@ -122,8 +99,16 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         encType: 'application/json',
       });
   };
+  const send = (sendParams: SendActionParams) => {
+    fetcher.submit(JSON.stringify(sendParams),
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/send`,
+        method: 'post',
+        encType: 'application/json',
+      });
+  };
 
-  const tryToInterpolateOrShowRenderErrorModal = async ({ request, environmentId, payload }: { request: WebSocketRequest; environmentId: string; payload: any }): Promise<any> => {
+  const tryToInterpolateOrShowRenderErrorModal = async ({ request, environmentId, payload }: { request: Request | WebSocketRequest; environmentId: string; payload: any }): Promise<any> => {
     try {
       const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
       return await render(payload, renderContext);
@@ -135,7 +120,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       throw error;
     }
   };
-  const sendOrConnect = async (shouldPromptForPathAFterResponse?: boolean) => {
+  const sendOrConnect = async (shouldPromptForPathAfterResponse?: boolean) => {
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
       event: SegmentEvent.requestExecute,
@@ -176,53 +161,17 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       return;
     }
 
-    setLoading(true);
     try {
       const { request,
-        environment,
-        settings,
-        clientCertificates,
-        caCert,
-        activeEnvironmentId } = await fetchRequestData(requestId);
+        environment } = await fetchRequestData(requestId);
 
       const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
       const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-      const response = await sendCurlAndWriteTimeline(
+      renderedRequest && send({
         renderedRequest,
-        clientCertificates,
-        caCert,
-        settings,
-      );
-      const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
-      const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
-      const shouldWriteToFile = shouldPromptForPathAFterResponse && is2XXWithBodyPath;
-      if (!shouldWriteToFile) {
-        const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
-        await patchRequestMeta(activeRequest._id, { activeResponseId: response._id });
-        setLoading(false);
-        return;
-      }
-      if (downloadPath) {
-        const header = getContentDispositionHeader(responsePatch.headers || []);
-        const name = header
-          ? contentDisposition.parse(header.value).parameters.filename
-          : `${activeRequest.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
-        writeToDownloadPath(path.join(downloadPath, name), responsePatch);
-      } else {
-        const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
-        const { filePath } = await window.dialog.showSaveDialog({
-          title: 'Select Download Location',
-          buttonLabel: 'Save',
-          // NOTE: An error will be thrown if defaultPath is supplied but not a String
-          ...(defaultPath ? { defaultPath } : {}),
-        });
-        if (!filePath) {
-          setLoading(false);
-          return;
-        }
-        window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-        writeToDownloadPath(filePath, responsePatch);
-      }
+        shouldPromptForPathAfterResponse,
+        context: renderResult.context,
+      });
     } catch (err) {
       showAlert({
         title: 'Unexpected Request Failure',
@@ -236,7 +185,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         ),
       });
     }
-    setLoading(false);
   };
 
   useInterval(sendOrConnect, currentInterval ? currentInterval : null);
@@ -361,104 +309,104 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
               type="button"
 
             >
-                {buttonText}</button>
-              {isEventStreamRequest(activeRequest) ? null : (<Dropdown
-                key="dropdown"
-                className="tall"
-                ref={dropdownRef}
-                aria-label="Request Options"
-                onClose={handleSendDropdownHide}
-                closeOnSelect={false}
-                triggerButton={
-                  <StyledDropdownButton
-                    className="urlbar__send-context"
-                    removeBorderRadius={true}
-                  >
-                    <i className="fa fa-caret-down" />
-                  </StyledDropdownButton>
-                }
+              {buttonText}</button>
+            {isEventStreamRequest(activeRequest) ? null : (<Dropdown
+              key="dropdown"
+              className="tall"
+              ref={dropdownRef}
+              aria-label="Request Options"
+              onClose={handleSendDropdownHide}
+              closeOnSelect={false}
+              triggerButton={
+                <StyledDropdownButton
+                  className="urlbar__send-context"
+                  removeBorderRadius={true}
+                >
+                  <i className="fa fa-caret-down" />
+                </StyledDropdownButton>
+              }
+            >
+              <DropdownSection
+                aria-label="Basic Section"
+                title="Basic"
               >
-                <DropdownSection
-                  aria-label="Basic Section"
-                  title="Basic"
-                >
-                  <DropdownItem aria-label="send-now">
+                <DropdownItem aria-label="send-now">
                   <ItemContent icon="arrow-circle-o-right" label="Send Now" hint={hotKeyRegistry.request_send} onClick={sendOrConnect} />
-                  </DropdownItem>
-                  <DropdownItem aria-label='Generate Client Code'>
-                    <ItemContent
-                      icon="code"
-                      label="Generate Client Code"
-                      onClick={() => showModal(GenerateCodeModal, { request: activeRequest })}
-                    />
-                  </DropdownItem>
-                </DropdownSection>
-                <DropdownSection
-                  aria-label="Advanced Section"
-                  title="Advanced"
-                >
-                  <DropdownItem aria-label='Send After Delay'>
-                    <ItemContent
-                      icon="clock-o"
-                      label="Send After Delay"
-                      onClick={() => showPrompt({
-                        inputType: 'decimal',
-                        title: 'Send After Delay',
-                        label: 'Delay in seconds',
-                        defaultValue: '3',
-                        onComplete: seconds => {
-                          setCurrentTimeout(+seconds * 1000);
-                        },
-                      })}
-                    />
-                  </DropdownItem>
-                  <DropdownItem aria-label='Repeat on Interval'>
-                    <ItemContent
-                      icon="repeat"
-                      label="Repeat on Interval"
-                      onClick={() => showPrompt({
-                        inputType: 'decimal',
-                        title: 'Send on Interval',
-                        label: 'Interval in seconds',
-                        defaultValue: '3',
-                        submitName: 'Start',
-                        onComplete: seconds => {
-                          setCurrentInterval(+seconds * 1000);
-                        },
-                      })}
-                    />
-                  </DropdownItem>
+                </DropdownItem>
+                <DropdownItem aria-label='Generate Client Code'>
+                  <ItemContent
+                    icon="code"
+                    label="Generate Client Code"
+                    onClick={() => showModal(GenerateCodeModal, { request: activeRequest })}
+                  />
+                </DropdownItem>
+              </DropdownSection>
+              <DropdownSection
+                aria-label="Advanced Section"
+                title="Advanced"
+              >
+                <DropdownItem aria-label='Send After Delay'>
+                  <ItemContent
+                    icon="clock-o"
+                    label="Send After Delay"
+                    onClick={() => showPrompt({
+                      inputType: 'decimal',
+                      title: 'Send After Delay',
+                      label: 'Delay in seconds',
+                      defaultValue: '3',
+                      onComplete: seconds => {
+                        setCurrentTimeout(+seconds * 1000);
+                      },
+                    })}
+                  />
+                </DropdownItem>
+                <DropdownItem aria-label='Repeat on Interval'>
+                  <ItemContent
+                    icon="repeat"
+                    label="Repeat on Interval"
+                    onClick={() => showPrompt({
+                      inputType: 'decimal',
+                      title: 'Send on Interval',
+                      label: 'Interval in seconds',
+                      defaultValue: '3',
+                      submitName: 'Start',
+                      onComplete: seconds => {
+                        setCurrentInterval(+seconds * 1000);
+                      },
+                    })}
+                  />
+                </DropdownItem>
                 {downloadPath
                   ? (<DropdownItem aria-label='Stop Auto-Download'>
-                      <ItemContent
-                        icon="stop-circle"
-                        label="Stop Auto-Download"
-                        withPrompt
-                        onClick={() => patchRequestMeta(activeRequest._id, { downloadPath: null })}
-                      />
+                    <ItemContent
+                      icon="stop-circle"
+                      label="Stop Auto-Download"
+                      withPrompt
+                      onClick={() => patchRequestMeta(activeRequest._id, { downloadPath: null })}
+                    />
                   </DropdownItem>)
                   : (<DropdownItem aria-label='Download After Send'>
-                      <ItemContent
-                        icon="download"
-                        label="Download After Send"
-                        onClick={async () => {
-                          const { canceled, filePaths } = await window.dialog.showOpenDialog({
-                            title: 'Select Download Location',
-                            buttonLabel: 'Select',
-                            properties: ['openDirectory'],
-                          });
-                          if (canceled) {
-                            return;
-                          }
-                          patchRequestMeta(activeRequest._id, { downloadPath: filePaths[0] });
-                        }}
-                      />
+                    <ItemContent
+                      icon="download"
+                      label="Download After Send"
+                      onClick={async () => {
+                        const { canceled, filePaths } = await window.dialog.showOpenDialog({
+                          title: 'Select Download Location',
+                          buttonLabel: 'Select',
+                          properties: ['openDirectory'],
+                        });
+                        if (canceled) {
+                          return;
+                        }
+                        patchRequestMeta(activeRequest._id, { downloadPath: filePaths[0] });
+                      }}
+                    />
                   </DropdownItem>)}
-                  <DropdownItem aria-label='Send And Download'>
+                <DropdownItem aria-label='Send And Download'>
                   <ItemContent icon="download" label="Send And Download" onClick={() => sendOrConnect(true)} />
-                  </DropdownItem>
-                </DropdownSection>
-              </Dropdown>)}
+                </DropdownItem>
+              </DropdownSection>
+            </Dropdown>)}
         </>)}
       </div>
     </div>

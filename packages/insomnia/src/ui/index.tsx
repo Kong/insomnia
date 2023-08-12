@@ -149,6 +149,10 @@ const router = createMemoryRouter(
                                   element: (<Outlet />),
                                   children: [
                                     {
+                                      path: 'send',
+                                      action: async (...args) => (await import('./routes/request')).sendAction(...args),
+                                    },
+                                    {
                                       path: 'connect',
                                       action: async (...args) => (await import('./routes/request')).connectAction(...args),
                                     },
