@@ -39,6 +39,7 @@ import {
   Organization } from '../../models/organization';
 import { isRemoteProject } from '../../models/project';
 import { Settings } from '../../models/settings';
+import { isDesign } from '../../models/workspace';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
@@ -280,8 +281,10 @@ const Root = () => {
     );
   }, [patchSettings]);
 
-  const { organizationId } = useParams() as {
+  const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
+    projectId?: string;
+    workspaceId?: string;
   };
 
   const crumbs = workspaceData
@@ -330,14 +333,37 @@ const Root = () => {
                 </div>
                 {!isLoggedIn() ? <GitHubStarsButton /> : null}
               </div>
-              <div className="flex items-center justify-center">
-                <Breadcrumbs items={crumbs}>
-                  {item => (
-                    <Item key={item.id} id={item.id}>
-                      {item.node}
-                    </Item>
-                  )}
-                </Breadcrumbs>
+              <div className="flex gap-2 flex-nowrap items-center justify-center">
+                {workspaceData && (
+                  <Fragment>
+                    <Breadcrumbs items={crumbs}>
+                      {item => (
+                        <Item key={item.id} id={item.id}>
+                          {item.node}
+                        </Item>
+                      )}
+                    </Breadcrumbs>
+                    {isDesign(workspaceData?.activeWorkspace) && (
+                      <nav className="flex rounded-full justify-between content-evenly font-semibold bg-[--hl-xs] p-[--padding-xxs]">
+                        {['spec', 'debug', 'test'].map(item => (
+                          <NavLink
+                            key={item}
+                            to={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${item}`}
+                            className={({ isActive }) =>
+                              `${
+                                isActive
+                                  ? 'text-[--color-font] bg-[--color-bg]'
+                                  : ''
+                              } no-underline transition-colors text-center outline-none min-w-[4rem] uppercase text-[--color-font] text-xs px-[--padding-xs] py-[--padding-xxs] rounded-full`
+                            }
+                          >
+                            {item}
+                          </NavLink>
+                        ))}
+                      </nav>
+                    )}
+                  </Fragment>
+                )}
               </div>
               <div className="flex gap-[--padding-sm] items-center justify-end p-2">
                 {isLoggedIn() ? (
@@ -349,7 +375,6 @@ const Root = () => {
                     <Popover className="min-w-max">
                       <Menu
                         onAction={action => {
-                          console.log(action);
                           if (action === 'logout') {
                             logout();
                           }
