@@ -3,10 +3,10 @@ import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { AuthType, CONTENT_TYPE_JSON } from '../../../common/constants';
-import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as models from '../../../models';
 import { Environment } from '../../../models/environment';
 import { WebSocketRequest } from '../../../models/websocket-request';
+import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { useReadyState } from '../../hooks/use-ready-state';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -108,26 +108,14 @@ const WebSocketRequestForm: FC<FormProps> = ({
     init();
   }, [request._id]);
 
-  const tryToInterpolateOrShowRenderErrorModal = async ({ request, environmentId, payload }: { request: WebSocketRequest; environmentId: string; payload: any }): Promise<any> => {
-    try {
-      const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-      return await render(payload, renderContext);
-    } catch (error) {
-      if (error.type === 'render') {
-        showModal(RequestRenderErrorModal, { request, error });
-        return;
-      }
-      throw error;
-    }
-  };
   // NOTE: Nunjucks interpolation can throw errors
   const interpolateOpenAndSend = async (payload: string) => {
     try {
-      const renderedMessage = await tryToInterpolateOrShowRenderErrorModal({ request, environmentId, payload });
+      const renderedMessage = await tryToInterpolateRequestOrShowRenderErrorModal({ request, environmentId, payload });
       const readyState = await window.main.webSocket.readyState.getCurrent({ requestId: request._id });
       if (!readyState) {
         const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-        const rendered = await tryToInterpolateOrShowRenderErrorModal({
+        const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
           request,
           environmentId,
           payload: {

@@ -2,15 +2,13 @@ import React, { FC, useLayoutEffect, useRef } from 'react';
 import { useFetcher, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as models from '../../../models';
 import { WebSocketRequest } from '../../../models/websocket-request';
+import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { ConnectActionParams } from '../../routes/request';
 import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
-import { showModal } from '../modals';
-import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
 import { DisconnectButton } from './disconnect-button';
 
 const Button = styled.button<{ warning?: boolean }>(({ warning }) => ({
@@ -85,18 +83,6 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
       });
   };
 
-  const tryToInterpolateOrShowRenderErrorModal = async ({ request, environmentId, payload }: { request: WebSocketRequest; environmentId: string; payload: any }): Promise<any> => {
-    try {
-      const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-      return await render(payload, renderContext);
-    } catch (error) {
-      if (error.type === 'render') {
-        showModal(RequestRenderErrorModal, { request, error });
-        return;
-      }
-      throw error;
-    }
-  };
   const handleSubmit = async () => {
     if (isOpen) {
       window.main.webSocket.close({ requestId: request._id });
@@ -104,7 +90,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
     }
     // Render any nunjucks tags in the url/headers/authentication settings/cookies
     const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-    const rendered = await tryToInterpolateOrShowRenderErrorModal({
+    const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
       request,
       environmentId,
       payload: {

@@ -5,12 +5,12 @@ import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
 import { database } from '../../common/database';
-import { getRenderContext, render, RENDER_PURPOSE_SEND } from '../../common/render';
+import { RENDER_PURPOSE_SEND } from '../../common/render';
 import * as models from '../../models';
-import { isEventStreamRequest, isRequest, Request } from '../../models/request';
-import { WebSocketRequest } from '../../models/websocket-request';
+import { isEventStreamRequest, isRequest } from '../../models/request';
 import { fetchRequestData, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { convert } from '../../utils/importers/convert';
+import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
 import { useReadyState } from '../hooks/use-ready-state';
@@ -26,7 +26,6 @@ import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
-import { RequestRenderErrorModal } from './modals/request-render-error-modal';
 
 const StyledDropdownButton = styled(DropdownButton)({
   '&:hover:not(:disabled)': {
@@ -108,18 +107,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       });
   };
 
-  const tryToInterpolateOrShowRenderErrorModal = async ({ request, environmentId, payload }: { request: Request | WebSocketRequest; environmentId: string; payload: any }): Promise<any> => {
-    try {
-      const renderContext = await getRenderContext({ request, environmentId, purpose: RENDER_PURPOSE_SEND });
-      return await render(payload, renderContext);
-    } catch (error) {
-      if (error.type === 'render') {
-        showModal(RequestRenderErrorModal, { request, error });
-        return;
-      }
-      throw error;
-    }
-  };
   const sendOrConnect = async (shouldPromptForPathAfterResponse?: boolean) => {
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
@@ -139,7 +126,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         const workspaceId = activeWorkspace._id;
         // Render any nunjucks tags in the url/headers/authentication settings/cookies
         const workspaceCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
-        const rendered = await tryToInterpolateOrShowRenderErrorModal({
+        const rendered = await tryToInterpolateRequestOrShowRenderErrorModal({
           request: activeRequest,
           environmentId,
           payload: {
