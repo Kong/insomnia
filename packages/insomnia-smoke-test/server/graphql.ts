@@ -1,33 +1,33 @@
-import { buildSchema } from 'graphql';
+import { GraphQLEnumType, GraphQLObjectType, GraphQLSchema, GraphQLString } from 'graphql';
 
-// Construct a schema, using GraphQL schema language
-export const schema = buildSchema(`
-  """Characters who at any time bore a Ring of Power."""
-  enum RingBearer {
-    Frodo
-    Bilbo
-    Thror
-    Gandalf
-    Galadriel
-    WitchKing
-    Nazgul
-    Elrond
-    GilGalad
-    Cirdan
-    Thrain
-  }
-  type Query {
-    hello: String,
-    bearer: RingBearer!
-  }
-`);
-
-// The root provides a resolver function for each API endpoint
-export const root = {
-  hello: () => {
-    return 'Hello world!';
-  },
-  bearer: () => {
-    return 'Gandalf';
-  },
-};
+export const schema = new GraphQLSchema({
+  query: new GraphQLObjectType({
+    name: 'Query',
+    fields: {
+      hello: {
+        type: GraphQLString,
+        resolve: () => 'Hello world!',
+      },
+      bearer: {
+        type: new GraphQLEnumType({
+          name: 'RingBearer',
+          description: 'Characters who at any time bore a Ring of Power.',
+          values: {
+            Frodo: { value: 0 },
+            Bilbo: { value: 1 },
+            Thror: { value: 2 },
+            Gandalf: { value: 3 },
+            Galadriel: { value: 4 },
+            WitchKing: { value: 5 },
+            Nazgul: { value: 6 },
+            Elrond: { value: 7 },
+            GilGalad: { value: 8 },
+            Cirdan: { value: 9 },
+            Thrain: { value: 10 },
+          },
+        }),
+        resolve: () => 3,
+      },
+    },
+  }),
+});

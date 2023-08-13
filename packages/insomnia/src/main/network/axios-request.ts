@@ -40,7 +40,11 @@ export const axiosRequest = async (config: AxiosRequestConfig): Promise<AxiosRes
       };
     }
   }
-
+  // HACK: workaround for isomteric git needing 400 responses
+  if (config.responseType === 'arraybuffer') {
+    console.log('[git-sync] Overriding validateStatus to allow 400 responses');
+    finalConfig.validateStatus = status => status < 500;
+  }
   const response = await axios(finalConfig);
 
   if (isDevelopment()) {

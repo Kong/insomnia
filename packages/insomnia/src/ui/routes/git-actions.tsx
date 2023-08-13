@@ -10,6 +10,8 @@ import * as models from '../../models';
 import { isApiSpec } from '../../models/api-spec';
 import { GitRepository } from '../../models/git-repository';
 import { createGitRepository } from '../../models/helpers/git-repository-operations';
+import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
+import { DEFAULT_PROJECT_ID } from '../../models/project';
 import {
   isWorkspace,
   Workspace,
@@ -50,7 +52,7 @@ export type GitRepoLoaderData =
       errors: string[];
     };
 
-export const gitRepoLoader: LoaderFunction = async ({
+export const gitRepoAction: ActionFunction = async ({
   params,
 }): Promise<GitRepoLoaderData> => {
   try {
@@ -541,21 +543,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
     const existingWorkspace = await models.workspace.getById(workspace._id);
 
     if (existingWorkspace) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.vcsSyncComplete, properties: {
-          ...vcsSegmentEventProperties(
-            'git',
-            'clone',
-            'workspace already exists'
-          ),
-          providerName,
-        },
-      });
-      return {
-        errors: [
-          `Workspace ${existingWorkspace.name} already exists. Please delete it before cloning.`,
-        ],
-      };
+      return redirect(`/organization/${existingWorkspace.parentId || DEFAULT_ORGANIZATION_ID}/project/${existingWorkspace.parentId || DEFAULT_PROJECT_ID}/workspace/${existingWorkspace._id}/debug`);
     }
 
     // Loop over all model folders in root
@@ -1283,7 +1271,7 @@ export interface GitStatusResult {
   };
 }
 
-export const gitStatusLoader: LoaderFunction = async ({
+export const gitStatusAction: ActionFunction = async ({
   params,
 }): Promise<GitStatusResult> => {
   const { workspaceId } = params;
