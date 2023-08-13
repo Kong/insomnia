@@ -43,6 +43,7 @@ const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
 
 type ConflictHandler = (conflicts: MergeConflict[]) => Promise<MergeConflict[]>;
 
+// breaks one array into multiple arrays of size chunkSize
 export function chunkArray<T>(arr: T[], chunkSize: number) {
   const chunks: T[][] = [];
   for (let i = 0, j = arr.length; i < j; i += chunkSize) {
