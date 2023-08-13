@@ -281,8 +281,6 @@ describe('chunkArray()', () => {
   });
 });
 
-describe('()', () => {
-
 describe('snapNumberToLimits()', () => {
   it('should return value', () => {
     expect(snapNumberToLimits(2)).toBe(2);

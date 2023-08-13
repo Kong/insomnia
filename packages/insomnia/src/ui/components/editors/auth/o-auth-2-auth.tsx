@@ -282,7 +282,7 @@ export const OAuth2Auth: FC = () => {
 };
 /**
   Finds epoch's digit count and converts it to make it exactly 13 digits.
-  Which is the epoch millisecond representation.
+  Which is the epoch millisecond representation. (trims last 2 digits)
 */
 export function convertEpochToMilliseconds(epoch: number) {
   const expDigitCount = epoch.toString().length;
