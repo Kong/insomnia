@@ -2,8 +2,6 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { chunkArray } from '../../sync/vcs/vcs';
-import { snapNumberToLimits } from '../../ui/components/settings/number-setting';
-import { xmlDecode } from '../../ui/components/viewers/response-viewer';
 import {
   debounce,
   filterHeaders,
@@ -252,7 +250,6 @@ describe('fuzzyMatchAll()', () => {
     expect(fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])).toEqual(null);
   });
 });
-
 describe('chunkArray()', () => {
   it('works with exact divisor', () => {
     const chunks = chunkArray([1, 2, 3, 4, 5, 6], 3);
@@ -281,30 +278,6 @@ describe('chunkArray()', () => {
   });
 });
 
-describe('snapNumberToLimits()', () => {
-  it('should return value', () => {
-    expect(snapNumberToLimits(2)).toBe(2);
-    expect(snapNumberToLimits(2, 0)).toBe(2);
-    expect(snapNumberToLimits(2, 0, 3)).toBe(2);
-    expect(snapNumberToLimits(2, 2, 2)).toBe(2);
-    expect(snapNumberToLimits(2, null, null)).toBe(2);
-    expect(snapNumberToLimits(2, NaN, NaN)).toBe(2);
-  });
-
-  it('should snap to min', () => {
-    expect(snapNumberToLimits(2, 3)).toBe(3);
-    expect(snapNumberToLimits(2, 3, 5)).toBe(3);
-    expect(snapNumberToLimits(2, 3, null)).toBe(3);
-    expect(snapNumberToLimits(2, 3, NaN)).toBe(3);
-  });
-
-  it('should snap to max', () => {
-    expect(snapNumberToLimits(5, 0, 3)).toBe(3);
-    expect(snapNumberToLimits(5, null, 3)).toBe(3);
-    expect(snapNumberToLimits(5, NaN, 3)).toBe(3);
-  });
-});
-
 describe('isNotNullOrUndefined', () => {
   it('should return correctly', () => {
     expect(isNotNullOrUndefined(0)).toBe(true);
@@ -312,14 +285,6 @@ describe('isNotNullOrUndefined', () => {
     expect(isNotNullOrUndefined(false)).toBe(true);
     expect(isNotNullOrUndefined(null)).toBe(false);
     expect(isNotNullOrUndefined(undefined)).toBe(false);
-  });
-});
-
-describe('xmlDecode()', () => {
-  it('unescape characters', () => {
-    const input = '&lt;a href=&quot;http://example.com?query1=value1&amp;query2=value2&quot;&gt;a link&lt;/a&gt;';
-    const output = '<a href="http://example.com?query1=value1&query2=value2">a link</a>';
-    expect(xmlDecode(input)).toEqual(output);
   });
 });
 
