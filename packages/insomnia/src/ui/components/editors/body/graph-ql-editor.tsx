@@ -14,7 +14,6 @@ import { useLocalStorage } from 'react-use';
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
-import { jsonParseOr } from '../../../../common/misc';
 import { RENDER_PURPOSE_SEND } from '../../../../common/render';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
@@ -175,6 +174,7 @@ interface State {
   documentAST: null | DocumentNode;
   disabledOperationMarkers: (TextMarker | undefined)[];
 }
+
 export const GraphQLEditor: FC<Props> = ({
   request,
   environmentId,
@@ -190,7 +190,11 @@ export const GraphQLEditor: FC<Props> = ({
     requestBody = { query: '' };
   }
   if (typeof requestBody.variables === 'string') {
-    requestBody.variables = jsonParseOr(requestBody.variables, '');
+    try {
+      requestBody.variables = JSON.parse(requestBody.variables);
+    } catch (err) {
+      requestBody.variables = '';
+    }
   }
   let documentAST;
   try {

@@ -1,13 +1,12 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
+import { chunkArray } from '../../sync/vcs/vcs';
+import { convertEpochToMilliseconds } from '../../ui/components/editors/auth/o-auth-2-auth';
 import { snapNumberToLimits } from '../../ui/components/settings/number-setting';
 import { xmlDecode } from '../../ui/components/viewers/response-viewer';
 import {
-  chunkArray,
-  convertEpochToMilliseconds,
   debounce,
-  diffPatchObj,
   filterHeaders,
   fuzzyMatch,
   fuzzyMatchAll,
@@ -280,69 +279,6 @@ describe('chunkArray()', () => {
   it('works with less than one chunk', () => {
     const chunks = chunkArray([1, 2], 4);
     expect(chunks).toEqual([[1, 2]]);
-  });
-});
-
-describe('diffPatchObj()', () => {
-  const a = {
-    x: 1,
-  };
-  const b = {
-    x: 2,
-    y: 3,
-  };
-  const c = {
-    x: 4,
-    y: {
-      z: 5,
-    },
-  };
-
-  it('does a basic merge', () => {
-    expect(diffPatchObj(a, b)).toEqual({
-      x: 2,
-      y: 3,
-    });
-    expect(diffPatchObj(b, a)).toEqual({
-      x: 1,
-      y: 3,
-    });
-  });
-
-  it.skip('does a basic merge, deep', () => {
-    expect(diffPatchObj(a, c, true)).toEqual({
-      x: 2,
-      y: 3,
-    });
-    expect(diffPatchObj(c, a, true)).toEqual({
-      x: 1,
-    });
-  });
-
-  it.skip('does a basic nested merge', () => {
-    expect(diffPatchObj(a, b)).toEqual({
-      x: 2,
-      y: 3,
-    });
-    expect(diffPatchObj(b, a)).toEqual({
-      x: 1,
-      y: {
-        z: 5,
-      },
-    });
-  });
-
-  it.skip('does a basic nested merge, deep', () => {
-    expect(diffPatchObj(a, c, true)).toEqual({
-      x: 2,
-      y: 3,
-    });
-    expect(diffPatchObj(c, a, true)).toEqual({
-      x: 1,
-      y: {
-        z: 5,
-      },
-    });
   });
 });
 
