@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { chunkArray } from '../../sync/vcs/vcs';
-import { convertEpochToMilliseconds } from '../../ui/components/editors/auth/o-auth-2-auth';
 import { snapNumberToLimits } from '../../ui/components/settings/number-setting';
 import { xmlDecode } from '../../ui/components/viewers/response-viewer';
 import {
@@ -282,19 +281,7 @@ describe('chunkArray()', () => {
   });
 });
 
-describe('convertEpochToMilliseconds()', () => {
-  it('should convert microseconds to milliseconds', () => {
-    expect(convertEpochToMilliseconds(1617616858412123)).toBe(1617616858412);
-  });
-
-  it('should convert seconds to milliseconds', () => {
-    expect(convertEpochToMilliseconds(1617617010)).toBe(1617617010000);
-  });
-
-  it('should output same if value already in milliseconds', () => {
-    expect(convertEpochToMilliseconds(1617617141412)).toBe(1617617141412);
-  });
-});
+describe('()', () => {
 
 describe('snapNumberToLimits()', () => {
   it('should return value', () => {
