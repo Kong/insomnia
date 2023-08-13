@@ -43,8 +43,17 @@ jobs:
       - name: Type checks
         run: npm run type-check
 
-      - name: Run tests
-        run: npm test
+      - name: Run Insomnia tests
+        run: npm test -w packages/insomnia
+
+      - name: Run Inso tests
+        run: npm test -w packages/insomnia-inso
+
+      - name: Run Insomnia Testing tests
+        run: npm test -w packages/insomnia-testing
+
+      - name: Run O2K tests
+        run: npm test -w packages/openapi-2-kong
 
       - name: Build app for smoke tests
         run: npm run app-build
