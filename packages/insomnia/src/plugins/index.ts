@@ -3,7 +3,6 @@ import fs from 'fs';
 import path from 'path';
 
 import { ParsedApiSpec } from '../common/api-specs';
-import { resolveHomePath } from '../common/misc';
 import type { PluginConfig, PluginConfigMap } from '../common/settings';
 import * as models from '../models';
 import { GrpcRequest } from '../models/grpc-request';
@@ -189,7 +188,13 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
     const extraPaths = settings.pluginPath
       .split(':')
       .filter(p => p)
-      .map(resolveHomePath);
+      .map(p => {
+        if (p.indexOf('~/') === 0) {
+          return path.join(process.env['HOME'] || '/', p.slice(1));
+        } else {
+          return p;
+        }
+      });
     // Make sure the default directories exist
     const pluginPath = path.join(process.env['INSOMNIA_DATA_PATH'] || (process.type === 'renderer' ? window : electron).app.getPath('userData'), 'plugins');
     fs.mkdirSync(pluginPath, { recursive: true });

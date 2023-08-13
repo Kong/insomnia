@@ -221,26 +221,12 @@ export function decompressObject<ObjectType>(input: string | null): ObjectType |
   return JSON.parse(jsonBuffer.toString('utf8')) as ObjectType;
 }
 
-export function resolveHomePath(p: string) {
-  if (p.indexOf('~/') === 0) {
-    return pathJoin(process.env['HOME'] || '/', p.slice(1));
-  } else {
-    return p;
-  }
-}
-
 export function jsonParseOr(str: string, fallback: any): any {
   try {
     return JSON.parse(str);
   } catch (err) {
     return fallback;
   }
-}
-
-export function escapeHTML(unsafeText: string) {
-  const div = document.createElement('div');
-  div.innerText = unsafeText;
-  return div.innerHTML;
 }
 
 /**
@@ -335,26 +321,6 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
   }
 
   return chunks;
-}
-
-export function pluralize(text: string) {
-  let trailer = 's';
-  let chop = 0;
-
-  // Things already ending with 's' stay that way
-  if (text.match(/s$/)) {
-    trailer = '';
-    chop = 0;
-  }
-
-  // Things ending in 'y' convert to ies
-  if (text.match(/y$/)) {
-    trailer = 'ies';
-    chop = 1;
-  }
-
-  // Add the trailer for pluralization
-  return `${text.slice(0, text.length - chop)}${trailer}`;
 }
 
 export function diffPatchObj(baseObj: any, patchObj: any, deep = false) {

@@ -3,7 +3,7 @@ import 'codemirror/addon/mode/overlay';
 import CodeMirror, { EnvironmentAutocompleteOptions, Hint, ShowHintOptions } from 'codemirror';
 
 import { getPlatformKeyCombinations } from '../../../../common/hotkeys';
-import { escapeHTML, escapeRegex, fnOrString, isNotNullOrUndefined } from '../../../../common/misc';
+import { escapeRegex, fnOrString, isNotNullOrUndefined } from '../../../../common/misc';
 import { getDefaultFill, NunjucksParsedTag } from '../../../../templating/utils';
 import { isNunjucksMode } from '../modes/nunjucks';
 
@@ -506,6 +506,11 @@ function replaceWithSurround(text: string, find: string, prefix: string, suffix:
   return text.replace(re, matched => prefix + matched + suffix);
 }
 
+function escapeHTML(unsafeText: string) {
+  const div = document.createElement('div');
+  div.innerText = unsafeText;
+  return div.innerHTML;
+}
 /**
  * Render the autocomplete list entry
  */
