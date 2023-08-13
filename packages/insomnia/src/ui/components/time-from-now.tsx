@@ -2,14 +2,19 @@ import { differenceInMinutes, formatDistanceToNowStrict } from 'date-fns';
 import React, { FC, useState } from 'react';
 import { useInterval } from 'react-use';
 
-import { toTitleCase } from '../../common/misc';
-
 interface Props {
   timestamp: number | Date | string;
   intervalSeconds?: number;
   className?: string;
   titleCase?: boolean;
 }
+const toTitleCase = (value: string) => (
+  value
+    .toLowerCase()
+    .split(' ')
+    .map(value => value.charAt(0).toUpperCase() + value.slice(1))
+    .join(' ')
+);
 
 function getTimeFromNow(timestamp: string | number | Date, titleCase: boolean): string {
   const date = new Date(timestamp);

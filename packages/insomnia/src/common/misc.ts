@@ -186,19 +186,6 @@ export function describeByteSize(bytes: number, long = false) {
   return `${rounded} ${unit}`;
 }
 
-export function xmlDecode(input: string) {
-  const ESCAPED_CHARACTERS_MAP = {
-    '&amp;': '&',
-    '&quot;': '"',
-    '&lt;': '<',
-    '&gt;': '>',
-  };
-
-  return input.replace(/(&quot;|&lt;|&gt;|&amp;)/g, (_: string, item: keyof typeof ESCAPED_CHARACTERS_MAP) => (
-    ESCAPED_CHARACTERS_MAP[item])
-  );
-}
-
 export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]) {
   if (typeof v === 'string') {
     return v;
@@ -375,19 +362,6 @@ export function convertEpochToMilliseconds(epoch: number) {
   return parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
 }
 
-export function snapNumberToLimits(value: number, min?: number, max?: number) {
-  const moreThanMax = max && !Number.isNaN(max) && value > max;
-  const lessThanMin = min && !Number.isNaN(min) && value < min;
-
-  if (moreThanMax) {
-    return max;
-  } else if (lessThanMin) {
-    return min;
-  }
-
-  return value;
-}
-
 export function isNotNullOrUndefined<ValueType>(
   value: ValueType | null | undefined
 ): value is ValueType {
@@ -399,15 +373,3 @@ export function isNotNullOrUndefined<ValueType>(
 }
 
 export const toKebabCase = (value: string) => value.replace(/ /g, '-');
-
-export const capitalize = (value: string) => (
-  `${value.slice(0, 1).toUpperCase()}${value.slice(1).toLowerCase()}`
-);
-
-export const toTitleCase = (value: string) => (
-  value
-    .toLowerCase()
-    .split(' ')
-    .map(capitalize)
-    .join(' ')
-);

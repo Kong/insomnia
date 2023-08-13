@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
+import { snapNumberToLimits } from '../../ui/components/settings/number-setting';
+import { xmlDecode } from '../../ui/components/viewers/response-viewer';
 import {
-  capitalize,
   chunkArray,
   convertEpochToMilliseconds,
   debounce,
@@ -14,10 +15,7 @@ import {
   hasAuthHeader,
   isNotNullOrUndefined,
   keyedDebounce,
-  snapNumberToLimits,
   toKebabCase,
-  toTitleCase,
-  xmlDecode,
 } from '../misc';
 
 describe('hasAuthHeader()', () => {
@@ -416,33 +414,5 @@ describe('toKebabCase', () => {
   it('replease spaces with hyphens', () => {
     expect(toKebabCase('a A')).toEqual('a-A');
     expect(toKebabCase('a A b B c')).toEqual('a-A-b-B-c');
-  });
-});
-
-describe('capitalize', () => {
-  it('capitalizes first letter', () => {
-    expect(capitalize('')).toEqual('');
-    expect(capitalize('a')).toEqual('A');
-    expect(capitalize('A')).toEqual('A');
-    expect(capitalize('abcd')).toEqual('Abcd');
-    expect(capitalize('abcd efg')).toEqual('Abcd efg');
-  });
-  it('lowercases all other letters but the first', () => {
-    expect(capitalize('aBcd efg')).toEqual('Abcd efg');
-    expect(capitalize('aBcd Efg')).toEqual('Abcd efg');
-  });
-});
-
-describe('toTitleCase', () => {
-  it('capitalizes first letter of each word', () => {
-    expect(toTitleCase('')).toEqual('');
-    expect(toTitleCase('a')).toEqual('A');
-    expect(toTitleCase('A')).toEqual('A');
-    expect(toTitleCase('abcd')).toEqual('Abcd');
-    expect(toTitleCase('abcd efg')).toEqual('Abcd Efg');
-  });
-  it('lowercases all other letters but the first of each word', () => {
-    expect(toTitleCase('aBcd efg')).toEqual('Abcd Efg');
-    expect(toTitleCase('aBcd Efg')).toEqual('Abcd Efg');
   });
 });
