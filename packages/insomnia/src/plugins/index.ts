@@ -105,25 +105,12 @@ export type ColorScheme = 'default' | 'light' | 'dark';
 
 let plugins: Plugin[] | null | undefined = null;
 
-let ignorePlugins: string[] = [];
-
 export async function init() {
-  clearIgnores();
   await reloadPlugins();
 }
 
-export function ignorePlugin(name: string) {
-  if (!ignorePlugins.includes(name)) {
-    ignorePlugins.push(name);
-  }
-}
-
-export function clearIgnores() {
-  ignorePlugins = [];
-}
-
 async function _traversePluginPath(
-  pluginMap: Record<string, any>,
+  pluginMap: Record<string, Plugin>,
   allPaths: string[],
   allConfigs: PluginConfigMap,
 ) {
@@ -169,8 +156,16 @@ async function _traversePluginPath(
         // Delete require cache entry and re-require
         const module = global.require(modulePath);
 
-        const pluginName = pluginJson.name;
-        pluginMap[pluginName] = _initPlugin(pluginJson || {}, module, allConfigs, modulePath);
+        pluginMap[pluginJson.name] = {
+          name: pluginJson.name,
+          description: pluginJson.description || pluginJson.insomnia.description || '',
+          version: pluginJson.version || 'unknown',
+          directory: modulePath || '',
+          config: allConfigs.hasOwnProperty(pluginJson.name)
+            ? allConfigs[pluginJson.name]
+            : { disabled: false },
+          module: module,
+        };
         console.log(`[plugin] Loaded ${modulePath}`);
       } catch (err) {
         showError({
@@ -399,30 +394,4 @@ export async function getThemes(): Promise<Theme[]> {
   }
 
   return extensions;
-}
-
-const _defaultPluginConfig: PluginConfig = {
-  disabled: false,
-};
-
-function _initPlugin(
-  packageJSON: Record<string, any>,
-  module: any,
-  allConfigs: PluginConfigMap,
-  path?: string | null,
-): Plugin {
-  const meta = packageJSON.insomnia || {};
-  const name = packageJSON.name || meta.name;
-  // Find config
-  const config: PluginConfig = allConfigs.hasOwnProperty(name)
-    ? allConfigs[name]
-    : _defaultPluginConfig;
-  return {
-    name,
-    description: packageJSON.description || meta.description || '',
-    version: packageJSON.version || 'unknown',
-    directory: path || '',
-    config,
-    module: module,
-  };
 }
