@@ -9,7 +9,6 @@ import {
   tryToInterpolateRequest,
   tryToTransformRequestWithPlugins,
 } from '../network/network';
-import * as plugins from '../plugins';
 import { invariant } from '../utils/invariant';
 import { database } from './database';
 import { RENDER_PURPOSE_SEND } from './render';
@@ -65,30 +64,27 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
   };
   // Return callback helper to send requests
   return async function sendRequest(requestId: string) {
-    try {
-      const {
-        request,
-        settings,
-        clientCertificates,
-        caCert,
-      } = await fetchInsoRequestData(requestId);
-      // NOTE: inso ignores active environment, using the one passed in
-      const renderResult = await tryToInterpolateRequest(request, environmentId, RENDER_PURPOSE_SEND);
-      const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-      const response = await sendCurlAndWriteTimeline(
-        renderedRequest,
-        clientCertificates,
-        caCert,
-        settings,
-      );
-      const res = await responseTransform(response, environmentId, renderedRequest, renderResult.context);
-      const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
-      const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
-      const bodyBuffer = await getBodyBuffer(res) as Buffer;
-      const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
-      return { status, statusMessage, data, headers, responseTime };
-    } finally {
-      plugins.clearIgnores();
-    }
+    const {
+      request,
+      settings,
+      clientCertificates,
+      caCert,
+    } = await fetchInsoRequestData(requestId);
+    // NOTE: inso ignores active environment, using the one passed in
+    const renderResult = await tryToInterpolateRequest(request, environmentId, RENDER_PURPOSE_SEND);
+    const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+    const response = await sendCurlAndWriteTimeline(
+      renderedRequest,
+      clientCertificates,
+      caCert,
+      settings,
+    );
+    const res = await responseTransform(response, environmentId, renderedRequest, renderResult.context);
+    const { statusCode: status, statusMessage, headers: headerArray, elapsedTime: responseTime } = res;
+    const headers = headerArray?.reduce((acc, { name, value }) => ({ ...acc, [name.toLowerCase() || '']: value || '' }), []);
+    const bodyBuffer = await getBodyBuffer(res) as Buffer;
+    const data = bodyBuffer ? bodyBuffer.toString('utf8') : undefined;
+    return { status, statusMessage, data, headers, responseTime };
+
   };
 }

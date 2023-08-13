@@ -1,7 +1,6 @@
 import React, { ChangeEventHandler, FC, InputHTMLAttributes, useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { snapNumberToLimits } from '../../../common/misc';
 import { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
@@ -15,7 +14,17 @@ interface Props {
   setting: SettingsOfType<number>;
   step?: InputHTMLAttributes<HTMLInputElement>['step'];
 }
-
+export function snapNumberToLimits(value: number, min?: number, max?: number) {
+  const moreThanMax = max && !Number.isNaN(max) && value > max;
+  if (moreThanMax) {
+    return max;
+  }
+  const lessThanMin = min && !Number.isNaN(min) && value < min;
+  if (lessThanMin) {
+    return min;
+  }
+  return value;
+}
 export const NumberSetting: FC<Props> = ({
   help,
   label,

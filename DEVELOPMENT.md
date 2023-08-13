@@ -69,7 +69,26 @@ This is just a brief summary of Insomnia's current technical debt.
 - Loading large responses (~20 MB) can crash the app on weaker hardware.
 - Bundling `libcurl` (native module) has caused many weeks of headaches trying to get builds working across Windows, Mac, and Linux. More expertise here is definitely needed.
 - All input fields that support features like templating or code completion are actually [CodeMirror](https://codemirror.net/6/) instances. This isn't really debt, but may affect things going forward.
-- Use of `libcurl` means Insomnia can't run in a web browser and can't support bidirectional socket communication.
+
+- [x] upgrade spectral e2e testing
+- [x] upgrading electron
+- [x] preload electron main functions
+- [x] update react classes to function components
+- [x] remove excess packages
+- [x] migrate redux to remix
+- [x] migrate lerna to npm workspaces
+- [x] CI slow ~30m (now 10m)
+- [x] styling vision (react-aria + tailwind)
+- [ ] de-polymorph database
+- [ ] codemirror is unmaintained
+- [ ] nedb is unmaintained
+- [ ] grpc state state should be in main rather than renderer
+- [ ] drag and drop is flakey
+- [ ] sync code is spaghetti
+- [ ] template rendering is spaghetti and has poor discoverability
+- [ ] inso abstraction limits networking improvements
+- [ ] testing feature doesn't scale with investment
+- [ ] unify curl.ts and libcurl-promise implementations
 
 ## Electron upgrade
 

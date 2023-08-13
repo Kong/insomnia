@@ -1,12 +1,9 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
+import { chunkArray } from '../../sync/vcs/vcs';
 import {
-  capitalize,
-  chunkArray,
-  convertEpochToMilliseconds,
   debounce,
-  diffPatchObj,
   filterHeaders,
   fuzzyMatch,
   fuzzyMatchAll,
@@ -14,11 +11,7 @@ import {
   hasAuthHeader,
   isNotNullOrUndefined,
   keyedDebounce,
-  pluralize,
-  snapNumberToLimits,
   toKebabCase,
-  toTitleCase,
-  xmlDecode,
 } from '../misc';
 
 describe('hasAuthHeader()', () => {
@@ -257,7 +250,6 @@ describe('fuzzyMatchAll()', () => {
     expect(fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])).toEqual(null);
   });
 });
-
 describe('chunkArray()', () => {
   it('works with exact divisor', () => {
     const chunks = chunkArray([1, 2, 3, 4, 5, 6], 3);
@@ -286,121 +278,6 @@ describe('chunkArray()', () => {
   });
 });
 
-describe('pluralize()', () => {
-  it('should not change pluralization', () => {
-    expect(pluralize('Requests')).toBe('Requests');
-  });
-
-  it('should end with s', () => {
-    expect(pluralize('Request')).toBe('Requests');
-  });
-
-  it('should end with ies', () => {
-    expect(pluralize('Directory')).toBe('Directories');
-  });
-});
-
-describe('diffPatchObj()', () => {
-  const a = {
-    x: 1,
-  };
-  const b = {
-    x: 2,
-    y: 3,
-  };
-  const c = {
-    x: 4,
-    y: {
-      z: 5,
-    },
-  };
-
-  it('does a basic merge', () => {
-    expect(diffPatchObj(a, b)).toEqual({
-      x: 2,
-      y: 3,
-    });
-    expect(diffPatchObj(b, a)).toEqual({
-      x: 1,
-      y: 3,
-    });
-  });
-
-  it.skip('does a basic merge, deep', () => {
-    expect(diffPatchObj(a, c, true)).toEqual({
-      x: 2,
-      y: 3,
-    });
-    expect(diffPatchObj(c, a, true)).toEqual({
-      x: 1,
-    });
-  });
-
-  it.skip('does a basic nested merge', () => {
-    expect(diffPatchObj(a, b)).toEqual({
-      x: 2,
-      y: 3,
-    });
-    expect(diffPatchObj(b, a)).toEqual({
-      x: 1,
-      y: {
-        z: 5,
-      },
-    });
-  });
-
-  it.skip('does a basic nested merge, deep', () => {
-    expect(diffPatchObj(a, c, true)).toEqual({
-      x: 2,
-      y: 3,
-    });
-    expect(diffPatchObj(c, a, true)).toEqual({
-      x: 1,
-      y: {
-        z: 5,
-      },
-    });
-  });
-});
-
-describe('convertEpochToMilliseconds()', () => {
-  it('should convert microseconds to milliseconds', () => {
-    expect(convertEpochToMilliseconds(1617616858412123)).toBe(1617616858412);
-  });
-
-  it('should convert seconds to milliseconds', () => {
-    expect(convertEpochToMilliseconds(1617617010)).toBe(1617617010000);
-  });
-
-  it('should output same if value already in milliseconds', () => {
-    expect(convertEpochToMilliseconds(1617617141412)).toBe(1617617141412);
-  });
-});
-
-describe('snapNumberToLimits()', () => {
-  it('should return value', () => {
-    expect(snapNumberToLimits(2)).toBe(2);
-    expect(snapNumberToLimits(2, 0)).toBe(2);
-    expect(snapNumberToLimits(2, 0, 3)).toBe(2);
-    expect(snapNumberToLimits(2, 2, 2)).toBe(2);
-    expect(snapNumberToLimits(2, null, null)).toBe(2);
-    expect(snapNumberToLimits(2, NaN, NaN)).toBe(2);
-  });
-
-  it('should snap to min', () => {
-    expect(snapNumberToLimits(2, 3)).toBe(3);
-    expect(snapNumberToLimits(2, 3, 5)).toBe(3);
-    expect(snapNumberToLimits(2, 3, null)).toBe(3);
-    expect(snapNumberToLimits(2, 3, NaN)).toBe(3);
-  });
-
-  it('should snap to max', () => {
-    expect(snapNumberToLimits(5, 0, 3)).toBe(3);
-    expect(snapNumberToLimits(5, null, 3)).toBe(3);
-    expect(snapNumberToLimits(5, NaN, 3)).toBe(3);
-  });
-});
-
 describe('isNotNullOrUndefined', () => {
   it('should return correctly', () => {
     expect(isNotNullOrUndefined(0)).toBe(true);
@@ -408,14 +285,6 @@ describe('isNotNullOrUndefined', () => {
     expect(isNotNullOrUndefined(false)).toBe(true);
     expect(isNotNullOrUndefined(null)).toBe(false);
     expect(isNotNullOrUndefined(undefined)).toBe(false);
-  });
-});
-
-describe('xmlDecode()', () => {
-  it('unescape characters', () => {
-    const input = '&lt;a href=&quot;http://example.com?query1=value1&amp;query2=value2&quot;&gt;a link&lt;/a&gt;';
-    const output = '<a href="http://example.com?query1=value1&query2=value2">a link</a>';
-    expect(xmlDecode(input)).toEqual(output);
   });
 });
 
@@ -431,33 +300,5 @@ describe('toKebabCase', () => {
   it('replease spaces with hyphens', () => {
     expect(toKebabCase('a A')).toEqual('a-A');
     expect(toKebabCase('a A b B c')).toEqual('a-A-b-B-c');
-  });
-});
-
-describe('capitalize', () => {
-  it('capitalizes first letter', () => {
-    expect(capitalize('')).toEqual('');
-    expect(capitalize('a')).toEqual('A');
-    expect(capitalize('A')).toEqual('A');
-    expect(capitalize('abcd')).toEqual('Abcd');
-    expect(capitalize('abcd efg')).toEqual('Abcd efg');
-  });
-  it('lowercases all other letters but the first', () => {
-    expect(capitalize('aBcd efg')).toEqual('Abcd efg');
-    expect(capitalize('aBcd Efg')).toEqual('Abcd efg');
-  });
-});
-
-describe('toTitleCase', () => {
-  it('capitalizes first letter of each word', () => {
-    expect(toTitleCase('')).toEqual('');
-    expect(toTitleCase('a')).toEqual('A');
-    expect(toTitleCase('A')).toEqual('A');
-    expect(toTitleCase('abcd')).toEqual('Abcd');
-    expect(toTitleCase('abcd efg')).toEqual('Abcd Efg');
-  });
-  it('lowercases all other letters but the first of each word', () => {
-    expect(toTitleCase('aBcd efg')).toEqual('Abcd Efg');
-    expect(toTitleCase('aBcd Efg')).toEqual('Abcd Efg');
   });
 });

@@ -33,13 +33,13 @@ From project root, in separate terminals:
 
 ```sh
 # start smoke test api
-npm run serve --prefix packages/insomnia-smoke-test
+npm run serve -w packages/insomnia-smoke-test
 
 # build send-request
-npm run build:sr --prefix packages/insomnia
+npm run build:sr -w packages/insomnia
 
 # watch inso
-npm run start --prefix packages/insomnia-inso
+npm run start -w packages/insomnia-inso
 
 # run api test with dev bundle
 $PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
@@ -49,7 +49,7 @@ $PWD/packages/insomnia-inso/bin/inso run test "Echo Test Suite" --src $PWD/packa
 
 ```sh
 # run modify package command and then a unit test
-npm run package --prefix packages/insomnia-inso && \
+npm run package -w packages/insomnia-inso && \
 $PWD/packages/insomnia-inso/binaries/inso run test "Echo Test Suite" --src $PWD/packages/insomnia-smoke-test/fixtures/inso-nedb --env Dev --verbose
 
 ```
