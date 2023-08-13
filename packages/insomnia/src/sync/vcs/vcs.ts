@@ -4,7 +4,7 @@ import path from 'path';
 
 import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
-import { chunkArray, generateId } from '../../common/misc';
+import { generateId } from '../../common/misc';
 import { strings } from '../../common/strings';
 import { BaseModel } from '../../models';
 import Store from '../store';
@@ -43,6 +43,14 @@ const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
 
 type ConflictHandler = (conflicts: MergeConflict[]) => Promise<MergeConflict[]>;
 
+// breaks one array into multiple arrays of size chunkSize
+export function chunkArray<T>(arr: T[], chunkSize: number) {
+  const chunks: T[][] = [];
+  for (let i = 0, j = arr.length; i < j; i += chunkSize) {
+    chunks.push(arr.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
 export class VCS {
   _store: Store;
   _driver: BaseDriver;

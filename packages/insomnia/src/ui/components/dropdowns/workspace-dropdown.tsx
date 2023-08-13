@@ -30,7 +30,6 @@ export const WorkspaceDropdown: FC = () => {
   const {
     activeWorkspace,
     activeWorkspaceMeta,
-    activeEnvironment,
     activeProject,
     activeApiSpec,
     clientCertificates,
@@ -63,7 +62,7 @@ export const WorkspaceDropdown: FC = () => {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
         ...pluginContexts.data.init(activeProject._id),
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
-        ...(pluginContexts.network.init(activeEnvironment._id) as Record<string, any>),
+        ...(pluginContexts.network.init() as Record<string, any>),
       };
 
       const docs = await db.withDescendants(workspace);
@@ -86,7 +85,7 @@ export const WorkspaceDropdown: FC = () => {
     }
     setLoadingActions({ ...loadingActions, [label]: false });
     dropdownRef.current?.hide();
-  }, [activeEnvironment, activeProject._id, loadingActions]);
+  }, [activeProject._id, loadingActions]);
 
   const handleDropdownOpen = useCallback(async () => {
     const actionPlugins = await getWorkspaceActions();

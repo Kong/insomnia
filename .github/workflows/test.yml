@@ -43,21 +43,30 @@ jobs:
       - name: Type checks
         run: npm run type-check
 
-      - name: Run tests
-        run: npm test
+      - name: Test Insomnia
+        run: npm test -w packages/insomnia
+
+      - name: Test Inso
+        run: npm test -w packages/insomnia-inso
+
+      - name: Test Insomnia Testing
+        run: npm test -w packages/insomnia-testing
+
+      - name: Test O2K
+        run: npm test -w packages/openapi-2-kong
 
       - name: Build app for smoke tests
         run: npm run app-build
 
-      - name: Run Smoke tests
+      - name: Smoke test electron app
         # Partial Smoke test run, for regular CI triggers
         if: ${{ !startsWith(github.head_ref, 'release/') }}
-        run: npm run test:build --prefix packages/insomnia-smoke-test -- --project=Smoke
+        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Smoke
 
-      - name: Run Prerelease tests
+      - name: Prerelease test electron app
         # Full Smoke test run, for Release PRs
         if: ${{ startsWith(github.head_ref, 'release/') }}
-        run: npm run test:build --prefix packages/insomnia-smoke-test -- --project=Default
+        run: npm run test:build -w packages/insomnia-smoke-test -- --project=Default
 
       - name: Set Inso CLI variables
         id: inso-variables
@@ -65,7 +74,6 @@ jobs:
         run: |
           INSO_VERSION="$(jq .version packages/insomnia-inso/package.json -rj)-run.${{ github.run_number }}"
           PKG_NAME="inso-ubuntu-latest-$INSO_VERSION"
-
           echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
           echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
 
@@ -74,7 +82,7 @@ jobs:
 
       - name: Package Inso CLI binary
         run: |
-          echo "Replacing electron binary with node binary"
+          echo "Replacing node-libcurl electron binary with node binary"
           node_modules/.bin/node-pre-gyp install --update-binary --directory node_modules/@getinsomnia/node-libcurl
           npm run inso-package
         env:
@@ -92,7 +100,7 @@ jobs:
           name: ${{ steps.inso-variables.outputs.pkg-name }}
           path: packages/insomnia-inso/artifacts
 
-      - name: Run Inso CLI smoke tests
+      - name: Smoke test Inso CLI
         run: npm run test:smoke:cli
 
       - name: Upload smoke test traces

@@ -6,11 +6,12 @@ import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { AuthTypeOAuth2, OAuth2ResponseType, RequestHeader, RequestParameter } from '../../models/request';
+import type { Request } from '../../models/request';
 import type { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
-import { sendWithSettings } from '../network';
+import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../network';
 import {
   AuthKeys,
   GRANT_TYPE_AUTHORIZATION_CODE,
@@ -289,7 +290,16 @@ const transformNewAccessTokenToOauthModel = (accessToken: Partial<Record<AuthKey
 
 const sendAccessTokenRequest = async (requestId: string, authentication: AuthTypeOAuth2, params: RequestParameter[], headers: RequestHeader[]) => {
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
-  const responsePatch = await sendWithSettings(requestId, {
+  console.log(`[network] Sending with settings req=${requestId}`);
+  // @TODO unpack oauth into regular timeline and remove oauth timeine dialog
+  const { request,
+    environment,
+    settings,
+    clientCertificates,
+    caCert,
+    activeEnvironmentId } = await fetchRequestData(requestId);
+
+  const newRequest: Request = await models.initModel(models.request.type, {
     headers: [
       { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
       { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
@@ -301,7 +311,22 @@ const sendAccessTokenRequest = async (requestId: string, authentication: AuthTyp
       mimeType: 'application/x-www-form-urlencoded',
       params,
     },
+  }, {
+    _id: request._id + '.other',
+    parentId: request._id,
   });
+
+  const renderResult = await tryToInterpolateRequest(newRequest, environment._id);
+  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+
+  const response = await sendCurlAndWriteTimeline(
+    renderResult.request,
+    clientCertificates,
+    caCert,
+    { ...settings, validateSSL: settings.validateAuthSSL },
+  );
+  const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
+
   return await models.response.create(responsePatch);
 };
 export const encodePKCE = (buffer: Buffer) => {

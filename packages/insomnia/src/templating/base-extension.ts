@@ -96,8 +96,6 @@ export default class BaseExtension {
     const renderMeta = renderContext.getMeta ? renderContext.getMeta() : {};
     // Pull out the purpose
     const renderPurpose = renderContext.getPurpose ? renderContext.getPurpose() : null;
-    // Pull out the environment ID
-    const environmentId = renderContext.getEnvironmentId ? renderContext.getEnvironmentId() : 'n/a';
     // Extract the rest of the args
     const args = runArgs
       .slice(0, runArgs.length - 1)
@@ -108,7 +106,7 @@ export default class BaseExtension {
       ...pluginContexts.app.init(renderPurpose),
       // @ts-expect-error -- TSCONVERSION
       ...pluginContexts.store.init(this._plugin),
-      ...pluginContexts.network.init(environmentId),
+      ...pluginContexts.network.init(),
       context: renderContext,
       meta: renderMeta,
       renderPurpose,

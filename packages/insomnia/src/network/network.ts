@@ -15,7 +15,6 @@ import type { ExtraRenderInfo, RenderedRequest, RenderPurpose, RequestAndContext
 import {
   getRenderedRequestAndContext,
   RENDER_PURPOSE_NO_RENDER,
-  RENDER_PURPOSE_SEND,
 } from '../common/render';
 import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main/network/libcurl-promise';
 import * as models from '../models';
@@ -38,69 +37,7 @@ import { getAuthHeader, getAuthQueryParams } from './authentication';
 import { cancellableCurlRequest } from './cancellation';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
-// used for oauth grant types
-// creates a new request with the patch args
-// and uses env and settings from workspace
-// not cancellable but currently is
-// used indirectly by send and getAuthHeader to fetch tokens
-// @TODO unpack oauth into regular timeline and remove oauth timeine dialog
-export async function sendWithSettings(
-  requestId: string,
-  requestPatch: Record<string, any>,
-) {
-  console.log(`[network] Sending with settings req=${requestId}`);
-  const { request,
-    environment,
-    settings,
-    clientCertificates,
-    caCert,
-    activeEnvironmentId } = await fetchRequestData(requestId);
-
-  const newRequest: Request = await models.initModel(models.request.type, requestPatch, {
-    _id: request._id + '.other',
-    parentId: request._id,
-  });
-
-  const renderResult = await tryToInterpolateRequest(newRequest, environment._id);
-  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-
-  const response = await sendCurlAndWriteTimeline(
-    renderResult.request,
-    clientCertificates,
-    caCert,
-    { ...settings, validateSSL: settings.validateAuthSSL },
-  );
-  return responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
-}
-
-// used by test feature, inso, and plugin api
-// not all need to be cancellable or to use curl
-export async function send(
-  requestId: string,
-  environmentId?: string,
-  extraInfo?: ExtraRenderInfo,
-) {
-  console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
-
-  const { request,
-    environment,
-    settings,
-    clientCertificates,
-    caCert,
-    activeEnvironmentId } = await fetchRequestData(requestId);
-
-  const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND, extraInfo);
-  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-  const response = await sendCurlAndWriteTimeline(
-    renderedRequest,
-    clientCertificates,
-    caCert,
-    settings,
-  );
-  return responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
-}
-
-const fetchRequestData = async (requestId: string) => {
+export const fetchRequestData = async (requestId: string) => {
   const request = await models.request.getById(requestId);
   invariant(request, 'failed to find request');
   const ancestors = await db.withAncestors(request, [
@@ -224,8 +161,8 @@ export async function sendCurlAndWriteTimeline(
     ...patch,
   };
 }
-export const responseTransform = (patch: ResponsePatch, environmentId: string | null, renderedRequest: RenderedRequest, context: Record<string, any>) => {
-  const response = {
+export const responseTransform = async (patch: ResponsePatch, environmentId: string | null, renderedRequest: RenderedRequest, context: Record<string, any>) => {
+  const response: ResponsePatch = {
     ...patch,
     // important for filter by responses
     environmentId,
@@ -239,7 +176,7 @@ export const responseTransform = (patch: ResponsePatch, environmentId: string | 
     return response;
   }
   console.log(`[network] Response succeeded req=${patch.parentId} status=${response.statusCode || '?'}`,);
-  return _applyResponsePluginHooks(
+  return await _applyResponsePluginHooks(
     response,
     renderedRequest,
     context,
@@ -325,7 +262,7 @@ async function _applyRequestPluginHooks(
       ...pluginContexts.data.init(renderedContext.getProjectId()),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
-      ...(pluginContexts.network.init(renderedContext.getEnvironmentId?.()) as Record<string, any>),
+      ...(pluginContexts.network.init() as Record<string, any>),
     };
 
     try {
@@ -355,7 +292,7 @@ async function _applyResponsePluginHooks(
         ...(pluginContexts.store.init(plugin) as Record<string, any>),
         ...(pluginContexts.response.init(newResponse) as Record<string, any>),
         ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),
-        ...(pluginContexts.network.init(renderedContext.getEnvironmentId?.()) as Record<string, any>),
+        ...(pluginContexts.network.init() as Record<string, any>),
       };
 
       try {

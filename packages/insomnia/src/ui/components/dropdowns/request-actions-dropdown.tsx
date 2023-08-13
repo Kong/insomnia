@@ -60,12 +60,11 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
     setLoadingActions({ ...loadingActions, [label]: true });
 
     try {
-      const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER)),
         ...pluginContexts.data.init(activeProject._id),
         ...(pluginContexts.store.init(plugin)),
-        ...(pluginContexts.network.init(activeEnvironmentId)),
+        ...(pluginContexts.network.init()),
       };
       await action(context, {
         request,
@@ -81,7 +80,7 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
     if (ref && 'current' in ref) { // this `in` operator statement type-narrows to `MutableRefObject`
       ref.current?.hide();
     }
-  }, [request, activeEnvironment, requestGroup, loadingActions, activeProject._id, ref]);
+  }, [request, requestGroup, loadingActions, activeProject._id, ref]);
 
   const duplicate = useCallback(() => {
     handleDuplicateRequest(request);

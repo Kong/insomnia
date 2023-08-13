@@ -1,7 +1,16 @@
 import * as misc from '../../common/misc';
 import type { RenderedRequest } from '../../common/render';
 import type { RequestBody } from '../../models/request';
+export function filterParameters<T extends { name: string; value: string }>(
+  parameters: T[],
+  name: string,
+): T[] {
+  if (!Array.isArray(parameters) || !name) {
+    return [];
+  }
 
+  return parameters.filter(h => (!h || !h.name ? false : h.name === name));
+}
 export function init(
   renderedRequest: RenderedRequest | null,
   renderedContext: Record<string, any>,
@@ -129,7 +138,7 @@ export function init(
     },
 
     getParameter(name: string) {
-      const parameters = misc.filterParameters(renderedRequest.parameters, name);
+      const parameters = filterParameters(renderedRequest.parameters, name);
 
       if (parameters.length) {
         // Use the last parameter if there are multiple of the same
@@ -152,12 +161,12 @@ export function init(
     },
 
     removeParameter(name: string) {
-      const parameters = misc.filterParameters(renderedRequest.parameters, name);
+      const parameters = filterParameters(renderedRequest.parameters, name);
       renderedRequest.parameters = renderedRequest.parameters.filter(p => !parameters.includes(p));
     },
 
     setParameter(name: string, value: string) {
-      const parameter = misc.filterParameters(renderedRequest.parameters, name)[0];
+      const parameter = filterParameters(renderedRequest.parameters, name)[0];
 
       if (parameter) {
         parameter.value = value;
@@ -167,7 +176,7 @@ export function init(
     },
 
     addParameter(name: string, value: string) {
-      const parameter = misc.filterParameters(renderedRequest.parameters, name)[0];
+      const parameter = filterParameters(renderedRequest.parameters, name)[0];
 
       if (!parameter) {
         renderedRequest.parameters.push({

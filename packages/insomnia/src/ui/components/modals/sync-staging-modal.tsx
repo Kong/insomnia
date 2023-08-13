@@ -68,7 +68,7 @@ export const SyncStagingModal = ({ vcs, branch, onSnapshot, handlePush, onHide }
         lookupMap[key] = {
           changes: hasDocAndLastSnapshot ? describeChanges(document, lastSnapshot) : null,
           entry: entry,
-          type: models.getModelName(docOrLastSnapshot.type),
+          type: models.getModel(docOrLastSnapshot.type)?.name || 'Unknown',
           checked: !!status.stage[key],
         };
       }

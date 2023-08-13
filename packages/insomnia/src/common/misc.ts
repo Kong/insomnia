@@ -1,9 +1,8 @@
 import fuzzysort from 'fuzzysort';
-import { join as pathJoin } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import zlib from 'zlib';
 
-import { DEBOUNCE_MILLIS, METHOD_DELETE, METHOD_OPTIONS } from './constants';
+import { DEBOUNCE_MILLIS } from './constants';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -12,23 +11,7 @@ interface Header {
   value: string;
 }
 
-interface Parameter {
-  name: string;
-  value: string;
-}
-
-export function filterParameters<T extends Parameter>(
-  parameters: T[],
-  name: string,
-): T[] {
-  if (!Array.isArray(parameters) || !name) {
-    return [];
-  }
-
-  return parameters.filter(h => (!h || !h.name ? false : h.name === name));
-}
-
-export function filterHeaders<T extends Header>(headers: T[], name?: string): T[] {
+export function filterHeaders<T extends { name: string; value: string }>(headers: T[], name?: string): T[] {
   if (!Array.isArray(headers) || !name || typeof name !== 'string') {
     return [];
   }
@@ -111,22 +94,6 @@ export function delay(milliseconds: number = DEBOUNCE_MILLIS) {
   return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 }
 
-export function removeVowels(str: string) {
-  return str.replace(/[aeiouyAEIOUY]/g, '');
-}
-
-export function formatMethodName(method: string) {
-  let methodName = method || '';
-
-  if (method === METHOD_DELETE || method === METHOD_OPTIONS) {
-    methodName = method.slice(0, 3);
-  } else if (method.length > 4) {
-    methodName = removeVowels(method).slice(0, 4);
-  }
-
-  return methodName;
-}
-
 export function keyedDebounce<T>(
   callback: (t: Record<string, T[]>) => void,
   millis: number = DEBOUNCE_MILLIS
@@ -186,19 +153,6 @@ export function describeByteSize(bytes: number, long = false) {
   return `${rounded} ${unit}`;
 }
 
-export function xmlDecode(input: string) {
-  const ESCAPED_CHARACTERS_MAP = {
-    '&amp;': '&',
-    '&quot;': '"',
-    '&lt;': '<',
-    '&gt;': '>',
-  };
-
-  return input.replace(/(&quot;|&lt;|&gt;|&amp;)/g, (_: string, item: keyof typeof ESCAPED_CHARACTERS_MAP) => (
-    ESCAPED_CHARACTERS_MAP[item])
-  );
-}
-
 export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]) {
   if (typeof v === 'string') {
     return v;
@@ -219,28 +173,6 @@ export function decompressObject<ObjectType>(input: string | null): ObjectType |
 
   const jsonBuffer = zlib.gunzipSync(Buffer.from(input, 'base64'));
   return JSON.parse(jsonBuffer.toString('utf8')) as ObjectType;
-}
-
-export function resolveHomePath(p: string) {
-  if (p.indexOf('~/') === 0) {
-    return pathJoin(process.env['HOME'] || '/', p.slice(1));
-  } else {
-    return p;
-  }
-}
-
-export function jsonParseOr(str: string, fallback: any): any {
-  try {
-    return JSON.parse(str);
-  } catch (err) {
-    return fallback;
-  }
-}
-
-export function escapeHTML(unsafeText: string) {
-  const div = document.createElement('div');
-  div.innerText = unsafeText;
-  return div.innerHTML;
 }
 
 /**
@@ -327,101 +259,6 @@ export function fuzzyMatchAll(
   };
 }
 
-export function chunkArray<T>(arr: T[], chunkSize: number) {
-  const chunks: T[][] = [];
-
-  for (let i = 0, j = arr.length; i < j; i += chunkSize) {
-    chunks.push(arr.slice(i, i + chunkSize));
-  }
-
-  return chunks;
-}
-
-export function pluralize(text: string) {
-  let trailer = 's';
-  let chop = 0;
-
-  // Things already ending with 's' stay that way
-  if (text.match(/s$/)) {
-    trailer = '';
-    chop = 0;
-  }
-
-  // Things ending in 'y' convert to ies
-  if (text.match(/y$/)) {
-    trailer = 'ies';
-    chop = 1;
-  }
-
-  // Add the trailer for pluralization
-  return `${text.slice(0, text.length - chop)}${trailer}`;
-}
-
-export function diffPatchObj(baseObj: any, patchObj: any, deep = false) {
-  const clonedBaseObj = JSON.parse(JSON.stringify(baseObj));
-
-  for (const prop in baseObj) {
-    if (!Object.prototype.hasOwnProperty.call(baseObj, prop)) {
-      continue;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(patchObj, prop)) {
-      const left = baseObj[prop];
-      const right = patchObj[prop];
-
-      if (right !== left) {
-        if (deep && isObject(left) && isObject(right)) {
-          clonedBaseObj[prop] = diffPatchObj(left, right, deep);
-        } else if (isObject(left) && !isObject(right)) {
-          // when right is empty but left isn't, prefer left to avoid a sparse array
-          clonedBaseObj[prop] = left;
-        } else {
-          // otherwise prefer right when both elements aren't objects to ensure values don't get overwritten
-          clonedBaseObj[prop] = right;
-        }
-      }
-    }
-  }
-
-  for (const prop in patchObj) {
-    if (!Object.prototype.hasOwnProperty.call(patchObj, prop)) {
-      continue;
-    }
-
-    if (!Object.prototype.hasOwnProperty.call(baseObj, prop)) {
-      clonedBaseObj[prop] = patchObj[prop];
-    }
-  }
-
-  return clonedBaseObj;
-}
-
-export function isObject(obj: unknown) {
-  return obj !== null && typeof obj === 'object';
-}
-
-/**
-  Finds epoch's digit count and converts it to make it exactly 13 digits.
-  Which is the epoch millisecond representation.
-*/
-export function convertEpochToMilliseconds(epoch: number) {
-  const expDigitCount = epoch.toString().length;
-  return parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
-}
-
-export function snapNumberToLimits(value: number, min?: number, max?: number) {
-  const moreThanMax = max && !Number.isNaN(max) && value > max;
-  const lessThanMin = min && !Number.isNaN(min) && value < min;
-
-  if (moreThanMax) {
-    return max;
-  } else if (lessThanMin) {
-    return min;
-  }
-
-  return value;
-}
-
 export function isNotNullOrUndefined<ValueType>(
   value: ValueType | null | undefined
 ): value is ValueType {
@@ -433,15 +270,3 @@ export function isNotNullOrUndefined<ValueType>(
 }
 
 export const toKebabCase = (value: string) => value.replace(/ /g, '-');
-
-export const capitalize = (value: string) => (
-  `${value.slice(0, 1).toUpperCase()}${value.slice(1).toLowerCase()}`
-);
-
-export const toTitleCase = (value: string) => (
-  value
-    .toLowerCase()
-    .split(' ')
-    .map(capitalize)
-    .join(' ')
-);

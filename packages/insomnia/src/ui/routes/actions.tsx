@@ -316,13 +316,7 @@ export const runAllTestsAction: ActionFunction = async ({
 
   const src = generate([{ name: 'My Suite', suites: [], tests }]);
 
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
-    workspaceId
-  );
-
-  const sendRequest = getSendRequestCallback(
-    workspaceMeta?.activeEnvironmentId || undefined
-  );
+  const sendRequest = getSendRequestCallback();
 
   const results = await runTests(src, { sendRequest });
 
@@ -435,13 +429,8 @@ export const runTestAction: ActionFunction = async ({ params }) => {
     },
   ];
   const src = generate([{ name: 'My Suite', suites: [], tests }]);
-  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(
-    unitTest.parentId
-  );
 
-  const sendRequest = getSendRequestCallback(
-    workspaceMeta?.activeEnvironmentId || undefined
-  );
+  const sendRequest = getSendRequestCallback();
 
   const results = await runTests(src, { sendRequest });
 
