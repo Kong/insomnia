@@ -109,13 +109,15 @@ export const Debug: FC = () => {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { sidebarFilter } = activeWorkspaceMeta;
-  const [runningRequests, setRunningRequests] = useState({});
+  const [runningRequests, setRunningRequests] = useState<Record<string, boolean>>({});
   const setLoading = (isLoading: boolean) => {
     invariant(requestId, 'No active request');
-    setRunningRequests({
-      ...runningRequests,
-      [requestId]: isLoading ? true : false,
-    });
+    if (runningRequests?.[requestId] !== isLoading) {
+      setRunningRequests({
+        ...runningRequests,
+        [requestId]: isLoading ? true : false,
+      });
+    }
   };
 
   const grpcState = grpcStates.find(s => s.requestId === requestId);
