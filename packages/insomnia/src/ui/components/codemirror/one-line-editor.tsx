@@ -18,7 +18,7 @@ import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 export interface OneLineEditorProps {
   defaultValue: string;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
-  id?: string;
+  id: string;
   onChange: (value: string) => void;
   onKeyDown?: (event: KeyboardEvent, value: string) => void;
   onPaste?: (event: ClipboardEvent) => void;
@@ -194,6 +194,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     return () => codeMirror.current?.on('paste', handlePaste);
   }, [onPaste]);
 
+  useEffect(() => window.main.on('context-menu-command', (_, { key, tag }) =>
+    id === key && codeMirror.current?.replaceSelection(tag)), [id]);
+
   useImperativeHandle(ref, () => ({
     selectAll: () => codeMirror.current?.setSelection({ line: 0, ch: 0 }, { line: codeMirror.current.lineCount(), ch: 0 }),
     focusEnd: () => {
@@ -214,7 +217,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       data-testid="OneLineEditor"
       onContextMenu={event => {
         event.preventDefault();
-        window.main.showContextMenu();
+        window.main.showContextMenu({ key: id });
       }}
     >
       <div className="editor__container input editor--single-line">

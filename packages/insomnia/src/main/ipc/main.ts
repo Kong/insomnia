@@ -40,7 +40,7 @@ export interface MainBridgeAPI {
   trackPageView: (options: { name: string }) => void;
   axiosRequest: typeof axiosRequest;
   insomniaFetch: typeof insomniaFetch;
-  showContextMenu: () => void;
+  showContextMenu: (options: { key: string }) => void;
 }
 export function registerMainHandlers() {
   ipcMain.handle('insomniaFetch', async (_, options: Parameters<typeof insomniaFetch>[0]) => {

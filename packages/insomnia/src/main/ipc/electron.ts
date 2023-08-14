@@ -6,7 +6,8 @@ import { localTemplateTags } from '../../ui/components/templating/local-template
 import { invariant } from '../../utils/invariant';
 
 export function registerElectronHandlers() {
-  ipcMain.on('show-context-menu', event => {
+  ipcMain.on('show-context-menu', (event, options) => {
+    console.log('key', options.key);
     try {
       const template: MenuItemConstructorOptions[] = [
         {
@@ -27,7 +28,7 @@ export function registerElectronHandlers() {
             ...(hasSubmenu ? {} : {
               click: () => {
                 const tag = `{% ${l.templateTag.name} 'encode', 'normal', '' %}`;
-                event.sender.send('context-menu-command', tag);
+                event.sender.send('context-menu-command', { key: options.key, tag });
               },
             }),
             ...(hasSubmenu ? {
@@ -36,7 +37,7 @@ export function registerElectronHandlers() {
                 click: () => {
                   console.log(l.templateTag.args);
                   const tag = `{% ${l.templateTag.name} '${action.value}', 'normal', '' %}`;
-                  event.sender.send('context-menu-command', tag);
+                  event.sender.send('context-menu-command', { key: options.key, tag });
                 },
               })),
             } : {}),
