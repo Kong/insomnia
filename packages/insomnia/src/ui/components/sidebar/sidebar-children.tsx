@@ -1,10 +1,8 @@
 import React, { FC, Fragment } from 'react';
-import ReactDOM from 'react-dom';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { isRequestGroup } from '../../../models/request-group';
 import { Child, WorkspaceLoaderData } from '../../routes/workspace';
-import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarRequestGroupRow } from './sidebar-request-group-row';
 import { SidebarRequestRow } from './sidebar-request-row';
 
@@ -29,12 +27,6 @@ export const SidebarChildren: FC<Props> = ({
 
   const pinned = requestTree.filter((child: Child) => child.pinned);
   const showSeparator = pinned.length > 0;
-  const contextMenuPortal = ReactDOM.createPortal(
-    <div className="hide">
-      <SidebarCreateDropdown />
-    </div>,
-    document.querySelector('#dropdowns-container') as any
-  );
   return (
     <Fragment>
       <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
@@ -56,7 +48,6 @@ export const SidebarChildren: FC<Props> = ({
           rows={requestTree}
         />
       </ul>
-      {contextMenuPortal}
     </Fragment>
   );
 };
