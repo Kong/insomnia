@@ -344,7 +344,6 @@ function hint(cm: CodeMirror.Editor, options: ShowHintOptions) {
     (arr, v) => (arr.find(a => a.text === v.text) ? arr : [...arr, v]),
     [] as Hint[], // Default value
   );
-  console.log(uniqueMatches);
   return {
     list: uniqueMatches,
     from: CodeMirror.Pos(cur.line, cur.ch - segment.length),
