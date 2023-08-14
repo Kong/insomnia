@@ -185,6 +185,7 @@ const WebSocketRequestForm: FC<FormProps> = ({
       }}
     >
       <CodeEditor
+        id="websocketMessageEditor"
         showPrettifyButton
         uniquenessKey={request._id}
         mode={previewMode}

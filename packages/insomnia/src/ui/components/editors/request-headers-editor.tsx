@@ -68,6 +68,7 @@ export const RequestHeadersEditor: FC<Props> = ({
     return (
       <div className="tall">
         <CodeEditor
+          id="request-headers-editor"
           onChange={handleBulkUpdate}
           defaultValue={headersString}
           enableNunjucks

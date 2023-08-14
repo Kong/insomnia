@@ -581,6 +581,7 @@ export const GraphQLEditor: FC<Props> = ({
 
       <div className="graphql-editor__query">
         <CodeEditor
+          id="graphql-editor"
           ref={editorRef}
           dynamicHeight
           showPrettifyButton
@@ -627,6 +628,7 @@ export const GraphQLEditor: FC<Props> = ({
       </h2>
       <div className="graphql-editor__variables">
         <CodeEditor
+          id="graphql-editor-variables"
           dynamicHeight
           enableNunjucks
           uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}

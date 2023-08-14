@@ -152,6 +152,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
             <div className="method-grpc pad-right pad-left vertically-center">gRPC</div>
             <StyledUrlEditor title={activeRequest.url}>
               <OneLineEditor
+                id="grpc-url"
                 key={uniquenessKey}
                 type="text"
                 defaultValue={activeRequest.url}
@@ -270,6 +271,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                     {[
                       <TabItem key="body" title="Body">
                         <CodeEditor
+                          id="grpc-request-editor"
                           ref={editorRef}
                           defaultValue={activeRequest.body.text}
                           onChange={text => patchRequest(requestId, { body: { text } })}
@@ -281,6 +283,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                       ...requestMessages.sort((a, b) => a.created - b.created).map((m, index) => (
                         <TabItem key={m.id} title={`Stream ${index + 1}`}>
                           <CodeEditor
+                            id={'grpc-request-editor-tab' + m.id}
                             defaultValue={m.text}
                             mode="application/json"
                             enableNunjucks

@@ -12,10 +12,6 @@ import { AskModal } from './components/modals/ask-modal';
 import { SelectModal } from './components/modals/select-modal';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from './components/modals/settings-modal';
 
-window.main.on('context-menu-command', (e, command) => {
-  console.log('c', command);
-});
-
 window.main.on('toggle-preferences', () => {
   showModal(SettingsModal);
 });

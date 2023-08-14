@@ -525,6 +525,9 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       data-editor-type="text"
       data-testid="CodeEditor"
       onContextMenu={event => {
+        if (readOnly) {
+          return;
+        }
         event.preventDefault();
         window.main.showContextMenu({ key: id });
       }}

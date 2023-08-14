@@ -173,6 +173,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           <CopyButton content={cmd} className="pull-right" />
         </div>
         {target && <CodeEditor
+          id="generate-code-modal-content"
           placeholder="Generating code snippet..."
           className="border-top"
           key={Date.now()}

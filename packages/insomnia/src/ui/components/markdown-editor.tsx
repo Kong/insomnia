@@ -80,6 +80,7 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(({
           <MarkdownEdit withDynamicHeight={!tall}>
             <div className='form-control form-control--outlined'>
               <CodeEditor
+                id="markdown-editor"
                 ref={ref}
                 hideGutters
                 hideLineNumbers

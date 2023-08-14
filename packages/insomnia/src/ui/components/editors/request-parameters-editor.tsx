@@ -64,6 +64,7 @@ export const RequestParametersEditor: FC<Props> = ({
   if (bulk) {
     return (
       <CodeEditor
+        id="request-parameters-editor"
         onChange={handleBulkUpdate}
         defaultValue={paramsString}
         enableNunjucks

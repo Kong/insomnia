@@ -216,6 +216,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       data-editor-type={type || 'text'}
       data-testid="OneLineEditor"
       onContextMenu={event => {
+        if (readOnly) {
+          return;
+        }
         event.preventDefault();
         window.main.showContextMenu({ key: id });
       }}
