@@ -24,14 +24,14 @@ export function registerElectronHandlers() {
           label: fnOrString(l.templateTag.displayName),
           ...(hasSubmenu ? {} : {
             click: () => {
-              event.sender.send('context-menu-command', 'open tag editor with parent settings');
+              event.sender.send('context-menu-command', l.templateTag.displayName);
             },
           }),
           ...(hasSubmenu ? {
             submenu: l.templateTag.args?.[0]?.options?.map(s => ({
               label: fnOrString(s.displayName),
               click: () => {
-                event.sender.send('context-menu-command', 'open tag editor with child settings');
+                event.sender.send('context-menu-command', s.displayName);
               },
             })),
           } : {}),

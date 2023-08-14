@@ -485,7 +485,10 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       console.log('Failed to set CodeMirror option', err.message, { key, value });
     }
   };
-
+  useEffect(() => window.main.on('context-menu-command', (e, command) => {
+    // TODO ensure this is the correct code mirror instance to listen to
+    codeMirror.current?.replaceSelection(command);
+  }), []);
   useEffect(() => tryToSetOption('hintOptions', hintOptions), [hintOptions]);
   useEffect(() => tryToSetOption('info', infoOptions), [infoOptions]);
   useEffect(() => tryToSetOption('jump', jumpOptions), [jumpOptions]);
