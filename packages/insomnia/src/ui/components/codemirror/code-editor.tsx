@@ -528,7 +528,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       data-testid="CodeEditor"
       onContextMenu={event => {
         event.preventDefault();
-        window.main.showContentMenu();
+        window.main.showContextMenu();
       }}
     >
       <div

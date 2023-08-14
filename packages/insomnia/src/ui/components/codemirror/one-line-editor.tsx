@@ -214,7 +214,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       data-testid="OneLineEditor"
       onContextMenu={event => {
         event.preventDefault();
-        window.main.showContentMenu();
+        window.main.showContextMenu();
       }}
     >
       <div className="editor__container input editor--single-line">

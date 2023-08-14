@@ -3,45 +3,52 @@ import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'ele
 
 import { fnOrString } from '../../common/misc';
 import { localTemplateTags } from '../../ui/components/templating/local-template-tags';
+import { invariant } from '../../utils/invariant';
 
 export function registerElectronHandlers() {
   ipcMain.on('show-context-menu', event => {
     try {
-    const template: MenuItemConstructorOptions[] = [
-      {
-        role: 'cut',
-      },
-      {
-        role: 'copy',
-      },
-      {
-        role: 'paste',
-      },
-      { type: 'separator' },
-      ...localTemplateTags.map(l => {
-        const hasSubmenu = l.templateTag.args?.[0]?.options?.length;
-        const r = {
-          label: fnOrString(l.templateTag.displayName),
-          ...(hasSubmenu ? {} : {
-            click: () => {
-              event.sender.send('context-menu-command', l.templateTag.displayName);
-            },
-          }),
-          ...(hasSubmenu ? {
-            submenu: l.templateTag.args?.[0]?.options?.map(s => ({
-              label: fnOrString(s.displayName),
+      const template: MenuItemConstructorOptions[] = [
+        {
+          role: 'cut',
+        },
+        {
+          role: 'copy',
+        },
+        {
+          role: 'paste',
+        },
+        { type: 'separator' },
+        ...localTemplateTags.map(l => {
+          const actions = l.templateTag.args?.[0];
+          const hasSubmenu = actions?.options?.length;
+          const r = {
+            label: fnOrString(l.templateTag.displayName),
+            ...(hasSubmenu ? {} : {
               click: () => {
-                event.sender.send('context-menu-command', s.displayName);
+                const tag = `{% ${l.templateTag.name} 'encode', 'normal', '' %}`;
+                event.sender.send('context-menu-command', tag);
               },
-            })),
-          } : {}),
-        };
-        return r;
-      }),
+            }),
+            ...(hasSubmenu ? {
+              submenu: actions?.options?.map(action => ({
+                label: fnOrString(action.displayName),
+                click: () => {
+                  console.log(l.templateTag.args);
+                  const tag = `{% ${l.templateTag.name} '${action.value}', 'normal', '' %}`;
+                  event.sender.send('context-menu-command', tag);
+                },
+              })),
+            } : {}),
+          };
+          return r;
+        }),
 
-    ];
-    const menu = Menu.buildFromTemplate(template);
-    menu.popup({ window: BrowserWindow.fromWebContents(event.sender) });
+      ];
+      const menu = Menu.buildFromTemplate(template);
+      const win = BrowserWindow.fromWebContents(event.sender);
+      invariant(win, 'expected window');
+      menu.popup({ window: win });
     } catch (e) {
       console.error(e);
     }
@@ -49,7 +56,7 @@ export function registerElectronHandlers() {
   ipcMain.on('setMenuBarVisibility', (_, visible: boolean) => {
     BrowserWindow.getAllWindows()
       .forEach(window => {
-      // the `setMenuBarVisibility` signature uses `visible` semantics
+        // the `setMenuBarVisibility` signature uses `visible` semantics
         window.setMenuBarVisibility(visible);
         // the `setAutoHideMenu` signature uses `hide` semantics
         const hide = !visible;
