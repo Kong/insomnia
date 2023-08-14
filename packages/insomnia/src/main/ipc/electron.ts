@@ -30,7 +30,8 @@ export function registerElectronHandlers() {
           role: 'paste',
         },
         { type: 'separator' },
-        ...localTemplateTags.map(l => {
+        ...localTemplateTags.sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
+          .map(l => {
           const actions = l.templateTag.args?.[0];
           const otherArgs = l.templateTag.args?.slice(1);
           const hasSubmenu = actions?.options?.length;
