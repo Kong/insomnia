@@ -2,9 +2,19 @@ import type { MenuItemConstructorOptions, OpenDialogOptions, SaveDialogOptions }
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, shell } from 'electron';
 
 import { fnOrString } from '../../common/misc';
+import type { NunjucksParsedTagArg } from '../../templating/utils';
 import { localTemplateTags } from '../../ui/components/templating/local-template-tags';
 import { invariant } from '../../utils/invariant';
 
+const getTemplateValue = (arg: NunjucksParsedTagArg) => {
+  if (arg.defaultValue === undefined) {
+    return "''";
+  }
+  if (typeof arg.defaultValue === 'string') {
+    return `'${arg.defaultValue}'`;
+  }
+  return arg.defaultValue;
+};
 export function registerElectronHandlers() {
   ipcMain.on('show-context-menu', (event, options) => {
     console.log('key', options.key);
@@ -22,12 +32,13 @@ export function registerElectronHandlers() {
         { type: 'separator' },
         ...localTemplateTags.map(l => {
           const actions = l.templateTag.args?.[0];
+          const otherArgs = l.templateTag.args?.slice(1);
           const hasSubmenu = actions?.options?.length;
           const r = {
             label: fnOrString(l.templateTag.displayName),
             ...(hasSubmenu ? {} : {
               click: () => {
-                const tag = `{% ${l.templateTag.name} 'encode', 'normal', '' %}`;
+                const tag = `{% ${l.templateTag.name} ${l.templateTag.args?.map(getTemplateValue).join(', ')} %}`;
                 event.sender.send('context-menu-command', { key: options.key, tag });
               },
             }),
@@ -35,8 +46,8 @@ export function registerElectronHandlers() {
               submenu: actions?.options?.map(action => ({
                 label: fnOrString(action.displayName),
                 click: () => {
-                  console.log(l.templateTag.args);
-                  const tag = `{% ${l.templateTag.name} '${action.value}', 'normal', '' %}`;
+                  const defaultTagArgs = otherArgs ? ', ' + otherArgs.map(getTemplateValue).join(', ') : '';
+                  const tag = `{% ${l.templateTag.name} '${action.value}'${defaultTagArgs} %}`;
                   event.sender.send('context-menu-command', { key: options.key, tag });
                 },
               })),
