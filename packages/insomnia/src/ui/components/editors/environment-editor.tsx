@@ -101,6 +101,7 @@ export const EnvironmentEditor = forwardRef<EnvironmentEditorHandle, Props>(({
   return (
     <div className="environment-editor">
       <CodeEditor
+        id="environment-editor"
         ref={editorRef}
         autoPrettify
         enableNunjucks

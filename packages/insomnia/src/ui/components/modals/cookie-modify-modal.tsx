@@ -89,6 +89,7 @@ export const CookieModifyModal = ((props: ModalProps & CookieModifyModalOptions)
                       <label data-testid="CookieKey">
                         Key
                         <OneLineEditor
+                          id="cookie-key"
                           defaultValue={(cookie && cookie.key || '').toString()}
                           onChange={value => handleCookieUpdate(Object.assign({}, cookie, { key: value.trim() }))}
                         />
@@ -98,6 +99,7 @@ export const CookieModifyModal = ((props: ModalProps & CookieModifyModalOptions)
                       <label data-testid="CookieValue">
                         Value
                         <OneLineEditor
+                          id="cookie-value"
                           defaultValue={(cookie && cookie.value || '').toString()}
                           onChange={value => handleCookieUpdate(Object.assign({}, cookie, { value: value.trim() }))}
                         />
@@ -109,6 +111,7 @@ export const CookieModifyModal = ((props: ModalProps & CookieModifyModalOptions)
                       <label data-testid="CookieDomain">
                         Domain
                         <OneLineEditor
+                          id="cookie-domain"
                           defaultValue={(cookie && cookie.domain || '').toString()}
                           onChange={value => handleCookieUpdate(Object.assign({}, cookie, { domain: value.trim() }))}
                         />
@@ -118,6 +121,7 @@ export const CookieModifyModal = ((props: ModalProps & CookieModifyModalOptions)
                       <label data-testid="CookiePath">
                         Path
                         <OneLineEditor
+                          id="cookie-path"
                           defaultValue={(cookie && cookie.path || '').toString()}
                           onChange={value => handleCookieUpdate(Object.assign({}, cookie, { path: value.trim() }))}
                         />

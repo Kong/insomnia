@@ -81,7 +81,7 @@ export interface CodeEditorProps {
   hideGutters?: boolean;
   hideLineNumbers?: boolean;
   hintOptions?: ShowHintOptions;
-  id?: string;
+  id: string;
   infoOptions?: GraphQLInfoOptions;
   jumpOptions?: ModifiedGraphQLJumpOptions;
   lintOptions?: Record<string, any>;
@@ -485,7 +485,8 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       console.log('Failed to set CodeMirror option', err.message, { key, value });
     }
   };
-
+  useEffect(() => window.main.on('context-menu-command', (_, { key, tag }) =>
+    id === key && codeMirror.current?.replaceSelection(tag)), [id]);
   useEffect(() => tryToSetOption('hintOptions', hintOptions), [hintOptions]);
   useEffect(() => tryToSetOption('info', infoOptions), [infoOptions]);
   useEffect(() => tryToSetOption('jump', jumpOptions), [jumpOptions]);
@@ -523,6 +524,13 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       style={style}
       data-editor-type="text"
       data-testid="CodeEditor"
+      onContextMenu={event => {
+        if (readOnly) {
+          return;
+        }
+        event.preventDefault();
+        window.main.showContextMenu({ key: id });
+      }}
     >
       <div
         className={classnames('editor__container', 'input', className)}
