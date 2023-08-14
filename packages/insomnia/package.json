@@ -89,11 +89,6 @@
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.4.0",
     "@develohpanda/fluent-builder": "^2.1.2",
-    "@fortawesome/fontawesome-svg-core": "^6.4.2",
-    "@fortawesome/free-solid-svg-icons": "^6.4.2",
-    "@fortawesome/free-regular-svg-icons": "^6.4.2",
-    "@fortawesome/free-brands-svg-icons": "^6.4.2",
-    "@fortawesome/react-fontawesome": "^0.2.0",
     "@getinsomnia/api-client": "0.0.4",
     "@tailwindcss/typography": "^0.5.9",
     "@tanstack/react-virtual": "3.0.0-beta.18",
