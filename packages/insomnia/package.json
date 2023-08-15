@@ -46,7 +46,6 @@
     "@stoplight/spectral-formats": "^1.5.0",
     "@stoplight/spectral-ruleset-bundler": "1.5.2",
     "@stoplight/spectral-rulesets": "^1.16.0",
-    "ajv": "^8.12.0",
     "apiconnect-wsdl": "1.8.31",
     "aws4": "^1.12.0",
     "axios": "^1.4.0",
