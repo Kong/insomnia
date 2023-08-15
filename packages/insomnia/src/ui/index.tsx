@@ -506,6 +506,13 @@ const router = createMemoryRouter(
                               ...args
                             ),
                         },
+                        {
+                          path: ':workspaceId/update-meta',
+                          action: async (...args) =>
+                            (await import('./routes/actions')).updateWorkspaceMetaAction(
+                              ...args
+                            ),
+                        },
                       ],
                     },
                     {

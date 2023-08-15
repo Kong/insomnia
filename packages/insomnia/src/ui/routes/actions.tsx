@@ -16,6 +16,7 @@ import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { UnitTest } from '../../models/unit-test';
 import { isCollection, Workspace } from '../../models/workspace';
+import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';
@@ -251,6 +252,14 @@ export const updateWorkspaceAction: ActionFunction = async ({ request }) => {
 
   await models.workspace.update(workspace, patch);
 
+  return null;
+};
+
+export const updateWorkspaceMetaAction: ActionFunction = async ({ request, params }) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  const patch = await request.json() as Partial<WorkspaceMeta>;
+  await models.workspaceMeta.updateByParentId(workspaceId, patch);
   return null;
 };
 
