@@ -278,7 +278,6 @@ const writeToDownloadPath = (downloadPathAndName: string, responsePatch: Respons
   const to = createWriteStream(downloadPathAndName);
   const readStream = models.response.getBodyStream(responsePatch);
   if (!readStream || typeof readStream === 'string') {
-    // setLoading(false);
     return null;
   }
   readStream.pipe(to);
@@ -288,14 +287,12 @@ const writeToDownloadPath = (downloadPathAndName: string, responsePatch: Respons
       responsePatch.error = `Saved to ${downloadPathAndName}`;
       const response = await models.response.create(responsePatch, maxHistoryResponses);
       await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-      // setLoading(false);
       resolve(null);
     });
     readStream.on('error', async err => {
       console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
       const response = await models.response.create(responsePatch, maxHistoryResponses);
       await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-      // setLoading(false);
       resolve(null);
     });
   });
@@ -407,26 +404,3 @@ export const deleteResponseAction: ActionFunction = async ({ request, params }) 
 
   return null;
 };
-
-// const RequestRoute = () => {
-//   const { requestId } = useParams() as { requestId: string };
-//   const activeEnvironment = useSelector(selectActiveEnvironment);
-//   return (<>
-//     <ErrorBoundary showAlert>
-//       {isGrpcRequestId(requestId) ? (
-//         <GrpcRequestPane />
-//       ) : (
-//         isWebSocketRequestId(requestId) ? (
-//           <WebSocketRequestPane
-//             environment={activeEnvironment}
-//           />
-//         ) : (
-//           <RequestPane
-//             environmentId={activeEnvironment ? activeEnvironment._id : ''}
-//           />
-//         )
-//       )}
-//     </ErrorBoundary>
-//   </>);
-// };
-// export default RequestRoute;
