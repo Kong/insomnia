@@ -34,6 +34,7 @@ export interface ExportRequestsModalHandle {
 export const ExportRequestsModal = ({ onHide }: ModalProps) => {
   const modalRef = useRef<ModalHandle>(null);
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const requestTree = workspaceData?.requestTree || [];
 
   const createNode = useCallback((item: Record<string, any>): Node => {
     const children: Node[] = item.children.map((child: Record<string, any>) => createNode(child));
@@ -53,7 +54,7 @@ export const ExportRequestsModal = ({ onHide }: ModalProps) => {
     };
   }, []);
 
-  const children: Node[] = workspaceData?.requestTree.map(child => createNode(child)) || [];
+  const children: Node[] = requestTree.map(child => createNode(child));
   const totalRequests = children
     .map(child => child.totalRequests)
     .reduce((acc, totalRequests) => acc + totalRequests, 0);
