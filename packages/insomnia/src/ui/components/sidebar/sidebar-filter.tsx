@@ -1,5 +1,5 @@
-import React, { FC, useCallback, useRef } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import React, { FC, useRef } from 'react';
+import { useRouteLoaderData } from 'react-router-dom';
 
 import { SortOrder } from '../../../common/constants';
 import { database as db } from '../../../common/database';
