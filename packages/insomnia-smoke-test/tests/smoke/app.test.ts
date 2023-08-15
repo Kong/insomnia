@@ -21,6 +21,14 @@ test('can send requests', async ({ app, page }) => {
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionSmoke testsjust now').click();
 
+  await page.locator('[data-testid="SidebarFilter"] [data-testid="SidebarCreateDropdown"] button').click();
+  await page.getByRole('menuitem', { name: 'Http Request' }).click();
+  const curl = 'curl --request POST --url http://mockbin.org/status/200';
+
+  await page.locator('.CodeMirror >> textarea').fill(curl);
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
+  await expect(statusTag).toContainText('200 OK');
+
   await page.getByRole('button', { name: 'send JSON request' }).click();
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect(statusTag).toContainText('200 OK');
