@@ -71,7 +71,8 @@ export const loader: LoaderFunction = async ({ params }) => {
     const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
     invariant(activeWorkspaceMeta, 'Workspace meta not found');
     const activeRequestId = activeWorkspaceMeta.activeRequestId;
-    if (activeRequestId) {
+    const activeRequest = activeRequestId ? await models.request.getById(activeRequestId) : null;
+    if (activeRequest) {
       return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
     }
   }

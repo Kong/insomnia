@@ -33,9 +33,8 @@ export interface ExportRequestsModalHandle {
 
 export const ExportRequestsModal = ({ onHide }: ModalProps) => {
   const modalRef = useRef<ModalHandle>(null);
-  const {
-    requestTree,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const requestTree = workspaceData?.requestTree || [];
 
   const createNode = useCallback((item: Record<string, any>): Node => {
     const children: Node[] = item.children.map((child: Record<string, any>) => createNode(child));
