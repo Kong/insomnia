@@ -157,7 +157,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       renderedRequest && send({
         renderedRequest,
         shouldPromptForPathAfterResponse,
-        context: renderResult.context,
       });
     } catch (err) {
       showAlert({
