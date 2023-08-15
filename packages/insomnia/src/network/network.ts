@@ -284,7 +284,6 @@ async function _applyResponsePluginHooks(
   try {
     const newResponse = clone(response);
     const newRequest = clone(renderedRequest);
-
     for (const { plugin, hook } of await plugins.getResponseHooks()) {
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
@@ -305,9 +304,10 @@ async function _applyResponsePluginHooks(
 
     return newResponse;
   } catch (err) {
+    console.log('[plugin] Response hook failed', err, response);
     return {
       url: renderedRequest.url,
-      error: `[plugin] Response hook failed plugin=${err.plugin.name} err=${err.message}`,
+      error: `[plugin] Response hook failed plugin=${err.plugin?.name} err=${err.message}`,
       elapsedTime: 0, // 0 because this path is hit during plugin calls
       statusMessage: 'Error',
       settingSendCookies: renderedRequest.settingSendCookies,

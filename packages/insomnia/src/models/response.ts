@@ -167,6 +167,7 @@ export async function getLatestForRequest(
 
 export async function create(patch: Partial<Response> = {}, maxResponses = 20): Promise<Response> {
   if (!patch.parentId) {
+    console.log('[db] Attempted to create response without `parentId`', patch);
     throw new Error('New Response missing `parentId`');
   }
 
