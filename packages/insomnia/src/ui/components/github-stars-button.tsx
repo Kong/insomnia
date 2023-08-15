@@ -1,50 +1,16 @@
-import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-aria-components';
 import { useMount, useMountedState } from 'react-use';
-import styled from 'styled-components';
 
 import { SegmentEvent } from '../analytics';
-import { SvgIcon } from './svg-icon';
-import { Button } from './themed-button';
-
-const ButtonGroup = styled.div({
-  fontSize: 'var(--font-size-xs)',
-  display: 'flex',
-  border: '1px solid var(--hl)',
-  borderRadius: 'var(--radius-md)',
-  '&>:first-of-type': {
-    borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
-  },
-  '&>:last-of-type': {
-    borderTopLeftRadius: 0,
-    borderBottomLeftRadius: 0,
-  },
-});
-
-const Icon = styled(SvgIcon)({
-  marginRight: 'var(--padding-xxs)',
-});
-
-const LinkButton = styled(Button).attrs({
-  as: 'a',
-})({
-  '&&': {
-    color: 'var(--hl)',
-    textDecoration: 'none',
-  },
-});
-
-const Divider = styled.span({
-  height: 'auto',
-  borderLeft: '1px solid var(--hl)',
-});
+import { Icon } from './icon';
 
 const LOCALSTORAGE_GITHUB_STARS_KEY = 'insomnia:github-stars';
 
 export const GitHubStarsButton = () => {
   const isMounted = useMountedState();
   const localStorageStars = localStorage.getItem(LOCALSTORAGE_GITHUB_STARS_KEY);
-  const initialState = parseInt(localStorageStars || '21700', 10);
+  const initialState = parseInt(localStorageStars || '30000', 10);
   const [starCount, setStarCount] = useState(initialState);
 
   useEffect(() => {
@@ -54,7 +20,6 @@ export const GitHubStarsButton = () => {
   const [error, setError] = useState<Error | null>(null);
 
   useMount(() => {
-
     if (!isMounted()) {
       return;
     }
@@ -106,20 +71,26 @@ export const GitHubStarsButton = () => {
   const shouldShowCount = !Boolean(error);
 
   return (
-    <ButtonGroup>
-      <LinkButton size="xs" variant="text" as={'a'} onClick={starClick} href="https://github.com/Kong/insomnia">
-        <Icon icon="github" />
-        Star
-      </LinkButton>
-
-      {shouldShowCount ? (
-        <Fragment>
-          <Divider />
-          <LinkButton size="xs" variant="text" as={'a'} onClick={counterClick} href="https://github.com/Kong/insomnia/stargazers">
+    <div className="flex select-none rounded-lg divide-x divide-[--hl-md] divide-solid border border-solid border-[--hl-md]">
+      <Link onPress={starClick}>
+        <a
+          href="https://github.com/Kong/insomnia"
+          className="px-4 py-1 rounded-l-lg last-of-type:rounded-r-lg outline-none flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        >
+          <Icon icon={['fab', 'github']} />
+          Star
+        </a>
+      </Link>
+      {shouldShowCount && (
+        <Link onPress={counterClick}>
+          <a
+            href="https://github.com/Kong/insomnia/stargazers"
+            className="px-4 py-1 rounded-r-lg outline-none flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] hover:bg-[--hl-xs] focus:ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          >
             {starCount.toLocaleString()}
-          </LinkButton>
-        </Fragment>
-      ) : null}
-    </ButtonGroup>
+          </a>
+        </Link>
+      )}
+    </div>
   );
 };

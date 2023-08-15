@@ -819,16 +819,7 @@ strong {
   animation: AIfadeIn 0.5s 0.5s ease-in-out forwards;
 }
 /* Styles */
-a {
-  font-weight: 600 !important;
-  text-decoration: none;
-}
-a:not(.a--nocolor) {
-  color: var(--color-surprise);
-}
-a:hover {
-  text-decoration: underline;
-}
+
 /* Layout */
 .form-control {
   outline: none;
