@@ -103,7 +103,6 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             Create Run Button
           </Link>
         </div>
-        <p className="italic faint">* Tip: You can also paste Curl commands into the URL bar</p>
       </div>
       {isImportModalOpen && (
         <ImportModal

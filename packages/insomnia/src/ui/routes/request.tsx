@@ -17,7 +17,7 @@ import { CookieJar } from '../../models/cookie-jar';
 import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestHeader } from '../../models/request';
+import { isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { isRequestMeta, RequestMeta } from '../../models/request-meta';
 import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
@@ -149,6 +149,9 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
   }
   if (requestType === 'From Curl') {
     // TODO: if no clipboard text show modal
+    if (!clipboardText) {
+      return;
+    }
     try {
       const { data } = await convert(clipboardText);
       const { resources } = data;
@@ -159,9 +162,9 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
         url: r.url,
         method: r.method,
         headers: r.headers,
-        body: r.body,
+        body: r.body as RequestBody,
         authentication: r.authentication,
-        parameters: r.parameters,
+        parameters: r.parameters as RequestParameter[],
       }))._id;
     } catch (error) {
       // Import failed, that's alright

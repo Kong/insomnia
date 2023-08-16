@@ -21,7 +21,6 @@ export interface OneLineEditorProps {
   id: string;
   onChange: (value: string) => void;
   onKeyDown?: (event: KeyboardEvent, value: string) => void;
-  onPaste?: (event: ClipboardEvent) => void;
   placeholder?: string;
   readOnly?: boolean;
   type?: string;
@@ -37,7 +36,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   id,
   onChange,
   onKeyDown,
-  onPaste,
   placeholder,
   readOnly,
   type,
@@ -187,12 +185,6 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     codeMirror.current?.on('changes', fn);
     return () => codeMirror.current?.off('changes', fn);
   }, [onChange]);
-
-  useEffect(() => {
-    const handlePaste = (_: CodeMirror.Editor, e: ClipboardEvent) => onPaste?.(e);
-    codeMirror.current?.on('paste', handlePaste);
-    return () => codeMirror.current?.on('paste', handlePaste);
-  }, [onPaste]);
 
   useEffect(() => window.main.on('context-menu-command', (_, { key, tag }) =>
     id === key && codeMirror.current?.replaceSelection(tag)), [id]);
