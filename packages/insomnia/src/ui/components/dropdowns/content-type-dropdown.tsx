@@ -1,7 +1,6 @@
 import React, { FC } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { version } from '../../../../package.json';
 import {
   CONTENT_TYPE_EDN,
   CONTENT_TYPE_FILE,
@@ -16,7 +15,6 @@ import {
   getContentTypeName,
   METHOD_POST,
 } from '../../../common/constants';
-import { getContentTypeHeader } from '../../../common/misc';
 import { Request, RequestBody, RequestHeader, RequestParameter } from '../../../models/request';
 import { deconstructQueryStringToParams } from '../../../utils/url/querystring';
 import { SegmentEvent } from '../../analytics';
@@ -217,66 +215,41 @@ export function newBodyGraphQL(rawBody: string): RequestBody {
     }
   }
 }
+
 export const updateMimeType = (
   request: Request,
   mimeType: string | null,
-  savedBody: RequestBody = {},
 ): { body: RequestBody; headers: RequestHeader[]; params?: RequestParameter[]; method?: string } => {
-  let headers = request.headers ? [...request.headers] : [];
-  const contentTypeHeader = getContentTypeHeader(headers);
-  const isJsonOrXml = Boolean(contentTypeHeader && mimeType && ((contentTypeHeader.value.includes('xml') && mimeType.includes('xml')) || (contentTypeHeader.value.includes('json') && mimeType.includes('json'))));
-  const mimeTypeOrJson = mimeType !== CONTENT_TYPE_GRAPHQL ? mimeType : CONTENT_TYPE_JSON;
-  const hasMimeType = typeof mimeType === 'string';
-  const hasMimeTypeContentTypeHeaderAndNotJSONOrXML = mimeType && contentTypeHeader && !isJsonOrXml;
-  const hasMimeTypeButNoContentTypeHeader = mimeType && !contentTypeHeader;
-  if (!hasMimeType) {
-    headers = headers.filter(h => h !== contentTypeHeader);
-  } else if (hasMimeTypeContentTypeHeaderAndNotJSONOrXML) {
-    contentTypeHeader.value = mimeTypeOrJson || '';
-  } else if (hasMimeTypeButNoContentTypeHeader) {
-    headers.push({
-      name: 'Content-Type',
-      value: mimeTypeOrJson || '',
-    });
+  const withoutContentType = request.headers.filter(h => h?.name?.toLowerCase() !== 'content-type');
+  // 'No body' selected
+  if (typeof mimeType !== 'string') {
+    return {
+      body: {},
+      headers: withoutContentType,
+    };
   }
-  if (!headers.find(h => h?.name?.toLowerCase() === 'user-agent')) {
-    headers.push({
-      name: 'User-Agent',
-      value: `Insomnia/${version}`,
-    });
+  if (mimeType === CONTENT_TYPE_GRAPHQL) {
+    return {
+      body: newBodyGraphQL(request.body.text || ''),
+      headers: [{ name: 'Content-Type', value: CONTENT_TYPE_JSON }, ...withoutContentType],
+      method: METHOD_POST,
+    };
   }
-  const savedBodyOrCurrentBody = Object.keys(savedBody).length === 0 ? request.body : savedBody;
   if (mimeType === CONTENT_TYPE_FORM_URLENCODED || mimeType === CONTENT_TYPE_FORM_DATA) {
-    const params = savedBodyOrCurrentBody.params || deconstructQueryStringToParams(savedBodyOrCurrentBody.text);
+    const params = request.body.params || deconstructQueryStringToParams(request.body.text);
     return {
       body: { mimeType, params },
-      headers,
+      headers: [{ name: 'Content-Type', value: mimeType || '' }, ...withoutContentType],
     };
   }
   if (mimeType === CONTENT_TYPE_FILE) {
     return {
       body: { mimeType, fileName: '' },
-      headers,
-    };
-  }
-  if (mimeType === CONTENT_TYPE_GRAPHQL) {
-    if (contentTypeHeader) {
-      contentTypeHeader.value = CONTENT_TYPE_JSON;
-    }
-    return {
-      body: newBodyGraphQL(savedBodyOrCurrentBody.text || ''),
-      headers,
-      method: METHOD_POST,
-    };
-  }
-  if (!hasMimeType) {
-    return {
-      body: {},
-      headers,
+      headers: [{ name: 'Content-Type', value: mimeType || '' }, ...withoutContentType],
     };
   }
   return {
-    body: { mimeType: mimeType.split(';')[0], text: savedBodyOrCurrentBody.text || '' },
-    headers,
+    body: { mimeType: mimeType.split(';')[0], text: request.body.text || '' },
+    headers: [{ name: 'Content-Type', value: mimeType || '' }, ...withoutContentType],
   };
 };

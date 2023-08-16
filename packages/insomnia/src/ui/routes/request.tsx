@@ -5,6 +5,7 @@ import * as contentDisposition from 'content-disposition';
 import { extension as mimeExtension } from 'mime-types';
 import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
+import { version } from '../../../package.json';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import { ChangeBufferEvent, database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
@@ -101,6 +102,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
       parentId: parentId || workspaceId,
       method: METHOD_GET,
       name: 'New Request',
+      headers: [{ name: 'User-Agent', value: `Insomnia/${version}` }],
     }))._id;
   }
   if (requestType === 'gRPC') {
@@ -114,10 +116,8 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
       parentId: parentId || workspaceId,
       method: METHOD_POST,
       headers: [
-        {
-          name: 'Content-Type',
-          value: CONTENT_TYPE_JSON,
-        },
+        { name: 'User-Agent', value: `Insomnia/${version}` },
+        { name: 'Content-Type', value: CONTENT_TYPE_JSON },
       ],
       body: {
         mimeType: CONTENT_TYPE_GRAPHQL,
@@ -132,10 +132,8 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
       method: METHOD_GET,
       url: '',
       headers: [
-        {
-          name: 'Accept',
-          value: CONTENT_TYPE_EVENT_STREAM,
-        },
+        { name: 'User-Agent', value: `Insomnia/${version}` },
+        { name: 'Accept', value: CONTENT_TYPE_EVENT_STREAM },
       ],
       name: 'New Event Stream',
     }))._id;
@@ -144,6 +142,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
     activeRequestId = (await models.webSocketRequest.create({
       parentId: parentId || workspaceId,
       name: 'New WebSocket Request',
+      headers: [{ name: 'User-Agent', value: `Insomnia/${version}` }],
     }))._id;
   }
   invariant(typeof activeRequestId === 'string', 'Request ID is required');
@@ -155,21 +154,17 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
 export const updateRequestAction: ActionFunction = async ({ request, params }) => {
   const { requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
-  let req = await requestOperations.getById(requestId);
+  const req = await requestOperations.getById(requestId);
   invariant(req, 'Request not found');
-  let patch = await request.json();
+  const patch = await request.json();
   // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
-  if (isRequest(req) && patch.body) {
-    const mimeType = patch.body?.mimeType as string | null;
-    const requestMeta = await models.requestMeta.getOrCreateByParentId(requestId);
-    const savedRequestBody = !mimeType ? (req.body || {}) : {};
-    await models.requestMeta.update(requestMeta, { savedRequestBody });
-    // TODO: make this less hacky, update expects latest req not patch
-    req = await requestOperations.update(req, patch);
-    patch = updateMimeType(req, mimeType, requestMeta.savedRequestBody);
+  const isMimeTypeChanged = isRequest(req) && patch.body && patch.body.mimeType !== req.body.mimeType;
+  if (isMimeTypeChanged) {
+    await requestOperations.update(req, { ...patch, ...updateMimeType(req, patch.body?.mimeType) });
+    return null;
   }
 
-  requestOperations.update(req, patch);
+  await requestOperations.update(req, patch);
   return null;
 };
 
