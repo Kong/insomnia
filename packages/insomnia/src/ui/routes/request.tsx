@@ -24,9 +24,11 @@ import { Response } from '../../models/response';
 import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../../network/network';
+import { convert } from '../../utils/importers/convert';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
+import { CreateRequestType } from '../hooks/use-request';
 
 export interface WebSocketRequestLoaderData {
   activeRequest: WebSocketRequest;
@@ -94,7 +96,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
 export const createRequestAction: ActionFunction = async ({ request, params }) => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-  const { requestType, parentId } = await request.json();
+  const { requestType, parentId, clipboardText } = await request.json() as { requestType: CreateRequestType; parentId?: string; clipboardText?: string };
 
   let activeRequestId;
   if (requestType === 'HTTP') {
@@ -144,6 +146,27 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
       name: 'New WebSocket Request',
       headers: [{ name: 'User-Agent', value: `Insomnia/${version}` }],
     }))._id;
+  }
+  if (requestType === 'From Curl') {
+    // TODO: if no clipboard text show modal
+    try {
+      const { data } = await convert(clipboardText);
+      const { resources } = data;
+      const r = resources[0];
+
+      activeRequestId = (await models.request.create({
+        parentId: parentId || workspaceId,
+        url: r.url,
+        method: r.method,
+        headers: r.headers,
+        body: r.body,
+        authentication: r.authentication,
+        parameters: r.parameters,
+      }))._id;
+    } catch (error) {
+      // Import failed, that's alright
+      console.error(error);
+    }
   }
   invariant(typeof activeRequestId === 'string', 'Request ID is required');
   models.stats.incrementCreatedRequests();

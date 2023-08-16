@@ -15,7 +15,7 @@ export const SidebarCreateDropdown = () => {
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const create = useCallback((requestType: CreateRequestType) =>
-    requestFetcher.submit({ requestType, parentId: workspaceId },
+    requestFetcher.submit({ requestType, parentId: workspaceId, clipboardText: window.clipboard.readText() },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
         method: 'post',
@@ -89,6 +89,14 @@ export const SidebarCreateDropdown = () => {
           icon="plus-circle"
           label="WebSocket Request"
           onClick={() => create('WebSocket')}
+        />
+      </DropdownItem>
+
+      <DropdownItem aria-label='From Curl'>
+        <ItemContent
+          icon="plus-circle"
+          label="From Curl"
+          onClick={() => create('From Curl')}
         />
       </DropdownItem>
 
