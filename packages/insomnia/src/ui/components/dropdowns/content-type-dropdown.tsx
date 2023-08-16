@@ -1,7 +1,6 @@
 import React, { FC } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { version } from '../../../../package.json';
 import {
   CONTENT_TYPE_EDN,
   CONTENT_TYPE_FILE,
@@ -16,8 +15,7 @@ import {
   getContentTypeName,
   METHOD_POST,
 } from '../../../common/constants';
-import { getContentTypeHeader } from '../../../common/misc';
-import { Request, RequestBody } from '../../../models/request';
+import { Request, RequestBody, RequestHeader, RequestParameter } from '../../../models/request';
 import { deconstructQueryStringToParams } from '../../../utils/url/querystring';
 import { SegmentEvent } from '../../analytics';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -217,104 +215,41 @@ export function newBodyGraphQL(rawBody: string): RequestBody {
     }
   }
 }
+
 export const updateMimeType = (
   request: Request,
   mimeType: string | null,
-  savedBody: RequestBody = {},
-) => {
-  let headers = request.headers ? [...request.headers] : [];
-  const contentTypeHeader = getContentTypeHeader(headers);
-  // GraphQL uses JSON content-type
-  const contentTypeHeaderValue = mimeType === CONTENT_TYPE_GRAPHQL ? CONTENT_TYPE_JSON : mimeType;
-  // GraphQL must be POST
-  if (mimeType === CONTENT_TYPE_GRAPHQL) {
-    request.method = METHOD_POST;
-  }
-  // Check if we are converting to/from variants of XML or JSON
-  let leaveContentTypeAlone = false;
-  if (contentTypeHeader && mimeType) {
-    const current = contentTypeHeader.value;
-    if (current.includes('xml') && mimeType.includes('xml')) {
-      leaveContentTypeAlone = true;
-    } else if (current.includes('json') && mimeType.includes('json')) {
-      leaveContentTypeAlone = true;
-    }
-  }
-  const hasBody = typeof mimeType === 'string';
-  if (!hasBody) {
-    headers = headers.filter(h => h !== contentTypeHeader);
-  } else if (mimeType === CONTENT_TYPE_OTHER) {
-    // Leave headers alone
-  } else if (mimeType && contentTypeHeader && !leaveContentTypeAlone) {
-    contentTypeHeader.value = contentTypeHeaderValue || '';
-  } else if (mimeType && !contentTypeHeader) {
-    headers.push({
-      name: 'Content-Type',
-      value: contentTypeHeaderValue || '',
-    });
-  }
-  if (!headers.find(h => h?.name?.toLowerCase() === 'user-agent')) {
-    headers.push({
-      name: 'User-Agent',
-      value: `Insomnia/${version}`,
-    });
-  }
-  const oldBody = Object.keys(savedBody).length === 0 ? request.body : savedBody;
-  if (mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+): { body: RequestBody; headers: RequestHeader[]; params?: RequestParameter[]; method?: string } => {
+  const withoutContentType = request.headers.filter(h => h?.name?.toLowerCase() !== 'content-type');
+  // 'No body' selected
+  if (typeof mimeType !== 'string') {
     return {
-      body: {
-        mimeType: CONTENT_TYPE_FORM_URLENCODED,
-        params: oldBody.params || (oldBody.text ? deconstructQueryStringToParams(oldBody.text) : []),
-      },
-      headers,
+      body: {},
+      headers: withoutContentType,
     };
   }
-  if (mimeType === CONTENT_TYPE_FORM_DATA) {
-    // Form Data
+  if (mimeType === CONTENT_TYPE_GRAPHQL) {
     return {
-      body: oldBody.params
-        ? {
-          mimeType: CONTENT_TYPE_FORM_DATA,
-          params: oldBody.params || [],
-        } : {
-          mimeType: CONTENT_TYPE_FORM_DATA,
-          params: oldBody.text ? deconstructQueryStringToParams(oldBody.text) : [],
-        },
-      headers,
+      body: newBodyGraphQL(request.body.text || ''),
+      headers: [{ name: 'Content-Type', value: CONTENT_TYPE_JSON }, ...withoutContentType],
+      method: METHOD_POST,
+    };
+  }
+  if (mimeType === CONTENT_TYPE_FORM_URLENCODED || mimeType === CONTENT_TYPE_FORM_DATA) {
+    const params = request.body.params || deconstructQueryStringToParams(request.body.text);
+    return {
+      body: { mimeType, params },
+      headers: [{ name: 'Content-Type', value: mimeType || '' }, ...withoutContentType],
     };
   }
   if (mimeType === CONTENT_TYPE_FILE) {
     return {
-      body: {
-        mimeType: CONTENT_TYPE_FILE,
-        fileName: '',
-      },
-      headers,
+      body: { mimeType, fileName: '' },
+      headers: [{ name: 'Content-Type', value: mimeType || '' }, ...withoutContentType],
     };
   }
-  if (mimeType === CONTENT_TYPE_GRAPHQL) {
-    if (contentTypeHeader) {
-      contentTypeHeader.value = CONTENT_TYPE_JSON;
-    }
-    return {
-      body: newBodyGraphQL(oldBody.text || ''),
-      headers,
-    };
-  }
-  if (typeof mimeType !== 'string') {
-    return {
-      body: {},
-      headers,
-    };
-  }
-  // Raw Content-Type (ex: application/json)
   return {
-    body: typeof mimeType !== 'string' ? {
-      text: oldBody.text || '',
-    } : {
-      mimeType: mimeType.split(';')[0],
-      text: oldBody.text || '',
-    },
-    headers,
+    body: { mimeType: mimeType.split(';')[0], text: request.body.text || '' },
+    headers: [{ name: 'Content-Type', value: mimeType || '' }, ...withoutContentType],
   };
 };

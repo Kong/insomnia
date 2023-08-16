@@ -8,7 +8,7 @@ import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../models/settings';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
-import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
+import { useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -67,7 +67,6 @@ export const RequestPane: FC<Props> = ({
 }) => {
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const patchRequest = useRequestPatcher();
   const patchSettings = useSettingsPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
 
@@ -131,7 +130,6 @@ export const RequestPane: FC<Props> = ({
             key={requestId}
             ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
-            onUrlChange={url => patchRequest(requestId, { url })}
             handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             setLoading={setLoading}

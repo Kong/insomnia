@@ -113,7 +113,7 @@ export const buildQueryStringFromParams = (
  * @returns {{name: string, value: string}[]}
  */
 export const deconstructQueryStringToParams = (
-  qs: string,
+  qs?: string,
 
   /** allow empty names and values */
   strict?: boolean,
