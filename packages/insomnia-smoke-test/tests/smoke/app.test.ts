@@ -23,9 +23,12 @@ test('can send requests', async ({ app, page }) => {
 
   await page.locator('[data-testid="SidebarFilter"] [data-testid="SidebarCreateDropdown"] button').click();
   await page.getByRole('menuitem', { name: 'Http Request' }).click();
-  const curl = 'curl --request POST --url http://mockbin.org/status/200';
 
-  await page.locator('.CodeMirror >> textarea').fill(curl);
+  const curl = 'curl --request POST --url http://mockbin.org/status/200';
+  await app.evaluate(async ({ clipboard }, curl) => clipboard.writeText(curl), curl);
+  await page.locator('[data-testid="SidebarFilter"] [data-testid="SidebarCreateDropdown"] button').click();
+  await page.getByRole('menuitem', { name: 'From Curl' }).click();
+
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();
   await expect(statusTag).toContainText('200 OK');
 
