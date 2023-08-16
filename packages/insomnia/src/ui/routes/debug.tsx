@@ -113,7 +113,7 @@ export const Debug: FC = () => {
   const [runningRequests, setRunningRequests] = useState<Record<string, boolean>>({});
   const setLoading = (isLoading: boolean) => {
     invariant(requestId, 'No active request');
-    if (runningRequests?.[requestId] !== isLoading) {
+    if (Boolean(runningRequests?.[requestId]) !== isLoading) {
       setRunningRequests({
         ...runningRequests,
         [requestId]: isLoading ? true : false,
