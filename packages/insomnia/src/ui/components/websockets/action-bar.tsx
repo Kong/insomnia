@@ -136,6 +136,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
       >
         <StyledUrlBar>
           <OneLineEditor
+            id="websocket-url-bar"
             ref={oneLineEditorRef}
             onKeyDown={createKeybindingsHandler({
               'Enter': () => handleSubmit(),

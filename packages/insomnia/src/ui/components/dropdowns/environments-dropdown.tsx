@@ -1,4 +1,4 @@
-import React, { FC, useRef, useState } from 'react';
+import React, { FC, useRef } from 'react';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { type Environment } from '../../../models/environment';
@@ -29,10 +29,9 @@ export const EnvironmentsDropdown: FC<Props> = ({ setEnvironmentModalOpen }) => 
   const { hotKeyRegistry } = settings;
   const setActiveEnvironmentFetcher = useFetcher();
   const dropdownRef = useRef<DropdownHandle>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useDocBodyKeyboardShortcuts({
-    environment_showSwitchMenu: () => setIsDropdownOpen(true),
+    environment_showSwitchMenu: () => dropdownRef.current?.show(),
   });
 
   // NOTE: Base environment might not exist if the users hasn't managed environments yet.
@@ -41,9 +40,6 @@ export const EnvironmentsDropdown: FC<Props> = ({ setEnvironmentModalOpen }) => 
   return (
     <Dropdown
       ref={dropdownRef}
-      isOpen={isDropdownOpen}
-      onOpen={() => setIsDropdownOpen(true)}
-      onClose={() => setIsDropdownOpen(false)}
       triggerButton={
         <DropdownButton
           className="btn btn--super-compact no-wrap"

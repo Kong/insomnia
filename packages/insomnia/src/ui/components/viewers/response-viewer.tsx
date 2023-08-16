@@ -330,6 +330,7 @@ export const ResponseViewer = ({
   if (previewMode === PREVIEW_MODE_RAW) {
     return (
       <CodeEditor
+        id="raw-response-viewer"
         key={responseId}
         ref={editorRef}
         className="raw-editor"
@@ -347,6 +348,7 @@ export const ResponseViewer = ({
   // Show everything else as "source"
   return (
     <CodeEditor
+      id="response-viewer"
       key={disablePreviewLinks ? 'links-disabled' : 'links-enabled'}
       ref={editorRef}
       autoPrettify

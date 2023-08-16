@@ -29,7 +29,7 @@ import { Pane, PaneHeader } from './pane';
 import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
-  runningRequests: Record<string, number>;
+  runningRequests: Record<string, boolean>;
 }
 export const ResponsePane: FC<Props> = ({
   runningRequests,

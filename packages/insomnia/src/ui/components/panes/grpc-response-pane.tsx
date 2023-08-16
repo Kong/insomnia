@@ -25,6 +25,7 @@ export const GrpcResponsePane: FunctionComponent<Props> = ({ grpcState: { runnin
             {responseMessages.sort((a, b) => a.created - b.created).map((m, index) => (
               <TabItem key={m.id} title={`Response ${index + 1}`}>
                 <CodeEditor
+                  id="grpc-response"
                   defaultValue={m.text}
                   mode="application/json"
                   enableNunjucks

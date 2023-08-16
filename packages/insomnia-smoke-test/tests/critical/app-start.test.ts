@@ -25,4 +25,9 @@ test('can send requests', async ({ app, page }) => {
   await page.getByRole('button', { name: 'Preview' }).click();
   await page.getByRole('menuitem', { name: 'Raw Data' }).click();
   await expect(responseBody).toContainText('{"id":"1"}');
+  await page.getByRole('button', { name: 'send JSON request' }).click();
+  await page.locator('[data-testid="Dropdown-send-JSON-request"]').click();
+  await page.getByRole('menuitem', { name: 'Generate Code' }).click();
+  await page.getByText('curl --request GET \\').click();
+  await page.getByRole('button', { name: 'Done' }).click();
 });

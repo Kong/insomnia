@@ -19,6 +19,7 @@ export const RawEditor: FC<Props> = ({
 }) => (
   <Fragment>
     <CodeEditor
+      id="raw-editor"
       showPrettifyButton
       uniquenessKey={uniquenessKey}
       defaultValue={content}

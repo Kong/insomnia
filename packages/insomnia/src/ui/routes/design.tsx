@@ -282,6 +282,7 @@ const Design: FC = () => {
           <div className="column tall theme--pane__body">
             <div className="tall relative overflow-hidden">
               <CodeEditor
+                id="spec-editor"
                 key={uniquenessKey}
                 showPrettifyButton
                 ref={editor}

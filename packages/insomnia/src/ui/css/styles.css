@@ -11,3 +11,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.grid-template-app-layout {
+  grid-template:
+    'Header Header' auto
+    'Navbar Content' 1fr
+    'Statusbar Statusbar' 30px [row-end]
+    / 50px 1fr;
+}
+
+.react-aria-Breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  gap: 0.5rem;
+}
+
+.react-aria-Breadcrumbs .react-aria-Item {
+  display: flex;
+  user-select: none;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-font);
+}
+
+.react-aria-Breadcrumbs .react-aria-Item:not(:last-child):after {
+  content: '/';
+}

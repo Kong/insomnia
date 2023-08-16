@@ -147,37 +147,38 @@ export const GenerateConfigModal = forwardRef<GenerateConfigModalHandle, ModalPr
           onSelectionChange={onSelect}
         >
           {configs.map(config =>
-            (<TabItem
-              key={config.label}
-              title={
-                <>
-                  {config.label}
-                  {config.docsLink ?
-                    <>
-                      {' '}
-                      <HelpTooltip>
-                        To learn more about {config.label}
-                        <br />
-                        <Link href={config.docsLink}>Documentation {<i className="fa fa-external-link-square" />}</Link>
-                      </HelpTooltip>
-                    </> : null}
-                </>
-              }
-            >
-              <PanelContainer key={config.label}>
-                {config.error ?
-                  <p className="notice error margin-md">
-                    {config.error}
-                    {config.docsLink ? <><br /><Link href={config.docsLink}>Documentation {<i className="fa fa-external-link-square" />}</Link></> : null}
-                  </p> :
-                  <CodeEditor
-                    className="tall pad-top-sm"
-                    defaultValue={config.content}
-                    mode={config.mimeType}
-                    readOnly
-                  />}
-              </PanelContainer>
-            </TabItem>)
+          (<TabItem
+            key={config.label}
+            title={
+              <>
+                {config.label}
+                {config.docsLink ?
+                  <>
+                    {' '}
+                    <HelpTooltip>
+                      To learn more about {config.label}
+                      <br />
+                      <Link href={config.docsLink}>Documentation {<i className="fa fa-external-link-square" />}</Link>
+                    </HelpTooltip>
+                  </> : null}
+              </>
+            }
+          >
+            <PanelContainer key={config.label}>
+              {config.error ?
+                <p className="notice error margin-md">
+                  {config.error}
+                  {config.docsLink ? <><br /><Link href={config.docsLink}>Documentation {<i className="fa fa-external-link-square" />}</Link></> : null}
+                </p> :
+                <CodeEditor
+                  id="generate-config-modal"
+                  className="tall pad-top-sm"
+                  defaultValue={config.content}
+                  mode={config.mimeType}
+                  readOnly
+                />}
+            </PanelContainer>
+          </TabItem>)
           )}
         </Tabs>
       </ModalBody>

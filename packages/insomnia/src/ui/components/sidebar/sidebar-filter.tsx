@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useRef } from 'react';
+import React, { FC, useRef } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { SortOrder } from '../../../common/constants';
@@ -6,6 +6,7 @@ import { database as db } from '../../../common/database';
 import { sortMethodMap } from '../../../common/sorting';
 import * as models from '../../../models';
 import { isRequestGroup } from '../../../models/request-group';
+import { useWorkspaceMetaPatcher } from '../../hooks/use-request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { SidebarCreateDropdown } from './sidebar-create-dropdown';
@@ -16,23 +17,21 @@ interface Props {
 
 export const SidebarFilter: FC<Props> = ({ filter }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-
+  const updateMeta = useWorkspaceMetaPatcher();
   const {
     activeWorkspace,
-    activeWorkspaceMeta,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-
-  const handleClearFilter = useCallback(async () => {
-    await models.workspaceMeta.update(activeWorkspaceMeta, { sidebarFilter: '' });
+  const handleClearFilter = () => {
+    updateMeta(activeWorkspace._id, { sidebarFilter: '' });
     if (inputRef.current) {
       inputRef.current.value = '';
       inputRef.current.focus();
     }
-  }, [activeWorkspaceMeta]);
+  };
 
-  const handleOnChange = useCallback(async (event: React.SyntheticEvent<HTMLInputElement>) => {
-    await models.workspaceMeta.update(activeWorkspaceMeta, { sidebarFilter: event.currentTarget.value });
-  }, [activeWorkspaceMeta]);
+  const handleOnChange = async (event: React.SyntheticEvent<HTMLInputElement>) => {
+    updateMeta(activeWorkspace._id, { sidebarFilter: event.currentTarget.value });
+  };
 
   useDocBodyKeyboardShortcuts({
     sidebar_focusFilter: () => {

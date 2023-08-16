@@ -132,6 +132,7 @@ const UnitTestItemView = ({
       }
     >
       <CodeEditor
+        id="unit-test-editor"
         ref={editorRef}
         dynamicHeight
         showPrettifyButton

@@ -71,7 +71,8 @@ export const loader: LoaderFunction = async ({ params }) => {
     const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
     invariant(activeWorkspaceMeta, 'Workspace meta not found');
     const activeRequestId = activeWorkspaceMeta.activeRequestId;
-    if (activeRequestId) {
+    const activeRequest = activeRequestId ? await models.request.getById(activeRequestId) : null;
+    if (activeRequest) {
       return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${activeRequestId}`);
     }
   }
@@ -109,13 +110,15 @@ export const Debug: FC = () => {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
   const { sidebarFilter } = activeWorkspaceMeta;
-  const [runningRequests, setRunningRequests] = useState({});
+  const [runningRequests, setRunningRequests] = useState<Record<string, boolean>>({});
   const setLoading = (isLoading: boolean) => {
     invariant(requestId, 'No active request');
-    setRunningRequests({
-      ...runningRequests,
-      [requestId]: isLoading ? true : false,
-    });
+    if (runningRequests?.[requestId] !== isLoading) {
+      setRunningRequests({
+        ...runningRequests,
+        [requestId]: isLoading ? true : false,
+      });
+    }
   };
 
   const grpcState = grpcStates.find(s => s.requestId === requestId);
