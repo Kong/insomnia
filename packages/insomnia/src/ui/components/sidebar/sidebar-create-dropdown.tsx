@@ -4,7 +4,7 @@ import { useRouteLoaderData } from 'react-router-dom';
 
 import { CreateRequestType } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showPrompt } from '../modals';
 
 export const SidebarCreateDropdown = () => {
@@ -91,23 +91,25 @@ export const SidebarCreateDropdown = () => {
           onClick={() => create('WebSocket')}
         />
       </DropdownItem>
-
-      <DropdownItem aria-label='From Curl'>
-        <ItemContent
-          icon="plus-circle"
-          label="From Curl"
-          onClick={() => create('From Curl')}
-        />
-      </DropdownItem>
-
-      <DropdownItem aria-label='New Folder'>
-        <ItemContent
-          icon="folder"
-          label="New Folder"
-          hint={hotKeyRegistry.request_showCreateFolder}
-          onClick={createGroup}
-        />
-      </DropdownItem>
+      <DropdownSection>
+        <DropdownItem aria-label='From Curl'>
+          <ItemContent
+            icon="plus-circle"
+            label="From Curl"
+            onClick={() => create('From Curl')}
+          />
+        </DropdownItem>
+      </DropdownSection>
+      <DropdownSection>
+        <DropdownItem aria-label='New Folder'>
+          <ItemContent
+            icon="folder"
+            label="New Folder"
+            hint={hotKeyRegistry.request_showCreateFolder}
+            onClick={createGroup}
+          />
+        </DropdownItem>
+      </DropdownSection>
     </Dropdown>
   );
 };

@@ -150,7 +150,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
   if (requestType === 'From Curl') {
     // TODO: if no clipboard text show modal
     if (!clipboardText) {
-      return;
+      return null;
     }
     try {
       const { data } = await convert(clipboardText);
@@ -167,8 +167,8 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
         parameters: r.parameters as RequestParameter[],
       }))._id;
     } catch (error) {
-      // Import failed, that's alright
       console.error(error);
+      return null;
     }
   }
   invariant(typeof activeRequestId === 'string', 'Request ID is required');

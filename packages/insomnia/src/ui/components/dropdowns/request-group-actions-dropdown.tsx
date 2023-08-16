@@ -43,7 +43,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
   const create = useCallback((requestType: CreateRequestType) =>
-    requestFetcher.submit({ requestType, parentId: requestGroup._id },
+    requestFetcher.submit({ requestType, parentId: requestGroup._id, clipboardText: window.clipboard.readText() },
       {
         encType: 'application/json',
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
@@ -202,15 +202,25 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
           onClick={() => create('WebSocket')}
         />
       </DropdownItem>
-
-      <DropdownItem aria-label='New Folder'>
-        <ItemContent
-          icon="folder"
-          label="New Folder"
-          hint={hotKeyRegistry.request_showCreateFolder}
-          onClick={createGroup}
-        />
-      </DropdownItem>
+      <DropdownSection>
+        <DropdownItem aria-label='From Curl'>
+          <ItemContent
+            icon="plus-circle"
+            label="From Curl"
+            onClick={() => create('From Curl')}
+          />
+        </DropdownItem>
+      </DropdownSection>
+      <DropdownSection>
+        <DropdownItem aria-label='New Folder'>
+          <ItemContent
+            icon="folder"
+            label="New Folder"
+            hint={hotKeyRegistry.request_showCreateFolder}
+            onClick={createGroup}
+          />
+        </DropdownItem>
+      </DropdownSection>
 
       <DropdownSection aria-label='Actions Section'>
         <DropdownItem aria-label='Duplicate'>
