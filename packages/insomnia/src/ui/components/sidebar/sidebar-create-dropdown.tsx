@@ -4,7 +4,7 @@ import { useRouteLoaderData } from 'react-router-dom';
 
 import { CreateRequestType } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { showPrompt } from '../modals';
 
 export const SidebarCreateDropdown = () => {
@@ -15,7 +15,7 @@ export const SidebarCreateDropdown = () => {
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
   const create = useCallback((requestType: CreateRequestType) =>
-    requestFetcher.submit({ requestType, parentId: workspaceId },
+    requestFetcher.submit({ requestType, parentId: workspaceId, clipboardText: window.clipboard.readText() },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
         method: 'post',
@@ -91,15 +91,25 @@ export const SidebarCreateDropdown = () => {
           onClick={() => create('WebSocket')}
         />
       </DropdownItem>
-
-      <DropdownItem aria-label='New Folder'>
-        <ItemContent
-          icon="folder"
-          label="New Folder"
-          hint={hotKeyRegistry.request_showCreateFolder}
-          onClick={createGroup}
-        />
-      </DropdownItem>
+      <DropdownSection>
+        <DropdownItem aria-label='From Curl'>
+          <ItemContent
+            icon="plus-circle"
+            label="From Curl"
+            onClick={() => create('From Curl')}
+          />
+        </DropdownItem>
+      </DropdownSection>
+      <DropdownSection>
+        <DropdownItem aria-label='New Folder'>
+          <ItemContent
+            icon="folder"
+            label="New Folder"
+            hint={hotKeyRegistry.request_showCreateFolder}
+            onClick={createGroup}
+          />
+        </DropdownItem>
+      </DropdownSection>
     </Dropdown>
   );
 };

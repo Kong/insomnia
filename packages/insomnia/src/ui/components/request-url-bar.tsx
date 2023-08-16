@@ -4,12 +4,10 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
-import { database } from '../../common/database';
 import { RENDER_PURPOSE_SEND } from '../../common/render';
 import * as models from '../../models';
-import { isEventStreamRequest, isRequest } from '../../models/request';
+import { isEventStreamRequest } from '../../models/request';
 import { fetchRequestData, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
-import { convert } from '../../utils/importers/convert';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
@@ -40,7 +38,6 @@ const StyledDropdownButton = styled(DropdownButton)({
 interface Props {
   handleAutocompleteUrls: () => Promise<string[]>;
   nunjucksPowerUserMode: boolean;
-  onUrlChange: (url: string) => void;
   uniquenessKey: string;
   setLoading: (l: boolean) => void;
 }
@@ -51,7 +48,6 @@ export interface RequestUrlBarHandle {
 
 export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   handleAutocompleteUrls,
-  onUrlChange,
   uniquenessKey,
   setLoading,
 }, ref) => {
@@ -194,56 +190,6 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     },
   });
 
-  const lastPastedTextRef = useRef('');
-  const handleImport = useCallback(async (text: string) => {
-    // Allow user to paste any import file into the url. If it results in
-    // only one item, it will overwrite the current request.
-    try {
-      const { data } = await convert(text);
-      const { resources } = data;
-      const r = resources[0];
-      if (r && r._type === 'request' && activeRequest && isRequest(activeRequest)) {
-        // Only pull fields that we want to update
-        return database.update({
-          ...activeRequest,
-          modified: Date.now(),
-          url: r.url,
-          method: r.method,
-          headers: r.headers,
-          body: r.body,
-          authentication: r.authentication,
-          parameters: r.parameters,
-        }, true); // Pass true to indicate that this is an import
-      }
-    } catch (error) {
-      // Import failed, that's alright
-      console.error(error);
-    }
-    return null;
-  }, [activeRequest]);
-
-  const handleUrlChange = useCallback(async (url: string) => {
-    const pastedText = lastPastedTextRef.current;
-    // If no pasted text in the queue, just fire the regular change handler
-    if (!pastedText) {
-      onUrlChange(url);
-      return;
-    }
-    // Reset pasted text cache
-    lastPastedTextRef.current = '';
-    // Attempt to import the pasted text
-    const importedRequest = await handleImport(pastedText);
-    // Update depending on whether something was imported
-    if (!importedRequest) {
-      onUrlChange(url);
-    }
-  }, [handleImport, onUrlChange]);
-
-  const handleUrlPaste = useCallback((event: ClipboardEvent) => {
-    // NOTE: We're not actually doing the import here to avoid races with onChange
-    lastPastedTextRef.current = event.clipboardData?.getData('text/plain') || '';
-  }, []);
-
   const handleSendDropdownHide = useCallback(() => {
     buttonRef.current?.blur();
   }, []);
@@ -263,12 +209,11 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           id="request-url-bar"
           key={uniquenessKey}
           ref={inputRef}
-          onPaste={handleUrlPaste}
           type="text"
           getAutocompleteConstants={handleAutocompleteUrls}
           placeholder="https://api.myproduct.com/v1/users"
           defaultValue={url}
-          onChange={handleUrlChange}
+          onChange={url => patchRequest(requestId, { url })}
           onKeyDown={createKeybindingsHandler({
             'Enter': () => sendOrConnect(),
           })}
