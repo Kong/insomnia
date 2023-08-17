@@ -96,7 +96,7 @@ test.describe('Dashboard', async () => {
       await page.getByRole('menuitem', { name: 'Design Document' }).click();
       await page.locator('text=Create').nth(1).click();
 
-      await page.getByTestId('proj_default-project').getByRole('link', { name: 'Insomnia' }).click();
+      await page.getByTestId('project').click();
 
       // Rename document
       await page.click('text=DocumentNew Documentjust now >> button');
@@ -111,7 +111,7 @@ test.describe('Dashboard', async () => {
       await page.locator('input[name="name"]').fill('test123-duplicate');
       await page.click('[role="dialog"] button:has-text("Duplicate")');
 
-      await page.getByTestId('proj_default-project').getByRole('link', { name: 'Insomnia' }).click();
+      await page.getByTestId('project').click();
 
       const workspaceCards = page.locator('.card-badge');
       await expect(workspaceCards).toHaveCount(2);
@@ -133,7 +133,7 @@ test.describe('Dashboard', async () => {
       await page.getByRole('menuitem', { name: 'Request Collection' }).click();
       await page.locator('text=Create').nth(1).click();
 
-      await page.getByTestId('proj_default-project').getByRole('link', { name: 'Insomnia' }).click();
+      await page.getByTestId('project').click();
 
       // Rename collection
       await page.click('text=CollectionMy Collectionjust now >> button');
@@ -148,7 +148,7 @@ test.describe('Dashboard', async () => {
       await page.locator('input[name="name"]').fill('test123-duplicate');
       await page.click('[role="dialog"] button:has-text("Duplicate")');
 
-      await page.getByTestId('proj_default-project').getByRole('link', { name: 'Insomnia' }).click();
+      await page.getByTestId('project').click();
       const workspaceCards = page.locator('.card-badge');
       await expect(workspaceCards).toHaveCount(2);
 
