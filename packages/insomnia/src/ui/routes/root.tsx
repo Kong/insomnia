@@ -461,6 +461,7 @@ const Root = () => {
             <div className="relative [grid-area:Statusbar] flex items-center justify-between overflow-hidden">
               <TooltipTrigger>
                 <Button
+                  data-testid="settings-button"
                   className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
                   onPress={showSettingsModal}
                 >
