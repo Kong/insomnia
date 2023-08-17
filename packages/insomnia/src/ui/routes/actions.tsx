@@ -900,17 +900,18 @@ export const createNewCaCertificateAction: ActionFunction = async ({ request }) 
 
 export const updateCaCertificateAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
-  const caCertificate = await models.caCertificate.getById(patch.parentId);
+  const caCertificate = await models.caCertificate.getById(patch._id);
   invariant(caCertificate, 'CA Certificate not found');
   await models.caCertificate.update(caCertificate, patch);
   return null;
 };
 
-export const deleteCaCertificateAction: ActionFunction = async ({ request }) => {
-  const { certificateId } = await request.json();
-  const caCertificate = await models.caCertificate.getById(certificateId);
+export const deleteCaCertificateAction: ActionFunction = async ({ params }) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  const caCertificate = await models.caCertificate.findByParentId(workspaceId);
   invariant(caCertificate, 'CA Certificate not found');
-  await models.caCertificate.removeWhere(certificateId);
+  await models.caCertificate.removeWhere(workspaceId);
   return null;
 };
 
@@ -922,17 +923,17 @@ export const createNewClientCertificateAction: ActionFunction = async ({ request
 
 export const updateClientCertificateAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
-  const clientCertificate = await models.clientCertificate.getById(patch.parentId);
+  const clientCertificate = await models.clientCertificate.getById(patch._id);
   invariant(clientCertificate, 'CA Certificate not found');
   await models.clientCertificate.update(clientCertificate, patch);
   return null;
 };
 
 export const deleteClientCertificateAction: ActionFunction = async ({ request }) => {
-  const { certificateId } = await request.json();
-  const clientCertificate = await models.clientCertificate.getById(certificateId);
+  const { _id } = await request.json();
+  const clientCertificate = await models.clientCertificate.getById(_id);
   invariant(clientCertificate, 'CA Certificate not found');
-  await models.clientCertificate.remove(certificateId);
+  await models.clientCertificate.remove(clientCertificate);
   return null;
 };
 
