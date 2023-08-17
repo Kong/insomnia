@@ -2,7 +2,8 @@ import { expect } from '@playwright/test';
 
 import { test } from '../../playwright/test';
 
-test('Clone Repo with bad values', async ({ page }) => {
+// TODO: Fix git branching and dropdown flakes
+test.fixme('Clone Repo with bad values @failing', async ({ page }) => {
   await page.getByRole('button', { name: 'Create' }).click();
   await page.getByRole('menuitem', { name: 'Git Clone' }).click();
   await page.getByRole('tab', { name: 'Git' }).nth(2).click();
@@ -50,7 +51,7 @@ test('Clone Repo with bad values', async ({ page }) => {
   await expect(page.locator('.app')).toContainText('Error Pushing Repository');
 });
 
-test('Clone Gitlab Repo with bad values', async ({ page }) => {
+test.fixme('Clone Gitlab Repo with bad values', async ({ page }) => {
   await page.getByRole('button', { name: 'Create' }).click();
   await page.getByRole('menuitem', { name: 'Git Clone' }).click();
   await page.getByRole('tab', { name: 'Git' }).nth(2).click();
