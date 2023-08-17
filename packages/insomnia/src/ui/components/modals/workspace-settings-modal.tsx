@@ -317,7 +317,7 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
                           onClick={async () => {
                             invariant(caCertificate, 'CA cert should exist');
                             workspaceFetcher.submit({ parentId: caCertificate._id, disabled: !caCertificate.disabled }, {
-                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/clientcert/update`,
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/cacert/update`,
                               method: 'post',
                               encType: 'application/json',
                             });
