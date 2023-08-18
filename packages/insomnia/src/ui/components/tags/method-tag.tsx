@@ -10,7 +10,7 @@ interface Props {
 function removeVowels(str: string) {
   return str.replace(/[aeiouyAEIOUY]/g, '');
 }
-function formatMethodName(method: string) {
+export function formatMethodName(method: string) {
   let methodName = method || '';
 
   if (method === METHOD_DELETE || method === METHOD_OPTIONS) {

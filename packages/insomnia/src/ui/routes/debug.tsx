@@ -26,7 +26,7 @@ import {
 } from 'react-router-dom';
 import { useListData } from 'react-stately';
 
-import { SORT_ORDERS, sortOrderName } from '../../common/constants';
+import { SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
@@ -38,6 +38,7 @@ import {
   isRequest,
   isRequestId,
 } from '../../models/request';
+import { isRequestGroup } from '../../models/request-group';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import {
   isWebSocketRequest,
@@ -61,6 +62,7 @@ import { PlaceholderRequestPane } from '../components/panes/placeholder-request-
 import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
+import { formatMethodName } from '../components/tags/method-tag';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
 import {
@@ -364,7 +366,7 @@ export const Debug: FC = () => {
   const setActiveEnvironmentFetcher = useFetcher();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const sortOrder = searchParams.get('sortOrder') || 'type-manual';
+  const sortOrder = searchParams.get('sortOrder') as SortOrder || 'type-manual';
   const { hotKeyRegistry } = settings;
 
   const createRequestGroup = (parentId: string) => {
@@ -731,8 +733,8 @@ export const Debug: FC = () => {
                   if (keys !== 'all') {
                     const value = keys.values().next().value;
                     console.log(value);
-                    const item = collection.find(item => item.id === value);
-                    if (item && item.type === 'group') {
+                    const item = collection.find(item => item.doc._id === value);
+                    if (item && isRequestGroup(item.doc)) {
                       groupMetaPatcher(value, { collapsed: !item.collapsed });
                     } else {
                       navigate(
@@ -745,8 +747,8 @@ export const Debug: FC = () => {
                 {item => {
                   return (
                     <Item
-                      key={item.id}
-                      id={item.id}
+                      key={item.doc._id}
+                      id={item.doc._id}
                       className="group outline-none select-none"
                     >
                       <div
@@ -756,18 +758,18 @@ export const Debug: FC = () => {
                         }}
                       >
                         <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
-                        {item.type === 'request' && (
+                        {isRequest(item.doc) && (
                           <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center">
-                            {item.tag}
+                            {formatMethodName(item.doc.method)}
                           </span>
                         )}
-                        {item.type === 'group' && (
+                        {isRequestGroup(item.doc) && (
                           <Icon
                             className="w-6"
                             icon={item.collapsed ? 'folder' : 'folder-open'}
                           />
                         )}
-                        <span className="truncate">{item.name}</span>
+                        <span className="truncate">{item.doc.name}</span>
                         <span className="flex-1" />
                       </div>
                     </Item>

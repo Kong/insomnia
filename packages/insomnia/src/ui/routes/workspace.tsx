@@ -53,6 +53,7 @@ export interface Child {
   collapsed: boolean;
   hidden: boolean;
   pinned: boolean;
+  level: number;
 }
 
 export const workspaceLoader: LoaderFunction = async ({
@@ -141,8 +142,10 @@ export const workspaceLoader: LoaderFunction = async ({
 
   const getCollectionTree = async ({
     parentId,
+    level,
+    parentIsCollapsed,
   }: {
-    parentId: string;
+      parentId: string; level: number; parentIsCollapsed: boolean;
   }): Promise<Child[]> => {
     const folders = await models.requestGroup.findByParentId(parentId);
     const requests = await models.request.findByParentId(parentId);
@@ -167,7 +170,7 @@ export const workspaceLoader: LoaderFunction = async ({
             ...(isRequestGroup(doc) ? [] : [doc.url]),
           ]);
 
-          const hidden =
+          const hidden = parentIsCollapsed ||
             (filter && !matches) ||
             (filter && matches && !matches.indexes) ||
             (filter && matches && matches.indexes.length < 1);
@@ -182,7 +185,8 @@ export const workspaceLoader: LoaderFunction = async ({
             pinned,
             collapsed,
             hidden,
-            children: await getCollectionTree({ parentId: doc._id }),
+            level,
+            children: await getCollectionTree({ parentId: doc._id, level: level + 1, parentIsCollapsed: collapsed || false }),
           };
         }),
     );
@@ -191,6 +195,8 @@ export const workspaceLoader: LoaderFunction = async ({
 
   const requestTree = await getCollectionTree({
     parentId: activeWorkspace._id,
+    level: 0,
+    parentIsCollapsed: false,
   });
 
   const syncItems: StatusCandidate[] = syncItemsList
@@ -202,57 +208,19 @@ export const workspaceLoader: LoaderFunction = async ({
     }));
   const grpcRequests = grpcRequestList;
 
-  function buildCollection() {
+  function flattenTree() {
     const collection: Collection = [];
     const tree = requestTree;
 
-    const build = (node: Child, level: number) => {
+    const build = (node: Child) => {
       if (isRequestGroup(node.doc)) {
-        collection.push({
-          name: node.doc.name,
-          sortKey: node.doc.metaSortKey,
-          level,
-          type: 'group',
-          collapsed: node.collapsed,
-          id: node.doc._id,
-          parentId: node.doc.parentId,
-          hidden: node.hidden,
-        });
-
-        node.children.forEach(child =>
-          build(
-            { ...child, hidden: node.collapsed || child.hidden },
-            level + 1,
-          ),
-        );
+        collection.push(node);
+        node.children.forEach(child => build(child));
       } else {
-        let tag = '';
-        if (isRequest(node.doc)) {
-          tag = node.doc.method;
-        }
-
-        if (isWebSocketRequest(node.doc)) {
-          tag = 'WS';
-        }
-
-        if (isGrpcRequest(node.doc)) {
-          tag = 'gRPC';
-        }
-
-        collection.push({
-          name: node.doc.name,
-          sortKey: node.doc.metaSortKey,
-          level,
-          hidden: node.hidden,
-          pinned: node.pinned,
-          parentId: node.doc.parentId,
-          tag,
-          type: 'request',
-          id: node.doc._id,
-        });
+        collection.push(node);
       }
     };
-    tree.forEach(node => build(node, 0));
+    tree.forEach(node => build(node));
 
     return collection;
   }
@@ -273,7 +241,7 @@ export const workspaceLoader: LoaderFunction = async ({
     requestTree,
     grpcRequests,
     syncItems,
-    collection: buildCollection(),
+    collection: flattenTree(),
   };
 };
 
