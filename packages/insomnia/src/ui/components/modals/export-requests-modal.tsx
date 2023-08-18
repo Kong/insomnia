@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { exportRequestsToFile } from '../../../common/export';
 import * as models from '../../../models';
@@ -8,6 +8,7 @@ import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { isWebSocketRequest, WebSocketRequest } from '../../../models/websocket-request';
+import { Workspace } from '../../../models/workspace';
 import { Child, WorkspaceLoaderData } from '../../routes/workspace';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -26,48 +27,57 @@ export interface Node {
 export interface State {
   treeRoot: Node | null;
 }
-export interface ExportRequestsModalHandle {
-  show: () => void;
-  hide: () => void;
-}
 
-export const ExportRequestsModal = ({ onHide }: ModalProps) => {
+export const ExportRequestsModal = ({ workspace, onHide }: { workspace: Workspace } & ModalProps) => {
   const modalRef = useRef<ModalHandle>(null);
-  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const requestTree = workspaceData?.requestTree || [];
+  const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+  const wsId = workspace._id;
+  const workspaceFetcher = useFetcher();
+  const [state, setState] = useState<State>();
 
-  const createTreeNode = (child: Child): Node => {
-    const docIsRequest = isRequest(child.doc) || isWebSocketRequest(child.doc) || isGrpcRequest(child.doc);
-    const children = child.children.map((child: Child) => createTreeNode(child));
-    const totalRequests = +docIsRequest + children.reduce((acc, { totalRequests }) => acc + totalRequests, 0);
-    return {
-      doc: child.doc,
-      collapsed: false,
-      children,
-      totalRequests: totalRequests,
-      selectedRequests: totalRequests, // Default select all
+  useEffect(() => {
+    const isIdleAndUninitialized = workspaceFetcher.state === 'idle' && !workspaceFetcher.data;
+    if (isIdleAndUninitialized) {
+      workspaceFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${wsId}`);
+    }
+  }, [organizationId, projectId, workspaceFetcher, wsId]);
+  const workspaceLoaderData = workspaceFetcher?.data as WorkspaceLoaderData;
+
+  useEffect(() => {
+    const createTreeNode = (child: Child): Node => {
+      const docIsRequest = isRequest(child.doc) || isWebSocketRequest(child.doc) || isGrpcRequest(child.doc);
+      const children = child.children.map((child: Child) => createTreeNode(child));
+      const totalRequests = +docIsRequest + children.reduce((acc, { totalRequests }) => acc + totalRequests, 0);
+      return {
+        doc: child.doc,
+        collapsed: false,
+        children,
+        totalRequests: totalRequests,
+        selectedRequests: totalRequests, // Default select all
+      };
     };
-  };
-
-  const children: Node[] = requestTree.map(child => createTreeNode(child));
-  const [state, setState] = useState<State>({
-    treeRoot: {
-      doc: {
-        ...models.requestGroup.init(),
-        _id: 'all',
-        type: models.requestGroup.type,
-        name: 'All requests',
-        parentId: '',
-        modified: 0,
-        created: 0,
-        isPrivate: false,
+    const requestTree = workspaceLoaderData?.requestTree || [];
+    const children: Node[] = requestTree.map(child => createTreeNode(child));
+    setState({
+      treeRoot: {
+        doc: {
+          ...models.requestGroup.init(),
+          _id: 'all',
+          type: models.requestGroup.type,
+          name: 'All requests',
+          parentId: '',
+          modified: 0,
+          created: 0,
+          isPrivate: false,
+        },
+        collapsed: false,
+        children: children,
+        totalRequests: children.map(child => child.totalRequests).reduce((acc, totalRequests) => acc + totalRequests, 0),
+        selectedRequests: children.map(child => child.totalRequests).reduce((acc, totalRequests) => acc + totalRequests, 0), // Default select all
       },
-      collapsed: false,
-      children: children,
-      totalRequests: children.map(child => child.totalRequests).reduce((acc, totalRequests) => acc + totalRequests, 0),
-      selectedRequests: children.map(child => child.totalRequests).reduce((acc, totalRequests) => acc + totalRequests, 0), // Default select all
-    },
-  });
+    });
+  }, [workspaceLoaderData?.requestTree]);
+
   useEffect(() => {
     modalRef.current?.show();
   }, []);
@@ -104,8 +114,7 @@ export const ExportRequestsModal = ({ onHide }: ModalProps) => {
     return !!node.children.find(child => setRequestGroupCollapsed(child, isCollapsed, requestGroupId));
   };
 
-  const { treeRoot } = state;
-  const isExportDisabled = treeRoot?.selectedRequests === 0 || false;
+  const isExportDisabled = state?.treeRoot?.selectedRequests === 0 || false;
   return (
     <OverlayContainer>
       <Modal ref={modalRef} tall onHide={onHide}>
@@ -113,15 +122,15 @@ export const ExportRequestsModal = ({ onHide }: ModalProps) => {
         <ModalBody>
           <div className="requests-tree">
             <Tree
-              root={treeRoot}
+              root={state?.treeRoot}
               handleSetRequestGroupCollapsed={(requestGroupId: string, isCollapsed: boolean) => {
-                if (state.treeRoot !== null && setRequestGroupCollapsed(state.treeRoot, isCollapsed, requestGroupId)) {
-                  setState({ treeRoot: { ...state.treeRoot } });
+                if (state?.treeRoot && setRequestGroupCollapsed(state?.treeRoot, isCollapsed, requestGroupId)) {
+                  setState({ treeRoot: state?.treeRoot });
                 }
               }}
               handleSetItemSelected={(itemId: string, isSelected: boolean) => {
-                if (state.treeRoot !== null && setItemSelected(state.treeRoot, isSelected, itemId)) {
-                  setState({ treeRoot: { ...state.treeRoot } });
+                if (state?.treeRoot && setItemSelected(state?.treeRoot, isSelected, itemId)) {
+                  setState({ treeRoot: state?.treeRoot });
                 }
               }}
             />
@@ -135,8 +144,8 @@ export const ExportRequestsModal = ({ onHide }: ModalProps) => {
             <button
               className="btn"
               onClick={() => {
-                if (state.treeRoot !== null && state.treeRoot.selectedRequests > 0) {
-                  exportRequestsToFile(getSelectedRequestIds(state.treeRoot));
+                if (state?.treeRoot && state?.treeRoot.selectedRequests > 0) {
+                  exportRequestsToFile(getSelectedRequestIds(state?.treeRoot));
                   modalRef.current?.hide();
                 }
               }}

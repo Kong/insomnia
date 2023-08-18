@@ -217,6 +217,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
       )}
       {isExportModalOpen && (
         <ExportRequestsModal
+          workspace={workspace}
           onHide={() => setIsExportModalOpen(false)}
         />
       )}
