@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useRef, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -17,14 +17,18 @@ import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
 import { BodyEditor } from '../editors/body/body-editor';
-import { QueryEditor, QueryEditorContainer, QueryEditorPreview } from '../editors/query-editor';
+import {
+  QueryEditor,
+  QueryEditorContainer,
+  QueryEditorPreview,
+} from '../editors/query-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { MarkdownPreview } from '../markdown-preview';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
-import { RequestUrlBar, RequestUrlBarHandle } from '../request-url-bar';
+import { RequestUrlBar } from '../request-url-bar';
 import { Pane, PaneHeader } from './pane';
 import { PlaceholderRequestPane } from './placeholder-request-pane';
 const HeaderContainer = styled.div({
@@ -68,7 +72,8 @@ export const RequestPane: FC<Props> = ({
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchSettings = useSettingsPatcher();
-  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
+  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
+    useState(false);
 
   const handleImportQueryFromUrl = useCallback(() => {
     let query;
@@ -82,53 +87,52 @@ export const RequestPane: FC<Props> = ({
 
     // Remove the search string (?foo=bar&...) from the Url
     const url = activeRequest.url.replace(`?${query}`, '');
-    const parameters = [...activeRequest.parameters, ...deconstructQueryStringToParams(query)];
+    const parameters = [
+      ...activeRequest.parameters,
+      ...deconstructQueryStringToParams(query),
+    ];
 
     // Only update if url changed
     if (url !== activeRequest.url) {
-      database.update({
-        ...activeRequest,
-        modified: Date.now(),
-        url,
-        parameters,
-        // Hack to force the ui to refresh. More info on use-vcs-version
-      }, true);
+      database.update(
+        {
+          ...activeRequest,
+          modified: Date.now(),
+          url,
+          parameters,
+          // Hack to force the ui to refresh. More info on use-vcs-version
+        },
+        true,
+      );
     }
   }, [activeRequest]);
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
 
-  const {
-    activeEnvironment,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { activeEnvironment } = useRouteLoaderData(
+    ':workspaceId',
+  ) as WorkspaceLoaderData;
   // Force re-render when we switch requests, the environment gets modified, or the (Git|Sync)VCS version changes
   const uniqueKey = `${activeEnvironment?.modified}::${requestId}::${gitVersion}::${activeRequestSyncVersion}::${activeRequestMeta?.activeResponseId}`;
 
-  const requestUrlBarRef = useRef<RequestUrlBarHandle>(null);
-  useEffect(() => {
-    requestUrlBarRef.current?.focusInput();
-  }, [
-    requestId, // happens when the user switches requests
-    uniqueKey,
-  ]);
-
   if (!activeRequest) {
-    return (
-      <PlaceholderRequestPane />
-    );
+    return <PlaceholderRequestPane />;
   }
 
-  const numParameters = activeRequest.parameters.filter(p => !p.disabled).length;
+  const numParameters = activeRequest.parameters.filter(
+    p => !p.disabled,
+  ).length;
   const numHeaders = activeRequest.headers.filter(h => !h.disabled).length;
   const urlHasQueryParameters = activeRequest.url.indexOf('?') >= 0;
-  const contentType = getContentTypeFromHeaders(activeRequest.headers) || activeRequest.body.mimeType;
+  const contentType =
+    getContentTypeFromHeaders(activeRequest.headers) ||
+    activeRequest.body.mimeType;
   return (
     <Pane type="request">
       <PaneHeader>
         <ErrorBoundary errorClassName="font-error pad text-center">
           <RequestUrlBar
             key={requestId}
-            ref={requestUrlBarRef}
             uniquenessKey={uniqueKey}
             handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
@@ -145,11 +149,24 @@ export const RequestPane: FC<Props> = ({
           />
         </TabItem>
         <TabItem key="auth" title={<AuthDropdown />}>
-          <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+          <ErrorBoundary
+            key={uniqueKey}
+            errorClassName="font-error pad text-center"
+          >
             <AuthWrapper />
           </ErrorBoundary>
         </TabItem>
-        <TabItem key="query" title={<>Query {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}</>}>
+        <TabItem
+          key="query"
+          title={
+            <>
+              Query{' '}
+              {numParameters > 0 && (
+                <span className="bubble space-left">{numParameters}</span>
+              )}
+            </>
+          }
+        >
           <QueryEditorContainer>
             <QueryEditorPreview className="pad pad-bottom-sm">
               <label className="label--small no-pad-top">Url Preview</label>
@@ -176,34 +193,59 @@ export const RequestPane: FC<Props> = ({
             <TabPanelFooter>
               <button
                 className="btn btn--compact"
-                title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
+                title={
+                  urlHasQueryParameters
+                    ? 'Import querystring'
+                    : 'No query params to import'
+                }
                 onClick={handleImportQueryFromUrl}
               >
                 Import from URL
               </button>
               <button
                 className="btn btn--compact"
-                onClick={() => patchSettings({ useBulkParametersEditor: !settings.useBulkParametersEditor })}
+                onClick={() =>
+                  patchSettings({
+                    useBulkParametersEditor: !settings.useBulkParametersEditor,
+                  })
+                }
               >
-                {settings.useBulkParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
+                {settings.useBulkParametersEditor
+                  ? 'Regular Edit'
+                  : 'Bulk Edit'}
               </button>
             </TabPanelFooter>
           </QueryEditorContainer>
         </TabItem>
-        <TabItem key="headers" title={<>Headers {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}</>}>
+        <TabItem
+          key="headers"
+          title={
+            <>
+              Headers{' '}
+              {numHeaders > 0 && (
+                <span className="bubble space-left">{numHeaders}</span>
+              )}
+            </>
+          }
+        >
           <HeaderContainer>
-            <ErrorBoundary key={uniqueKey} errorClassName="font-error pad text-center">
+            <ErrorBoundary
+              key={uniqueKey}
+              errorClassName="font-error pad text-center"
+            >
               <TabPanelBody>
-                <RequestHeadersEditor
-                  bulk={settings.useBulkHeaderEditor}
-                />
+                <RequestHeadersEditor bulk={settings.useBulkHeaderEditor} />
               </TabPanelBody>
             </ErrorBoundary>
 
             <TabPanelFooter>
               <button
                 className="btn btn--compact"
-                onClick={() => patchSettings({ useBulkHeaderEditor: !settings.useBulkHeaderEditor })}
+                onClick={() =>
+                  patchSettings({
+                    useBulkHeaderEditor: !settings.useBulkHeaderEditor,
+                  })
+                }
               >
                 {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
@@ -227,7 +269,10 @@ export const RequestPane: FC<Props> = ({
             {activeRequest.description ? (
               <div>
                 <div className="pull-right pad bg-default">
-                  <button className="btn btn--clicky" onClick={() => setIsRequestSettingsModalOpen(true)}>
+                  <button
+                    className="btn btn--clicky"
+                    onClick={() => setIsRequestSettingsModalOpen(true)}
+                  >
                     Edit
                   </button>
                 </div>
@@ -254,7 +299,10 @@ export const RequestPane: FC<Props> = ({
                   </span>
                   <br />
                   <br />
-                    <button className="btn btn--clicky faint" onClick={() => setIsRequestSettingsModalOpen(true)}>
+                  <button
+                    className="btn btn--clicky faint"
+                    onClick={() => setIsRequestSettingsModalOpen(true)}
+                  >
                     Add Description
                   </button>
                 </p>

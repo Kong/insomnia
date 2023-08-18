@@ -1,20 +1,50 @@
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import React, { FC, Fragment, useEffect, useState } from 'react';
-import { LoaderFunction, redirect, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import {
+  Button,
+  DropIndicator,
+  GridList,
+  Input,
+  Item,
+  ListBox,
+  Menu,
+  MenuTrigger,
+  Popover,
+  SearchField,
+  Select,
+  SelectValue,
+  useDragAndDrop,
+} from 'react-aria-components';
+import {
+  LoaderFunction,
+  redirect,
+  useFetcher,
+  useNavigate,
+  useParams,
+  useRouteLoaderData,
+} from 'react-router-dom';
 
+import { SORT_ORDERS, sortOrderName } from '../../common/constants';
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
 import { isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
-import { isEventStreamRequest, isRequest, isRequestId } from '../../models/request';
+import {
+  isEventStreamRequest,
+  isRequest,
+  isRequestId,
+} from '../../models/request';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
-import { isWebSocketRequest, isWebSocketRequestId } from '../../models/websocket-request';
+import {
+  isWebSocketRequest,
+  isWebSocketRequestId,
+} from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
-import { EnvironmentsDropdown } from '../components/dropdowns/environments-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
+import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
@@ -28,15 +58,22 @@ import { GrpcResponsePane } from '../components/panes/grpc-response-pane';
 import { PlaceholderRequestPane } from '../components/panes/placeholder-request-pane';
 import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
-import { SidebarChildren } from '../components/sidebar/sidebar-children';
-import { SidebarFilter } from '../components/sidebar/sidebar-filter';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
-import { useRequestMetaPatcher } from '../hooks/use-request';
-import { GrpcRequestLoaderData, RequestLoaderData, WebSocketRequestLoaderData } from './request';
+import {
+  CreateRequestType,
+  useRequestGroupMetaPatcher,
+  useRequestMetaPatcher,
+} from '../hooks/use-request';
+import {
+  GrpcRequestLoaderData,
+  RequestLoaderData,
+  WebSocketRequestLoaderData,
+} from './request';
 import { RootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
+
 export interface GrpcMessage {
   id: string;
   text: string;
@@ -68,7 +105,8 @@ export const loader: LoaderFunction = async ({ params }) => {
     invariant(projectId, 'Project ID is required');
     const activeWorkspace = await models.workspace.getById(workspaceId);
     invariant(activeWorkspace, 'Workspace not found');
-    const activeWorkspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+    const activeWorkspaceMeta =
+      await models.workspaceMeta.getOrCreateByParentId(workspaceId);
     invariant(activeWorkspaceMeta, 'Workspace meta not found');
     const activeRequestId = activeWorkspaceMeta.activeRequestId;
     const activeRequest = activeRequestId ? await models.request.getById(activeRequestId) : null;
@@ -78,20 +116,39 @@ export const loader: LoaderFunction = async ({ params }) => {
   }
   return null;
 };
+
 export const Debug: FC = () => {
   const {
     activeWorkspace,
     activeWorkspaceMeta,
     activeEnvironment,
     grpcRequests,
+    subEnvironments,
+    baseEnvironment,
+    collection,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const requestData = useRouteLoaderData('request/:requestId') as RequestLoaderData | GrpcRequestLoaderData | WebSocketRequestLoaderData | undefined;
+  const requestData = useRouteLoaderData('request/:requestId') as
+    | RequestLoaderData
+    | GrpcRequestLoaderData
+    | WebSocketRequestLoaderData
+    | undefined;
   const { activeRequest } = requestData || {};
   const requestFetcher = useFetcher();
-  const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(grpcRequests.map(r => ({ requestId: r._id, ...INITIAL_GRPC_REQUEST_STATE })));
+  const { organizationId, projectId, workspaceId, requestId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
+    requestId: string;
+  };
+  const [grpcStates, setGrpcStates] = useState<GrpcRequestState[]>(
+    grpcRequests.map(r => ({
+      requestId: r._id,
+      ...INITIAL_GRPC_REQUEST_STATE,
+    })),
+  );
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
-  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] = useState(false);
+  const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
+    useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
 
   const patchRequestMeta = useRequestMetaPatcher();
@@ -100,17 +157,20 @@ export const Debug: FC = () => {
       for (const change of changes) {
         const [event, doc] = change;
         if (isGrpcRequest(doc) && event === 'insert') {
-          setGrpcStates(grpcStates => ([...grpcStates, { requestId: doc._id, ...INITIAL_GRPC_REQUEST_STATE }]));
+          setGrpcStates(grpcStates => [
+            ...grpcStates,
+            { requestId: doc._id, ...INITIAL_GRPC_REQUEST_STATE },
+          ]);
         }
       }
     });
   }, []);
 
-  const {
-    settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
-  const { sidebarFilter } = activeWorkspaceMeta;
-  const [runningRequests, setRunningRequests] = useState<Record<string, boolean>>({});
+  const { settings } = useRouteLoaderData('root') as RootLoaderData;
+  // const { sidebarFilter } = activeWorkspaceMeta;
+  const [runningRequests, setRunningRequests] = useState<
+    Record<string, boolean>
+  >({});
   const setLoading = (isLoading: boolean) => {
     invariant(requestId, 'No active request');
     if (Boolean(runningRequests?.[requestId]) !== isLoading) {
@@ -122,124 +182,172 @@ export const Debug: FC = () => {
   };
 
   const grpcState = grpcStates.find(s => s.requestId === requestId);
-  const setGrpcState = (newState: GrpcRequestState) => setGrpcStates(state => state.map(s => s.requestId === requestId ? newState : s));
+  const setGrpcState = (newState: GrpcRequestState) =>
+    setGrpcStates(state =>
+      state.map(s => (s.requestId === requestId ? newState : s)),
+    );
   const reloadRequests = (requestIds: string[]) => {
-    setGrpcStates(state => state.map(s => requestIds.includes(s.requestId) ? { ...s, methods: [] } : s));
+    setGrpcStates(state =>
+      state.map(s =>
+        requestIds.includes(s.requestId) ? { ...s, methods: [] } : s,
+      ),
+    );
   };
-  useEffect(() => window.main.on('grpc.start', (_, id) => {
-    setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, running: true } : s));
-  }), []);
-  useEffect(() => window.main.on('grpc.end', (_, id) => {
-    setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, running: false } : s));
-  }), []);
-  useEffect(() => window.main.on('grpc.data', (_, id, value) => {
-    setGrpcStates(state => state.map(s => s.requestId === id ? {
-      ...s, responseMessages: [...s.responseMessages, {
-        id: generateId(),
-        text: JSON.stringify(value),
-        created: Date.now(),
-      }],
-    } : s));
-  }), []);
-  useEffect(() => window.main.on('grpc.error', (_, id, error) => {
-    setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, error } : s));
-  }), []);
-  useEffect(() => window.main.on('grpc.status', (_, id, status) => {
-    setGrpcStates(state => state.map(s => s.requestId === id ? { ...s, status } : s));
-  }), []);
+  useEffect(
+    () =>
+      window.main.on('grpc.start', (_, id) => {
+        setGrpcStates(state =>
+          state.map(s => (s.requestId === id ? { ...s, running: true } : s)),
+        );
+      }),
+    [],
+  );
+  useEffect(
+    () =>
+      window.main.on('grpc.end', (_, id) => {
+        setGrpcStates(state =>
+          state.map(s => (s.requestId === id ? { ...s, running: false } : s)),
+        );
+      }),
+    [],
+  );
+  useEffect(
+    () =>
+      window.main.on('grpc.data', (_, id, value) => {
+        setGrpcStates(state =>
+          state.map(s =>
+            s.requestId === id
+              ? {
+                  ...s,
+                  responseMessages: [
+                    ...s.responseMessages,
+                    {
+                      id: generateId(),
+                      text: JSON.stringify(value),
+                      created: Date.now(),
+                    },
+                  ],
+                }
+              : s,
+          ),
+        );
+      }),
+    [],
+  );
+  useEffect(
+    () =>
+      window.main.on('grpc.error', (_, id, error) => {
+        setGrpcStates(state =>
+          state.map(s => (s.requestId === id ? { ...s, error } : s)),
+        );
+      }),
+    [],
+  );
+  useEffect(
+    () =>
+      window.main.on('grpc.status', (_, id, status) => {
+        setGrpcStates(state =>
+          state.map(s => (s.requestId === id ? { ...s, status } : s)),
+        );
+      }),
+    [],
+  );
 
   useDocBodyKeyboardShortcuts({
-    request_togglePin:
-      async () => {
-        if (requestId) {
-          const meta = isGrpcRequestId(requestId) ? await getGrpcRequestMetaByParentId(requestId) : await getRequestMetaByParentId(requestId);
-          patchRequestMeta(requestId, { pinned: !meta?.pinned });
-        }
-      },
-    request_showSettings:
-      () => {
-        if (activeRequest) {
-          setIsRequestSettingsModalOpen(true);
-        }
-      },
-    request_showDelete:
-      () => {
-        if (activeRequest) {
-          showModal(AskModal, {
-            title: 'Delete Request?',
-            message: `Really delete ${activeRequest.name}?`,
-            onDone: async (confirmed: boolean) => {
-              if (confirmed) {
-                requestFetcher.submit({ id: requestId },
-                  {
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
-                    method: 'post',
-                  });
-              }
-            },
-          });
-        }
-      },
-    request_showDuplicate:
-      () => {
-        if (activeRequest) {
-          showModal(PromptModal, {
-            title: 'Duplicate Request',
-            defaultValue: activeRequest.name,
-            submitName: 'Create',
-            label: 'New Name',
-            selectText: true,
-            onComplete: async (name: string) => {
-              requestFetcher.submit({ name },
+    request_togglePin: async () => {
+      if (requestId) {
+        const meta = isGrpcRequestId(requestId)
+          ? await getGrpcRequestMetaByParentId(requestId)
+          : await getRequestMetaByParentId(requestId);
+        patchRequestMeta(requestId, { pinned: !meta?.pinned });
+      }
+    },
+    request_showSettings: () => {
+      if (activeRequest) {
+        setIsRequestSettingsModalOpen(true);
+      }
+    },
+    request_showDelete: () => {
+      if (activeRequest) {
+        showModal(AskModal, {
+          title: 'Delete Request?',
+          message: `Really delete ${activeRequest.name}?`,
+          onDone: async (confirmed: boolean) => {
+            if (confirmed) {
+              requestFetcher.submit(
+                { id: requestId },
                 {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/duplicate`,
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
                   method: 'post',
-                  encType: 'application/json',
-                });
-            },
-          });
-        }
-      },
-    request_createHTTP:
-      async () => {
-        const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
-        requestFetcher.submit({ requestType: 'HTTP', parentId },
-          {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
-            method: 'post',
-            encType: 'application/json',
-          });
-      },
-    request_showCreateFolder:
-      () => {
-        const parentId = activeRequest ? activeRequest.parentId : workspaceId;
-        showPrompt({
-          title: 'New Folder',
-          defaultValue: 'My Folder',
+                },
+              );
+            }
+          },
+        });
+      }
+    },
+    request_showDuplicate: () => {
+      if (activeRequest) {
+        showModal(PromptModal, {
+          title: 'Duplicate Request',
+          defaultValue: activeRequest.name,
           submitName: 'Create',
-          label: 'Name',
+          label: 'New Name',
           selectText: true,
-          onComplete: name => requestFetcher.submit({ parentId, name },
+          onComplete: async (name: string) => {
+            requestFetcher.submit(
+              { name },
+              {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/duplicate`,
+                method: 'post',
+                encType: 'application/json',
+              },
+            );
+          },
+        });
+      }
+    },
+    request_createHTTP: async () => {
+      const parentId = activeRequest
+        ? activeRequest.parentId
+        : activeWorkspace._id;
+      requestFetcher.submit(
+        { requestType: 'HTTP', parentId },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+          method: 'post',
+          encType: 'application/json',
+        },
+      );
+    },
+    request_showCreateFolder: () => {
+      const parentId = activeRequest ? activeRequest.parentId : workspaceId;
+      showPrompt({
+        title: 'New Folder',
+        defaultValue: 'My Folder',
+        submitName: 'Create',
+        label: 'Name',
+        selectText: true,
+        onComplete: name =>
+          requestFetcher.submit(
+            { parentId, name },
             {
               action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
               method: 'post',
-            }),
-        });
-      },
+            },
+          ),
+      });
+    },
     // TODO: fix these
-    request_showRecent:
-      () => { },
-    request_quickSwitch:
-      () => { },
-    environment_showEditor:
-      () => setEnvironmentModalOpen(true),
+    request_showRecent: () => {},
+    request_quickSwitch: () => {},
+    environment_showEditor: () => setEnvironmentModalOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
-    request_showGenerateCodeEditor:
-      () => {
-        if (activeRequest && isRequest(activeRequest)) {
-          showModal(GenerateCodeModal, { request: activeRequest });
-        }
-      },
+    request_showGenerateCodeEditor: () => {
+      if (activeRequest && isRequest(activeRequest)) {
+        showModal(GenerateCodeModal, { request: activeRequest });
+      }
+    },
   });
   // Close all websocket connections when the active environment changes
   useEffect(() => {
@@ -248,75 +356,555 @@ export const Debug: FC = () => {
       window.main.grpc.closeAll();
     };
   }, [activeEnvironment?._id]);
-  const isRealtimeRequest = activeRequest && (isWebSocketRequest(activeRequest) || isEventStreamRequest(activeRequest));
-  return (
-    <SidebarLayout
-      renderPageSidebar={workspaceId ? <Fragment>
-        <div className="sidebar__menu">
-          <EnvironmentsDropdown
-            activeEnvironment={activeEnvironment}
-            workspaceId={workspaceId}
-            setEnvironmentModalOpen={setEnvironmentModalOpen}
-          />
-          <button className="btn btn--super-compact" onClick={() => setIsCookieModalOpen(true)}>
-            <div className="sidebar__menu__thing">
-              <span>Cookies</span>
-            </div>
-          </button>
-        </div>
-        {isEnvironmentModalOpen && (
-          <WorkspaceEnvironmentsEditModal onHide={() => setEnvironmentModalOpen(false)} />)
-        }
-        {isCookieModalOpen && (
-          <CookiesModal
-            onHide={() => setIsCookieModalOpen(false)}
-          />
-        )}
+  const isRealtimeRequest =
+    activeRequest &&
+    (isWebSocketRequest(activeRequest) || isEventStreamRequest(activeRequest));
 
-        <SidebarFilter
-          key={`${workspaceId}::filter`}
-          filter={sidebarFilter || ''}
+  const setActiveEnvironmentFetcher = useFetcher();
+  const create = (requestType: CreateRequestType) =>
+  requestFetcher.submit({ requestType, parentId: workspaceId, clipboardText: window.clipboard.readText() },
+    {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+      method: 'post',
+      encType: 'application/json',
+    });
+
+const createGroup = () => {
+  showPrompt({
+    title: 'New Folder',
+    defaultValue: 'My Folder',
+    submitName: 'Create',
+    label: 'Name',
+    selectText: true,
+    onComplete: name => requestFetcher.submit({ parentId: workspaceId, name },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+        method: 'post',
+      }),
+  });
+};
+
+  const { hotKeyRegistry } = settings;
+
+  const createRequest = (requestType: CreateRequestType) =>
+    requestFetcher.submit(
+      { requestType, parentId: workspaceId, clipboardText: window.clipboard.readText() },
+      {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+        method: 'post',
+        encType: 'application/json',
+      },
+    );
+
+  const groupMetaPatcher = useRequestGroupMetaPatcher();
+  const reorderFetcher = useFetcher();
+  console.log({ collection });
+
+  const navigate = useNavigate();
+
+  const collectionDragAndDrop = useDragAndDrop({
+    getItems: keys =>
+      [...keys].map(key => ({ 'text/plain': key.toString() })),
+    onReorder(event) {
+      const id = event.keys.values().next().value.toString();
+      const targetId = event.target.key.toString();
+
+      const targetIndex = collection.findIndex(r => r.id === targetId);
+      let metaSortKey = 0;
+
+      if (event.target.dropPosition === 'before') {
+        const beforeTarget = collection[targetIndex - 1];
+        const afterTarget = collection[targetIndex];
+
+        const afterKey = afterTarget?.sortKey;
+        const beforeKey =
+          beforeTarget?.sortKey && beforeTarget.level === afterTarget.level
+            ? beforeTarget?.sortKey
+            : afterKey + 100;
+
+        metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+      } else {
+        const beforeTarget = collection[targetIndex];
+        const afterTarget = collection[targetIndex + 1];
+
+        const beforeKey = beforeTarget?.sortKey;
+        const afterKey =
+          afterTarget?.sortKey && afterTarget.level === beforeTarget.level
+            ? afterTarget.sortKey
+            : beforeKey - 100;
+
+        metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+      }
+
+      reorderFetcher.submit(
+        {
+          targetId,
+          id,
+          dropPosition: event.target.dropPosition,
+          metaSortKey,
+        },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/reorder`,
+          method: 'POST',
+          encType: 'application/json',
+        },
+      );
+    },
+    renderDropIndicator(target) {
+      return (
+        <DropIndicator
+          target={target}
+          className="w-full absolute h-[1px] bg-[--color-surprise]"
         />
-        <SidebarChildren
-          filter={sidebarFilter || ''}
-        />
-        <WorkspaceSyncDropdown />
-      </Fragment>
-        : null}
-      renderPaneOne={workspaceId ?
-        <ErrorBoundary showAlert>
-          {isGrpcRequestId(requestId) && grpcState && (
-            <GrpcRequestPane
-              grpcState={grpcState}
-              setGrpcState={setGrpcState}
-              reloadRequests={reloadRequests}
-            />)}
-          {isWebSocketRequestId(requestId) && (
-            <WebSocketRequestPane environment={activeEnvironment} />)}
-          {isRequestId(requestId) && (<RequestPane
-            environmentId={activeEnvironment ? activeEnvironment._id : ''}
-            settings={settings}
-            setLoading={setLoading}
-          />)}
-          {!requestId && <PlaceholderRequestPane />}
-          {isRequestSettingsModalOpen && activeRequest && (
-            <RequestSettingsModal
-              request={activeRequest}
-              onHide={() => setIsRequestSettingsModalOpen(false)}
-            />
-          )}
-        </ErrorBoundary>
-        : null}
-      renderPaneTwo={
-        <ErrorBoundary showAlert>
-          {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
-            <GrpcResponsePane grpcState={grpcState} />)}
-          {isRealtimeRequest && (
-            <RealtimeResponsePane requestId={activeRequest._id} />)}
-          {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
-            <ResponsePane runningRequests={runningRequests} />)}
-        </ErrorBoundary>}
-    />
+      );
+    },
+  });
+
+  return (
+    <div className="new-sidebar">
+      <SidebarLayout
+        renderPageSidebar={
+          <div className="flex flex-1 flex-col gap-2 overflow-hidden">
+            <div className="flex items-center gap-2 justify-between px-[--padding-sm] pt-[--padding-sm]">
+              <Select
+                aria-label="Select an environment"
+                onSelectionChange={environmentId => {
+                  setActiveEnvironmentFetcher.submit(
+                    {
+                      environmentId,
+                    },
+                    {
+                      method: 'post',
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
+                    },
+                  );
+                }}
+                selectedKey={activeEnvironment._id}
+                items={[baseEnvironment, ...subEnvironments].map(e => ({
+                  ...e,
+                  id: e._id,
+                }))}
+              >
+                <Button className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                  <SelectValue className="flex items-center justify-center gap-2">
+                    {({ isPlaceholder, selectedItem }) => {
+                      if (
+                        isPlaceholder ||
+                        selectedItem._id === baseEnvironment._id
+                      ) {
+                        return <Fragment>No environment</Fragment>;
+                      }
+
+                      return (
+                        <Fragment>
+                          <Icon
+                            icon="circle"
+                            style={{
+                              color: selectedItem.color,
+                            }}
+                          />
+                          {selectedItem.name}
+                        </Fragment>
+                      );
+                    }}
+                  </SelectValue>
+                </Button>
+                <Popover className="min-w-max">
+                  <ListBox
+                    key={activeEnvironment._id}
+                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
+                    {item => (
+                      <Item
+                        id={item._id}
+                        key={item._id}
+                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                        aria-label={item.name}
+                        textValue={item.name}
+                        value={item}
+                      >
+                        {({ isSelected }) => (
+                          <Fragment>
+                            <Icon
+                              icon="circle"
+                              style={{
+                                color: item.color,
+                              }}
+                            />
+                            <span>{item.name}</span>
+                            {isSelected && (
+                              <Icon
+                                icon="check"
+                                className="text-[--color-success] justify-self-end"
+                              />
+                            )}
+                          </Fragment>
+                        )}
+                      </Item>
+                    )}
+                  </ListBox>
+                </Popover>
+              </Select>
+              <Button
+                onPress={() => setIsCookieModalOpen(true)}
+                className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              >
+                <Icon icon="cookie-bite" />
+                Cookies
+              </Button>
+            </div>
+
+            <div className="flex justify-between gap-1 px-[--padding-sm]">
+              <SearchField
+                aria-label="Collection filter"
+                className="group relative flex-1"
+              >
+                <Input
+                  placeholder="Filter"
+                  className="py-1 w-full pl-2 pr-6 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                />
+                <Button className="flex group-data-[empty]:hidden items-center justify-center absolute right-0 top-0 aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                  <Icon icon="close" />
+                </Button>
+              </SearchField>
+              <Select
+                aria-label="Select an environment"
+                className="h-full aspect-square"
+                onSelectionChange={console.log}
+                items={SORT_ORDERS.map(order => {
+                  return {
+                    id: order,
+                    name: sortOrderName[order],
+                  };
+                })}
+              >
+                <Button
+                  aria-label="Show environments"
+                  className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                >
+                  <Icon icon="sort" />
+                </Button>
+                <Popover className="min-w-max">
+                  <ListBox className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
+                    {item => (
+                      <Item
+                        id={item.id}
+                        key={item.id}
+                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                        aria-label={item.name}
+                        textValue={item.name}
+                        value={item}
+                      >
+                        {({ isSelected }) => (
+                          <Fragment>
+                            <span>{item.name}</span>
+                            {isSelected && (
+                              <Icon
+                                icon="check"
+                                className="text-[--color-success] justify-self-end"
+                              />
+                            )}
+                          </Fragment>
+                        )}
+                      </Item>
+                    )}
+                  </ListBox>
+                </Popover>
+              </Select>
+
+              <MenuTrigger>
+                <Button
+                  aria-label="Create in collection"
+                  className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                >
+                  <Icon icon="plus-circle" />
+                </Button>
+                <Popover className="min-w-max">
+                  <Menu
+                    aria-label="Create a new request"
+                    selectionMode="single"
+                    onAction={action => {
+                      console.log(action);
+                    }}
+                    items={[
+                      {
+                        id: 'HTTP',
+                        name: 'HTTP Request',
+                        icon: 'plus-circle',
+                        hint: hotKeyRegistry.request_createHTTP,
+                        value: () => createRequest('HTTP'),
+                      },
+                      {
+                        id: 'Event Stream',
+                        name: 'Event Stream Request',
+                        icon: 'plus-circle',
+                        value: () => createRequest('Event Stream'),
+                      },
+                      {
+                        id: 'GraphQL Request',
+                        name: 'GraphQL Request',
+                        icon: 'plus-circle',
+                        value: () => createRequest('GraphQL'),
+                      },
+                      {
+                        id: 'gRPC Request',
+                        name: 'gRPC Request',
+                        icon: 'plus-circle',
+                        value: () => createRequest('gRPC'),
+                      },
+                      {
+                        id: 'WebSocket Request',
+                        name: 'WebSocket Request',
+                        icon: 'plus-circle',
+                        value: () => createRequest('WebSocket'),
+                      },
+                      {
+                        id: 'From Curl',
+                        name: 'From Curl',
+                        icon: 'plus-circle',
+                        value: () => createRequest('From Curl'),
+                      },
+                      {
+                        id: 'New Folder',
+                        name: 'New Folder',
+                        icon: 'folder',
+                        value: () =>
+                          showPrompt({
+                            title: 'New Folder',
+                            defaultValue: 'My Folder',
+                            submitName: 'Create',
+                            label: 'Name',
+                            selectText: true,
+                            onComplete: name =>
+                              requestFetcher.submit(
+                                { parentId: workspaceId, name },
+                                {
+                                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+                                  method: 'post',
+                                },
+                              ),
+                          }),
+                      },
+                    ]}
+                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
+                    {item => (
+                      <Item
+                        key={item.id}
+                        id={item.id}
+                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                        aria-label={item.name}
+                      >
+                        <Icon icon={item.icon} />
+                        <span>{item.name}</span>
+                      </Item>
+                    )}
+                  </Menu>
+                </Popover>
+              </MenuTrigger>
+            </div>
+
+            <div className="flex-1">
+              <GridList
+                items={collection}
+                aria-label="Request Collection"
+                disallowEmptySelection
+                dragAndDropHooks={collectionDragAndDrop.dragAndDropHooks}
+                selectedKeys={[requestId]}
+                selectionMode="single"
+                onSelectionChange={keys => {
+                  if (keys !== 'all') {
+                    const value = keys.values().next().value;
+                    console.log(value);
+                    const item = collection.find(item => item.id === value);
+                    if (item && item.type === 'group') {
+                      groupMetaPatcher(value, { collapsed: !item.collapsed });
+                    } else {
+                      navigate(
+                        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}`,
+                      );
+                    }
+                  }
+                }}
+              >
+                {item => {
+                  return (
+                    <Item
+                      key={item.id}
+                      id={item.id}
+                      className="group outline-none select-none"
+                    >
+                      <div
+                        className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                        style={{
+                          paddingLeft: `${item.level + 1}rem`,
+                        }}
+                      >
+                        <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                        {item.type === 'request' && (
+                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center">
+                            {item.tag}
+                          </span>
+                        )}
+                        {item.type === 'group' && (
+                          <Icon
+                            className="w-6"
+                            icon={item.collapsed ? 'folder' : 'folder-open'}
+                          />
+                        )}
+                        <span className="truncate">{item.name}</span>
+                        <span className="flex-1" />
+                        <MenuTrigger>
+                          <Button
+                            aria-label="Request Group Actions"
+                            className="justify-self-end data-[pressed]:opacity-100 group-hover:opacity-100 group-data-[focused]:opacity-100 flex opacity-0 w-5 aspect-square items-center justify-center data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                          >
+                            <Icon icon="caret-down" />
+                          </Button>
+                          <Popover className="min-w-max">
+                            <Menu
+                              disallowEmptySelection
+                              selectionMode="single"
+                              aria-label="Create a new request"
+                              onSelectionChange={keys => {
+                                if (keys !== 'all') {
+                                  const action = keys.values().next().value;
+                                  console.log({ action });
+                                }
+                              }}
+                              items={[
+                                {
+                                  id: 'HTTP',
+                                  name: 'HTTP Request',
+                                  icon: 'plus-circle',
+                                  hint: hotKeyRegistry.request_createHTTP,
+                                  value: () => createRequest('HTTP'),
+                                },
+                                {
+                                  id: 'Event Stream',
+                                  name: 'Event Stream Request',
+                                  icon: 'plus-circle',
+                                  value: () => createRequest('Event Stream'),
+                                },
+                                {
+                                  id: 'GraphQL Request',
+                                  name: 'GraphQL Request',
+                                  icon: 'plus-circle',
+                                  value: () => createRequest('GraphQL'),
+                                },
+                                {
+                                  id: 'gRPC Request',
+                                  name: 'gRPC Request',
+                                  icon: 'plus-circle',
+                                  value: () => createRequest('gRPC'),
+                                },
+                                {
+                                  id: 'WebSocket Request',
+                                  name: 'WebSocket Request',
+                                  icon: 'plus-circle',
+                                  value: () => createRequest('WebSocket'),
+                                },
+                                {
+                                  id: 'New Folder',
+                                  name: 'New Folder',
+                                  icon: 'folder',
+                                  value: () =>
+                                    showPrompt({
+                                      title: 'New Folder',
+                                      defaultValue: 'My Folder',
+                                      submitName: 'Create',
+                                      label: 'Name',
+                                      selectText: true,
+                                      onComplete: name =>
+                                        requestFetcher.submit(
+                                          { parentId: workspaceId, name },
+                                          {
+                                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+                                            method: 'post',
+                                          },
+                                        ),
+                                    }),
+                                },
+                              ]}
+                              className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                            >
+                              {item => (
+                                <Item
+                                  className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                                  aria-label={item.name}
+                                >
+                                  <Icon icon={item.icon} />
+                                  <span>{item.name}</span>
+                                </Item>
+                              )}
+                            </Menu>
+                          </Popover>
+                        </MenuTrigger>
+                      </div>
+                    </Item>
+                  );
+                }}
+              </GridList>
+            </div>
+            <WorkspaceSyncDropdown />
+
+            {isEnvironmentModalOpen && (
+              <WorkspaceEnvironmentsEditModal
+                onHide={() => setEnvironmentModalOpen(false)}
+              />
+            )}
+            {isCookieModalOpen && (
+              <CookiesModal onHide={() => setIsCookieModalOpen(false)} />
+            )}
+          </div>
+        }
+        renderPaneOne={
+          workspaceId ? (
+            <ErrorBoundary showAlert>
+              {isGrpcRequestId(requestId) && grpcState && (
+                <GrpcRequestPane
+                  grpcState={grpcState}
+                  setGrpcState={setGrpcState}
+                  reloadRequests={reloadRequests}
+                />
+              )}
+              {isWebSocketRequestId(requestId) && (
+                <WebSocketRequestPane environment={activeEnvironment} />
+              )}
+              {isRequestId(requestId) && (
+                <RequestPane
+                  environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                  settings={settings}
+                  setLoading={setLoading}
+                />
+              )}
+              {!requestId && <PlaceholderRequestPane />}
+              {isRequestSettingsModalOpen && activeRequest && (
+                <RequestSettingsModal
+                  request={activeRequest}
+                  onHide={() => setIsRequestSettingsModalOpen(false)}
+                />
+              )}
+            </ErrorBoundary>
+          ) : null
+        }
+        renderPaneTwo={
+          <ErrorBoundary showAlert>
+            {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+              <GrpcResponsePane grpcState={grpcState} />
+            )}
+            {isRealtimeRequest && (
+              <RealtimeResponsePane requestId={activeRequest._id} />
+            )}
+            {activeRequest &&
+              isRequest(activeRequest) &&
+              !isRealtimeRequest && (
+                <ResponsePane runningRequests={runningRequests} />
+              )}
+          </ErrorBoundary>
+        }
+      />
+    </div>
   );
 };
 

@@ -549,9 +549,6 @@ blockquote p {
 .hide {
   display: none;
 }
-.hidden {
-  visibility: hidden;
-}
 .relative {
   position: relative;
 }
@@ -717,18 +714,6 @@ i.fa.fa--fixed-width {
 }
 .no-margin-left {
   margin-left: 0 !important;
-}
-.block {
-  display: block !important;
-}
-.grid {
-  display: grid !important;
-}
-.flex {
-  display: flex !important;
-}
-.inline-block {
-  display: inline-block !important;
 }
 .ellipsis {
   white-space: nowrap;

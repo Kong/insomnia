@@ -11,10 +11,14 @@ import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
+import { isGrpcRequestId } from '../../models/grpc-request';
+import { update } from '../../models/helpers/request-operations';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
-import { isRequest, Request } from '../../models/request';
+import { isRequest, isRequestId, Request } from '../../models/request';
+import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
+import { isWebSocketRequestId } from '../../models/websocket-request';
 import { isCollection, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
@@ -940,5 +944,66 @@ export const deleteClientCertificateAction: ActionFunction = async ({ request })
 export const updateSettingsAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
   await models.settings.patch(patch);
+  return null;
+};
+
+const getCollectionItem = async (id: string) => {
+  let item;
+  if (isRequestGroupId(id)) {
+    item = await models.requestGroup.getById(id);
+  } else if (isRequestId(id)) {
+    item = await models.request.getById(id);
+  } else if (isWebSocketRequestId(id)) {
+    item = await models.webSocketRequest.getById(id);
+  } else if (isGrpcRequestId(id)) {
+    item = await models.grpcRequest.getById(id);
+  }
+
+  invariant(item, 'Item not found');
+
+  return item;
+};
+
+export const reorderCollectionAction: ActionFunction = async ({ request, params }) => {
+  const { workspaceId }  = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  const { id, targetId, dropPosition, metaSortKey } = await request.json();
+  invariant(typeof id === 'string', 'ID is required');
+  invariant(typeof targetId === 'string', 'Target ID is required');
+  invariant(typeof dropPosition === 'string', 'Drop position is required');
+  invariant(metaSortKey, 'MetaSortKey position is required');
+
+  if (id === targetId) {
+    return null;
+  }
+
+  const item = await getCollectionItem(id);
+  const targetItem = await getCollectionItem(targetId);
+
+  // @TODO METASortKEY
+  if (!isRequestGroup(targetItem)) {
+    console.log('Moving to request');
+    if (isRequestGroup(item)) {
+      await models.requestGroup.update(item, { parentId: targetItem.parentId, metaSortKey });
+    } else {
+      await update(item, { parentId: targetItem.parentId, metaSortKey });
+    }
+  } else {
+    console.log('Moving to group');
+    if (dropPosition === 'before') {
+      if (isRequestGroup(item)) {
+        await models.requestGroup.update(item, { parentId: targetItem.parentId, metaSortKey });
+      } else {
+        await update(item, { parentId: targetItem.parentId, metaSortKey });
+      }
+    } else {
+      if (isRequestGroup(item)) {
+        await models.requestGroup.update(item, { parentId: targetItem._id, metaSortKey });
+      } else {
+        await update(item, { parentId: targetItem._id, metaSortKey });
+      }
+    }
+  }
+
   return null;
 };
