@@ -560,12 +560,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
     const existingWorkspace = await models.workspace.getById(workspace._id);
 
     if (existingWorkspace) {
-      // if collection scope, redirect to debug instead
-      if (existingWorkspace.scope === WorkspaceScopeKeys.collection) {
-        return redirect(`/organization/${existingWorkspace.parentId || DEFAULT_ORGANIZATION_ID}/project/${existingWorkspace.parentId || DEFAULT_PROJECT_ID}/workspace/${existingWorkspace._id}/debug`);
-      }
-
-      return redirect(`/organization/${existingWorkspace.parentId || DEFAULT_ORGANIZATION_ID}/project/${existingWorkspace.parentId || DEFAULT_PROJECT_ID}/workspace/${existingWorkspace._id}/${ACTIVITY_SPEC}`);
+      return redirect(`/organization/${existingWorkspace.parentId || DEFAULT_ORGANIZATION_ID}/project/${existingWorkspace.parentId || DEFAULT_PROJECT_ID}/workspace/${existingWorkspace._id}/debug`);
     }
 
     // Loop over all model folders in root
