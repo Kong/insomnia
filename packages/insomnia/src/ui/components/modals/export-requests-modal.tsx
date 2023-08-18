@@ -115,7 +115,7 @@ export const ExportRequestsModal = ({ workspace, onHide }: { workspace: Workspac
 
   const isExportDisabled = state?.treeRoot?.selectedRequests === 0 || false;
   return (
-    <OverlayContainer>
+    <OverlayContainer onClick={e => e.stopPropagation()}>
       <Modal ref={modalRef} tall onHide={onHide}>
         <ModalHeader>Select Requests to Export</ModalHeader>
         <ModalBody>
