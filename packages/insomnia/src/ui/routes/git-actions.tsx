@@ -476,25 +476,10 @@ export const cloneGitRepoAction: ActionFunction = async ({
     return rootDirs.includes(models.workspace.type);
   };
 
-  // get workspace scope from workspace dir
-  const getWorkspaceScopeFromWorkspaceDir = async (
-    fsClient: Record<string, any>
-  ): Promise<'design' | 'collection'> => {
-    const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-    const workspaces = await fsClient.promises.readdir(workspaceBase);
-    const workspacePath = path.join(workspaceBase, workspaces[0]);
-    const workspaceJson = await fsClient.promises.readFile(workspacePath);
-    const workspace = YAML.parse(workspaceJson.toString());
-    if (workspace.scope === WorkspaceScopeKeys.collection) {
-      return WorkspaceScopeKeys.collection;
-    }
-    return WorkspaceScopeKeys.design;
-  };
-
   // Stop the DB from pushing updates to the UI temporarily
   const bufferId = await database.bufferChanges();
   let workspaceId = '';
-  const scope = await getWorkspaceScopeFromWorkspaceDir(fsClient);
+  let scope: 'design' | 'collection' = WorkspaceScopeKeys.design;
   // If no workspace exists we create a new one
   if (!(await containsInsomniaWorkspaceDir(fsClient))) {
     // Create a new workspace
@@ -556,6 +541,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
     const workspacePath = path.join(workspaceBase, workspaces[0]);
     const workspaceJson = await fsClient.promises.readFile(workspacePath);
     const workspace = YAML.parse(workspaceJson.toString());
+    scope = (workspace.scope === WorkspaceScopeKeys.collection) ? WorkspaceScopeKeys.collection : WorkspaceScopeKeys.design;
     // Check if the workspace already exists
     const existingWorkspace = await models.workspace.getById(workspace._id);
 
@@ -572,7 +558,6 @@ export const cloneGitRepoAction: ActionFunction = async ({
         const docPath = path.join(modelDir, docFileName);
         const docYaml = await fsClient.promises.readFile(docPath);
         const doc: models.BaseModel = YAML.parse(docYaml.toString());
-        const scope = await getWorkspaceScopeFromWorkspaceDir(fsClient);
         if (isWorkspace(doc)) {
           doc.parentId = project._id;
           doc.scope = scope;
@@ -599,6 +584,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
 
   invariant(workspaceId, 'Workspace ID is required');
 
+  // Redirect to debug for collection scope initial clone
   if (scope === WorkspaceScopeKeys.collection) {
     return redirect(
       `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`
