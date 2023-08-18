@@ -25,14 +25,16 @@ export const SidebarChildren: FC<Props> = ({
     requestTree,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
 
-  const pinned = requestTree.filter((child: Child) => child.pinned);
+  const pinned = requestTree.filter((child: Child) => child.pinned && child.doc.name.includes(filter));
   const showSeparator = pinned.length > 0;
+
+  const requestTreeFiltered = requestTree.filter((child: Child) => child.doc.name.includes(filter));
   return (
     <Fragment>
       <ul className="sidebar__list sidebar__list-root theme--sidebar__list">
         <RecursiveSidebarRows
           filter={filter}
-          isInPinnedList={true}
+          isInPinnedList={false}
           rows={pinned}
         />
       </ul>
@@ -45,7 +47,7 @@ export const SidebarChildren: FC<Props> = ({
         <RecursiveSidebarRows
           filter={filter}
           isInPinnedList={false}
-          rows={requestTree}
+          rows={requestTreeFiltered}
         />
       </ul>
     </Fragment>
