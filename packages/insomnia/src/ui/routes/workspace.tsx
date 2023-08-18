@@ -132,7 +132,7 @@ export const workspaceLoader: LoaderFunction = async ({
   const filter =
     searchParams.get('filter') || activeWorkspaceMeta.sidebarFilter;
   const sortOrder = searchParams.get('sortOrder') as SortOrder;
-
+  const sortFunction = sortMethodMap[sortOrder] || sortMethodMap['type-manual'];
   // Update sidebar filter if it's changed
   filter !== activeWorkspaceMeta.sidebarFilter &&
     (await models.workspaceMeta.update(activeWorkspaceMeta, {
@@ -159,9 +159,7 @@ export const workspaceLoader: LoaderFunction = async ({
 
     const childrenWithChildren = await Promise.all(
       [...folders, ...requests, ...webSocketRequests, ...grpcRequests]
-        .sort((a, b) => {
-          return b.metaSortKey - a.metaSortKey;
-        })
+        .sort(sortFunction)
         .map(async doc => {
           const matches = fuzzyMatchAll(filter, [
             doc.name,
@@ -174,7 +172,9 @@ export const workspaceLoader: LoaderFunction = async ({
             (filter && matches && !matches.indexes) ||
             (filter && matches && matches.indexes.length < 1);
 
-          const pinned = !isRequestGroup(doc) && isGrpcRequest(doc) ? (await models.grpcRequestMeta.getOrCreateByParentId(doc._id)).pinned : (await models.requestMeta.getOrCreateByParentId(doc._id)).pinned;
+          const pinned = !isRequestGroup(doc) && isGrpcRequest(doc)
+            ? (await models.grpcRequestMeta.getOrCreateByParentId(doc._id)).pinned
+            : (await models.requestMeta.getOrCreateByParentId(doc._id)).pinned;
           const collapsed = isRequestGroup(doc) && (await models.requestGroupMeta.getByParentId(doc._id))?.collapsed;
 
           return {

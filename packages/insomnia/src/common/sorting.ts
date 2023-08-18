@@ -12,6 +12,7 @@ import {
   SORT_NAME_DESC,
   SORT_TYPE_ASC,
   SORT_TYPE_DESC,
+  SORT_TYPE_MANUAL,
 } from './constants';
 
 type SortableModel = Request | RequestGroup | GrpcRequest;
@@ -134,4 +135,5 @@ export const sortMethodMap = {
   [SORT_HTTP_METHOD]: httpMethodSort,
   [SORT_TYPE_DESC]: descendingTypeSort,
   [SORT_TYPE_ASC]: ascendingTypeSort,
+  [SORT_TYPE_MANUAL]: metaSortKeySort,
 };

@@ -22,6 +22,7 @@ import {
   useNavigate,
   useParams,
   useRouteLoaderData,
+  useSearchParams,
 } from 'react-router-dom';
 import { useListData } from 'react-stately';
 
@@ -361,7 +362,9 @@ export const Debug: FC = () => {
     (isWebSocketRequest(activeRequest) || isEventStreamRequest(activeRequest));
 
   const setActiveEnvironmentFetcher = useFetcher();
+  const [searchParams, setSearchParams] = useSearchParams();
 
+  const sortOrder = searchParams.get('sortOrder') || 'type-manual';
   const { hotKeyRegistry } = settings;
 
   const createRequestGroup = (parentId: string) => {
@@ -642,7 +645,8 @@ export const Debug: FC = () => {
               <Select
                 aria-label="Select an environment"
                 className="h-full aspect-square"
-                onSelectionChange={console.log}
+                selectedKey={sortOrder}
+                onSelectionChange={order => setSearchParams({ sortOrder: order.toString() })}
                 items={SORT_ORDERS.map(order => {
                   return {
                     id: order,
