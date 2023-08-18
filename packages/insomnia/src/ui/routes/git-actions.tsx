@@ -476,15 +476,32 @@ export const cloneGitRepoAction: ActionFunction = async ({
     return rootDirs.includes(models.workspace.type);
   };
 
+  // get workspace scope from workspace dir
+  const getWorkspaceScopeFromWorkspaceDir = async (
+    fsClient: Record<string, any>
+  ): Promise<'design' | 'collection'> => {
+    const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
+    const workspaces = await fsClient.promises.readdir(workspaceBase);
+    const workspacePath = path.join(workspaceBase, workspaces[0]);
+    const workspaceJson = await fsClient.promises.readFile(workspacePath);
+    const workspace = YAML.parse(workspaceJson.toString());
+    if (workspace.scope === WorkspaceScopeKeys.collection) {
+      return WorkspaceScopeKeys.collection;
+    }
+    return WorkspaceScopeKeys.design;
+  };
+
   // Stop the DB from pushing updates to the UI temporarily
   const bufferId = await database.bufferChanges();
   let workspaceId = '';
+  const scope = await getWorkspaceScopeFromWorkspaceDir(fsClient);
   // If no workspace exists we create a new one
   if (!(await containsInsomniaWorkspaceDir(fsClient))) {
     // Create a new workspace
+
     const workspace = await models.workspace.create({
       name: repoSettingsPatch.uri.split('/').pop(),
-      scope: WorkspaceScopeKeys.design,
+      scope: scope,
       parentId: project._id,
       description: `Insomnia Workspace for ${repoSettingsPatch.uri}}`,
     });
@@ -543,7 +560,12 @@ export const cloneGitRepoAction: ActionFunction = async ({
     const existingWorkspace = await models.workspace.getById(workspace._id);
 
     if (existingWorkspace) {
-      return redirect(`/organization/${existingWorkspace.parentId || DEFAULT_ORGANIZATION_ID}/project/${existingWorkspace.parentId || DEFAULT_PROJECT_ID}/workspace/${existingWorkspace._id}/debug`);
+      // if collection scope, redirect to debug instead
+      if (existingWorkspace.scope === WorkspaceScopeKeys.collection) {
+        return redirect(`/organization/${existingWorkspace.parentId || DEFAULT_ORGANIZATION_ID}/project/${existingWorkspace.parentId || DEFAULT_PROJECT_ID}/workspace/${existingWorkspace._id}/debug`);
+      }
+
+      return redirect(`/organization/${existingWorkspace.parentId || DEFAULT_ORGANIZATION_ID}/project/${existingWorkspace.parentId || DEFAULT_PROJECT_ID}/workspace/${existingWorkspace._id}/${ACTIVITY_SPEC}`);
     }
 
     // Loop over all model folders in root
@@ -555,9 +577,10 @@ export const cloneGitRepoAction: ActionFunction = async ({
         const docPath = path.join(modelDir, docFileName);
         const docYaml = await fsClient.promises.readFile(docPath);
         const doc: models.BaseModel = YAML.parse(docYaml.toString());
+        const scope = await getWorkspaceScopeFromWorkspaceDir(fsClient);
         if (isWorkspace(doc)) {
           doc.parentId = project._id;
-          doc.scope = WorkspaceScopeKeys.design;
+          doc.scope = scope;
           const workspace = await database.upsert(doc);
           workspaceId = workspace._id;
         } else {
@@ -581,6 +604,11 @@ export const cloneGitRepoAction: ActionFunction = async ({
 
   invariant(workspaceId, 'Workspace ID is required');
 
+  if (scope === WorkspaceScopeKeys.collection) {
+    return redirect(
+      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`
+    );
+  }
   return redirect(
     `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}`
   );
