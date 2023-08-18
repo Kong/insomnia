@@ -410,7 +410,7 @@ export const Debug: FC = () => {
       const id = event.keys.values().next().value.toString();
       const targetId = event.target.key.toString();
 
-      const targetIndex = collection.findIndex(r => r.id === targetId);
+      const targetIndex = collection.findIndex(r => r.doc._id === targetId);
       let metaSortKey = 0;
 
       if (event.target.dropPosition === 'before') {
@@ -418,35 +418,35 @@ export const Debug: FC = () => {
         const afterTarget = collection[targetIndex];
 
         if (beforeTarget) {
-          const afterKey = afterTarget?.sortKey;
+          const afterKey = afterTarget?.doc.metaSortKey;
           const beforeKey =
-            beforeTarget?.sortKey && beforeTarget.level === afterTarget.level
-              ? beforeTarget?.sortKey
+            beforeTarget?.doc.metaSortKey && beforeTarget.level === afterTarget.level
+              ? beforeTarget?.doc.metaSortKey
               : afterKey + 100;
 
           metaSortKey = afterKey - (afterKey - beforeKey) / 2;
         } else {
-          metaSortKey = afterTarget.sortKey + 100;
+          metaSortKey = afterTarget.doc.metaSortKey + 100;
         }
       } else {
         const beforeTarget = collection[targetIndex];
         const afterTarget = collection[targetIndex + 1];
 
         if (afterTarget) {
-          let beforeKey = beforeTarget?.sortKey;
+          let beforeKey = beforeTarget?.doc.metaSortKey;
           let afterKey =
-            afterTarget?.sortKey && afterTarget.level === beforeTarget.level
-              ? afterTarget.sortKey
+            afterTarget?.doc.metaSortKey && afterTarget.level === beforeTarget.level
+              ? afterTarget.doc.metaSortKey
               : beforeKey - 100;
 
           if (afterTarget.level > beforeTarget.level) {
-            beforeKey = afterTarget.sortKey - 200;
-            afterKey = afterTarget.sortKey - 100;
+            beforeKey = afterTarget.doc.metaSortKey - 200;
+            afterKey = afterTarget.doc.metaSortKey - 100;
           }
 
           metaSortKey = afterKey - (afterKey - beforeKey) / 2;
         } else {
-          metaSortKey = beforeTarget.sortKey - 100;
+          metaSortKey = beforeTarget.doc.metaSortKey - 100;
         }
       }
 
