@@ -23,6 +23,7 @@ import {
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
+import { useListData } from 'react-stately';
 
 import { SORT_ORDERS, sortOrderName } from '../../common/constants';
 import { ChangeBufferEvent, database as db } from '../../common/database';
@@ -120,7 +121,6 @@ export const loader: LoaderFunction = async ({ params }) => {
 export const Debug: FC = () => {
   const {
     activeWorkspace,
-    activeWorkspaceMeta,
     activeEnvironment,
     grpcRequests,
     subEnvironments,
@@ -361,30 +361,26 @@ export const Debug: FC = () => {
     (isWebSocketRequest(activeRequest) || isEventStreamRequest(activeRequest));
 
   const setActiveEnvironmentFetcher = useFetcher();
-  const create = (requestType: CreateRequestType) =>
-  requestFetcher.submit({ requestType, parentId: workspaceId, clipboardText: window.clipboard.readText() },
-    {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
-      method: 'post',
-      encType: 'application/json',
-    });
-
-const createGroup = () => {
-  showPrompt({
-    title: 'New Folder',
-    defaultValue: 'My Folder',
-    submitName: 'Create',
-    label: 'Name',
-    selectText: true,
-    onComplete: name => requestFetcher.submit({ parentId: workspaceId, name },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-        method: 'post',
-      }),
-  });
-};
 
   const { hotKeyRegistry } = settings;
+
+  const createRequestGroup = (parentId: string) => {
+    showPrompt({
+      title: 'New Folder',
+      defaultValue: 'My Folder',
+      submitName: 'Create',
+      label: 'Name',
+      selectText: true,
+      onComplete: name =>
+        requestFetcher.submit(
+          { parentId, name },
+          {
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+            method: 'post',
+          },
+        ),
+    });
+  };
 
   const createRequest = (requestType: CreateRequestType) =>
     requestFetcher.submit(
@@ -416,24 +412,37 @@ const createGroup = () => {
         const beforeTarget = collection[targetIndex - 1];
         const afterTarget = collection[targetIndex];
 
-        const afterKey = afterTarget?.sortKey;
-        const beforeKey =
-          beforeTarget?.sortKey && beforeTarget.level === afterTarget.level
-            ? beforeTarget?.sortKey
-            : afterKey + 100;
+        if (beforeTarget) {
+          const afterKey = afterTarget?.sortKey;
+          const beforeKey =
+            beforeTarget?.sortKey && beforeTarget.level === afterTarget.level
+              ? beforeTarget?.sortKey
+              : afterKey + 100;
 
-        metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+          metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+        } else {
+          metaSortKey = afterTarget.sortKey + 100;
+        }
       } else {
         const beforeTarget = collection[targetIndex];
         const afterTarget = collection[targetIndex + 1];
 
-        const beforeKey = beforeTarget?.sortKey;
-        const afterKey =
-          afterTarget?.sortKey && afterTarget.level === beforeTarget.level
-            ? afterTarget.sortKey
-            : beforeKey - 100;
+        if (afterTarget) {
+          let beforeKey = beforeTarget?.sortKey;
+          let afterKey =
+            afterTarget?.sortKey && afterTarget.level === beforeTarget.level
+              ? afterTarget.sortKey
+              : beforeKey - 100;
 
-        metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+          if (afterTarget.level > beforeTarget.level) {
+            beforeKey = afterTarget.sortKey - 200;
+            afterKey = afterTarget.sortKey - 100;
+          }
+
+          metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+        } else {
+          metaSortKey = beforeTarget.sortKey - 100;
+        }
       }
 
       reorderFetcher.submit(
@@ -458,6 +467,69 @@ const createGroup = () => {
         />
       );
     },
+  });
+
+  const createNewItemList = useListData({
+    initialItems: [
+      {
+        id: 'HTTP',
+        name: 'HTTP Request',
+        icon: 'plus-circle',
+        hint: hotKeyRegistry.request_createHTTP,
+        action: () => createRequest('HTTP'),
+      },
+      {
+        id: 'Event Stream',
+        name: 'Event Stream Request',
+        icon: 'plus-circle',
+        action: () => createRequest('Event Stream'),
+      },
+      {
+        id: 'GraphQL Request',
+        name: 'GraphQL Request',
+        icon: 'plus-circle',
+        action: () => createRequest('GraphQL'),
+      },
+      {
+        id: 'gRPC Request',
+        name: 'gRPC Request',
+        icon: 'plus-circle',
+        action: () => createRequest('gRPC'),
+      },
+      {
+        id: 'WebSocket Request',
+        name: 'WebSocket Request',
+        icon: 'plus-circle',
+        action: () => createRequest('WebSocket'),
+      },
+      {
+        id: 'From Curl',
+        name: 'From Curl',
+        icon: 'plus-circle',
+        value: () => createRequest('From Curl'),
+      },
+      {
+        id: 'New Folder',
+        name: 'New Folder',
+        icon: 'folder',
+        action: () =>
+          showPrompt({
+            title: 'New Folder',
+            defaultValue: 'My Folder',
+            submitName: 'Create',
+            label: 'Name',
+            selectText: true,
+            onComplete: name =>
+              requestFetcher.submit(
+                { parentId: workspaceId, name },
+                {
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
+                  method: 'post',
+                },
+              ),
+          }),
+      },
+    ],
   });
 
   return (
@@ -623,69 +695,8 @@ const createGroup = () => {
                   <Menu
                     aria-label="Create a new request"
                     selectionMode="single"
-                    onAction={action => {
-                      console.log(action);
-                    }}
-                    items={[
-                      {
-                        id: 'HTTP',
-                        name: 'HTTP Request',
-                        icon: 'plus-circle',
-                        hint: hotKeyRegistry.request_createHTTP,
-                        value: () => createRequest('HTTP'),
-                      },
-                      {
-                        id: 'Event Stream',
-                        name: 'Event Stream Request',
-                        icon: 'plus-circle',
-                        value: () => createRequest('Event Stream'),
-                      },
-                      {
-                        id: 'GraphQL Request',
-                        name: 'GraphQL Request',
-                        icon: 'plus-circle',
-                        value: () => createRequest('GraphQL'),
-                      },
-                      {
-                        id: 'gRPC Request',
-                        name: 'gRPC Request',
-                        icon: 'plus-circle',
-                        value: () => createRequest('gRPC'),
-                      },
-                      {
-                        id: 'WebSocket Request',
-                        name: 'WebSocket Request',
-                        icon: 'plus-circle',
-                        value: () => createRequest('WebSocket'),
-                      },
-                      {
-                        id: 'From Curl',
-                        name: 'From Curl',
-                        icon: 'plus-circle',
-                        value: () => createRequest('From Curl'),
-                      },
-                      {
-                        id: 'New Folder',
-                        name: 'New Folder',
-                        icon: 'folder',
-                        value: () =>
-                          showPrompt({
-                            title: 'New Folder',
-                            defaultValue: 'My Folder',
-                            submitName: 'Create',
-                            label: 'Name',
-                            selectText: true,
-                            onComplete: name =>
-                              requestFetcher.submit(
-                                { parentId: workspaceId, name },
-                                {
-                                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-                                  method: 'post',
-                                },
-                              ),
-                          }),
-                      },
-                    ]}
+                    onAction={key => createNewItemList.getItem(key).action()}
+                    items={createNewItemList.items}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
                     {item => (
@@ -706,7 +717,7 @@ const createGroup = () => {
 
             <div className="flex-1">
               <GridList
-                items={collection}
+                items={collection.filter(item => !item.hidden)}
                 aria-label="Request Collection"
                 disallowEmptySelection
                 dragAndDropHooks={collectionDragAndDrop.dragAndDropHooks}
@@ -754,92 +765,6 @@ const createGroup = () => {
                         )}
                         <span className="truncate">{item.name}</span>
                         <span className="flex-1" />
-                        <MenuTrigger>
-                          <Button
-                            aria-label="Request Group Actions"
-                            className="justify-self-end data-[pressed]:opacity-100 group-hover:opacity-100 group-data-[focused]:opacity-100 flex opacity-0 w-5 aspect-square items-center justify-center data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                          >
-                            <Icon icon="caret-down" />
-                          </Button>
-                          <Popover className="min-w-max">
-                            <Menu
-                              disallowEmptySelection
-                              selectionMode="single"
-                              aria-label="Create a new request"
-                              onSelectionChange={keys => {
-                                if (keys !== 'all') {
-                                  const action = keys.values().next().value;
-                                  console.log({ action });
-                                }
-                              }}
-                              items={[
-                                {
-                                  id: 'HTTP',
-                                  name: 'HTTP Request',
-                                  icon: 'plus-circle',
-                                  hint: hotKeyRegistry.request_createHTTP,
-                                  value: () => createRequest('HTTP'),
-                                },
-                                {
-                                  id: 'Event Stream',
-                                  name: 'Event Stream Request',
-                                  icon: 'plus-circle',
-                                  value: () => createRequest('Event Stream'),
-                                },
-                                {
-                                  id: 'GraphQL Request',
-                                  name: 'GraphQL Request',
-                                  icon: 'plus-circle',
-                                  value: () => createRequest('GraphQL'),
-                                },
-                                {
-                                  id: 'gRPC Request',
-                                  name: 'gRPC Request',
-                                  icon: 'plus-circle',
-                                  value: () => createRequest('gRPC'),
-                                },
-                                {
-                                  id: 'WebSocket Request',
-                                  name: 'WebSocket Request',
-                                  icon: 'plus-circle',
-                                  value: () => createRequest('WebSocket'),
-                                },
-                                {
-                                  id: 'New Folder',
-                                  name: 'New Folder',
-                                  icon: 'folder',
-                                  value: () =>
-                                    showPrompt({
-                                      title: 'New Folder',
-                                      defaultValue: 'My Folder',
-                                      submitName: 'Create',
-                                      label: 'Name',
-                                      selectText: true,
-                                      onComplete: name =>
-                                        requestFetcher.submit(
-                                          { parentId: workspaceId, name },
-                                          {
-                                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-                                            method: 'post',
-                                          },
-                                        ),
-                                    }),
-                                },
-                              ]}
-                              className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                            >
-                              {item => (
-                                <Item
-                                  className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                                  aria-label={item.name}
-                                >
-                                  <Icon icon={item.icon} />
-                                  <span>{item.name}</span>
-                                </Item>
-                              )}
-                            </Menu>
-                          </Popover>
-                        </MenuTrigger>
                       </div>
                     </Item>
                   );

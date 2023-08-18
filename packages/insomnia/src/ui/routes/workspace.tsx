@@ -27,27 +27,8 @@ import { WorkspaceMeta } from '../../models/workspace-meta';
 import { StatusCandidate } from '../../sync/types';
 import { invariant } from '../../utils/invariant';
 
-type Collection = (
-  | {
-      name: string;
-      level: number;
-      type: 'group';
-      collapsed: boolean;
-      sortKey: number;
-      parentId: string;
-      id: string;
-    }
-  | {
-      name: string;
-      level: number;
-      pinned: boolean;
-      sortKey: number;
-      parentId: string;
-      type: 'request';
-      tag: string;
-      id: string;
-    }
-)[];
+type Collection = Child[];
+
 export interface WorkspaceLoaderData {
   activeWorkspace: Workspace;
   activeWorkspaceMeta: WorkspaceMeta;
@@ -126,14 +107,10 @@ export const workspaceLoader: LoaderFunction = async ({
 
   const organizationProjects =
     organizationId === DEFAULT_ORGANIZATION_ID
-      ? allProjects.filter((proj) => !isRemoteProject(proj))
+      ? allProjects.filter(proj => !isRemoteProject(proj))
       : [activeProject];
 
   const projects = sortProjects(organizationProjects);
-  const requestMetas = await models.requestMeta.all();
-  const grpcRequestMetas = await models.grpcRequestMeta.all();
-  const metas = [...requestMetas, ...grpcRequestMetas];
-  const folderMetas = await models.requestGroupMeta.all();
   const grpcRequestList: GrpcRequest[] = [];
   const syncItemsList: (
     | Workspace
@@ -146,7 +123,7 @@ export const workspaceLoader: LoaderFunction = async ({
   )[] = [];
   syncItemsList.push(activeWorkspace);
   syncItemsList.push(baseEnvironment);
-  subEnvironments.forEach((e) => syncItemsList.push(e));
+  subEnvironments.forEach(e => syncItemsList.push(e));
   if (activeApiSpec) {
     syncItemsList.push(activeApiSpec);
   }
@@ -174,18 +151,18 @@ export const workspaceLoader: LoaderFunction = async ({
     );
     const grpcRequests = await models.grpcRequest.findByParentId(parentId);
     // TODO: remove this state hack when the grpc responses go somewhere else
-    grpcRequests.map((r) => grpcRequestList.push(r));
-    folders.map((f) => syncItemsList.push(f));
-    requests.map((r) => syncItemsList.push(r));
-    webSocketRequests.map((r) => syncItemsList.push(r));
-    grpcRequests.map((r) => syncItemsList.push(r));
+    grpcRequests.map(r => grpcRequestList.push(r));
+    folders.map(f => syncItemsList.push(f));
+    requests.map(r => syncItemsList.push(r));
+    webSocketRequests.map(r => syncItemsList.push(r));
+    grpcRequests.map(r => syncItemsList.push(r));
 
     const childrenWithChildren = await Promise.all(
       [...folders, ...requests, ...webSocketRequests, ...grpcRequests]
         .sort((a, b) => {
           return b.metaSortKey - a.metaSortKey;
         })
-        .map(async (doc) => {
+        .map(async doc => {
           const matches = fuzzyMatchAll(filter, [
             doc.name,
             doc.description,
@@ -197,12 +174,13 @@ export const workspaceLoader: LoaderFunction = async ({
             (filter && matches && !matches.indexes) ||
             (filter && matches && matches.indexes.length < 1);
 
+          const pinned = !isRequestGroup(doc) && isGrpcRequest(doc) ? (await models.grpcRequestMeta.getOrCreateByParentId(doc._id)).pinned : (await models.requestMeta.getOrCreateByParentId(doc._id)).pinned;
+          const collapsed = isRequestGroup(doc) && (await models.requestGroupMeta.getByParentId(doc._id))?.collapsed;
+
           return {
             doc,
-            pinned: metas.find((m) => m.parentId === doc._id)?.pinned || false,
-            collapsed:
-              folderMetas.find((m) => m.parentId === doc._id)?.collapsed ||
-              false,
+            pinned,
+            collapsed,
             hidden,
             children: await getCollectionTree({ parentId: doc._id }),
           };
@@ -217,7 +195,7 @@ export const workspaceLoader: LoaderFunction = async ({
 
   const syncItems: StatusCandidate[] = syncItemsList
     .filter(canSync)
-    .map((i) => ({
+    .map(i => ({
       key: i._id,
       name: i.name || '',
       document: i,
@@ -238,11 +216,15 @@ export const workspaceLoader: LoaderFunction = async ({
           collapsed: node.collapsed,
           id: node.doc._id,
           parentId: node.doc.parentId,
+          hidden: node.hidden,
         });
 
-        if (!node.collapsed) {
-          node.children.forEach((child) => build(child, level + 1));
-        }
+        node.children.forEach(child =>
+          build(
+            { ...child, hidden: node.collapsed || child.hidden },
+            level + 1,
+          ),
+        );
       } else {
         let tag = '';
         if (isRequest(node.doc)) {
@@ -261,6 +243,7 @@ export const workspaceLoader: LoaderFunction = async ({
           name: node.doc.name,
           sortKey: node.doc.metaSortKey,
           level,
+          hidden: node.hidden,
           pinned: node.pinned,
           parentId: node.doc.parentId,
           tag,
@@ -269,7 +252,7 @@ export const workspaceLoader: LoaderFunction = async ({
         });
       }
     };
-    tree.forEach((node) => build(node, 0));
+    tree.forEach(node => build(node, 0));
 
     return collection;
   }
