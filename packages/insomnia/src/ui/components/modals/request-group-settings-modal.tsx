@@ -43,9 +43,9 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   const requestFetcher = useFetcher();
 
   const duplicateRequestGroup = (r: Partial<RequestGroup>) => {
-    requestFetcher.submit(JSON.stringify(r),
+    requestFetcher.submit(r,
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${requestGroup._id}/duplicate`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/duplicate`,
         method: 'post',
         encType: 'application/json',
       });
@@ -63,6 +63,7 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   const handleCopyToWorkspace = async () => {
     invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
     duplicateRequestGroup({
+      _id: requestGroup._id,
       metaSortKey: -1e9, // Move to top of sort order
       name: requestGroup.name, // Because duplicate will add (Copy) suffix if name is not provided in patch
       parentId: state.activeWorkspaceIdToCopyTo,

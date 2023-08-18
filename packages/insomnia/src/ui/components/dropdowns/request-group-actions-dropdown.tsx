@@ -70,13 +70,15 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
       label: 'New Name',
       selectText: true,
       onComplete: async (name: string) => {
-        const newRequestGroup = await models.requestGroup.duplicate(requestGroup, {
-          name,
-        });
-        models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
+        requestFetcher.submit({ _id: requestGroup._id, name },
+          {
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/duplicate`,
+            method: 'post',
+            encType: 'application/json',
+          });
       },
     });
-  }, [requestGroup]);
+  }, [organizationId, projectId, requestFetcher, requestGroup._id, requestGroup.name, workspaceId]);
 
   const createGroup = useCallback(() => showPrompt({
     title: 'New Folder',
