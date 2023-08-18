@@ -199,6 +199,10 @@ const router = createMemoryRouter(
                                   action: async (...args) => (await import('./routes/request-group')).updateRequestGroupAction(...args),
                                 },
                                 {
+                                  path: 'request-group/duplicate',
+                                  action: async (...args) => (await import('./routes/request-group')).duplicateRequestGroupAction(...args),
+                                },
+                                {
                                   path: 'request-group/:requestGroupId/update-meta',
                                   action: async (...args) => (await import('./routes/request-group')).updateRequestGroupMetaAction(...args),
                                 },
