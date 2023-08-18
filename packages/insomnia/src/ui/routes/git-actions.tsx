@@ -479,12 +479,14 @@ export const cloneGitRepoAction: ActionFunction = async ({
   // Stop the DB from pushing updates to the UI temporarily
   const bufferId = await database.bufferChanges();
   let workspaceId = '';
+  let scope: 'design' | 'collection' = WorkspaceScopeKeys.design;
   // If no workspace exists we create a new one
   if (!(await containsInsomniaWorkspaceDir(fsClient))) {
     // Create a new workspace
+
     const workspace = await models.workspace.create({
       name: repoSettingsPatch.uri.split('/').pop(),
-      scope: WorkspaceScopeKeys.design,
+      scope: scope,
       parentId: project._id,
       description: `Insomnia Workspace for ${repoSettingsPatch.uri}}`,
     });
@@ -539,6 +541,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
     const workspacePath = path.join(workspaceBase, workspaces[0]);
     const workspaceJson = await fsClient.promises.readFile(workspacePath);
     const workspace = YAML.parse(workspaceJson.toString());
+    scope = (workspace.scope === WorkspaceScopeKeys.collection) ? WorkspaceScopeKeys.collection : WorkspaceScopeKeys.design;
     // Check if the workspace already exists
     const existingWorkspace = await models.workspace.getById(workspace._id);
 
@@ -557,7 +560,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
         const doc: models.BaseModel = YAML.parse(docYaml.toString());
         if (isWorkspace(doc)) {
           doc.parentId = project._id;
-          doc.scope = WorkspaceScopeKeys.design;
+          doc.scope = scope;
           const workspace = await database.upsert(doc);
           workspaceId = workspace._id;
         } else {
@@ -581,6 +584,12 @@ export const cloneGitRepoAction: ActionFunction = async ({
 
   invariant(workspaceId, 'Workspace ID is required');
 
+  // Redirect to debug for collection scope initial clone
+  if (scope === WorkspaceScopeKeys.collection) {
+    return redirect(
+      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`
+    );
+  }
   return redirect(
     `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${ACTIVITY_SPEC}`
   );

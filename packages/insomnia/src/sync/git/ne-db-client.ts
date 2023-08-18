@@ -7,7 +7,6 @@ import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { isWorkspace } from '../../models/workspace';
 import { resetKeys } from '../ignore-keys';
-import { forceWorkspaceScopeToDesign } from './force-workspace-scope-to-design';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
 import Stat from './stat';
@@ -105,8 +104,6 @@ export class NeDBClient {
       // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
       doc.parentId = this._projectId;
     }
-
-    forceWorkspaceScopeToDesign(doc);
 
     await db.upsert(doc, true);
   }
