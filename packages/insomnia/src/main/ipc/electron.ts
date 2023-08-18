@@ -34,26 +34,27 @@ export function registerElectronHandlers() {
           .sort((a, b) => fnOrString(a.templateTag.displayName).localeCompare(fnOrString(b.templateTag.displayName)))
           .map(l => {
             const actions = l.templateTag.args?.[0];
-            const otherArgs = l.templateTag.args?.slice(1);
+            const additionalArgs = l.templateTag.args?.slice(1);
             const hasSubmenu = actions?.options?.length;
             return {
               label: fnOrString(l.templateTag.displayName),
-              ...(hasSubmenu ? {} : {
-                click: () => {
-                  const tag = `{% ${l.templateTag.name} ${l.templateTag.args?.map(getTemplateValue).join(', ')} %}`;
-                  event.sender.send('context-menu-command', { key: options.key, tag });
-                },
-              }),
-              ...(hasSubmenu ? {
-                submenu: actions?.options?.map(action => ({
-                  label: fnOrString(action.displayName),
+              ...(!hasSubmenu ?
+                {
                   click: () => {
-                    const defaultTagArgs = otherArgs ? ', ' + otherArgs.map(getTemplateValue).join(', ') : '';
-                    const tag = `{% ${l.templateTag.name} '${action.value}'${defaultTagArgs} %}`;
+                    const tag = `{% ${l.templateTag.name} ${l.templateTag.args?.map(getTemplateValue).join(', ')} %}`;
                     event.sender.send('context-menu-command', { key: options.key, tag });
                   },
-                })),
-              } : {}),
+                } :
+                {
+                  submenu: actions?.options?.map(action => ({
+                    label: fnOrString(action.displayName),
+                    click: () => {
+                      const additionalTagFields = additionalArgs.length ? ', ' + additionalArgs.map(getTemplateValue).join(', ') : '';
+                      const tag = `{% ${l.templateTag.name} '${action.value}'${additionalTagFields} %}`;
+                      event.sender.send('context-menu-command', { key: options.key, tag });
+                    },
+                  })),
+                }),
             };
           }),
 
