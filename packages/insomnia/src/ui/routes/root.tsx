@@ -76,7 +76,10 @@ export interface RootLoaderData {
   organizations: Organization[];
   settings: Settings;
 }
-// NOTE: hacks on hacks on hacks
+// NOTE: when getVCS is rewritten to be less spaghetti
+// this can be removed, and get team should only run once,
+// at app start and whenever the user logs in
+// This "workaround" will not work if a user logs out and back in again
 let hasRun = false;
 export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
   // Load all projects
