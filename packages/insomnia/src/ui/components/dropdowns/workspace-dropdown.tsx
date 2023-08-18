@@ -275,6 +275,7 @@ export const WorkspaceDropdown: FC = () => {
       )}
       {isExportModalOpen && (
         <ExportRequestsModal
+          workspace={activeWorkspace}
           onHide={() => setIsExportModalOpen(false)}
         />
       )}

@@ -115,8 +115,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           defaultWorkspaceId={workspaceId}
         />
       )}
-      {isExportModalOpen && (
+      {isExportModalOpen && workspaceData?.activeWorkspace && (
         <ExportRequestsModal
+          workspace={workspaceData.activeWorkspace}
           onHide={() => setIsExportModalOpen(false)}
         />
       )}
