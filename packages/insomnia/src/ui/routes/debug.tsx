@@ -369,24 +369,6 @@ export const Debug: FC = () => {
   const sortOrder = searchParams.get('sortOrder') as SortOrder || 'type-manual';
   const { hotKeyRegistry } = settings;
 
-  const createRequestGroup = (parentId: string) => {
-    showPrompt({
-      title: 'New Folder',
-      defaultValue: 'My Folder',
-      submitName: 'Create',
-      label: 'Name',
-      selectText: true,
-      onComplete: name =>
-        requestFetcher.submit(
-          { parentId, name },
-          {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
-            method: 'post',
-          },
-        ),
-    });
-  };
-
   const createRequest = (requestType: CreateRequestType) =>
     requestFetcher.submit(
       { requestType, parentId: workspaceId, clipboardText: window.clipboard.readText() },
@@ -468,7 +450,7 @@ export const Debug: FC = () => {
       return (
         <DropIndicator
           target={target}
-          className="w-full absolute h-[1px] bg-[--color-surprise]"
+          className="outline-[--color-surprise] outline-1 outline"
         />
       );
     },
@@ -538,8 +520,8 @@ export const Debug: FC = () => {
   });
 
   return (
-    <div className="new-sidebar">
       <SidebarLayout
+      className="new-sidebar"
         renderPageSidebar={
           <div className="flex flex-1 flex-col gap-2 overflow-hidden">
             <div className="flex items-center gap-2 justify-between px-[--padding-sm] pt-[--padding-sm]">
@@ -638,11 +620,13 @@ export const Debug: FC = () => {
               >
                 <Input
                   placeholder="Filter"
-                  className="py-1 w-full pl-2 pr-6 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                  className="py-1 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                 />
-                <Button className="flex group-data-[empty]:hidden items-center justify-center absolute right-0 top-0 aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                <div className='flex items-center px-2 absolute right-0 top-0 h-full'>
+                  <Button className="flex group-data-[empty]:hidden items-center justify-center aspect-square w-5 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                   <Icon icon="close" />
                 </Button>
+                </div>
               </SearchField>
               <Select
                 aria-label="Select an environment"
@@ -721,62 +705,61 @@ export const Debug: FC = () => {
               </MenuTrigger>
             </div>
 
-            <div className="flex-1">
-              <GridList
-                items={collection.filter(item => !item.hidden)}
-                aria-label="Request Collection"
-                disallowEmptySelection
-                dragAndDropHooks={collectionDragAndDrop.dragAndDropHooks}
-                selectedKeys={[requestId]}
-                selectionMode="single"
-                onSelectionChange={keys => {
-                  if (keys !== 'all') {
-                    const value = keys.values().next().value;
-                    console.log(value);
-                    const item = collection.find(item => item.doc._id === value);
-                    if (item && isRequestGroup(item.doc)) {
-                      groupMetaPatcher(value, { collapsed: !item.collapsed });
-                    } else {
-                      navigate(
-                        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}`,
-                      );
-                    }
+            <GridList
+              className="flex-1 overflow-y-auto"
+              items={collection.filter(item => !item.hidden)}
+              aria-label="Request Collection"
+              disallowEmptySelection
+              dragAndDropHooks={collectionDragAndDrop.dragAndDropHooks}
+              selectedKeys={[requestId]}
+              selectionMode="single"
+              onSelectionChange={keys => {
+                if (keys !== 'all') {
+                  const value = keys.values().next().value;
+                  console.log(value);
+                  const item = collection.find(item => item.doc._id === value);
+                  if (item && isRequestGroup(item.doc)) {
+                    groupMetaPatcher(value, { collapsed: !item.collapsed });
+                  } else {
+                    navigate(
+                      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}`,
+                    );
                   }
-                }}
-              >
-                {item => {
-                  return (
-                    <Item
-                      key={item.doc._id}
-                      id={item.doc._id}
-                      className="group outline-none select-none"
+                }
+              }}
+            >
+              {item => {
+                return (
+                  <Item
+                    key={item.doc._id}
+                    id={item.doc._id}
+                    className="group outline-none select-none"
+                  >
+                    <div
+                      className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                      style={{
+                        paddingLeft: `${item.level + 1}rem`,
+                      }}
                     >
-                      <div
-                        className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                        style={{
-                          paddingLeft: `${item.level + 1}rem`,
-                        }}
-                      >
-                        <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
-                        {isRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center">
-                            {formatMethodName(item.doc.method)}
-                          </span>
-                        )}
-                        {isRequestGroup(item.doc) && (
-                          <Icon
-                            className="w-6"
-                            icon={item.collapsed ? 'folder' : 'folder-open'}
-                          />
-                        )}
-                        <span className="truncate">{item.doc.name}</span>
-                        <span className="flex-1" />
-                      </div>
-                    </Item>
-                  );
-                }}
-              </GridList>
-            </div>
+                      <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                      {isRequest(item.doc) && (
+                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center">
+                          {formatMethodName(item.doc.method)}
+                        </span>
+                      )}
+                      {isRequestGroup(item.doc) && (
+                        <Icon
+                          className="w-6"
+                          icon={item.collapsed ? 'folder' : 'folder-open'}
+                        />
+                      )}
+                      <span className="truncate">{item.doc.name}</span>
+                      <span className="flex-1" />
+                    </div>
+                  </Item>
+                );
+              }}
+            </GridList>
             <WorkspaceSyncDropdown />
 
             {isEnvironmentModalOpen && (
@@ -834,8 +817,7 @@ export const Debug: FC = () => {
               )}
           </ErrorBoundary>
         }
-      />
-    </div>
+    />
   );
 };
 
