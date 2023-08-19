@@ -1,14 +1,11 @@
 import { test } from '../../playwright/test';
 
-test.beforeEach(async ({ page }) => {
+test('Request tabs', async ({ page }) => {
   await page.getByRole('button', { name: 'New Collection' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
 
   await page.getByRole('button', { name: ' ' }).press('ArrowDown');
   await page.getByRole('menuitem', { name: 'HTTP Request' }).press('Enter');
-});
-
-test('Request tabs', async ({ page }) => {
   await page.getByRole('button', { name: 'Body' }).click();
   await page.getByRole('menuitem', { name: 'JSON' }).click();
   await page.getByRole('tab', { name: 'Auth' }).click();
@@ -23,7 +20,10 @@ test('Request tabs', async ({ page }) => {
 });
 
 test('WS tabs', async ({ page }) => {
-  await page.locator('[data-testid="SidebarFilter"] [data-testid="SidebarCreateDropdown"] button').click();
+  await page.getByRole('button', { name: 'New Collection' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
+
+  await page.getByRole('button', { name: ' ' }).press('ArrowDown');
   await page.getByRole('menuitem', { name: 'WebSocket Request' }).click();
   await page.getByRole('tab', { name: 'JSON' }).click();
   await page.getByRole('menuitem', { name: 'JSON' }).click();

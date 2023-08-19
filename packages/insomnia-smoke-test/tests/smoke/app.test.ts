@@ -19,11 +19,19 @@ test('can send requests', async ({ app, page }) => {
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
+
+  await page.locator('.card-menu').click();
+  await page.getByRole('menuitem', { name: 'Export' }).click();
+  await page.getByRole('dialog').getByRole('checkbox').nth(1).uncheck();
+  await page.getByRole('button', { name: 'Export' }).click();
+  await page.getByText('Which format would you like to export as?').click();
+  await page.locator('.app').press('Escape');
+
   await page.getByText('CollectionSmoke testsjust now').click();
 
   const curl = 'curl --request POST --url http://mockbin.org/status/200';
   await app.evaluate(async ({ clipboard }, curl) => clipboard.writeText(curl), curl);
-  await page.locator('[data-testid="SidebarFilter"] [data-testid="SidebarCreateDropdown"] button').click();
+  await page.getByRole('button', { name: ' ' }).press('ArrowDown');
   await page.getByRole('menuitem', { name: 'From Curl' }).click();
 
   await page.getByTestId('request-pane').getByRole('button', { name: 'Send' }).click();

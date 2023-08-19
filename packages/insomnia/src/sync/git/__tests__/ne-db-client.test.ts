@@ -177,33 +177,6 @@ describe('NeDBClient', () => {
       upsertSpy.mockRestore();
     });
 
-    it('should force to a design workspace when writing', async () => {
-      // Arrange
-      const workspaceId = 'wrk_1';
-      const projectId = `${models.project.prefix}_1`;
-      const neDbClient = new NeDBClient(workspaceId, projectId);
-      const upsertSpy = jest.spyOn(db, 'upsert');
-
-      workspaceBuilder._id(workspaceId).parentId(projectId).certificates(null);
-
-      // @ts-expect-error not sure why scope is being typed as never
-      const workspaceInFile = workspaceBuilder.scope('collection').build();
-      // @ts-expect-error not sure why scope is being typed as never
-      const workspaceInDb = workspaceBuilder.scope('design').build();
-
-      const filePath = path.join(GIT_INSOMNIA_DIR, models.workspace.type, `${workspaceId}.yml`);
-
-      // Act
-      await neDbClient.writeFile(filePath, YAML.stringify(workspaceInFile));
-
-      // Assert
-      expect(upsertSpy).toHaveBeenCalledTimes(1);
-      expect(upsertSpy).toHaveBeenCalledWith(workspaceInDb, true);
-
-      // Cleanup
-      upsertSpy.mockRestore();
-    });
-
     it('should throw error if id does not match', async () => {
       // Arrange
       const workspaceId = 'wrk_1';

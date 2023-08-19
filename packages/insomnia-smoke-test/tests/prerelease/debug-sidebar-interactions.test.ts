@@ -120,7 +120,7 @@ test.describe('Debug-Sidebar', async () => {
     });
 
     test('Create a new HTTP request', async ({ page }) => {
-      await page.locator('[data-testid="SidebarFilter"] [data-testid="SidebarCreateDropdown"] button').click();
+      await page.getByRole('button', { name: ' ' }).press('ArrowDown');
       await page.getByRole('menuitem', { name: 'Http Request' }).click();
       await expect(page.locator('.app')).toContainText('New Request');
     });

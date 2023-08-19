@@ -32,6 +32,16 @@ export const deleteRequestGroupAction: ActionFunction = async ({ request }) => {
   return null;
 };
 
+export const duplicateRequestGroupAction: ActionFunction = async ({ request }) => {
+  const patch = await request.json() as Partial<RequestGroup>;
+  invariant(patch._id, 'Patch Id not found');
+  const requestGroup = await models.requestGroup.getById(patch._id);
+  invariant(requestGroup, 'Request group not found');
+  const newRequestGroup = await models.requestGroup.duplicate(requestGroup, { name: patch.name });
+  models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
+  return null;
+};
+
 export const updateRequestGroupMetaAction: ActionFunction = async ({ request, params }) => {
   const { requestGroupId } = params;
   invariant(typeof requestGroupId === 'string', 'Request Group ID is required');
