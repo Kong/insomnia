@@ -16,10 +16,9 @@ import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { isRemoteProject, Project } from '../../models/project';
-import { isRequest, Request } from '../../models/request';
+import { Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import {
-  isWebSocketRequest,
   WebSocketRequest,
 } from '../../models/websocket-request';
 import { Workspace } from '../../models/workspace';
@@ -160,25 +159,28 @@ export const workspaceLoader: LoaderFunction = async ({
     webSocketRequests.map(r => syncItemsList.push(r));
     grpcRequests.map(r => syncItemsList.push(r));
 
-    const childrenWithChildren = await Promise.all(
+    const childrenWithChildren: Child[] = await Promise.all(
       [...folders, ...requests, ...webSocketRequests, ...grpcRequests]
         .sort(sortFunction)
-        .map(async doc => {
+        .map(async (doc): Promise<Child> => {
           const matches = fuzzyMatchAll(filter, [
             doc.name,
             doc.description,
             ...(isRequestGroup(doc) ? [] : [doc.url]),
           ]);
 
-          const hidden = parentIsCollapsed ||
+          const matchesFilter = Boolean(
             (filter && !matches) ||
             (filter && matches && !matches.indexes) ||
-            (filter && matches && matches.indexes.length < 1);
+            (filter && matches && matches.indexes.length < 1),
+          );
+
+          const hidden = parentIsCollapsed || matchesFilter;
 
           const pinned = !isRequestGroup(doc) && isGrpcRequest(doc)
             ? (await models.grpcRequestMeta.getOrCreateByParentId(doc._id)).pinned
             : (await models.requestMeta.getOrCreateByParentId(doc._id)).pinned;
-          const collapsed = isRequestGroup(doc) && (await models.requestGroupMeta.getByParentId(doc._id))?.collapsed;
+          const collapsed = parentIsCollapsed || (isRequestGroup(doc) && (await models.requestGroupMeta.getByParentId(doc._id))?.collapsed) || false;
 
           return {
             doc,
@@ -186,10 +188,11 @@ export const workspaceLoader: LoaderFunction = async ({
             collapsed,
             hidden,
             level,
-            children: await getCollectionTree({ parentId: doc._id, level: level + 1, parentIsCollapsed: collapsed || false }),
+            children: await getCollectionTree({ parentId: doc._id, level: level + 1, parentIsCollapsed: collapsed }),
           };
         }),
     );
+
     return childrenWithChildren;
   };
 
