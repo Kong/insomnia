@@ -747,6 +747,16 @@ export const Debug: FC = () => {
                           {formatMethodName(item.doc.method)}
                         </span>
                       )}
+                      {isWebSocketRequest(item.doc) && (
+                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center">
+                          WS
+                        </span>
+                      )}
+                      {isGrpcRequest(item.doc) && (
+                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center">
+                          gRPC
+                        </span>
+                      )}
                       {isRequestGroup(item.doc) && (
                         <Icon
                           className="w-6"
