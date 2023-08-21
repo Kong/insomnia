@@ -129,15 +129,9 @@ export const workspaceLoader: LoaderFunction = async ({
   }
 
   const searchParams = new URL(request.url).searchParams;
-  const filter =
-    searchParams.get('filter') || activeWorkspaceMeta.sidebarFilter;
+  const filter = searchParams.get('filter');
   const sortOrder = searchParams.get('sortOrder') as SortOrder;
   const sortFunction = sortMethodMap[sortOrder] || sortMethodMap['type-manual'];
-  // Update sidebar filter if it's changed
-  filter !== activeWorkspaceMeta.sidebarFilter &&
-    (await models.workspaceMeta.update(activeWorkspaceMeta, {
-      sidebarFilter: filter,
-    }));
 
   const getCollectionTree = async ({
     parentId,
@@ -163,24 +157,41 @@ export const workspaceLoader: LoaderFunction = async ({
       [...folders, ...requests, ...webSocketRequests, ...grpcRequests]
         .sort(sortFunction)
         .map(async (doc): Promise<Child> => {
-          const matches = fuzzyMatchAll(filter, [
-            doc.name,
-            doc.description,
-            ...(isRequestGroup(doc) ? [] : [doc.url]),
-          ]);
+          const isFiltered = (filter?: string) => {
+            if (filter) {
+              const matches = fuzzyMatchAll(filter, [
+                doc.name,
+                doc.description,
+                ...(isRequestGroup(doc) ? [] : [doc.url]),
+              ]);
 
-          const matchesFilter = Boolean(
-            (filter && !matches) ||
-            (filter && matches && !matches.indexes) ||
-            (filter && matches && matches.indexes.length < 1),
-          );
+              return Boolean(
+                !matches ||
+                  (matches && !matches.indexes) ||
+                  (matches && matches.indexes.length < 1)
+              );
+            }
+
+            return false;
+          };
+
+          const matchesFilter = isFiltered(filter?.toString());
 
           const hidden = parentIsCollapsed || matchesFilter;
 
-          const pinned = !isRequestGroup(doc) && isGrpcRequest(doc)
-            ? (await models.grpcRequestMeta.getOrCreateByParentId(doc._id)).pinned
-            : (await models.requestMeta.getOrCreateByParentId(doc._id)).pinned;
-          const collapsed = parentIsCollapsed || (isRequestGroup(doc) && (await models.requestGroupMeta.getByParentId(doc._id))?.collapsed) || false;
+          const pinned =
+            !isRequestGroup(doc) && isGrpcRequest(doc)
+              ? (await models.grpcRequestMeta.getOrCreateByParentId(doc._id))
+                  .pinned
+              : (await models.requestMeta.getOrCreateByParentId(doc._id))
+                  .pinned;
+          const collapsed = filter
+            ? false
+            : parentIsCollapsed ||
+              (isRequestGroup(doc) &&
+                (await models.requestGroupMeta.getByParentId(doc._id))
+                  ?.collapsed) ||
+              false;
 
           return {
             doc,

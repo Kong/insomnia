@@ -31,7 +31,6 @@ import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
-import { Environment } from '../../models/environment';
 import { isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import {
@@ -46,6 +45,8 @@ import {
   isWebSocketRequestId,
 } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
+import { RequestActionsDropdown } from '../components/dropdowns/request-actions-dropdown';
+import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
@@ -371,19 +372,24 @@ export const Debug: FC = () => {
   const sortOrder = searchParams.get('sortOrder') as SortOrder || 'type-manual';
   const { hotKeyRegistry } = settings;
 
-  const createRequest = (requestType: CreateRequestType) =>
+  const createRequest = ({
+    requestType,
+    parentId,
+  }: {
+    requestType: CreateRequestType;
+    parentId: string;
+  }) =>
     requestFetcher.submit(
       { requestType, parentId: workspaceId, clipboardText: window.clipboard.readText() },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
         method: 'post',
         encType: 'application/json',
-      },
+      }
     );
 
   const groupMetaPatcher = useRequestGroupMetaPatcher();
   const reorderFetcher = useFetcher();
-  console.log({ collection });
 
   const navigate = useNavigate();
 
@@ -404,7 +410,8 @@ export const Debug: FC = () => {
         if (beforeTarget) {
           const afterKey = afterTarget?.doc.metaSortKey;
           const beforeKey =
-            beforeTarget?.doc.metaSortKey && beforeTarget.level === afterTarget.level
+            beforeTarget?.doc.metaSortKey &&
+            beforeTarget.level === afterTarget.level
               ? beforeTarget?.doc.metaSortKey
               : afterKey + 100;
 
@@ -419,7 +426,8 @@ export const Debug: FC = () => {
         if (afterTarget) {
           let beforeKey = beforeTarget?.doc.metaSortKey;
           let afterKey =
-            afterTarget?.doc.metaSortKey && afterTarget.level === beforeTarget.level
+            afterTarget?.doc.metaSortKey &&
+            afterTarget.level === beforeTarget.level
               ? afterTarget.doc.metaSortKey
               : beforeKey - 100;
 
@@ -445,7 +453,7 @@ export const Debug: FC = () => {
           action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/reorder`,
           method: 'POST',
           encType: 'application/json',
-        },
+        }
       );
     },
     renderDropIndicator(target) {
@@ -458,38 +466,58 @@ export const Debug: FC = () => {
     },
   });
 
-  const createNewItemList = useListData({
+  const createInCollectionActionList = useListData({
     initialItems: [
       {
         id: 'HTTP',
         name: 'HTTP Request',
         icon: 'plus-circle',
         hint: hotKeyRegistry.request_createHTTP,
-        action: () => createRequest('HTTP'),
+        action: () =>
+          createRequest({
+            requestType: 'HTTP',
+            parentId: workspaceId,
+          }),
       },
       {
         id: 'Event Stream',
         name: 'Event Stream Request',
         icon: 'plus-circle',
-        action: () => createRequest('Event Stream'),
+        action: () =>
+          createRequest({
+            requestType: 'Event Stream',
+            parentId: workspaceId,
+          }),
       },
       {
         id: 'GraphQL Request',
         name: 'GraphQL Request',
         icon: 'plus-circle',
-        action: () => createRequest('GraphQL'),
+        action: () =>
+          createRequest({
+            requestType: 'GraphQL',
+            parentId: workspaceId,
+          }),
       },
       {
         id: 'gRPC Request',
         name: 'gRPC Request',
         icon: 'plus-circle',
-        action: () => createRequest('gRPC'),
+        action: () =>
+          createRequest({
+            requestType: 'gRPC',
+            parentId: workspaceId,
+          }),
       },
       {
         id: 'WebSocket Request',
         name: 'WebSocket Request',
         icon: 'plus-circle',
-        action: () => createRequest('WebSocket'),
+        action: () =>
+          createRequest({
+            requestType: 'WebSocket',
+            parentId: workspaceId,
+          }),
       },
       {
         id: 'From Curl',
@@ -514,11 +542,16 @@ export const Debug: FC = () => {
                 {
                   action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/new`,
                   method: 'post',
-                },
+                }
               ),
           }),
       },
     ],
+  });
+
+  const environmentsList = useListData({
+    initialItems: [baseEnvironment, ...subEnvironments],
+    getKey: item => item._id,
   });
 
   return (
@@ -542,7 +575,7 @@ export const Debug: FC = () => {
                   );
                 }}
                 selectedKey={activeEnvironment._id}
-                items={[baseEnvironment, ...subEnvironments]}
+                items={environmentsList.items}
               >
                 <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                   <SelectValue className="flex truncate items-center justify-center gap-2">
@@ -641,6 +674,13 @@ export const Debug: FC = () => {
               <SearchField
                 aria-label="Collection filter"
                 className="group relative flex-1"
+                defaultValue={searchParams.get('filter')?.toString() ?? ''}
+                onChange={filter => {
+                  setSearchParams({
+                    ...Object.fromEntries(searchParams.entries()),
+                    filter,
+                  });
+                }}
               >
                 <Input
                   placeholder="Filter"
@@ -657,7 +697,10 @@ export const Debug: FC = () => {
                 className="h-full aspect-square"
                 selectedKey={sortOrder}
                 onSelectionChange={order =>
-                  setSearchParams({ sortOrder: order.toString() })
+                  setSearchParams({
+                    ...Object.fromEntries(searchParams.entries()),
+                    sortOrder: order.toString(),
+                  })
                 }
                 items={SORT_ORDERS.map(order => {
                   return {
@@ -711,8 +754,10 @@ export const Debug: FC = () => {
                   <Menu
                     aria-label="Create a new request"
                     selectionMode="single"
-                    onAction={key => createNewItemList.getItem(key).action()}
-                    items={createNewItemList.items}
+                    onAction={key =>
+                      createInCollectionActionList.getItem(key).action()
+                    }
+                    items={createInCollectionActionList.items}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
                     {item => (
@@ -742,7 +787,7 @@ export const Debug: FC = () => {
               onSelectionChange={keys => {
                 if (keys !== 'all') {
                   const value = keys.values().next().value;
-                  console.log(value);
+
                   const item = collection.find(
                     item => item.doc._id === value
                   );
@@ -750,7 +795,7 @@ export const Debug: FC = () => {
                     groupMetaPatcher(value, { collapsed: !item.collapsed });
                   } else {
                     navigate(
-                      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}`
+                      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`
                     );
                   }
                 }
@@ -793,6 +838,17 @@ export const Debug: FC = () => {
                       )}
                       <span className="truncate">{item.doc.name}</span>
                       <span className="flex-1" />
+                      {isRequestGroup(item.doc) ? (
+                        <RequestGroupActionsDropdown
+                          requestGroup={item.doc}
+                          handleShowSettings={console.log}
+                        />
+                      ) : (
+                        <RequestActionsDropdown
+                          request={item.doc}
+                          isPinned={item.pinned}
+                        />
+                      )}
                     </div>
                   </Item>
                 );
