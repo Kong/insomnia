@@ -27,6 +27,7 @@ export const TrailLinesContainer = ({ children }: PropsWithChildren) => {
   const startTailRef = useRef<TrailsLineHandle>(null);
   const endTailRef = useRef<TrailsLineHandle>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const childrenContainerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState<Size | undefined>();
 
   useEffect(() => {
@@ -48,18 +49,23 @@ export const TrailLinesContainer = ({ children }: PropsWithChildren) => {
     startTailRef.current?.toggle(false);
     endTailRef.current?.toggle(false);
 
-    const width = containerRef.current?.clientWidth;
-    const height = containerRef.current?.clientHeight;
+    const containerWidth = containerRef.current?.clientWidth;
+    const containerHeight = containerRef.current?.clientHeight;
 
-    if (!width || !height) {
+    const childrenWidth = childrenContainerRef.current?.clientWidth;
+    const childrenHeight = childrenContainerRef.current?.clientHeight;
+
+    console.log({ containerWidth, containerHeight, childrenWidth, childrenHeight });
+
+    if (!containerWidth || !containerHeight || !childrenWidth || !childrenHeight) {
       return;
     }
 
-    if (width < 500) {
+    if (containerWidth < 500) {
       return;
     }
 
-    const matrix: Size = { width: width / 2, height: height };
+    const matrix: Size = { width: (containerWidth - childrenWidth) / 2, height: containerHeight };
 
     setDimensions(matrix);
   };
@@ -69,7 +75,9 @@ export const TrailLinesContainer = ({ children }: PropsWithChildren) => {
       <div>
         {dimensions && <TrailLines id="start" ref={startTailRef} width={dimensions.width} height={dimensions.height} />}
       </div>
-      {children}
+      <div className='flex w-min' ref={childrenContainerRef}>
+        {children}
+      </div>
       <div>
         {dimensions && (
           <TrailLines id="end" ref={endTailRef} width={dimensions.width} height={dimensions.height} reverse />
