@@ -185,25 +185,25 @@ const LoginView = () => (
         display: 'flex',
         justifyContent: 'center',
         color: 'var(--color-font)',
+        fontSize: 'var(--font-size-sm)',
         gap: 'var(--padding-xs)',
-        paddingTop: '2rem',
       }}
     >
       <div>
         <i className='fa fa-edit' />
       </div>
       <span>
-        Or continue to Scratch Pad
+        Or use the Scratch Pad
       </span>
     </Link>
     <p
       style={{
         color: 'rgba(var(--color-font-rgb), 0.8)',
-        fontSize: 'var(--font-size-sm)',
+        fontSize: 'var(--font-size-xs)',
         textAlign: 'center',
       }}
     >
-      By signing up, you agree to the{' '}
+      By signing up or using Insomnia, you agree to the{' '}
       <a
         style={{
           color: 'rgba(var(--color-font-rgb), 0.8)',
@@ -212,7 +212,7 @@ const LoginView = () => (
         href="https://insomnia.rest/terms"
         rel="noreferrer"
       >
-        Terms of Service
+        terms of service
       </a>{' '}
       and{' '}
       <a
@@ -223,7 +223,7 @@ const LoginView = () => (
         href="https://insomnia.rest/privacy"
         rel="noreferrer"
       >
-        Privacy Policy agreement
+        privacy policy
       </a>
       .
     </p>

@@ -29,6 +29,8 @@ import Auth from './routes/auth';
 import Authorize from './routes/auth.authorize';
 import Login from './routes/auth.login';
 import { ErrorRoute } from './routes/error';
+import Onboarding from './routes/onboarding';
+import { OnboardingCloudMigration } from './routes/onboarding.cloud-migration';
 import { shouldOrganizationsRevalidate } from './routes/organization';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
@@ -59,6 +61,12 @@ try {
   console.log('User has not logged in before.');
 }
 
+const shouldShowOnboarding = true;
+
+if (shouldShowOnboarding) {
+  initialEntry = '/onboarding';
+}
+
 const router = createMemoryRouter(
   // @TODO - Investigate file based routing to generate these routes:
   [
@@ -68,6 +76,16 @@ const router = createMemoryRouter(
       element: <Root />,
       errorElement: <ErrorRoute />,
       children: [
+        {
+          path: 'onboarding/*',
+          element: <Onboarding />,
+        },
+        {
+          path: 'onboarding/cloud-migration',
+          loader: async (...args) => (await import('./routes/onboarding.cloud-migration')).loader(...args),
+          action: async (...args) => (await import('./routes/onboarding.cloud-migration')).action(...args),
+          element: <OnboardingCloudMigration />,
+        },
         {
           path: 'import',
           children: [
