@@ -14,11 +14,12 @@ export const createRequestGroupAction: ActionFunction = async ({ request, params
   models.requestGroupMeta.create({ parentId: requestGroup._id, collapsed: false });
   return null;
 };
-export const updateRequestGroupAction: ActionFunction = async ({ request }) => {
-  const patch = await request.json() as RequestGroup;
-  invariant(typeof patch._id === 'string', 'Request Group ID is required');
-  const reqGroup = await models.requestGroup.getById(patch._id);
+export const updateRequestGroupAction: ActionFunction = async ({ request, params }) => {
+  const { requestGroupId } = params;
+  invariant(typeof requestGroupId === 'string', 'Request Group ID is required');
+  const reqGroup = await models.requestGroup.getById(requestGroupId);
   invariant(reqGroup, 'Request Group not found');
+  const patch = await request.json() as RequestGroup;
   models.requestGroup.update(reqGroup, patch);
   return null;
 };
