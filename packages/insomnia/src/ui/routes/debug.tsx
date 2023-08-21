@@ -31,6 +31,7 @@ import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
+import { Environment } from '../../models/environment';
 import { isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import {
@@ -125,6 +126,7 @@ export const Debug: FC = () => {
   const {
     activeWorkspace,
     activeEnvironment,
+    activeCookieJar,
     grpcRequests,
     subEnvironments,
     baseEnvironment,
@@ -520,11 +522,12 @@ export const Debug: FC = () => {
   });
 
   return (
-      <SidebarLayout
+    <SidebarLayout
       className="new-sidebar"
-        renderPageSidebar={
-          <div className="flex flex-1 flex-col gap-2 overflow-hidden">
-            <div className="flex items-center gap-2 justify-between px-[--padding-sm] pt-[--padding-sm]">
+      renderPageSidebar={
+        <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
+          <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
+            <div className="flex w-full items-center gap-2 justify-between">
               <Select
                 aria-label="Select an environment"
                 onSelectionChange={environmentId => {
@@ -533,25 +536,29 @@ export const Debug: FC = () => {
                       environmentId,
                     },
                     {
-                      method: 'post',
+                      method: 'POST',
                       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
-                    },
+                    }
                   );
                 }}
                 selectedKey={activeEnvironment._id}
-                items={[baseEnvironment, ...subEnvironments].map(e => ({
-                  ...e,
-                  id: e._id,
-                }))}
+                items={[baseEnvironment, ...subEnvironments]}
               >
-                <Button className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                  <SelectValue className="flex items-center justify-center gap-2">
+                <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                  <SelectValue className="flex truncate items-center justify-center gap-2">
                     {({ isPlaceholder, selectedItem }) => {
                       if (
                         isPlaceholder ||
-                        selectedItem._id === baseEnvironment._id
+                        (selectedItem &&
+                          selectedItem._id === baseEnvironment._id) ||
+                        !selectedItem
                       ) {
-                        return <Fragment>No environment</Fragment>;
+                        return (
+                          <Fragment>
+                            <Icon icon="cancel" />
+                            No Environment
+                          </Fragment>
+                        );
                       }
 
                       return (
@@ -559,7 +566,7 @@ export const Debug: FC = () => {
                           <Icon
                             icon="circle"
                             style={{
-                              color: selectedItem.color,
+                              color: selectedItem.color ?? 'var(--color-font)',
                             }}
                           />
                           {selectedItem.name}
@@ -567,6 +574,7 @@ export const Debug: FC = () => {
                       );
                     }}
                   </SelectValue>
+                  <Icon icon="caret-down" />
                 </Button>
                 <Popover className="min-w-max">
                   <ListBox
@@ -585,12 +593,20 @@ export const Debug: FC = () => {
                         {({ isSelected }) => (
                           <Fragment>
                             <Icon
-                              icon="circle"
+                              icon={
+                                item._id === baseEnvironment._id
+                                  ? 'cancel'
+                                  : 'circle'
+                              }
                               style={{
-                                color: item.color,
+                                color: item.color ?? 'var(--color-font)',
                               }}
                             />
-                            <span>{item.name}</span>
+                            <span>
+                              {item._id === baseEnvironment._id
+                                ? 'No Environment'
+                                : item.name}
+                            </span>
                             {isSelected && (
                               <Icon
                                 icon="check"
@@ -605,15 +621,23 @@ export const Debug: FC = () => {
                 </Popover>
               </Select>
               <Button
-                onPress={() => setIsCookieModalOpen(true)}
-                className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                onPress={() => setEnvironmentModalOpen(true)}
+                className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
               >
-                <Icon icon="cookie-bite" />
-                Cookies
+                <Icon icon="gear" />
               </Button>
             </div>
+            <Button
+              onPress={() => setIsCookieModalOpen(true)}
+              className="px-4 py-1 flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            >
+              <Icon icon="cookie-bite" />
+              {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies
+            </Button>
+          </div>
 
-            <div className="flex justify-between gap-1 px-[--padding-sm]">
+          <div className="flex flex-col flex-1 overflow-hidden">
+            <div className="flex justify-between gap-1 p-[--padding-sm]">
               <SearchField
                 aria-label="Collection filter"
                 className="group relative flex-1"
@@ -622,17 +646,19 @@ export const Debug: FC = () => {
                   placeholder="Filter"
                   className="py-1 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                 />
-                <div className='flex items-center px-2 absolute right-0 top-0 h-full'>
+                <div className="flex items-center px-2 absolute right-0 top-0 h-full">
                   <Button className="flex group-data-[empty]:hidden items-center justify-center aspect-square w-5 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                  <Icon icon="close" />
-                </Button>
+                    <Icon icon="close" />
+                  </Button>
                 </div>
               </SearchField>
               <Select
                 aria-label="Select an environment"
                 className="h-full aspect-square"
                 selectedKey={sortOrder}
-                onSelectionChange={order => setSearchParams({ sortOrder: order.toString() })}
+                onSelectionChange={order =>
+                  setSearchParams({ sortOrder: order.toString() })
+                }
                 items={SORT_ORDERS.map(order => {
                   return {
                     id: order,
@@ -717,12 +743,14 @@ export const Debug: FC = () => {
                 if (keys !== 'all') {
                   const value = keys.values().next().value;
                   console.log(value);
-                  const item = collection.find(item => item.doc._id === value);
+                  const item = collection.find(
+                    item => item.doc._id === value
+                  );
                   if (item && isRequestGroup(item.doc)) {
                     groupMetaPatcher(value, { collapsed: !item.collapsed });
                   } else {
                     navigate(
-                      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}`,
+                      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}`
                     );
                   }
                 }
@@ -770,63 +798,63 @@ export const Debug: FC = () => {
                 );
               }}
             </GridList>
-            <WorkspaceSyncDropdown />
+          </div>
 
-            {isEnvironmentModalOpen && (
-              <WorkspaceEnvironmentsEditModal
-                onHide={() => setEnvironmentModalOpen(false)}
+          <WorkspaceSyncDropdown />
+
+          {isEnvironmentModalOpen && (
+            <WorkspaceEnvironmentsEditModal
+              onHide={() => setEnvironmentModalOpen(false)}
+            />
+          )}
+          {isCookieModalOpen && (
+            <CookiesModal onHide={() => setIsCookieModalOpen(false)} />
+          )}
+        </div>
+      }
+      renderPaneOne={
+        workspaceId ? (
+          <ErrorBoundary showAlert>
+            {isGrpcRequestId(requestId) && grpcState && (
+              <GrpcRequestPane
+                grpcState={grpcState}
+                setGrpcState={setGrpcState}
+                reloadRequests={reloadRequests}
               />
             )}
-            {isCookieModalOpen && (
-              <CookiesModal onHide={() => setIsCookieModalOpen(false)} />
+            {isWebSocketRequestId(requestId) && (
+              <WebSocketRequestPane environment={activeEnvironment} />
             )}
-          </div>
-        }
-        renderPaneOne={
-          workspaceId ? (
-            <ErrorBoundary showAlert>
-              {isGrpcRequestId(requestId) && grpcState && (
-                <GrpcRequestPane
-                  grpcState={grpcState}
-                  setGrpcState={setGrpcState}
-                  reloadRequests={reloadRequests}
-                />
-              )}
-              {isWebSocketRequestId(requestId) && (
-                <WebSocketRequestPane environment={activeEnvironment} />
-              )}
-              {isRequestId(requestId) && (
-                <RequestPane
-                  environmentId={activeEnvironment ? activeEnvironment._id : ''}
-                  settings={settings}
-                  setLoading={setLoading}
-                />
-              )}
-              {!requestId && <PlaceholderRequestPane />}
-              {isRequestSettingsModalOpen && activeRequest && (
-                <RequestSettingsModal
-                  request={activeRequest}
-                  onHide={() => setIsRequestSettingsModalOpen(false)}
-                />
-              )}
-            </ErrorBoundary>
-          ) : null
-        }
-        renderPaneTwo={
-          <ErrorBoundary showAlert>
-            {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
-              <GrpcResponsePane grpcState={grpcState} />
+            {isRequestId(requestId) && (
+              <RequestPane
+                environmentId={activeEnvironment ? activeEnvironment._id : ''}
+                settings={settings}
+                setLoading={setLoading}
+              />
             )}
-            {isRealtimeRequest && (
-              <RealtimeResponsePane requestId={activeRequest._id} />
+            {!requestId && <PlaceholderRequestPane />}
+            {isRequestSettingsModalOpen && activeRequest && (
+              <RequestSettingsModal
+                request={activeRequest}
+                onHide={() => setIsRequestSettingsModalOpen(false)}
+              />
             )}
-            {activeRequest &&
-              isRequest(activeRequest) &&
-              !isRealtimeRequest && (
-                <ResponsePane runningRequests={runningRequests} />
-              )}
           </ErrorBoundary>
-        }
+        ) : null
+      }
+      renderPaneTwo={
+        <ErrorBoundary showAlert>
+          {activeRequest && isGrpcRequest(activeRequest) && grpcState && (
+            <GrpcResponsePane grpcState={grpcState} />
+          )}
+          {isRealtimeRequest && (
+            <RealtimeResponsePane requestId={activeRequest._id} />
+          )}
+          {activeRequest && isRequest(activeRequest) && !isRealtimeRequest && (
+            <ResponsePane runningRequests={runningRequests} />
+          )}
+        </ErrorBoundary>
+      }
     />
   );
 };
