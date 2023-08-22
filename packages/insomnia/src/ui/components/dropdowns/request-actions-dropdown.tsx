@@ -207,7 +207,7 @@ export const RequestActionsDropdown = ({
       ...actionPlugins.map((plugin: RequestAction) => ({
         id: plugin.label,
         name: plugin.label,
-        icon: loadingActions[plugin.label] ? 'refresh' : plugin.icon as IconName || 'code',
+        icon: loadingActions[plugin.label] ? 'refresh' : plugin.icon as IconName || 'plug',
         action: () => handlePluginClick(plugin),
       })),
       {
