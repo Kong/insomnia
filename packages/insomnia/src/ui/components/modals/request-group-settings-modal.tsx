@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
 import type { RequestGroup } from '../../../models/request-group';
 import { invariant } from '../../../utils/invariant';
@@ -53,11 +53,12 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   useEffect(() => {
     modalRef.current?.show();
   }, []);
-
+  const navigate = useNavigate();
   const handleMoveToWorkspace = async () => {
     invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
     patchRequestGroup(requestGroup._id, { parentId: state.activeWorkspaceIdToCopyTo });
     modalRef.current?.hide();
+    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${state.activeWorkspaceIdToCopyTo}/debug`);
   };
 
   const handleCopyToWorkspace = async () => {
