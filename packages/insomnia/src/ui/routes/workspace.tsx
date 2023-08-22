@@ -53,6 +53,7 @@ export interface Child {
   hidden: boolean;
   pinned: boolean;
   level: number;
+  ancestors?: string[];
 }
 
 export const workspaceLoader: LoaderFunction = async ({
@@ -137,8 +138,9 @@ export const workspaceLoader: LoaderFunction = async ({
     parentId,
     level,
     parentIsCollapsed,
+    ancestors,
   }: {
-      parentId: string; level: number; parentIsCollapsed: boolean;
+      parentId: string; level: number; parentIsCollapsed: boolean; ancestors: string[];
   }): Promise<Child[]> => {
     const folders = await models.requestGroup.findByParentId(parentId);
     const requests = await models.request.findByParentId(parentId);
@@ -193,13 +195,16 @@ export const workspaceLoader: LoaderFunction = async ({
                   ?.collapsed) ||
               false;
 
+          const docAncestors = [...ancestors, parentId];
+
           return {
             doc,
             pinned,
             collapsed,
             hidden,
             level,
-            children: await getCollectionTree({ parentId: doc._id, level: level + 1, parentIsCollapsed: collapsed }),
+            ancestors: docAncestors,
+            children: await getCollectionTree({ parentId: doc._id, level: level + 1, parentIsCollapsed: collapsed, ancestors: docAncestors }),
           };
         }),
     );
@@ -211,6 +216,7 @@ export const workspaceLoader: LoaderFunction = async ({
     parentId: activeWorkspace._id,
     level: 0,
     parentIsCollapsed: false,
+    ancestors: [],
   });
 
   const syncItems: StatusCandidate[] = syncItemsList
