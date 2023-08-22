@@ -3,7 +3,6 @@ import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
 import * as Sentry from '@sentry/electron';
 
 import * as session from '../account/session';
-import { getAppWebsiteBaseURL } from '../common/constants';
 import { invariant } from '../utils/invariant';
 
 interface AuthBox {
@@ -38,14 +37,14 @@ export async function submitAuthCode(code: string) {
   }
 }
 
-export function getLoginUrl() {
+export function getLoginUrl(websiteUrl: string) {
   const publicKey = window.localStorage.getItem('insomnia.publicKey');
   if (!publicKey) {
     console.log('No public key found');
     return '';
   }
 
-  const url = new URL(getAppWebsiteBaseURL());
+  const url = new URL(websiteUrl);
 
   url.pathname = '/app/auth-app/';
   url.searchParams.set('loginKey', encodeURIComponent(publicKey));

@@ -50,6 +50,7 @@ import { AppHooks } from '../containers/app-hooks';
 import { AIProvider } from '../context/app/ai-context';
 import { PresenceProvider } from '../context/app/presence-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
+import { useRootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 
 const getNameInitials = (name: string) => {
@@ -231,6 +232,7 @@ export const shouldOrganizationsRevalidate: ShouldRevalidateFunction = ({
 };
 
 const OrganizationRoute = () => {
+  const { env } = useRootLoaderData();
   const { organizations, settings, user } =
     useLoaderData() as OrganizationLoaderData;
   const workspaceData = useRouteLoaderData(
@@ -303,7 +305,7 @@ const OrganizationRoute = () => {
                   {workspaceData && (
                     <Fragment>
                       <Breadcrumbs items={crumbs}>
-                        {(item) => (
+                        {item => (
                           <Item key={item.id} id={item.id}>
                             {item.node}
                           </Item>
@@ -311,7 +313,7 @@ const OrganizationRoute = () => {
                       </Breadcrumbs>
                       {isDesign(workspaceData?.activeWorkspace) && (
                         <nav className="flex rounded-full justify-between content-evenly font-semibold bg-[--hl-xs] p-[--padding-xxs]">
-                          {['spec', 'debug', 'test'].map((item) => (
+                          {['spec', 'debug', 'test'].map(item => (
                             <NavLink
                               key={item}
                               to={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${item}`}
@@ -347,7 +349,7 @@ const OrganizationRoute = () => {
                         </Button>
                         <Popover className="min-w-max">
                           <Menu
-                            onAction={(action) => {
+                            onAction={action => {
                               if (action === 'logout') {
                                 logoutFetcher.submit(
                                   {},
@@ -360,7 +362,7 @@ const OrganizationRoute = () => {
 
                               if (action === 'account-settings') {
                                 window.main.openInBrowser(
-                                  `${getAppWebsiteBaseURL()}/app/settings/account`,
+                                  `${env.websiteURL}/app/settings/account`,
                                 );
                               }
                             }}
@@ -425,7 +427,7 @@ const OrganizationRoute = () => {
               ) : null}
               <div className="[grid-area:Navbar]">
                 <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
-                  {organizations.map((organization) => (
+                  {organizations.map(organization => (
                     <TooltipTrigger key={organization.id}>
                       <Link>
                         <NavLink
@@ -455,14 +457,14 @@ const OrganizationRoute = () => {
                     </TooltipTrigger>
                   ))}
                   <MenuTrigger>
-                    <Button className="select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 box-border p-[--padding-sm] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center overflow-hidden outline-offset-[3px] hover:outline">
+                    <Button className="select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 box-border p-[--padding-sm] font-bold outline-none rounded-md w-[28px] h-[28px] flex items-center justify-center overflow-hidden">
                       <Icon icon="plus" />
                     </Button>
                     <Popover placement="left" className="min-w-max">
                       <Menu
-                        onAction={(action) => {
+                        onAction={action => {
                           if (action === 'join-organization') {
-                            window.main.openInBrowser(getLoginUrl());
+                            window.main.openInBrowser(getLoginUrl(env.websiteURL));
                           }
 
                           if (action === 'new-organization') {

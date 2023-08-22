@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ActionFunction, Form, Link, redirect } from 'react-router-dom';
 
+import { getStagingEnvironmentVariables } from '../../models/environment';
 import { DEFAULT_PROJECT_ID } from '../../models/project';
 import { getLoginUrl } from '../auth-session-provider';
 import { Button } from '../components/themed-button';
@@ -33,8 +34,8 @@ export const action: ActionFunction = async ({
 }) => {
   const data = await request.formData();
   const provider = data.get('provider');
-  console.log('provider', provider);
-  const url = new URL(getLoginUrl());
+  const stagingEnv = await getStagingEnvironmentVariables();
+  const url = new URL(getLoginUrl(stagingEnv.websiteURL));
 
   if (typeof provider === 'string' && provider) {
     url.searchParams.set('provider', provider);
@@ -45,7 +46,7 @@ export const action: ActionFunction = async ({
   return redirect('/auth/authorize');
 };
 
-const LoginView = () => (
+const Login = () => (
   <Form
     style={{
       display: 'flex',
@@ -229,48 +230,5 @@ const LoginView = () => (
     </p>
   </Form>
 );
-
-const Login = () => {
-  const [_, refresh] = useState(0);
-  const apiURL = window.localStorage.getItem('insomnia::api_url');
-  const websiteURL = window.localStorage.getItem('insomnia::website_url');
-
-  if (apiURL && websiteURL) {
-    return (
-      <LoginView />
-    );
-  }
-
-  return (
-    <form
-      className='flex flex-col gap-3'
-      onSubmit={e => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-
-        const apiURL = formData.get('apiURL') as string;
-        const websiteURL = formData.get('websiteURL') as string;
-
-        window.localStorage.setItem('insomnia::api_url', apiURL);
-        window.localStorage.setItem('insomnia::website_url', websiteURL);
-        refresh(_ + 1);
-      }}
-    >
-      <label className="flex flex-col gap-2">
-        <span className='text-[--color-font]'>API Url</span>
-        <input className='p-2 bg-[--hl-md] rounded' name="apiURL" type="url" defaultValue={apiURL || ''} />
-      </label>
-      <label className="flex flex-col gap-2">
-        <span className='text-[--color-font]'>Website Url</span>
-        <input className='p-2 bg-[--hl-md] rounded' name="websiteURL" type="url" defaultValue={websiteURL || ''} />
-      </label>
-      <div>
-        <Button bg="surprise" variant='contained'>
-          Save
-        </Button>
-      </div>
-    </form>
-  );
-};
 
 export default Login;
