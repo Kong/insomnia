@@ -1,3 +1,4 @@
+import { IconName } from '@fortawesome/fontawesome-svg-core';
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import {
@@ -29,8 +30,10 @@ import { useListData } from 'react-stately';
 import { SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
+import { PlatformKeyCombinations } from '../../common/settings';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
+import { Environment } from '../../models/environment';
 import { isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import {
@@ -374,10 +377,8 @@ export const Debug: FC = () => {
 
   const createRequest = ({
     requestType,
-    parentId,
   }: {
-    requestType: CreateRequestType;
-    parentId: string;
+      requestType: CreateRequestType;
   }) =>
     requestFetcher.submit(
       { requestType, parentId: workspaceId, clipboardText: window.clipboard.readText() },
@@ -400,45 +401,63 @@ export const Debug: FC = () => {
       const id = event.keys.values().next().value.toString();
       const targetId = event.target.key.toString();
 
-      const targetIndex = collection.findIndex(r => r.doc._id === targetId);
+      const dropItem = collection.find(r => r.doc._id === id);
+      const targetItem = collection.find(r => r.doc._id === targetId);
+
+      if (!dropItem || !targetItem) {
+        return;
+      }
+
+      // If the item we move is a folder we cannot move it inside it's ancestor folders so we must check the ancestry
+      const isMovingFolderInsideItsChildren = isRequestGroup(dropItem.doc) && targetItem.ancestors?.includes(dropItem.doc._id);
+      if (isMovingFolderInsideItsChildren) {
+        return;
+      }
+
       let metaSortKey = 0;
+      // If the target is a folder and we insert after it we want to add that item to the folder
+      const isMovingItemInsideFolder = isRequestGroup(targetItem.doc) && event.target.dropPosition === 'after';
+      if (isMovingItemInsideFolder) {
+        // there is no item before we move the item to the beginning
+        // If there are children find the first child key and use a lower one
+        // otherwise use whatever
+        const children = collection.filter(r => r.doc.parentId === targetId);
 
-      if (event.target.dropPosition === 'before') {
-        const beforeTarget = collection[targetIndex - 1];
-        const afterTarget = collection[targetIndex];
+        if (children.length > 0) {
+          const firstChild = children[0];
+          const firstChildKey = firstChild?.doc.metaSortKey;
 
-        if (beforeTarget) {
-          const afterKey = afterTarget?.doc.metaSortKey;
-          const beforeKey =
-            beforeTarget?.doc.metaSortKey &&
-            beforeTarget.level === afterTarget.level
-              ? beforeTarget?.doc.metaSortKey
-              : afterKey + 100;
+          const keyBeforeFirstChildKey = firstChildKey - 100;
 
-          metaSortKey = afterKey - (afterKey - beforeKey) / 2;
+          metaSortKey = keyBeforeFirstChildKey;
         } else {
-          metaSortKey = afterTarget.doc.metaSortKey + 100;
+          // Doesn't matter what key we give since it's the first item in the folder
+          // This is how we construct the default metaSortKey in the database so sorting will be loosely time based
+          const defaultMetaSortKey = -1 * Date.now();
+          metaSortKey = defaultMetaSortKey;
         }
       } else {
-        const beforeTarget = collection[targetIndex];
-        const afterTarget = collection[targetIndex + 1];
+        // Everything is going to be moving the item besides the other items
+        const targetSiblingsCollections = collection.filter(r => r.doc.parentId === targetItem.doc.parentId);
+        const targetIndexInSiblingsCollection = targetSiblingsCollections.findIndex(r => r.doc._id === targetId);
+        if (event.target.dropPosition === 'after') {
+          const beforeItem = targetItem;
+          const afterItem = targetSiblingsCollections[targetIndexInSiblingsCollection + 1];
 
-        if (afterTarget) {
-          let beforeKey = beforeTarget?.doc.metaSortKey;
-          let afterKey =
-            afterTarget?.doc.metaSortKey &&
-            afterTarget.level === beforeTarget.level
-              ? afterTarget.doc.metaSortKey
-              : beforeKey - 100;
-
-          if (afterTarget.level > beforeTarget.level) {
-            beforeKey = afterTarget.doc.metaSortKey - 200;
-            afterKey = afterTarget.doc.metaSortKey - 100;
+          if (beforeItem && afterItem) {
+            metaSortKey = beforeItem.doc.metaSortKey - (beforeItem.doc.metaSortKey - afterItem.doc.metaSortKey) / 2;
+          } else {
+            metaSortKey = beforeItem.doc.metaSortKey + 100;
           }
-
-          metaSortKey = afterKey - (afterKey - beforeKey) / 2;
         } else {
-          metaSortKey = beforeTarget.doc.metaSortKey - 100;
+          const beforeItem = targetSiblingsCollections[targetIndexInSiblingsCollection - 1];
+          const afterItem = targetItem;
+
+          if (beforeItem && afterItem) {
+            metaSortKey = afterItem.doc.metaSortKey - (afterItem.doc.metaSortKey - beforeItem.doc.metaSortKey) / 2;
+          } else {
+            metaSortKey = afterItem.doc.metaSortKey - 100;
+          }
         }
       }
 
@@ -466,7 +485,13 @@ export const Debug: FC = () => {
     },
   });
 
-  const createInCollectionActionList = useListData({
+  const createInCollectionActionList = useListData<{
+    id: string;
+    name: string;
+    icon: IconName;
+    hint?: PlatformKeyCombinations;
+    action: () => void;
+  }>({
     initialItems: [
       {
         id: 'HTTP',
@@ -476,7 +501,6 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'HTTP',
-            parentId: workspaceId,
           }),
       },
       {
@@ -486,7 +510,6 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'Event Stream',
-            parentId: workspaceId,
           }),
       },
       {
@@ -496,7 +519,6 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'GraphQL',
-            parentId: workspaceId,
           }),
       },
       {
@@ -506,7 +528,6 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'gRPC',
-            parentId: workspaceId,
           }),
       },
       {
@@ -516,14 +537,15 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'WebSocket',
-            parentId: workspaceId,
           }),
       },
       {
         id: 'From Curl',
         name: 'From Curl',
         icon: 'plus-circle',
-        value: () => createRequest('From Curl'),
+        action: () => createRequest({
+          requestType: 'From Curl',
+        }),
       },
       {
         id: 'New Folder',
@@ -578,7 +600,7 @@ export const Debug: FC = () => {
                 items={environmentsList.items}
               >
                 <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                  <SelectValue className="flex truncate items-center justify-center gap-2">
+                  <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
                     {({ isPlaceholder, selectedItem }) => {
                       if (
                         isPlaceholder ||
@@ -610,7 +632,7 @@ export const Debug: FC = () => {
                   <Icon icon="caret-down" />
                 </Button>
                 <Popover className="min-w-max">
-                  <ListBox
+                  <ListBox<Environment>
                     key={activeEnvironment._id}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
@@ -693,7 +715,7 @@ export const Debug: FC = () => {
                 </div>
               </SearchField>
               <Select
-                aria-label="Select an environment"
+                aria-label="Sort order"
                 className="h-full aspect-square"
                 selectedKey={sortOrder}
                 onSelectionChange={order =>
@@ -710,13 +732,13 @@ export const Debug: FC = () => {
                 })}
               >
                 <Button
-                  aria-label="Show environments"
+                  aria-label="Select sort order"
                   className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                 >
                   <Icon icon="sort" />
                 </Button>
                 <Popover className="min-w-max">
-                  <ListBox className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
+                  <ListBox<{ id: string; name: string }> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
                     {item => (
                       <Item
                         id={item.id}
@@ -755,7 +777,7 @@ export const Debug: FC = () => {
                     aria-label="Create a new request"
                     selectionMode="single"
                     onAction={key =>
-                      createInCollectionActionList.getItem(key).action()
+                      createInCollectionActionList.getItem(key)?.action?.()
                     }
                     items={createInCollectionActionList.items}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
