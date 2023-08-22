@@ -176,7 +176,6 @@ export const Debug: FC = () => {
   }, []);
 
   const { settings } = useRouteLoaderData('root') as RootLoaderData;
-  // const { sidebarFilter } = activeWorkspaceMeta;
   const [runningRequests, setRunningRequests] = useState<
     Record<string, boolean>
   >({});
@@ -799,6 +798,68 @@ export const Debug: FC = () => {
             </div>
 
             <GridList
+              className="overflow-y-auto border-b border-t data-[empty]:py-0 py-[--padding-sm] data-[empty]:border-none border-solid border-[--hl-sm]"
+              items={collection.filter(item => !item.hidden && item.pinned)}
+              aria-label="Pinned Requests"
+              disallowEmptySelection
+              selectedKeys={[requestId]}
+              selectionMode="single"
+              onSelectionChange={keys => {
+                if (keys !== 'all') {
+                  const value = keys.values().next().value;
+                  navigate(
+                    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`
+                  );
+                }
+              }}
+            >
+              {item => {
+                return (
+                  <Item
+                    key={item.doc._id}
+                    id={item.doc._id}
+                    className="group outline-none select-none"
+                  >
+                    <div
+                      className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                      style={{
+                        paddingLeft: `${item.level + 1}rem`,
+                      }}
+                    >
+                      <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                      {isRequest(item.doc) && (
+                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center">
+                          {formatMethodName(item.doc.method)}
+                        </span>
+                      )}
+                      {isWebSocketRequest(item.doc) && (
+                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center">
+                          WS
+                        </span>
+                      )}
+                      {isGrpcRequest(item.doc) && (
+                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center">
+                          gRPC
+                        </span>
+                      )}
+                      <span className="truncate">{item.doc.name}</span>
+                      <span className="flex-1" />
+                      {item.pinned && (
+                        <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
+                      )}
+                      {!isRequestGroup(item.doc) && (
+                        <RequestActionsDropdown
+                          request={item.doc}
+                          isPinned={item.pinned}
+                        />
+                      )}
+                    </div>
+                  </Item>
+                );
+              }}
+            </GridList>
+
+            <GridList
               className="flex-1 overflow-y-auto"
               items={collection.filter(item => !item.hidden)}
               aria-label="Request Collection"
@@ -860,6 +921,9 @@ export const Debug: FC = () => {
                       )}
                       <span className="truncate">{item.doc.name}</span>
                       <span className="flex-1" />
+                      {item.pinned && (
+                        <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
+                      )}
                       {isRequestGroup(item.doc) ? (
                         <RequestGroupActionsDropdown
                           requestGroup={item.doc}
