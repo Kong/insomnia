@@ -68,8 +68,10 @@ import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { formatMethodName } from '../components/tags/method-tag';
+import { ConnectionCircle } from '../components/websockets/action-bar';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
+import { useReadyState } from '../hooks/use-ready-state';
 import {
   CreateRequestType,
   useRequestGroupMetaPatcher,
@@ -124,6 +126,16 @@ export const loader: LoaderFunction = async ({ params }) => {
     }
   }
   return null;
+};
+
+const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
+  const readyState = useReadyState({ requestId, protocol: 'webSocket' });
+  return readyState ? <ConnectionCircle data-testid="WebSocketSpinner__Connected" /> : null;
+};
+
+const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
+  const readyState = useReadyState({ requestId, protocol: 'curl' });
+  return readyState ? <ConnectionCircle data-testid="EventStreamSpinner__Connected" /> : null;
 };
 
 export const Debug: FC = () => {
@@ -903,7 +915,7 @@ export const Debug: FC = () => {
                       <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                       {isRequest(item.doc) && (
                         <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center">
-                          {formatMethodName(item.doc.method)}
+                          {isEventStreamRequest(item.doc) ? 'SSE' : formatMethodName(item.doc.method)}
                         </span>
                       )}
                       {isWebSocketRequest(item.doc) && (
@@ -924,6 +936,8 @@ export const Debug: FC = () => {
                       )}
                       <span className="truncate">{item.doc.name}</span>
                       <span className="flex-1" />
+                      {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+                      {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
                       {item.pinned && (
                         <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
                       )}
