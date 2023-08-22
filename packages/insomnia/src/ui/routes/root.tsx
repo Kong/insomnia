@@ -2,10 +2,11 @@ import '../css/styles.css';
 
 import { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
-import { Outlet, useFetcher, useParams } from 'react-router-dom';
+import { LoaderFunction, Outlet, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { isDevelopment } from '../../common/constants';
+import { getApiBaseURL, getAppWebsiteBaseURL, isDevelopment } from '../../common/constants';
 import * as models from '../../models';
+import { getStagingEnvironmentVariables } from '../../models/environment';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
@@ -22,6 +23,28 @@ import {
   TAB_INDEX_THEMES,
 } from '../components/modals/settings-modal';
 import Modals from './modals';
+
+interface LoaderData {
+  env: {
+    websiteURL: string;
+    apiURL: string;
+  };
+}
+
+export const useRootLoaderData = () => {
+  return useRouteLoaderData('root') as LoaderData;
+};
+
+export const loader: LoaderFunction = async (): Promise<LoaderData> => {
+  const stagingEnv = await getStagingEnvironmentVariables();
+
+  return {
+    env: {
+      websiteURL: stagingEnv.websiteURL || getAppWebsiteBaseURL(),
+      apiURL: stagingEnv.apiURL || getApiBaseURL(),
+    },
+  };
+};
 
 const Root = () => {
   const { organizationId } = useParams() as {

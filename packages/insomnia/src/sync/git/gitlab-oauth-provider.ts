@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'crypto';
 import { v4 as uuid } from 'uuid';
 
 import { getApiBaseURL } from '../../common/constants';
+import { getStagingEnvironmentVariables } from '../../models/environment';
 
 const env = process['env'];
 
@@ -24,10 +25,11 @@ const getGitLabConfig = async () => {
       redirectUri: INSOMNIA_GITLAB_REDIRECT_URI,
     };
   }
-
+  const stagingEnv = await getStagingEnvironmentVariables();
+  const apiURL = stagingEnv.apiURL || getApiBaseURL();
   // Otherwise fetch the config for the GitLab API
   return window.main.axiosRequest({
-    url: getApiBaseURL() + '/v1/oauth/gitlab/config',
+    url: apiURL + '/v1/oauth/gitlab/config',
     method: 'GET',
   }).then(({ data }) => {
     return {

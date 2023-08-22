@@ -2,6 +2,7 @@ import { BrowserWindow, net } from 'electron';
 
 import { getApiBaseURL, getClientString } from '../common/constants';
 import { delay } from '../common/misc';
+import { getStagingEnvironmentVariables } from '../models/environment';
 
 interface FetchConfig {
   method: 'POST' | 'PUT' | 'GET' | 'DELETE' | 'PATCH';
@@ -53,7 +54,9 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
   if (sessionId === undefined) {
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
-  const response = await exponentialBackOff(`${origin || getApiBaseURL()}${path}`, config);
+  const stagingEnv = await getStagingEnvironmentVariables();
+  const apiURL = stagingEnv.apiURL || getApiBaseURL();
+  const response = await exponentialBackOff(`${origin || apiURL}${path}`, config);
   const uri = response.headers.get('x-insomnia-command');
   if (uri) {
     for (const window of BrowserWindow.getAllWindows()) {

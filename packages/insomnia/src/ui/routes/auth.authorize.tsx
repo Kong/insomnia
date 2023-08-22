@@ -8,6 +8,7 @@ import { VCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Button } from '../components/themed-button';
+import { useRootLoaderData } from './root';
 
 export const action: ActionFunction = async ({
   request,
@@ -29,7 +30,8 @@ export const action: ActionFunction = async ({
 };
 
 const Authorize = () => {
-  const url = getLoginUrl();
+  const { env } = useRootLoaderData();
+  const url = getLoginUrl(env.websiteURL);
   const copyUrl = () => {
     window.clipboard.writeText(url);
   };

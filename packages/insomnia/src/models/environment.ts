@@ -116,3 +116,12 @@ export function remove(environment: Environment) {
 export function all() {
   return db.all<Environment>(type);
 }
+
+export async function getStagingEnvironmentVariables() {
+  const stagingEnv = await getOrCreateForParentId('insomnia::staging');
+
+  return {
+    apiURL: stagingEnv.data.apiURL,
+    websiteURL: stagingEnv.data.websiteURL,
+  };
+};

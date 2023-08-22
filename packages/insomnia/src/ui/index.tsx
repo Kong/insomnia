@@ -28,6 +28,7 @@ import { AppLoadingIndicator } from './components/app-loading-indicator';
 import Auth from './routes/auth';
 import Authorize from './routes/auth.authorize';
 import Login from './routes/auth.login';
+import Dev from './routes/dev';
 import { ErrorRoute } from './routes/error';
 import Onboarding from './routes/onboarding';
 import { OnboardingCloudMigration } from './routes/onboarding.cloud-migration';
@@ -50,6 +51,10 @@ document.title = getProductName();
 
 let initialEntry = isLoggedIn() ? '/organization' : `/organization/${DEFAULT_PROJECT_ID}/project/${DEFAULT_PROJECT_ID}/workspace/wrk_scratchpad/debug`;
 
+if (!isLoggedIn()) {
+  initialEntry = '/dev';
+}
+
 try {
   const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
 
@@ -61,12 +66,6 @@ try {
   console.log('User has not logged in before.');
 }
 
-const shouldShowOnboarding = true;
-
-if (shouldShowOnboarding) {
-  initialEntry = '/onboarding';
-}
-
 const router = createMemoryRouter(
   // @TODO - Investigate file based routing to generate these routes:
   [
@@ -74,8 +73,15 @@ const router = createMemoryRouter(
       path: '/',
       id: 'root',
       element: <Root />,
+      loader: async (...args) => (await import('./routes/root')).loader(...args),
       errorElement: <ErrorRoute />,
       children: [
+        {
+          path: 'dev',
+          loader: async (...args) => (await import('./routes/dev')).loader(...args),
+          action: async (...args) => (await import('./routes/dev')).action(...args),
+          element: <Dev />,
+        },
         {
           path: 'onboarding/*',
           element: <Onboarding />,

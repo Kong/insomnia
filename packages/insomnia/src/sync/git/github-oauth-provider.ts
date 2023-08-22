@@ -1,10 +1,10 @@
 import { v4 } from 'uuid';
 
-import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL } from '../../common/constants';
+import { getApiBaseURL, getGitHubGraphQLApiURL } from '../../common/constants';
+import { getStagingEnvironmentVariables } from '../../models/environment';
 
 export const GITHUB_TOKEN_STORAGE_KEY = 'github-oauth-token';
 export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();
-const getOauthPageURL = () => getAppWebsiteBaseURL() + '/oauth/github';
 
 /**
  * This cache stores the states that are generated for the OAuth flow.
@@ -13,12 +13,12 @@ const getOauthPageURL = () => getAppWebsiteBaseURL() + '/oauth/github';
  */
 const statesCache = new Set<string>();
 
-export function generateAuthorizationUrl() {
+export function generateAuthorizationUrl(websiteURL: string) {
   const state = v4();
   const scopes = ['repo', 'read:user', 'user:email'];
   const scope = scopes.join(' ');
 
-  const url = new URL(getOauthPageURL());
+  const url = new URL(websiteURL + '/oauth/github');
 
   statesCache.add(state);
 
@@ -43,8 +43,11 @@ export async function exchangeCodeForToken({
     );
   }
 
+  const stagingEnv = await getStagingEnvironmentVariables();
+  const apiURL = stagingEnv.apiURL || getApiBaseURL();
+
   return window.main.axiosRequest({
-    url: getApiBaseURL() + '/v1/oauth/github',
+    url: apiURL + '/v1/oauth/github',
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
