@@ -129,6 +129,7 @@ export const loader: LoaderFunction = async ({ params }) => {
 export const Debug: FC = () => {
   const {
     activeWorkspace,
+    activeProject,
     activeEnvironment,
     activeCookieJar,
     grpcRequests,
@@ -849,6 +850,7 @@ export const Debug: FC = () => {
                       )}
                       {!isRequestGroup(item.doc) && (
                         <RequestActionsDropdown
+                          activeProject={activeProject}
                           request={item.doc}
                           isPinned={item.pinned}
                         />
@@ -932,6 +934,7 @@ export const Debug: FC = () => {
                         />
                       ) : (
                         <RequestActionsDropdown
+                          activeProject={activeProject}
                           request={item.doc}
                           isPinned={item.pinned}
                         />

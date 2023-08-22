@@ -1,11 +1,15 @@
+import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Item, Menu, MenuTrigger, Popover } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
+import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import { PlatformKeyCombinations } from '../../../common/settings';
 import type { Environment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
+import { Project } from '../../../models/project';
 import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import { incrementDeletedRequests } from '../../../models/stats';
@@ -13,18 +17,19 @@ import { incrementDeletedRequests } from '../../../models/stats';
 import { WebSocketRequest } from '../../../models/websocket-request';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
+import * as pluginContexts from '../../../plugins/context/index';
 import { useRequestMetaPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
 import { type DropdownProps } from '../base/dropdown';
 import { Icon } from '../icon';
-import { showModal, showPrompt } from '../modals';
+import { showError, showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 
 interface Props extends Omit<DropdownProps, 'children'> {
   activeEnvironment?: Environment | null;
-  // activeProject: Project;
+  activeProject: Project;
   isPinned: Boolean;
   request: Request | GrpcRequest | WebSocketRequest;
   requestGroup?: RequestGroup;
@@ -32,7 +37,7 @@ interface Props extends Omit<DropdownProps, 'children'> {
 
 export const RequestActionsDropdown = ({
   activeEnvironment,
-  // activeProject,
+  activeProject,
   isPinned,
   request,
 }: Props) => {
@@ -74,31 +79,27 @@ export const RequestActionsDropdown = ({
     });
   };
 
-  // const handlePluginClick = async ({ plugin, action, label }: RequestAction) => {
-  //   setLoadingActions({ ...loadingActions, [label]: true });
+  const handlePluginClick = async ({ plugin, action, label }: RequestAction) => {
+    setLoadingActions({ ...loadingActions, [label]: true });
 
-  //   try {
-  //     const context = {
-  //       ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER)),
-  //       ...pluginContexts.data.init(activeProject._id),
-  //       ...(pluginContexts.store.init(plugin)),
-  //       ...(pluginContexts.network.init()),
-  //     };
-  //     await action(context, {
-  //       request,
-  //       requestGroup,
-  //     });
-  //   } catch (error) {
-  //     showError({
-  //       title: 'Plugin Action Failed',
-  //       error,
-  //     });
-  //   }
-  //   setLoadingActions({ ...loadingActions, [label]: false });
-  //   if (ref && 'current' in ref) { // this `in` operator statement type-narrows to `MutableRefObject`
-  //     ref.current?.hide();
-  //   }
-  // };
+    try {
+      const context = {
+        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER)),
+        ...pluginContexts.data.init(activeProject._id),
+        ...(pluginContexts.store.init(plugin)),
+        ...(pluginContexts.network.init()),
+      };
+      await action(context, {
+        request,
+      });
+    } catch (error) {
+      showError({
+        title: 'Plugin Action Failed',
+        error,
+      });
+    }
+    setLoadingActions({ ...loadingActions, [label]: false });
+  };
 
   const generateCode = () => {
     if (isRequest(request)) {
@@ -152,7 +153,32 @@ export const RequestActionsDropdown = ({
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);
 
-  const requestActionList = [
+  const codeGenerationActions: {
+    id: string;
+    name: string;
+    icon: IconName;
+    hint?: PlatformKeyCombinations;
+    action: () => void;
+  }[] = canGenerateCode ? [{
+    id: 'GenerateCode',
+    name: 'Generate Code',
+    action: generateCode,
+    icon: 'code',
+    hint: hotKeyRegistry.request_showGenerateCodeEditor,
+  }, {
+    id: 'CopyAsCurl',
+    name: 'Copy as cURL',
+    action: copyAsCurl,
+    icon: 'copy',
+  }] : [];
+
+  const requestActionList: {
+    id: string;
+    name: string;
+    icon: IconName;
+    hint?: PlatformKeyCombinations;
+    action: () => void;
+  }[] = [
       {
         id: 'Duplicate',
         name: 'Duplicate',
@@ -177,18 +203,13 @@ export const RequestActionsDropdown = ({
         action: togglePin,
         icon: 'thumbtack',
       },
-      ...(canGenerateCode ? [{
-        id: 'GenerateCode',
-        name: 'Generate Code',
-        action: generateCode,
-        icon: 'code',
-        hint: hotKeyRegistry.request_showGenerateCodeEditor,
-      }, {
-        id: 'CopyAsCurl',
-        name: 'Copy as cURL',
-        action: copyAsCurl,
-        icon: 'copy',
-      }] : []),
+      ...codeGenerationActions,
+      ...actionPlugins.map((plugin: RequestAction) => ({
+        id: plugin.label,
+        name: plugin.label,
+        icon: loadingActions[plugin.label] ? 'refresh' : plugin.icon as IconName || 'code',
+        action: () => handlePluginClick(plugin),
+      })),
       {
         id: 'Settings',
         name: 'Settings',
@@ -243,104 +264,3 @@ export const RequestActionsDropdown = ({
     </Fragment>
   );
 };
-    // <Dropdown
-    //   ref={ref}
-    //   aria-label="Request Actions Dropdown"
-    //   onOpen={onOpen}
-    //   dataTestId={`Dropdown-${toKebabCase(request.name)}`}
-    //   triggerButton={
-    //     <DropdownButton>
-    //       <i className="fa fa-caret-down" />
-    //     </DropdownButton>
-    //   }
-    // >
-    //   <DropdownItem aria-label='Duplicate'>
-    //     <ItemContent
-    //       icon="copy"
-    //       label="Duplicate"
-    //       hint={hotKeyRegistry.request_showDuplicate}
-    //       onClick={duplicate}
-    //     />
-    //   </DropdownItem>
-
-    //   <DropdownItem aria-label='Generate Code'>
-    //     {canGenerateCode && (
-    //       <ItemContent
-    //         icon="code"
-    //         label="Generate Code"
-    //         hint={hotKeyRegistry.request_showGenerateCodeEditor}
-    //         onClick={generateCode}
-    //       />
-    //     )}
-    //   </DropdownItem>
-
-    //   <DropdownItem aria-label={isPinned ? 'Unpin' : 'Pin'}>
-    //     <ItemContent
-    //       icon="thumb-tack"
-    //       label={isPinned ? 'Unpin' : 'Pin'}
-    //       hint={hotKeyRegistry.request_togglePin}
-    //       onClick={togglePin}
-    //     />
-    //   </DropdownItem>
-
-    //   <DropdownItem aria-label='Copy as cURL'>
-    //     {canGenerateCode && (
-    //       <ItemContent
-    //         icon="copy"
-    //         label="Copy as cURL"
-    //         onClick={copyAsCurl}
-    //         withPrompt
-    //       />
-    //     )}
-    //   </DropdownItem>
-
-    //   <DropdownItem aria-label='Rename'>
-    //     <ItemContent
-    //       icon="edit"
-    //       label="Rename"
-    //       onClick={handleRename}
-    //     />
-    //   </DropdownItem>
-
-    //   <DropdownItem aria-label='Delete'>
-    //     <ItemContent
-    //       icon="trash-o"
-    //       label="Delete"
-    //       className="danger"
-    //       hint={hotKeyRegistry.request_showDelete}
-    //       withPrompt
-    //       onClick={deleteRequest}
-    //     />
-    //   </DropdownItem>
-
-    //   <DropdownSection
-    //     aria-label='Plugins Section'
-    //     title="Plugins"
-    //   >
-    //     {actionPlugins.map((plugin: RequestAction) => (
-    //       <DropdownItem
-    //         key={`${plugin.plugin.name}::${plugin.label}`}
-    //         aria-label={plugin.label}
-    //       >
-    //         <ItemContent
-    //           icon={loadingActions[plugin.label] ? 'refresh fa-spin' : plugin.icon || 'code'}
-    //           label={plugin.label}
-    //           stayOpenAfterClick
-    //           onClick={() => handlePluginClick(plugin)}
-    //         />
-    //       </DropdownItem>
-    //     ))}
-    //   </DropdownSection>
-
-    //   <DropdownSection aria-label='Settings Section'>
-    //     <DropdownItem aria-label='Settings'>
-    //       <ItemContent
-    //         icon="wrench"
-    //         label="Settings"
-    //         hint={hotKeyRegistry.request_showSettings}
-    //         onClick={handleShowSettings}
-    //       />
-    //     </DropdownItem>
-    //   </DropdownSection>
-    // </Dropdown>
-  // );

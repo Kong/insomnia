@@ -8,6 +8,7 @@ import * as models from '../models';
 import { GrpcRequest } from '../models/grpc-request';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
+import { WebSocketRequest } from '../models/websocket-request';
 import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/extensions/index';
 import { showError } from '../ui/components/modals/index';
@@ -47,7 +48,7 @@ export interface RequestGroupAction extends InternalProperties {
     context: Record<string, any>,
     models: {
       requestGroup: RequestGroup;
-      requests: (Request | GrpcRequest)[];
+      requests: (Request | GrpcRequest | WebSocketRequest)[];
     },
   ) => void | Promise<void>;
   label: string;
@@ -59,7 +60,7 @@ export interface RequestAction extends InternalProperties {
     context: Record<string, any>,
     models: {
       requestGroup?: RequestGroup;
-      request: Request | GrpcRequest;
+      request: Request | GrpcRequest | WebSocketRequest;
     },
   ) => void | Promise<void>;
   label: string;
