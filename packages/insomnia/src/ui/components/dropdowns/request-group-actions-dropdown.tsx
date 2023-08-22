@@ -8,7 +8,7 @@ import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
-import { CreateRequestType } from '../../hooks/use-request';
+import { CreateRequestType, useRequestGroupPatcher } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
@@ -92,7 +92,7 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
         method: 'post',
       }),
   }), [requestFetcher, organizationId, projectId, requestGroup._id, workspaceId]);
-
+  const patchGroup = useRequestGroupPatcher();
   const handleRename = useCallback(() => {
     showPrompt({
       title: 'Rename Folder',
@@ -100,14 +100,9 @@ export const RequestGroupActionsDropdown = forwardRef<RequestGroupActionsDropdow
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: name => requestFetcher.submit({ _id: requestGroup._id, name },
-        {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/update`,
-          method: 'post',
-          encType: 'application/json',
-        }),
+      onComplete: name => patchGroup(requestGroup._id, { name }),
     });
-  }, [requestFetcher, organizationId, projectId, requestGroup._id, requestGroup.name, workspaceId]);
+  }, [requestGroup.name, requestGroup._id, patchGroup]);
 
   const handleDeleteFolder = useCallback(async () => {
     models.stats.incrementDeletedRequestsForDescendents(requestGroup);
