@@ -19,7 +19,7 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionSmoke GraphQLjust now').click();
   // Open the graphql request
-  await page.getByRole('button', { name: 'GraphQL request' }).click();
+  await page.getByLabel('Request Collection').getByRole('row', { name: 'GraphQL request' }).click();
   // Assert the schema is fetched after switching to GraphQL request
   await expect(page.locator('.graphql-editor__meta')).toContainText('schema fetched just now');
 
@@ -55,7 +55,7 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionSmoke GraphQLjust now').click();
-  await page.getByRole('button', { name: 'GraphQL request' }).click();
+  await page.getByLabel('Request Collection').getByRole('row', { name: 'GraphQL request' }).click();
 
   // Edit and prettify query
   await page.locator('pre[role="presentation"]:has-text("bearer")').click();
