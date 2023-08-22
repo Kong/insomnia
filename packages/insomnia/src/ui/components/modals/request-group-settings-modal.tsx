@@ -120,16 +120,24 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
                 </HelpTooltip>
                 <select
                   value={activeWorkspaceIdToCopyTo || '__NULL__'}
-                  onChange={event => setState(state => ({ ...state, activeWorkspaceIdToCopyTo: event.currentTarget.value === '__NULL__' ? null : event.currentTarget.value }))}
+                  onChange={event => {
+                    const { value } = event.currentTarget;
+                    const workspaceId = value === '__NULL__' ? null : value;
+                    setState(state => ({ ...state, activeWorkspaceIdToCopyTo: workspaceId }));
+                  }}
                 >
                   <option value="__NULL__">-- Select Workspace --</option>
-                  {workspacesForActiveProject
-                    .filter(w => workspaceId !== w._id)
-                    .map(w => (
+                  {workspacesForActiveProject.map(w => {
+                    if (workspaceId === w._id) {
+                      return null;
+                    }
+
+                    return (
                       <option key={w._id} value={w._id}>
                         {w.name}
                       </option>
-                    ))}
+                    );
+                  })}
                 </select>
               </label>
             </div>
