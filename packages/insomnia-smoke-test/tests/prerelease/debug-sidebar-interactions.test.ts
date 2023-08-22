@@ -78,11 +78,11 @@ test.describe('Debug-Sidebar', async () => {
 
     test('Filter by a folder name', async ({ page }) => {
       await page.locator('button[aria-label="Select sort order"]').click();
-      await page.getByRole('menuitemradio', { name: 'Folders First' }).click();
+      await page.getByRole('option', { name: 'Folders First' }).click();
       await page.locator('[placeholder="Filter"]').click();
       await page.locator('[placeholder="Filter"]').fill('test folder');
       await page.locator('[placeholder="Filter"]').press('Enter');
-      await page.locator('button:has-text("test folderOPEN")').click();
+      await page.getByLabel('Request Collection').getByRole('row', { name: 'test folder' }).click();
     });
 
     test('Open Generate code', async ({ page }) => {

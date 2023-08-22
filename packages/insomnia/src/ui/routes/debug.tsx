@@ -688,6 +688,7 @@ export const Debug: FC = () => {
                 </Popover>
               </Select>
               <Button
+                aria-label='Manage Environments'
                 onPress={() => setEnvironmentModalOpen(true)}
                 className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
               >
