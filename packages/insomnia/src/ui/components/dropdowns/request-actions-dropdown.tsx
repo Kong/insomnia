@@ -54,6 +54,26 @@ export const RequestActionsDropdown = ({
     setActionPlugins(actionPlugins);
   }, []);
 
+  const handleDuplicateRequest = () => {
+    if (!request) {
+      return;
+    }
+
+    showPrompt({
+      title: 'Duplicate Request',
+      defaultValue: request.name,
+      submitName: 'Create',
+      label: 'New Name',
+      selectText: true,
+      onComplete: (name: string) => requestFetcher.submit({ name },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request?._id}/duplicate`,
+          method: 'post',
+          encType: 'application/json',
+        }),
+    });
+  };
+
   // const handlePluginClick = async ({ plugin, action, label }: RequestAction) => {
   //   setLoadingActions({ ...loadingActions, [label]: true });
 
@@ -79,10 +99,6 @@ export const RequestActionsDropdown = ({
   //     ref.current?.hide();
   //   }
   // };
-
-  const duplicate = () => {
-    // handleDuplicateRequest(request);
-  };
 
   const generateCode = () => {
     if (isRequest(request)) {
@@ -140,7 +156,7 @@ export const RequestActionsDropdown = ({
       {
         id: 'Duplicate',
         name: 'Duplicate',
-        action: duplicate,
+      action: handleDuplicateRequest,
         icon: 'copy',
       },
       {

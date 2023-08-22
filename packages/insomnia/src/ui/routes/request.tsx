@@ -53,11 +53,13 @@ export interface RequestLoaderData {
 }
 
 export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData | WebSocketRequestLoaderData | GrpcRequestLoaderData> => {
-  const { requestId, workspaceId } = params;
+  const { organizationId, projectId, requestId, workspaceId } = params;
   invariant(requestId, 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');
   const activeRequest = await requestOperations.getById(requestId);
-  invariant(activeRequest, 'Request not found');
+  if (!activeRequest) {
+    throw redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+  }
   const activeWorkspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   invariant(activeWorkspaceMeta, 'Active workspace meta not found');
   // NOTE: loaders shouldnt mutate data, this should be moved somewhere else

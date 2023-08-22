@@ -27,9 +27,9 @@ export const deleteRequestGroupAction: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const id = formData.get('id') as string;
   const requestGroup = await models.requestGroup.getById(id);
-  invariant(requestGroup, 'Request not found');
+  invariant(requestGroup, 'Request Group not found');
   models.stats.incrementDeletedRequestsForDescendents(requestGroup);
-  models.requestGroup.remove(requestGroup);
+  await models.requestGroup.remove(requestGroup);
   return null;
 };
 
