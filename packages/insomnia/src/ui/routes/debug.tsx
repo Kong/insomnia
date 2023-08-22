@@ -25,7 +25,6 @@ import {
   useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
-import { useListData } from 'react-stately';
 
 import { SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
 import { ChangeBufferEvent, database as db } from '../../common/database';
@@ -497,14 +496,13 @@ export const Debug: FC = () => {
     },
   });
 
-  const createInCollectionActionList = useListData<{
+  const createInCollectionActionList: {
     id: string;
     name: string;
     icon: IconName;
     hint?: PlatformKeyCombinations;
     action: () => void;
-  }>({
-    initialItems: [
+  }[] = [
       {
         id: 'HTTP',
         name: 'HTTP Request',
@@ -580,13 +578,12 @@ export const Debug: FC = () => {
               ),
           }),
       },
-    ],
-  });
+    ];
 
-  const environmentsList = useListData({
-    initialItems: [baseEnvironment, ...subEnvironments],
-    getKey: item => item._id,
-  });
+  const environmentsList = [baseEnvironment, ...subEnvironments].map(e => ({
+    id: e._id,
+    name: e.name,
+  }));
 
   return (
     <SidebarLayout
@@ -609,7 +606,7 @@ export const Debug: FC = () => {
                   );
                 }}
                 selectedKey={activeEnvironment._id}
-                items={environmentsList.items}
+                items={environmentsList}
               >
                 <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                   <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
@@ -789,10 +786,13 @@ export const Debug: FC = () => {
                   <Menu
                     aria-label="Create a new request"
                     selectionMode="single"
-                    onAction={key =>
-                      createInCollectionActionList.getItem(key)?.action?.()
-                    }
-                    items={createInCollectionActionList.items}
+                    onAction={key => {
+                      const item = createInCollectionActionList.find(item => item.id === key);
+                      if (item) {
+                        item.action();
+                      }
+                    }}
+                    items={createInCollectionActionList}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
                     {item => (
