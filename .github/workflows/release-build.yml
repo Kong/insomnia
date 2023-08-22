@@ -90,6 +90,7 @@ jobs:
           primary-bundle-id: com.insomnia.inso
           appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+          appstore-connect-team-id: FX44YY62GV
 
       - name: Staple Inso CLI installer (macOS only)
         if: matrix.os == 'macos-latest'
@@ -105,6 +106,7 @@ jobs:
           primary-bundle-id: com.insomnia.inso-binary
           appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+          appstore-connect-team-id: FX44YY62GV
 
       - name: Create inso artifacts
         run: npm run inso-package:artifacts
