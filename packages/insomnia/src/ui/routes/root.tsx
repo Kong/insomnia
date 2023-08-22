@@ -66,7 +66,6 @@ import {
 import { Toast } from '../components/toast';
 import { AppHooks } from '../containers/app-hooks';
 import { AIProvider } from '../context/app/ai-context';
-import withDragDropContext from '../context/app/drag-drop-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import { useSettingsPatcher } from '../hooks/use-request';
 import Modals from './modals';
@@ -505,4 +504,4 @@ const Root = () => {
   );
 };
 
-export default withDragDropContext(Root);
+export default Root;
