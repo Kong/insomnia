@@ -195,7 +195,7 @@ const router = createMemoryRouter(
                                   action: async (...args) => (await import('./routes/request-group')).deleteRequestGroupAction(...args),
                                 },
                                 {
-                                  path: 'request-group/update',
+                                  path: 'request-group/:requestGroupId/update',
                                   action: async (...args) => (await import('./routes/request-group')).updateRequestGroupAction(...args),
                                 },
                                 {

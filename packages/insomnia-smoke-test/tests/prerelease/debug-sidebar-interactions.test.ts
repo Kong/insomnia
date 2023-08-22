@@ -119,6 +119,15 @@ test.describe('Debug-Sidebar', async () => {
       await page.locator('button:has-text("example http1")').click();
     });
 
+    test('Update a request folder via settings', async ({ page }) => {
+      await page.getByRole('button', { name: 'test folder' }).click();
+      await page.locator('[data-testid="Dropdown-test-folder"] button').click();
+      await page.getByRole('menuitem', { name: 'Settings' }).click();
+      await page.getByPlaceholder('test folder').fill('test folder1');
+      await page.locator('.app').press('Escape');
+      await page.locator('button:has-text("test folder1")').click();
+    });
+
     test('Create a new HTTP request', async ({ page }) => {
       await page.getByRole('button', { name: ' ' }).press('ArrowDown');
       await page.getByRole('menuitem', { name: 'Http Request' }).click();
