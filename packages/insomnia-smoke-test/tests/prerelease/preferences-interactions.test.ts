@@ -27,7 +27,7 @@ test('Check filter responses by environment preference', async ({ app, page }) =
   await page.getByText('Collectionsimplejust now').click();
 
   // Send a request
-  await page.getByRole('button', { name: 'example http' }).click();
+  await page.getByLabel('Request Collection').getByRole('row', { name: 'example http' }).click();
   await page.click('[data-testid="request-pane"] button:has-text("Send")');
   await page.click('text=Timeline');
   await page.locator('text=HTTP/1.1 200 OK').click();

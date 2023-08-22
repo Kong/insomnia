@@ -3,6 +3,7 @@ import React, { Fragment, useRef, useState } from 'react';
 import { Button, Item, Menu, MenuTrigger, Popover } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
+import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import { PlatformKeyCombinations } from '../../../common/settings';
 import * as models from '../../../models';
@@ -244,14 +245,15 @@ export const RequestGroupActionsDropdown = ({
     <Fragment>
     <MenuTrigger onOpenChange={isOpen => isOpen && onOpen()}>
       <Button
-        aria-label="Create in request group"
+        data-testid={`Dropdown-${toKebabCase(requestGroup.name)}`}
+        aria-label="Request Group Actions"
         className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
       >
         <Icon icon="caret-down" />
       </Button>
       <Popover className="min-w-max">
         <Menu
-          aria-label="Create in request group"
+          aria-label="Request Group Actions Menu"
           selectionMode="single"
           onAction={key => {
             const item = requestGroupActionItems.find(a => a.id === key);

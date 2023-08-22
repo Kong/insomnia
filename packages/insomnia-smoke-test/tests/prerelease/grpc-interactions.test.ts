@@ -30,7 +30,7 @@ test.describe('gRPC interactions', () => {
   });
 
   test('can send unidirectional requests', async ({ page }) => {
-    await page.getByRole('button', { name: 'gRPC Unary', exact: true }).click();
+    await page.getByLabel('Request Collection').getByRole('row', { name: 'gRPC Unary', exact: true }).click();
     await page.locator('[data-testid="request-pane"] >> text=Unary').click();
     await page.click('text=Send');
 

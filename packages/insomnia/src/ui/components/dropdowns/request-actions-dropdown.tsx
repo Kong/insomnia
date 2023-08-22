@@ -233,7 +233,7 @@ export const RequestActionsDropdown = ({
       </Button>
       <Popover className="min-w-max">
         <Menu
-          aria-label="Request Actions"
+          aria-label="Request Actions Menu"
           selectionMode="single"
           onAction={key =>
             requestActionList.find(({ id }) => key === id)?.action()
