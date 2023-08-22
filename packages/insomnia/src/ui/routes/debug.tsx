@@ -864,7 +864,8 @@ export const Debug: FC = () => {
               items={collection.filter(item => !item.hidden)}
               aria-label="Request Collection"
               disallowEmptySelection
-              dragAndDropHooks={collectionDragAndDrop.dragAndDropHooks}
+              key={sortOrder}
+              dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
               selectedKeys={[requestId]}
               selectionMode="single"
               onSelectionChange={keys => {
