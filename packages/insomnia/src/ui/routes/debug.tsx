@@ -930,7 +930,6 @@ export const Debug: FC = () => {
                       {isRequestGroup(item.doc) ? (
                         <RequestGroupActionsDropdown
                           requestGroup={item.doc}
-                          handleShowSettings={console.log}
                         />
                       ) : (
                         <RequestActionsDropdown
