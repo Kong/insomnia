@@ -836,7 +836,7 @@ export const Debug: FC = () => {
                     <div
                       className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                       style={{
-                        paddingLeft: `${item.level + 1}rem`,
+                        paddingLeft: `${item.ancestors?.length}rem`,
                       }}
                     >
                       <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />

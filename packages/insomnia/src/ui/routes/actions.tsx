@@ -11,14 +11,12 @@ import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
-import { isGrpcRequestId } from '../../models/grpc-request';
-import { update } from '../../models/helpers/request-operations';
+import { getById, update } from '../../models/helpers/request-operations';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
-import { isRequest, isRequestId, Request } from '../../models/request';
+import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
-import { isWebSocketRequestId } from '../../models/websocket-request';
 import { isCollection, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
@@ -951,12 +949,8 @@ const getCollectionItem = async (id: string) => {
   let item;
   if (isRequestGroupId(id)) {
     item = await models.requestGroup.getById(id);
-  } else if (isRequestId(id)) {
-    item = await models.request.getById(id);
-  } else if (isWebSocketRequestId(id)) {
-    item = await models.webSocketRequest.getById(id);
-  } else if (isGrpcRequestId(id)) {
-    item = await models.grpcRequest.getById(id);
+  } else {
+    item = await getById(id);
   }
 
   invariant(item, 'Item not found');
