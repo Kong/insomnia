@@ -84,7 +84,7 @@ jobs:
 
       - name: Notarize Inso CLI installer (macOS only)
         if: matrix.os == 'macos-latest'
-        uses: devbotsxyz/xcode-notarize@v1
+        uses: lando/notarize-action@v2
         with:
           product-path: packages/insomnia-inso/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
           primary-bundle-id: com.insomnia.inso
@@ -93,13 +93,13 @@ jobs:
 
       - name: Staple Inso CLI installer (macOS only)
         if: matrix.os == 'macos-latest'
-        uses: devbotsxyz/xcode-staple@v1
+        uses: BoundfoxStudios/action-xcode-staple@v1
         with:
           product-path: packages/insomnia-inso/artifacts/inso-${{ matrix.os }}-${{ env.INSO_VERSION }}.pkg
 
       - name: Notarize Inso CLI binary (macOS only)
         if: matrix.os == 'macos-latest'
-        uses: devbotsxyz/xcode-notarize@v1
+        uses: lando/notarize-action@v2
         with:
           product-path: packages/insomnia-inso/binaries/inso
           primary-bundle-id: com.insomnia.inso-binary
