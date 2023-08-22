@@ -20,7 +20,6 @@ import { EnvironmentEditModal } from '../modals/environment-edit-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
-  handleShowSettings: (requestGroup: RequestGroup) => any;
 }
 
 export const RequestGroupActionsDropdown = ({
