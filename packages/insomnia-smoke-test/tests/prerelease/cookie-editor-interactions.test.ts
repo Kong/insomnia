@@ -27,7 +27,7 @@ test.describe('Cookie editor', async () => {
     await page.getByRole('cell', { name: 'foo=b123ar; Expires=' }).click();
 
     // Create a new cookie
-    await page.getByRole('button', { name: 'Actions' }).click();
+    await page.locator('.cookie-list').getByRole('button', { name: 'Actions' }).click();
     await page.getByRole('menuitem', { name: 'Add Cookie' }).click();
     await page.getByRole('button', { name: 'Edit' }).first().click();
 
@@ -40,7 +40,7 @@ test.describe('Cookie editor', async () => {
     await page.click('text=Done');
 
     // Send http request
-    await page.getByRole('button', { name: 'example http' }).click();
+    await page.getByLabel('Request Collection').getByRole('row', { name: 'example http' }).click();
     await page.click('[data-testid="request-pane"] button:has-text("Send")');
 
     // Check in the timeline that the cookie was sent
@@ -48,7 +48,7 @@ test.describe('Cookie editor', async () => {
     await page.click('text=foo2=bar2; foo=b123ar');
 
     // Send ws request
-    await page.getByRole('button', { name: 'example websocket' }).click();
+    await page.getByLabel('Request Collection').getByRole('row', { name: 'example websocket' }).click();
     await page.click('text=ws://localhost:4010');
     await page.click('[data-testid="request-pane"] >> text=Connect');
 

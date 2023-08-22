@@ -54,7 +54,8 @@ const router = createMemoryRouter(
     {
       path: '/',
       id: 'root',
-      loader: async (...args) => (await import('./routes/root')).loader(...args),
+      loader: async (...args) =>
+        (await import('./routes/root')).loader(...args),
       element: <Root />,
       errorElement: <ErrorRoute />,
       children: [
@@ -63,17 +64,24 @@ const router = createMemoryRouter(
           children: [
             {
               path: 'scan',
-              action: async (...args) => (await import('./routes/import')).scanForResourcesAction(...args),
+              action: async (...args) =>
+                (await import('./routes/import')).scanForResourcesAction(
+                  ...args,
+                ),
             },
             {
               path: 'resources',
-              action: async (...args) => (await import('./routes/import')).importResourcesAction(...args),
+              action: async (...args) =>
+                (await import('./routes/import')).importResourcesAction(
+                  ...args,
+                ),
             },
           ],
         },
         {
           path: 'settings/update',
-          action: async (...args) => (await import('./routes/actions')).updateSettingsAction(...args),
+          action: async (...args) =>
+            (await import('./routes/actions')).updateSettingsAction(...args),
         },
         {
           path: 'organization',
@@ -83,7 +91,8 @@ const router = createMemoryRouter(
               children: [
                 {
                   index: true,
-                  loader: async (...args) => (await import('./routes/project')).indexLoader(...args),
+                  loader: async (...args) =>
+                    (await import('./routes/project')).indexLoader(...args),
                 },
                 {
                   path: 'project',
@@ -102,23 +111,26 @@ const router = createMemoryRouter(
                         {
                           path: 'delete',
                           action: async (...args) =>
-                            (await import('./routes/actions')).deleteProjectAction(
-                              ...args
-                            ),
+                            (
+                              await import('./routes/actions')
+                            ).deleteProjectAction(...args),
                         },
                         {
                           path: 'rename',
                           action: async (...args) =>
-                            (await import('./routes/actions')).renameProjectAction(
-                              ...args
-                            ),
+                            (
+                              await import('./routes/actions')
+                            ).renameProjectAction(...args),
                         },
                         {
                           path: 'git',
                           children: [
                             {
                               path: 'clone',
-                              action: async (...args) => (await import('./routes/git-actions')).cloneGitRepoAction(...args),
+                              action: async (...args) =>
+                                (
+                                  await import('./routes/git-actions')
+                                ).cloneGitRepoAction(...args),
                             },
                           ],
                         },
@@ -130,12 +142,22 @@ const router = createMemoryRouter(
                         {
                           path: ':workspaceId',
                           id: ':workspaceId',
-                          loader: async (...args) => (await import('./routes/workspace')).workspaceLoader(...args),
-                          element: <Suspense fallback={<AppLoadingIndicator />}><Workspace /></Suspense>,
+                          loader: async (...args) =>
+                            (
+                              await import('./routes/workspace')
+                            ).workspaceLoader(...args),
+                          element: (
+                            <Suspense fallback={<AppLoadingIndicator />}>
+                              <Workspace />
+                            </Suspense>
+                          ),
                           children: [
                             {
                               path: `${ACTIVITY_DEBUG}`,
-                              loader: async (...args) => (await import('./routes/debug')).loader(...args),
+                              loader: async (...args) =>
+                                (await import('./routes/debug')).loader(
+                                  ...args,
+                                ),
                               element: (
                                 <Suspense fallback={<AppLoadingIndicator />}>
                                   <Debug />
@@ -143,56 +165,99 @@ const router = createMemoryRouter(
                               ),
                               children: [
                                 {
+                                  path: 'reorder',
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).reorderCollectionAction(...args),
+                                },
+                                {
                                   path: 'request/:requestId',
                                   id: 'request/:requestId',
-                                  loader: async (...args) => (await import('./routes/request')).loader(...args),
-                                  element: (<Outlet />),
+                                  loader: async (...args) =>
+                                    (await import('./routes/request')).loader(
+                                      ...args,
+                                    ),
+                                  element: <Outlet />,
                                   children: [
                                     {
                                       path: 'send',
-                                      action: async (...args) => (await import('./routes/request')).sendAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/request')
+                                        ).sendAction(...args),
                                     },
                                     {
                                       path: 'connect',
-                                      action: async (...args) => (await import('./routes/request')).connectAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/request')
+                                        ).connectAction(...args),
                                     },
                                     {
                                       path: 'duplicate',
-                                      action: async (...args) => (await import('./routes/request')).duplicateRequestAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/request')
+                                        ).duplicateRequestAction(...args),
                                     },
                                     {
                                       path: 'update',
-                                      action: async (...args) => (await import('./routes/request')).updateRequestAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/request')
+                                        ).updateRequestAction(...args),
                                     },
                                     {
                                       path: 'update-meta',
-                                      action: async (...args) => (await import('./routes/request')).updateRequestMetaAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/request')
+                                        ).updateRequestMetaAction(...args),
                                     },
                                     {
                                       path: 'response/delete-all',
-                                      action: async (...args) => (await import('./routes/request')).deleteAllResponsesAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/request')
+                                        ).deleteAllResponsesAction(...args),
                                     },
                                     {
                                       path: 'response/delete',
-                                      action: async (...args) => (await import('./routes/request')).deleteResponseAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/request')
+                                        ).deleteResponseAction(...args),
                                     },
                                   ],
                                 },
                                 {
                                   path: 'request/new',
-                                  action: async (...args) => (await import('./routes/request')).createRequestAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/request')
+                                    ).createRequestAction(...args),
                                 },
                                 {
                                   path: 'request/delete',
-                                  action: async (...args) => (await import('./routes/request')).deleteRequestAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/request')
+                                    ).deleteRequestAction(...args),
                                 },
                                 {
                                   path: 'request-group/new',
-                                  action: async (...args) => (await import('./routes/request-group')).createRequestGroupAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/request-group')
+                                    ).createRequestGroupAction(...args),
                                 },
                                 {
                                   path: 'request-group/delete',
-                                  action: async (...args) => (await import('./routes/request-group')).deleteRequestGroupAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/request-group')
+                                    ).deleteRequestGroupAction(...args),
                                 },
                                 {
                                   path: 'request-group/:requestGroupId/update',
@@ -204,13 +269,19 @@ const router = createMemoryRouter(
                                 },
                                 {
                                   path: 'request-group/:requestGroupId/update-meta',
-                                  action: async (...args) => (await import('./routes/request-group')).updateRequestGroupMetaAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/request-group')
+                                    ).updateRequestGroupMetaAction(...args),
                                 },
                               ],
                             },
                             {
                               path: `${ACTIVITY_SPEC}`,
-                              loader: async (...args) => (await import('./routes/design')).loader(...args),
+                              loader: async (...args) =>
+                                (await import('./routes/design')).loader(
+                                  ...args,
+                                ),
                               element: (
                                 <Suspense fallback={<AppLoadingIndicator />}>
                                   <Design />
@@ -219,11 +290,19 @@ const router = createMemoryRouter(
                               children: [
                                 {
                                   path: 'update',
-                                  action: async (...args) => (await import('./routes/actions')).updateApiSpecAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).updateApiSpecAction(...args),
                                 },
                                 {
                                   path: 'generate-request-collection',
-                                  action: async (...args) => (await import('./routes/actions')).generateCollectionFromApiSpecAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).generateCollectionFromApiSpecAction(
+                                      ...args,
+                                    ),
                                 },
                               ],
                             },
@@ -232,17 +311,25 @@ const router = createMemoryRouter(
                               children: [
                                 {
                                   path: 'new',
-                                  action: async (...args) => (await import('./routes/actions')).createNewCaCertificateAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).createNewCaCertificateAction(...args),
                                 },
                                 {
                                   path: 'update',
-                                  action: async (...args) => (await import('./routes/actions')).updateCaCertificateAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).updateCaCertificateAction(...args),
                                 },
                                 {
                                   path: 'delete',
-                                  action: async (...args) => (await import('./routes/actions')).deleteCaCertificateAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).deleteCaCertificateAction(...args),
                                 },
-
                               ],
                             },
                             {
@@ -250,15 +337,24 @@ const router = createMemoryRouter(
                               children: [
                                 {
                                   path: 'new',
-                                  action: async (...args) => (await import('./routes/actions')).createNewClientCertificateAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).createNewClientCertificateAction(...args),
                                 },
                                 {
                                   path: 'update',
-                                  action: async (...args) => (await import('./routes/actions')).updateClientCertificateAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).updateClientCertificateAction(...args),
                                 },
                                 {
                                   path: 'delete',
-                                  action: async (...args) => (await import('./routes/actions')).deleteClientCertificateAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).deleteClientCertificateAction(...args),
                                 },
                               ],
                             },
@@ -267,23 +363,38 @@ const router = createMemoryRouter(
                               children: [
                                 {
                                   path: 'update',
-                                  action: async (...args) => (await import('./routes/actions')).updateEnvironment(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).updateEnvironment(...args),
                                 },
                                 {
                                   path: 'delete',
-                                  action: async (...args) => (await import('./routes/actions')).deleteEnvironmentAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).deleteEnvironmentAction(...args),
                                 },
                                 {
                                   path: 'create',
-                                  action: async (...args) => (await import('./routes/actions')).createEnvironmentAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).createEnvironmentAction(...args),
                                 },
                                 {
                                   path: 'duplicate',
-                                  action: async (...args) => (await import('./routes/actions')).duplicateEnvironmentAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).duplicateEnvironmentAction(...args),
                                 },
                                 {
                                   path: 'set-active',
-                                  action: async (...args) => (await import('./routes/actions')).setActiveEnvironmentAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).setActiveEnvironmentAction(...args),
                                 },
                               ],
                             },
@@ -292,13 +403,19 @@ const router = createMemoryRouter(
                               children: [
                                 {
                                   path: 'update',
-                                  action: async (...args) => (await import('./routes/actions')).updateCookieJarAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).updateCookieJarAction(...args),
                                 },
                               ],
                             },
                             {
                               path: 'test/*',
-                              loader: async (...args) =>  (await import('./routes/unit-test')).loader(...args),
+                              loader: async (...args) =>
+                                (await import('./routes/unit-test')).loader(
+                                  ...args,
+                                ),
                               element: (
                                 <Suspense fallback={<AppLoadingIndicator />}>
                                   <UnitTest />
@@ -307,27 +424,44 @@ const router = createMemoryRouter(
                               children: [
                                 {
                                   index: true,
-                                  loader: async (...args) => (await import('./routes/test-suite')).indexLoader(...args),
+                                  loader: async (...args) =>
+                                    (
+                                      await import('./routes/test-suite')
+                                    ).indexLoader(...args),
                                 },
                                 {
                                   path: 'test-suite',
                                   children: [
                                     {
                                       index: true,
-                                      loader: async (...args) => (await import('./routes/test-suite')).indexLoader(...args),
+                                      loader: async (...args) =>
+                                        (
+                                          await import('./routes/test-suite')
+                                        ).indexLoader(...args),
                                     },
                                     {
                                       path: 'new',
-                                      action: async (...args) => (await import('./routes/actions')).createNewTestSuiteAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/actions')
+                                        ).createNewTestSuiteAction(...args),
                                     },
                                     {
                                       path: ':testSuiteId',
                                       id: ':testSuiteId',
-                                      loader: async (...args) => (await import('./routes/test-suite')).loader(...args),
+                                      loader: async (...args) =>
+                                        (
+                                          await import('./routes/test-suite')
+                                        ).loader(...args),
                                       children: [
                                         {
                                           index: true,
-                                          loader: async (...args) => (await import('./routes/test-results')).indexLoader(...args),
+                                          loader: async (...args) =>
+                                            (
+                                              await import(
+                                                './routes/test-results'
+                                              )
+                                            ).indexLoader(...args),
                                         },
                                         {
                                           path: 'test-result',
@@ -335,43 +469,77 @@ const router = createMemoryRouter(
                                             {
                                               path: ':testResultId',
                                               id: ':testResultId',
-                                              loader: async (...args) => (await import('./routes/test-results')).loader(...args),
+                                              loader: async (...args) =>
+                                                (
+                                                  await import(
+                                                    './routes/test-results'
+                                                  )
+                                                ).loader(...args),
                                             },
                                           ],
                                         },
                                         {
                                           path: 'delete',
-                                          action: async (...args) => (await import('./routes/actions')).deleteTestSuiteAction(...args),
+                                          action: async (...args) =>
+                                            (
+                                              await import('./routes/actions')
+                                            ).deleteTestSuiteAction(...args),
                                         },
                                         {
                                           path: 'rename',
-                                          action: async (...args) => (await import('./routes/actions')).renameTestSuiteAction(...args),
+                                          action: async (...args) =>
+                                            (
+                                              await import('./routes/actions')
+                                            ).renameTestSuiteAction(...args),
                                         },
                                         {
                                           path: 'run-all-tests',
-                                          action: async (...args) => (await import('./routes/actions')).runAllTestsAction(...args),
+                                          action: async (...args) =>
+                                            (
+                                              await import('./routes/actions')
+                                            ).runAllTestsAction(...args),
                                         },
                                         {
                                           path: 'test',
                                           children: [
                                             {
                                               path: 'new',
-                                              action: async (...args) => (await import('./routes/actions')).createNewTestAction(...args),
+                                              action: async (...args) =>
+                                                (
+                                                  await import(
+                                                    './routes/actions'
+                                                  )
+                                                ).createNewTestAction(...args),
                                             },
                                             {
                                               path: ':testId',
                                               children: [
                                                 {
                                                   path: 'delete',
-                                                  action: async (...args) => (await import('./routes/actions')).deleteTestAction(...args),
+                                                  action: async (...args) =>
+                                                    (
+                                                      await import(
+                                                        './routes/actions'
+                                                      )
+                                                    ).deleteTestAction(...args),
                                                 },
                                                 {
                                                   path: 'update',
-                                                  action: async (...args) => (await import('./routes/actions')).updateTestAction(...args),
+                                                  action: async (...args) =>
+                                                    (
+                                                      await import(
+                                                        './routes/actions'
+                                                      )
+                                                    ).updateTestAction(...args),
                                                 },
                                                 {
                                                   path: 'run',
-                                                  action: async (...args) => (await import('./routes/actions')).runTestAction(...args),
+                                                  action: async (...args) =>
+                                                    (
+                                                      await import(
+                                                        './routes/actions'
+                                                      )
+                                                    ).runTestAction(...args),
                                                 },
                                               ],
                                             },
@@ -389,20 +557,30 @@ const router = createMemoryRouter(
                                 {
                                   path: 'generate',
                                   children: [
-
                                     {
                                       path: 'collection-and-tests',
-                                      action: async (...args) => (await import('./routes/actions')).generateCollectionAndTestsAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/actions')
+                                        ).generateCollectionAndTestsAction(
+                                          ...args,
+                                        ),
                                     },
                                     {
                                       path: 'tests',
-                                      action: async (...args) => (await import('./routes/actions')).generateTestsAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/actions')
+                                        ).generateTestsAction(...args),
                                     },
                                   ],
                                 },
                                 {
                                   path: 'access',
-                                  action: async (...args) => (await import('./routes/actions')).accessAIApiAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/actions')
+                                    ).accessAIApiAction(...args),
                                 },
                               ],
                             },
@@ -418,72 +596,120 @@ const router = createMemoryRouter(
                               children: [
                                 {
                                   path: 'status',
-                                  action: async (...args) => (await import('./routes/git-actions')).gitStatusAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/git-actions')
+                                    ).gitStatusAction(...args),
                                 },
                                 {
                                   path: 'changes',
-                                  loader: async (...args) => (await import('./routes/git-actions')).gitChangesLoader(...args),
+                                  loader: async (...args) =>
+                                    (
+                                      await import('./routes/git-actions')
+                                    ).gitChangesLoader(...args),
                                 },
                                 {
                                   path: 'commit',
-                                  action: async (...args) => (await import('./routes/git-actions')).commitToGitRepoAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/git-actions')
+                                    ).commitToGitRepoAction(...args),
                                 },
                                 {
                                   path: 'branches',
-                                  loader: async (...args) => (await import('./routes/git-actions')).gitBranchesLoader(...args),
+                                  loader: async (...args) =>
+                                    (
+                                      await import('./routes/git-actions')
+                                    ).gitBranchesLoader(...args),
                                 },
                                 {
                                   path: 'log',
-                                  loader: async (...args) => (await import('./routes/git-actions')).gitLogLoader(...args),
+                                  loader: async (...args) =>
+                                    (
+                                      await import('./routes/git-actions')
+                                    ).gitLogLoader(...args),
                                 },
                                 {
                                   path: 'fetch',
-                                  action: async (...args) => (await import('./routes/git-actions')).gitFetchAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/git-actions')
+                                    ).gitFetchAction(...args),
                                 },
                                 {
                                   path: 'branch',
                                   children: [
                                     {
                                       path: 'new',
-                                      action: async (...args) => (await import('./routes/git-actions')).createNewGitBranchAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/git-actions')
+                                        ).createNewGitBranchAction(...args),
                                     },
                                     {
                                       path: 'delete',
-                                      action: async (...args) => (await import('./routes/git-actions')).deleteGitBranchAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/git-actions')
+                                        ).deleteGitBranchAction(...args),
                                     },
                                     {
                                       path: 'checkout',
-                                      action: async (...args) => (await import('./routes/git-actions')).checkoutGitBranchAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/git-actions')
+                                        ).checkoutGitBranchAction(...args),
                                     },
                                     {
                                       path: 'merge',
-                                      action: async (...args) => (await import('./routes/git-actions')).mergeGitBranchAction(...args),
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/git-actions')
+                                        ).mergeGitBranchAction(...args),
                                     },
                                   ],
                                 },
                                 {
                                   path: 'rollback',
-                                  action: async (...args) => (await import('./routes/git-actions')).gitRollbackChangesAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/git-actions')
+                                    ).gitRollbackChangesAction(...args),
                                 },
                                 {
                                   path: 'repo',
-                                  action: async (...args) => (await import('./routes/git-actions')).gitRepoAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/git-actions')
+                                    ).gitRepoAction(...args),
                                 },
                                 {
                                   path: 'update',
-                                  action: async (...args) => (await import('./routes/git-actions')).updateGitRepoAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/git-actions')
+                                    ).updateGitRepoAction(...args),
                                 },
                                 {
                                   path: 'reset',
-                                  action: async (...args) => (await import('./routes/git-actions')).resetGitRepoAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/git-actions')
+                                    ).resetGitRepoAction(...args),
                                 },
                                 {
                                   path: 'pull',
-                                  action: async (...args) => (await import('./routes/git-actions')).pullFromGitRemoteAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/git-actions')
+                                    ).pullFromGitRemoteAction(...args),
                                 },
                                 {
                                   path: 'push',
-                                  action: async (...args) => (await import('./routes/git-actions')).pushToGitRemoteAction(...args),
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/git-actions')
+                                    ).pushToGitRemoteAction(...args),
                                 },
                               ],
                             },
@@ -492,23 +718,23 @@ const router = createMemoryRouter(
                         {
                           path: 'new',
                           action: async (...args) =>
-                            (await import('./routes/actions')).createNewWorkspaceAction(
-                              ...args
-                            ),
+                            (
+                              await import('./routes/actions')
+                            ).createNewWorkspaceAction(...args),
                         },
                         {
                           path: 'delete',
                           action: async (...args) =>
-                            (await import('./routes/actions')).deleteWorkspaceAction(
-                              ...args
-                            ),
+                            (
+                              await import('./routes/actions')
+                            ).deleteWorkspaceAction(...args),
                         },
                         {
                           path: 'update',
                           action: async (...args) =>
-                            (await import('./routes/actions')).updateWorkspaceAction(
-                              ...args
-                            ),
+                            (
+                              await import('./routes/actions')
+                            ).updateWorkspaceAction(...args),
                         },
                         {
                           path: ':workspaceId/update-meta',
@@ -522,9 +748,9 @@ const router = createMemoryRouter(
                     {
                       path: 'new',
                       action: async (...args) =>
-                        (await import('./routes/actions')).createNewProjectAction(
-                          ...args
-                        ),
+                        (
+                          await import('./routes/actions')
+                        ).createNewProjectAction(...args),
                     },
                     {
                       path: ':projectId/remote-collections',
@@ -553,7 +779,7 @@ const router = createMemoryRouter(
   ],
   {
     initialEntries: [locationHistoryEntry],
-  }
+  },
 );
 
 // Store the last location in local storage

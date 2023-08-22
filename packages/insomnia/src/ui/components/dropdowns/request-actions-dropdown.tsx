@@ -1,9 +1,12 @@
-import React, { forwardRef, useCallback, useState } from 'react';
+import { IconName } from '@fortawesome/fontawesome-svg-core';
+import React, { Fragment, useCallback, useState } from 'react';
+import { Button, Item, Menu, MenuTrigger, Popover } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import { PlatformKeyCombinations } from '../../../common/settings';
 import type { Environment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
 import { Project } from '../../../models/project';
@@ -11,35 +14,33 @@ import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import { incrementDeletedRequests } from '../../../models/stats';
 // Plugin action related imports
+import { WebSocketRequest } from '../../../models/websocket-request';
 import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { useRequestMetaPatcher, useRequestPatcher } from '../../hooks/use-request';
 import { RootLoaderData } from '../../routes/root';
-import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, type DropdownProps, DropdownSection, ItemContent } from '../base/dropdown';
+import { type DropdownProps } from '../base/dropdown';
+import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
+import { RequestSettingsModal } from '../modals/request-settings-modal';
 
 interface Props extends Omit<DropdownProps, 'children'> {
   activeEnvironment?: Environment | null;
   activeProject: Project;
-  handleDuplicateRequest: Function;
-  handleShowSettings: () => void;
   isPinned: Boolean;
-  request: Request | GrpcRequest;
+  request: Request | GrpcRequest | WebSocketRequest;
   requestGroup?: RequestGroup;
 }
 
-export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
+export const RequestActionsDropdown = ({
   activeEnvironment,
   activeProject,
-  handleDuplicateRequest,
-  handleShowSettings,
   isPinned,
   request,
-  requestGroup,
-}, ref) => {
+}: Props) => {
   const {
     settings,
   } = useRouteLoaderData('root') as RootLoaderData;
@@ -51,12 +52,34 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
   const onOpen = useCallback(async () => {
     const actionPlugins = await getRequestActions();
     setActionPlugins(actionPlugins);
   }, []);
 
-  const handlePluginClick = useCallback(async ({ plugin, action, label }: RequestAction) => {
+  const handleDuplicateRequest = () => {
+    if (!request) {
+      return;
+    }
+
+    showPrompt({
+      title: 'Duplicate Request',
+      defaultValue: request.name,
+      submitName: 'Create',
+      label: 'New Name',
+      selectText: true,
+      onComplete: (name: string) => requestFetcher.submit({ name },
+        {
+          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${request?._id}/duplicate`,
+          method: 'post',
+          encType: 'application/json',
+        }),
+    });
+  };
+
+  const handlePluginClick = async ({ plugin, action, label }: RequestAction) => {
     setLoadingActions({ ...loadingActions, [label]: true });
 
     try {
@@ -68,7 +91,6 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       };
       await action(context, {
         request,
-        requestGroup,
       });
     } catch (error) {
       showError({
@@ -77,22 +99,15 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       });
     }
     setLoadingActions({ ...loadingActions, [label]: false });
-    if (ref && 'current' in ref) { // this `in` operator statement type-narrows to `MutableRefObject`
-      ref.current?.hide();
-    }
-  }, [request, requestGroup, loadingActions, activeProject._id, ref]);
+  };
 
-  const duplicate = useCallback(() => {
-    handleDuplicateRequest(request);
-  }, [handleDuplicateRequest, request]);
-
-  const generateCode = useCallback(() => {
+  const generateCode = () => {
     if (isRequest(request)) {
       showModal(GenerateCodeModal, { request });
     }
-  }, [request]);
+  };
 
-  const copyAsCurl = useCallback(async () => {
+  const copyAsCurl = async () => {
     try {
       const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
       const har = await exportHarRequest(request._id, environmentId);
@@ -109,9 +124,9 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
         message: err instanceof Error ? err.message : 'Unknown error',
       });
     }
-  }, [activeEnvironment, request._id]);
+  };
 
-  const handleRename = useCallback(() => {
+  const handleRename = () => {
     showPrompt({
       title: 'Rename Request',
       defaultValue: request.name,
@@ -120,124 +135,132 @@ export const RequestActionsDropdown = forwardRef<DropdownHandle, Props>(({
       label: 'Name',
       onComplete: name => patchRequest(request._id, { name }),
     });
-  }, [request.name, request._id, patchRequest]);
+  };
 
-  const togglePin = useCallback(() => {
+  const togglePin = () => {
     patchRequestMeta(request._id, { pinned: !isPinned });
-  }, [isPinned, request._id, patchRequestMeta]);
+  };
 
-  const deleteRequest = useCallback(() => {
+  const deleteRequest = () => {
     incrementDeletedRequests();
     requestFetcher.submit({ id: request._id },
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
         method: 'post',
       });
-  }, [requestFetcher, organizationId, projectId, request._id, workspaceId]);
+  };
 
   // Can only generate code for regular requests, not gRPC requests
   const canGenerateCode = isRequest(request);
+
+  const codeGenerationActions: {
+    id: string;
+    name: string;
+    icon: IconName;
+    hint?: PlatformKeyCombinations;
+    action: () => void;
+  }[] = canGenerateCode ? [{
+    id: 'GenerateCode',
+    name: 'Generate Code',
+    action: generateCode,
+    icon: 'code',
+    hint: hotKeyRegistry.request_showGenerateCodeEditor,
+  }, {
+    id: 'CopyAsCurl',
+    name: 'Copy as cURL',
+    action: copyAsCurl,
+    icon: 'copy',
+  }] : [];
+
+  const requestActionList: {
+    id: string;
+    name: string;
+    icon: IconName;
+    hint?: PlatformKeyCombinations;
+    action: () => void;
+  }[] = [
+      {
+        id: 'Duplicate',
+        name: 'Duplicate',
+      action: handleDuplicateRequest,
+        icon: 'copy',
+      },
+      {
+        id: 'Rename',
+        name: 'Rename',
+        action: handleRename,
+        icon: 'edit',
+      },
+      {
+        id: 'Delete',
+        name: 'Delete',
+        action: deleteRequest,
+        icon: 'trash',
+      },
+      {
+        id: 'Pin',
+        name: isPinned ? 'Unpin' : 'Pin',
+        action: togglePin,
+        icon: 'thumbtack',
+      },
+      ...codeGenerationActions,
+      ...actionPlugins.map((plugin: RequestAction) => ({
+        id: plugin.label,
+        name: plugin.label,
+        icon: loadingActions[plugin.label] ? 'refresh' : plugin.icon as IconName || 'plug',
+        action: () => handlePluginClick(plugin),
+      })),
+      {
+        id: 'Settings',
+        name: 'Settings',
+        icon: 'gear',
+        hint: hotKeyRegistry.request_showSettings,
+        action: () => {
+          setIsSettingsModalOpen(true);
+        },
+      },
+    ];
+
   return (
-    <Dropdown
-      ref={ref}
-      aria-label="Request Actions Dropdown"
-      onOpen={onOpen}
-      dataTestId={`Dropdown-${toKebabCase(request.name)}`}
-      triggerButton={
-        <DropdownButton>
-          <i className="fa fa-caret-down" />
-        </DropdownButton>
-      }
-    >
-      <DropdownItem aria-label='Duplicate'>
-        <ItemContent
-          icon="copy"
-          label="Duplicate"
-          hint={hotKeyRegistry.request_showDuplicate}
-          onClick={duplicate}
-        />
-      </DropdownItem>
-
-      <DropdownItem aria-label='Generate Code'>
-        {canGenerateCode && (
-          <ItemContent
-            icon="code"
-            label="Generate Code"
-            hint={hotKeyRegistry.request_showGenerateCodeEditor}
-            onClick={generateCode}
-          />
-        )}
-      </DropdownItem>
-
-      <DropdownItem aria-label={isPinned ? 'Unpin' : 'Pin'}>
-        <ItemContent
-          icon="thumb-tack"
-          label={isPinned ? 'Unpin' : 'Pin'}
-          hint={hotKeyRegistry.request_togglePin}
-          onClick={togglePin}
-        />
-      </DropdownItem>
-
-      <DropdownItem aria-label='Copy as cURL'>
-        {canGenerateCode && (
-          <ItemContent
-            icon="copy"
-            label="Copy as cURL"
-            onClick={copyAsCurl}
-          />
-        )}
-      </DropdownItem>
-
-      <DropdownItem aria-label='Rename'>
-        <ItemContent
-          icon="edit"
-          label="Rename"
-          onClick={handleRename}
-        />
-      </DropdownItem>
-
-      <DropdownItem aria-label='Delete'>
-        <ItemContent
-          icon="trash-o"
-          label="Delete"
-          className="danger"
-          hint={hotKeyRegistry.request_showDelete}
-          withPrompt
-          onClick={deleteRequest}
-        />
-      </DropdownItem>
-
-      <DropdownSection
-        aria-label='Plugins Section'
-        title="Plugins"
+    <Fragment>
+    <MenuTrigger onOpenChange={isOpen => isOpen && onOpen()}>
+      <Button
+        data-testid={`Dropdown-${toKebabCase(request.name)}`}
+        aria-label="Request Actions"
+        className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
       >
-        {actionPlugins.map((plugin: RequestAction) => (
-          <DropdownItem
-            key={`${plugin.plugin.name}::${plugin.label}`}
-            aria-label={plugin.label}
-          >
-            <ItemContent
-              icon={loadingActions[plugin.label] ? 'refresh fa-spin' : plugin.icon || 'code'}
-              label={plugin.label}
-              stayOpenAfterClick
-              onClick={() => handlePluginClick(plugin)}
-            />
-          </DropdownItem>
-        ))}
-      </DropdownSection>
-
-      <DropdownSection aria-label='Settings Section'>
-        <DropdownItem aria-label='Settings'>
-          <ItemContent
-            icon="wrench"
-            label="Settings"
-            hint={hotKeyRegistry.request_showSettings}
-            onClick={handleShowSettings}
-          />
-        </DropdownItem>
-      </DropdownSection>
-    </Dropdown>
+        <Icon icon="caret-down" />
+      </Button>
+      <Popover className="min-w-max">
+        <Menu
+          aria-label="Request Actions Menu"
+          selectionMode="single"
+          onAction={key =>
+            requestActionList.find(({ id }) => key === id)?.action()
+          }
+          items={requestActionList}
+          className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+        >
+          {item => (
+            <Item
+              key={item.id}
+              id={item.id}
+              className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+              aria-label={item.name}
+            >
+              <Icon icon={item.icon} />
+              <span>{item.name}</span>
+            </Item>
+          )}
+        </Menu>
+      </Popover>
+    </MenuTrigger>
+    {isSettingsModalOpen && (
+      <RequestSettingsModal
+        request={request}
+        onHide={() => setIsSettingsModalOpen(false)}
+      />
+    )}
+    </Fragment>
   );
-});
-
-RequestActionsDropdown.displayName = 'RequestActionsDropdown';
+};

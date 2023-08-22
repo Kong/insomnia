@@ -18,44 +18,49 @@ test.describe('Debug-Sidebar', async () => {
 
   test.describe('Interact with sidebar', async () => {
     test('Open Properties of an HTTP Request', async ({ page }) => {
-      await page.getByRole('button', { name: 'example http' }).click();
-      await page.locator('[data-testid="Dropdown-example-http"]').click();
-      await page.getByRole('menuitem', { name: 'Settings' }).click();
+      const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
+      await requestLocator.click();
+      await requestLocator.getByLabel('Request Actions').click();
+      await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
     });
 
     test('Open properties of a grpc request', async ({ page }) => {
-      await page.getByRole('button', { name: 'example grpc' }).click();
-      await page.locator('[data-testid="Dropdown-example-grpc"]').click();
-      await page.getByRole('menuitem', { name: 'Settings' }).click();
+      const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example grpc' });
+      await requestLocator.click();
+      await requestLocator.getByLabel('Request Actions').click();
+      await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
     });
 
     test('Open properties of a websocket request', async ({ page }) => {
-      await page.getByRole('button', { name: 'example websocket' }).click();
-      await page.locator('[data-testid="Dropdown-example-websocket"]').click();
-      await page.getByRole('menuitem', { name: 'Settings' }).click();
+      const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example websocket' });
+      await requestLocator.click();
+      await requestLocator.getByLabel('Request Actions').click();
+      await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
     });
 
     test('Open properties of a graphql request', async ({ page }) => {
-      await page.getByRole('button', { name: 'example graphql' }).click();
-      await page.locator('[data-testid="Dropdown-example-graphql"]').click();
-      await page.getByRole('menuitem', { name: 'Settings' }).click();
+      const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example graphql' });
+      await requestLocator.click();
+      await requestLocator.getByLabel('Request Actions').click();
+      await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
     });
 
     test('Open properties of a folder', async ({ page }) => {
-      await page.getByRole('button', { name: 'test folder' }).click();
-      await page.locator('[data-testid="Dropdown-test-folder"] button').click();
-      await page.getByRole('menuitem', { name: 'Settings' }).click();
+      const folderLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'test folder' });
+      await folderLocator.click();
+      await folderLocator.getByLabel('Request Group Actions').click();
+      await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByRole('tab', { name: 'Preview' }).click();
     });
 
@@ -68,22 +73,23 @@ test.describe('Debug-Sidebar', async () => {
     test('Filter by request name', async ({ page }) => {
       await page.locator('[placeholder="Filter"]').click();
       await page.locator('[placeholder="Filter"]').fill('example http');
-      await page.getByRole('button', { name: 'example http' }).click();
+      await page.getByLabel('Request Collection').getByRole('row', { name: 'example http' }).click();
     });
 
     test('Filter by a folder name', async ({ page }) => {
-      await page.locator('[data-testid="SidebarFilter"] [data-testid="DropdownButton"] button').click();
-      await page.getByRole('menuitem', { name: 'Folders First' }).click();
+      await page.locator('button[aria-label="Select sort order"]').click();
+      await page.getByRole('option', { name: 'Folders First' }).click();
       await page.locator('[placeholder="Filter"]').click();
       await page.locator('[placeholder="Filter"]').fill('test folder');
       await page.locator('[placeholder="Filter"]').press('Enter');
-      await page.locator('button:has-text("test folderOPEN")').click();
+      await page.getByLabel('Request Collection').getByRole('row', { name: 'test folder' }).click();
     });
 
     test('Open Generate code', async ({ page }) => {
-      await page.getByRole('button', { name: 'example http' }).click();
-      await page.locator('[data-testid="Dropdown-example-http"] button').click();
-      await page.getByRole('menuitem', { name: 'Generate Code' }).click();
+      const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
+      await requestLocator.click();
+      await requestLocator.getByLabel('Request Actions').click();
+      await page.getByRole('menuitemradio', { name: 'Generate Code' }).click();
       await page.locator('[data-testid="CodeEditor"] >> text=curl').click();
       await page.locator('text=Done').click();
     });
@@ -93,44 +99,48 @@ test.describe('Debug-Sidebar', async () => {
     });
 
     test('Pin a Request', async ({ page }) => {
-      await page.getByRole('button', { name: 'example http' }).click();
-      await page.locator('[data-testid="Dropdown-example-http"] button').click();
-      await page.getByRole('menuitem', { name: 'Pin' }).click();
+      const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
+      await requestLocator.click();
+      await requestLocator.getByLabel('Request Actions').click();
+      await page.getByRole('menuitemradio', { name: 'Pin' }).click();
       // Click pinned request on pinned request list
-      await page.locator('button:has-text("GETexample http")').first().click();
-      // Click pinned request on regular list
-      await page.locator('button:has-text("GETexample http")').nth(1).click();
+      const pinnedRequestLocator = page.getByLabel('Pinned Requests').getByRole('row', { name: 'example http' });
+      await pinnedRequestLocator.click();
+
+      await requestLocator.click();
     });
 
     test('Delete Request', async ({ page }) => {
-      await page.getByRole('button', { name: 'example http' }).click();
-      await page.locator('[data-testid="Dropdown-example-http"] button').click();
-      await page.getByRole('menuitem', { name: 'Delete' }).click();
-      await page.getByRole('button', { name: 'Click to confirm' }).click();
+      const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
+      await requestLocator.click();
+      await requestLocator.getByLabel('Request Actions').click();
+      await page.getByRole('menuitemradio', { name: 'Delete' }).click();
       await expect(page.locator('.app')).not.toContainText('example http');
     });
 
     test('Rename a request', async ({ page }) => {
-      await page.getByRole('button', { name: 'example http' }).click();
-      await page.locator('[data-testid="Dropdown-example-http"]').click();
-      await page.getByRole('menuitem', { name: 'Rename' }).click();
+      const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
+      await requestLocator.click();
+      await requestLocator.getByLabel('Request Actions').click();
+      await page.getByRole('menuitemradio', { name: 'Rename' }).click();
       await page.locator('text=Rename RequestName Rename >> input[type="text"]').fill('example http1');
       await page.locator('div[role="dialog"] button:has-text("Rename")').click();
-      await page.locator('button:has-text("example http1")').click();
+      await page.getByLabel('Request Collection').getByRole('row', { name: 'example http1' }).click();
     });
 
     test('Update a request folder via settings', async ({ page }) => {
-      await page.getByRole('button', { name: 'test folder' }).click();
-      await page.locator('[data-testid="Dropdown-test-folder"] button').click();
-      await page.getByRole('menuitem', { name: 'Settings' }).click();
+      const folderLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'test folder' });
+      await folderLocator.click();
+      await folderLocator.getByLabel('Request Group Actions').click();
+      await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByPlaceholder('test folder').fill('test folder1');
       await page.locator('.app').press('Escape');
-      await page.locator('button:has-text("test folder1")').click();
+      await page.getByLabel('Request Collection').getByRole('row', { name: 'test folder1' }).click();
     });
 
     test('Create a new HTTP request', async ({ page }) => {
-      await page.getByRole('button', { name: ' ' }).press('ArrowDown');
-      await page.getByRole('menuitem', { name: 'Http Request' }).click();
+      await page.getByLabel('Create in collection').click();
+      await page.getByRole('menuitemradio', { name: 'Http Request' }).click();
       await expect(page.locator('.app')).toContainText('New Request');
     });
 

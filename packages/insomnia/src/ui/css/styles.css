@@ -41,3 +41,17 @@
 .react-aria-Breadcrumbs .react-aria-Item:not(:last-child):after {
   content: '/';
 }
+
+input[type="search"]::-webkit-search-cancel-button {
+  display: none;
+}
+
+.new-sidebar .sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: var(--color-bg);
+  color: var(--color-font);
+  overflow: hidden;
+}

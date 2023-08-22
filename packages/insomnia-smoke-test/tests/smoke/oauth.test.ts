@@ -29,10 +29,10 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.getByText('CollectionOAuth Testingjust now').click();
 
   // Authorization code
-  await projectView.getByRole('button', { name: 'Authorization Code' }).click();
+  await projectView.getByLabel('Request Collection').getByRole('row', { name: 'Authorization Code' }).click();
 
   // No PKCE
-  await projectView.getByRole('button', { name: 'No PKCE' }).click();
+  await projectView.getByLabel('Request Collection').getByRole('row', { name: 'No PKCE' }).click();
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
 
   const [authorizationCodePage] = await Promise.all([
@@ -77,7 +77,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect(tokenInput).not.toHaveValue('');
 
   // PKCE SHA256
-  await page.getByRole('button', { name: 'PKCE SHA256' }).click();
+  await page.getByLabel('Request Collection').getByRole('row', { name: 'PKCE SHA256' }).click();
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
   await expect(page.locator('#Grant-Type')).toHaveValue('authorization_code');
   await expect(page.locator('#Code-Challenge-Method')).toHaveValue('S256');
@@ -86,7 +86,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect(responseBody).toContainText('"sub": "admin"');
 
   // PKCE Plain
-  await page.getByRole('button', { name: 'PKCE Plain' }).click();
+  await page.getByLabel('Request Collection').getByRole('row', { name: 'PKCE Plain' }).click();
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
   await expect(page.locator('#Grant-Type')).toHaveValue('authorization_code');
   await expect(page.locator('#Code-Challenge-Method')).toHaveValue('plain');
@@ -104,10 +104,10 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.keyboard.press('Escape');
 
   // Implicit
-  await page.getByRole('button', { name: 'Implicit' }).click();
+  await page.getByLabel('Request Collection').getByRole('row', { name: 'Implicit' }).click();
 
   // ID Token
-  await page.getByRole('button', { name: 'ID Token' }).click();
+  await page.getByLabel('Request Collection').getByRole('row', { name: 'ID Token' }).click();
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/id-token');
   await expect(page.locator('#Grant-Type')).toHaveValue('implicit');
 
@@ -125,7 +125,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await expect(responseBody).toContainText('"sub": "admin"');
 
   // ID and Access Token
-  await page.getByRole('button', { name: 'ID and Access Token' }).click();
+  await page.getByLabel('Request Collection').getByRole('row', { name: 'ID and Access Token' }).click();
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
   await expect(page.locator('#Grant-Type')).toHaveValue('implicit');
   await sendButton.click();
@@ -142,7 +142,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.keyboard.press('Escape');
 
   // Client Credentials
-  await page.getByRole('button', { name: 'Client Credentials' }).click();
+  await page.getByLabel('Request Collection').getByRole('row', { name: 'Client Credentials' }).click();
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/client-credential');
   await expect(page.locator('#Grant-Type')).toHaveValue('client_credentials');
   await sendButton.click();
@@ -159,7 +159,7 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.keyboard.press('Escape');
 
   // Resource Owner Password Credentials
-  await page.getByRole('button', { name: 'Resource Owner Password Credentials' }).click();
+  await page.getByLabel('Request Collection').getByRole('row', { name: 'Resource Owner Password Credentials' }).click();
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
   await expect(page.locator('#Grant-Type')).toHaveValue('password');
   await sendButton.click();

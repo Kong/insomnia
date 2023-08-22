@@ -1,6 +1,9 @@
 import React from 'react';
 import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
+import { SortOrder } from '../../common/constants';
+import { fuzzyMatchAll } from '../../common/misc';
+import { sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { canSync } from '../../models';
 import { ApiSpec } from '../../models/api-spec';
@@ -9,17 +12,22 @@ import { ClientCertificate } from '../../models/client-certificate';
 import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { GitRepository } from '../../models/git-repository';
-import { GrpcRequest } from '../../models/grpc-request';
+import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { isRemoteProject, Project } from '../../models/project';
 import { Request } from '../../models/request';
-import { RequestGroup } from '../../models/request-group';
-import { WebSocketRequest } from '../../models/websocket-request';
+import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import {
+  WebSocketRequest,
+} from '../../models/websocket-request';
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { StatusCandidate } from '../../sync/types';
 import { invariant } from '../../utils/invariant';
+
+type Collection = Child[];
+
 export interface WorkspaceLoaderData {
   activeWorkspace: Workspace;
   activeWorkspaceMeta: WorkspaceMeta;
@@ -36,6 +44,7 @@ export interface WorkspaceLoaderData {
   requestTree: Child[];
   grpcRequests: GrpcRequest[];
   syncItems: StatusCandidate[];
+  collection: Collection;
 }
 export interface Child {
   doc: Request | GrpcRequest | WebSocketRequest | RequestGroup;
@@ -43,9 +52,12 @@ export interface Child {
   collapsed: boolean;
   hidden: boolean;
   pinned: boolean;
+  level: number;
+  ancestors?: string[];
 }
 
 export const workspaceLoader: LoaderFunction = async ({
+  request,
   params,
 }): Promise<WorkspaceLoaderData> => {
   const { projectId, workspaceId, organizationId } = params;
@@ -73,16 +85,24 @@ export const workspaceLoader: LoaderFunction = async ({
   const baseEnvironment = await models.environment.getByParentId(workspaceId);
   invariant(baseEnvironment, 'Base environment not found');
 
-  const subEnvironments = (await models.environment.findByParentId(baseEnvironment._id))
-    .sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
+  const subEnvironments = (
+    await models.environment.findByParentId(baseEnvironment._id)
+  ).sort((e1, e2) => e1.metaSortKey - e2.metaSortKey);
 
-  const activeEnvironment = subEnvironments.find(({ _id }) => activeWorkspaceMeta.activeEnvironmentId === _id) || baseEnvironment;
+  const activeEnvironment =
+    subEnvironments.find(
+      ({ _id }) => activeWorkspaceMeta.activeEnvironmentId === _id,
+    ) || baseEnvironment;
 
-  const activeCookieJar = await models.cookieJar.getOrCreateForParentId(workspaceId);
+  const activeCookieJar = await models.cookieJar.getOrCreateForParentId(
+    workspaceId,
+  );
   invariant(activeCookieJar, 'Cookie jar not found');
 
   const activeApiSpec = await models.apiSpec.getByParentId(workspaceId);
-  const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
+  const clientCertificates = await models.clientCertificate.findByParentId(
+    workspaceId,
+  );
 
   const allProjects = await models.project.all();
 
@@ -92,12 +112,16 @@ export const workspaceLoader: LoaderFunction = async ({
       : [activeProject];
 
   const projects = sortProjects(organizationProjects);
-  const requestMetas = await models.requestMeta.all();
-  const grpcRequestMetas = await models.grpcRequestMeta.all();
-  const metas = [...requestMetas, ...grpcRequestMetas];
-  const folderMetas = (await models.requestGroupMeta.all());
   const grpcRequestList: GrpcRequest[] = [];
-  const syncItemsList: (Workspace | Environment | ApiSpec | Request | WebSocketRequest | GrpcRequest | RequestGroup)[] = [];
+  const syncItemsList: (
+    | Workspace
+    | Environment
+    | ApiSpec
+    | Request
+    | WebSocketRequest
+    | GrpcRequest
+    | RequestGroup
+  )[] = [];
   syncItemsList.push(activeWorkspace);
   syncItemsList.push(baseEnvironment);
   subEnvironments.forEach(e => syncItemsList.push(e));
@@ -105,10 +129,24 @@ export const workspaceLoader: LoaderFunction = async ({
     syncItemsList.push(activeApiSpec);
   }
 
-  const recurse = async ({ parentId }: { parentId: string }): Promise<Child[]> => {
+  const searchParams = new URL(request.url).searchParams;
+  const filter = searchParams.get('filter');
+  const sortOrder = searchParams.get('sortOrder') as SortOrder;
+  const sortFunction = sortMethodMap[sortOrder] || sortMethodMap['type-manual'];
+
+  const getCollectionTree = async ({
+    parentId,
+    level,
+    parentIsCollapsed,
+    ancestors,
+  }: {
+      parentId: string; level: number; parentIsCollapsed: boolean; ancestors: string[];
+  }): Promise<Child[]> => {
     const folders = await models.requestGroup.findByParentId(parentId);
     const requests = await models.request.findByParentId(parentId);
-    const webSocketRequests = await models.webSocketRequest.findByParentId(parentId);
+    const webSocketRequests = await models.webSocketRequest.findByParentId(
+      parentId,
+    );
     const grpcRequests = await models.grpcRequest.findByParentId(parentId);
     // TODO: remove this state hack when the grpc responses go somewhere else
     grpcRequests.map(r => grpcRequestList.push(r));
@@ -117,23 +155,96 @@ export const workspaceLoader: LoaderFunction = async ({
     webSocketRequests.map(r => syncItemsList.push(r));
     grpcRequests.map(r => syncItemsList.push(r));
 
-    const childrenWithChildren = await Promise.all([...folders, ...requests, ...webSocketRequests, ...grpcRequests].map(async doc => ({
-      doc,
-      pinned: metas.find(m => m.parentId === doc._id)?.pinned || false,
-      collapsed: folderMetas.find(m => m.parentId === doc._id)?.collapsed || false,
-      hidden: false,
-      children: await recurse({ parentId: doc._id }),
-    })));
+    const childrenWithChildren: Child[] = await Promise.all(
+      [...folders, ...requests, ...webSocketRequests, ...grpcRequests]
+        .sort(sortFunction)
+        .map(async (doc): Promise<Child> => {
+          const isFiltered = (filter?: string) => {
+            if (filter) {
+              const matches = fuzzyMatchAll(filter, [
+                doc.name,
+                doc.description,
+                ...(isRequestGroup(doc) ? [] : [doc.url]),
+              ]);
+
+              return Boolean(
+                !matches ||
+                  (matches && !matches.indexes) ||
+                  (matches && matches.indexes.length < 1)
+              );
+            }
+
+            return false;
+          };
+
+          const matchesFilter = isFiltered(filter?.toString());
+
+          const hidden = parentIsCollapsed || matchesFilter;
+
+          const pinned =
+            !isRequestGroup(doc) && isGrpcRequest(doc)
+              ? (await models.grpcRequestMeta.getOrCreateByParentId(doc._id))
+                  .pinned
+              : (await models.requestMeta.getOrCreateByParentId(doc._id))
+                  .pinned;
+          const collapsed = filter
+            ? false
+            : parentIsCollapsed ||
+              (isRequestGroup(doc) &&
+                (await models.requestGroupMeta.getByParentId(doc._id))
+                  ?.collapsed) ||
+              false;
+
+          const docAncestors = [...ancestors, parentId];
+
+          return {
+            doc,
+            pinned,
+            collapsed,
+            hidden,
+            level,
+            ancestors: docAncestors,
+            children: await getCollectionTree({ parentId: doc._id, level: level + 1, parentIsCollapsed: collapsed, ancestors: docAncestors }),
+          };
+        }),
+    );
+
     return childrenWithChildren;
   };
 
-  const requestTree = await recurse({ parentId: activeWorkspace._id });
-  const syncItems: StatusCandidate[] = syncItemsList.filter(canSync).map(i => ({
-    key: i._id,
-    name: i.name || '',
-    document: i,
-  }));
+  const requestTree = await getCollectionTree({
+    parentId: activeWorkspace._id,
+    level: 0,
+    parentIsCollapsed: false,
+    ancestors: [],
+  });
+
+  const syncItems: StatusCandidate[] = syncItemsList
+    .filter(canSync)
+    .map(i => ({
+      key: i._id,
+      name: i.name || '',
+      document: i,
+    }));
   const grpcRequests = grpcRequestList;
+
+  function flattenTree() {
+    const collection: Collection = [];
+    const tree = requestTree;
+
+    const build = (node: Child) => {
+      if (isRequestGroup(node.doc)) {
+        collection.push(node);
+        node.children.forEach(child => build(child));
+      } else {
+        collection.push(node);
+      }
+    };
+    tree.forEach(node => build(node));
+
+    return collection;
+  }
+
   return {
     activeWorkspace,
     activeProject,
@@ -150,6 +261,7 @@ export const workspaceLoader: LoaderFunction = async ({
     requestTree,
     grpcRequests,
     syncItems,
+    collection: flattenTree(),
   };
 };
 

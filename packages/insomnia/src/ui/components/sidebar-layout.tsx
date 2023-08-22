@@ -194,12 +194,14 @@ interface Props {
   renderPageSidebar?: ReactNode;
   renderPaneOne?: ReactNode;
   renderPaneTwo?: ReactNode;
+  className?: string;
 }
 
 export const SidebarLayout: FC<Props> = ({
   renderPaneOne,
   renderPaneTwo,
   renderPageSidebar,
+  className,
 }) => {
   const {
     settings,
@@ -369,6 +371,7 @@ export const SidebarLayout: FC<Props> = ({
     <LayoutGrid
       key="wrapper"
       id="wrapper"
+      className={className}
       orientation={forceVerticalLayout ? 'vertical' : 'horizontal'}
       style={{
         gridTemplateColumns: gridColumns,

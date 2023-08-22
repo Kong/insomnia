@@ -165,8 +165,6 @@
     "react": "^18.2.0",
     "react-aria": "3.23.1",
     "react-aria-components": "^1.0.0-alpha.6",
-    "react-dnd": "^7.4.5",
-    "react-dnd-html5-backend": "^7.4.4",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.14.1",
     "react-stately": "3.21.0",

@@ -11,9 +11,11 @@ import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
+import { getById, update } from '../../models/helpers/request-operations';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
+import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
 import { isCollection, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
@@ -940,5 +942,45 @@ export const deleteClientCertificateAction: ActionFunction = async ({ request })
 export const updateSettingsAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
   await models.settings.patch(patch);
+  return null;
+};
+
+const getCollectionItem = async (id: string) => {
+  let item;
+  if (isRequestGroupId(id)) {
+    item = await models.requestGroup.getById(id);
+  } else {
+    item = await getById(id);
+  }
+
+  invariant(item, 'Item not found');
+
+  return item;
+};
+
+export const reorderCollectionAction: ActionFunction = async ({ request, params }) => {
+  const { workspaceId }  = params;
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+  const { id, targetId, dropPosition, metaSortKey } = await request.json();
+  invariant(typeof id === 'string', 'ID is required');
+  invariant(typeof targetId === 'string', 'Target ID is required');
+  invariant(typeof dropPosition === 'string', 'Drop position is required');
+  invariant(metaSortKey, 'MetaSortKey position is required');
+
+  if (id === targetId) {
+    return null;
+  }
+
+  const item = await getCollectionItem(id);
+  const targetItem = await getCollectionItem(targetId);
+
+  const parentId = dropPosition === 'after' && isRequestGroup(targetItem) ? targetItem._id : targetItem.parentId;
+
+  if (isRequestGroup(item)) {
+    await models.requestGroup.update(item, { parentId, metaSortKey });
+  } else {
+    await update(item, { parentId, metaSortKey });
+  }
+
   return null;
 };

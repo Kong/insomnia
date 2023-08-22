@@ -16,15 +16,15 @@ test.describe('Environment Editor', async () => {
 
   test('create a new environment', async ({ page }) => {
     // Create the environment (which will become active on creation)
-    await page.getByText('ExampleA').click();
-    await page.getByRole('menuitem', { name: 'Manage Environments' }).click();
+    // await page.getByLabel("Select an environment").click();
+    await page.getByLabel('Manage Environments').click();
     await page.getByTestId('CreateEnvironmentDropdown').click();
     await page.getByRole('menuitem', { name: 'Environment', exact: true }).click();
     await page.getByRole('option', { name: 'New Environment' }).click();
     await page.getByRole('button', { name: 'Close' }).click();
 
     // Send a request check variables defaulted to base env since new env is empty
-    await page.getByRole('button', { name: 'GET New Request' }).click();
+    await page.getByLabel('Request Collection').getByRole('row', { name: 'GET New Request' }).click();
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByRole('tab', { name: 'Timeline' }).click();
     await page.getByText('baseenv0').click();
@@ -34,15 +34,14 @@ test.describe('Environment Editor', async () => {
   // rename an existing environment
   test('Rename an existing environment', async ({ page }) => {
     // Rename the environment (which will make it active)
-    await page.getByText('ExampleA').click();
-    await page.getByRole('menuitem', { name: 'Manage Environments' }).click();
+    await page.getByLabel('Manage Environments').click();
     await page.getByRole('option', { name: 'ExampleB' }).click();
     await page.getByTitle('Click to edit', { exact: true }).click();
     await page.getByRole('dialog').locator('input[type="text"]').fill('Gandalf');
     await page.getByRole('button', { name: 'Close' }).click();
 
     // Send a request check variables defaulted to base env since new env is empty
-    await page.getByRole('button', { name: 'GET New Request' }).click();
+    await page.getByLabel('Request Collection').getByRole('row', { name: 'GET New Request' }).click();
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByRole('tab', { name: 'Timeline' }).click();
     await page.getByText('subenvB0').click();
@@ -51,9 +50,7 @@ test.describe('Environment Editor', async () => {
 
   test('Add new variables to an existing environment', async ({ page }) => {
     // Rename the environment
-    await page.getByText('ExampleA').click();
-    await page.getByRole('menuitem', { name: 'Manage Environments' }).click();
-
+    await page.getByLabel('Manage Environments').click();
     // add a new string environment variable
     await page.locator('pre').filter({ hasText: '"exampleNumber": 1111,' }).click();
     await page.getByTestId('CodeEditor').getByRole('textbox').press('Enter');
@@ -64,7 +61,7 @@ test.describe('Environment Editor', async () => {
 
     // Open request
     await page.getByRole('button', { name: 'Close' }).click();
-    await page.getByRole('button', { name: 'GET New Request' }).click();
+    await page.getByLabel('Request Collection').getByRole('row', { name: 'GET New Request' }).click();
 
     // Add number variable to request body
     await page.locator('pre').filter({ hasText: '_.exampleObject.anotherNumber' }).click();
