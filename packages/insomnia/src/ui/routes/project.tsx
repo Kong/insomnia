@@ -395,9 +395,8 @@ const OrganizationProjectsSidebar: FC<{
           return (
             <li key={proj._id} className="sidebar__row">
               <div
-                className={`sidebar__item sidebar__item--request ${
-                  activeProject._id === proj._id ? 'sidebar__item--active' : ''
-                }`}
+                className={`sidebar__item sidebar__item--request ${activeProject._id === proj._id ? 'sidebar__item--active' : ''
+                  }`}
               >
                 <button
                   style={{
@@ -508,26 +507,26 @@ const OrganizationProjectsSidebar: FC<{
 
       <SidebarDivider />
 
-      <List
-        onAction={key => {
-          window.main.openInBrowser(key.toString());
-        }}
-      >
-        <Item
-          key="https://insomnia.rest/pricing"
-          aria-label="Help and Feedback"
+        <List
+          onAction={key => {
+            window.main.openInBrowser(key.toString());
+          }}
         >
-          <SidebarListItemContent level={1}>
-            <SidebarListItemTitle
-              icon="arrow-up-right-from-square"
-              label="Explore Subscriptions"
-            />
-          </SidebarListItemContent>
-        </Item>
-      </List>
-    </Sidebar>
-  );
-};
+          <Item
+            key="https://insomnia.rest/pricing"
+            aria-label="Help and Feedback"
+          >
+            <SidebarListItemContent level={1}>
+              <SidebarListItemTitle
+                icon="arrow-up-right-from-square"
+                label="Explore Subscriptions"
+              />
+            </SidebarListItemContent>
+          </Item>
+        </List>
+      </Sidebar>
+    );
+  };
 
 const ButtonWithoutHoverBackground = styled(Button)({
   '&&:hover': {
@@ -669,7 +668,8 @@ export const loader: LoaderFunction = async ({
 
   let project = await models.project.getById(projectId);
   if (!project) {
-    project = await models.project.create({ _id: DEFAULT_PROJECT_ID, name: getProductName(), remoteId: null });
+    const defaultproject = await models.project.getById(DEFAULT_PROJECT_ID);
+    project = defaultproject || await models.project.create({ _id: DEFAULT_PROJECT_ID, name: getProductName(), remoteId: null });
   }
   invariant(project, 'Project was not found');
 
@@ -688,8 +688,8 @@ export const loader: LoaderFunction = async ({
         specFormat = result.format;
         specFormatVersion = result.formatVersion;
       } catch (err) {
-      // Assume there is no spec
-      // TODO: Check for parse errors if it's an invalid spec
+        // Assume there is no spec
+        // TODO: Check for parse errors if it's an invalid spec
       }
     }
     const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
@@ -719,7 +719,7 @@ export const loader: LoaderFunction = async ({
 
     const hasUnsavedChanges = Boolean(
       isDesign(workspace) &&
-        workspaceMeta?.cachedGitLastCommitTime &&
+      workspaceMeta?.cachedGitLastCommitTime &&
       modifiedLocally > workspaceMeta?.cachedGitLastCommitTime
     );
     const name = isDesign(workspace) ? (apiSpec?.fileName || '') : workspace.name;
@@ -756,7 +756,7 @@ export const loader: LoaderFunction = async ({
 
   const workspaces = workspacesWithMetaData
     .filter(w => (scope !== 'all' ? w.workspace.scope === scope : true))
-  // @TODO - Figure out if the database has a way to sort/filter items that could replace this logic.
+    // @TODO - Figure out if the database has a way to sort/filter items that could replace this logic.
     .filter(workspace => filter ? Boolean(fuzzyMatchAll(filter,
       // Use the filter string to match against these properties
       [
@@ -1005,12 +1005,10 @@ const ProjectRoute: FC = () => {
                     activeProject={activeProject}
                     onSelect={() =>
                       navigate(
-                        `/organization/${organizationId}/project/${
-                          activeProject._id
-                        }/workspace/${workspace.workspace._id}/${
-                          workspace.workspace.scope === 'design'
-                            ? ACTIVITY_SPEC
-                            : ACTIVITY_DEBUG
+                        `/organization/${organizationId}/project/${activeProject._id
+                        }/workspace/${workspace.workspace._id}/${workspace.workspace.scope === 'design'
+                          ? ACTIVITY_SPEC
+                          : ACTIVITY_DEBUG
                         }`
                       )
                     }
