@@ -338,14 +338,16 @@ const OrganizationRoute = () => {
                     <Fragment>
                       <PresentUsers />
                       <MenuTrigger>
-                        <Button className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                        <Button className="px-1 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                           <Avatar
                             src={user?.picture}
                             alt={`${getFirstName()?.charAt(
                               0,
                             )}${getLastName()?.charAt(0)}`}
                           />
-                          {`${getFirstName()} ${getLastName()}`}
+                          <span className='pr-2'>
+                            {`${getFirstName()} ${getLastName()}`}
+                          </span>
                         </Button>
                         <Popover className="min-w-max">
                           <Menu
