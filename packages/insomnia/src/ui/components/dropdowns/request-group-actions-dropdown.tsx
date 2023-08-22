@@ -1,9 +1,10 @@
+import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useRef, useState } from 'react';
 import { Button, Item, Menu, MenuTrigger, Popover } from 'react-aria-components';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
-import { useListData } from 'react-stately';
 
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import { PlatformKeyCombinations } from '../../../common/settings';
 import * as models from '../../../models';
 import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
@@ -14,7 +15,8 @@ import { RootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { Icon } from '../icon';
-import { showError, showPrompt } from '../modals';
+import { showError, showModal, showPrompt } from '../modals';
+import { EnvironmentEditModal } from '../modals/environment-edit-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
@@ -124,8 +126,13 @@ export const RequestGroupActionsDropdown = ({
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
-  const createInRequestGroupActionList = useListData({
-    initialItems: [
+  const requestGroupActionItems: ({
+    id: string;
+    name: string;
+    icon: IconName;
+    hint?: PlatformKeyCombinations;
+    action: () => void;
+  })[] = [
       {
         id: 'HTTP',
         name: 'HTTP Request',
@@ -199,6 +206,12 @@ export const RequestGroupActionsDropdown = ({
           handleRequestGroupDuplicate(),
       },
       {
+        id: 'Environment',
+        name: 'Environment',
+        icon: 'code',
+        action: () => showModal(EnvironmentEditModal, { requestGroup }),
+      },
+      {
         id: 'Rename',
         name: 'Rename',
         icon: 'edit',
@@ -212,6 +225,13 @@ export const RequestGroupActionsDropdown = ({
         action: () =>
           handleDeleteFolder(),
       },
+      ...actionPlugins.map(plugin => ({
+        id: plugin.label,
+        name: plugin.label,
+        icon: plugin.icon as IconName || 'plug',
+        action: () =>
+          handlePluginClick(plugin),
+      })),
       {
         id: 'Settings',
         name: 'Settings',
@@ -219,8 +239,7 @@ export const RequestGroupActionsDropdown = ({
         action: () =>
           setIsSettingsModalOpen(true),
       },
-    ],
-  });
+    ];
 
   return (
     <Fragment>
@@ -235,10 +254,11 @@ export const RequestGroupActionsDropdown = ({
         <Menu
           aria-label="Create in request group"
           selectionMode="single"
-          onAction={key =>
-            createInRequestGroupActionList.getItem(key).action()
-          }
-          items={createInRequestGroupActionList.items}
+          onAction={key => {
+            const item = requestGroupActionItems.find(a => a.id === key);
+            item && item.action();
+          }}
+          items={requestGroupActionItems}
           className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
         >
           {item => (
@@ -262,132 +282,5 @@ export const RequestGroupActionsDropdown = ({
       />
     )}
     </Fragment>
-    // <Dropdown
-    //   {...other}
-    //   aria-label="Request Group Actions Dropdown"
-    //   ref={dropdownRef}
-    //   onOpen={onOpen}
-    //   dataTestId={`Dropdown-${toKebabCase(requestGroup.name)}`}
-    //   closeOnSelect={false}
-    //   triggerButton={
-    //     <DropdownButton>
-    //       <i className="fa fa-caret-down" />
-    //     </DropdownButton>
-    //   }
-    // >
-    //   <DropdownItem aria-label='New HTTP Request'>
-    //     <ItemContent
-    //       icon="plus-circle"
-    //       label="New HTTP Request"
-    //       hint={hotKeyRegistry.request_createHTTP}
-    //       onClick={() => create('HTTP')}
-    //     />
-    //   </DropdownItem>
-
-    //   <DropdownItem aria-label='Event Stream Request'>
-    //     <ItemContent
-    //       icon="plus-circle"
-    //       label="Event Stream Request"
-    //       onClick={() => create('Event Stream')}
-    //     />
-    //   </DropdownItem>
-
-    //   <DropdownItem aria-label='New GraphQL Request'>
-    //     <ItemContent
-    //       icon="plus-circle"
-    //       label="New GraphQL Request"
-    //       onClick={() => create('GraphQL')}
-    //     />
-    //   </DropdownItem>
-
-    //   <DropdownItem aria-label='New gRPC Request'>
-    //     <ItemContent
-    //       icon="plus-circle"
-    //       label="New gRPC Request"
-    //       onClick={() => create('gRPC')}
-    //     />
-    //   </DropdownItem>
-
-    //   <DropdownItem aria-label='WebSocket Request'>
-    //     <ItemContent
-    //       icon="plus-circle"
-    //       label="WebSocket Request"
-    //       onClick={() => create('WebSocket')}
-    //     />
-    //   </DropdownItem>
-
-    //   <DropdownItem aria-label='New Folder'>
-    //     <ItemContent
-    //       icon="folder"
-    //       label="New Folder"
-    //       hint={hotKeyRegistry.request_showCreateFolder}
-    //       onClick={createGroup}
-    //     />
-    //   </DropdownItem>
-
-    //   <DropdownSection aria-label='Actions Section'>
-    //     <DropdownItem aria-label='Duplicate'>
-    //       <ItemContent
-    //         icon="copy"
-    //         label="Duplicate"
-    //         onClick={handleRequestGroupDuplicate}
-    //       />
-    //     </DropdownItem>
-
-    //     <DropdownItem aria-label='Environment'>
-    //       <ItemContent
-    //         icon="code"
-    //         label="Environment"
-    //         onClick={() => showModal(EnvironmentEditModal, { requestGroup })}
-    //       />
-    //     </DropdownItem>
-
-    //     <DropdownItem aria-label='Rename'>
-    //       <ItemContent
-    //         icon="edit"
-    //         label="Rename"
-    //         onClick={handleRename}
-    //       />
-    //     </DropdownItem>
-
-    //     <DropdownItem aria-label='Delete'>
-    //       <ItemContent
-    //         icon="trash-o"
-    //         label="Delete"
-    //         withPrompt
-    //         onClick={handleDeleteFolder}
-    //       />
-    //     </DropdownItem>
-    //   </DropdownSection>
-
-    //   <DropdownSection
-    //     aria-label='Plugins Section'
-    //     title="Plugins"
-    //   >
-    //     {actionPlugins.map((requestGroupAction: RequestGroupAction) => (
-    //       <DropdownItem
-    //         key={requestGroupAction.label}
-    //         aria-label={requestGroupAction.label}
-    //       >
-    //         <ItemContent
-    //           icon={loadingActions[requestGroupAction.label] ? 'refresh fa-spin' : requestGroupAction.icon || 'fa-code'}
-    //           label={requestGroupAction.label}
-    //           onClick={() => handlePluginClick(requestGroupAction)}
-    //         />
-    //       </DropdownItem>
-    //     ))}
-    //   </DropdownSection>
-
-    //   <DropdownSection aria-label='Settings Section'>
-    //     <DropdownItem aria-label='Settings'>
-    //       <ItemContent
-    //         // dataTestId={`DropdownItemSettings-${toKebabCase(requestGroup.name)}`}
-    //         icon="wrench"
-    //         label="Settings"
-    //         onClick={() => handleShowSettings(requestGroup)}
-    //       />
-    //     </DropdownItem>
-    //   </DropdownSection>
-    // </Dropdown>
   );
 };
