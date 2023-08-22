@@ -980,29 +980,12 @@ export const reorderCollectionAction: ActionFunction = async ({ request, params 
   const item = await getCollectionItem(id);
   const targetItem = await getCollectionItem(targetId);
 
-  // @TODO METASortKEY
-  if (!isRequestGroup(targetItem)) {
-    console.log('Moving to request');
-    if (isRequestGroup(item)) {
-      await models.requestGroup.update(item, { parentId: targetItem.parentId, metaSortKey });
-    } else {
-      await update(item, { parentId: targetItem.parentId, metaSortKey });
-    }
+  const parentId = dropPosition === 'after' && isRequestGroup(targetItem) ? targetItem._id : targetItem.parentId;
+
+  if (isRequestGroup(item)) {
+    await models.requestGroup.update(item, { parentId, metaSortKey });
   } else {
-    console.log('Moving to group');
-    if (dropPosition === 'before') {
-      if (isRequestGroup(item)) {
-        await models.requestGroup.update(item, { parentId: targetItem.parentId, metaSortKey });
-      } else {
-        await update(item, { parentId: targetItem.parentId, metaSortKey });
-      }
-    } else {
-      if (isRequestGroup(item)) {
-        await models.requestGroup.update(item, { parentId: targetItem._id, metaSortKey });
-      } else {
-        await update(item, { parentId: targetItem._id, metaSortKey });
-      }
-    }
+    await update(item, { parentId, metaSortKey });
   }
 
   return null;
