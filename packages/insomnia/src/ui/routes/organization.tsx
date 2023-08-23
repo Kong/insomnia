@@ -471,7 +471,7 @@ const OrganizationRoute = () => {
 
                           if (action === 'new-organization') {
                             window.main.openInBrowser(
-                              `${getAppWebsiteBaseURL()}/app/organization/create`,
+                              `${env.websiteURL}/app/organization/create`,
                             );
                           }
                         }}
