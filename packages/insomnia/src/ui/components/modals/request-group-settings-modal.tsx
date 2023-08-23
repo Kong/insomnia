@@ -65,7 +65,6 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
     invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
     duplicateRequestGroup({
       _id: requestGroup._id,
-      metaSortKey: -1e9, // Move to top of sort order
       name: requestGroup.name, // Because duplicate will add (Copy) suffix if name is not provided in patch
       parentId: state.activeWorkspaceIdToCopyTo,
     });
