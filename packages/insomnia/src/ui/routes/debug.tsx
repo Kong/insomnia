@@ -583,6 +583,7 @@ export const Debug: FC = () => {
   const environmentsList = [baseEnvironment, ...subEnvironments].map(e => ({
     id: e._id,
     name: e.name,
+    color: e.color,
   }));
 
   return (
