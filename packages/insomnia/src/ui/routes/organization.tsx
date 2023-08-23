@@ -27,7 +27,6 @@ import {
   getLastName,
   isLoggedIn,
 } from '../../account/session';
-import { getAppWebsiteBaseURL } from '../../common/constants';
 import * as models from '../../models';
 import { Settings } from '../../models/settings';
 import { isDesign, isScratchpad } from '../../models/workspace';
@@ -292,7 +291,7 @@ const OrganizationRoute = () => {
       <AIProvider>
         <NunjucksEnabledProvider>
           <AppHooks />
-          <div className="app">
+          <div className="w-full h-full">
             <div className="w-full h-full divide-x divide-solid divide-y divide-[--hl-md] grid-template-app-layout grid relative bg-[--color-bg]">
               <header className="[grid-area:Header] grid grid-cols-3 items-center">
                 <div className="flex items-center">
@@ -445,7 +444,7 @@ const OrganizationRoute = () => {
                           {isPersonalOrganization(organization) ? (
                             <Icon icon="home" />
                           ) : (
-                            getNameInitials(organization.name)
+                              getNameInitials(organization.display_name)
                           )}
                         </NavLink>
                       </Link>
@@ -454,7 +453,7 @@ const OrganizationRoute = () => {
                         offset={8}
                         className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                       >
-                        <span>{organization.name}</span>
+                        <span>{organization.display_name}</span>
                       </Tooltip>
                     </TooltipTrigger>
                   ))}
