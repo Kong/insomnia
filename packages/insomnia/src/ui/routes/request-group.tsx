@@ -35,9 +35,18 @@ export const deleteRequestGroupAction: ActionFunction = async ({ request }) => {
 
 export const duplicateRequestGroupAction: ActionFunction = async ({ request }) => {
   const patch = await request.json() as Partial<RequestGroup>;
-  invariant(patch._id, 'Patch Id not found');
+  invariant(patch._id, 'Request group id not found');
   const requestGroup = await models.requestGroup.getById(patch._id);
   invariant(requestGroup, 'Request group not found');
+  if (patch.parentId) {
+    const workspace = await models.workspace.getById(patch.parentId);
+    invariant(workspace, 'Workspace is required');
+    // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
+    // Move to top of sort order
+    const newRequestGroup = await models.requestGroup.duplicate(requestGroup, { name: patch.name, parentId: patch.parentId, metaSortKey: -1e9 });
+    models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
+    return null;
+  }
   const newRequestGroup = await models.requestGroup.duplicate(requestGroup, { name: patch.name });
   models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
   return null;
