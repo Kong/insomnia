@@ -42,7 +42,7 @@ export const RequestGroupActionsDropdown = ({
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
-  const createRequest = ({ requestType, parentId, req }: { requestType: CreateRequestType; parentId: string; req?: Request }) =>
+  const createRequest = ({ requestType, parentId, req }: { requestType: CreateRequestType; parentId: string; req?: Partial<Request> }) =>
     requestFetcher.submit(JSON.stringify({ requestType, parentId, req }),
       {
         encType: 'application/json',

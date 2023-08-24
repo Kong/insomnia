@@ -9,7 +9,7 @@ import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditor } from '../codemirror/code-editor';
 
-export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & { onImport: (req: Request) => void; defaultValue: string }) => {
+export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & { onImport: (req: Partial<Request>) => void; defaultValue?: string }) => {
   const modalRef = useRef<ModalHandle>(null);
   const [isValid, setIsValid] = useState<boolean>();
   const [req, setReq] = useState<any>({});

@@ -39,6 +39,7 @@ import {
   isEventStreamRequest,
   isRequest,
   isRequestId,
+  Request,
 } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
@@ -391,7 +392,7 @@ export const Debug: FC = () => {
   const sortOrder = searchParams.get('sortOrder') as SortOrder || 'type-manual';
   const { hotKeyRegistry } = settings;
 
-  const createRequest = ({ requestType, parentId, req }: { requestType: CreateRequestType; parentId: string; req?: Request }) =>
+  const createRequest = ({ requestType, parentId, req }: { requestType: CreateRequestType; parentId: string; req?: Partial<Request> }) =>
     requestFetcher.submit(JSON.stringify({ requestType, parentId, req }),
       {
         encType: 'application/json',
