@@ -4,8 +4,9 @@ import * as models from '../../models';
 import { isRemoteProject } from '../../models/project';
 import { isScratchpad, Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
+import FileSystemDriver from '../store/drivers/file-system-driver';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from './initialize-backend-project';
-import { getVCS } from './vcs';
+import { getVCS, initVCS } from './vcs';
 
 let status: 'idle' | 'pending' | 'error' | 'completed' = 'idle';
 
@@ -21,10 +22,10 @@ export const migrateLocalToCloudProjects = async () => {
     invariant(sessionId, 'User must be logged in to migrate projects');
     // Get all local projects
     const allProjects = await models.project.all();
-    const localProjects = allProjects.filter(p => !isRemoteProject(p));
+    const projectsToMigrate = allProjects.filter(p => !isRemoteProject(p));
 
     // Nothing to migrate if there are no local projects
-    if (!localProjects.length) {
+    if (!projectsToMigrate.length) {
       status = 'completed';
       return;
     }
@@ -58,7 +59,7 @@ export const migrateLocalToCloudProjects = async () => {
     invariant(personalTeam, 'Could not find personal Team');
 
     // For each local project
-    for (const localProject of localProjects) {
+    for (const localProject of projectsToMigrate) {
       // -- Create a remote project
       const newCloudProject = await window.main.insomniaFetch<{ id: string; name: string }>({
         path: `/v1/teams/${personalTeam.id}/team-projects`,
@@ -91,7 +92,24 @@ export const migrateLocalToCloudProjects = async () => {
 
         // Initialize Sync on the workspace if it's not using Git sync
         if (!workspaceMeta.gitRepositoryId) {
-          const vcs = getVCS();
+          let vcs = getVCS();
+
+          if (!vcs) {
+            const driver = FileSystemDriver.create(
+              process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+            );
+
+            console.log('Initializing VCS');
+            vcs = await initVCS(driver, async conflicts => {
+              return new Promise((resolve, reject) => {
+                if (conflicts.length) {
+                  reject('Not implemented');
+                }
+
+                resolve(conflicts);
+              });
+            });
+          }
           invariant(vcs, 'VCS must be initialized');
 
           await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });

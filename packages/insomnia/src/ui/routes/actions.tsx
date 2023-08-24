@@ -33,7 +33,7 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
 
   const sessionId = session.getCurrentSessionId();
   invariant(sessionId, 'User must be logged in to create a project');
-  const newProject = await window.main.insomniaFetch<{ id: string }>({
+  const newCloudProject = await window.main.insomniaFetch<{ id: string; name: string }>({
     path: `/v1/teams/${organizationId}/team-projects`,
     method: 'POST',
     data: {
@@ -42,7 +42,14 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
     sessionId,
   });
 
-  return redirect(`/organization/${organizationId}/project/${newProject.id}`);
+  const project = await models.project.create({
+    _id: newCloudProject.id,
+    name: newCloudProject.name,
+    remoteId: newCloudProject.id,
+    parentId: organizationId,
+  });
+
+  return redirect(`/organization/${organizationId}/project/${project._id}`);
 };
 
 export const renameProjectAction: ActionFunction = async ({
