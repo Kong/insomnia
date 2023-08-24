@@ -1,14 +1,11 @@
-import { cp, mkdir } from 'node:fs/promises';
 
 import electron, { app, ipcMain, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
-import { readdir } from 'fs';
 import path from 'path';
 
 import { userDataFolder } from '../config/config.json';
-import { version } from '../package.json';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
@@ -258,22 +255,7 @@ async function _trackStats() {
       // start backup with current version in folder
       // Q: if we find an existing backup, should we replace it or skip backup?
       // skip backup
-
-      const dataPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
-      const versionPath = path.join(dataPath, 'backups', version);
-      await mkdir(versionPath, { recursive: true });
-      await readdir(dataPath, (err, files) => {
-        if (err) {
-          console.log(err);
-          throw err;
-        }
-        files.forEach((file: string) => {
-          if (file.endsWith('.db')) {
-            cp(file, versionPath);
-          }
-        });
-      }
-      );
+      // exportAllWorkspaces();
 
     }, 5000);
   });
