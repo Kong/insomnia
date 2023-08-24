@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
@@ -50,7 +50,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
 
   const requestFetcher = useFetcher();
   const patchRequest = useRequestPatcher();
-
+  const navigate = useNavigate();
   const duplicateRequest = (r: Partial<Request>) => {
     requestFetcher.submit(JSON.stringify(r),
       {
@@ -63,6 +63,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
     invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
     patchRequest(request._id, { parentId: state.activeWorkspaceIdToCopyTo });
     modalRef.current?.hide();
+    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${state.activeWorkspaceIdToCopyTo}/debug`);
   }
 
   async function handleCopyToWorkspace() {
