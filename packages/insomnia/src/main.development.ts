@@ -9,6 +9,7 @@ import { userDataFolder } from '../config/config.json';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
+import { backup } from './main/export';
 import { registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
@@ -255,7 +256,7 @@ async function _trackStats() {
       // start backup with current version in folder
       // Q: if we find an existing backup, should we replace it or skip backup?
       // skip backup
-      // exportAllWorkspaces();
+      backup();
 
     }, 5000);
   });

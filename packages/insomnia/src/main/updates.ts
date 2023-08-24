@@ -10,7 +10,6 @@ import {
 import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
-import { exportAllWorkspaces } from './export';
 const isUpdateSupported = () => {
   if (process.platform === 'linux') {
     console.log('[updater] Not supported on this platform', process.platform);
@@ -62,8 +61,6 @@ export const init = async () => {
   autoUpdater.on('update-downloaded', async (_error, releaseNotes, releaseName) => {
     console.log(`[updater] Downloaded ${releaseName}`);
     _sendUpdateStatus('Performing backup...');
-    // removing this
-    await exportAllWorkspaces();
     _sendUpdateStatus('Updated (Restart Required)');
 
     dialog.showMessageBox({
