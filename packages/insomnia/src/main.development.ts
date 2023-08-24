@@ -5,11 +5,14 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import path from 'path';
 
+import appConfig from '../config/config.json';
 import { userDataFolder } from '../config/config.json';
+import { version } from '../package.json';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
 import { backup } from './main/export';
+import { insomniaFetch } from './main/insomniaFetch';
 import { registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
@@ -230,7 +233,26 @@ async function _trackStats() {
     launches: oldStats.launches + 1,
   });
 
-  ipcMain.once('halfSecondAfterAppStart', () => {
+  ipcMain.once('halfSecondAfterAppStart', async () => {
+    console.log('[main] Checking for newer version');
+    try {
+      const settings = await models.settings.getOrCreate();
+
+      const response = await insomniaFetch<{ url: string }>({
+        method: 'GET',
+        origin: 'https://updates.insomnia.rest',
+        path: `/builds/check/mac?v=${version}&app=${appConfig.appId}&channel=${settings.updateChannel}`,
+        sessionId: null,
+      });
+      if (response) {
+        console.log('[main] Found newer version', response);
+        backup();
+        return;
+      }
+      console.log('[main] No newer version');
+    } catch (err) {
+      console.log('[main] Error checking for newer version', err);
+    }
     const { currentVersion, launches, lastVersion } = stats;
 
     const firstLaunch = launches === 1;
@@ -251,13 +273,6 @@ async function _trackStats() {
         // @ts-expect-error -- TSCONVERSION likely needs to be window.webContents.send instead
         window.send('show-notification', notification);
       }
-      // fetch https://updates.insomnia.rest/builds/check/mac?v=2023.5.5&app=com.insomnia.app&channel=stable
-      // if(fetch returns 200)
-      // start backup with current version in folder
-      // Q: if we find an existing backup, should we replace it or skip backup?
-      // skip backup
-      backup();
-
     }, 5000);
   });
   return stats;
