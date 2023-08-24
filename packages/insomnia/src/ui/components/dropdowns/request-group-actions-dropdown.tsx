@@ -18,6 +18,7 @@ import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
+import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
@@ -40,7 +41,7 @@ export const RequestGroupActionsDropdown = ({
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
-  const createRequest = (requestType: CreateRequestType) =>
+  const createRequest = ({ requestType }: { requestType: CreateRequestType }) =>
     requestFetcher.submit({ requestType, parentId: requestGroup._id, clipboardText: window.clipboard.readText() },
       {
         encType: 'application/json',
@@ -125,6 +126,7 @@ export const RequestGroupActionsDropdown = ({
   };
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
 
   const requestGroupActionItems: ({
     id: string;
@@ -138,55 +140,48 @@ export const RequestGroupActionsDropdown = ({
         name: 'HTTP Request',
         icon: 'plus-circle',
         hint: hotKeyRegistry.request_createHTTP,
-        action: () =>
-          createRequest(
-            'HTTP',
-          ),
+      action: () => createRequest({
+        requestType: 'HTTP',
+      }),
       },
       {
         id: 'Event Stream',
         name: 'Event Stream Request',
         icon: 'plus-circle',
-        action: () =>
-          createRequest(
-            'Event Stream',
-          ),
+        action: () => createRequest({
+          requestType: 'Event Stream',
+        }),
       },
       {
         id: 'GraphQL Request',
         name: 'GraphQL Request',
         icon: 'plus-circle',
-        action: () =>
-          createRequest(
-            'GraphQL',
-          ),
+        action: () => createRequest({
+          requestType: 'GraphQL',
+        }),
       },
       {
         id: 'gRPC Request',
         name: 'gRPC Request',
         icon: 'plus-circle',
-        action: () =>
-          createRequest(
-            'gRPC',
-          ),
+        action: () => createRequest({
+          requestType: 'gRPC',
+        }),
       },
       {
         id: 'WebSocket Request',
         name: 'WebSocket Request',
         icon: 'plus-circle',
-        action: () =>
-          createRequest(
-            'WebSocket',
-          ),
+        action: () => createRequest({
+          requestType: 'WebSocket',
+        }),
       },
       {
         id: 'From Curl',
         name: 'From Curl',
         icon: 'terminal',
-        action: () =>
-          createRequest(
-            'From Curl',
-          ),
+        action: () => setPasteCurlModalOpen(true),
+
       },
       {
         id: 'New Folder',
@@ -211,8 +206,7 @@ export const RequestGroupActionsDropdown = ({
         name: 'Duplicate',
         icon: 'copy',
         hint: hotKeyRegistry.request_createHTTP,
-        action: () =>
-          handleRequestGroupDuplicate(),
+        action: () => handleRequestGroupDuplicate(),
       },
       {
         id: 'Environment',
@@ -291,6 +285,14 @@ export const RequestGroupActionsDropdown = ({
         onHide={() => setIsSettingsModalOpen(false)}
       />
     )}
+      {isPasteCurlModalOpen && (
+        <PasteCurlModal
+          onImport={req => {
+            createRequest({ requestType: 'From Curl' });
+          }}
+          onHide={() => setPasteCurlModalOpen(false)}
+        />
+      )}
     </Fragment>
   );
 };
