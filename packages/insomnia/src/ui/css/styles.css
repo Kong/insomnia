@@ -8,6 +8,14 @@
 @import './lib/codemirror/material.css';
 @import './main.css';
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  font-size: 11px;
+}
+
 .app-grid-template {
   grid-template:
     'Header Header' auto
@@ -24,10 +32,6 @@
     'Statusbar Statusbar' 30px [row-end]
     / 50px 1fr;
 }
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 .grid-template-app-layout {
   grid-template:

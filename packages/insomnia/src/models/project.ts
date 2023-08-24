@@ -79,6 +79,10 @@ export async function all() {
   return projects;
 }
 
+export function isDefaultOrganizationProject(project: Project) {
+  return project.remoteId?.startsWith('proj_org');
+}
+
 export async function seed() {
   try {
     const defaultProject = await getById(DEFAULT_PROJECT_ID);

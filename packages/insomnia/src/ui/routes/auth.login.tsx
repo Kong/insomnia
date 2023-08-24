@@ -2,7 +2,6 @@ import React from 'react';
 import { ActionFunction, Form, Link, redirect } from 'react-router-dom';
 
 import { getStagingEnvironmentVariables } from '../../models/environment';
-import { DEFAULT_PROJECT_ID } from '../../models/project';
 import { getLoginUrl } from '../auth-session-provider';
 import { Button } from '../components/themed-button';
 
@@ -181,7 +180,7 @@ const Login = () => (
     </Button>
 
     <Link
-      to={`/organization/${DEFAULT_PROJECT_ID}/project/${DEFAULT_PROJECT_ID}/workspace/wrk_scratchpad/debug`}
+      to={'/scratchpad'}
       style={{
         display: 'flex',
         justifyContent: 'center',
