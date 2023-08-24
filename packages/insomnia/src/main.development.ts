@@ -249,6 +249,12 @@ async function _trackStats() {
         // @ts-expect-error -- TSCONVERSION likely needs to be window.webContents.send instead
         window.send('show-notification', notification);
       }
+      // fetch https://updates.insomnia.rest/builds/check/mac?v=2023.5.5&app=com.insomnia.app&channel=stable
+      // if(fetch returns 200)
+      // start backup with current version in folder
+      // Q: if we find an existing backup, should we replace it or skip backup?
+      // skip backup
+
     }, 5000);
   });
   return stats;

@@ -62,6 +62,7 @@ export const init = async () => {
   autoUpdater.on('update-downloaded', async (_error, releaseNotes, releaseName) => {
     console.log(`[updater] Downloaded ${releaseName}`);
     _sendUpdateStatus('Performing backup...');
+    // removing this
     await exportAllWorkspaces();
     _sendUpdateStatus('Updated (Restart Required)');
 
@@ -79,6 +80,7 @@ export const init = async () => {
   });
 
   if (isUpdateSupported()) {
+    // perhaps disable this method of upgrading just incase it trigger before backup is complete
     // on app start
     const settings = await models.settings.getOrCreate();
     const updateUrl = getUpdateUrl(settings.updateChannel);
