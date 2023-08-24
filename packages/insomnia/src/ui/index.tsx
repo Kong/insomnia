@@ -139,6 +139,13 @@ const router = createMemoryRouter(
                     (await import('./routes/project')).indexLoader(...args),
                 },
                 {
+                  path: 'ai/access',
+                  action: async (...args) =>
+                    (
+                      await import('./routes/actions')
+                    ).accessAIApiAction(...args),
+                },
+                {
                   path: 'project',
                   children: [
                     {
@@ -618,13 +625,6 @@ const router = createMemoryRouter(
                                         ).generateTestsAction(...args),
                                     },
                                   ],
-                                },
-                                {
-                                  path: 'access',
-                                  action: async (...args) =>
-                                    (
-                                      await import('./routes/actions')
-                                    ).accessAIApiAction(...args),
                                 },
                               ],
                             },
