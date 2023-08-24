@@ -4,7 +4,7 @@ const sidebarBackground = {
   notice: '#f0e137',
   warning: '#ff9a1f',
   danger: '#ff5631',
-  surprise: '#a896ff',
+  surprise: '#4000BF',
   info: '#46c1e6',
 };
 

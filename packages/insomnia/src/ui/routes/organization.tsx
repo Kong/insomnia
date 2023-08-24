@@ -1,6 +1,5 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import {
-  Breadcrumbs,
   Button,
   Item,
   Link,
@@ -35,7 +34,6 @@ import { MergeConflict } from '../../sync/types';
 import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
-import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { GitHubStarsButton } from '../components/github-stars-button';
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
@@ -259,29 +257,6 @@ const OrganizationRoute = () => {
     };
   }, []);
 
-  const crumbs = workspaceData
-    ? [
-        {
-          id: workspaceData.activeProject._id,
-          label: workspaceData.activeProject.name,
-          node: (
-            <Link data-testid="project">
-              <NavLink
-                to={`/organization/${organizationId}/project/${workspaceData.activeProject._id}`}
-              >
-                {workspaceData.activeProject.name}
-              </NavLink>
-            </Link>
-          ),
-        },
-        {
-          id: workspaceData.activeWorkspace._id,
-          label: workspaceData.activeWorkspace.name,
-          node: <WorkspaceDropdown />,
-        },
-      ]
-    : [];
-
   const isScratchpadWorkspace =
     workspaceData?.activeWorkspace &&
     isScratchpad(workspaceData.activeWorkspace);
@@ -301,35 +276,27 @@ const OrganizationRoute = () => {
                   {!isLoggedIn() ? <GitHubStarsButton /> : null}
                 </div>
                 <div className="flex gap-2 flex-nowrap items-center justify-center">
-                  {workspaceData && (
-                    <Fragment>
-                      <Breadcrumbs items={crumbs}>
-                        {item => (
-                          <Item key={item.id} id={item.id}>
-                            {item.node}
-                          </Item>
-                        )}
-                      </Breadcrumbs>
-                      {isDesign(workspaceData?.activeWorkspace) && (
-                        <nav className="flex rounded-full justify-between content-evenly font-semibold bg-[--hl-xs] p-[--padding-xxs]">
-                          {['spec', 'debug', 'test'].map(item => (
-                            <NavLink
-                              key={item}
-                              to={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${item}`}
-                              className={({ isActive }) =>
-                                `${
-                                  isActive
-                                    ? 'text-[--color-font] bg-[--color-bg]'
-                                    : ''
-                                } no-underline transition-colors text-center outline-none min-w-[4rem] uppercase text-[--color-font] text-xs px-[--padding-xs] py-[--padding-xxs] rounded-full`
-                              }
-                            >
-                              {item}
-                            </NavLink>
-                          ))}
-                        </nav>
-                      )}
-                    </Fragment>
+                  {workspaceData && isDesign(workspaceData?.activeWorkspace) && (
+                    <nav className="flex rounded-full justify-between content-evenly font-semibold bg-[--hl-xs] p-[--padding-xxs]">
+                      {[
+                        { id: 'spec', name: 'spec' },
+                        { name: 'collection', id: 'debug' },
+                        { id: 'test', name: 'tests' },
+                      ].map(item => (
+                        <NavLink
+                          key={item.id}
+                          to={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${item.id}`}
+                          className={({ isActive }) =>
+                            `${isActive
+                              ? 'text-[--color-font] bg-[--color-bg]'
+                              : ''
+                            } no-underline transition-colors text-center outline-none min-w-[4rem] uppercase text-[--color-font] text-xs px-[--padding-xs] py-[--padding-xxs] rounded-full`
+                          }
+                        >
+                          {item.name}
+                        </NavLink>
+                      ))}
+                    </nav>
                   )}
                 </div>
                 <div className="flex gap-[--padding-sm] items-center justify-end p-2">
@@ -344,7 +311,7 @@ const OrganizationRoute = () => {
                               0,
                             )}${getLastName()?.charAt(0)}`}
                           />
-                          <span className='pr-2'>
+                          <span className="pr-2">
                             {`${getFirstName()} ${getLastName()}`}
                           </span>
                         </Button>
@@ -415,8 +382,10 @@ const OrganizationRoute = () => {
                     </div>
                   </div>
                   <div className="py-[--padding-xs] px-[--padding-md] gap-[--padding-xs]">
-                    <span className='mr-2'>Welcome to the local Scratch Pad. To get the most out of
-                      Insomnia and see your projects</span>
+                    <span className="mr-2">
+                      Welcome to the local Scratch Pad. To get the most out of
+                      Insomnia and see your projects
+                    </span>
                     <NavLink
                       to="/auth/login"
                       className="font-bold text-white inline-flex"
@@ -465,7 +434,9 @@ const OrganizationRoute = () => {
                       <Menu
                         onAction={action => {
                           if (action === 'join-organization') {
-                            window.main.openInBrowser(getLoginUrl(env.websiteURL));
+                            window.main.openInBrowser(
+                              getLoginUrl(env.websiteURL),
+                            );
                           }
 
                           if (action === 'new-organization') {
@@ -522,16 +493,31 @@ const OrganizationRoute = () => {
                   </TooltipTrigger>
                   <TooltipTrigger>
                     <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
-                      <Icon icon="circle" className={isLoggedIn() ? status === 'online' ? 'text-[--color-success]' : 'text-[--color-danger]' : ''} /> {isLoggedIn() ? status.charAt(0).toUpperCase() + status.slice(1) : 'Log in to sync your data'}
+                      <Icon
+                        icon="circle"
+                        className={
+                          isLoggedIn()
+                            ? status === 'online'
+                              ? 'text-[--color-success]'
+                              : 'text-[--color-danger]'
+                            : ''
+                        }
+                      />{' '}
+                      {isLoggedIn()
+                        ? status.charAt(0).toUpperCase() + status.slice(1)
+                        : 'Log in to sync your data'}
                     </Button>
                     <Tooltip
                       placement="top"
                       offset={8}
                       className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
-                      {isLoggedIn() ? `You are ${status === 'online'
-                        ? 'securely connected to Insomnia Cloud'
-                        : 'offline. Connect to sync your data.'}` : 'Log in to Insomnia to sync your data.'}
+                      {isLoggedIn()
+                        ? `You are ${status === 'online'
+                          ? 'securely connected to Insomnia Cloud'
+                          : 'offline. Connect to sync your data.'
+                        }`
+                        : 'Log in to Insomnia to sync your data.'}
                     </Tooltip>
                   </TooltipTrigger>
                 </div>
