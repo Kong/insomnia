@@ -16,6 +16,15 @@ html {
   font-size: 11px;
 }
 
+.grid-template-app-layout-with-banner {
+  grid-template: 
+    'Header Header' auto
+    'Banner Banner' 30px
+    'Navbar Content' 1fr
+    'Statusbar Statusbar' 30px [row-end]
+    / 50px 1fr;
+}
+
 .grid-template-app-layout {
   grid-template:
     'Header Header' auto

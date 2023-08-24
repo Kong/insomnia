@@ -267,7 +267,7 @@ const OrganizationRoute = () => {
         <NunjucksEnabledProvider>
           <AppHooks />
           <div className="w-full h-full">
-            <div className="w-full h-full divide-x divide-solid divide-y divide-[--hl-md] grid-template-app-layout grid relative bg-[--color-bg]">
+            <div className={`w-full h-full divide-x divide-solid divide-y divide-[--hl-md] ${workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace) ? 'grid-template-app-layout-with-banner' : 'grid-template-app-layout'} grid relative bg-[--color-bg]`}>
               <header className="[grid-area:Header] grid grid-cols-3 items-center">
                 <div className="flex items-center">
                   <div className="flex w-[50px] py-2">

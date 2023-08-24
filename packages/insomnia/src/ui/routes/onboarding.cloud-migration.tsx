@@ -15,7 +15,7 @@ export const loader: LoaderFunction = async () => {
 
 export const OnboardingCloudMigration = () => {
   const { Form, state } = useFetcher();
-  return <div className='relative h-full w-full text-left text-sm flex bg-[--color-bg]'>
+  return <div className='relative h-full w-full text-left text-base flex bg-[--color-bg]'>
     <TrailLinesContainer>
       <div
         className='flex justify-center items-center flex-col h-full w-[600px] min-h-[450px]'
@@ -29,10 +29,10 @@ export const OnboardingCloudMigration = () => {
           <div className='text-[--color-font] flex flex-col gap-4'>
             <h1 className='text-xl text-center'>Activating cloud synchronization</h1>
             <div className='flex flex-col gap-4'>
-              <p className='text-sm'>
+              <p>
                 We have detected that you have previously created data with Insomnia, which will be automatically synchronized to the cloud after logging-in or creating a new account. Your data is end-to-end encrypted (E2EE) and secure.
               </p>
-              <ul className='text-left flex flex-col gap-2 text-sm'>
+              <ul className='text-left flex flex-col gap-2'>
                 <li><i className="fa fa-check text-emerald-600" /> End-to-end encryption (E2EE) enabled.</li>
                 <li><i className="fa fa-check text-emerald-600" /> Automatic sync across clients enabled.</li>
                 <li><i className="fa fa-check text-emerald-600" /> Unlimited user collaboration activated.</li>
