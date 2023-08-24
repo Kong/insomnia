@@ -9,7 +9,7 @@ import fs from 'fs';
 
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
-import { backup, restoreBackup } from '../export';
+import { backup, restoreBackup } from '../backup';
 import { insomniaFetch } from '../insomniaFetch';
 import installPlugin from '../install-plugin';
 import { axiosRequest } from '../network/axios-request';
