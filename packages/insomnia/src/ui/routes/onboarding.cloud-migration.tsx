@@ -1,30 +1,15 @@
 import React from 'react';
 import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-router-dom';
 
-import { getCurrentSessionId } from '../../account/session';
-import { database } from '../../common/database';
-import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import { migrateCollectionsIntoRemoteProject } from '../../sync/vcs/migrate-collections';
-import { migrateLocalToCloudProjects } from '../../sync/vcs/migrate-to-cloud-projects';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 
 export const action: ActionFunction = async () => {
-  await migrateLocalToCloudProjects();
+  window.localStorage.setItem('hasSeenOnboarding', 'true');
 
   return redirect('/auth/login');
 };
 export const loader: LoaderFunction = async () => {
-  // const sessionId = getCurrentSessionId();
-
-  // const localProjects = await database.find('Project', {
-  //   remoteId: null,
-  // });
-
-  // if (!localProjects.length || !sessionId) {
-  //   return redirect('/onboarding/scratchpad');
-  // }
-
   return null;
 };
 

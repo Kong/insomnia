@@ -19,7 +19,6 @@ import {
 import { database } from '../common/database';
 import { initializeLogging } from '../common/log';
 import * as models from '../models';
-import { DEFAULT_PROJECT_ID } from '../models/project';
 import { initNewOAuthSession } from '../network/o-auth-2/get-token';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
@@ -49,7 +48,7 @@ initializeLogging();
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
-let initialEntry = isLoggedIn() ? '/organization' : `/organization/${DEFAULT_PROJECT_ID}/project/${DEFAULT_PROJECT_ID}/workspace/wrk_scratchpad/debug`;
+let initialEntry = isLoggedIn() ? '/organization' : '/scratchpad';
 
 if (!isLoggedIn()) {
   initialEntry = '/dev';
@@ -58,7 +57,7 @@ if (!isLoggedIn()) {
 try {
   const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
 
-  if (hasUserLoggedInBefore) {
+  if (hasUserLoggedInBefore && !isLoggedIn()) {
     initialEntry = '/auth/login';
   }
 
@@ -81,6 +80,10 @@ const router = createMemoryRouter(
           loader: async (...args) => (await import('./routes/dev')).loader(...args),
           action: async (...args) => (await import('./routes/dev')).action(...args),
           element: <Dev />,
+        },
+        {
+          path: '/scratchpad',
+          loader: async (...args) => (await import('./routes/scratchpad')).loader(...args),
         },
         {
           path: 'onboarding/*',

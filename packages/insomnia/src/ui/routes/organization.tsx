@@ -116,12 +116,12 @@ export const indexLoader: LoaderFunction = async () => {
         return redirect(`/organization/${personalOrganization.id}`);
       }
     } catch (error) {
-      console.log('Failed to load Teams', error);
-      return null;
+      console.log('Failed to load Organizations', error);
+      return redirect('/auth/login');
     }
   }
 
-  return null;
+  return redirect('/auth/login');
 };
 
 export interface OrganizationLoaderData {
@@ -409,14 +409,14 @@ const OrganizationRoute = () => {
               </header>
               {isScratchpadWorkspace ? (
                 <div className="flex h-[30px] items-center [grid-area:Banner] text-white bg-gradient-to-r from-[#7400e1] to-[#4000bf]">
-                  <div className="flex basis-[50px] h-full">
+                  <div className="flex flex-shrink-0 basis-[50px] h-full">
                     <div className="border-solid border-r-[--hl-xl] border-r border-l border-l-[--hl-xl] box-border flex items-center justify-center w-full h-full">
                       <Icon icon="edit" />
                     </div>
                   </div>
                   <div className="py-[--padding-xs] px-[--padding-md] gap-[--padding-xs]">
-                    Welcome to the local Scratch Pad. To get the most out of
-                    Insomnia and see your projects
+                    <span className='mr-2'>Welcome to the local Scratch Pad. To get the most out of
+                      Insomnia and see your projects</span>
                     <NavLink
                       to="/auth/login"
                       className="font-bold text-white inline-flex"
@@ -522,17 +522,16 @@ const OrganizationRoute = () => {
                   </TooltipTrigger>
                   <TooltipTrigger>
                     <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                      <Icon icon="circle" className={isLoggedIn() ? status === 'online' ? 'text-[--color-success]' : 'text-[--color-danger]' : ''} /> {isLoggedIn() ? status.charAt(0).toUpperCase() + status.slice(1) : 'Log in to sync your data'}
                     </Button>
                     <Tooltip
                       placement="top"
                       offset={8}
                       className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
-                      You are{' '}
-                      {status === 'online'
+                      {isLoggedIn() ? `You are ${status === 'online'
                         ? 'securely connected to Insomnia Cloud'
-                        : 'offline. Connect to sync your data.'}
+                        : 'offline. Connect to sync your data.'}` : 'Log in to Insomnia to sync your data.'}
                     </Tooltip>
                   </TooltipTrigger>
                 </div>

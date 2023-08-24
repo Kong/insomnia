@@ -33,6 +33,14 @@ export const action: ActionFunction = async ({ request }) => {
     data,
   });
 
+  try {
+    if (window.localStorage.getItem('hasSeenOnboarding')) {
+      return redirect('/organization');
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
   return redirect('/onboarding');
 };
 
@@ -58,15 +66,15 @@ const Dev = () => {
                 left: '50%',
               }}
             />
-            <Heading>Insomnia Staging</Heading>
-            <p className='text-sm'>
+            <Heading className='text-2xl py-3'>Insomnia Staging</Heading>
+            <p>
               Please enter the API and Website URLs below to get started.
             </p>
             <Form method="POST" className="flex flex-col gap-3 w-full">
-              <label className="flex text-sm flex-col gap-2">
+              <label className="flex flex-col gap-2">
                 <span className="text-[--color-font]">API Url</span>
                 <input
-                  className="py-1 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                  className="py-2 w-full pl-2 pr-7 rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                   name="apiURL"
                   type="url"
                   required
@@ -74,11 +82,11 @@ const Dev = () => {
                   defaultValue={apiURL || ''}
                 />
               </label>
-              <label className="flex text-sm flex-col gap-2">
+              <label className="flex flex-col gap-2">
                 <span className="text-[--color-font]">Website Url</span>
                 <input
                   required
-                  className="py-1 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                  className="py-2 w-full pl-2 pr-7 rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                   name="websiteURL"
                   type="url"
                   placeholder='https://app.insomnia.rest'
@@ -86,7 +94,7 @@ const Dev = () => {
                 />
               </label>
               <div className='flex justify-end'>
-                <Button type="submit" className="px-4 py-1 bg-[#4000BF] flex items-center justify-center gap-2 aria-pressed:bg-opacity-90 focus:bg-opacity-90 font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                <Button type="submit" className="px-4 py-2 bg-[#4000BF] flex items-center justify-center gap-2 aria-pressed:bg-opacity-90 focus:bg-opacity-90 font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
                   Continue
                 </Button>
               </div>

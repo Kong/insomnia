@@ -3,7 +3,7 @@ import { OverlayContainer } from 'react-aria';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { strings } from '../../../common/strings';
-import { Project } from '../../../models/project';
+import { isDefaultOrganizationProject, Project } from '../../../models/project';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -48,7 +48,7 @@ export const ProjectSettingsModal: FC<ProjectSettingsModalProps> = ({ project, o
               Update
             </button>
           </Form>
-          {!project._id.startsWith('proj_team') && <Fragment>
+          {!isDefaultOrganizationProject(project) && <Fragment>
             <h2>Actions</h2>
             <div className="form-control form-control--padded">
               <PromptButton

@@ -211,7 +211,7 @@ const Root = () => {
 
   return (
     <ErrorBoundary>
-      <div className="app">
+      <div className="app [font-size:11px]">
         <Outlet />
       </div>
       <Modals />
