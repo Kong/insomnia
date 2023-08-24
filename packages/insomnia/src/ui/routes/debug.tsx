@@ -57,6 +57,7 @@ import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
+import { PasteCurlModal } from '../components/modals/paste-curl-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
@@ -75,6 +76,7 @@ import {
   CreateRequestType,
   useRequestGroupMetaPatcher,
   useRequestMetaPatcher,
+  useRequestPatcher,
 } from '../hooks/use-request';
 import {
   GrpcRequestLoaderData,
@@ -155,6 +157,10 @@ export const Debug: FC = () => {
     | undefined;
   const { activeRequest } = requestData || {};
   const requestFetcher = useFetcher();
+  const patchRequest = useRequestPatcher();
+
+  const [isPasteCurlModalOpen, setPasteCurlModalOpen] =
+    useState(false);
   const { organizationId, projectId, workspaceId, requestId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -553,9 +559,7 @@ export const Debug: FC = () => {
         id: 'From Curl',
         name: 'From Curl',
         icon: 'plus-circle',
-        action: () => createRequest({
-          requestType: 'From Curl',
-        }),
+        action: () => setPasteCurlModalOpen(true),
       },
       {
         id: 'New Folder',
@@ -968,6 +972,14 @@ export const Debug: FC = () => {
           {isCookieModalOpen && (
             <CookiesModal onHide={() => setIsCookieModalOpen(false)} />
           )}
+          {isPasteCurlModalOpen && (
+            <PasteCurlModal
+              onImport={req => {
+                createRequest({ requestType: 'From Curl' });
+              }}
+              onHide={() => setPasteCurlModalOpen(false)}
+            />
+          )}
         </div>
       }
       renderPaneOne={
@@ -988,6 +1000,7 @@ export const Debug: FC = () => {
                 environmentId={activeEnvironment ? activeEnvironment._id : ''}
                 settings={settings}
                 setLoading={setLoading}
+                onPaste={() => setPasteCurlModalOpen(true)}
               />
             )}
             {!requestId && <PlaceholderRequestPane />}

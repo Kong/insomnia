@@ -63,24 +63,24 @@ interface Props {
   environmentId: string;
   settings: Settings;
   setLoading: (l: boolean) => void;
+  onPaste: () => void;
 }
 
 export const RequestPane: FC<Props> = ({
   environmentId,
   settings,
   setLoading,
+  onPaste,
 }) => {
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchSettings = useSettingsPatcher();
-  const patchRequest = useRequestPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
     useState(false);
+  const patchRequest = useRequestPatcher();
 
-  const [isPasteCurlModalOpen, setPasteCurlModalOpen] =
-    useState(false);
-
-  const handleImportQueryFromUrl = useCallback(() => {
+  useState(false);
+  const handleImportQueryFromUrl = () => {
     let query;
 
     try {
@@ -99,18 +99,9 @@ export const RequestPane: FC<Props> = ({
 
     // Only update if url changed
     if (url !== activeRequest.url) {
-      database.update(
-        {
-          ...activeRequest,
-          modified: Date.now(),
-          url,
-          parameters,
-          // Hack to force the ui to refresh. More info on use-vcs-version
-        },
-        true,
-      );
+      patchRequest(requestId, { url, parameters });
     }
-  }, [activeRequest]);
+  };
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
 
@@ -142,10 +133,7 @@ export const RequestPane: FC<Props> = ({
             handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             setLoading={setLoading}
-            onPaste={() => {
-              console.log('open');
-              setPasteCurlModalOpen(true);
-            }}
+            onPaste={onPaste}
           />
         </ErrorBoundary>
       </PaneHeader>
@@ -324,21 +312,6 @@ export const RequestPane: FC<Props> = ({
         <RequestSettingsModal
           request={activeRequest}
           onHide={() => setIsRequestSettingsModalOpen(false)}
-        />
-      )}
-      {isPasteCurlModalOpen && (
-        <PasteCurlModal
-          onImport={req => {
-            patchRequest(requestId, {
-              url: req.url,
-              method: req.method,
-              headers: req.headers,
-              body: req.body,
-              authentication: req.authentication,
-              parameters: req.parameters,
-            });
-          }}
-          onHide={() => setPasteCurlModalOpen(false)}
         />
       )}
     </Pane>
