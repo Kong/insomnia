@@ -126,7 +126,6 @@ export async function exportRequestsHAR(
   }
 
   const data = await har.exportHar(harRequests);
-  window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: 'har' } });
   return JSON.stringify(data, null, '\t');
 }
 
@@ -269,7 +268,6 @@ export async function exportRequestsData(
       delete d.type;
       return d;
     });
-  window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: format } });
 
   if (format.toLowerCase() === 'yaml') {
     return YAML.stringify(data);
@@ -407,6 +405,7 @@ export const exportAllToFile = (activeProjectName: string, workspacesForActivePr
           default:
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
         }
+        window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat } });
       } catch (err) {
         showError({
           title: 'Export Failed',
@@ -478,6 +477,7 @@ export const exportRequestsToFile = (requestIds: string[]) => {
           default:
             throw new Error(`selected export format "${selectedFormat}" is invalid`);
         }
+        window.main.trackSegmentEvent({ event: SegmentEvent.dataExport, properties: { type: selectedFormat } });
       } catch (err) {
         showError({
           title: 'Export Failed',
