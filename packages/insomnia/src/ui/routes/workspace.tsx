@@ -159,27 +159,18 @@ export const workspaceLoader: LoaderFunction = async ({
       [...folders, ...requests, ...webSocketRequests, ...grpcRequests]
         .sort(sortFunction)
         .map(async (doc): Promise<Child> => {
-          const isFiltered = (filter?: string) => {
-            if (filter) {
-              const matches = fuzzyMatchAll(filter, [
+          const isMatched = (filter: string): boolean =>
+            Boolean(fuzzyMatchAll(
+              filter,
+              [
                 doc.name,
                 doc.description,
                 ...(isRequestGroup(doc) ? [] : [doc.url]),
-              ]);
-
-              return Boolean(
-                !matches ||
-                  (matches && !matches.indexes) ||
-                  (matches && matches.indexes.length < 1)
-              );
-            }
-
-            return false;
-          };
-
-          const matchesFilter = isFiltered(filter?.toString());
-
-          const hidden = parentIsCollapsed || matchesFilter;
+              ],
+              { splitSpace: true, loose: true }
+            )?.indexes);
+          const shouldHide = Boolean(filter && !isMatched(filter));
+          const hidden = parentIsCollapsed || shouldHide;
 
           const pinned =
             !isRequestGroup(doc) && isGrpcRequest(doc)
