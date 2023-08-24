@@ -98,7 +98,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
 export const createRequestAction: ActionFunction = async ({ request, params }) => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-  const { requestType, parentId, clipboardText } = await request.json() as { requestType: CreateRequestType; parentId?: string; clipboardText?: string };
+  const { requestType, parentId, req } = await request.json() as { requestType: CreateRequestType; parentId?: string; req?: Request };
 
   let activeRequestId;
   if (requestType === 'HTTP') {
@@ -150,22 +150,18 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
     }))._id;
   }
   if (requestType === 'From Curl') {
-    if (!clipboardText) {
+    if (!req) {
       return null;
     }
     try {
-      const { data } = await convert(clipboardText);
-      const { resources } = data;
-      const r = resources[0];
-
       activeRequestId = (await models.request.create({
         parentId: parentId || workspaceId,
-        url: r.url,
-        method: r.method,
-        headers: r.headers,
-        body: r.body as RequestBody,
-        authentication: r.authentication,
-        parameters: r.parameters as RequestParameter[],
+        url: req.url,
+        method: req.method,
+        headers: req.headers,
+        body: req.body as RequestBody,
+        authentication: req.authentication,
+        parameters: req.parameters as RequestParameter[],
       }))._id;
     } catch (error) {
       console.error(error);

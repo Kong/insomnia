@@ -76,7 +76,6 @@ import {
   CreateRequestType,
   useRequestGroupMetaPatcher,
   useRequestMetaPatcher,
-  useRequestPatcher,
 } from '../hooks/use-request';
 import {
   GrpcRequestLoaderData,
@@ -157,7 +156,6 @@ export const Debug: FC = () => {
     | undefined;
   const { activeRequest } = requestData || {};
   const requestFetcher = useFetcher();
-  const patchRequest = useRequestPatcher();
 
   const [isPasteCurlModalOpen, setPasteCurlModalOpen] =
     useState(false);
@@ -244,16 +242,16 @@ export const Debug: FC = () => {
           state.map(s =>
             s.requestId === id
               ? {
-                  ...s,
-                  responseMessages: [
-                    ...s.responseMessages,
-                    {
-                      id: generateId(),
-                      text: JSON.stringify(value),
-                      created: Date.now(),
-                    },
-                  ],
-                }
+                ...s,
+                responseMessages: [
+                  ...s.responseMessages,
+                  {
+                    id: generateId(),
+                    text: JSON.stringify(value),
+                    created: Date.now(),
+                  },
+                ],
+              }
               : s,
           ),
         );
@@ -365,8 +363,8 @@ export const Debug: FC = () => {
       });
     },
     // TODO: fix these
-    request_showRecent: () => {},
-    request_quickSwitch: () => {},
+    request_showRecent: () => { },
+    request_quickSwitch: () => { },
     environment_showEditor: () => setEnvironmentModalOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
     request_showGenerateCodeEditor: () => {
@@ -392,19 +390,13 @@ export const Debug: FC = () => {
   const sortOrder = searchParams.get('sortOrder') as SortOrder || 'type-manual';
   const { hotKeyRegistry } = settings;
 
-  const createRequest = ({
-    requestType,
-  }: {
-      requestType: CreateRequestType;
-  }) =>
-    requestFetcher.submit(
-      { requestType, parentId: workspaceId, clipboardText: window.clipboard.readText() },
+  const createRequest = ({ requestType, parentId, req }: { requestType: CreateRequestType; parentId: string; req?: Request }) =>
+    requestFetcher.submit(JSON.stringify({ requestType, parentId, req }),
       {
+        encType: 'application/json',
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
         method: 'post',
-        encType: 'application/json',
-      }
-    );
+      });
 
   const groupMetaPatcher = useRequestGroupMetaPatcher();
   const reorderFetcher = useFetcher();
@@ -517,6 +509,7 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'HTTP',
+            parentId: workspaceId,
           }),
       },
       {
@@ -526,6 +519,7 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'Event Stream',
+            parentId: workspaceId,
           }),
       },
       {
@@ -535,6 +529,7 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'GraphQL',
+            parentId: workspaceId,
           }),
       },
       {
@@ -544,6 +539,7 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'gRPC',
+            parentId: workspaceId,
           }),
       },
       {
@@ -553,6 +549,7 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'WebSocket',
+            parentId: workspaceId,
           }),
       },
       {
@@ -975,7 +972,11 @@ export const Debug: FC = () => {
           {isPasteCurlModalOpen && (
             <PasteCurlModal
               onImport={req => {
-                createRequest({ requestType: 'From Curl' });
+                createRequest({
+                  requestType: 'From Curl',
+                  parentId: workspaceId,
+                  req,
+                });
               }}
               onHide={() => setPasteCurlModalOpen(false)}
             />

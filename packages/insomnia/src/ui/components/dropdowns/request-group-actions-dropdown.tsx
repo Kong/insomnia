@@ -7,6 +7,7 @@ import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import { PlatformKeyCombinations } from '../../../common/settings';
 import * as models from '../../../models';
+import { Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
@@ -41,8 +42,8 @@ export const RequestGroupActionsDropdown = ({
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
-  const createRequest = ({ requestType }: { requestType: CreateRequestType }) =>
-    requestFetcher.submit({ requestType, parentId: requestGroup._id, clipboardText: window.clipboard.readText() },
+  const createRequest = ({ requestType, parentId, req }: { requestType: CreateRequestType; parentId: string; req?: Request }) =>
+    requestFetcher.submit(JSON.stringify({ requestType, parentId, req }),
       {
         encType: 'application/json',
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
@@ -142,6 +143,7 @@ export const RequestGroupActionsDropdown = ({
         hint: hotKeyRegistry.request_createHTTP,
       action: () => createRequest({
         requestType: 'HTTP',
+        parentId: requestGroup._id,
       }),
       },
       {
@@ -150,6 +152,7 @@ export const RequestGroupActionsDropdown = ({
         icon: 'plus-circle',
         action: () => createRequest({
           requestType: 'Event Stream',
+          parentId: requestGroup._id,
         }),
       },
       {
@@ -158,6 +161,7 @@ export const RequestGroupActionsDropdown = ({
         icon: 'plus-circle',
         action: () => createRequest({
           requestType: 'GraphQL',
+          parentId: requestGroup._id,
         }),
       },
       {
@@ -166,6 +170,7 @@ export const RequestGroupActionsDropdown = ({
         icon: 'plus-circle',
         action: () => createRequest({
           requestType: 'gRPC',
+          parentId: requestGroup._id,
         }),
       },
       {
@@ -174,6 +179,7 @@ export const RequestGroupActionsDropdown = ({
         icon: 'plus-circle',
         action: () => createRequest({
           requestType: 'WebSocket',
+          parentId: requestGroup._id,
         }),
       },
       {
@@ -288,7 +294,11 @@ export const RequestGroupActionsDropdown = ({
       {isPasteCurlModalOpen && (
         <PasteCurlModal
           onImport={req => {
-            createRequest({ requestType: 'From Curl' });
+            createRequest({
+              requestType: 'From Curl',
+              parentId: requestGroup._id,
+              req,
+            });
           }}
           onHide={() => setPasteCurlModalOpen(false)}
         />
