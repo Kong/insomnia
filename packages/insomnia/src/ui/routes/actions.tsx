@@ -774,11 +774,9 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
 };
 
 export const accessAIApiAction: ActionFunction = async ({ params }) => {
-  const { organizationId, projectId, workspaceId } = params;
+  const { organizationId } = params;
 
   invariant(typeof organizationId === 'string', 'Organization ID is required');
-  invariant(typeof projectId === 'string', 'Project ID is required');
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   try {
     const response = await window.main.insomniaFetch<{ enabled: boolean }>({

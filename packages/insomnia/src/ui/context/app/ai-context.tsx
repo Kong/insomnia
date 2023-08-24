@@ -1,6 +1,5 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect } from 'react';
 import { useFetcher, useFetchers, useParams } from 'react-router-dom';
-import { usePrevious } from 'react-use';
 
 import { isLoggedIn } from '../../../account/session';
 
@@ -40,23 +39,19 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const loggedIn = isLoggedIn();
 
-  const prevProjectId = usePrevious(projectId);
-
   useEffect(() => {
     if (!loggedIn) {
       return;
     }
-
     const fetcherHasNotRun = aiAccessFetcher.state === 'idle' && !aiAccessFetcher.data;
-    const projectIdHasChanged = prevProjectId !== projectId;
 
-    if (fetcherHasNotRun || projectIdHasChanged) {
+    if (fetcherHasNotRun) {
       aiAccessFetcher.submit({}, {
         method: 'post',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/access`,
+        action: `/organization/${organizationId}/ai/access`,
       });
     }
-  }, [aiAccessFetcher, organizationId, projectId, workspaceId, loggedIn, prevProjectId]);
+  }, [aiAccessFetcher, organizationId, loggedIn]);
 
   const isAIEnabled = aiAccessFetcher.data?.enabled ?? false;
 
