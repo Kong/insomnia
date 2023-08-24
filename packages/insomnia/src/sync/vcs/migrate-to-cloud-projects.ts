@@ -79,7 +79,7 @@ export const migrateLocalToCloudProjects = async () => {
       // For each workspace in the local project
       const projectWorkspaces = (await database.find<Workspace>(models.workspace.type, {
         parentId: localProject._id,
-      })).filter(isScratchpad);
+      })).filter(workspace => !isScratchpad(workspace));
 
       for (const workspace of projectWorkspaces) {
         // Update the workspace to point to the newly created project
