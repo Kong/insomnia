@@ -5,14 +5,11 @@ import contextMenu from 'electron-context-menu';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import path from 'path';
 
-import appConfig from '../config/config.json';
 import { userDataFolder } from '../config/config.json';
-import { version } from '../package.json';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
-import { backup } from './main/export';
-import { insomniaFetch } from './main/insomniaFetch';
+import { backupIfNewerVersionAvailable } from './main/export';
 import { registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
@@ -234,25 +231,7 @@ async function _trackStats() {
   });
 
   ipcMain.once('halfSecondAfterAppStart', async () => {
-    console.log('[main] Checking for newer version');
-    try {
-      const settings = await models.settings.getOrCreate();
-
-      const response = await insomniaFetch<{ url: string }>({
-        method: 'GET',
-        origin: 'https://updates.insomnia.rest',
-        path: `/builds/check/mac?v=${version}&app=${appConfig.appId}&channel=${settings.updateChannel}`,
-        sessionId: null,
-      });
-      if (response) {
-        console.log('[main] Found newer version', response);
-        backup();
-        return;
-      }
-      console.log('[main] No newer version');
-    } catch (err) {
-      console.log('[main] Error checking for newer version', err);
-    }
+    backupIfNewerVersionAvailable();
     const { currentVersion, launches, lastVersion } = stats;
 
     const firstLaunch = launches === 1;

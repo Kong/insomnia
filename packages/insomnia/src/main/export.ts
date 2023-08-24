@@ -3,14 +3,43 @@ import path from 'node:path';
 
 import electron from 'electron';
 
+import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
+import * as models from '../models';
+import { insomniaFetch } from './insomniaFetch';
+
+export async function backupIfNewerVersionAvailable() {
+  try {
+    const settings = await models.settings.getOrCreate();
+    console.log('[main] Checking for newer version than ', version);
+    const response = await insomniaFetch<{ url: string }>({
+      method: 'GET',
+      origin: 'https://updates.insomnia.rest',
+      path: `/builds/check/mac?v=${version}&app=${appConfig.appId}&channel=${settings.updateChannel}`,
+      sessionId: null,
+    });
+    if (response) {
+      console.log('[main] Found newer version', response);
+      backup();
+      return;
+    }
+    console.log('[main] No newer version');
+  } catch (err) {
+    console.log('[main] Error checking for newer version', err);
+  }
+}
 
 export async function backup() {
   try {
-
     const dataPath = process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData');
     const versionPath = path.join(dataPath, 'backups', version);
     await mkdir(versionPath, { recursive: true });
+    // skip if backup already exists at version path
+    const backupFiles = await readdir(versionPath);
+    if (backupFiles.length) {
+      console.log('Backup found at:', versionPath);
+      return;
+    }
     const files = await readdir(dataPath);
     files.forEach(async (file: string) => {
       if (file.endsWith('.db')) {
