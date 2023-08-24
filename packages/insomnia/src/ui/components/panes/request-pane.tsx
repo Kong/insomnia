@@ -8,7 +8,7 @@ import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../models/settings';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
-import { useSettingsPatcher } from '../../hooks/use-request';
+import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -26,6 +26,7 @@ import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { MarkdownPreview } from '../markdown-preview';
+import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
 import { RequestUrlBar } from '../request-url-bar';
@@ -72,7 +73,11 @@ export const RequestPane: FC<Props> = ({
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchSettings = useSettingsPatcher();
+  const patchRequest = useRequestPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
+    useState(false);
+
+  const [isPasteCurlModalOpen, setPasteCurlModalOpen] =
     useState(false);
 
   const handleImportQueryFromUrl = useCallback(() => {
@@ -137,6 +142,10 @@ export const RequestPane: FC<Props> = ({
             handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             setLoading={setLoading}
+            onPaste={() => {
+              console.log('open');
+              setPasteCurlModalOpen(true);
+            }}
           />
         </ErrorBoundary>
       </PaneHeader>
@@ -315,6 +324,21 @@ export const RequestPane: FC<Props> = ({
         <RequestSettingsModal
           request={activeRequest}
           onHide={() => setIsRequestSettingsModalOpen(false)}
+        />
+      )}
+      {isPasteCurlModalOpen && (
+        <PasteCurlModal
+          onImport={req => {
+            patchRequest(requestId, {
+              url: req.url,
+              method: req.method,
+              headers: req.headers,
+              body: req.body,
+              authentication: req.authentication,
+              parameters: req.parameters,
+            });
+          }}
+          onHide={() => setPasteCurlModalOpen(false)}
         />
       )}
     </Pane>

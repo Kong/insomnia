@@ -24,6 +24,7 @@ export interface OneLineEditorProps {
   placeholder?: string;
   readOnly?: boolean;
   type?: string;
+  onPaste?: () => void;
 }
 
 export interface OneLineEditorHandle {
@@ -39,6 +40,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   placeholder,
   readOnly,
   type,
+  onPaste,
 }, ref) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
@@ -109,6 +111,9 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
         // If we're in single-line mode, merge all changed lines into one
         change.update?.(change.from, change.to, [change.text.join('').replace(/\n/g, ' ')]);
       }
+    });
+    codeMirror.current.on('paste', () => {
+      onPaste?.();
     });
 
     codeMirror.current.on('keydown', (doc: CodeMirror.Editor, event: KeyboardEvent) => {

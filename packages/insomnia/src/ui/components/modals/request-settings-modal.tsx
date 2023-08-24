@@ -23,10 +23,7 @@ interface State {
   defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string;
 }
-export interface RequestSettingsModalHandle {
-  show: (options: RequestSettingsModalOptions) => void;
-  hide: () => void;
-}
+
 export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSettingsModalOptions) => {
   const modalRef = useRef<ModalHandle>(null);
   const editorRef = useRef<CodeEditorHandle>(null);
