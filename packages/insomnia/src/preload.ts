@@ -44,6 +44,7 @@ const main: Window['main'] = {
   halfSecondAfterAppStart: () => ipcRenderer.send('halfSecondAfterAppStart'),
   manualUpdateCheck: () => ipcRenderer.send('manualUpdateCheck'),
   backup: () => ipcRenderer.invoke('backup'),
+  restoreBackup: options => ipcRenderer.invoke('restoreBackup', options),
   authorizeUserInWindow: options => ipcRenderer.invoke('authorizeUserInWindow', options),
   spectralRun: options => ipcRenderer.invoke('spectralRun', options),
   setMenuBarVisibility: options => ipcRenderer.send('setMenuBarVisibility', options),

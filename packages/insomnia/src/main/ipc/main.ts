@@ -9,7 +9,7 @@ import fs from 'fs';
 
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
-import { backup } from '../export';
+import { backup, restoreBackup } from '../export';
 import { insomniaFetch } from '../insomniaFetch';
 import installPlugin from '../install-plugin';
 import { axiosRequest } from '../network/axios-request';
@@ -25,6 +25,7 @@ export interface MainBridgeAPI {
   halfSecondAfterAppStart: () => void;
   manualUpdateCheck: () => void;
   backup: () => Promise<void>;
+  restoreBackup: (version: string) => Promise<void>;
   spectralRun: (options: { contents: string; rulesetPath: string }) => Promise<ISpectralDiagnostic[]>;
   authorizeUserInWindow: typeof authorizeUserInWindow;
   setMenuBarVisibility: (visible: boolean) => void;
@@ -56,6 +57,9 @@ export function registerMainHandlers() {
   });
   ipcMain.handle('backup', async () => {
     return backup();
+  });
+  ipcMain.handle('restoreBackup', async (_, options: string) => {
+    return restoreBackup(options);
   });
   ipcMain.handle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {
     const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
