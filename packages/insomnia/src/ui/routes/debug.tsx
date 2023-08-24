@@ -3,11 +3,13 @@ import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
 import {
+  Breadcrumbs,
   Button,
   DropIndicator,
   GridList,
   Input,
   Item,
+  Link,
   ListBox,
   Menu,
   MenuTrigger,
@@ -19,6 +21,7 @@ import {
 } from 'react-aria-components';
 import {
   LoaderFunction,
+  NavLink,
   redirect,
   useFetcher,
   useNavigate,
@@ -51,6 +54,7 @@ import {
 import { invariant } from '../../utils/invariant';
 import { RequestActionsDropdown } from '../components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
+import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
@@ -622,6 +626,20 @@ export const Debug: FC = () => {
       renderPageSidebar={
         <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
+            <Breadcrumbs className='react-aria-Breadcrumbs pb-3 border-b border-solid border-[--hl-sm] font-bold flex py-[--padding-sm] w-full'>
+              <Item className="react-aria-Item outline-none data-[focused]:outline-none">
+                <Link data-testid="project" className="px-1 py-1 aspect-square flex flex-1 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                  <NavLink
+                    to={`/organization/${organizationId}/project/${activeProject._id}`}
+                  >
+                    <Icon className='text-xs' icon="chevron-left" />
+                  </NavLink>
+                </Link>
+              </Item>
+              <Item>
+                <WorkspaceDropdown />
+              </Item>
+            </Breadcrumbs>
             <div className="flex w-full items-center gap-2 justify-between">
               <Select
                 aria-label="Select an environment"

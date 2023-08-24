@@ -16,27 +16,9 @@ html {
   font-size: 11px;
 }
 
-.app-grid-template {
-  grid-template:
-    'Header Header' auto
-    'Navbar Content' 1fr
-    'Statusbar Statusbar' 30px [row-end]
-    / 50px 1fr;
-}
-
-.app-grid-template-with-banner {
-  grid-template: 
-    'Header Header' auto
-    'Banner Banner' 30px
-    'Navbar Content' 1fr
-    'Statusbar Statusbar' 30px [row-end]
-    / 50px 1fr;
-}
-
 .grid-template-app-layout {
   grid-template:
     'Header Header' auto
-    'Banner Banner' max-content
     'Navbar Content' 1fr
     'Statusbar Statusbar' 30px [row-end]
     / 50px 1fr;
@@ -58,10 +40,17 @@ html {
   align-items: center;
   gap: 0.5rem;
   color: var(--color-font);
+  outline: none;
+  box-shadow: none;
+}
+
+.react-aria-Breadcrumbs .react-aria-Item:focus {
+  outline: none;
 }
 
 .react-aria-Breadcrumbs .react-aria-Item:not(:last-child):after {
-  content: '/';
+  content: '|';
+  color: var(--hl-lg);
 }
 
 input[type="search"]::-webkit-search-cancel-button {
