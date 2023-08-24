@@ -35,7 +35,7 @@ const features = [
     icon: 'city',
     title: 'Introducing Organizations',
     description:
-      'Teams have been replaced with Organizations, you can now create as many as you need and invite people to collaborate to them.',
+      'Teams have been replaced with Organizations, you can now create as many as you need and invite people to collaborate with them.',
     image: introducing_organizations,
   },
   {
@@ -49,9 +49,9 @@ const features = [
   {
     id: 'sse_api_support',
     icon: 'plug',
-    title: 'SSE API Support',
+    title: 'Server Side Events API Support',
     description:
-      'SSE APIs are now supported to give you even more ways to debug APIs with Insomnia, in addition to the previously supported REST, GraphQL, gRPC and WebSockets.',
+      'Server Side Events APIs are now supported to give you even more ways to debug APIs with Insomnia, in addition to the previously supported REST, GraphQL, gRPC and WebSockets.',
     image: sse_api_support,
   },
   {
@@ -66,8 +66,7 @@ const features = [
     id: 'new_cloud_dashboard',
     icon: 'cloud',
     title: 'New cloud dashboard',
-    description: `With an entirely redesigned cloud platform and dashboard at
-    http://insomnia.rest managing all of your organizations and collaborators is as easy as eating a piece of cake.`,
+    description: 'With an entirely redesigned cloud platform and dashboard at insomnia.rest managing all of your organizations and collaborators is a piece of cake.',
     image: new_cloud_dashboard,
   },
   {
@@ -83,7 +82,7 @@ const features = [
     icon: 'infinity',
     title: 'Unlimited Projects',
     description:
-      'We remove all limitations to the Insomnia application, you can now create as many projects as you want, with as many files as you want.',
+      'We removed all limitations to the Insomnia application, you can now create as many projects as you want, with as many files as you want.',
     image: unlimited_projects,
   },
 ];
