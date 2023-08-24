@@ -157,8 +157,9 @@ export const Debug: FC = () => {
   const { activeRequest } = requestData || {};
   const requestFetcher = useFetcher();
 
-  const [isPasteCurlModalOpen, setPasteCurlModalOpen] =
-    useState(false);
+  const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
+  const [pastedCurl, setPastedCurl] = useState('');
+
   const { organizationId, projectId, workspaceId, requestId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -978,6 +979,7 @@ export const Debug: FC = () => {
                   req,
                 });
               }}
+              defaultValue={pastedCurl}
               onHide={() => setPasteCurlModalOpen(false)}
             />
           )}
@@ -1001,7 +1003,10 @@ export const Debug: FC = () => {
                 environmentId={activeEnvironment ? activeEnvironment._id : ''}
                 settings={settings}
                 setLoading={setLoading}
-                onPaste={() => setPasteCurlModalOpen(true)}
+                onPaste={text => {
+                  setPastedCurl(text);
+                  setPasteCurlModalOpen(true);
+                }}
               />
             )}
             {!requestId && <PlaceholderRequestPane />}

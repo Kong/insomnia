@@ -40,7 +40,7 @@ interface Props {
   nunjucksPowerUserMode: boolean;
   uniquenessKey: string;
   setLoading: (l: boolean) => void;
-  onPaste: () => void;
+  onPaste: (text: string) => void;
 }
 
 export interface RequestUrlBarHandle {

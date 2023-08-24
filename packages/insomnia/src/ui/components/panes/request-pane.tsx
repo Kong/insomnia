@@ -1,9 +1,8 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useState } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
-import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../models/settings';
@@ -26,7 +25,6 @@ import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
 import { MarkdownPreview } from '../markdown-preview';
-import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
 import { RequestUrlBar } from '../request-url-bar';
@@ -63,7 +61,7 @@ interface Props {
   environmentId: string;
   settings: Settings;
   setLoading: (l: boolean) => void;
-  onPaste: () => void;
+  onPaste: (text: string) => void;
 }
 
 export const RequestPane: FC<Props> = ({

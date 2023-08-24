@@ -24,7 +24,7 @@ export interface OneLineEditorProps {
   placeholder?: string;
   readOnly?: boolean;
   type?: string;
-  onPaste?: () => void;
+  onPaste?: (text: string) => void;
 }
 
 export interface OneLineEditorHandle {
@@ -108,12 +108,20 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     codeMirror.current.on('beforeChange', (_: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
       const isPaste = change.text && change.text.length > 1;
       if (isPaste) {
+        if (change.text[0].startsWith('curl')) {
+          change.cancel();
+          return;
+        }
         // If we're in single-line mode, merge all changed lines into one
         change.update?.(change.from, change.to, [change.text.join('').replace(/\n/g, ' ')]);
       }
     });
-    codeMirror.current.on('paste', () => {
-      onPaste?.();
+    codeMirror.current.on('paste', (_, e: ClipboardEvent) => {
+      const text = e.clipboardData?.getData('text/plain');
+      if (onPaste && text && text.startsWith('curl')) {
+        console.log('curl PASTE event', text);
+        onPaste(text);
+      }
     });
 
     codeMirror.current.on('keydown', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
