@@ -1,4 +1,4 @@
-import { cp, mkdir, readdir } from 'node:fs/promises';
+import { copyFile, mkdir, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
 import electron from 'electron';
@@ -12,14 +12,12 @@ export async function exportAllWorkspaces() {
     const versionPath = path.join(dataPath, 'backups', version);
     await mkdir(versionPath, { recursive: true });
     const files = await readdir(dataPath);
-    files.forEach((file: string) => {
+    files.forEach(async (file: string) => {
       if (file.endsWith('.db')) {
-        cp(file, versionPath);
-
+        await copyFile(path.join(dataPath, file), path.join(versionPath, file));
       }
     });
     console.log('Exported backup to:', versionPath);
-
   } catch (err) {
     console.log('Error exporting project backup:', err);
   }
