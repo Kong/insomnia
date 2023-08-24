@@ -180,6 +180,15 @@ export const RequestGroupActionsDropdown = ({
           ),
       },
       {
+        id: 'From Curl',
+        name: 'From Curl',
+        icon: 'terminal',
+        action: () =>
+          createRequest(
+            'From Curl',
+          ),
+      },
+      {
         id: 'New Folder',
         name: 'New Folder',
         icon: 'folder',

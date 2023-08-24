@@ -150,7 +150,6 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
     }))._id;
   }
   if (requestType === 'From Curl') {
-    // TODO: if no clipboard text show modal
     if (!clipboardText) {
       return null;
     }

@@ -558,7 +558,7 @@ export const Debug: FC = () => {
       {
         id: 'From Curl',
         name: 'From Curl',
-        icon: 'plus-circle',
+        icon: 'terminal',
         action: () => setPasteCurlModalOpen(true),
       },
       {
