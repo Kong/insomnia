@@ -21,7 +21,7 @@ export interface RequestSettingsModalOptions {
 }
 interface State {
   defaultPreviewMode: boolean;
-  activeWorkspaceIdToCopyTo: string | null;
+  activeWorkspaceIdToCopyTo: string;
 }
 export interface RequestSettingsModalHandle {
   show: (options: RequestSettingsModalOptions) => void;
@@ -42,7 +42,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
   const [state, setState] = useState<State>({
     defaultPreviewMode: !!request?.description,
-    activeWorkspaceIdToCopyTo: null,
+    activeWorkspaceIdToCopyTo: '',
   });
   useEffect(() => {
     modalRef.current?.show();
@@ -162,14 +162,13 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                         the new workspace's folder structure.
                       </HelpTooltip>
                       <select
-                        value={activeWorkspaceIdToCopyTo || '__NULL__'}
+                        value={activeWorkspaceIdToCopyTo}
                         onChange={event => {
-                          const { value } = event.currentTarget;
-                          const workspaceId = value === '__NULL__' ? null : value;
-                          setState(state => ({ ...state, activeWorkspaceIdToCopyTo: workspaceId }));
+                          const activeWorkspaceIdToCopyTo = event.currentTarget.value;
+                          setState(state => ({ ...state, activeWorkspaceIdToCopyTo }));
                         }}
                       >
-                        <option value="__NULL__">-- Select Workspace --</option>
+                        <option value="">-- Select Workspace --</option>
                         {workspacesForActiveProject.map(w => {
                           if (workspaceId === w._id) {
                             return null;
@@ -320,14 +319,13 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                         the new workspace's folder structure.
                       </HelpTooltip>
                       <select
-                        value={activeWorkspaceIdToCopyTo || '__NULL__'}
+                        value={activeWorkspaceIdToCopyTo}
                         onChange={event => {
-                          const { value } = event.currentTarget;
-                          const workspaceId = value === '__NULL__' ? null : value;
-                          setState(state => ({ ...state, activeWorkspaceIdToCopyTo: workspaceId }));
+                          const activeWorkspaceIdToCopyTo = event.currentTarget.value;
+                          setState(state => ({ ...state, activeWorkspaceIdToCopyTo }));
                         }}
                       >
-                        <option value="__NULL__">-- Select Workspace --</option>
+                        <option value="">-- Select Workspace --</option>
                         {workspacesForActiveProject.map(w => {
                           if (workspaceId === w._id) {
                             return null;

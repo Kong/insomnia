@@ -18,7 +18,7 @@ export interface RequestGroupSettingsModalOptions {
 }
 interface State {
   defaultPreviewMode: boolean;
-  activeWorkspaceIdToCopyTo: string | null;
+  activeWorkspaceIdToCopyTo: string;
 }
 export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps & {
   requestGroup: RequestGroup;
@@ -36,7 +36,7 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData;
   const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
   const [state, setState] = useState<State>({
-    activeWorkspaceIdToCopyTo: null,
+    activeWorkspaceIdToCopyTo: '',
     defaultPreviewMode: !!requestGroup.description,
   });
   const patchRequestGroup = useRequestGroupPatcher();
@@ -119,25 +119,24 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
                   placed at the root of the new workspace's folder structure.
                 </HelpTooltip>
                 <select
-                  value={activeWorkspaceIdToCopyTo || '__NULL__'}
+                  value={activeWorkspaceIdToCopyTo}
                   onChange={event => {
-                    const { value } = event.currentTarget;
-                    const workspaceId = value === '__NULL__' ? null : value;
-                    setState(state => ({ ...state, activeWorkspaceIdToCopyTo: workspaceId }));
+                    const activeWorkspaceIdToCopyTo = event.currentTarget.value;
+                    setState(state => ({
+                      ...state,
+                      activeWorkspaceIdToCopyTo,
+                    }));
                   }}
                 >
-                  <option value="__NULL__">-- Select Workspace --</option>
-                  {workspacesForActiveProject.map(w => {
-                    if (workspaceId === w._id) {
-                      return null;
-                    }
-
-                    return (
+                  <option value="">-- Select Workspace --</option>
+                  {workspacesForActiveProject
+                    .filter(w => workspaceId !== w._id)
+                    .map(w => (
                       <option key={w._id} value={w._id}>
                         {w.name}
                       </option>
-                    );
-                  })}
+                    ))
+                  }
                 </select>
               </label>
             </div>
