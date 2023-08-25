@@ -10,7 +10,6 @@ import {
 import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
-import { exportAllWorkspaces } from './export';
 const isUpdateSupported = () => {
   if (process.platform === 'linux') {
     console.log('[updater] Not supported on this platform', process.platform);
@@ -62,7 +61,6 @@ export const init = async () => {
   autoUpdater.on('update-downloaded', async (_error, releaseNotes, releaseName) => {
     console.log(`[updater] Downloaded ${releaseName}`);
     _sendUpdateStatus('Performing backup...');
-    await exportAllWorkspaces();
     _sendUpdateStatus('Updated (Restart Required)');
 
     dialog.showMessageBox({
@@ -79,6 +77,7 @@ export const init = async () => {
   });
 
   if (isUpdateSupported()) {
+    // perhaps disable this method of upgrading just incase it trigger before backup is complete
     // on app start
     const settings = await models.settings.getOrCreate();
     const updateUrl = getUpdateUrl(settings.updateChannel);
