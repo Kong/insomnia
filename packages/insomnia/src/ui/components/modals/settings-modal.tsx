@@ -34,11 +34,11 @@ const Dev = () => {
   const { Form } = useFetcher();
 
   return (
-    <Form action="/dev" method="POST" className="flex flex-col gap-3 w-full">
+    <Form action="/dev" method="POST" className="flex flex-col gap-3 w-full p-2">
       <label className="flex text-sm flex-col gap-2">
         <span className="text-[--color-font]">API Url</span>
         <input
-          className="py-1 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+          className="py-2 w-full px-4 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
           name="apiURL"
           type="url"
           required
@@ -50,7 +50,7 @@ const Dev = () => {
         <span className="text-[--color-font]">Website Url</span>
         <input
           required
-          className="py-1 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+          className="py-2 w-full px-4 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
           name="websiteURL"
           type="url"
           placeholder='https://app.insomnia.rest'
@@ -59,7 +59,7 @@ const Dev = () => {
       </label>
       <div className='flex justify-end'>
         <Button type="submit" className="px-4 py-1 bg-[#4000BF] flex items-center justify-center gap-2 aria-pressed:bg-opacity-90 focus:bg-opacity-90 font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-          Continue
+          Save
         </Button>
       </div>
     </Form>
