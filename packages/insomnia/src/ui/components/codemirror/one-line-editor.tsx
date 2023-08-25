@@ -24,6 +24,7 @@ export interface OneLineEditorProps {
   placeholder?: string;
   readOnly?: boolean;
   type?: string;
+  onPaste?: (text: string) => void;
 }
 
 export interface OneLineEditorHandle {
@@ -39,6 +40,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   placeholder,
   readOnly,
   type,
+  onPaste,
 }, ref) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
@@ -106,8 +108,20 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     codeMirror.current.on('beforeChange', (_: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) => {
       const isPaste = change.text && change.text.length > 1;
       if (isPaste) {
+        if (change.text[0].startsWith('curl')) {
+          change.cancel();
+          return;
+        }
         // If we're in single-line mode, merge all changed lines into one
         change.update?.(change.from, change.to, [change.text.join('').replace(/\n/g, ' ')]);
+      }
+    });
+    codeMirror.current.on('paste', (_, e: ClipboardEvent) => {
+      const text = e.clipboardData?.getData('text/plain');
+      // TODO: watch out for pasting urls that are curl<something>, e.g. curl.se would be picked up here without the space
+      if (onPaste && text && text.startsWith('curl ')) {
+        console.log('curl PASTE event', text);
+        onPaste(text);
       }
     });
 

@@ -40,6 +40,7 @@ interface Props {
   nunjucksPowerUserMode: boolean;
   uniquenessKey: string;
   setLoading: (l: boolean) => void;
+  onPaste: (text: string) => void;
 }
 
 export interface RequestUrlBarHandle {
@@ -50,6 +51,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   handleAutocompleteUrls,
   uniquenessKey,
   setLoading,
+  onPaste,
 }, ref) => {
   const {
     activeWorkspace,
@@ -217,6 +219,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           onKeyDown={createKeybindingsHandler({
             'Enter': () => sendOrConnect(),
           })}
+          onPaste={onPaste}
         />
         {isCancellable ? (
           <button

@@ -24,7 +24,6 @@ import { Response } from '../../models/response';
 import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../../network/network';
-import { convert } from '../../utils/importers/convert';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
@@ -98,7 +97,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
 export const createRequestAction: ActionFunction = async ({ request, params }) => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-  const { requestType, parentId, clipboardText } = await request.json() as { requestType: CreateRequestType; parentId?: string; clipboardText?: string };
+  const { requestType, parentId, req } = await request.json() as { requestType: CreateRequestType; parentId?: string; req?: Request };
 
   let activeRequestId;
   if (requestType === 'HTTP') {
@@ -150,23 +149,18 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
     }))._id;
   }
   if (requestType === 'From Curl') {
-    // TODO: if no clipboard text show modal
-    if (!clipboardText) {
+    if (!req) {
       return null;
     }
     try {
-      const { data } = await convert(clipboardText);
-      const { resources } = data;
-      const r = resources[0];
-
       activeRequestId = (await models.request.create({
         parentId: parentId || workspaceId,
-        url: r.url,
-        method: r.method,
-        headers: r.headers,
-        body: r.body as RequestBody,
-        authentication: r.authentication,
-        parameters: r.parameters as RequestParameter[],
+        url: req.url,
+        method: req.method,
+        headers: req.headers,
+        body: req.body as RequestBody,
+        authentication: req.authentication,
+        parameters: req.parameters as RequestParameter[],
       }))._id;
     } catch (error) {
       console.error(error);
@@ -185,6 +179,7 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
   const req = await requestOperations.getById(requestId);
   invariant(req, 'Request not found');
   const patch = await request.json();
+  console.log('patch', patch);
   // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
   const isMimeTypeChanged = isRequest(req) && patch.body && patch.body.mimeType !== req.body.mimeType;
   if (isMimeTypeChanged) {

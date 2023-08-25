@@ -39,6 +39,7 @@ import {
   isEventStreamRequest,
   isRequest,
   isRequestId,
+  Request,
 } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
@@ -57,6 +58,7 @@ import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
+import { PasteCurlModal } from '../components/modals/paste-curl-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestSettingsModal } from '../components/modals/request-settings-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
@@ -155,6 +157,10 @@ export const Debug: FC = () => {
     | undefined;
   const { activeRequest } = requestData || {};
   const requestFetcher = useFetcher();
+
+  const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
+  const [pastedCurl, setPastedCurl] = useState('');
+
   const { organizationId, projectId, workspaceId, requestId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -238,16 +244,16 @@ export const Debug: FC = () => {
           state.map(s =>
             s.requestId === id
               ? {
-                  ...s,
-                  responseMessages: [
-                    ...s.responseMessages,
-                    {
-                      id: generateId(),
-                      text: JSON.stringify(value),
-                      created: Date.now(),
-                    },
-                  ],
-                }
+                ...s,
+                responseMessages: [
+                  ...s.responseMessages,
+                  {
+                    id: generateId(),
+                    text: JSON.stringify(value),
+                    created: Date.now(),
+                  },
+                ],
+              }
               : s,
           ),
         );
@@ -359,8 +365,8 @@ export const Debug: FC = () => {
       });
     },
     // TODO: fix these
-    request_showRecent: () => {},
-    request_quickSwitch: () => {},
+    request_showRecent: () => { },
+    request_quickSwitch: () => { },
     environment_showEditor: () => setEnvironmentModalOpen(true),
     showCookiesEditor: () => setIsCookieModalOpen(true),
     request_showGenerateCodeEditor: () => {
@@ -386,19 +392,13 @@ export const Debug: FC = () => {
   const sortOrder = searchParams.get('sortOrder') as SortOrder || 'type-manual';
   const { hotKeyRegistry } = settings;
 
-  const createRequest = ({
-    requestType,
-  }: {
-      requestType: CreateRequestType;
-  }) =>
-    requestFetcher.submit(
-      { requestType, parentId: workspaceId, clipboardText: window.clipboard.readText() },
+  const createRequest = ({ requestType, parentId, req }: { requestType: CreateRequestType; parentId: string; req?: Partial<Request> }) =>
+    requestFetcher.submit(JSON.stringify({ requestType, parentId, req }),
       {
+        encType: 'application/json',
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
         method: 'post',
-        encType: 'application/json',
-      }
-    );
+      });
 
   const groupMetaPatcher = useRequestGroupMetaPatcher();
   const reorderFetcher = useFetcher();
@@ -511,6 +511,7 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'HTTP',
+            parentId: workspaceId,
           }),
       },
       {
@@ -520,6 +521,7 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'Event Stream',
+            parentId: workspaceId,
           }),
       },
       {
@@ -529,6 +531,7 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'GraphQL',
+            parentId: workspaceId,
           }),
       },
       {
@@ -538,6 +541,7 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'gRPC',
+            parentId: workspaceId,
           }),
       },
       {
@@ -547,15 +551,14 @@ export const Debug: FC = () => {
         action: () =>
           createRequest({
             requestType: 'WebSocket',
+            parentId: workspaceId,
           }),
       },
       {
         id: 'From Curl',
         name: 'From Curl',
-        icon: 'plus-circle',
-        action: () => createRequest({
-          requestType: 'From Curl',
-        }),
+        icon: 'terminal',
+        action: () => setPasteCurlModalOpen(true),
       },
       {
         id: 'New Folder',
@@ -837,9 +840,6 @@ export const Debug: FC = () => {
                   >
                     <div
                       className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                      style={{
-                        paddingLeft: `${item.ancestors?.length}rem`,
-                      }}
                     >
                       <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                       {isRequest(item.doc) && (
@@ -971,6 +971,19 @@ export const Debug: FC = () => {
           {isCookieModalOpen && (
             <CookiesModal onHide={() => setIsCookieModalOpen(false)} />
           )}
+          {isPasteCurlModalOpen && (
+            <PasteCurlModal
+              onImport={req => {
+                createRequest({
+                  requestType: 'From Curl',
+                  parentId: workspaceId,
+                  req,
+                });
+              }}
+              defaultValue={pastedCurl}
+              onHide={() => setPasteCurlModalOpen(false)}
+            />
+          )}
         </div>
       }
       renderPaneOne={
@@ -991,6 +1004,10 @@ export const Debug: FC = () => {
                 environmentId={activeEnvironment ? activeEnvironment._id : ''}
                 settings={settings}
                 setLoading={setLoading}
+                onPaste={text => {
+                  setPastedCurl(text);
+                  setPasteCurlModalOpen(true);
+                }}
               />
             )}
             {!requestId && <PlaceholderRequestPane />}

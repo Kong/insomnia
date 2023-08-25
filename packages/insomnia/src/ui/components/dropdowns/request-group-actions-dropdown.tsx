@@ -7,6 +7,7 @@ import { toKebabCase } from '../../../common/misc';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import { PlatformKeyCombinations } from '../../../common/settings';
 import * as models from '../../../models';
+import { Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
@@ -18,6 +19,7 @@ import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
+import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 interface Props extends Partial<DropdownProps> {
   requestGroup: RequestGroup;
@@ -40,8 +42,8 @@ export const RequestGroupActionsDropdown = ({
   const requestFetcher = useFetcher();
   const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
-  const createRequest = (requestType: CreateRequestType) =>
-    requestFetcher.submit({ requestType, parentId: requestGroup._id, clipboardText: window.clipboard.readText() },
+  const createRequest = ({ requestType, parentId, req }: { requestType: CreateRequestType; parentId: string; req?: Partial<Request> }) =>
+    requestFetcher.submit(JSON.stringify({ requestType, parentId, req }),
       {
         encType: 'application/json',
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
@@ -125,6 +127,7 @@ export const RequestGroupActionsDropdown = ({
   };
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isPasteCurlModalOpen, setPasteCurlModalOpen] = useState(false);
 
   const requestGroupActionItems: ({
     id: string;
@@ -138,46 +141,53 @@ export const RequestGroupActionsDropdown = ({
         name: 'HTTP Request',
         icon: 'plus-circle',
         hint: hotKeyRegistry.request_createHTTP,
-        action: () =>
-          createRequest(
-            'HTTP',
-          ),
+      action: () => createRequest({
+        requestType: 'HTTP',
+        parentId: requestGroup._id,
+      }),
       },
       {
         id: 'Event Stream',
         name: 'Event Stream Request',
         icon: 'plus-circle',
-        action: () =>
-          createRequest(
-            'Event Stream',
-          ),
+        action: () => createRequest({
+          requestType: 'Event Stream',
+          parentId: requestGroup._id,
+        }),
       },
       {
         id: 'GraphQL Request',
         name: 'GraphQL Request',
         icon: 'plus-circle',
-        action: () =>
-          createRequest(
-            'GraphQL',
-          ),
+        action: () => createRequest({
+          requestType: 'GraphQL',
+          parentId: requestGroup._id,
+        }),
       },
       {
         id: 'gRPC Request',
         name: 'gRPC Request',
         icon: 'plus-circle',
-        action: () =>
-          createRequest(
-            'gRPC',
-          ),
+        action: () => createRequest({
+          requestType: 'gRPC',
+          parentId: requestGroup._id,
+        }),
       },
       {
         id: 'WebSocket Request',
         name: 'WebSocket Request',
         icon: 'plus-circle',
-        action: () =>
-          createRequest(
-            'WebSocket',
-          ),
+        action: () => createRequest({
+          requestType: 'WebSocket',
+          parentId: requestGroup._id,
+        }),
+      },
+      {
+        id: 'From Curl',
+        name: 'From Curl',
+        icon: 'terminal',
+        action: () => setPasteCurlModalOpen(true),
+
       },
       {
         id: 'New Folder',
@@ -202,8 +212,7 @@ export const RequestGroupActionsDropdown = ({
         name: 'Duplicate',
         icon: 'copy',
         hint: hotKeyRegistry.request_createHTTP,
-        action: () =>
-          handleRequestGroupDuplicate(),
+        action: () => handleRequestGroupDuplicate(),
       },
       {
         id: 'Environment',
@@ -282,6 +291,18 @@ export const RequestGroupActionsDropdown = ({
         onHide={() => setIsSettingsModalOpen(false)}
       />
     )}
+      {isPasteCurlModalOpen && (
+        <PasteCurlModal
+          onImport={req => {
+            createRequest({
+              requestType: 'From Curl',
+              parentId: requestGroup._id,
+              req,
+            });
+          }}
+          onHide={() => setPasteCurlModalOpen(false)}
+        />
+      )}
     </Fragment>
   );
 };

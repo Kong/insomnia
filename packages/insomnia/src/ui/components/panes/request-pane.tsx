@@ -1,14 +1,13 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useState } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getContentTypeFromHeaders } from '../../../common/constants';
-import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type { Settings } from '../../../models/settings';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from '../../../utils/url/querystring';
-import { useSettingsPatcher } from '../../hooks/use-request';
+import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -62,20 +61,24 @@ interface Props {
   environmentId: string;
   settings: Settings;
   setLoading: (l: boolean) => void;
+  onPaste: (text: string) => void;
 }
 
 export const RequestPane: FC<Props> = ({
   environmentId,
   settings,
   setLoading,
+  onPaste,
 }) => {
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchSettings = useSettingsPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
     useState(false);
+  const patchRequest = useRequestPatcher();
 
-  const handleImportQueryFromUrl = useCallback(() => {
+  useState(false);
+  const handleImportQueryFromUrl = () => {
     let query;
 
     try {
@@ -94,18 +97,9 @@ export const RequestPane: FC<Props> = ({
 
     // Only update if url changed
     if (url !== activeRequest.url) {
-      database.update(
-        {
-          ...activeRequest,
-          modified: Date.now(),
-          url,
-          parameters,
-          // Hack to force the ui to refresh. More info on use-vcs-version
-        },
-        true,
-      );
+      patchRequest(requestId, { url, parameters });
     }
-  }, [activeRequest]);
+  };
   const gitVersion = useGitVCSVersion();
   const activeRequestSyncVersion = useActiveRequestSyncVCSVersion();
 
@@ -137,6 +131,7 @@ export const RequestPane: FC<Props> = ({
             handleAutocompleteUrls={() => queryAllWorkspaceUrls(workspaceId, models.request.type, requestId)}
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             setLoading={setLoading}
+            onPaste={onPaste}
           />
         </ErrorBoundary>
       </PaneHeader>
