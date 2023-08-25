@@ -118,7 +118,8 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     });
     codeMirror.current.on('paste', (_, e: ClipboardEvent) => {
       const text = e.clipboardData?.getData('text/plain');
-      if (onPaste && text && text.startsWith('curl')) {
+      // TODO: watch out for pasting urls that are curl<something>, e.g. curl.se would be picked up here without the space
+      if (onPaste && text && text.startsWith('curl ')) {
         console.log('curl PASTE event', text);
         onPaste(text);
       }

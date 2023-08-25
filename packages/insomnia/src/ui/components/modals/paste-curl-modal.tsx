@@ -11,12 +11,29 @@ import { CodeEditor } from '../codemirror/code-editor';
 
 export const PasteCurlModal = ({ onHide, onImport, defaultValue }: ModalProps & { onImport: (req: Partial<Request>) => void; defaultValue?: string }) => {
   const modalRef = useRef<ModalHandle>(null);
-  const [isValid, setIsValid] = useState<boolean>();
+  const [isValid, setIsValid] = useState<boolean>(true);
   const [req, setReq] = useState<any>({});
 
   useEffect(() => {
-    modalRef.current?.show();
-  }, []);
+    async function parseCurlToRequest() {
+      try {
+        const { data } = await convert(defaultValue || '');
+        const { resources } = data;
+        const importedRequest = resources[0];
+        setIsValid(true);
+        setReq(importedRequest);
+
+      } catch (error) {
+        console.log('error', error);
+        setIsValid(false);
+        setReq({});
+      } finally {
+        modalRef.current?.show();
+      }
+    }
+    parseCurlToRequest();
+
+  }, [defaultValue]);
 
   return (
     <OverlayContainer onClick={e => e.stopPropagation()}>
