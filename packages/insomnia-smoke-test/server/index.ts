@@ -23,6 +23,13 @@ app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
 });
 
+app.get('/builds/check/*', (_req, res) => {
+  res.status(200).send({
+    url: 'https://github.com/Kong/insomnia/releases/download/core@2023.5.6/Insomnia.Core-2023.5.6.zip',
+    name: '2099.1.0',
+  });
+});
+
 app.get('/sleep', (_req, res) => {
   res.status(200).send({ sleep: true });
 });
