@@ -5,6 +5,7 @@ import electron from 'electron';
 
 import appConfig from '../../config/config.json';
 import { version } from '../../package.json';
+import { getUpdatesBaseURL } from '../common/constants';
 import * as models from '../models';
 import { insomniaFetch } from './insomniaFetch';
 
@@ -14,7 +15,7 @@ export async function backupIfNewerVersionAvailable() {
     console.log('[main] Checking for newer version than ', version);
     const response = await insomniaFetch<{ url: string }>({
       method: 'GET',
-      origin: 'https://updates.insomnia.rest',
+      origin: getUpdatesBaseURL(),
       path: `/builds/check/mac?v=${version}&app=${appConfig.appId}&channel=${settings.updateChannel}`,
       sessionId: null,
     });
