@@ -53,10 +53,10 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).not.toContainText('Git Sync');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
-      await page.getByRole('button', { name: 'Create' }).click();
+      await page.getByRole('button', { name: 'Create in project' }).click();
       const text = await loadFixture('multiple-workspaces.yaml');
       await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-      await page.getByRole('menuitem', { name: 'Import' }).click();
+      await page.getByRole('menuitemradio', { name: 'Import' }).click();
       await page.getByText('Clipboard').click();
       await page.getByRole('button', { name: 'Scan' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
@@ -92,8 +92,8 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
       // Create new document
-      await page.getByRole('button', { name: 'Create' }).click();
-      await page.getByRole('menuitem', { name: 'Design Document' }).click();
+      await page.getByRole('button', { name: 'Create in project' }).click();
+      await page.getByRole('menuitemradio', { name: 'Design Document' }).click();
       await page.locator('text=Create').nth(1).click();
 
       await page.getByTestId('project').click();
@@ -129,7 +129,7 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
       // Create new collection
-      await page.getByRole('button', { name: 'Create' }).click();
+      await page.getByRole('button', { name: 'Create in project' }).click();
       await page.getByRole('menuitem', { name: 'Request Collection' }).click();
       await page.locator('text=Create').nth(1).click();
 

@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 
 import { loadFixture } from '../../playwright/paths';
-import { test } from '../../playwright/test';
+import { test } from '../../playwright/test';;
 
 test('can send requests', async ({ app, page }) => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
@@ -10,17 +10,16 @@ test('can send requests', async ({ app, page }) => {
     has: page.locator('.CodeMirror-activeline'),
   });
 
-  await page.getByRole('button', { name: 'Create' }).click();
-
   const text = await loadFixture('smoke-test-collection.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-  await page.getByRole('menuitem', { name: 'Import' }).click();
+  await page.getByRole('button', { name: 'Create in project' }).click();
+  await page.getByRole('menuitemradio', { name: 'Import' }).click();
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
-  await page.locator('.card-menu').click();
+  await page.getByRole('button', { name: 'Workspace actions menu button' }).click();
   await page.getByRole('menuitem', { name: 'Export' }).click();
   await page.getByRole('dialog').getByRole('checkbox').nth(1).uncheck();
   await page.getByRole('button', { name: 'Export' }).click();
@@ -88,12 +87,12 @@ test('can send requests', async ({ app, page }) => {
 // This feature is unsafe to place beside other tests, cancelling a request can cause network code to block
 // related to https://linear.app/insomnia/issue/INS-973
 test('can cancel requests', async ({ app, page }) => {
-  await page.getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('button', { name: 'Create in project' }).click();
 
   const text = await loadFixture('smoke-test-collection.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-  await page.getByRole('menuitem', { name: 'Import' }).click();
+  await page.getByRole('menuitemradio', { name: 'Import' }).click();
   await page.getByText('Clipboard').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
