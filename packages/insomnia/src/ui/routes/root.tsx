@@ -428,14 +428,14 @@ const Root = () => {
                 )}
               </div>
             </header>
-            <div className="[grid-area:Navbar]">
+            <div className="[grid-area:Navbar] overflow-hidden">
               <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
                 {organizations.map(organization => (
                   <TooltipTrigger key={organization._id}>
                     <Link>
                       <NavLink
                         className={({ isActive }) =>
-                          `select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] p-[--padding-sm] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${
+                          `select-none text-[--color-font-surprise] flex-shrink-0 hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] p-[--padding-sm] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${
                             isActive
                               ? 'outline-[--color-font]'
                               : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
