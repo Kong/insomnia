@@ -107,6 +107,8 @@ export const createNewWorkspaceAction: ActionFunction = async ({
     parentId: projectId,
   });
 
+  console.log({ workspace, name });
+
   if (scope === 'design') {
     await models.apiSpec.getOrCreateForParentId(workspace._id);
   }

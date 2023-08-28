@@ -218,7 +218,7 @@ export const loader: LoaderFunction = async ({
         workspaceMeta?.cachedGitLastCommitTime &&
         modifiedLocally > workspaceMeta?.cachedGitLastCommitTime
     );
-    const name = isDesign(workspace) ? apiSpec?.fileName || '' : workspace.name;
+
     const clientCertificates = await models.clientCertificate.findByParentId(
       workspace._id
     );
@@ -234,16 +234,13 @@ export const loader: LoaderFunction = async ({
       lastActiveBranch,
       spec,
       specFormat,
-      name,
+      name: workspace.name,
       apiSpec,
       specFormatVersion,
       workspaceMeta,
       clientCertificates,
       caCertificate: await models.caCertificate.findByParentId(workspace._id),
-      workspace: {
-        ...workspace,
-        name,
-      },
+      workspace,
     };
   };
 
@@ -878,7 +875,7 @@ const ProjectRoute: FC = () => {
                         />
                       </div>
                       <Heading className="pt-4 text-lg font-bold truncate">
-                        {item.name}
+                        {item.workspace.name}
                       </Heading>
                       <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
                         {item.spec?.info?.version && (
