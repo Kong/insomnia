@@ -21,8 +21,14 @@ interface EnvOptions {
 
 export const test = baseTest.extend<{
   app: ElectronApplication;
+  db: {
+    stuff: string;
+    onReady: () => Promise<unknown>;
+  };
 }>({
-  app: async ({ playwright, trace }, use, testInfo) => {
+  app: async ({ playwright, trace, db }, use, testInfo) => {
+    await db.onReady();
+    console.log('Creating app');
     const webServerUrl = testInfo.config.webServer?.url;
 
     const options: EnvOptions = {
@@ -72,5 +78,16 @@ export const test = baseTest.extend<{
     await page.waitForLoadState();
 
     await use(page);
+  },
+  db: async ({ }, use) => {
+    console.log('Creating db');
+    const db = {
+      stuff: 'here',
+      onReady: () => new Promise(resolve => setTimeout(resolve, 1000)),
+    };
+
+    await use(db);
+
+    console.log('Closing db');
   },
 });
