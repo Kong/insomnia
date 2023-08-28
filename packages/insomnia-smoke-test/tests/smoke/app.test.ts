@@ -3,7 +3,8 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';;
 
-test('can send requests', async ({ app, page }) => {
+test('can send requests', async ({ app, page, db }) => {
+  console.log({ db });
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   const responseBody = page.locator('[data-testid="CodeEditor"]:visible', {
