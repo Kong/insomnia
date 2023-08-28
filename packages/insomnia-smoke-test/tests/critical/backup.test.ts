@@ -2,7 +2,6 @@ import { expect } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 
-// import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 test('can backup data on new version available', async ({ app, page }) => {
