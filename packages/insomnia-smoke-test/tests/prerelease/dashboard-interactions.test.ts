@@ -7,20 +7,20 @@ test.describe('Dashboard', async () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   test.describe('Projects', async () => {
     test('Can create, rename and delete new project', async ({ page }) => {
-      await expect(page.locator('.app')).toContainText('All Files (0)');
+      await page.getByLabel('All Files (0)').click();
       await expect(page.locator('.app')).not.toContainText('Git Sync');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
       // Create new project
-      await page.click('[data-testid="CreateProjectButton"]');
+      await page.getByRole('button', { name: 'Create new Project' }).click();
       await page.locator('text=Create').nth(1).click();
 
       // Check empty project
       await expect(page.locator('.app')).toContainText('This is an empty project, to get started create your first resource:');
 
       // Rename Project
-      await page.click('[data-testid="ProjectDropDown-My-Project"] button');
-      await page.getByRole('menuitem', { name: 'Project Settings' }).click();
+      await page.getByRole('row', { name: 'My Project' }).getByRole('button', { name: 'Project Actions' }).click();
+      await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByPlaceholder('My Project').click();
       await page.getByPlaceholder('My Project').fill('My Project123');
 
@@ -32,8 +32,8 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).toContainText('My Project123');
 
       // Delete project
-      await page.click('[data-testid="ProjectDropDown-My-Project123"] button');
-      await page.getByRole('menuitem', { name: 'Project Settings' }).click();
+      await page.getByRole('row', { name: 'My Project' }).getByRole('button', { name: 'Project Actions' }).click();
+      await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       // Click text=NameActions Delete >> button
       await page.click('text=NameActions Delete >> button');
       await page.getByRole('button', { name: 'Click to confirm' }).click();
@@ -42,27 +42,27 @@ test.describe('Dashboard', async () => {
       await expect(page.locator('.app')).toContainText('Insomnia');
       await expect(page.locator('.app')).not.toContainText('My Project123');
       await expect(page.locator('.app')).toContainText('New Document');
-      await expect(page.locator('.app')).toContainText('All Files (0)');
+      await page.getByLabel('All Files (0)').click();
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
     });
   });
   test.describe('Interactions', async () => { // Not sure about the name here
     // TODO(INS-2504) - we don't support importing multiple collections at this time
     test.skip('Can filter through multiple collections', async ({ app, page }) => {
-      await expect(page.locator('.app')).toContainText('All Files (0)');
+      await page.getByLabel('All Files (0)').click();
       await expect(page.locator('.app')).not.toContainText('Git Sync');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
-      await page.getByRole('button', { name: 'Create' }).click();
+      await page.getByRole('button', { name: 'Create in project' }).click();
       const text = await loadFixture('multiple-workspaces.yaml');
       await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-      await page.getByRole('menuitem', { name: 'Import' }).click();
+      await page.getByRole('menuitemradio', { name: 'Import' }).click();
       await page.getByText('Clipboard').click();
       await page.getByRole('button', { name: 'Scan' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
       await page.getByText('CollectionSmoke testsjust now').click();
       // Check that 10 new workspaces are imported besides the default one
-      const workspaceCards = page.locator('.card-badge');
+      const workspaceCards = page.getByLabel('Workspaces').getByRole('gridcell');
       await expect(workspaceCards).toHaveCount(11);
       await expect(page.locator('.app')).toContainText('New Document');
       await expect(page.locator('.app')).toContainText('collection 1');
@@ -87,13 +87,13 @@ test.describe('Dashboard', async () => {
     });
 
     test('Can create, rename and delete a document', async ({ page }) => {
-      await expect(page.locator('.app')).toContainText('All Files (0)');
+      await page.getByLabel('All Files (0)').click();
       await expect(page.locator('.app')).not.toContainText('Git Sync');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
       // Create new document
-      await page.getByRole('button', { name: 'Create' }).click();
-      await page.getByRole('menuitem', { name: 'Design Document' }).click();
+      await page.getByRole('button', { name: 'Create in project' }).click();
+      await page.getByRole('menuitemradio', { name: 'Design Document' }).click();
       await page.locator('text=Create').nth(1).click();
 
       await page.getByTestId('project').click();
@@ -113,7 +113,7 @@ test.describe('Dashboard', async () => {
 
       await page.getByTestId('project').click();
 
-      const workspaceCards = page.locator('.card-badge');
+      const workspaceCards = page.getByLabel('Workspaces').getByRole('gridcell');
       await expect(workspaceCards).toHaveCount(2);
 
       // Delete document
@@ -124,13 +124,13 @@ test.describe('Dashboard', async () => {
     });
 
     test('Can create, rename and delete a collection', async ({ page }) => {
-      await expect(page.locator('.app')).toContainText('All Files (0)');
+      await page.getByLabel('All Files (0)').click();
       await expect(page.locator('.app')).not.toContainText('Git Sync');
       await expect(page.locator('.app')).not.toContainText('Setup Git Sync');
 
       // Create new collection
-      await page.getByRole('button', { name: 'Create' }).click();
-      await page.getByRole('menuitem', { name: 'Request Collection' }).click();
+      await page.getByRole('button', { name: 'Create in project' }).click();
+      await page.getByRole('menuitemradio', { name: 'Request Collection' }).click();
       await page.locator('text=Create').nth(1).click();
 
       await page.getByTestId('project').click();
@@ -149,7 +149,7 @@ test.describe('Dashboard', async () => {
       await page.click('[role="dialog"] button:has-text("Duplicate")');
 
       await page.getByTestId('project').click();
-      const workspaceCards = page.locator('.card-badge');
+      const workspaceCards = page.getByLabel('Workspaces').getByRole('gridcell');
       await expect(workspaceCards).toHaveCount(2);
 
       // Delete collection

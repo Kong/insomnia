@@ -52,8 +52,8 @@ test.fixme('Clone Repo with bad values @failing', async ({ page }) => {
 });
 
 test.fixme('Clone Gitlab Repo with bad values', async ({ page }) => {
-  await page.getByRole('button', { name: 'Create' }).click();
-  await page.getByRole('menuitem', { name: 'Git Clone' }).click();
+  await page.getByRole('button', { name: 'Create in project' }).click();
+  await page.getByRole('menuitemradio', { name: 'Git Clone' }).click();
   await page.getByRole('tab', { name: 'Git' }).nth(2).click();
 
   // Fill in Git Sync details and clone repository

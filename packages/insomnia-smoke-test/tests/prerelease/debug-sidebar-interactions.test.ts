@@ -6,10 +6,10 @@ import { test } from '../../playwright/test';
 test.describe('Debug-Sidebar', async () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
   test.beforeEach(async ({ app, page }) => {
-    await page.getByRole('button', { name: 'Create' }).click();
+    await page.getByRole('button', { name: 'Create in project' }).click();
     const text = await loadFixture('simple.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
-    await page.getByRole('menuitem', { name: 'Import' }).click();
+    await page.getByRole('menuitemradio', { name: 'Import' }).click();
     await page.getByText('Clipboard').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
@@ -71,8 +71,8 @@ test.describe('Debug-Sidebar', async () => {
     });
 
     test('Filter by request name', async ({ page }) => {
-      await page.locator('[placeholder="Filter"]').click();
-      await page.locator('[placeholder="Filter"]').fill('example http');
+      await page.getByLabel('Collection filter').click();
+      await page.getByLabel('Collection filter').fill('example http');
       await page.getByLabel('Request Collection').getByRole('row', { name: 'example http' }).click();
     });
 

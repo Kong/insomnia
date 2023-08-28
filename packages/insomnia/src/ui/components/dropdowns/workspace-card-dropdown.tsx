@@ -104,7 +104,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
         aria-label='Workspace Actions Dropdown'
         onOpen={refresh}
         triggerButton={
-          <DropdownButton>
+          <DropdownButton aria-label='Workspace actions menu button' className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
             <SvgIcon icon="ellipsis" />
           </DropdownButton>
         }
