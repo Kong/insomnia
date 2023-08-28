@@ -474,7 +474,7 @@ const ProjectRoute: FC = () => {
             <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
               <div className="p-[--padding-sm]">
                 <Select
-                  aria-label="Select an environment"
+                  aria-label="Organizations"
                   onSelectionChange={id => {
                     navigate(`/organization/${id}`);
                   }}
@@ -696,7 +696,7 @@ const ProjectRoute: FC = () => {
             <div className="w-full h-full flex flex-col overflow-hidden">
               <div className="flex justify-between w-full gap-1 p-[--padding-md]">
                 <SearchField
-                  aria-label="Collection filter"
+                  aria-label="Workspaces filter"
                   className="group relative flex-1"
                   defaultValue={searchParams.get('filter')?.toString()}
                   onChange={filter => {

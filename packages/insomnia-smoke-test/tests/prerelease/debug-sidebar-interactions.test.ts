@@ -71,8 +71,8 @@ test.describe('Debug-Sidebar', async () => {
     });
 
     test('Filter by request name', async ({ page }) => {
-      await page.locator('[placeholder="Filter"]').click();
-      await page.locator('[placeholder="Filter"]').fill('example http');
+      await page.getByLabel('Collection filter').click();
+      await page.getByLabel('Collection filter').fill('example http');
       await page.getByLabel('Request Collection').getByRole('row', { name: 'example http' }).click();
     });
 
