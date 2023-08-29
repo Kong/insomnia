@@ -263,7 +263,6 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
               style={{
                 width: '100%',
                 borderRadius: '0',
-                borderTop: '1px solid var(--hl-md)',
                 justifyContent: 'flex-start !important',
                 height: 'var(--line-height-sm)',
               }}
@@ -441,7 +440,6 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
               style={{
                 width: '100%',
                 borderRadius: '0',
-                borderTop: '1px solid var(--hl-md)',
                 justifyContent: 'flex-start !important',
                 height: 'var(--line-height-sm)',
               }}

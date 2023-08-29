@@ -364,7 +364,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               style={{
                 width: '100%',
                 borderRadius: '0',
-                borderTop: '1px solid var(--hl-md)',
                 height: 'var(--line-height-sm)',
               }}
             >
@@ -478,7 +477,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               style={{
                 width: '100%',
                 borderRadius: '0',
-                borderTop: '1px solid var(--hl-md)',
                 height: 'var(--line-height-sm)',
               }}
             >

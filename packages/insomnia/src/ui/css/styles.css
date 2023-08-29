@@ -38,6 +38,7 @@ html {
   flex-wrap: wrap;
   list-style: none;
   align-items: center;
+  flex-wrap: nowrap;
   margin: 0;
   padding: 0;
   gap: 0.5rem;
@@ -55,11 +56,6 @@ html {
 
 .react-aria-Breadcrumbs .react-aria-Item:focus {
   outline: none;
-}
-
-.react-aria-Breadcrumbs .react-aria-Item:not(:last-child):after {
-  content: '|';
-  color: var(--hl-lg);
 }
 
 input[type="search"]::-webkit-search-cancel-button {
