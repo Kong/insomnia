@@ -59,8 +59,9 @@ const router = createMemoryRouter(
       shouldRevalidate: ({
         currentParams,
         nextParams,
+        nextUrl,
       }) => {
-        return currentParams.organizationId !== nextParams.organizationId;
+        return currentParams.organizationId !== nextParams.organizationId || nextUrl.hash === '#revalidate=true';
       },
       element: <Root />,
       errorElement: <ErrorRoute />,

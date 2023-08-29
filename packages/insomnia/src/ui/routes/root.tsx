@@ -18,8 +18,9 @@ import {
   NavLink,
   Outlet,
   useLoaderData,
+  useLocation,
+  useNavigate,
   useParams,
-  useRevalidator,
   useRouteLoaderData,
 } from 'react-router-dom';
 
@@ -125,7 +126,8 @@ const getNameInitials = (name: string) => {
 };
 
 const Root = () => {
-  const { revalidate } = useRevalidator();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { organizations, settings } = useLoaderData() as RootLoaderData;
   const workspaceData = useRouteLoaderData(
     ':workspaceId'
@@ -135,9 +137,13 @@ const Root = () => {
 
   useEffect(() => {
     onLoginLogout(() => {
-      revalidate();
+      // Update the hash of the current route to force revalidation of data
+      navigate({
+        pathname: location.pathname,
+        hash: 'revalidate=true',
+      });
     });
-  }, [revalidate]);
+  }, [location.pathname, navigate]);
 
   useEffect(() => {
     return window.main.on(
