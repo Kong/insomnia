@@ -392,17 +392,18 @@ const Design: FC = () => {
       renderPageSidebar={
         <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md]'>
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
-            <Breadcrumbs className='react-aria-Breadcrumbs pb-3 border-b border-solid border-[--hl-sm] font-bold flex py-[--padding-sm] w-full'>
-              <Item className="react-aria-Item outline-none data-[focused]:outline-none">
-                <Link data-testid="project" className="px-1 py-1 aspect-square flex flex-1 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+            <Breadcrumbs className='react-aria-Breadcrumbs pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
+              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
+                <Link data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                   <NavLink
                     to={`/organization/${organizationId}/project/${activeProject._id}`}
                   >
                     <Icon className='text-xs' icon="chevron-left" />
                   </NavLink>
                 </Link>
+                <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
               </Item>
-              <Item>
+              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
                 <WorkspaceDropdown />
               </Item>
             </Breadcrumbs>
