@@ -131,38 +131,12 @@ export enum UpdateURL {
 }
 
 // API
-export const getApiBaseURL = () => {
-  if (env.INSOMNIA_API_URL) {
-    return env.INSOMNIA_API_URL;
-  }
-
-  let apiURL = 'https://api.insomnia.rest';
-  try {
-    apiURL = window.localStorage.getItem('insomnia::api_url') || apiURL;
-  } catch (err) {
-    console.log(err);
-  }
-
-  return apiURL;
-};
+export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
 
 export const getUpdatesBaseURL = () => env.INSOMNIA_UPDATES_URL || 'https://updates.insomnia.rest';
 
 // App website
-export const getAppWebsiteBaseURL = () => {
-  if (env.INSOMNIA_APP_WEBSITE_URL) {
-    return env.INSOMNIA_APP_WEBSITE_URL;
-  }
-
-  let apiURL = 'https://app.insomnia.rest';
-  try {
-    apiURL = window.localStorage.getItem('insomnia::website_url') || apiURL;
-  } catch (err) {
-    console.log(err);
-  }
-
-  return apiURL;
-};
+export const getAppWebsiteBaseURL = () => env.INSOMNIA_APP_WEBSITE_URL || 'https://app.insomnia.rest';
 
 // GitHub API
 export const getGitHubGraphQLApiURL = () => env.INSOMNIA_GITHUB_API_URL || 'https://api.github.com/graphql';

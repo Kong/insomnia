@@ -89,7 +89,7 @@ import {
   RequestLoaderData,
   WebSocketRequestLoaderData,
 } from './request';
-import { WorkspaceLoaderData } from './workspace';
+import { Child, WorkspaceLoaderData } from './workspace';
 
 export interface GrpcMessage {
   id: string;
@@ -888,17 +888,30 @@ export const Debug: FC = () => {
                     >
                       <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                       {isRequest(item.doc) && (
-                        <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-${item.doc.method}`}>
+                        <span
+                          className={
+                            `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
+                            ${{
+                              'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+                              'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+                              'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                              'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                              'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+                              'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+                              'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+                            }[item.doc.method] || 'text-[--color-font] bg-[--hl-md]'}`
+                          }
+                        >
                           {getMethodShortHand(item.doc)}
                         </span>
                       )}
                       {isWebSocketRequest(item.doc) && (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center info justify-center">
+                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
                           WS
                         </span>
                       )}
                       {isGrpcRequest(item.doc) && (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center method-grpc justify-center">
+                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
                           gRPC
                         </span>
                       )}
@@ -969,17 +982,30 @@ export const Debug: FC = () => {
                         <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                         <Button slot="drag" className="hidden" />
                         {isRequest(item.doc) && (
-                          <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-${item.doc.method}`}>
+                          <span
+                            className={
+                              `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
+                              ${{
+                                'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+                                'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+                                'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                                'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                                'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+                                'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+                                'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+                              }[item.doc.method] || 'text-[--color-font] bg-[--hl-md]'}`
+                            }
+                          >
                             {getMethodShortHand(item.doc)}
                           </span>
                         )}
                         {isWebSocketRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center info justify-center">
+                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center info justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
                             WS
                           </span>
                         )}
                         {isGrpcRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center method-grpc justify-center">
+                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
                             gRPC
                           </span>
                         )}
