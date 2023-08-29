@@ -282,7 +282,6 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
       for (const change of changes) {
         const [event, doc] = change;
         if (isRequestMeta(doc) && doc.parentId === requestId && event === 'update') {
-          console.log('Response meta received', doc);
           resolve(null);
         }
       }
