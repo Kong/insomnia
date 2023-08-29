@@ -1,6 +1,6 @@
 import * as path from 'path';
 import React, { FC, useEffect, useState } from 'react';
-import { useNavigate, useRouteLoaderData } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { isLoggedIn } from '../../../account/session';
 import {
@@ -13,7 +13,7 @@ import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { OrganizationLoaderData } from '../../routes/organization';
+import { useRootLoaderData } from '../../routes/root';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
@@ -47,7 +47,7 @@ export const PluginsSettings: FC = () => {
   } = state;
   const {
     settings,
-  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  } = useRootLoaderData();
 
   useEffect(() => {
     refreshPlugins();

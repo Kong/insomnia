@@ -28,7 +28,6 @@ import {
   isLoggedIn,
 } from '../../account/session';
 import * as models from '../../models';
-import { Settings } from '../../models/settings';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
@@ -44,7 +43,6 @@ import { showSettingsModal } from '../components/modals/settings-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
-import { AppHooks } from '../containers/app-hooks';
 import { AIProvider } from '../context/app/ai-context';
 import { PresenceProvider } from '../context/app/presence-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
@@ -129,7 +127,6 @@ export interface OrganizationLoaderData {
     name: string;
     picture: string;
   };
-  settings: Settings;
 }
 
 export const loader: LoaderFunction = async () => {
@@ -196,7 +193,6 @@ export const loader: LoaderFunction = async () => {
           name: '',
           picture: '',
         },
-        settings: await models.settings.getOrCreate(),
         organizations: [],
       };
     }
@@ -207,7 +203,6 @@ export const loader: LoaderFunction = async () => {
       name: '',
       picture: '',
     },
-    settings: await models.settings.getOrCreate(),
     organizations: [],
   };
 };
@@ -226,8 +221,8 @@ export const shouldOrganizationsRevalidate: ShouldRevalidateFunction = ({
 };
 
 const OrganizationRoute = () => {
-  const { env } = useRootLoaderData();
-  const { organizations, settings, user } =
+  const { env, settings } = useRootLoaderData();
+  const { organizations, user } =
     useLoaderData() as OrganizationLoaderData;
   const workspaceData = useRouteLoaderData(
     ':workspaceId',
@@ -262,7 +257,6 @@ const OrganizationRoute = () => {
     <PresenceProvider>
       <AIProvider>
         <NunjucksEnabledProvider>
-          <AppHooks />
           <div className="w-full h-full">
             <div className={`w-full h-full divide-x divide-solid divide-y divide-[--hl-md] ${workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace) ? 'grid-template-app-layout-with-banner' : 'grid-template-app-layout'} grid relative bg-[--color-bg]`}>
               <header className="[grid-area:Header] grid grid-cols-3 items-center">

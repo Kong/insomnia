@@ -1,9 +1,8 @@
 import React, { ChangeEventHandler, FC, InputHTMLAttributes, useCallback } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
 
 import { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { OrganizationLoaderData } from '../../routes/organization';
+import { useRootLoaderData } from '../../routes/root';
 import { HelpTooltip } from '../help-tooltip';
 
 interface Props {
@@ -35,7 +34,7 @@ export const NumberSetting: FC<Props> = ({
 }) => {
   const {
     settings,
-  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  } = useRootLoaderData();
 
   if (!Object.prototype.hasOwnProperty.call(settings, setting)) {
     throw new Error(`Invalid setting name ${setting}`);

@@ -1,13 +1,12 @@
 import { useEffect } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
 
 import * as themes from '../../plugins/misc';
-import { OrganizationLoaderData } from '../routes/organization';
+import { useRootLoaderData } from '../routes/root';
 
 export const useThemeChange = () => {
   const {
     settings,
-  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  } = useRootLoaderData();
   // Handle System Theme change
   useEffect(() => {
     const matches = window.matchMedia('(prefers-color-scheme: dark)');

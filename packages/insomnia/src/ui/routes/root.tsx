@@ -7,6 +7,7 @@ import { LoaderFunction, Outlet, useFetcher, useParams, useRouteLoaderData } fro
 import { getApiBaseURL, getAppWebsiteBaseURL, isDevelopment } from '../../common/constants';
 import * as models from '../../models';
 import { getStagingEnvironmentVariables } from '../../models/environment';
+import { Settings } from '../../models/settings';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
@@ -22,9 +23,15 @@ import {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../components/modals/settings-modal';
+import { AppHooks } from '../containers/app-hooks';
 import Modals from './modals';
 
 interface LoaderData {
+  user?: {
+    name: string;
+    picture: string;
+  };
+  settings: Settings;
   env: {
     websiteURL: string;
     apiURL: string;
@@ -39,6 +46,7 @@ export const loader: LoaderFunction = async (): Promise<LoaderData> => {
   const stagingEnv = await getStagingEnvironmentVariables();
 
   return {
+    settings: await models.settings.getOrCreate(),
     env: {
       websiteURL: stagingEnv.websiteURL || getAppWebsiteBaseURL(),
       apiURL: stagingEnv.apiURL || getApiBaseURL(),
@@ -211,10 +219,11 @@ const Root = () => {
 
   return (
     <ErrorBoundary>
-      <div className="app [font-size:11px]">
+      <div className="app">
         <Outlet />
       </div>
       <Modals />
+      <AppHooks />
       {/* triggered by insomnia://app/import */}
       {importUri && (
         <ImportModal

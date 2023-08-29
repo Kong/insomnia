@@ -1,5 +1,4 @@
 import React, { FC } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
 
 import {
   areSameKeyCombinations,
@@ -10,7 +9,7 @@ import {
 } from '../../../common/hotkeys';
 import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { OrganizationLoaderData } from '../../routes/organization';
+import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { PromptButton } from '../base/prompt-button';
 import { Hotkey } from '../hotkey';
@@ -25,7 +24,7 @@ export const isKeyCombinationInRegistry = (pressedKeyComb: KeyCombination, hotKe
 export const Shortcuts: FC = () => {
   const {
     settings,
-  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  } = useRootLoaderData();
   const { hotKeyRegistry } = settings;
   const patchSettings = useSettingsPatcher();
 
