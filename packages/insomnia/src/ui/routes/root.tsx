@@ -18,8 +18,9 @@ import {
   NavLink,
   Outlet,
   useLoaderData,
+  useLocation,
+  useNavigate,
   useParams,
-  useRevalidator,
   useRouteLoaderData,
 } from 'react-router-dom';
 
@@ -75,20 +76,15 @@ export interface RootLoaderData {
   organizations: Organization[];
   settings: Settings;
 }
-// NOTE: when getVCS is rewritten to be less spaghetti
-// this can be removed, and get team should only run once,
-// at app start and whenever the user logs in
-// This "workaround" will not work if a user logs out and back in again
-let hasRun = false;
+
 export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
   // Load all projects
   try {
     const vcs = getVCS();
-    if (vcs && isLoggedIn() && !hasRun) {
+    if (vcs && isLoggedIn()) {
       const teams = await vcs.teams();
       const projects = await Promise.all(teams.map(initializeProjectFromTeam));
       await database.batchModifyDocs({ upsert: projects });
-      hasRun = true;
     }
   } catch {
     console.log('Failed to load projects');
@@ -130,7 +126,8 @@ const getNameInitials = (name: string) => {
 };
 
 const Root = () => {
-  const { revalidate } = useRevalidator();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { organizations, settings } = useLoaderData() as RootLoaderData;
   const workspaceData = useRouteLoaderData(
     ':workspaceId'
@@ -140,9 +137,13 @@ const Root = () => {
 
   useEffect(() => {
     onLoginLogout(() => {
-      revalidate();
+      // Update the hash of the current route to force revalidation of data
+      navigate({
+        pathname: location.pathname,
+        hash: 'revalidate=true',
+      });
     });
-  }, [revalidate]);
+  }, [location.pathname, navigate]);
 
   useEffect(() => {
     return window.main.on(

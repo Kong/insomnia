@@ -56,6 +56,13 @@ const router = createMemoryRouter(
       id: 'root',
       loader: async (...args) =>
         (await import('./routes/root')).loader(...args),
+      shouldRevalidate: ({
+        currentParams,
+        nextParams,
+        nextUrl,
+      }) => {
+        return currentParams.organizationId !== nextParams.organizationId || nextUrl.hash === '#revalidate=true';
+      },
       element: <Root />,
       errorElement: <ErrorRoute />,
       children: [
