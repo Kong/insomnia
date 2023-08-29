@@ -62,7 +62,7 @@ export default {
           notice: '#d8c84d',
           warning: '#ec8702',
           danger: '#e15251',
-          surprise: '#8776d5',
+          surprise: '#4000BF',
           info: '#20aed9',
         },
       },
