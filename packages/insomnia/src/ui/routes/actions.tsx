@@ -967,7 +967,7 @@ export const reorderCollectionAction: ActionFunction = async ({ request, params 
   invariant(typeof id === 'string', 'ID is required');
   invariant(typeof targetId === 'string', 'Target ID is required');
   invariant(typeof dropPosition === 'string', 'Drop position is required');
-  invariant(metaSortKey, 'MetaSortKey position is required');
+  invariant(typeof metaSortKey === 'number', 'MetaSortKey position is required');
 
   if (id === targetId) {
     return null;
