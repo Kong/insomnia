@@ -472,19 +472,21 @@ export const Debug: FC = () => {
         }
       }
 
-      reorderFetcher.submit(
-        {
-          targetId,
-          id,
-          dropPosition: event.target.dropPosition,
-          metaSortKey,
-        },
-        {
-          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/reorder`,
-          method: 'POST',
-          encType: 'application/json',
-        }
-      );
+      if (metaSortKey) {
+        reorderFetcher.submit(
+          {
+            targetId,
+            id,
+            dropPosition: event.target.dropPosition,
+            metaSortKey,
+          },
+          {
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/reorder`,
+            method: 'POST',
+            encType: 'application/json',
+          }
+        );
+      }
     },
     renderDropIndicator(target) {
       return (
