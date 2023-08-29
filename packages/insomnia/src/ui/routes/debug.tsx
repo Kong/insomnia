@@ -136,12 +136,12 @@ export const loader: LoaderFunction = async ({ params }) => {
 
 const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useReadyState({ requestId, protocol: 'webSocket' });
-  return readyState ? <ConnectionCircle data-testid="WebSocketSpinner__Connected" /> : null;
+  return readyState ? <ConnectionCircle className='flex-shrink-0' data-testid="WebSocketSpinner__Connected" /> : null;
 };
 
 const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useReadyState({ requestId, protocol: 'curl' });
-  return readyState ? <ConnectionCircle data-testid="EventStreamSpinner__Connected" /> : null;
+  return readyState ? <ConnectionCircle className='flex-shrink-0' data-testid="EventStreamSpinner__Connected" /> : null;
 };
 
 export const Debug: FC = () => {
