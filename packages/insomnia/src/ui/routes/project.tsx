@@ -42,9 +42,6 @@ import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
 import {
-  Organization,
-} from '../../models/organization';
-import {
   DEFAULT_PROJECT_ID,
   isRemoteProject,
   Project,
@@ -60,14 +57,14 @@ import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspa
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
-import { showAlert, showPrompt } from '../components/modals';
+import { showPrompt } from '../components/modals';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '../components/modals/import-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
 import { usePresenceContext } from '../context/app/presence-context';
-import { useOrganizationLoaderData } from './organization';
+import { Organization, useOrganizationLoaderData } from './organization';
 
 async function getAllTeamProjects(organizationId: string) {
   const sessionId = getCurrentSessionId() || '';
@@ -517,7 +514,7 @@ const ProjectRoute: FC = () => {
                   <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                     <SelectValue<Organization> className="flex truncate items-center justify-center gap-2">
                       {({ selectedItem }) => {
-                        return selectedItem?.name;
+                        return selectedItem?.display_name;
                       }}
                     </SelectValue>
                     <Icon icon="caret-down" />
@@ -526,16 +523,16 @@ const ProjectRoute: FC = () => {
                     <ListBox<Organization> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
                       {item => (
                         <Item
-                          id={item._id}
-                          key={item._id}
+                          id={item.id}
+                          key={item.id}
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                          aria-label={item.name}
-                          textValue={item.name}
+                          aria-label={item.display_name}
+                          textValue={item.display_name}
                           value={item}
                         >
                           {({ isSelected }) => (
                             <Fragment>
-                              <span>{item.name}</span>
+                              <span>{item.display_name}</span>
                               {isSelected && (
                                 <Icon
                                   icon="check"
@@ -579,40 +576,24 @@ const ProjectRoute: FC = () => {
 
                   <Button
                     onPress={() => {
-                      if (activeProject.remoteId) {
-                        showAlert({
-                          title: 'This capability is coming soon',
-                          okLabel: 'Close',
-                          message: (
-                            <div>
-                              <p>
-                                At the moment it is not possible to create more
-                                cloud projects within a team in Insomnia.
-                              </p>
-                              <p>🚀 This feature is coming soon!</p>
-                            </div>
+                      const defaultValue = `My ${strings.project.singular}`;
+                      showPrompt({
+                        title: `Create New ${strings.project.singular}`,
+                        submitName: 'Create',
+                        placeholder: defaultValue,
+                        defaultValue,
+                        selectText: true,
+                        onComplete: async name =>
+                          createNewProjectFetcher.submit(
+                            {
+                              name,
+                            },
+                            {
+                              action: `/organization/${organizationId}/project/new`,
+                              method: 'post',
+                            }
                           ),
-                        });
-                      } else {
-                        const defaultValue = `My ${strings.project.singular}`;
-                        showPrompt({
-                          title: `Create New ${strings.project.singular}`,
-                          submitName: 'Create',
-                          placeholder: defaultValue,
-                          defaultValue,
-                          selectText: true,
-                          onComplete: async name =>
-                            createNewProjectFetcher.submit(
-                              {
-                                name,
-                              },
-                              {
-                                action: `/organization/${organizationId}/project/new`,
-                                method: 'post',
-                              }
-                            ),
-                        });
-                      }
+                      });
                     }}
                     aria-label="Create new Project"
                     className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
@@ -902,6 +883,27 @@ const ProjectRoute: FC = () => {
                           </span>
                         </div>
                         <span className="flex-1" />
+                        {presence && (
+                          <AvatarGroup
+                            size="small"
+                            maxAvatars={3}
+                            items={
+                              presence.filter(p => {
+                                return (
+                                  p.project === activeProject._id &&
+                                  p.file === item.workspace._id
+                                );
+                              })
+                                .map(user => {
+                                  return {
+                                    key: user.acct,
+                                    alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+                                    src: user.avatar,
+                                  };
+                                })
+                            }
+                          />
+                        )}
                         <WorkspaceCardDropdown
                           {...item}
                           project={activeProject}
@@ -955,27 +957,6 @@ const ProjectRoute: FC = () => {
                                 `by ${item.lastCommitAuthor}`}
                             </span>
                           </div>
-                        )}
-                        {presence && (
-                          <AvatarGroup
-                            size="small"
-                            maxAvatars={3}
-                            items={
-                              presence.filter(p => {
-                                return (
-                                  p.project === activeProject._id &&
-                                  p.file === item.workspace._id
-                                );
-                              })
-                              .map(user => {
-                                return {
-                                  key: user.acct,
-                                  alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-                                  src: user.avatar,
-                                };
-                              })
-                            }
-                          />
                         )}
                       </div>
                     </Item>
