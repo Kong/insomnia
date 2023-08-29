@@ -65,6 +65,7 @@ import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
 import { usePresenceContext } from '../context/app/presence-context';
 import { Organization, useOrganizationLoaderData } from './organization';
+import { useRootLoaderData } from './root';
 
 async function getAllTeamProjects(organizationId: string) {
   const sessionId = getCurrentSessionId() || '';
@@ -357,6 +358,7 @@ const ProjectRoute: FC = () => {
   const { organizations } = useOrganizationLoaderData();
 
   const [searchParams, setSearchParams] = useSearchParams();
+  const { env } = useRootLoaderData();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
 
@@ -689,19 +691,34 @@ const ProjectRoute: FC = () => {
                   );
                 }}
               </GridList>
-              <Button
-                aria-label="Explore subscriptions"
-                className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                onPress={() => {
-                  window.main.openInBrowser('https://insomnia.rest/pricing');
-                }}
-              >
-                <Icon icon="arrow-up-right-from-square" />
+              <div className='flex flex-col py-[--padding-sm]'>
+                <Button
+                  aria-label="Invite people to organization"
+                  className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                  onPress={() => {
+                    window.main.openInBrowser(`${env.websiteURL}/app/dashboard/organizations/${organizationId}/members`);
+                  }}
+                >
+                  <Icon icon="user-plus" />
 
-                <span className="truncate capitalize">
-                  Explore subscriptions
-                </span>
-              </Button>
+                  <span className="truncate">
+                    Invite people to organization
+                  </span>
+                </Button>
+                <Button
+                  aria-label="Help and Feedback"
+                  className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                  onPress={() => {
+                    window.main.openInBrowser('https://insomnia.rest/support');
+                  }}
+                >
+                  <Icon icon="message" />
+
+                  <span className="truncate">
+                    Help and feedback
+                  </span>
+                </Button>
+              </div>
             </div>
           }
           renderPaneOne={
