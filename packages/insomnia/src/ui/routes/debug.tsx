@@ -68,7 +68,7 @@ import { PlaceholderRequestPane } from '../components/panes/placeholder-request-
 import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
-import { formatMethodName } from '../components/tags/method-tag';
+import { getMethodShortHand } from '../components/tags/method-tag';
 import { ConnectionCircle } from '../components/websockets/action-bar';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
@@ -846,7 +846,7 @@ export const Debug: FC = () => {
                       <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                       {isRequest(item.doc) && (
                         <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-${item.doc.method}`}>
-                          {formatMethodName(item.doc.method)}
+                          {getMethodShortHand(item.doc)}
                         </span>
                       )}
                       {isWebSocketRequest(item.doc) && (
@@ -919,7 +919,7 @@ export const Debug: FC = () => {
                       <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                       {isRequest(item.doc) && (
                         <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-${item.doc.method}`}>
-                          {isEventStreamRequest(item.doc) ? 'SSE' : formatMethodName(item.doc.method)}
+                          {getMethodShortHand(item.doc)}
                         </span>
                       )}
                       {isWebSocketRequest(item.doc) && (
