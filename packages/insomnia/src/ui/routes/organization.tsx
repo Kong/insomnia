@@ -424,7 +424,7 @@ const OrganizationRoute = () => {
                     </TooltipTrigger>
                   ))}
                   <MenuTrigger>
-                    <Button className="select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 box-border p-[--padding-sm] font-bold outline-none rounded-md w-[28px] h-[28px] flex items-center justify-center overflow-hidden">
+                    <Button className="select-none text-[--color-font] hover:no-underline transition-all duration-150 box-border p-[--padding-sm] font-bold outline-none rounded-md w-[28px] h-[28px] flex items-center justify-center overflow-hidden">
                       <Icon icon="plus" />
                     </Button>
                     <Popover placement="left" className="min-w-max">
