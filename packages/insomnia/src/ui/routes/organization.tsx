@@ -378,17 +378,17 @@ const OrganizationRoute = () => {
                       <Icon icon="edit" />
                     </div>
                   </div>
-                  <div className="py-[--padding-xs] px-[--padding-md] gap-[--padding-xs]">
-                    <span className="mr-2">
+                  <div className="py-[--padding-xs] overflow-hidden px-[--padding-md] w-full h-full flex items-center text-xs">
+                    <p className='w-full truncate leading-normal'>
                       Welcome to the local Scratch Pad. To get the most out of
-                      Insomnia and see your projects
-                    </span>
-                    <NavLink
-                      to="/auth/login"
-                      className="font-bold text-white inline-flex"
-                    >
-                      login or create an account →
-                    </NavLink>
+                      Insomnia and see your projects{' '}
+                      <NavLink
+                        to="/auth/login"
+                        className="font-bold text-white inline-flex"
+                      >
+                        login or create an account →
+                      </NavLink>
+                    </p>
                   </div>
                 </div>
               ) : null}
