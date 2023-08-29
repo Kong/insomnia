@@ -26,7 +26,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { CONTENT_TYPE_GRAPHQL, SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
+import { SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
 import { ChangeBufferEvent, database as db } from '../../common/database';
 import { generateId } from '../../common/misc';
 import { PlatformKeyCombinations } from '../../common/settings';
@@ -41,7 +41,7 @@ import {
   isRequestId,
   Request,
 } from '../../models/request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import { isRequestGroup } from '../../models/request-group';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import {
   isWebSocketRequest,
@@ -68,7 +68,7 @@ import { PlaceholderRequestPane } from '../components/panes/placeholder-request-
 import { RequestPane } from '../components/panes/request-pane';
 import { ResponsePane } from '../components/panes/response-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
-import { formatMethodName, getMethodShortHand } from '../components/tags/method-tag';
+import { getMethodShortHand } from '../components/tags/method-tag';
 import { ConnectionCircle } from '../components/websockets/action-bar';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
