@@ -439,7 +439,7 @@ const ProjectRoute: FC = () => {
       level: 0,
     },
     {
-      id: 'document',
+      id: 'design',
       label: `Documents (${documentsCount})`,
       level: 1,
       icon: 'file',
