@@ -317,7 +317,6 @@ export const runAllTestsAction: ActionFunction = async ({
     parentId: testSuiteId,
   });
   invariant(unitTests, 'No unit tests found');
-  console.log('unitTests', unitTests);
 
   const tests: Test[] = unitTests
     .filter(t => t !== null)

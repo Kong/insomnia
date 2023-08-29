@@ -179,7 +179,6 @@ export const updateRequestAction: ActionFunction = async ({ request, params }) =
   const req = await requestOperations.getById(requestId);
   invariant(req, 'Request not found');
   const patch = await request.json();
-  console.log('patch', patch);
   // TODO: if gRPC, we should also copy the protofile to the destination workspace - INS-267
   const isMimeTypeChanged = isRequest(req) && patch.body && patch.body.mimeType !== req.body.mimeType;
   if (isMimeTypeChanged) {
@@ -283,7 +282,6 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
       for (const change of changes) {
         const [event, doc] = change;
         if (isRequestMeta(doc) && doc.parentId === requestId && event === 'update') {
-          console.log('Response meta received', doc);
           resolve(null);
         }
       }
