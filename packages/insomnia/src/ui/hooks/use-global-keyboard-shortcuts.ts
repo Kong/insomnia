@@ -4,14 +4,14 @@ import * as plugins from '../../plugins';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
-import { OrganizationLoaderData } from '../routes/organization';
+import { useRootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { useSettingsPatcher, useWorkspaceMetaPatcher } from './use-request';
 export const useGlobalKeyboardShortcuts = () => {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const {
     settings,
-  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  } = useRootLoaderData();
   const { activeWorkspaceMeta } = workspaceData || {};
   const patchSettings = useSettingsPatcher();
   const patchWorkspaceMeta = useWorkspaceMetaPatcher();

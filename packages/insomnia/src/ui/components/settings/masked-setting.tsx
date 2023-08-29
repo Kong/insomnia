@@ -1,10 +1,9 @@
 import React, { FC } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
 import { useToggle } from 'react-use';
 
 import { SettingsOfType } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { OrganizationLoaderData } from '../../routes/organization';
+import { useRootLoaderData } from '../../routes/root';
 import { HelpTooltip } from '../help-tooltip';
 
 export const MaskedSetting: FC<{
@@ -24,7 +23,7 @@ export const MaskedSetting: FC<{
 
   const {
     settings,
-  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  } = useRootLoaderData();
 
   if (!settings.hasOwnProperty(setting)) {
     throw new Error(`Invalid setting name ${setting}`);

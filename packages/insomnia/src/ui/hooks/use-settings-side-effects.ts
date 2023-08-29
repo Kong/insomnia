@@ -1,14 +1,13 @@
 import { useEffect, useLayoutEffect } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
 import { usePrevious } from 'react-use';
 
 import { Settings } from '../../models/settings';
-import { OrganizationLoaderData } from '../routes/organization';
+import { useRootLoaderData } from '../routes/root';
 
 const useRestartSetting = (setting: keyof Settings) => {
   const {
     settings,
-  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  } = useRootLoaderData();
 
   const nextValue = settings[setting];
   const previousValue = usePrevious(nextValue);
@@ -33,7 +32,7 @@ const updateFontStyle = (key: string, value: string | null) => document?.querySe
 export const useSettingsSideEffects = () => {
   const {
     settings,
-  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  } = useRootLoaderData();
 
   useLayoutEffect(() => {
     updateFontStyle('--font-default', settings.fontInterface);

@@ -4,8 +4,8 @@ import { useToggle } from 'react-use';
 
 import { toKebabCase } from '../../../../../common/misc';
 import { useRequestPatcher } from '../../../../hooks/use-request';
-import { OrganizationLoaderData } from '../../../../routes/organization';
 import { RequestLoaderData } from '../../../../routes/request';
+import { useRootLoaderData } from '../../../../routes/root';
 import { OneLineEditor } from '../../../codemirror/one-line-editor';
 import { AuthRow } from './auth-row';
 
@@ -20,7 +20,7 @@ interface Props extends Pick<ComponentProps<typeof OneLineEditor>, 'getAutocompl
 export const AuthInputRow: FC<Props> = ({ label, getAutocompleteConstants, property, mask, help, disabled = false }) => {
   const {
     settings,
-  } = useRouteLoaderData('/organization') as OrganizationLoaderData;
+  } = useRootLoaderData();
   const { showPasswords } = settings;
   const { activeRequest: { authentication, _id: requestId } } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const patchRequest = useRequestPatcher();
