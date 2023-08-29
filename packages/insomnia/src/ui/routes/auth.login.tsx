@@ -181,13 +181,7 @@ const Login = () => (
 
     <Link
       to={'/scratchpad'}
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        color: 'var(--color-font)',
-        fontSize: 'var(--font-size-sm)',
-        gap: 'var(--padding-xs)',
-      }}
+      className='flex transition-colors justify-center text-[rgba(var(--color-font-rgb),0.8)] text-sm gap-[--padding-xs] hover:text-[--color-font] focus:text-[--color-font]'
     >
       <div>
         <i className='fa fa-edit' />
@@ -196,18 +190,10 @@ const Login = () => (
         Or use the Scratch Pad
       </span>
     </Link>
-    <p
-      style={{
-        color: 'rgba(var(--color-font-rgb), 0.8)',
-        fontSize: 'var(--font-size-xs)',
-        textAlign: 'center',
-      }}
-    >
+    <p className='text-[rgba(var(--color-font-rgb),0.8)] text-xs text-center'>
       By signing up or using Insomnia, you agree to the{' '}
       <a
-        style={{
-          color: 'rgba(var(--color-font-rgb), 0.8)',
-        }}
+        className='font-bold transition-colors hover:text-[--color-font] focus:text-[--color-font]'
         target="_blank"
         href="https://insomnia.rest/terms"
         rel="noreferrer"
@@ -216,9 +202,7 @@ const Login = () => (
       </a>{' '}
       and{' '}
       <a
-        style={{
-          color: 'rgba(var(--color-font-rgb), 0.8)',
-        }}
+        className='font-bold transition-colors hover:text-[--color-font] focus:text-[--color-font]'
         target="_blank"
         href="https://insomnia.rest/privacy"
         rel="noreferrer"
