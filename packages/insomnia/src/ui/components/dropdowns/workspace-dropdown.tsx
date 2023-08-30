@@ -10,7 +10,7 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
-import { isDesign, Workspace } from '../../../models/workspace';
+import { isDesign, isScratchpad, Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
@@ -25,6 +25,13 @@ import { configGenerators, showGenerateConfigModal } from '../modals/generate-co
 import { ImportModal } from '../modals/import-modal';
 import { WorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
+
+interface WorkspaceActionItem {
+  id: string;
+  name: string;
+  icon: ReactNode;
+  action: () => void;
+}
 
 export const WorkspaceDropdown: FC = () => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
@@ -101,13 +108,10 @@ export const WorkspaceDropdown: FC = () => {
     });
   }, [activeApiSpec]);
 
-  const workspaceActionsList: {
-    id: string;
-    name: string;
-    icon: ReactNode;
-    action: () => void;
-  }[] = [
-      {
+  const isScratchpadWorkspace = isScratchpad(activeWorkspace);
+
+  const workspaceActionsList: WorkspaceActionItem[] = [
+      ...!isScratchpadWorkspace ? [{
         id: 'duplicate',
         name: 'Duplicate',
         icon: <Icon icon='bars' />,
@@ -135,7 +139,7 @@ export const WorkspaceDropdown: FC = () => {
               ),
           });
         },
-      },
+      }] : [],
       {
         id: 'import',
         name: 'Import',
@@ -165,12 +169,7 @@ export const WorkspaceDropdown: FC = () => {
         name: generator.label,
         icon: <Icon icon='code' />,
         action: () => handleGenerateConfig(generator.label),
-      } satisfies {
-        id: string;
-        name: string;
-        icon: ReactNode;
-        action: () => void;
-      })) : [],
+      } satisfies WorkspaceActionItem)) : [],
       ...isLoggedIn() && access.enabled && activeWorkspace.scope === 'design' ? [{
         id: 'insomnia-ai/generate-test-suite',
         name: 'Auto-generate Tests For Collection',
