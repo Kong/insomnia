@@ -24,7 +24,7 @@ import type { WebSocketResponse } from '../../models/websocket-response';
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../network/api-key/constants';
 import { getBasicAuthHeader } from '../../network/basic-auth/get-header';
 import { getBearerAuthHeader } from '../../network/bearer-auth/get-header';
-import { addSetCookiesToToughCookieJar } from '../../network/network';
+import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
