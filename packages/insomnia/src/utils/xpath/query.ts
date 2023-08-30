@@ -24,22 +24,22 @@ export const queryXPath = (xml: string, query?: string) => {
     });
   } else {
     for (const selectedValue of selectedValues || []) {
-      switch (selectedValue.constructor.name) {
-        case 'Attr':
+      switch ((<Node>selectedValue).nodeType) {
+        case Node.ATTRIBUTE_NODE:
           output.push({
             outer: (selectedValue as Attr).toString().trim(),
             inner: (selectedValue as Attr).nodeValue,
           });
           break;
 
-        case 'Element':
+        case Node.ELEMENT_NODE:
           output.push({
             outer: (selectedValue as Node).toString().trim(),
             inner: (selectedValue as Node).childNodes.toString(),
           });
           break;
 
-        case 'Text':
+        case Node.TEXT_NODE:
           output.push({
             outer: (selectedValue as Text).toString().trim(),
             inner: (selectedValue as Text).toString().trim(),
