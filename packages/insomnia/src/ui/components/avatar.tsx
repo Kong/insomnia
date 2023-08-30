@@ -3,6 +3,26 @@ import styled, { keyframes } from 'styled-components';
 
 import { Tooltip } from './tooltip';
 
+const getNameInitials = (name: string) => {
+  // Split on whitespace and take first letter of each word
+  const words = name.toUpperCase().split(' ');
+  const firstWord = words[0];
+  const lastWord = words[words.length - 1];
+
+  // If there is only one word, just take the first letter
+  if (words.length === 1) {
+    return firstWord.charAt(0);
+  }
+
+  // If the first word is an emoji or an icon then just use that
+  const iconMatch = firstWord.match(/\p{Extended_Pictographic}/u);
+  if (iconMatch) {
+    return iconMatch[0];
+  }
+
+  return `${firstWord.charAt(0)}${lastWord ? lastWord.charAt(0) : ''}`;
+};
+
 const appearIn = keyframes`
   0% {
     opacity: 0;
@@ -56,7 +76,7 @@ const AvatarPlaceholder = styled.div<{size: 'small' | 'medium'; animate: boolean
   margin: 0!important;
   animation: ${({ animate }) => animate ? appearIn : 'none'} 0.2s ease-in-out;
   background-color: var(--color-surprise);
-  color: var(--color-font);
+  color: var(--color-font-surprise);
   display: flex;
   margin-left: ${({ size }) => size === 'small' ? '-5px' : '-6px'};
   align-items: center;
@@ -90,7 +110,7 @@ const imgCache = new ImageCache();
 
 export const Avatar = ({ src, alt, size = 'medium', animate }: { src: string; alt: string; size?: 'small' | 'medium'; animate?: boolean }) => {
   if (!src) {
-    return <AvatarPlaceholder animate={Boolean(animate)} size={size}>{alt}</AvatarPlaceholder>;
+    return <AvatarPlaceholder animate={Boolean(animate)} size={size}>{getNameInitials(alt)}</AvatarPlaceholder>;
   }
 
   return (
