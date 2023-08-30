@@ -12,6 +12,7 @@ import tls from 'tls';
 import { parse as urlParse } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
+import { version } from '../../../package.json';
 import { AUTH_AWS_IAM, AUTH_DIGEST, AUTH_NETRC, AUTH_NTLM, CONTENT_TYPE_FORM_DATA, CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 import { describeByteSize, hasAuthHeader } from '../../common/misc';
 import { ClientCertificate } from '../../models/client-certificate';
@@ -371,9 +372,13 @@ export const createConfiguredCurlInstance = ({
     }
   }
 
+  const { headers, authentication } = req;
+  const hasUserAgentHeader = headers.find((h: { name: string; value: string }) => h.name.toLowerCase() === 'user-agent');
+  if (!hasUserAgentHeader) {
+    curl.setOpt(Curl.option.USERAGENT, `insomnia/${version}`);
+  }
   // suppress node-libcurl default user-agent
   curl.setOpt(Curl.option.USERAGENT, '');
-  const { headers, authentication } = req;
   const { username, password, disabled } = authentication;
   const isDigest = authentication.type === AUTH_DIGEST;
   const isNLTM = authentication.type === AUTH_NTLM;
