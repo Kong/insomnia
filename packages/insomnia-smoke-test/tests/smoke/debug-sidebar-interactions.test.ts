@@ -64,15 +64,15 @@ test.describe('Debug-Sidebar', async () => {
     });
 
     test('Filter by request name', async ({ page }) => {
-      await page.getByLabel('Collection filter').click();
-      await page.getByLabel('Collection filter').fill('example http');
+      await page.getByLabel('Request filter').click();
+      await page.getByLabel('Request filter').fill('example http');
       await page.getByLabel('Request Collection').getByRole('row', { name: 'example http' }).click();
     });
 
     test('Filter by a folder name', async ({ page }) => {
-      await page.locator('[placeholder="Filter"]').click();
-      await page.locator('[placeholder="Filter"]').fill('test folder');
-      await page.locator('[placeholder="Filter"]').press('Enter');
+      await page.getByLabel('Request filter').click();
+      await page.getByLabel('Request filter').fill('test folder');
+      await page.getByLabel('Request filter').press('Enter');
       await page.getByLabel('Request Collection').getByRole('row', { name: 'test folder' }).click();
     });
 
