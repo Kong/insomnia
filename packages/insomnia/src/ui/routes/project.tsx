@@ -116,6 +116,32 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     `locationHistoryEntry:${organizationId}`
   );
 
+  let remoteProjects: Team[] = [];// Check if the org has any remote projects and redirect to the first one
+  try {
+    remoteProjects = await getAllTeamProjects(organizationId);
+
+    console.log({ remoteProjects });
+
+    const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
+      id: string;
+      name: string;
+    }) => models.initModel<RemoteProject>(
+      models.project.type,
+      {
+        _id: prj.id,
+        remoteId: prj.id,
+        name: prj.name,
+        parentId: organizationId,
+      }
+    )));
+
+    await database.batchModifyDocs({ upsert: projectsToUpdate });
+
+    console.log('Redirecting to first remote project', projectsToUpdate[0]._id);
+  } catch (err) {
+    console.log('Could not fetch remote projects.');
+  }
+
   // Check if the last visited project exists and redirect to it
   if (prevOrganizationLocation) {
     const match = matchPath(
@@ -150,32 +176,11 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     return redirect(`/organization/${organizationId}/project/${projectId}`);
   }
 
-  // Check if the org has any remote projects and redirect to the first one
-  try {
-    const remoteProjects = await getAllTeamProjects(organizationId);
-
-    const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
-        id: string;
-        name: string;
-      }) => models.initModel<RemoteProject>(
-        models.project.type,
-        {
-          _id: prj.id,
-          remoteId: prj.id,
-          name: prj.name,
-          parentId: organizationId,
-        }
-      )));
-
-    await database.batchModifyDocs({ upsert: projectsToUpdate });
-
-    console.log('Redirecting to first remote project', projectsToUpdate[0]._id);
-
-    return redirect(`/organization/${organizationId}/project/${projectsToUpdate[0]._id}`);
-  } catch (err) {
-    console.log(err);
-    return redirect('/organization');
+  if (remoteProjects[0]?.id) {
+    return redirect(`/organization/${organizationId}/project/${remoteProjects[0].id}`);
   }
+
+  return redirect(`/organization/${organizationId}`);
 };
 
 export interface ProjectLoaderData {
