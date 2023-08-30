@@ -718,44 +718,30 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             } catch (err) {
               throw new Error(`Invalid XPath query: ${sanitizedFilter}`);
             }
-            const results: { outer: string; inner: string }[] = [];
+            let results: { outer: string; inner: string | null }[] = [];
+
             // Functions return plain strings
             if (typeof selectedValues === 'string') {
-              results.push({
-                outer: selectedValues,
-                inner: selectedValues,
-              });
-            } else {
-              for (const selectedValue of selectedValues || []) {
-                switch (selectedValue.constructor.name) {
-                  case 'Attr':
-                    results.push({
-                      outer: selectedValue.toString().trim(),
-                      // @ts-expect-error -- needs xpath types
-                      inner: selectedValue.nodeValue,
-                    });
-                    break;
-
-                  case 'Element':
-                    results.push({
-                      outer: selectedValue.toString().trim(),
-                      // @ts-expect-error -- needs xpath types
-                      inner: selectedValue.childNodes.toString(),
-                    });
-                    break;
-
-                  case 'Text':
-                    results.push({
-                      outer: selectedValue.toString().trim(),
-                      inner: selectedValue.toString().trim(),
-                    });
-                    break;
-
-                  default:
-                    break;
-                }
-              }
+              results = [{ outer: selectedValues, inner: selectedValues }];
             }
+
+            results = (selectedValues as Node[])
+              .filter(sv => sv.nodeType === Node.ATTRIBUTE_NODE
+                || sv.nodeType === Node.ELEMENT_NODE
+                || sv.nodeType === Node.TEXT_NODE)
+              .map(selectedValue => {
+                const outer = selectedValue.toString().trim();
+                if (selectedValue.nodeType === Node.ATTRIBUTE_NODE) {
+                  return { outer, inner: selectedValue.nodeValue };
+                }
+                if (selectedValue.nodeType === Node.ELEMENT_NODE) {
+                  return { outer, inner: selectedValue.childNodes.toString() };
+                }
+                if (selectedValue.nodeType === Node.TEXT_NODE) {
+                  return { outer, inner: selectedValue.toString().trim() };
+                }
+                return { outer, inner: null };
+              });
 
             if (results.length === 0) {
               throw new Error(`Returned no results: ${sanitizedFilter}`);
