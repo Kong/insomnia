@@ -48,6 +48,8 @@ export const shouldOrganizationsRevalidate: ShouldRevalidateFunction = ({
   nextUrl,
 }) => {
   const isSwitchingBetweenOrganizations = currentParams.organizationId !== nextParams.organizationId;
+  // We need this for isLoggedIn to update the organization list
+  // The hash gets removed from the URL after the first time it's used so it doesn't revalidate on every navigation
   const shouldForceRevalidate = nextUrl.hash === '#revalidate=true';
 
   return isSwitchingBetweenOrganizations || shouldForceRevalidate;
