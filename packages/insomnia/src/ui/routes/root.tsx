@@ -32,13 +32,8 @@ import {
   onLoginLogout,
 } from '../../account/session';
 import { isDevelopment } from '../../common/constants';
-import { database } from '../../common/database';
 import * as models from '../../models';
-import {
-  defaultOrganization,
-  isDefaultOrganization,
-  Organization } from '../../models/organization';
-import { isRemoteProject } from '../../models/project';
+import { isDefaultOrganization } from '../../models/organization';
 import { Settings } from '../../models/settings';
 import { isDesign } from '../../models/workspace';
 import { reloadPlugins } from '../../plugins';
@@ -46,8 +41,6 @@ import { createPlugin } from '../../plugins/create';
 import { setTheme } from '../../plugins/misc';
 import { exchangeCodeForToken } from '../../sync/git/github-oauth-provider';
 import { exchangeCodeForGitLabToken } from '../../sync/git/gitlab-oauth-provider';
-import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
-import { getVCS } from '../../sync/vcs/vcs';
 import { submitAuthCode } from '../auth-session-provider';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { GitHubStarsButton } from '../components/github-stars-button';
@@ -70,37 +63,15 @@ import { AIProvider } from '../context/app/ai-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import { useSettingsPatcher } from '../hooks/use-request';
 import Modals from './modals';
+import { useOrganizationLoaderData } from './organization';
 import { WorkspaceLoaderData } from './workspace';
 
 export interface RootLoaderData {
-  organizations: Organization[];
   settings: Settings;
 }
 
 export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
-  // Load all projects
-  try {
-    const vcs = getVCS();
-    if (vcs && isLoggedIn()) {
-      const teams = await vcs.teams();
-      const projects = await Promise.all(teams.map(initializeProjectFromTeam));
-      await database.batchModifyDocs({ upsert: projects });
-    }
-  } catch {
-    console.log('Failed to load projects');
-  }
-  const allProjects = await models.project.all();
-
-  const remoteOrgs = allProjects
-    .filter(isRemoteProject)
-    .map(({ _id, name }) => ({
-      _id,
-      name,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
-
   return {
-    organizations: [defaultOrganization, ...remoteOrgs],
     settings: await models.settings.getOrCreate(),
   };
 };
@@ -128,7 +99,8 @@ const getNameInitials = (name: string) => {
 const Root = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { organizations, settings } = useLoaderData() as RootLoaderData;
+  const { settings } = useLoaderData() as RootLoaderData;
+  const { organizations } = useOrganizationLoaderData();
   const workspaceData = useRouteLoaderData(
     ':workspaceId'
   ) as WorkspaceLoaderData | null;

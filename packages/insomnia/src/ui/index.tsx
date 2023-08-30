@@ -26,6 +26,7 @@ import { applyColorScheme } from '../plugins/misc';
 import { invariant } from '../utils/invariant';
 import { AppLoadingIndicator } from './components/app-loading-indicator';
 import { ErrorRoute } from './routes/error';
+import { shouldOrganizationsRevalidate } from './routes/organization';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
 
@@ -56,13 +57,6 @@ const router = createMemoryRouter(
       id: 'root',
       loader: async (...args) =>
         (await import('./routes/root')).loader(...args),
-      shouldRevalidate: ({
-        currentParams,
-        nextParams,
-        nextUrl,
-      }) => {
-        return currentParams.organizationId !== nextParams.organizationId || nextUrl.hash === '#revalidate=true';
-      },
       element: <Root />,
       errorElement: <ErrorRoute />,
       children: [
@@ -92,6 +86,9 @@ const router = createMemoryRouter(
         },
         {
           path: 'organization',
+          id: '/organization',
+          shouldRevalidate: shouldOrganizationsRevalidate,
+          loader: async (...args) => (await import('./routes/organization')).loader(...args),
           children: [
             {
               path: ':organizationId',
