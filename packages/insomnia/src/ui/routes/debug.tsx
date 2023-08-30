@@ -710,7 +710,7 @@ export const Debug: FC = () => {
           <div className="flex flex-col flex-1 overflow-hidden">
             <div className="flex justify-between gap-1 p-[--padding-sm]">
               <SearchField
-                aria-label="Collection filter"
+                aria-label="Request filter"
                 className="group relative flex-1"
                 defaultValue={searchParams.get('filter')?.toString() ?? ''}
                 onChange={filter => {

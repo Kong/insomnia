@@ -17,7 +17,7 @@ test.describe('Debug-Sidebar', async () => {
   });
 
   test.describe('Interact with sidebar', async () => {
-    test('Open Properties of an HTTP Request', async ({ page }) => {
+    test('Open Properties in Request Sidebar', async ({ page }) => {
       const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example http' });
       await requestLocator.click();
       await requestLocator.getByLabel('Request Actions').click();
@@ -25,43 +25,36 @@ test.describe('Debug-Sidebar', async () => {
       await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
-    });
 
-    test('Open properties of a grpc request', async ({ page }) => {
-      const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example grpc' });
-      await requestLocator.click();
-      await requestLocator.getByLabel('Request Actions').click();
+      const grpc = page.getByLabel('Request Collection').getByRole('row', { name: 'example grpc' });
+      await grpc.click();
+      await grpc.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
-    });
 
-    test('Open properties of a websocket request', async ({ page }) => {
-      const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example websocket' });
-      await requestLocator.click();
-      await requestLocator.getByLabel('Request Actions').click();
+      const ws = page.getByLabel('Request Collection').getByRole('row', { name: 'example websocket' });
+      await ws.click();
+      await ws.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
-    });
 
-    test('Open properties of a graphql request', async ({ page }) => {
-      const requestLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'example graphql' });
-      await requestLocator.click();
-      await requestLocator.getByLabel('Request Actions').click();
+      const gql = page.getByLabel('Request Collection').getByRole('row', { name: 'example graphql' });
+      await gql.click();
+      await gql.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByRole('tab', { name: 'Preview' }).click();
       // Close settings modal
       await page.locator('.app').press('Escape');
-    });
-
-    test('Open properties of a folder', async ({ page }) => {
       const folderLocator = page.getByLabel('Request Collection').getByRole('row', { name: 'test folder' });
       await folderLocator.click();
       await folderLocator.getByLabel('Request Group Actions').click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByRole('tab', { name: 'Preview' }).click();
+      // Close settings modal
+      await page.locator('.app').press('Escape');
     });
 
     test('Open properties of the collection', async ({ page }) => {
@@ -71,17 +64,15 @@ test.describe('Debug-Sidebar', async () => {
     });
 
     test('Filter by request name', async ({ page }) => {
-      await page.getByLabel('Collection filter').click();
-      await page.getByLabel('Collection filter').fill('example http');
+      await page.getByLabel('Request filter').click();
+      await page.getByLabel('Request filter').fill('example http');
       await page.getByLabel('Request Collection').getByRole('row', { name: 'example http' }).click();
     });
 
     test('Filter by a folder name', async ({ page }) => {
-      await page.locator('button[aria-label="Select sort order"]').click();
-      await page.getByRole('option', { name: 'Folders First' }).click();
-      await page.locator('[placeholder="Filter"]').click();
-      await page.locator('[placeholder="Filter"]').fill('test folder');
-      await page.locator('[placeholder="Filter"]').press('Enter');
+      await page.getByLabel('Request filter').click();
+      await page.getByLabel('Request filter').fill('test folder');
+      await page.getByLabel('Request filter').press('Enter');
       await page.getByLabel('Request Collection').getByRole('row', { name: 'test folder' }).click();
     });
 
