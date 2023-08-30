@@ -93,7 +93,7 @@ const FeatureWizardView = () => {
       <Route
         path="/"
         element={
-          <ul className="grid grid-cols-3 gap-2 justify-center">
+          <ul className="grid grid-cols-3 gap-2 justify-center p-4">
             {features.map(feature => (
               <li key={feature.id}>
                 <Link
@@ -134,10 +134,10 @@ const FeatureWizardView = () => {
                     <p className="text-[--color-font] text-sm">
                       <span>{feature.description}</span>
                     </p>
-                    <div className="">
-                      <img className="max-h-32" src={feature.image} />
+                    <div className="h-32">
+                      <img className="max-h-32 aspect-auto" src={feature.image} />
                     </div>
-                    <div className="flex w-full p-4 bottom-0 left-0 sticky justify-between text-xs font-normal bg-gradient-to-t from-[--color-bg] to-[rgba(var(--color-bg-rgb),80%)]">
+                    <div className="flex w-full p-4 bottom-0 left-0 sticky justify-between text-sm font-normal bg-gradient-to-t from-[--color-bg] to-[rgba(var(--color-bg-rgb),80%)]">
                       {prevPath ? (
                         <Link className="hover:no-underline" to={prevPath}>
                           <i className="fa fa-arrow-left" /> Previous feature
@@ -186,7 +186,7 @@ const Onboarding = () => {
                   are:
                 </p>
               </div>
-              <div className="w-full relative">
+              <div className="w-full relative min-h-full">
                 <FeatureWizardView />
               </div>
               <div className="flex justify-between items-center">
