@@ -4,7 +4,6 @@ import fs from 'fs';
 import { join as pathJoin } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import { cookiesFromJar, jarFromCookies } from '../common/cookies';
 import { database as db } from '../common/database';
 import {
   getContentTypeHeader,
@@ -20,7 +19,6 @@ import type { HeaderResult, ResponsePatch, ResponseTimelineEntry } from '../main
 import * as models from '../models';
 import { CaCertificate } from '../models/ca-certificate';
 import { ClientCertificate } from '../models/client-certificate';
-import { Cookie } from '../models/cookie-jar';
 import type { Request, RequestAuthentication, RequestParameter } from '../models/request';
 import type { Settings } from '../models/settings';
 import { isWorkspace } from '../models/workspace';
@@ -35,6 +33,7 @@ import {
 } from '../utils/url/querystring';
 import { getAuthHeader, getAuthQueryParams } from './authentication';
 import { cancellableCurlRequest } from './cancellation';
+import { addSetCookiesToToughCookieJar } from './set-cookie-util';
 import { urlMatchesCertHost } from './url-matches-cert-host';
 
 export const fetchRequestData = async (requestId: string) => {
@@ -232,22 +231,6 @@ export const getCurrentUrl = ({ headerResults, finalUrl }: { headerResults: any;
   } catch (error) {
     return finalUrl;
   }
-};
-
-export const addSetCookiesToToughCookieJar = async ({ setCookieStrings, currentUrl, cookieJar }: any) => {
-  const rejectedCookies: string[] = [];
-  const jar = jarFromCookies(cookieJar.cookies);
-  for (const setCookieStr of setCookieStrings) {
-    try {
-      jar.setCookieSync(setCookieStr, currentUrl);
-    } catch (err) {
-      if (err instanceof Error) {
-        rejectedCookies.push(err.message);
-      }
-    }
-  }
-  const cookies = (await cookiesFromJar(jar)) as Cookie[];
-  return { cookies, rejectedCookies };
 };
 
 async function _applyRequestPluginHooks(

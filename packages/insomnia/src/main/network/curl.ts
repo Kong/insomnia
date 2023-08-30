@@ -13,7 +13,7 @@ import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
 import { Response } from '../../models/response';
-import { addSetCookiesToToughCookieJar } from '../../network/network';
+import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
