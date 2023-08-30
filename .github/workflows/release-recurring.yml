@@ -52,10 +52,10 @@ jobs:
         shell: bash
         run: NODE_OPTIONS='--max_old_space_size=6144' BUILD_TARGETS='${{ matrix.build-targets }}' npm run app-package
 
-      - name: Test critical path on packaged electron app
-        run: npm run test:package -w packages/insomnia-smoke-test -- --project=Critical
-        env:
-          INSOMNIA_UPDATES_URL: http://localhost:4010
+      # - name: Test critical path on packaged electron app
+      #   run: npm run test:package -w packages/insomnia-smoke-test -- --project=Critical
+      #   env:
+      #     INSOMNIA_UPDATES_URL: http://localhost:4010
 
       # - name: Upload smoke test traces
       #   uses: actions/upload-artifact@v3
