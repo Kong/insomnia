@@ -361,13 +361,32 @@ const ProjectRoute: FC = () => {
   };
 
   const { organizations } = useOrganizationLoaderData();
+  const { presence } = usePresenceContext();
+
+  const workspacesWithPresence = workspaces.map(workspace => {
+    const workspacePresence = presence.filter(p => {
+      return (
+        p.project === activeProject._id &&
+        p.file === workspace._id
+      );
+    })
+      .map(user => {
+        return {
+          key: user.acct,
+          alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+          src: user.avatar,
+        };
+      });
+    return {
+      ...workspace,
+      presence: workspacePresence,
+    };
+  });
 
   const [searchParams, setSearchParams] = useSearchParams();
   const { env } = useRootLoaderData();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
-
-  const { presence } = usePresenceContext();
 
   const fetcher = useFetcher();
   const navigate = useNavigate();
@@ -851,7 +870,7 @@ const ProjectRoute: FC = () => {
 
               <GridList
                 aria-label="Workspaces"
-                items={workspaces}
+                items={workspacesWithPresence}
                 onAction={key => {
                   navigate(
                     `/organization/${organizationId}/project/${projectId}/workspace/${key}/debug`
@@ -887,43 +906,29 @@ const ProjectRoute: FC = () => {
                       textValue={item.name}
                       className="[&_[role=gridcell]]:flex-1 [&_[role=gridcell]]:overflow-hidden [&_[role=gridcell]]:flex [&_[role=gridcell]]:flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
                     >
-                      <div className="flex gap-2">
-                        <div className="flex items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
+                      <div className="flex gap-2 h-[20px]">
+                        <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
                           {isDesign(item.workspace) ? (
-                            <div className="px-2 rounded-s-sm bg-[--color-info] text-[--color-font-info]">
+                            <div className="px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm bg-[--color-info] text-[--color-font-info]">
                               <Icon icon="file" />
                             </div>
                           ) : (
-                            <div className="px-2 rounded-s-sm bg-[--color-surprise] text-[--color-font-surprise]">
+                              <div className="px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm bg-[--color-surprise] text-[--color-font-surprise]">
                               <Icon icon="bars" />
                             </div>
                           )}
-                          <span className="truncate pr-2">
+                          <span>
                             {isDesign(item.workspace)
                               ? 'Document'
                               : 'Collection'}
                           </span>
                         </div>
                         <span className="flex-1" />
-                        {presence && (
+                        {item.presence.length > 0 && (
                           <AvatarGroup
                             size="small"
                             maxAvatars={3}
-                            items={
-                              presence.filter(p => {
-                                return (
-                                  p.project === activeProject._id &&
-                                  p.file === item.workspace._id
-                                );
-                              })
-                                .map(user => {
-                                  return {
-                                    key: user.acct,
-                                    alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
-                                    src: user.avatar,
-                                  };
-                                })
-                            }
+                            items={item.presence}
                           />
                         )}
                         <WorkspaceCardDropdown
