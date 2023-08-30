@@ -15,41 +15,27 @@ export const queryXPath = (xml: string, query?: string) => {
   } catch (err) {
     throw new Error(`Invalid XPath query: ${query}`);
   }
-  const output = [];
   // Functions return plain strings
   if (typeof selectedValues === 'string') {
-    output.push({
-      outer: selectedValues,
-      inner: selectedValues,
-    });
-  } else {
-    for (const selectedValue of selectedValues || []) {
-      switch (selectedValue.constructor.name) {
-        case 'Attr':
-          output.push({
-            outer: (selectedValue as Attr).toString().trim(),
-            inner: (selectedValue as Attr).nodeValue,
-          });
-          break;
-
-        case 'Element':
-          output.push({
-            outer: (selectedValue as Node).toString().trim(),
-            inner: (selectedValue as Node).childNodes.toString(),
-          });
-          break;
-
-        case 'Text':
-          output.push({
-            outer: (selectedValue as Text).toString().trim(),
-            inner: (selectedValue as Text).toString().trim(),
-          });
-          break;
-
-        default:
-          break;
-      }
-    }
+    return [{ outer: selectedValues, inner: selectedValues }];
   }
-  return output;
+
+  return (selectedValues as Node[])
+    .filter(sv => sv.nodeType === Node.ATTRIBUTE_NODE
+      || sv.nodeType === Node.ELEMENT_NODE
+      || sv.nodeType === Node.TEXT_NODE)
+    .map(selectedValue => {
+      const outer = selectedValue.toString().trim();
+      if (selectedValue.nodeType === Node.ATTRIBUTE_NODE) {
+        return { outer, inner: selectedValue.nodeValue };
+      }
+      if (selectedValue.nodeType === Node.ELEMENT_NODE) {
+        return { outer, inner: selectedValue.childNodes.toString() };
+      }
+      if (selectedValue.nodeType === Node.TEXT_NODE) {
+        return { outer, inner: selectedValue.toString().trim() };
+      }
+      return { outer, inner: null };
+    });
+
 };
