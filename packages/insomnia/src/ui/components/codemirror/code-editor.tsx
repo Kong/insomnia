@@ -338,7 +338,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     });
 
-    codeMirror.current.on('keydown', (_: CodeMirror.Editor, event: KeyboardEvent) => {
+    codeMirror.current.on('keydown', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
       const pressedKeyComb: KeyCombination = {
         ctrl: event.ctrlKey,
         alt: event.altKey,
@@ -363,19 +363,18 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         event.codemirrorIgnore = true;
       } else {
         event.stopPropagation();
-      }
-    });
-    codeMirror.current.on('keyup', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
-      // Enable graphql completion if we're in that mode
-      if (doc.getOption('mode') === 'graphql') {
-        // Only operate on one-letter keys. This will filter out
-        // any special keys (Backspace, Enter, etc)
-        const isModifier = event.metaKey || event.ctrlKey || event.altKey || event.key.length > 1;
-        // You don't want to re-trigger the hint dropdown if it's already open
-        // for other reasons, like forcing its display with Ctrl+Space
-        const isDropdownActive = codeMirror.current?.isHintDropdownActive();
-        if (!isModifier && !isDropdownActive) {
-          doc.execCommand('autocomplete');
+
+        // Enable graphql completion if we're in that mode
+        if (doc.getOption('mode') === 'graphql') {
+          // Only operate on one-letter keys. This will filter out
+          // any special keys (Backspace, Enter, etc)
+          const isModifier = event.metaKey || event.ctrlKey || event.altKey || event.key.length > 1;
+          // You don't want to re-trigger the hint dropdown if it's already open
+          // for other reasons, like forcing its display with Ctrl+Space
+          const isDropdownActive = codeMirror.current?.isHintDropdownActive();
+          if ((isAutoCompleteBinding || !isModifier) && !isDropdownActive) {
+            doc.execCommand('autocomplete');
+          }
         }
       }
     });
