@@ -258,6 +258,10 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
                   triggerButton={
                     <StyledDropdownButton
                       className="urlbar__send-context rounded-r-sm"
+                      style={{
+                        borderTopRightRadius: '0.125rem',
+                        borderBottomRightRadius: '0.125rem',
+                      }}
                       removeBorderRadius={true}
                     >
                       <i className="fa fa-caret-down" />

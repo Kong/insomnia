@@ -10,6 +10,7 @@ import {
 import { useFetcher } from 'react-router-dom';
 
 import {
+  isDefaultOrganizationProject,
   Project,
 } from '../../../models/project';
 import { Icon } from '../icon';
@@ -20,24 +21,26 @@ interface Props {
   organizationId: string;
 }
 
+interface ProjectActionItem {
+  id: string;
+  name: string;
+  icon: IconName;
+  action: (projectId: string) => void;
+}
+
 export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] =
     useState(false);
   const deleteProjectFetcher = useFetcher();
 
-  const projectActionList: {
-    id: string;
-    name: string;
-    icon: IconName;
-    action: (projectId: string) => void;
-  }[] = [
+  const projectActionList: ProjectActionItem[] = [
     {
       id: 'settings',
       name: 'Settings',
       icon: 'gear',
       action: () => setIsProjectSettingsModalOpen(true),
     },
-    {
+    ...!isDefaultOrganizationProject(project) ? [{
       id: 'delete',
       name: 'Delete',
       icon: 'trash',
@@ -49,7 +52,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
             action: `/organization/${organizationId}/project/${projectId}/delete`,
           }
         ),
-    },
+    }] satisfies ProjectActionItem[] : [],
   ];
   return (
     <Fragment>
