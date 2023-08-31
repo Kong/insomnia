@@ -8,6 +8,7 @@ import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
+import { showAlert } from '.';
 
 export interface ProjectSettingsModalProps extends ModalProps {
   project: Project;
@@ -16,11 +17,20 @@ export interface ProjectSettingsModalProps extends ModalProps {
 export const ProjectSettingsModal: FC<ProjectSettingsModalProps> = ({ project, onHide }) => {
   const modalRef = useRef<ModalHandle>(null);
   const { organizationId } = useParams<{organizationId: string}>();
-  const { submit, Form } = useFetcher();
+  const { submit, Form, data, state } = useFetcher();
 
   useEffect(() => {
     modalRef.current?.show();
   }, []);
+
+  useEffect(() => {
+    if (data && data.error && state === 'idle') {
+      showAlert({
+        title: 'Could not rename project',
+        message: data.error,
+      });
+    }
+  }, [data, state]);
 
   return (
     <OverlayContainer>

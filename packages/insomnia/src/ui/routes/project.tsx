@@ -1,5 +1,5 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { FC, Fragment, useState } from 'react';
+import React, { FC, Fragment, useEffect, useState } from 'react';
 import {
   Button,
   GridList,
@@ -58,7 +58,7 @@ import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspa
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
-import { showPrompt } from '../components/modals';
+import { showAlert, showPrompt } from '../components/modals';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '../components/modals/import-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
@@ -395,6 +395,7 @@ const ProjectRoute: FC = () => {
   const [importModalType, setImportModalType] = useState<
     'uri' | 'file' | 'clipboard' | null
   >(null);
+
   const createNewCollection = () => {
     showPrompt({
       title: 'Create New Request Collection',
@@ -440,6 +441,15 @@ const ProjectRoute: FC = () => {
   };
 
   const createNewProjectFetcher = useFetcher();
+
+  useEffect(() => {
+    if (createNewProjectFetcher.data && createNewProjectFetcher.data.error && createNewProjectFetcher.state === 'idle') {
+      showAlert({
+        title: 'Could not create project',
+        message: createNewProjectFetcher.data.error,
+      });
+    }
+  }, [createNewProjectFetcher.data, createNewProjectFetcher.state]);
 
   const importFromGit = () => {
     setIsGitRepositoryCloneModalOpen(true);
