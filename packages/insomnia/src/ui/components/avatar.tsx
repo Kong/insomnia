@@ -86,27 +86,40 @@ const AvatarPlaceholder = styled.div<{size: 'small' | 'medium'; animate: boolean
 `;
 
 class ImageCache {
-  __cache: Record<string, Promise<string> | string> = {};
+  __cache: Record<string, { value: Promise<string> | string; timestamp: number }> = {};
+  ttl: number;
+
+  constructor({ ttl }: { ttl: number }) {
+    this.ttl = ttl;
+  }
 
   read(src: string) {
-    if (!this.__cache[src]) {
-      this.__cache[src] = new Promise(resolve => {
+    const now = Date.now();
+    if (this.__cache[src] && typeof this.__cache[src].value !== 'string') {
+      // If the value is a Promise, throw it to indicate that the cache is still loading
+      throw this.__cache[src].value;
+    } else if (this.__cache[src] && now - this.__cache[src].timestamp < this.ttl) {
+      // If the value is a string and hasn't expired, return it
+      return this.__cache[src].value;
+    } else {
+      // Otherwise, load the image and add it to the cache
+      const promise = new Promise<string>(resolve => {
         const img = new Image();
         img.onload = () => {
-          this.__cache[src] = src;
-          resolve(this.__cache[src]);
+          const value = src;
+          this.__cache[src] = { value, timestamp: now };
+          resolve(value);
         };
         img.src = src;
       });
+      this.__cache[src] = { value: promise, timestamp: now };
+      throw promise;
     }
-    if (this.__cache[src] instanceof Promise) {
-      throw this.__cache[src];
-    }
-    return this.__cache[src];
   }
 }
 
-const imgCache = new ImageCache();
+// Cache images for 10 minutes
+const imgCache = new ImageCache({ ttl: 1000 * 60 * 10 });
 
 export const Avatar = ({ src, alt, size = 'medium', animate }: { src: string; alt: string; size?: 'small' | 'medium'; animate?: boolean }) => {
   if (!src) {
@@ -121,7 +134,7 @@ export const Avatar = ({ src, alt, size = 'medium', animate }: { src: string; al
       }}
       message={alt}
     >
-      <Suspense fallback={<AvatarPlaceholder animate={Boolean(animate)} size={size}>{alt}</AvatarPlaceholder>}>
+      <Suspense fallback={<AvatarPlaceholder animate={Boolean(animate)} size={size}>{getNameInitials(alt)}</AvatarPlaceholder>}>
         <AvatarImage
           animate={Boolean(animate)}
           src={src}
