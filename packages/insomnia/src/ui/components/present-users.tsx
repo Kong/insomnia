@@ -22,22 +22,23 @@ export const PresentUsers = () => {
     .filter(p => {
       return p.project === projectId && p.file === workspaceId;
     })
-    .filter(p => p.acct !== accountId);
+    .filter(p => p.acct !== accountId)
+    .map(user => {
+      return {
+        key: user.acct,
+        alt:
+          user.firstName || user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user.acct,
+        src: user.avatar,
+      };
+    });
 
   return (
     <AvatarGroup
       animate
       size="medium"
-      items={activeUsers.map(user => {
-        return {
-          key: user.acct,
-          alt:
-            user.firstName || user.lastName
-              ? `${user.firstName} ${user.lastName}`
-              : user.acct,
-          src: user.avatar,
-        };
-      })}
+      items={activeUsers}
     />
   );
 };

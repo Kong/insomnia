@@ -382,6 +382,23 @@ const ProjectRoute: FC = () => {
     };
   });
 
+  const projectsWithPresence = projects.map(project => {
+    const projectPresence = presence
+      .filter(p => p.project === project._id)
+      .filter(p => p.acct !== accountId)
+      .map(user => {
+        return {
+          key: user.acct,
+          alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+          src: user.avatar,
+        };
+      });
+    return {
+      ...project,
+      presence: projectPresence,
+    };
+  });
+
   const [searchParams, setSearchParams] = useSearchParams();
   const { env } = useRootLoaderData();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
@@ -639,7 +656,7 @@ const ProjectRoute: FC = () => {
 
                 <GridList
                   aria-label="Projects"
-                  items={projects}
+                  items={projectsWithPresence}
                   className="overflow-y-auto flex-1 data-[empty]:py-0 py-[--padding-sm]"
                   disallowEmptySelection
                   selectedKeys={[activeProject._id]}
@@ -671,6 +688,11 @@ const ProjectRoute: FC = () => {
                           />
                           <span className="truncate">{item.name}</span>
                           <span className="flex-1" />
+                          <AvatarGroup
+                            size="small"
+                            maxAvatars={3}
+                            items={item.presence}
+                          />
                           {item._id !== DEFAULT_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} />}
                         </div>
                       </Item>
