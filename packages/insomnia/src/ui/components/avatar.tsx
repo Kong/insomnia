@@ -153,9 +153,8 @@ export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium', animate = 
   return (
     <Suspense fallback={<div />}>
       <div
+        className='flex items-center flex-shrink-0 -space-x-2'
         style={{
-          display: 'flex',
-          alignItems: 'center',
           paddingLeft: size === 'small' ? '5px' : '6px',
         }}
       >
