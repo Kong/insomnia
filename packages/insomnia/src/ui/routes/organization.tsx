@@ -43,6 +43,7 @@ import { InsomniaAILogo } from '../components/insomnia-icon';
 import { showModal } from '../components/modals';
 import { showSettingsModal } from '../components/modals/settings-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
+import { OrganizationAvatar } from '../components/organization-avatar';
 import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
 import { AIProvider } from '../context/app/ai-context';
@@ -51,25 +52,6 @@ import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-co
 import { useRootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 
-const getNameInitials = (name: string) => {
-  // Split on whitespace and take first letter of each word
-  const words = name.toUpperCase().split(' ');
-  const firstWord = words[0];
-  const lastWord = words[words.length - 1];
-
-  // If there is only one word, just take the first letter
-  if (words.length === 1) {
-    return firstWord.charAt(0);
-  }
-
-  // If the first word is an emoji or an icon then just use that
-  const iconMatch = firstWord.match(/\p{Extended_Pictographic}/u);
-  if (iconMatch) {
-    return iconMatch[0];
-  }
-
-  return `${firstWord.charAt(0)}${lastWord ? lastWord.charAt(0) : ''}`;
-};
 interface OrganizationsResponse {
   start: number;
   limit: number;
@@ -407,7 +389,7 @@ const OrganizationRoute = () => {
                       <Link>
                         <NavLink
                           className={({ isActive }) =>
-                            `select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] p-[--padding-sm] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${
+                            `select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${
                               isActive
                                 ? 'outline-[--color-font]'
                                 : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
@@ -421,7 +403,10 @@ const OrganizationRoute = () => {
                           }) ? (
                             <Icon icon="home" />
                           ) : (
-                              getNameInitials(organization.display_name)
+                              <OrganizationAvatar
+                                alt={organization.display_name}
+                                src={organization.branding.logo_url}
+                              />
                           )}
                         </NavLink>
                       </Link>
