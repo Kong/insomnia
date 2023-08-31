@@ -146,7 +146,6 @@ export async function exportRequestsData(
   format: 'json' | 'yaml',
 ) {
   const data: Insomnia4Data = {
-    // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
     _type: 'export',
     __export_format: EXPORT_FORMAT,
     __export_date: new Date(),

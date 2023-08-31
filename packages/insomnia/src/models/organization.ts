@@ -1,9 +1,28 @@
+interface Branding {
+  logo_url: string;
+}
 
-export const type = 'Organization';
-export const prefix = 'org';
+export interface Metadata {
+  organizationType: string;
+  ownerAccountId: string;
+}
 
 export interface Organization {
-  _id: string;
+  id: string;
   name: string;
-  isPersonal: boolean;
+  display_name: string;
+  branding: Branding;
+  metadata: Metadata;
 }
+
+export const isPersonalOrganization = (organization: Organization) =>
+  organization.metadata.organizationType === 'personal';
+
+export const isOwnerOfOrganization = ({
+  organization,
+  accountId,
+}: {
+  organization: Organization;
+  accountId: string;
+}) =>
+  organization.metadata.ownerAccountId === accountId;

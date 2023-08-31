@@ -25,7 +25,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { getCurrentSessionId } from '../../account/session';
+import { getAccountId, getCurrentSessionId } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   DASHBOARD_SORT_ORDERS,
@@ -41,6 +41,7 @@ import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
+import { Organization } from '../../models/organization';
 import {
   DEFAULT_PROJECT_ID,
   isRemoteProject,
@@ -64,7 +65,7 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
 import { usePresenceContext } from '../context/app/presence-context';
-import { Organization, useOrganizationLoaderData } from './organization';
+import { useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 async function getAllTeamProjects(organizationId: string) {
@@ -362,13 +363,12 @@ const ProjectRoute: FC = () => {
   const { organizations } = useOrganizationLoaderData();
   const { presence } = usePresenceContext();
 
+  const accountId = getAccountId();
+
   const workspacesWithPresence = workspaces.map(workspace => {
-    const workspacePresence = presence.filter(p => {
-      return (
-        p.project === activeProject._id &&
-        p.file === workspace._id
-      );
-    })
+    const workspacePresence = presence
+      .filter(p => p.project === projectId && p.file === workspace._id)
+      .filter(p => p.acct !== accountId)
       .map(user => {
         return {
           key: user.acct,
