@@ -1,5 +1,5 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { FC, Fragment, useState } from 'react';
+import React, { FC, Fragment, useEffect, useState } from 'react';
 import {
   Button,
   Item,
@@ -14,6 +14,7 @@ import {
   Project,
 } from '../../../models/project';
 import { Icon } from '../icon';
+import { showAlert } from '../modals';
 import ProjectSettingsModal from '../modals/project-settings-modal';
 
 interface Props {
@@ -54,6 +55,16 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
         ),
     }] satisfies ProjectActionItem[] : [],
   ];
+
+  useEffect(() => {
+    if (deleteProjectFetcher.data && deleteProjectFetcher.data.error && deleteProjectFetcher.state === 'idle') {
+      showAlert({
+        title: 'Could not delete project',
+        message: deleteProjectFetcher.data.error,
+      });
+    }
+  }, [deleteProjectFetcher.data, deleteProjectFetcher.state]);
+
   return (
     <Fragment>
       <MenuTrigger>

@@ -33,23 +33,41 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
 
   const sessionId = session.getCurrentSessionId();
   invariant(sessionId, 'User must be logged in to create a project');
-  const newCloudProject = await window.main.insomniaFetch<{ id: string; name: string }>({
-    path: `/v1/teams/${organizationId}/team-projects`,
-    method: 'POST',
-    data: {
-      name,
-    },
-    sessionId,
-  });
 
-  const project = await models.project.create({
-    _id: newCloudProject.id,
-    name: newCloudProject.name,
-    remoteId: newCloudProject.id,
-    parentId: organizationId,
-  });
+  try {
+    const newCloudProject = await window.main.insomniaFetch<{
+      id: string;
+      name: string;
+    } | {
+      error: string;
+      message?: string;
+    }>({
+      path: `/v1/teams/${organizationId}/team-projects`,
+      method: 'POST',
+      data: {
+        name,
+      },
+      sessionId,
+    });
 
-  return redirect(`/organization/${organizationId}/project/${project._id}`);
+    if (!newCloudProject || 'error' in newCloudProject) {
+      return {
+        error: newCloudProject.error === 'FORBIDDEN' ? 'You do not have permission to create a project in this organization.' : 'An unexpected error occurred while creating the project. Please try again.',
+      };
+    }
+
+    const project = await models.project.create({
+      _id: newCloudProject.id,
+      name: newCloudProject.name,
+      remoteId: newCloudProject.id,
+      parentId: organizationId,
+    });
+
+    return redirect(`/organization/${organizationId}/project/${project._id}`);
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
 };
 
 export const renameProjectAction: ActionFunction = async ({
@@ -72,7 +90,10 @@ export const renameProjectAction: ActionFunction = async ({
   invariant(sessionId, 'User must be logged in to rename a project');
 
   try {
-    await window.main.insomniaFetch({
+    const response = await window.main.insomniaFetch<{} | {
+      error: string;
+      message?: string;
+    }>({
       path: `/v1/teams/${project.parentId}/team-projects/${projectId}`,
       method: 'PATCH',
       sessionId,
@@ -80,6 +101,13 @@ export const renameProjectAction: ActionFunction = async ({
         name,
       },
     });
+
+    if ('error' in response) {
+      return {
+        error: response.error === 'FORBIDDEN' ? 'You do not have permission to rename this project.' : 'An unexpected error occurred while renaming the project. Please try again.',
+      };
+    }
+
     await models.project.update(project, { name });
     return null;
   } catch (err) {
@@ -99,11 +127,20 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   invariant(sessionId, 'User must be logged in to delete a project');
 
   try {
-    await window.main.insomniaFetch({
+    const response = await window.main.insomniaFetch<{} | {
+      error: string;
+      message?: string;
+    }>({
       path: `/v1/teams/${organizationId}/team-projects/${projectId}`,
       method: 'DELETE',
       sessionId,
     });
+
+    if ('error' in response) {
+      return {
+        error: response.error === 'FORBIDDEN' ? 'You do not have permission to delete this project.' : 'An unexpected error occurred while deleting the project. Please try again.',
+      };
+    }
 
     await models.stats.incrementDeletedRequestsForDescendents(project);
     await models.project.remove(project);
