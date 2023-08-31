@@ -231,7 +231,6 @@ const Login = () => (
       By signing up or using Insomnia, you agree to the{' '}
       <a
         className='font-bold transition-colors hover:text-[--color-font] focus:text-[--color-font]'
-        target="_blank"
         href="https://insomnia.rest/terms"
         rel="noreferrer"
       >
@@ -240,7 +239,6 @@ const Login = () => (
       and{' '}
       <a
         className='font-bold transition-colors hover:text-[--color-font] focus:text-[--color-font]'
-        target="_blank"
         href="https://insomnia.rest/privacy"
         rel="noreferrer"
       >
