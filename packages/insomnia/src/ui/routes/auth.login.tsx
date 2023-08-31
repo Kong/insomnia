@@ -178,7 +178,44 @@ const Login = () => (
         </span>
       </div>
     </Button>
-
+    <Button
+      name="provider"
+      value="sso"
+      variant='outlined'
+      size="medium"
+      type="submit"
+      style={{
+        width: '100%',
+        padding: 0,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          width: '100%',
+          height: '100%',
+          gap: 'var(--padding-md)',
+        }}
+      >
+        <div
+          style={{
+            width: '40px',
+            height: '100%',
+            borderRight: '1px solid var(--hl-sm)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'var(--hl-xs)',
+          }}
+        >
+          <i className='fa fa-key' />
+        </div>
+        <span>
+          Continue with SSO
+        </span>
+      </div>
+    </Button>
     <Link
       to={'/scratchpad'}
       className='flex transition-colors justify-center text-[rgba(var(--color-font-rgb),0.8)] text-sm gap-[--padding-xs] hover:text-[--color-font] focus:text-[--color-font]'
