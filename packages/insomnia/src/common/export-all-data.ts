@@ -187,7 +187,6 @@ export async function exportWorkspaceData({
       ...model,
       _type: exportTypeByModelType(type),
     })),
-    items: [],
   };
 
   const filePath = join(dirPath, workspaceId + '.json');

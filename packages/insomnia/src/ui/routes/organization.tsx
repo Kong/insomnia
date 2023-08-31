@@ -22,12 +22,14 @@ import {
 } from 'react-router-dom';
 
 import {
+  getAccountId,
   getCurrentSessionId,
   getFirstName,
   getLastName,
   isLoggedIn,
 } from '../../account/session';
 import * as models from '../../models';
+import { isOwnerOfOrganization, isPersonalOrganization, Organization } from '../../models/organization';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
@@ -77,25 +79,6 @@ interface OrganizationsResponse {
   organizations: Organization[];
 }
 
-export interface Organization {
-  id: string;
-  name: string;
-  display_name: string;
-  branding: Branding;
-  metadata: Metadata;
-}
-
-interface Branding {
-  logo_url: string;
-}
-
-export interface Metadata {
-  organizationType: string;
-}
-
-export const isPersonalOrganization = (organization: Organization) =>
-  organization.metadata.organizationType === 'personal';
-
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
@@ -107,7 +90,13 @@ export const indexLoader: LoaderFunction = async () => {
           sessionId,
         });
 
-      const personalOrganization = organizations.find(isPersonalOrganization);
+      const personalOrganization = organizations.filter(isPersonalOrganization).find(organization => {
+        const accountId = getAccountId();
+        return accountId && isOwnerOfOrganization({
+          organization,
+          accountId,
+        });
+      });
 
       if (personalOrganization) {
         return redirect(`/organization/${personalOrganization.id}`);
@@ -179,6 +168,31 @@ export const loader: LoaderFunction = async () => {
             } else if (
               !isPersonalOrganization(a) &&
               isPersonalOrganization(b)
+            ) {
+              return 1;
+            } else {
+              return 0;
+            }
+          })
+          .sort((a, b) => {
+            const accountId = getAccountId();
+            if (isOwnerOfOrganization({
+              organization: a,
+              accountId: accountId || '',
+            }) && !isOwnerOfOrganization({
+              organization: b,
+              accountId: accountId || '',
+            })) {
+              return -1;
+            } else if (
+              !isOwnerOfOrganization({
+                organization: a,
+                accountId: accountId || '',
+              }) &&
+              isOwnerOfOrganization({
+                organization: b,
+                accountId: accountId || '',
+              })
             ) {
               return 1;
             } else {
@@ -401,7 +415,10 @@ const OrganizationRoute = () => {
                           }
                           to={`/organization/${organization.id}`}
                         >
-                          {isPersonalOrganization(organization) ? (
+                          {isPersonalOrganization(organization) && isOwnerOfOrganization({
+                            organization,
+                            accountId: getAccountId() || '',
+                          }) ? (
                             <Icon icon="home" />
                           ) : (
                               getNameInitials(organization.display_name)
