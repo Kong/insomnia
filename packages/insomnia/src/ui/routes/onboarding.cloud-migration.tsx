@@ -1,7 +1,12 @@
 import React from 'react';
+import { Button } from 'react-aria-components';
 import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-router-dom';
 
+import { database } from '../../common/database';
+import { exportAllData } from '../../common/export-all-data';
+import { project } from '../../models';
 import { InsomniaLogo } from '../components/insomnia-icon';
+import { showAlert } from '../components/modals';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 
 export const action: ActionFunction = async () => {
@@ -11,7 +16,15 @@ export const action: ActionFunction = async () => {
 };
 
 export const loader: LoaderFunction = async () => {
-  return null;
+  const localProjects = await database.find(project.type, {
+    remoteId: null,
+  });
+
+  if (localProjects.length > 0) {
+    return null;
+  }
+
+  return redirect('/auth/login');
 };
 
 export const OnboardingCloudMigration = () => {
@@ -218,7 +231,41 @@ export const OnboardingCloudMigration = () => {
                       color: 'rgba(var(--color-font-rgb), 0.8)',
                     }}
                   >
-                    While not needed, you can <button className='text-[--color-font] font-bold'> export your data </button> for portability.
+                    While not needed, you can <Button
+                      onPress={async () => {
+                        const { filePaths, canceled } = await window.dialog.showOpenDialog({
+                          properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
+                          buttonLabel: 'Select',
+                          title: 'Export All Insomnia Data',
+                        });
+
+                        if (canceled) {
+                          return;
+                        }
+
+                        const [dirPath] = filePaths;
+
+                        try {
+                          console.time('Export');
+                          dirPath && await exportAllData({
+                            dirPath,
+                          });
+                          console.timeEnd('Export');
+                        } catch (e) {
+                          showAlert({
+                            title: 'Export Failed',
+                            message: 'An error occurred while exporting data. Please try again.',
+                          });
+                          console.error(e);
+                        }
+
+                        showAlert({
+                          title: 'Export Complete',
+                          message: 'All your data have been successfully exported',
+                        });
+                      }}
+                      className='focus:text-[--color-font] hover:text-[--color-font] font-bold transition-colors'
+                    > export your data </Button> for portability.
                   </p>
                 </div>
                 <button disabled={state !== 'idle'} className='hover:no-underline font-bold bg-[#4000BF] text-sm hover:bg-opacity-90 py-2 px-3 text-[--color-font] transition-colors rounded-sm'>

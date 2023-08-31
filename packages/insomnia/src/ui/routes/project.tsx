@@ -136,8 +136,6 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     )));
 
     await database.batchModifyDocs({ upsert: projectsToUpdate });
-
-    console.log('Redirecting to first remote project', projectsToUpdate[0]._id);
   } catch (err) {
     console.log('Could not fetch remote projects.');
   }
@@ -322,11 +320,12 @@ export const loader: LoaderFunction = async ({
     )
     .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
 
-  const allProjects = await models.project.all();
-  const organizationProjects = allProjects.filter(proj => proj.parentId === organizationId);
+  const organizationProjects = await database.find<Project>(models.project.type, {
+    parentId: organizationId,
+  }) || [];
 
   const projects = sortProjects(organizationProjects).filter(p =>
-    p.name.toLowerCase().includes(projectName.toLowerCase())
+    p.name?.toLowerCase().includes(projectName.toLowerCase())
   );
 
   return {

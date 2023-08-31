@@ -9,6 +9,9 @@ export const description = 'Insomnia export format 4';
 
 export interface Insomnia4Data extends Omit<Insomnia3Data, '__export_format'> {
   __export_format: 4;
+  _type?: 'export';
+  __export_date?: Date;
+  __export_source?: string;
 }
 
 export const convert: Converter = rawData => {
