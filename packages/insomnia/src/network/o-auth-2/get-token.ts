@@ -304,7 +304,6 @@ const sendAccessTokenRequest = async (requestId: string, authentication: AuthTyp
     headers: [
       { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
       { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
-      { name: 'User-Agent', value: 'insomnia/' + version },
       ...headers,
     ],
     url: setDefaultProtocol(authentication.accessTokenUrl),
