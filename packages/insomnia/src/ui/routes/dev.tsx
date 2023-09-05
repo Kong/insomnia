@@ -28,6 +28,7 @@ export const action: ActionFunction = async ({ request }) => {
 
   invariant(data.apiURL, 'Missing apiURL');
   invariant(data.websiteURL, 'Missing websiteURL');
+  invariant(data.aiURL, 'Missing aiURL');
 
   await environment.update(stagingEnv, {
     data,
@@ -46,7 +47,7 @@ export const action: ActionFunction = async ({ request }) => {
 
 const Dev = () => {
   const {
-    env: { apiURL, websiteURL },
+    env: { apiURL, websiteURL, aiURL },
   } = useLoaderData() as LoaderData;
 
   const { Form } = useFetcher();
@@ -91,6 +92,17 @@ const Dev = () => {
                   type="url"
                   placeholder='https://app.insomnia.rest'
                   defaultValue={websiteURL || ''}
+                />
+              </label>
+              <label className="flex flex-col gap-2">
+                <span className="text-[--color-font]">Website Url</span>
+                <input
+                  required
+                  className="py-3 w-full px-4 rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                  name="aiURL"
+                  type="url"
+                  placeholder='https://ai.insomnia.rest'
+                  defaultValue={aiURL || ''}
                 />
               </label>
               <div className='flex justify-end'>

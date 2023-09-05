@@ -57,6 +57,17 @@ const Dev = () => {
           defaultValue={env.websiteURL || ''}
         />
       </label>
+      <label className="flex text-sm flex-col gap-2">
+        <span className="text-[--color-font]">InsomniaAI Url</span>
+        <input
+          required
+          className="py-2 w-full px-4 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+          name="aiURL"
+          type="url"
+          placeholder='https://ai.insomnia.rest'
+          defaultValue={env.aiURL || ''}
+        />
+      </label>
       <div className='flex justify-end'>
         <Button type="submit" className="px-4 py-1 bg-[#4000BF] flex items-center justify-center gap-2 aria-pressed:bg-opacity-90 focus:bg-opacity-90 font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
           Save

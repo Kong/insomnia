@@ -63,6 +63,6 @@ export async function insomniaFetch<T = void>({ method, path, data, sessionId, o
       window.webContents.send('shell:open', uri);
     }
   }
-  const isJson = response.headers.get('content-type') === 'application/json' || path.match(/\.json$/);
+  const isJson = response.headers.get('content-type')?.includes('application/json') || path.match(/\.json$/);
   return isJson ? response.json() : response.text();
 }
