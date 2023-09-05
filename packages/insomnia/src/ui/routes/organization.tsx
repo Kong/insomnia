@@ -24,9 +24,6 @@ import {
 import {
   getAccountId,
   getCurrentSessionId,
-  getFirstName,
-  getLastName,
-  isLoggedIn,
 } from '../../account/session';
 import * as models from '../../models';
 import { isOwnerOfOrganization, isPersonalOrganization, Organization } from '../../models/organization';
@@ -59,6 +56,20 @@ interface OrganizationsResponse {
   total: number;
   next: string;
   organizations: Organization[];
+}
+
+interface UserProfileResponse {
+  id: string;
+  email: string;
+  name: string;
+  picture: string;
+  bio: string;
+  github: string;
+  linkedin: string;
+  twitter: string;
+  identities: any;
+  given_name: string;
+  family_name: string;
 }
 
 export const indexLoader: LoaderFunction = async () => {
@@ -94,10 +105,7 @@ export const indexLoader: LoaderFunction = async () => {
 
 export interface OrganizationLoaderData {
   organizations: Organization[];
-  user: {
-    name: string;
-    picture: string;
-  };
+  user?: UserProfileResponse;
 }
 
 export const loader: LoaderFunction = async () => {
@@ -130,10 +138,7 @@ export const loader: LoaderFunction = async () => {
           sessionId,
         });
 
-      const user = await window.main.insomniaFetch<{
-        name: string;
-        picture: string;
-      }>({
+      const user = await window.main.insomniaFetch<UserProfileResponse>({
         method: 'GET',
         path: '/v1/user/profile',
         sessionId,
@@ -185,20 +190,14 @@ export const loader: LoaderFunction = async () => {
     } catch (err) {
       console.log('Failed to load Teams', err);
       return {
-        user: {
-          name: '',
-          picture: '',
-        },
+        user: null,
         organizations: [],
       };
     }
   }
 
   return {
-    user: {
-      name: '',
-      picture: '',
-    },
+    user: null,
     organizations: [],
   };
 };
@@ -260,7 +259,7 @@ const OrganizationRoute = () => {
                   <div className="flex w-[50px] py-2">
                     <InsomniaAILogo />
                   </div>
-                  {!isLoggedIn() ? <GitHubStarsButton /> : null}
+                  {!user ? <GitHubStarsButton /> : null}
                 </div>
                 <div className="flex gap-2 flex-nowrap items-center justify-center">
                   {workspaceData && isDesign(workspaceData?.activeWorkspace) && (
@@ -287,19 +286,17 @@ const OrganizationRoute = () => {
                   )}
                 </div>
                 <div className="flex gap-[--padding-sm] items-center justify-end p-2">
-                  {isLoggedIn() ? (
+                  {user ? (
                     <Fragment>
                       <PresentUsers />
                       <MenuTrigger>
                         <Button className="px-1 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                           <Avatar
-                            src={user?.picture}
-                            alt={`${getFirstName()?.charAt(
-                              0,
-                            )}${getLastName()?.charAt(0)}`}
+                            src={user.picture}
+                            alt={user.name}
                           />
                           <span className="pr-2">
-                            {`${getFirstName()} ${getLastName()}`}
+                            {user.name}
                           </span>
                         </Button>
                         <Popover className="min-w-max">
@@ -489,14 +486,14 @@ const OrganizationRoute = () => {
                       <Icon
                         icon="circle"
                         className={
-                          isLoggedIn()
+                          user
                             ? status === 'online'
                               ? 'text-[--color-success]'
                               : 'text-[--color-danger]'
                             : ''
                         }
                       />{' '}
-                      {isLoggedIn()
+                      {user
                         ? status.charAt(0).toUpperCase() + status.slice(1)
                         : 'Log in to sync your data'}
                     </Button>
@@ -505,7 +502,7 @@ const OrganizationRoute = () => {
                       offset={8}
                       className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                     >
-                      {isLoggedIn()
+                      {user
                         ? `You are ${status === 'online'
                           ? 'securely connected to Insomnia Cloud'
                           : 'offline. Connect to sync your data.'

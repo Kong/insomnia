@@ -1,7 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useFetcher } from 'react-router-dom';
 
-import * as session from '../../../account/session';
+import { getEmail } from '../../../account/session';
 import { getAppVersion, getProductName } from '../../../common/constants';
 import { useRootLoaderData } from '../../routes/root';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
@@ -69,7 +69,7 @@ const Dev = () => {
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
   const modalRef = useRef<ModalHandle>(null);
-  const email = session.isLoggedIn() ? session.getFullName() : null;
+  const email = getEmail();
 
   useImperativeHandle(ref, () => ({
     hide: () => {
