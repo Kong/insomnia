@@ -2,7 +2,6 @@ import crypto from 'crypto';
 import querystring from 'querystring';
 import { v4 as uuidv4 } from 'uuid';
 
-import { version } from '../../../package.json';
 import { escapeRegex } from '../../common/misc';
 import * as models from '../../models';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
@@ -304,7 +303,6 @@ const sendAccessTokenRequest = async (requestId: string, authentication: AuthTyp
     headers: [
       { name: 'Content-Type', value: 'application/x-www-form-urlencoded' },
       { name: 'Accept', value: 'application/x-www-form-urlencoded, application/json' },
-      { name: 'User-Agent', value: 'insomnia/' + version },
       ...headers,
     ],
     url: setDefaultProtocol(authentication.accessTokenUrl),
