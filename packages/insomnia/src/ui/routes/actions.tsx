@@ -783,8 +783,8 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
 
   const stagingEnv = await getStagingEnvironmentVariables();
 
-  for (const test of tests) {
-    async function generateTest() {
+  async function generateTests() {
+    async function generateTest(test: Partial<UnitTest>) {
       try {
         const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
@@ -814,8 +814,12 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
       }
     }
 
-    generateTest();
+    for (const test of tests) {
+      await generateTest(test);
+    }
   }
+
+  generateTests();
 
   return progressStream;
 };
