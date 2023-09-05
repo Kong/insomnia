@@ -410,7 +410,8 @@ export const cloneGitRepoAction: ActionFunction = async ({
     properties: vcsSegmentEventProperties('git', 'clone'),
   });
   repoSettingsPatch.needsFullClone = true;
-  let fsClient = MemClient.createClient();
+  repoSettingsPatch.uri = addDotGit(repoSettingsPatch.uri);
+  const fsClient = MemClient.createClient();
 
   const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
   try {
@@ -419,41 +420,15 @@ export const cloneGitRepoAction: ActionFunction = async ({
       gitRepository: repoSettingsPatch as GitRepository,
     });
   } catch (originalUriError) {
-    if (repoSettingsPatch.uri.endsWith('.git')) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.vcsSyncComplete,
-        properties: {
-          ...vcsSegmentEventProperties('git', 'clone', originalUriError.message),
-          providerName,
-        },
-      });
+    if (originalUriError instanceof Errors.HttpError) {
+      return {
+        errors: [originalUriError.message, originalUriError.data.response],
+      };
+    }
 
       return {
         errors: [originalUriError.message],
       };
-    }
-
-    const dotGitUri = addDotGit(repoSettingsPatch.uri);
-
-    try {
-      fsClient = MemClient.createClient();
-      await shallowClone({
-        fsClient,
-        gitRepository: { ...repoSettingsPatch, uri: dotGitUri } as GitRepository,
-      });
-      // by this point the clone was successful, so update with this syntax
-      repoSettingsPatch.uri = dotGitUri;
-    } catch (dotGitError) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.vcsSyncComplete, properties: {
-          ...vcsSegmentEventProperties('git', 'clone', dotGitError.message),
-          providerName,
-        },
-      });
-      return {
-        errors: [dotGitError.message],
-      };
-    }
   }
 
   const containsInsomniaDir = async (
