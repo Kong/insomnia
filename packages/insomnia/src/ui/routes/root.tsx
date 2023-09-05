@@ -24,6 +24,7 @@ import {
   TAB_INDEX_THEMES,
 } from '../components/modals/settings-modal';
 import { AppHooks } from '../containers/app-hooks';
+import { AIProvider } from '../context/app/ai-context';
 import Modals from './modals';
 
 interface LoaderData {
@@ -35,6 +36,7 @@ interface LoaderData {
   env: {
     websiteURL: string;
     apiURL: string;
+    aiURL: string;
   };
 }
 
@@ -50,6 +52,7 @@ export const loader: LoaderFunction = async (): Promise<LoaderData> => {
     env: {
       websiteURL: stagingEnv.websiteURL || getAppWebsiteBaseURL(),
       apiURL: stagingEnv.apiURL || getApiBaseURL(),
+      aiURL: stagingEnv.aiURL || 'https://ai.insomnia.rest',
     },
   };
 };
@@ -218,22 +221,24 @@ const Root = () => {
   }, [actionFetcher]);
 
   return (
-    <ErrorBoundary>
-      <div className="app">
-        <Outlet />
-      </div>
-      <Modals />
-      <AppHooks />
-      {/* triggered by insomnia://app/import */}
-      {importUri && (
-        <ImportModal
-          onHide={() => setImportUri('')}
-          projectName="Insomnia"
-          organizationId={organizationId}
-          from={{ type: 'uri', defaultValue: importUri }}
-        />
-      )}
-    </ErrorBoundary>
+    <AIProvider>
+      <ErrorBoundary>
+        <div className="app">
+          <Outlet />
+        </div>
+        <Modals />
+        <AppHooks />
+        {/* triggered by insomnia://app/import */}
+        {importUri && (
+          <ImportModal
+            onHide={() => setImportUri('')}
+            projectName="Insomnia"
+            organizationId={organizationId}
+            from={{ type: 'uri', defaultValue: importUri }}
+          />
+        )}
+      </ErrorBoundary>
+    </AIProvider>
   );
 };
 

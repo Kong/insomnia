@@ -123,5 +123,6 @@ export async function getStagingEnvironmentVariables() {
   return {
     apiURL: stagingEnv.data.apiURL,
     websiteURL: stagingEnv.data.websiteURL,
+    aiURL: stagingEnv.data.aiURL,
   };
 };

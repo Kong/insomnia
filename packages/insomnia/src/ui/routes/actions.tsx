@@ -11,6 +11,7 @@ import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
+import { getStagingEnvironmentVariables } from '../../models/environment';
 import { getById, update } from '../../models/helpers/request-operations';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
@@ -701,10 +702,10 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
         }
 
         const methodInfo = resolveComponentSchemaRefs(spec, getMethodInfo(request));
-
+        const stagingEnv = await getStagingEnvironmentVariables();
         const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
-          origin: 'https://ai.insomnia.rest',
+          origin: stagingEnv.aiURL || 'https://ai.insomnia.rest',
           path: '/v1/generate-test',
           sessionId: session.getCurrentSessionId(),
           data: {
@@ -780,12 +781,14 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
     total,
   });
 
+  const stagingEnv = await getStagingEnvironmentVariables();
+
   for (const test of tests) {
     async function generateTest() {
       try {
         const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
-          origin: 'https://ai.insomnia.rest',
+          origin: stagingEnv.aiURL || 'https://ai.insomnia.rest',
           path: '/v1/generate-test',
           sessionId: session.getCurrentSessionId(),
           data: {
@@ -821,18 +824,18 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
   const { organizationId } = params;
 
   invariant(typeof organizationId === 'string', 'Organization ID is required');
+  const stagingEnv = await getStagingEnvironmentVariables();
 
   try {
     const response = await window.main.insomniaFetch<{ enabled: boolean }>({
       method: 'POST',
-      origin: 'https://ai.insomnia.rest',
+      origin: stagingEnv.aiURL || 'https://ai.insomnia.rest',
       path: '/v1/access',
       sessionId: session.getCurrentSessionId(),
       data: {
         teamId: organizationId,
       },
     });
-
     return {
       enabled: response.enabled,
     };
