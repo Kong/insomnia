@@ -173,7 +173,7 @@ export const InsomniaAILogo = ({
         }
         {loading && (
           <AILoadingText>
-            <span>{'AI is thinking...'}</span>
+            <span className="whitespace-nowrap">{'AI is thinking...'}</span>
           </AILoadingText>
         )}
       </RelativeFrame>
