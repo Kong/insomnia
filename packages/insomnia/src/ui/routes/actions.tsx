@@ -90,7 +90,7 @@ export const renameProjectAction: ActionFunction = async ({
   invariant(sessionId, 'User must be logged in to rename a project');
 
   try {
-    const response = await window.main.insomniaFetch<{} | {
+    const response = await window.main.insomniaFetch<void | {
       error: string;
       message?: string;
     }>({
@@ -102,7 +102,7 @@ export const renameProjectAction: ActionFunction = async ({
       },
     });
 
-    if ('error' in response) {
+    if (response && 'error' in response) {
       return {
         error: response.error === 'FORBIDDEN' ? 'You do not have permission to rename this project.' : 'An unexpected error occurred while renaming the project. Please try again.',
       };
@@ -127,7 +127,7 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   invariant(sessionId, 'User must be logged in to delete a project');
 
   try {
-    const response = await window.main.insomniaFetch<{} | {
+    const response = await window.main.insomniaFetch<void | {
       error: string;
       message?: string;
     }>({
@@ -136,7 +136,7 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
       sessionId,
     });
 
-    if ('error' in response) {
+    if (response && 'error' in response) {
       return {
         error: response.error === 'FORBIDDEN' ? 'You do not have permission to delete this project.' : 'An unexpected error occurred while deleting the project. Please try again.',
       };
