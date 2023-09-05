@@ -8,6 +8,7 @@ const BINARY_PREFIX = 'Insomnia.Core';
  * @see https://www.electron.build/configuration/configuration
  */
 const config = {
+  compression: 'maximum',
   npmRebuild: false,
   appId: 'com.insomnia.app',
   protocols: [
