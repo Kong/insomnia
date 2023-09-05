@@ -1015,7 +1015,7 @@ export const pushToGitRemoteAction: ActionFunction = async ({
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
 
-    return { errors: [`Error Pushing Repository ${errorMessage}`] };
+    return { errors: [`Error Pushing Repository ${errorMessage} ${err?.data?.response}`] };
   }
   // If nothing to push, display that to the user
   if (!canPush) {
