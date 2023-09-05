@@ -26,7 +26,7 @@ const TabPill = styled.div({
 export const GitRepositoryCloneModal = (props: ModalProps) => {
   const { organizationId, projectId } = useParams() as { organizationId: string; projectId: string };
   const modalRef = useRef<ModalHandle>(null);
-  const updateGitRepositoryFetcher = useFetcher();
+  const cloneGitRepositoryFetcher = useFetcher();
 
   const [selectedTab, setTab] = useState<OauthProviderName>('github');
 
@@ -46,7 +46,7 @@ export const GitRepositoryCloneModal = (props: ModalProps) => {
       ...repoPatch
     } = gitRepositoryPatch;
 
-    updateGitRepositoryFetcher.submit(
+    cloneGitRepositoryFetcher.submit(
       {
         ...repoPatch,
         authorName: author?.name || '',
@@ -60,14 +60,15 @@ export const GitRepositoryCloneModal = (props: ModalProps) => {
     );
   };
 
-  const isSubmitting = updateGitRepositoryFetcher.state === 'submitting';
-  const errors = updateGitRepositoryFetcher.data?.errors as (Error | string)[];
-
+  const isSubmitting = cloneGitRepositoryFetcher.state === 'submitting';
+  const errors = cloneGitRepositoryFetcher.data?.errors as (Error | string)[];
   useEffect(() => {
     if (errors && errors.length) {
+      const errorMessage = errors.map(e => e instanceof Error ? e.message : typeof e === 'string' && e).join(', ');
+
       showAlert({
         title: 'Error Cloning Repository',
-        message: errors.map(e => e instanceof Error ? e.message : typeof e === 'string' && e).join(''),
+        message: errorMessage,
       });
     }
   }, [errors]);

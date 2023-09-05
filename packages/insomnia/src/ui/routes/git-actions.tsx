@@ -140,6 +140,7 @@ export const gitRepoAction: ActionFunction = async ({
       gitRepository: gitRepository,
     };
   } catch (e) {
+    console.error(e);
     const errorMessage =
       e instanceof Error ? e.message : 'Error while fetching git repository.';
     return {
@@ -410,7 +411,8 @@ export const cloneGitRepoAction: ActionFunction = async ({
     properties: vcsSegmentEventProperties('git', 'clone'),
   });
   repoSettingsPatch.needsFullClone = true;
-  let fsClient = MemClient.createClient();
+  repoSettingsPatch.uri = addDotGit(repoSettingsPatch.uri);
+  const fsClient = MemClient.createClient();
 
   const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
   try {
@@ -418,42 +420,18 @@ export const cloneGitRepoAction: ActionFunction = async ({
       fsClient,
       gitRepository: repoSettingsPatch as GitRepository,
     });
-  } catch (originalUriError) {
-    if (repoSettingsPatch.uri.endsWith('.git')) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.vcsSyncComplete,
-        properties: {
-          ...vcsSegmentEventProperties('git', 'clone', originalUriError.message),
-          providerName,
-        },
-      });
+  } catch (err) {
+    console.error(err);
 
+    if (err instanceof Errors.HttpError) {
       return {
-        errors: [originalUriError.message],
+        errors: [`${err.message}, ${err.data.response}`],
       };
     }
 
-    const dotGitUri = addDotGit(repoSettingsPatch.uri);
-
-    try {
-      fsClient = MemClient.createClient();
-      await shallowClone({
-        fsClient,
-        gitRepository: { ...repoSettingsPatch, uri: dotGitUri } as GitRepository,
-      });
-      // by this point the clone was successful, so update with this syntax
-      repoSettingsPatch.uri = dotGitUri;
-    } catch (dotGitError) {
-      window.main.trackSegmentEvent({
-        event: SegmentEvent.vcsSyncComplete, properties: {
-          ...vcsSegmentEventProperties('git', 'clone', dotGitError.message),
-          providerName,
-        },
-      });
       return {
-        errors: [dotGitError.message],
+        errors: [err.message],
       };
-    }
   }
 
   const containsInsomniaDir = async (
@@ -811,6 +789,11 @@ export const createNewGitBranchAction: ActionFunction = async ({
       },
     });
   } catch (err) {
+    if (err instanceof Errors.HttpError) {
+      return {
+        errors: [`${err.message}, ${err.data.response}`],
+      };
+    }
     const errorMessage =
       err instanceof Error
         ? err.message
@@ -855,6 +838,11 @@ export const checkoutGitBranchAction: ActionFunction = async ({
   try {
     await GitVCS.checkout(branch);
   } catch (err) {
+    if (err instanceof Errors.HttpError) {
+      return {
+        errors: [`${err.message}, ${err.data.response}`],
+      };
+    }
     const errorMessage = err instanceof Error ? err.message : err;
     return {
       errors: [errorMessage],
@@ -928,6 +916,11 @@ export const mergeGitBranchAction: ActionFunction = async ({
       },
     });
   } catch (err) {
+    if (err instanceof Errors.HttpError) {
+      return {
+        errors: [`${err.message}, ${err.data.response}`],
+      };
+    }
     const errorMessage = err instanceof Error ? err.message : 'Unknown error';
     return { errors: [errorMessage] };
   }
@@ -1013,9 +1006,14 @@ export const pushToGitRemoteAction: ActionFunction = async ({
   try {
     canPush = await GitVCS.canPush(gitRepository.credentials);
   } catch (err) {
+    if (err instanceof Errors.HttpError) {
+      return {
+        errors: [`${err.message}, ${err.data.response}`],
+      };
+    }
     const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
 
-    return { errors: [`Error Pushing Repository ${errorMessage}`] };
+    return { errors: [errorMessage] };
   }
   // If nothing to push, display that to the user
   if (!canPush) {
@@ -1035,6 +1033,11 @@ export const pushToGitRemoteAction: ActionFunction = async ({
       },
     });
   } catch (err: unknown) {
+    if (err instanceof Errors.HttpError) {
+      return {
+        errors: [`${err.message}, ${err.data.response}`],
+      };
+    }
     const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
 
     window.main.trackSegmentEvent({
@@ -1093,7 +1096,7 @@ export const pullFromGitRemoteAction: ActionFunction = async ({
       credentials: gitRepository?.credentials,
     });
   } catch (e) {
-    console.warn('Error fetching from remote');
+    console.warn('Error fetching from remote', e);
   }
 
   try {
@@ -1105,6 +1108,9 @@ export const pullFromGitRemoteAction: ActionFunction = async ({
       },
     });
   } catch (err: unknown) {
+    if (err instanceof Errors.HttpError) {
+      return { errors: [`${err.message}, ${err.data.response}`] };
+    }
     const errorMessage = err instanceof Error ? err.message : 'Unknown Error';
     window.main.trackSegmentEvent({
       event:
@@ -1298,6 +1304,7 @@ export const gitStatusAction: ActionFunction = async ({
       },
     };
   } catch (e) {
+    console.error(e);
     return {
       status: {
         localChanges: 0,

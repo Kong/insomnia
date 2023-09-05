@@ -71,9 +71,11 @@ export const GitRepositorySettingsModal = (props: ModalProps & {
 
   useEffect(() => {
     if (errors && errors.length) {
+      const errorMessage = errors.map(e => e instanceof Error ? e.message : typeof e === 'string' && e).join(', ');
+
       showAlert({
         title: 'Error Cloning Repository',
-        message: errors.map(e => e instanceof Error ? e.message : typeof e === 'string' && e).join(''),
+        message: errorMessage,
       });
     }
   }, [errors]);
