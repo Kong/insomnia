@@ -16,7 +16,7 @@ import { generateId } from './misc';
 
 export interface Query {
   _id?: string | SpecificQuery;
-  parentId?: string | null;
+  parentId?: string | SpecificQuery | null;
   remoteId?: string | null;
   plugin?: string;
   key?: string;
@@ -291,7 +291,6 @@ export const database = {
     if (db._empty) {
       return _send<T>('getWhere', ...arguments);
     }
-    // @ts-expect-error -- TSCONVERSION type narrowing needed
     const docs = await database.find<T>(type, query);
     return docs.length ? docs[0] : null;
   },
