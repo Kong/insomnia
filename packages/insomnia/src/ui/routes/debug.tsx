@@ -72,6 +72,7 @@ import { getMethodShortHand } from '../components/tags/method-tag';
 import { ConnectionCircle } from '../components/websockets/action-bar';
 import { RealtimeResponsePane } from '../components/websockets/realtime-response-pane';
 import { WebSocketRequestPane } from '../components/websockets/websocket-request-pane';
+import { useWorkspaceContext } from '../context/app/workspace-context';
 import { useReadyState } from '../hooks/use-ready-state';
 import {
   CreateRequestType,
@@ -84,7 +85,7 @@ import {
   WebSocketRequestLoaderData,
 } from './request';
 import { RootLoaderData } from './root';
-import { WorkspaceLoaderData } from './workspace';
+import { Child, WorkspaceLoaderData } from './workspace';
 
 export interface GrpcMessage {
   id: string;
@@ -140,6 +141,7 @@ const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
 };
 
 export const Debug: FC = () => {
+  console.time('Debug');
   const {
     activeWorkspace,
     activeProject,
@@ -148,8 +150,25 @@ export const Debug: FC = () => {
     grpcRequests,
     subEnvironments,
     baseEnvironment,
-    collection,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const { requestTree } = useWorkspaceContext();
+  function flattenTree(tree: Child[]) {
+    const collection: Child[] = [];
+
+    const build = (node: Child) => {
+      if (isRequestGroup(node.doc)) {
+        collection.push(node);
+        node.children.forEach(child => build(child));
+      } else {
+        collection.push(node);
+      }
+    };
+    tree.forEach(node => build(node));
+
+    return collection;
+  }
+  const collection = flattenTree(requestTree);
+
   const requestData = useRouteLoaderData('request/:requestId') as
     | RequestLoaderData
     | GrpcRequestLoaderData
@@ -590,6 +609,7 @@ export const Debug: FC = () => {
     name: e.name,
     color: e.color,
   }));
+  console.timeEnd('Debug');
 
   return (
     <SidebarLayout

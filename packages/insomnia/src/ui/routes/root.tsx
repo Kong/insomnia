@@ -56,10 +56,12 @@ import {
   SettingsModal,
   showSettingsModal,
   TAB_INDEX_PLUGINS,
-  TAB_INDEX_THEMES } from '../components/modals/settings-modal';
+  TAB_INDEX_THEMES,
+} from '../components/modals/settings-modal';
 import { Toast } from '../components/toast';
 import { AppHooks } from '../containers/app-hooks';
 import { AIProvider } from '../context/app/ai-context';
+import { WorkspaceProvider } from '../context/app/workspace-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import { useSettingsPatcher } from '../hooks/use-request';
 import Modals from './modals';
@@ -266,213 +268,213 @@ const Root = () => {
 
   const crumbs = workspaceData
     ? [
-        {
-          id: workspaceData.activeProject._id,
-          label: workspaceData.activeProject.name,
-          node: (
-            <Link data-testid="project">
-              <NavLink
-                to={`/organization/${organizationId}/project/${workspaceData.activeProject._id}`}
-              >
-                {workspaceData.activeProject.name}
-              </NavLink>
-            </Link>
-          ),
-        },
-        {
-          id: workspaceData.activeWorkspace._id,
-          label: workspaceData.activeWorkspace.name,
-          node: <WorkspaceDropdown />,
-        },
-      ]
+      {
+        id: workspaceData.activeProject._id,
+        label: workspaceData.activeProject.name,
+        node: (
+          <Link data-testid="project">
+            <NavLink
+              to={`/organization/${organizationId}/project/${workspaceData.activeProject._id}`}
+            >
+              {workspaceData.activeProject.name}
+            </NavLink>
+          </Link>
+        ),
+      },
+      {
+        id: workspaceData.activeWorkspace._id,
+        label: workspaceData.activeWorkspace.name,
+        node: <WorkspaceDropdown />,
+      },
+    ]
     : [];
 
   return (
     <AIProvider>
-      <NunjucksEnabledProvider>
-        <AppHooks />
-        <div className="app">
-          <Modals />
-          {/* triggered by insomnia://app/import */}
-          {importUri && (
-            <ImportModal
-              onHide={() => setImportUri('')}
-              projectName="Insomnia"
-              organizationId={organizationId}
-              from={{ type: 'uri', defaultValue: importUri }}
-            />
-          )}
-          <div className="w-full h-full divide-x divide-solid divide-y divide-[--hl-md] grid-template-app-layout grid relative bg-[--color-bg]">
-            <header className="[grid-area:Header] grid grid-cols-3 items-center">
-              <div className="flex items-center">
-                <div className="flex w-[50px] py-2">
-                  <InsomniaAILogo />
+      <WorkspaceProvider>
+        <NunjucksEnabledProvider>
+          <AppHooks />
+          <div className="app">
+            <Modals />
+            {/* triggered by insomnia://app/import */}
+            {importUri && (
+              <ImportModal
+                onHide={() => setImportUri('')}
+                projectName="Insomnia"
+                organizationId={organizationId}
+                from={{ type: 'uri', defaultValue: importUri }}
+              />
+            )}
+            <div className="w-full h-full divide-x divide-solid divide-y divide-[--hl-md] grid-template-app-layout grid relative bg-[--color-bg]">
+              <header className="[grid-area:Header] grid grid-cols-3 items-center">
+                <div className="flex items-center">
+                  <div className="flex w-[50px] py-2">
+                    <InsomniaAILogo />
+                  </div>
+                  {!isLoggedIn() ? <GitHubStarsButton /> : null}
                 </div>
-                {!isLoggedIn() ? <GitHubStarsButton /> : null}
-              </div>
-              <div className="flex gap-2 flex-nowrap items-center justify-center">
-                {workspaceData && (
-                  <Fragment>
-                    <Breadcrumbs items={crumbs}>
-                      {item => (
-                        <Item key={item.id} id={item.id}>
-                          {item.node}
-                        </Item>
-                      )}
-                    </Breadcrumbs>
-                    {isDesign(workspaceData?.activeWorkspace) && (
-                      <nav className="flex rounded-full justify-between content-evenly font-semibold bg-[--hl-xs] p-[--padding-xxs]">
-                        {['spec', 'debug', 'test'].map(item => (
-                          <NavLink
-                            key={item}
-                            to={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${item}`}
-                            className={({ isActive }) =>
-                              `${
-                                isActive
+                <div className="flex gap-2 flex-nowrap items-center justify-center">
+                  {workspaceData && (
+                    <Fragment>
+                      <Breadcrumbs items={crumbs}>
+                        {item => (
+                          <Item key={item.id} id={item.id}>
+                            {item.node}
+                          </Item>
+                        )}
+                      </Breadcrumbs>
+                      {isDesign(workspaceData?.activeWorkspace) && (
+                        <nav className="flex rounded-full justify-between content-evenly font-semibold bg-[--hl-xs] p-[--padding-xxs]">
+                          {['spec', 'debug', 'test'].map(item => (
+                            <NavLink
+                              key={item}
+                              to={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${item}`}
+                              className={({ isActive }) =>
+                                `${isActive
                                   ? 'text-[--color-font] bg-[--color-bg]'
                                   : ''
-                              } no-underline transition-colors text-center outline-none min-w-[4rem] uppercase text-[--color-font] text-xs px-[--padding-xs] py-[--padding-xxs] rounded-full`
+                                } no-underline transition-colors text-center outline-none min-w-[4rem] uppercase text-[--color-font] text-xs px-[--padding-xs] py-[--padding-xxs] rounded-full`
+                              }
+                            >
+                              {item}
+                            </NavLink>
+                          ))}
+                        </nav>
+                      )}
+                    </Fragment>
+                  )}
+                </div>
+                <div className="flex gap-[--padding-sm] items-center justify-end p-2">
+                  {isLoggedIn() ? (
+                    <MenuTrigger>
+                      <Button className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                        <Icon icon="user" />{' '}
+                        {`${getFirstName()} ${getLastName()}`}
+                      </Button>
+                      <Popover className="min-w-max">
+                        <Menu
+                          onAction={action => {
+                            if (action === 'logout') {
+                              logout();
                             }
-                          >
-                            {item}
-                          </NavLink>
-                        ))}
-                      </nav>
-                    )}
-                  </Fragment>
-                )}
-              </div>
-              <div className="flex gap-[--padding-sm] items-center justify-end p-2">
-                {isLoggedIn() ? (
-                  <MenuTrigger>
-                    <Button className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                      <Icon icon="user" />{' '}
-                      {`${getFirstName()} ${getLastName()}`}
-                    </Button>
-                    <Popover className="min-w-max">
-                      <Menu
-                        onAction={action => {
-                          if (action === 'logout') {
-                            logout();
-                          }
 
-                          if (action === 'account-settings') {
-                            window.main.openInBrowser(
-                              'https://app.insomnia.rest/app/account/'
-                            );
-                          }
-                        }}
-                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                            if (action === 'account-settings') {
+                              window.main.openInBrowser(
+                                'https://app.insomnia.rest/app/account/'
+                              );
+                            }
+                          }}
+                          className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                        >
+                          <Item
+                            id="account-settings"
+                            className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                            aria-label="Account settings"
+                          >
+                            <Icon icon="gear" />
+                            <span>Account Settings</span>
+                          </Item>
+                          <Item
+                            id="logout"
+                            className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                            aria-label="logout"
+                          >
+                            <Icon icon="sign-out" />
+                            <span>Logout</span>
+                          </Item>
+                        </Menu>
+                      </Popover>
+                    </MenuTrigger>
+                  ) : (
+                    <Fragment>
+                      <Button
+                        onPress={showLoginModal}
+                        className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                       >
-                        <Item
-                          id="account-settings"
-                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                          aria-label="Account settings"
-                        >
-                          <Icon icon="gear" />
-                          <span>Account Settings</span>
-                        </Item>
-                        <Item
-                          id="logout"
-                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                          aria-label="logout"
-                        >
-                          <Icon icon="sign-out" />
-                          <span>Logout</span>
-                        </Item>
-                      </Menu>
-                    </Popover>
-                  </MenuTrigger>
-                ) : (
-                  <Fragment>
-                    <Button
-                      onPress={showLoginModal}
-                      className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                    >
-                      Login
-                    </Button>
-                    <a
-                      className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)] focus:bg-[rgba(var(--color-surprise-rgb),0.9)] bg-[--color-surprise] font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                      href="https://app.insomnia.rest/app/signup/"
-                    >
-                      Sign Up
-                    </a>
-                  </Fragment>
-                )}
-              </div>
-            </header>
-            <div className="[grid-area:Navbar] overflow-hidden">
-              <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
-                {organizations.map(organization => (
-                  <TooltipTrigger key={organization._id}>
-                    <Link>
-                      <NavLink
-                        className={({ isActive }) =>
-                          `select-none text-[--color-font-surprise] flex-shrink-0 hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] p-[--padding-sm] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${
-                            isActive
+                        Login
+                      </Button>
+                      <a
+                        className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[rgba(var(--color-surprise-rgb),0.8)] focus:bg-[rgba(var(--color-surprise-rgb),0.9)] bg-[--color-surprise] font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                        href="https://app.insomnia.rest/app/signup/"
+                      >
+                        Sign Up
+                      </a>
+                    </Fragment>
+                  )}
+                </div>
+              </header>
+              <div className="[grid-area:Navbar] overflow-hidden">
+                <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
+                  {organizations.map(organization => (
+                    <TooltipTrigger key={organization._id}>
+                      <Link>
+                        <NavLink
+                          className={({ isActive }) =>
+                            `select-none text-[--color-font-surprise] flex-shrink-0 hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] p-[--padding-sm] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${isActive
                               ? 'outline-[--color-font]'
                               : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
-                          }`
-                        }
-                        to={`/organization/${organization._id}`}
+                            }`
+                          }
+                          to={`/organization/${organization._id}`}
+                        >
+                          {isDefaultOrganization(organization) ? (
+                            <Icon icon="home" />
+                          ) : (
+                            getNameInitials(organization.name)
+                          )}
+                        </NavLink>
+                      </Link>
+                      <Tooltip
+                        placement="right"
+                        offset={8}
+                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                       >
-                        {isDefaultOrganization(organization) ? (
-                          <Icon icon="home" />
-                        ) : (
-                          getNameInitials(organization.name)
-                        )}
-                      </NavLink>
-                    </Link>
-                    <Tooltip
-                      placement="right"
-                      offset={8}
-                      className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                    >
-                      <span>{organization.name}</span>
-                    </Tooltip>
-                  </TooltipTrigger>
-                ))}
-              </nav>
+                        <span>{organization.name}</span>
+                      </Tooltip>
+                    </TooltipTrigger>
+                  ))}
+                </nav>
+              </div>
+              <Outlet />
+              <div className="relative [grid-area:Statusbar] flex items-center justify-between overflow-hidden">
+                <TooltipTrigger>
+                  <Button
+                    data-testid="settings-button"
+                    className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                    onPress={showSettingsModal}
+                  >
+                    <Icon icon="gear" /> Preferences
+                  </Button>
+                  <Tooltip
+                    placement="top"
+                    offset={8}
+                    className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
+                    Preferences
+                    <Hotkey
+                      keyBindings={
+                        settings.hotKeyRegistry.preferences_showGeneral
+                      }
+                    />
+                  </Tooltip>
+                </TooltipTrigger>
+                <Link>
+                  <a
+                    className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
+                    href="https://konghq.com/"
+                  >
+                    Made with
+                    <Icon className="text-[--color-surprise]" icon="heart" /> by
+                    Kong
+                  </a>
+                </Link>
+              </div>
             </div>
-            <Outlet />
-            <div className="relative [grid-area:Statusbar] flex items-center justify-between overflow-hidden">
-              <TooltipTrigger>
-                <Button
-                  data-testid="settings-button"
-                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                  onPress={showSettingsModal}
-                >
-                  <Icon icon="gear" /> Preferences
-                </Button>
-                <Tooltip
-                  placement="top"
-                  offset={8}
-                  className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                >
-                  Preferences
-                  <Hotkey
-                    keyBindings={
-                      settings.hotKeyRegistry.preferences_showGeneral
-                    }
-                  />
-                </Tooltip>
-              </TooltipTrigger>
-              <Link>
-                <a
-                  className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
-                  href="https://konghq.com/"
-                >
-                  Made with
-                  <Icon className="text-[--color-surprise]" icon="heart" /> by
-                  Kong
-                </a>
-              </Link>
-            </div>
-          </div>
 
-          <Toast />
-        </div>
-      </NunjucksEnabledProvider>
+            <Toast />
+          </div>
+        </NunjucksEnabledProvider>
+      </WorkspaceProvider>
     </AIProvider>
   );
 };
