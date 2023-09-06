@@ -64,7 +64,6 @@ export const workspaceLoader: LoaderFunction = async ({
   request,
   params,
 }): Promise<WorkspaceLoaderData> => {
-  console.time('workspaceLoader');
   const { projectId, workspaceId, organizationId } = params;
   invariant(workspaceId, 'Workspace ID is required');
   invariant(projectId, 'Project ID is required');
@@ -221,14 +220,12 @@ export const workspaceLoader: LoaderFunction = async ({
 
     return childrenWithChildren;
   };
-  console.time('getCollectionTree');
   const requestTree = await getCollectionTree({
     parentId: activeWorkspace._id,
     level: 0,
     parentIsCollapsed: false,
     ancestors: [],
   });
-  console.timeEnd('getCollectionTree');
   const syncItems: StatusCandidate[] = syncItemsList
     .filter(canSync)
     .map(i => ({
@@ -254,7 +251,6 @@ export const workspaceLoader: LoaderFunction = async ({
     return collection;
   }
 
-  console.timeEnd('workspaceLoader');
   return {
     activeWorkspace,
     activeProject,
