@@ -140,6 +140,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
           headers: rendered.headers,
           authentication: rendered.authentication,
           cookieJar: rendered.workspaceCookieJar,
+          suppressUserAgent: rendered.suppressUserAgent,
         });
       };
       startListening();

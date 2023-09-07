@@ -90,6 +90,7 @@ interface OpenCurlRequestOptions {
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
   initialPayload?: string;
+  suppressUserAgent: boolean;
 }
 const openCurlConnection = async (
   _event: Electron.IpcMainInvokeEvent,
@@ -137,7 +138,7 @@ const openCurlConnection = async (
     const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), options.url));
     const { curl, debugTimeline } = createConfiguredCurlInstance({
-      req: { ...request, cookieJar: options.cookieJar, cookies: [] },
+      req: { ...request, cookieJar: options.cookieJar, cookies: [], suppressUserAgent: options.suppressUserAgent },
       finalUrl: options.url,
       settings,
       caCert: caCertificate,
