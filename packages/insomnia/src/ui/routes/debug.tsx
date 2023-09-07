@@ -410,7 +410,6 @@ export const Debug: FC = () => {
     getItems: keys =>
       [...keys].map(key => ({ 'text/plain': key.toString() })),
     onReorder(event) {
-      console.log('event', event);
       const id = event.keys.values().next().value.toString();
       const targetId = event.target.key.toString();
 
@@ -917,8 +916,6 @@ export const Debug: FC = () => {
                 onSelectionChange={keys => {
                   if (keys !== 'all') {
                     const value = keys.values().next().value;
-
-                    console.log('value', value);
 
                     const item = collection.find(
                       item => item.doc._id === value
