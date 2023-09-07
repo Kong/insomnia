@@ -85,6 +85,7 @@ import {
   WebSocketRequestLoaderData,
 } from './request';
 import { RootLoaderData } from './root';
+import testdata from './testdata.json';
 import { Child, WorkspaceLoaderData } from './workspace';
 
 export interface GrpcMessage {
@@ -167,8 +168,9 @@ export const Debug: FC = () => {
 
     return collection;
   }
-  const collection = flattenTree(requestTree);
-
+  // const collection = flattenTree(requestTree);
+  // console.log(collection);
+  const collection = testdata;
   const requestData = useRouteLoaderData('request/:requestId') as
     | RequestLoaderData
     | GrpcRequestLoaderData
@@ -903,10 +905,10 @@ export const Debug: FC = () => {
               aria-label="Request Collection"
               disallowEmptySelection
               key={sortOrder}
-              dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
               selectedKeys={[requestId]}
               selectionMode="single"
               onSelectionChange={keys => {
+                console.log('keys', keys);
                 if (keys !== 'all') {
                   const value = keys.values().next().value;
 
@@ -960,12 +962,12 @@ export const Debug: FC = () => {
                       )}
                       <span className="truncate">{item.doc.name}</span>
                       <span className="flex-1" />
-                      {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
-                      {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
+                      {/* {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+                      {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />} */}
                       {item.pinned && (
                         <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
                       )}
-                      {isRequestGroup(item.doc) ? (
+                      {/* {isRequestGroup(item.doc) ? (
                         <RequestGroupActionsDropdown
                           requestGroup={item.doc}
                         />
@@ -975,7 +977,7 @@ export const Debug: FC = () => {
                           request={item.doc}
                           isPinned={item.pinned}
                         />
-                      )}
+                      )} */}
                     </div>
                   </Item>
                 );
