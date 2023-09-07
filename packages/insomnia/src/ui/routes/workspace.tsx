@@ -2,6 +2,7 @@ import React from 'react';
 import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
 import { SortOrder } from '../../common/constants';
+import { database } from '../../common/database';
 import { fuzzyMatchAll } from '../../common/misc';
 import { sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
@@ -12,12 +13,15 @@ import { ClientCertificate } from '../../models/client-certificate';
 import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { GitRepository } from '../../models/git-repository';
-import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
+import { GrpcRequest } from '../../models/grpc-request';
+import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
 import { isRemoteProject, Project } from '../../models/project';
 import { Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import { RequestGroupMeta } from '../../models/request-group-meta';
+import { RequestMeta } from '../../models/request-meta';
 import {
   WebSocketRequest,
 } from '../../models/websocket-request';
@@ -112,7 +116,6 @@ export const workspaceLoader: LoaderFunction = async ({
       : [activeProject];
 
   const projects = sortProjects(organizationProjects);
-  const grpcRequestList: GrpcRequest[] = [];
   const syncItemsList: (
     | Workspace
     | Environment
@@ -122,6 +125,37 @@ export const workspaceLoader: LoaderFunction = async ({
     | GrpcRequest
     | RequestGroup
   )[] = [];
+
+  const searchParams = new URL(request.url).searchParams;
+  const filter = searchParams.get('filter');
+  const sortOrder = searchParams.get('sortOrder') as SortOrder;
+  const sortFunction = sortMethodMap[sortOrder] || sortMethodMap['type-manual'];
+
+  // first recursion to get all the folders ids in order to use nedb search by an array
+  const flattenFoldersIntoList = async (id: string): Promise<string[]> => {
+    const parentIds: string[] = [id];
+    const folderIds = (await models.requestGroup.findByParentId(id)).map(r => r._id);
+    if (folderIds.length) {
+      await Promise.all(folderIds.map(async folderIds => parentIds.push(...(await flattenFoldersIntoList(folderIds)))));
+    }
+    return parentIds;
+  };
+  const listOfParentIds = await flattenFoldersIntoList(activeWorkspace._id);
+
+  const reqs = await database.find(models.request.type, { parentId: { $in: listOfParentIds } });
+  const reqGroups = await database.find(models.requestGroup.type, { parentId: { $in: listOfParentIds } });
+  const grpcReqs = await database.find(models.grpcRequest.type, { parentId: { $in: listOfParentIds } }) as GrpcRequest[];
+  const wsReqs = await database.find(models.webSocketRequest.type, { parentId: { $in: listOfParentIds } });
+  const allRequests = [...reqs, ...reqGroups, ...grpcReqs, ...wsReqs] as (Request | RequestGroup | GrpcRequest | WebSocketRequest)[];
+
+  const requestMetas = await database.find(models.requestMeta.type, { parentId: { $in: reqs.map(r => r._id) } });
+  const grpcRequestMetas = await database.find(models.grpcRequestMeta.type, { parentId: { $in: grpcReqs.map(r => r._id) } });
+  const grpcAndRequestMetas = [...requestMetas, ...grpcRequestMetas] as (RequestMeta | GrpcRequestMeta)[];
+  const requestGroupMetas = await database.find(models.requestGroupMeta.type, { parentId: { $in: listOfParentIds } }) as RequestGroupMeta[];
+
+  // team sync needs an up to date list of eveything in the workspace to detect changes
+  // TODO: move this to somewhere more approriate
+  allRequests.map(r => syncItemsList.push(r));
   syncItemsList.push(activeWorkspace);
   syncItemsList.push(baseEnvironment);
   subEnvironments.forEach(e => syncItemsList.push(e));
@@ -129,11 +163,7 @@ export const workspaceLoader: LoaderFunction = async ({
     syncItemsList.push(activeApiSpec);
   }
 
-  const searchParams = new URL(request.url).searchParams;
-  const filter = searchParams.get('filter');
-  const sortOrder = searchParams.get('sortOrder') as SortOrder;
-  const sortFunction = sortMethodMap[sortOrder] || sortMethodMap['type-manual'];
-
+  // second recursion to build the tree
   const getCollectionTree = async ({
     parentId,
     level,
@@ -142,21 +172,9 @@ export const workspaceLoader: LoaderFunction = async ({
   }: {
       parentId: string; level: number; parentIsCollapsed: boolean; ancestors: string[];
   }): Promise<Child[]> => {
-    const folders = await models.requestGroup.findByParentId(parentId);
-    const requests = await models.request.findByParentId(parentId);
-    const webSocketRequests = await models.webSocketRequest.findByParentId(
-      parentId,
-    );
-    const grpcRequests = await models.grpcRequest.findByParentId(parentId);
-    // TODO: remove this state hack when the grpc responses go somewhere else
-    grpcRequests.map(r => grpcRequestList.push(r));
-    folders.map(f => syncItemsList.push(f));
-    requests.map(r => syncItemsList.push(r));
-    webSocketRequests.map(r => syncItemsList.push(r));
-    grpcRequests.map(r => syncItemsList.push(r));
+    const levelReqs = allRequests.filter(r => r.parentId === parentId);
 
-    const childrenWithChildren: Child[] = await Promise.all(
-      [...folders, ...requests, ...webSocketRequests, ...grpcRequests]
+    const childrenWithChildren: Child[] = await Promise.all(levelReqs
         .sort(sortFunction)
         .map(async (doc): Promise<Child> => {
           const isMatched = (filter: string): boolean =>
@@ -173,17 +191,12 @@ export const workspaceLoader: LoaderFunction = async ({
           const hidden = parentIsCollapsed || shouldHide;
 
           const pinned =
-            !isRequestGroup(doc) && isGrpcRequest(doc)
-              ? (await models.grpcRequestMeta.getOrCreateByParentId(doc._id))
-                  .pinned
-              : (await models.requestMeta.getOrCreateByParentId(doc._id))
-                  .pinned;
+            !isRequestGroup(doc) && grpcAndRequestMetas.find(m => m.parentId === doc._id)?.pinned || false;
           const collapsed = filter
             ? false
             : parentIsCollapsed ||
               (isRequestGroup(doc) &&
-                (await models.requestGroupMeta.getByParentId(doc._id))
-                  ?.collapsed) ||
+              requestGroupMetas.find(m => m.parentId === doc._id)?.collapsed) ||
               false;
 
           const docAncestors = [...ancestors, parentId];
@@ -195,21 +208,24 @@ export const workspaceLoader: LoaderFunction = async ({
             hidden,
             level,
             ancestors: docAncestors,
-            children: await getCollectionTree({ parentId: doc._id, level: level + 1, parentIsCollapsed: collapsed, ancestors: docAncestors }),
+            children: await getCollectionTree({
+              parentId: doc._id,
+              level: level + 1,
+              parentIsCollapsed: collapsed,
+              ancestors: docAncestors,
+            }),
           };
         }),
     );
 
     return childrenWithChildren;
   };
-
   const requestTree = await getCollectionTree({
     parentId: activeWorkspace._id,
     level: 0,
     parentIsCollapsed: false,
     ancestors: [],
   });
-
   const syncItems: StatusCandidate[] = syncItemsList
     .filter(canSync)
     .map(i => ({
@@ -217,7 +233,6 @@ export const workspaceLoader: LoaderFunction = async ({
       name: i.name || '',
       document: i,
     }));
-  const grpcRequests = grpcRequestList;
 
   function flattenTree() {
     const collection: Collection = [];
@@ -250,7 +265,8 @@ export const workspaceLoader: LoaderFunction = async ({
     caCertificate: await models.caCertificate.findByParentId(workspaceId),
     projects,
     requestTree,
-    grpcRequests,
+    // TODO: remove this state hack when the grpc responses go somewhere else
+    grpcRequests: grpcReqs,
     syncItems,
     collection: flattenTree(),
   };
