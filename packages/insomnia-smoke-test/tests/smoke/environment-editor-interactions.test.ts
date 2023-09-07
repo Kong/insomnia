@@ -24,7 +24,7 @@ test.describe('Environment Editor', async () => {
     await page.getByRole('button', { name: 'Close' }).click();
 
     // Send a request check variables defaulted to base env since new env is empty
-    await page.getByLabel('Request Collection').getByRole('row', { name: 'GET New Request' }).click();
+    await page.getByLabel('Request Collection').getByRole('row', { name: 'New Request' }).click();
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByRole('tab', { name: 'Timeline' }).click();
     await page.getByText('baseenv0').click();
@@ -41,7 +41,7 @@ test.describe('Environment Editor', async () => {
     await page.getByRole('button', { name: 'Close' }).click();
 
     // Send a request check variables defaulted to base env since new env is empty
-    await page.getByLabel('Request Collection').getByRole('row', { name: 'GET New Request' }).click();
+    await page.getByLabel('Request Collection').getByRole('row', { name: 'New Request' }).click();
     await page.getByRole('button', { name: 'Send' }).click();
     await page.getByRole('tab', { name: 'Timeline' }).click();
     await page.getByText('subenvB0').click();
@@ -61,7 +61,7 @@ test.describe('Environment Editor', async () => {
 
     // Open request
     await page.getByRole('button', { name: 'Close' }).click();
-    await page.getByLabel('Request Collection').getByRole('row', { name: 'GET New Request' }).click();
+    await page.getByLabel('Request Collection').getByRole('row', { name: 'New Request' }).click();
 
     // Add number variable to request body
     await page.locator('pre').filter({ hasText: '_.exampleObject.anotherNumber' }).click();

@@ -1,6 +1,7 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
-import React, { FC, Fragment, useEffect, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
 import {
   Button,
   DropIndicator,
@@ -84,7 +85,7 @@ import {
   WebSocketRequestLoaderData,
 } from './request';
 import { RootLoaderData } from './root';
-import { WorkspaceLoaderData } from './workspace';
+import { Child, WorkspaceLoaderData } from './workspace';
 
 export interface GrpcMessage {
   id: string;
@@ -489,12 +490,25 @@ export const Debug: FC = () => {
       }
     },
     renderDropIndicator(target) {
-      return (
-        <DropIndicator
-          target={target}
-          className="outline-[--color-surprise] outline-1 outline"
-        />
-      );
+      if (target.type === 'item') {
+        const item = virtualizer.getVirtualItems().find(i => i.key === target.key);
+        if (item) {
+          return (
+            <DropIndicator
+              target={target}
+              className="absolute w-full z-10 outline-[--color-surprise] left-0 top-0 outline-1 outline"
+              style={{
+                transform: `translateY(${target.dropPosition === 'before' ? item?.start : item.end}px)`,
+              }}
+            />
+          );
+        }
+      }
+
+      return <DropIndicator
+        target={target}
+        className="absolute outline-[--color-surprise] left-0 top-0 outline-1 outline"
+      />;
     },
   });
 
@@ -590,6 +604,17 @@ export const Debug: FC = () => {
     name: e.name,
     color: e.color,
   }));
+
+  const visibleCollection = collection.filter(item => !item.hidden);
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer<HTMLDivElement | null, Child>({
+    getScrollElement: () => parentRef.current,
+    count: visibleCollection.length,
+    estimateSize: React.useCallback(() => 32, []),
+    overscan: 30,
+    getItemKey: index => visibleCollection[index].doc._id,
+  });
 
   return (
     <SidebarLayout
@@ -877,90 +902,98 @@ export const Debug: FC = () => {
               }}
             </GridList>
 
-            <GridList
-              className="flex-1 overflow-y-auto"
-              items={collection.filter(item => !item.hidden)}
-              aria-label="Request Collection"
-              disallowEmptySelection
-              key={sortOrder}
-              dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
-              selectedKeys={[requestId]}
-              selectionMode="single"
-              onSelectionChange={keys => {
-                if (keys !== 'all') {
-                  const value = keys.values().next().value;
+            <div className='flex-1 overflow-y-auto' ref={parentRef}>
+              <GridList
+                style={{ height: virtualizer.getTotalSize() }}
+                items={virtualizer.getVirtualItems()}
+                className="relative"
+                aria-label="Request Collection"
+                disallowEmptySelection
+                key={sortOrder}
+                dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
+                selectedKeys={[requestId]}
+                selectionMode="single"
+                onSelectionChange={keys => {
+                  if (keys !== 'all') {
+                    const value = keys.values().next().value;
 
-                  const item = collection.find(
-                    item => item.doc._id === value
-                  );
-                  if (item && isRequestGroup(item.doc)) {
-                    groupMetaPatcher(value, { collapsed: !item.collapsed });
-                  } else {
-                    navigate(
-                      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`
+                    const item = collection.find(
+                      item => item.doc._id === value
                     );
+                    if (item && isRequestGroup(item.doc)) {
+                      groupMetaPatcher(value, { collapsed: !item.collapsed });
+                    } else {
+                      navigate(
+                        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`
+                      );
+                    }
                   }
-                }
-              }}
-            >
-              {item => {
-                return (
-                  <Item
-                    key={item.doc._id}
-                    id={item.doc._id}
-                    className="group outline-none select-none"
-                  >
-                    <div
-                      className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                }}
+              >
+                {virtualItem => {
+                  const item = visibleCollection[virtualItem.index];
+                  return (
+                    <Item
+                      className="group outline-none absolute top-0 left-0 select-none w-full"
+                      textValue={item.doc.name}
                       style={{
-                        paddingLeft: `${item.level + 1}rem`,
+                        height: `${virtualItem.size}`,
+                        transform: `translateY(${virtualItem.start}px)`,
                       }}
                     >
-                      <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
-                      {isRequest(item.doc) && (
-                        <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-${item.doc.method}`}>
-                          {getMethodShortHand(item.doc)}
-                        </span>
-                      )}
-                      {isWebSocketRequest(item.doc) && (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center info justify-center">
-                          WS
-                        </span>
-                      )}
-                      {isGrpcRequest(item.doc) && (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center method-grpc justify-center">
-                          gRPC
-                        </span>
-                      )}
-                      {isRequestGroup(item.doc) && (
-                        <Icon
-                          className="w-6"
-                          icon={item.collapsed ? 'folder' : 'folder-open'}
-                        />
-                      )}
-                      <span className="truncate">{item.doc.name}</span>
-                      <span className="flex-1" />
-                      {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
-                      {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
-                      {item.pinned && (
-                        <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
-                      )}
-                      {isRequestGroup(item.doc) ? (
-                        <RequestGroupActionsDropdown
-                          requestGroup={item.doc}
-                        />
-                      ) : (
-                        <RequestActionsDropdown
-                          activeProject={activeProject}
-                          request={item.doc}
-                          isPinned={item.pinned}
-                        />
-                      )}
-                    </div>
-                  </Item>
-                );
-              }}
-            </GridList>
+                      <div
+                        className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                        style={{
+                          paddingLeft: `${item.level + 1}rem`,
+                        }}
+                      >
+                        <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                        <Button slot="drag" className="hidden" />
+                        {isRequest(item.doc) && (
+                          <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-${item.doc.method}`}>
+                            {getMethodShortHand(item.doc)}
+                          </span>
+                        )}
+                        {isWebSocketRequest(item.doc) && (
+                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center info justify-center">
+                            WS
+                          </span>
+                        )}
+                        {isGrpcRequest(item.doc) && (
+                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center method-grpc justify-center">
+                            gRPC
+                          </span>
+                        )}
+                        {isRequestGroup(item.doc) && (
+                          <Icon
+                            className="w-6"
+                            icon={item.collapsed ? 'folder' : 'folder-open'}
+                          />
+                        )}
+                        <span className="truncate">{item.doc.name}</span>
+                        <span className="flex-1" />
+                        {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+                        {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
+                        {item.pinned && (
+                          <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
+                        )}
+                        {isRequestGroup(item.doc) ? (
+                          <RequestGroupActionsDropdown
+                            requestGroup={item.doc}
+                          />
+                        ) : (
+                          <RequestActionsDropdown
+                            activeProject={activeProject}
+                            request={item.doc}
+                            isPinned={item.pinned}
+                          />
+                        )}
+                      </div>
+                    </Item>
+                  );
+                }}
+              </GridList>
+            </div>
           </div>
 
           <WorkspaceSyncDropdown />
