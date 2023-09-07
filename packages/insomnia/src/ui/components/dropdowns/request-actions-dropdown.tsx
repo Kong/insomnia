@@ -28,7 +28,7 @@ import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 
 interface Props extends Omit<DropdownProps, 'children'> {
-  activeEnvironment?: Environment | null;
+  activeEnvironment: Environment;
   activeProject: Project;
   isPinned: Boolean;
   request: Request | GrpcRequest | WebSocketRequest;
@@ -109,8 +109,7 @@ export const RequestActionsDropdown = ({
 
   const copyAsCurl = async () => {
     try {
-      const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
-      const har = await exportHarRequest(request._id, environmentId);
+      const har = await exportHarRequest(request._id, activeEnvironment._id);
       const HTTPSnippet = (await import('httpsnippet')).default;
       const snippet = new HTTPSnippet(har);
       const cmd = snippet.convert('shell', 'curl');
