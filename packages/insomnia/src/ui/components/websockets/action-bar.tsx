@@ -106,6 +106,7 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
       headers: rendered.headers,
       authentication: rendered.authentication,
       cookieJar: rendered.workspaceCookieJar,
+      suppressUserAgent: rendered.suppressUserAgent,
     });
 
   };

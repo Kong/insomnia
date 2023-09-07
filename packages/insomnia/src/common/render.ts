@@ -36,6 +36,7 @@ export type RenderedRequest = Request & {
     disabled?: boolean;
   }[];
   cookieJar: CookieJar;
+  suppressUserAgent: boolean;
 };
 
 export type RenderedGrpcRequest = GrpcRequest;
@@ -495,6 +496,7 @@ export async function getRenderedRequestAndContext(
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
   renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
+  const suppressUserAgent = request.headers.some(h => h.name.toLowerCase() === 'user-agent' && h.disabled === true);
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
   // Remove disabled headers
@@ -515,6 +517,7 @@ export async function getRenderedRequestAndContext(
   return {
     context: renderContext,
     request: {
+      suppressUserAgent,
       cookieJar: renderedCookieJar,
       cookies: [],
       isPrivate: false,

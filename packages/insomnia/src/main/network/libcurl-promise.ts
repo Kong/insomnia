@@ -41,6 +41,7 @@ interface RequestUsedHere {
   url: string;
   cookieJar: any;
   cookies: { name: string; value: string }[];
+  suppressUserAgent: boolean;
 }
 interface SettingsUsedHere {
   preferredHttpVersion: string;
@@ -376,6 +377,9 @@ export const createConfiguredCurlInstance = ({
   const userAgent: RequestHeader | null = headers.find((h: any) => h.name.toLowerCase() === 'user-agent') || null;
   const userAgentOrFallback = typeof userAgent?.value === 'string' ? userAgent?.value : 'insomnia/' + version;
   curl.setOpt(Curl.option.USERAGENT, userAgentOrFallback);
+  if (req.suppressUserAgent) {
+    curl.setOpt(Curl.option.USERAGENT, '');
+  }
 
   const { username, password, disabled } = authentication;
   const isDigest = authentication.type === AUTH_DIGEST;

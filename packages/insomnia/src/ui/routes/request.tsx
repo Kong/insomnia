@@ -248,6 +248,7 @@ export interface ConnectActionParams {
   headers: RequestHeader[];
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
+  suppressUserAgent: boolean;
 }
 export const connectAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
@@ -274,6 +275,7 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
       headers: rendered.headers,
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
+      suppressUserAgent: rendered.suppressUserAgent,
     });
   }
   // HACK: even more elaborate hack to get the request to update
