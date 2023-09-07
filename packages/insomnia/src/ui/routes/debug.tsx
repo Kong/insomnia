@@ -891,6 +891,7 @@ export const Debug: FC = () => {
                       )}
                       {!isRequestGroup(item.doc) && (
                         <RequestActionsDropdown
+                          activeEnvironment={activeEnvironment}
                           activeProject={activeProject}
                           request={item.doc}
                           isPinned={item.pinned}
@@ -983,6 +984,7 @@ export const Debug: FC = () => {
                           />
                         ) : (
                           <RequestActionsDropdown
+                            activeEnvironment={activeEnvironment}
                             activeProject={activeProject}
                             request={item.doc}
                             isPinned={item.pinned}
