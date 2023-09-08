@@ -391,8 +391,8 @@ export function createWindow() {
       {
         label: 'Show Software License',
         click: () => {
-          // eslint-disable-next-line no-restricted-properties
-          shell.openExternal('https://insomnia.rest/license');
+          const licensePath = path.resolve(app.getAppPath(), '../license.txt');
+          shell.openPath(licensePath);
         },
       },
     ],
