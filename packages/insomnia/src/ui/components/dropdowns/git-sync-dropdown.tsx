@@ -3,6 +3,7 @@ import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
 import { useFetcher, useParams, useRevalidator } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
+import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { docsGitSync } from '../../../common/documentation';
 import { GitRepository } from '../../../models/git-repository';
 import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
@@ -24,13 +25,14 @@ import {
 } from '../base/dropdown';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
-import { showAlert } from '../modals';
+import { showAlert, showModal } from '../modals';
 import { GitBranchesModal } from '../modals/git-branches-modal';
 import { GitLogModal } from '../modals/git-log-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { GitStagingModal } from '../modals/git-staging-modal';
 import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
+import { AskModal } from '../modals/ask-modal';
 
 interface Props {
   gitRepository: GitRepository | null;
@@ -247,7 +249,23 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
 
   const commitToolTipMsg = status?.localChanges ? 'Local changes made' : 'No local changes made';
 
-  if (isSynced) {
+  const showUpgradePlanModal = () => {
+    showModal(AskModal, {
+      title: "Upgrading Plan",
+      message: `Role-based access control (RBAC) is only enabled for Team plan or above, please upgrade your plan.`,
+      yesText: 'Upgrade Plan',
+      noText: 'Cancel',
+      onDone: async (isYes: boolean) => {
+        if (isYes) {
+          window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+        }
+      },
+    })
+  };
+
+  const gitFlagIsEnabled = false; // TODO: use loader data to set it
+
+  if (gitFlagIsEnabled && isSynced) {
     dropdown = (
       <div className={className}>
         <Dropdown
@@ -425,7 +443,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
         </Dropdown>
       </div>
     );
-  } else {
+  } else if (gitFlagIsEnabled && !isSynced) {
     dropdown = (
       <div className={className}>
         <Dropdown
@@ -527,6 +545,38 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
           </DropdownSection>
         </Dropdown>
       </div>
+    );
+  } else {
+    dropdown = (
+      <div className={className}>
+        <Button
+          size="medium"
+          variant='text'
+          style={{
+            width: '100%',
+            borderRadius: '0',
+            borderTop: '1px solid var(--hl-md)',
+            justifyContent: 'flex-start !important',
+            height: 'var(--line-height-sm)',
+          }}
+          onClick={showUpgradePlanModal}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              gap: 'var(--padding-xs)',
+              width: '100%',
+            }}
+          >
+            {iconClassName && (
+              <i className={classnames('space-right', iconClassName)} />
+            )}
+            <span className="ellipsis">Git Sync</span>
+          </div>
+        </Button>
+      </div >
     );
   }
 
