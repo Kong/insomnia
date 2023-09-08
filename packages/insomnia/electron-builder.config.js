@@ -21,7 +21,7 @@ const config = {
     {
       from: './build',
       to: '.',
-      filter: ['**/*', '!opensource-licenses.txt'],
+      filter: ['**/*', '!opensource-licenses.txt', '!static/license.txt'],
     },
     './package.json',
   ],
@@ -36,6 +36,11 @@ const config = {
       from: './build',
       to: '.',
       filter: 'opensource-licenses.txt',
+    },
+    {
+      from: './build/static',
+      to: '.',
+      filter: 'license.txt',
     },
   ],
   extraMetadata: {
