@@ -12,7 +12,18 @@ export const canDuplicate = false;
 export const canSync = false;
 
 export interface BaseUnitTestResult {
-  results: Record<string, any>;
+  results: {
+    stats: {
+      failures: number;
+      passes: number;
+      tests: number;
+    };
+    tests: {
+      err?: Error;
+      title: string;
+      duration: number;
+    }[];
+  };
 }
 
 export type UnitTestResult = BaseModel & BaseUnitTestResult;
