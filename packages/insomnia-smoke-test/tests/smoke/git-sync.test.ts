@@ -8,7 +8,7 @@ test('Clone from github', async ({ page }) => {
   await page.getByPlaceholder('MyUser').fill('J');
   await page.getByPlaceholder('88e7ee63b254e4b0bf047559eafe86ba9dd49507').fill('J');
   await page.getByTestId('git-repository-settings-modal__sync-btn').click();
-  await page.getByRole('button', { name: 'Toggle Preview' }).click();
+  await page.getByLabel('Toggle preview').click();
 });
 test('Sign in with GitHub', async ({ app, page }) => {
   await page.getByRole('button', { name: 'New Document' }).click();
