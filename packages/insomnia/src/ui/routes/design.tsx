@@ -22,6 +22,7 @@ import {
   Menu,
   MenuTrigger,
   Popover,
+  ToggleButton,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
@@ -336,7 +337,7 @@ const Design: FC = () => {
     {
       id: 'toggle-preview',
       name: 'Toggle preview',
-      icon: <Icon icon={isSpecPaneOpen ? 'eye-slash' : 'eye'} />,
+      icon: <Icon icon={isSpecPaneOpen ? 'eye' : 'eye-slash'} />,
       isDisabled:
         !apiSpec.contents ||
         lintErrors.length > 0 ||
@@ -355,14 +356,27 @@ const Design: FC = () => {
       renderPageSidebar={
         <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md]'>
           <div className="flex flex-shrink-0 items-center gap-2 p-[--padding-sm]">
-            <Heading className="text-[--color-font] font-bold">Spec</Heading>
+            <Heading className="text-[--hl] uppercase">Spec</Heading>
             <span className="flex-1" />
+            <ToggleButton
+              aria-label="Toggle preview"
+              isSelected={isSpecPaneOpen}
+              className="flex items-center justify-center gap-2 px-2 h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              onChange={setIsSpecPaneOpen}
+            >
+              {({ isSelected }) => (
+                <>
+                  <Icon icon={isSelected ? 'eye' : 'eye-slash'} />
+                  <span>Preview</span>
+                </>
+              )}
+            </ToggleButton>
             <MenuTrigger>
               <Button
-                aria-label="Create in collection"
+                aria-label="Spec actions"
                 className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
               >
-                <Icon icon="caret-down" />
+                <Icon icon="gear" />
               </Button>
               <Popover className="min-w-max">
                 <Menu
@@ -402,7 +416,7 @@ const Design: FC = () => {
             {info && (
               <div className='divide-y divide-solid divide-[--hl-md]'>
                   <Button
-                    className="w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
                     onPress={() => {
                       expandedKeys.includes('info')
                         ? setExpandedKeys(
@@ -413,7 +427,7 @@ const Design: FC = () => {
                   >
                     <span className='truncate'>Info</span>
                     <Icon
-                      icon={expandedKeys.includes('info') ? 'chevron-up' : 'chevron-down'}
+                      icon={expandedKeys.includes('info') ? 'minus' : 'plus'}
                       className='text-xs'
                     />
                   </Button>
@@ -457,7 +471,7 @@ const Design: FC = () => {
               <div className='divide-y divide-solid divide-[--hl-md]'>
                 <div>
                   <Button
-                    className="w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
                     onPress={() => {
                       expandedKeys.includes('servers')
                         ? setExpandedKeys(
@@ -466,9 +480,9 @@ const Design: FC = () => {
                         : setExpandedKeys([...expandedKeys, 'servers']);
                     }}
                   >
-                    Servers
+                    <span className='truncate'>Servers</span>
                     <Icon
-                      icon={expandedKeys.includes('servers') ? 'chevron-up' : 'chevron-down'}
+                      icon={expandedKeys.includes('servers') ? 'minus' : 'plus'}
                       className='text-xs'
                     />
                   </Button>
@@ -498,7 +512,7 @@ const Design: FC = () => {
               <div className='divide-y divide-solid divide-[--hl-md]'>
                 <div>
                   <Button
-                    className="w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
                     onPress={() => {
                       expandedKeys.includes('paths')
                         ? setExpandedKeys(
@@ -509,7 +523,7 @@ const Design: FC = () => {
                   >
                     <span className='truncate'>Paths</span>
                     <Icon
-                      icon={expandedKeys.includes('paths') ? 'chevron-up' : 'chevron-down'}
+                      icon={expandedKeys.includes('paths') ? 'minus' : 'plus'}
                       className='text-xs'
                     />
                   </Button>
@@ -554,7 +568,7 @@ const Design: FC = () => {
               <div className='divide-y divide-solid divide-[--hl-md]'>
                 <div>
                   <Button
-                    className="w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
                     onPress={() => {
                       expandedKeys.includes('requestBodies')
                         ? setExpandedKeys(
@@ -567,7 +581,7 @@ const Design: FC = () => {
                   >
                     <span className='truncate'>Request bodies</span>
                     <Icon
-                      icon={expandedKeys.includes('requestBodies') ? 'chevron-up' : 'chevron-down'}
+                      icon={expandedKeys.includes('requestBodies') ? 'minus' : 'plus'}
                       className='text-xs'
                     />
                   </Button>
@@ -600,7 +614,7 @@ const Design: FC = () => {
               <div className='divide-y divide-solid divide-[--hl-md]'>
                 <div>
                   <Button
-                    className="w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
                     onPress={() => {
                       expandedKeys.includes('responses')
                         ? setExpandedKeys(
@@ -613,7 +627,7 @@ const Design: FC = () => {
                       Responses
                     </span>
                     <Icon
-                      icon={expandedKeys.includes('responses') ? 'chevron-up' : 'chevron-down'}
+                      icon={expandedKeys.includes('responses') ? 'minus' : 'plus'}
                       className='text-xs'
                     />
                   </Button>
@@ -644,7 +658,7 @@ const Design: FC = () => {
               <div className='divide-y divide-solid divide-[--hl-md]'>
                 <div>
                   <Button
-                    className="w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
                     onPress={() => {
                       expandedKeys.includes('parameters')
                         ? setExpandedKeys(
@@ -657,7 +671,7 @@ const Design: FC = () => {
                       Parameters
                     </span>
                     <Icon
-                      icon={expandedKeys.includes('parameters') ? 'chevron-up' : 'chevron-down'}
+                      icon={expandedKeys.includes('parameters') ? 'minus' : 'plus'}
                       className='text-xs'
                     />
                   </Button>
@@ -688,7 +702,7 @@ const Design: FC = () => {
               <div className='divide-y divide-solid divide-[--hl-md]'>
                 <div>
                   <Button
-                    className="w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
                     onPress={() => {
                       expandedKeys.includes('headers')
                         ? setExpandedKeys(
@@ -701,7 +715,7 @@ const Design: FC = () => {
                       Headers
                     </span>
                     <Icon
-                      icon={expandedKeys.includes('headers') ? 'chevron-up' : 'chevron-down'}
+                      icon={expandedKeys.includes('headers') ? 'minus' : 'plus'}
                       className='text-xs'
                     />
                   </Button>
@@ -732,7 +746,7 @@ const Design: FC = () => {
               <div className='divide-y divide-solid divide-[--hl-md]'>
                 <div>
                   <Button
-                    className="w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
                     onPress={() => {
                       expandedKeys.includes('schemas')
                         ? setExpandedKeys(
@@ -745,7 +759,7 @@ const Design: FC = () => {
                       Schemas
                     </span>
                     <Icon
-                      icon={expandedKeys.includes('schemas') ? 'chevron-up' : 'chevron-down'}
+                      icon={expandedKeys.includes('schemas') ? 'minus' : 'plus'}
                       className='text-xs'
                     />
                   </Button>
@@ -776,7 +790,7 @@ const Design: FC = () => {
               <div className='divide-y divide-solid divide-[--hl-md]'>
                 <div>
                   <Button
-                    className="w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
+                    className="text-[--hl] text-sm uppercase w-full select-none p-[--padding-sm] hover:bg-[--hl-sm] focus:bg-[--hl-sm] flex gap-2 justify-between items-center"
                     onPress={() => {
                       expandedKeys.includes('security')
                         ? setExpandedKeys(
@@ -789,7 +803,7 @@ const Design: FC = () => {
                       Security
                     </span>
                     <Icon
-                      icon={expandedKeys.includes('security') ? 'chevron-up' : 'chevron-down'}
+                      icon={expandedKeys.includes('security') ? 'minus' : 'plus'}
                       className='text-xs'
                     />
                   </Button>
