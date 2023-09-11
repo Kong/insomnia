@@ -14,6 +14,7 @@ interface EnvOptions {
   INSOMNIA_DATA_PATH: string;
   INSOMNIA_API_URL: string;
   INSOMNIA_APP_WEBSITE_URL: string;
+  INSOMNIA_AI_URL: string;
   INSOMNIA_GITHUB_API_URL: string;
   INSOMNIA_GITLAB_API_URL: string;
   INSOMNIA_UPDATES_URL: string;
@@ -21,20 +22,16 @@ interface EnvOptions {
 
 export const test = baseTest.extend<{
   app: ElectronApplication;
-  db: {
-    stuff: string;
-    onReady: () => Promise<unknown>;
-  };
+  dataPath: string;
 }>({
-  app: async ({ playwright, trace, db }, use, testInfo) => {
-    await db.onReady();
-    console.log('Creating app');
+  app: async ({ playwright, trace, dataPath }, use, testInfo) => {
     const webServerUrl = testInfo.config.webServer?.url;
 
     const options: EnvOptions = {
-      INSOMNIA_DATA_PATH: randomDataPath(),
+      INSOMNIA_DATA_PATH: dataPath,
       INSOMNIA_API_URL: webServerUrl + '/api',
       INSOMNIA_APP_WEBSITE_URL: webServerUrl + '/website',
+      INSOMNIA_AI_URL: '/ai',
       INSOMNIA_GITHUB_API_URL: webServerUrl + '/github-api/graphql',
       INSOMNIA_GITLAB_API_URL: webServerUrl + '/gitlab-api',
       INSOMNIA_UPDATES_URL: webServerUrl || 'https://updates.insomnia.rest',
@@ -79,15 +76,9 @@ export const test = baseTest.extend<{
 
     await use(page);
   },
-  db: async ({ }, use) => {
-    console.log('Creating db');
-    const db = {
-      stuff: 'here',
-      onReady: () => new Promise(resolve => setTimeout(resolve, 1000)),
-    };
+  dataPath: async ({ }, use) => {
+    const insomniaDataPath = randomDataPath();
 
-    await use(db);
-
-    console.log('Closing db');
+    await use(insomniaDataPath);
   },
 });
