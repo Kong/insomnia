@@ -78,7 +78,7 @@ export const TestRunStatus: FC = () => {
             <div className="flex gap-2 p-[--padding-sm] items-center">
               <div className="flex flex-shrink-0">
                 <span
-                  className={`px-2 w-20 py-1 flex-shrink-0 flex rounded-sm border border-solid border-current ${
+                  className={`w-20 flex-shrink-0 flex rounded-sm border border-solid border-current ${
                     test.err?.message
                       ? 'text-[--color-danger]'
                       : 'text-[--color-success]'
