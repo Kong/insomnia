@@ -1,5 +1,14 @@
-import classnames from 'classnames';
+import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { FC, Suspense } from 'react';
+import {
+  Button,
+  GridList,
+  Heading,
+  Item,
+  Menu,
+  MenuTrigger,
+  Popover,
+} from 'react-aria-components';
 import {
   LoaderFunction,
   Route,
@@ -14,12 +23,11 @@ import {
 import * as models from '../../models';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { invariant } from '../../utils/invariant';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
+import { EditableInput } from '../components/editable-input';
 import { ErrorBoundary } from '../components/error-boundary';
-import { showPrompt } from '../components/modals';
+import { Icon } from '../components/icon';
 import { SidebarFooter, SidebarLayout } from '../components/sidebar-layout';
-import { Button } from '../components/themed-button';
 import { TestRunStatus } from './test-results';
 import TestSuiteRoute from './test-suite';
 
@@ -45,15 +53,17 @@ export const loader: LoaderFunction = async ({
 const TestRoute: FC = () => {
   const { unitTestSuites } = useLoaderData() as LoaderData;
 
-  const { organizationId, projectId, workspaceId, testSuiteId } = useParams() as {
-    organizationId: string;
-    projectId: string;
-    workspaceId: string;
-    testSuiteId: string;
-  };
+  const { organizationId, projectId, workspaceId, testSuiteId } =
+    useParams() as {
+      organizationId: string;
+      projectId: string;
+      workspaceId: string;
+      testSuiteId: string;
+    };
 
   const createUnitTestSuiteFetcher = useFetcher();
   const deleteUnitTestSuiteFetcher = useFetcher();
+  const renameTestSuiteFetcher = useFetcher();
   const runAllTestsFetcher = useFetcher();
   const runningTests = useFetchers()
     .filter(
@@ -65,102 +75,149 @@ const TestRoute: FC = () => {
 
   const navigate = useNavigate();
 
+  const testSuiteActionList: {
+    id: string;
+    name: string;
+    icon: IconName;
+    action: (suiteId: string) => void;
+  }[] = [
+    {
+      id: 'run-tests',
+      name: 'Run tests',
+      icon: 'play',
+      action: suiteId => {
+        runAllTestsFetcher.submit(
+          {},
+          {
+            method: 'POST',
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/run-all-tests`,
+          }
+        );
+      },
+    },
+    {
+      id: 'delete-suite',
+      name: 'Delete suite',
+      icon: 'trash',
+      action: suiteId => {
+        deleteUnitTestSuiteFetcher.submit(
+          {},
+          {
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/delete`,
+            method: 'POST',
+          }
+        );
+      },
+    },
+  ];
+
   return (
     <SidebarLayout
       renderPageSidebar={
         <ErrorBoundary showAlert>
-          <div className="unit-tests__sidebar">
-            <div className="pad-sm">
+          <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
+            <div className="p-[--padding-sm]">
               <Button
-                variant="outlined"
-                onClick={() => {
-                  showPrompt({
-                    title: 'New Test Suite',
-                    defaultValue: 'New Suite',
-                    submitName: 'Create Suite',
-                    label: 'Test Suite Name',
-                    selectText: true,
-                    onComplete: async name => {
-                      createUnitTestSuiteFetcher.submit(
-                        {
-                          name,
-                        },
-                        {
-                          method: 'post',
-                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/new`,
-                        }
-                      );
+                className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                onPress={() => {
+                  createUnitTestSuiteFetcher.submit(
+                    {
+                      name: 'New Suite',
                     },
-                  });
+                    {
+                      method: 'post',
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/new`,
+                    }
+                  );
                 }}
               >
-                New Test Suite
+                <Icon icon="plus" />
+                New test suite
               </Button>
             </div>
-            <ul>
-              {unitTestSuites.map(suite => (
-                <li
-                  key={suite._id}
-                  className={classnames({
-                    active: suite._id === testSuiteId,
-                  })}
-                >
-                  <button
-                    onClick={e => {
-                      e.preventDefault();
-                      navigate(
-                        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suite._id}`
-                      );
-                    }}
+            <GridList
+              aria-label="Projects"
+              items={unitTestSuites.map(suite => ({
+                id: suite._id,
+                key: suite._id,
+                ...suite,
+              }))}
+              className="overflow-y-auto flex-1 data-[empty]:py-0 py-[--padding-sm]"
+              disallowEmptySelection
+              selectedKeys={[testSuiteId]}
+              selectionMode="single"
+              onSelectionChange={keys => {
+                if (keys !== 'all') {
+                  const value = keys.values().next().value;
+                  navigate({
+                    pathname: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${value}`,
+                  });
+                }
+              }}
+            >
+              {item => {
+                return (
+                  <Item
+                    key={item._id}
+                    id={item._id}
+                    textValue={item.name}
+                    className="group outline-none select-none w-full"
                   >
-                    {suite.name}
-                  </button>
-
-                  <Dropdown
-                    aria-label='Test Suite Actions'
-                    triggerButton={
-                      <DropdownButton className="unit-tests__sidebar__action">
-                        <i className="fa fa-caret-down" />
-                      </DropdownButton>
-                    }
-                  >
-                    <DropdownItem aria-label='Run Tests'>
-                      <ItemContent
-                        stayOpenAfterClick
-                        isDisabled={runAllTestsFetcher.state === 'submitting'}
-                        label={runAllTestsFetcher.state === 'submitting'
-                          ? 'Running... '
-                          : 'Run Tests'}
-                        onClick={() => {
-                          runAllTestsFetcher.submit(
-                            {},
+                    <div className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]">
+                      <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                      <EditableInput
+                        value={item.name}
+                        name="name"
+                        ariaLabel="Test suite name"
+                        onChange={name => {
+                          renameTestSuiteFetcher.submit(
+                            { name },
                             {
-                              method: 'post',
-                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suite._id}/run-all-tests`,
+                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}/rename`,
+                              method: 'POST',
                             }
                           );
                         }}
                       />
-                    </DropdownItem>
-                    <DropdownItem aria-label='Delete Suite'>
-                      <ItemContent
-                        label="Delete Suite"
-                        withPrompt
-                        onClick={() =>
-                          deleteUnitTestSuiteFetcher.submit(
-                            {},
-                            {
-                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suite._id}/delete`,
-                              method: 'post',
-                            }
-                          )
-                        }
-                      />
-                    </DropdownItem>
-                  </Dropdown>
-                </li>
-              ))}
-            </ul>
+                      <span className="flex-1" />
+                      <MenuTrigger>
+                        <Button
+                          aria-label="Project Actions"
+                          className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                        >
+                          <Icon icon="caret-down" />
+                        </Button>
+                        <Popover className="min-w-max">
+                          <Menu
+                            aria-label="Project Actions Menu"
+                            selectionMode="single"
+                            onAction={key => {
+                              testSuiteActionList
+                                .find(({ id }) => key === id)
+                                ?.action(item._id);
+                            }}
+                            items={testSuiteActionList}
+                            className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                          >
+                            {item => (
+                              <Item
+                                key={item.id}
+                                id={item.id}
+                                className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                                aria-label={item.name}
+                              >
+                                <Icon icon={item.icon} />
+                                <span>{item.name}</span>
+                              </Item>
+                            )}
+                          </Menu>
+                        </Popover>
+                      </MenuTrigger>
+                    </div>
+                  </Item>
+                );
+              }}
+            </GridList>
           </div>
           <SidebarFooter>
             <WorkspaceSyncDropdown />
@@ -180,9 +237,7 @@ const TestRoute: FC = () => {
           <Route
             path="*"
             element={
-              <div className="unit-tests pad theme--pane__body">
-                No test suite selected
-              </div>
+              <div className="p-[--padding-md]">No test suite selected</div>
             }
           />
         </Routes>
@@ -193,11 +248,9 @@ const TestRoute: FC = () => {
             path="test-suite/:testSuiteId/test-result/:testResultId"
             element={
               runningTests ? (
-                <div className="unit-tests__results">
-                  <div className="unit-tests__top-header">
-                    <h2>Running Tests...</h2>
-                  </div>
-                </div>
+                <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full p-[--padding-md] border-solid border-b border-b-[--hl-md]">
+                  <Icon icon="spinner" className="fa-pulse" /> Running tests...
+                </Heading>
               ) : (
                 <TestRunStatus />
               )
@@ -206,19 +259,16 @@ const TestRoute: FC = () => {
           <Route
             path="*"
             element={
-              runningTests ? (
-                <div className="unit-tests__results">
-                  <div className="unit-tests__top-header">
-                    <h2>Running Tests...</h2>
-                  </div>
-                </div>
-              ) : (
-                <div className="unit-tests__results">
-                  <div className="unit-tests__top-header">
-                    <h2>No Results</h2>
-                  </div>
-                </div>
-              )
+              <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full p-[--padding-md] border-solid border-b border-b-[--hl-md]">
+                {runningTests ? (
+                  <>
+                    <Icon icon="spinner" className="fa-pulse" /> Running
+                    tests...
+                  </>
+                ) : (
+                  'No test results'
+                )}
+              </Heading>
             }
           />
         </Routes>
