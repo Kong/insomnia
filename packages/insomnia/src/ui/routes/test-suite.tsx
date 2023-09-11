@@ -29,8 +29,6 @@ import {
 } from '../components/codemirror/code-editor';
 import { EditableInput } from '../components/editable-input';
 import { Icon } from '../components/icon';
-import { showModal, showPrompt } from '../components/modals';
-import { SelectModal } from '../components/modals/select-modal';
 
 const UnitTestItemView = ({
   unitTest,
@@ -72,7 +70,7 @@ const UnitTestItemView = ({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="p-[--padding-sm] overflow-hidden">
+    <div className="p-[--padding-sm] flex-shrink-0 overflow-hidden">
       <div className="flex items-center gap-2 w-full">
         <Button
           className="flex flex-shrink-0 flex-nowrap items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
@@ -123,7 +121,7 @@ const UnitTestItemView = ({
             key: request._id,
           }))}
         >
-          <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+          <Button className="px-4 py-1 flex flex-1 h-6 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
             <SelectValue<Request> className="flex truncate items-center justify-center gap-2">
               {({ isPlaceholder, selectedItem }) => {
                 if (isPlaceholder || !selectedItem) {
@@ -164,7 +162,7 @@ const UnitTestItemView = ({
         </Select>
 
         <Button
-          className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => {
             deleteUnitTestFetcher.submit(
               {},
@@ -178,7 +176,7 @@ const UnitTestItemView = ({
           <Icon icon="trash" />
         </Button>
         <Button
-          className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => {
             runTestFetcher.submit(
               {},
@@ -212,39 +210,19 @@ const UnitTestItemView = ({
             const variableName = 'response' + (highestNumberedConstant + 1);
             return [
               {
-                name: 'Send Current Request',
+                name: 'Send: Current request',
                 displayValue: '',
                 value:
                   `const ${variableName} = await insomnia.send();\n` +
                   `expect(${variableName}.status).to.equal(200);`,
               },
-              {
-                name: 'Send Request By ID',
+              ...requests.map(({ name, _id }) => ({
+                name: `Send: ${name}`,
                 displayValue: '',
-                value: async () => {
-                  return new Promise(resolve => {
-                    showModal(SelectModal, {
-                      title: 'Select Request',
-                      message: 'Select a request to fill',
-                      value: '__NULL__',
-                      options: [
-                        {
-                          name: '-- Select Request --',
-                          value: '__NULL__',
-                        },
-                        ...requests.map(({ name, _id }) => ({
-                          name,
-                          displayValue: '',
-                          value:
-                            `const ${variableName} = await insomnia.send('${_id}');\n` +
-                            `expect(${variableName}.status).to.equal(200);`,
-                        })),
-                      ],
-                      onDone: (value: string | null) => resolve(value),
-                    });
-                  });
-                },
-              },
+                value:
+                  `const ${variableName} = await insomnia.send('${_id}');\n` +
+                  `expect(${variableName}.status).to.equal(200);`,
+              })),
             ];
           }}
           lintOptions={lintOptions}
@@ -382,27 +360,19 @@ const TestSuiteRoute = () => {
           aria-label="New test"
           className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() =>
-            showPrompt({
-              title: 'New test',
-              defaultValue: 'Returns 200',
-              submitName: 'New test',
-              label: 'Test name',
-              selectText: true,
-              onComplete: name => {
-                createUnitTestFetcher.submit(
-                  {
-                    name,
-                  },
-                  {
-                    method: 'POST',
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/new`,
-                  }
-                );
+            createUnitTestFetcher.submit(
+              {
+                name: 'Returns 200',
               },
-            })
+              {
+                method: 'POST',
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/new`,
+              }
+            )
           }
         >
-          New Test
+          <Icon icon="plus" />
+          <span>New test</span>
         </Button>
         <Button
           aria-label="Project actions"

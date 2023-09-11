@@ -27,7 +27,6 @@ import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dr
 import { EditableInput } from '../components/editable-input';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
-import { showPrompt } from '../components/modals';
 import { SidebarFooter, SidebarLayout } from '../components/sidebar-layout';
 import { TestRunStatus } from './test-results';
 import TestSuiteRoute from './test-suite';
@@ -121,28 +120,19 @@ const TestRoute: FC = () => {
               <Button
                 className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                 onPress={() => {
-                  showPrompt({
-                    title: 'New Test Suite',
-                    defaultValue: 'New Suite',
-                    submitName: 'Create Suite',
-                    label: 'Test Suite Name',
-                    selectText: true,
-                    onComplete: async name => {
-                      createUnitTestSuiteFetcher.submit(
-                        {
-                          name,
-                        },
-                        {
-                          method: 'post',
-                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/new`,
-                        }
-                      );
+                  createUnitTestSuiteFetcher.submit(
+                    {
+                      name: 'New Suite',
                     },
-                  });
+                    {
+                      method: 'post',
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/new`,
+                    }
+                  );
                 }}
               >
                 <Icon icon="plus" />
-                New Test Suite
+                New test suite
               </Button>
             </div>
             <GridList

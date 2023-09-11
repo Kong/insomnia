@@ -47,7 +47,7 @@ export const EditableInput = ({
   return (
     <>
       <Button
-        className={`items-center truncate justify-center px-2 h-6 data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all ${
+        className={`items-center truncate justify-center px-2 data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all ${
           isEditable ? 'hidden' : ''
         }`}
         onPress={() => {
@@ -79,7 +79,9 @@ export const EditableInput = ({
                 setIsEditable(false);
               }
             }}
-            onBlur={() => {
+            onBlur={e => {
+              const value = e.currentTarget.value;
+              onChange(value);
               setIsEditable(false);
             }}
           />
