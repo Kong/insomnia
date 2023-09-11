@@ -62,6 +62,7 @@ interface LoaderData {
   lintMessages: LintMessage[];
   apiSpec: ApiSpec;
   rulesetPath: string;
+  parsedSpec?: OpenAPIV3.Document;
 }
 
 export const loader: LoaderFunction = async ({
@@ -111,10 +112,19 @@ export const loader: LoaderFunction = async ({
     }
   }
 
+  let parsedSpec: OpenAPIV3.Document | undefined;
+
+  try {
+    parsedSpec = YAML.parse(apiSpec.contents) as OpenAPIV3.Document;
+  } catch (error) {
+    console.log('Error parsing spec', error);
+  }
+
   return {
     lintMessages,
     apiSpec,
     rulesetPath,
+    parsedSpec,
   };
 };
 
@@ -178,13 +188,23 @@ const Design: FC = () => {
     projectId: string;
     workspaceId: string;
   };
-  const { apiSpec, lintMessages, rulesetPath } = useLoaderData() as LoaderData;
+  const { apiSpec, lintMessages, rulesetPath, parsedSpec } = useLoaderData() as LoaderData;
   const editor = createRef<CodeEditorHandle>();
   const { generating, generateTestsFromSpec, access } = useAIContext();
   const updateApiSpecFetcher = useFetcher();
   const generateRequestCollectionFetcher = useFetcher();
   const [isLintPaneOpen, setIsLintPaneOpen] = useState(false);
   const [isSpecPaneOpen, setIsSpecPaneOpen] = useState(true);
+
+  const { components, info, servers, paths } = parsedSpec || {};
+  const {
+    requestBodies,
+    responses,
+    parameters,
+    headers,
+    schemas,
+    securitySchemes,
+  } = components || {};
 
   const lintErrors = lintMessages.filter(message => message.type === 'error');
   const lintWarnings = lintMessages.filter(
@@ -295,19 +315,6 @@ const Design: FC = () => {
       scrollPosition.end.line - 1
     );
   };
-
-  const specJSON = YAML.parse(apiSpec.contents) as OpenAPIV3.Document;
-
-  const { components, info, servers, paths } = specJSON || {};
-
-  const {
-    requestBodies,
-    responses,
-    parameters,
-    headers,
-    schemas,
-    securitySchemes,
-  } = components || {};
 
   const createInCollectionActionList: SpecActionItem[] = [
     {
