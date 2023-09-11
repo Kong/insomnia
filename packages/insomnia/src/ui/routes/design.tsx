@@ -931,7 +931,7 @@ const Design: FC = () => {
               )}
               <span className="flex-1" />
               {lintMessages.length > 0 && (
-                <Button onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
+                <Button aria-label='Toggle lint panel' onPress={() => setIsLintPaneOpen(!isLintPaneOpen)}>
                   <Icon icon={isLintPaneOpen ? 'chevron-down' : 'chevron-up'} />
                 </Button>
               )}
