@@ -1,3 +1,5 @@
+import type { TestResults } from 'insomnia-testing';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
@@ -12,18 +14,7 @@ export const canDuplicate = false;
 export const canSync = false;
 
 export interface BaseUnitTestResult {
-  results: {
-    stats: {
-      failures: number;
-      passes: number;
-      tests: number;
-    };
-    tests: {
-      err?: Error;
-      title: string;
-      duration: number;
-    }[];
-  };
+  results: TestResults;
 }
 
 export type UnitTestResult = BaseModel & BaseUnitTestResult;

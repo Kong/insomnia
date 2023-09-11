@@ -73,30 +73,33 @@ export const TestRunStatus: FC = () => {
         className="w-full flex-1 overflow-y-auto divide-solid divide-y divide-[--hl-md] flex flex-col"
         aria-label="Test results"
       >
-        {tests.map((test, i) => (
-          <div key={i} className="flex flex-col">
-            <div className="flex gap-2 p-[--padding-sm] items-center">
-              <div className="flex flex-shrink-0">
-                <span
-                  className={`w-20 flex-shrink-0 flex rounded-sm border border-solid border-current ${
-                    test.err?.message
-                      ? 'text-[--color-danger]'
-                      : 'text-[--color-success]'
-                  } items-center justify-center`}
-                >
-                  {test.err?.message ? 'Failed' : 'Passed'}
-                </span>
+        {tests.map((test, i) => {
+          const errorMessage = 'message' in test.err ? test.err.message : '';
+          return (
+            <div key={i} className="flex flex-col">
+              <div className="flex gap-2 p-[--padding-sm] items-center">
+                <div className="flex flex-shrink-0">
+                  <span
+                    className={`w-20 flex-shrink-0 flex rounded-sm border border-solid border-current ${
+                      errorMessage
+                        ? 'text-[--color-danger]'
+                        : 'text-[--color-success]'
+                      } items-center justify-center`}
+                  >
+                    {errorMessage ? 'Failed' : 'Passed'}
+                  </span>
+                </div>
+                <div className="flex-1 truncate">{test.title}</div>
+                <div className="flex flex-shrink-0">{test.duration} ms</div>
               </div>
-              <div className="flex-1 truncate">{test.title}</div>
-              <div className="flex flex-shrink-0">{test.duration} ms</div>
+              {errorMessage && (
+                <div className="w-full px-[--padding-sm] pb-[--padding-sm]">
+                  <code className="w-full">{errorMessage}</code>
+                </div>
+              )}
             </div>
-            {test.err?.message && (
-              <div className="w-full px-[--padding-sm] pb-[--padding-sm]">
-                <code className="w-full">{test.err.message}</code>
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
