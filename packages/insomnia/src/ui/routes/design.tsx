@@ -316,7 +316,7 @@ const Design: FC = () => {
     );
   };
 
-  const createInCollectionActionList: SpecActionItem[] = [
+  const specActionList: SpecActionItem[] = [
     {
       id: 'ai-generate-tests-in-collection',
       name: 'Generate tests',
@@ -387,20 +387,20 @@ const Design: FC = () => {
               </Button>
               <Popover className="min-w-max">
                 <Menu
-                  aria-label="Create a new request"
+                  aria-label="Spec actions menu"
                   selectionMode="single"
-                  disabledKeys={createInCollectionActionList
+                  disabledKeys={specActionList
                     .filter(item => item.isDisabled)
                     .map(item => item.id)}
                   onAction={key => {
-                    const item = createInCollectionActionList.find(
+                    const item = specActionList.find(
                       item => item.id === key
                     );
                     if (item) {
                       item.action();
                     }
                   }}
-                  items={createInCollectionActionList}
+                  items={specActionList}
                   className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                 >
                   {item => (
