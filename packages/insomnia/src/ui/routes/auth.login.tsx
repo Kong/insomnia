@@ -34,7 +34,7 @@ export const action: ActionFunction = async ({
   const data = await request.formData();
   const provider = data.get('provider');
   const stagingEnv = await getStagingEnvironmentVariables();
-  const url = new URL(getLoginUrl(stagingEnv.websiteURL));
+  const url = new URL(getLoginUrl(stagingEnv.websiteURL || process.env.INSOMNIA_APP_WEBSITE_URL));
 
   if (typeof provider === 'string' && provider) {
     url.searchParams.set('provider', provider);
@@ -65,6 +65,7 @@ const Login = () => (
       Welcome to Insomnia
     </p>
     <Button
+      aria-label='Continue with Google'
       name="provider"
       variant='outlined'
       size="medium"
@@ -103,6 +104,7 @@ const Login = () => (
       </div>
     </Button>
     <Button
+      aria-label='Continue with GitHub'
       name="provider"
       value="github"
       variant='outlined'
@@ -141,6 +143,7 @@ const Login = () => (
       </div>
     </Button>
     <Button
+      aria-label='Continue with Email'
       name="provider"
       value="email"
       variant='outlined'
@@ -179,6 +182,7 @@ const Login = () => (
       </div>
     </Button>
     <Button
+      aria-label='Continue with SSO'
       name="provider"
       value="sso"
       variant='outlined'
@@ -217,6 +221,7 @@ const Login = () => (
       </div>
     </Button>
     <Link
+      aria-label='Use the Scratch Pad'
       to={'/scratchpad'}
       className='flex transition-colors justify-center text-[rgba(var(--color-font-rgb),0.8)] text-sm gap-[--padding-xs] hover:text-[--color-font] focus:text-[--color-font]'
     >

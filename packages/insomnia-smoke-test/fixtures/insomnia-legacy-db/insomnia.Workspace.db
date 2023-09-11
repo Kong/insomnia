@@ -1,0 +1,4 @@
+{"_id":"wrk_f3246c005c9d48ed9e35724415c962d6","type":"Workspace","parentId":"proj_default-project","modified":1694435944027,"created":1694435944027,"name":"RocketAPI","description":"","scope":"collection"}
+{"_id":"wrk_a528e60334a54420a7b384bae215ad1b","type":"Workspace","parentId":"proj_f5359773e8b544c2bfeec86c95b978dc","modified":1694436050037,"created":1694436050037,"name":"OpenAPI","description":"","scope":"design"}
+{"_id":"wrk_ef815fde95ce489aa225fc4408a04bf7","type":"Workspace","parentId":"proj_team_195a6ce0edb1427eb2e8ba7b986072e4","modified":1694436238605,"created":1628147455076,"name":"Test","description":"","scope":"collection"}
+{"_id":"wrk_d58fc511fbf1495591e9939627cf4b9a","type":"Workspace","parentId":"proj_f5359773e8b544c2bfeec86c95b978dc","modified":1639600569168,"created":1639600546875,"name":"Endpoint Security 1.2","description":"","scope":"design"}

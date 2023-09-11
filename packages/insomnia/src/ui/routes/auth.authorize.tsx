@@ -32,6 +32,7 @@ export const action: ActionFunction = async ({
 
 const Authorize = () => {
   const { env } = useRootLoaderData();
+  console.log('env.websiteURL', env);
   const url = getLoginUrl(env.websiteURL);
   const copyUrl = () => {
     window.clipboard.writeText(url);

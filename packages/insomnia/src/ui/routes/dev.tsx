@@ -95,7 +95,7 @@ const Dev = () => {
                 />
               </label>
               <label className="flex flex-col gap-2">
-                <span className="text-[--color-font]">Website Url</span>
+                <span className="text-[--color-font]">InsomniaAI Url</span>
                 <input
                   required
                   className="py-3 w-full px-4 rounded-md border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
