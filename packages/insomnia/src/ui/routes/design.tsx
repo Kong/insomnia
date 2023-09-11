@@ -321,13 +321,13 @@ const Design: FC = () => {
       id: 'ai-generate-tests-in-collection',
       name: 'Generate tests',
       action: generateTestsFromSpec,
-      isDisabled: generating || !access,
-      icon: <InsomniaAI />,
+      isDisabled: !access.enabled || generating,
+      icon: <InsomniaAI className='w-3' />,
     },
     {
       id: 'generate-request-collection',
       name: 'Generate requests from spec',
-      icon: <Icon icon="file-code" />,
+      icon: <Icon className='w-3' icon="file-code" />,
       isDisabled:
         !apiSpec.contents ||
         lintErrors.length > 0 ||
@@ -344,14 +344,14 @@ const Design: FC = () => {
     {
       id: 'toggle-preview',
       name: 'Toggle preview',
-      icon: <Icon icon={isSpecPaneOpen ? 'eye' : 'eye-slash'} />,
-      isDisabled:
-        !apiSpec.contents ||
-        lintErrors.length > 0 ||
-        generateRequestCollectionFetcher.state !== 'idle',
+      icon: <Icon className='w-3' icon={isSpecPaneOpen ? 'eye' : 'eye-slash'} />,
       action: () => setIsSpecPaneOpen(!isSpecPaneOpen),
     },
   ];
+
+  const disabledKeys = specActionList
+    .filter(item => item.isDisabled)
+    .map(item => item.id);
 
   const gitVersion = useGitVCSVersion();
   const syncVersion = useActiveApiSpecSyncVCSVersion();
@@ -389,9 +389,7 @@ const Design: FC = () => {
                 <Menu
                   aria-label="Spec actions menu"
                   selectionMode="single"
-                  disabledKeys={specActionList
-                    .filter(item => item.isDisabled)
-                    .map(item => item.id)}
+                  disabledKeys={disabledKeys}
                   onAction={key => {
                     const item = specActionList.find(
                       item => item.id === key
@@ -405,8 +403,6 @@ const Design: FC = () => {
                 >
                   {item => (
                     <Item
-                      key={item.id}
-                      id={item.id}
                       className="flex gap-2 aria-disabled:text-[--hl-md] aria-disabled:cursor-not-allowed px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                       aria-label={item.name}
                     >
