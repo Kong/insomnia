@@ -1,40 +1,24 @@
+import { randomUUID } from 'crypto';
 import type { Application } from 'express';
 import { json } from 'express';
 
 const projectsByOrgId = new Map(Object.entries({
+  'team_195a6ce0edb1427eb2e8ba7b986072e4': [
+    {
+      id: 'proj_team_195a6ce0edb1427eb2e8ba7b986072e4',
+      name: 'Personal Workspace',
+    },
+  ],
   'org_7ef19d06-5a24-47ca-bc81-3dea011edec2': [
     {
-      id: 'proj_5d1a6d9a-5a24-47ca-bc81-3dea011edec2',
-      name: 'Personal Workspace',
-    },
-    {
       id: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
-      name: 'Project 1',
-    },
-  ],
-  'org_31a76a2b-6e1a-4318-9b9c-36c81299a8bf': [
-    {
-      id: 'proj_org_5d1a6d9a-5a24-47ca-bc81-3dea011ed123',
       name: 'Personal Workspace',
-    },
-    {
-      id: 'proj_7ef19d06-5a24-47ca-bc81-3dea011ed123',
-      name: 'Project 2',
-    },
-  ],
-  'org_4856369d-c116-41e2-a5ba-f257d7afb03d': [
-    {
-      id: 'proj_org_5d1a6d9a-5a24-47ca-bc81-3dea011ed321',
-      name: 'Personal Workspace',
-    },
-    {
-      id: 'proj_7ef19d06-5a24-47ca-bc81-3dea011ed321',
-      name: 'Project 3',
     },
   ],
 }));
 
 const organizations = [
+  // Personal organization
   {
     'id': 'org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
     'name': 'feb56ab4b19347c4b648c99bfa7db363',
@@ -47,22 +31,11 @@ const organizations = [
       'ownerAccountId': 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
     },
   },
+  // Team before migration
   {
-    'id': 'org_31a76a2b-6e1a-4318-9b9c-36c81299a8bf',
+    'id': 'team_195a6ce0edb1427eb2e8ba7b986072e4',
     'name': '07df6d95b60e4593af0424c74d96637a-team',
     'display_name': '🦄 Magic',
-    'branding': {
-      'logo_url': '',
-    },
-    'metadata': {
-      'organizationType': 'team',
-      'ownerAccountId': 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
-    },
-  },
-  {
-    'id': 'org_4856369d-c116-41e2-a5ba-f257d7afb03d',
-    'name': '7fa2e000dfad4cbbacb9257ea21dc709-team',
-    'display_name': '🦄 Unicorn CO',
     'branding': {
       'logo_url': '',
     },
@@ -154,7 +127,7 @@ export default (app: Application) => {
     res.status(200).send();
   });
 
-  app.post('/api/v1/teams/personal/team-projects', json(), (_req, res) => {
+  app.post('/api/v1/organizations/personal/team-projects', json(), (_req, res) => {
     const personalOrg = organizations.find(org => org.metadata.organizationType === 'personal');
 
     if (!personalOrg) {
@@ -163,7 +136,7 @@ export default (app: Application) => {
     }
 
     const newProject = {
-      id: 'proj_5d1a6d9a-5a24-47ca-bc81-3dea011ednew',
+      id: `proj_${randomUUID()}`,
       name: _req.body.name,
     };
 
