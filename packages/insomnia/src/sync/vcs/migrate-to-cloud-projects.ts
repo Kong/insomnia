@@ -20,19 +20,13 @@ export const migrateLocalToCloudProjects = async () => {
   try {
     const sessionId = getCurrentSessionId();
     invariant(sessionId, 'User must be logged in to migrate projects');
-    // Get all local projects
-    const allProjects = await models.project.all();
-    const projectsToMigrate = allProjects.filter(p => !isRemoteProject(p));
 
-    // Nothing to migrate if there are no local projects
-    if (!projectsToMigrate.length) {
-      status = 'completed';
-      return;
-    }
+    const allProjects = await models.project.all();
+    const localProjects = allProjects.filter(p => !isRemoteProject(p));
+    const remoteProjects = allProjects.filter(p => isRemoteProject(p));
 
     // @TODO There's a chance user's can't create projects in their personal organization. We should handle this case.
-    // For each local project
-    for (const localProject of projectsToMigrate) {
+    for (const localProject of localProjects) {
       // -- Create a remote project
       const newCloudProject = await window.main.insomniaFetch<{ id: string; name: string; organizationId: string }>({
         path: '/v1/organizations/personal/team-projects',
@@ -95,6 +89,57 @@ export const migrateLocalToCloudProjects = async () => {
 
       // Delete the local project
       await models.project.remove(localProject);
+    }
+
+    for (const remoteProject of remoteProjects) {
+      const project = await models.project.update(remoteProject, {
+        _id: `proj_${remoteProject.remoteId}`,
+        remoteId: remoteProject.remoteId,
+        parentId: remoteProject.parentId,
+      });
+
+      // For each workspace in the local project
+      const projectWorkspaces = (await database.find<Workspace>(models.workspace.type, {
+        parentId: remoteProject._id,
+      })).filter(workspace => !isScratchpad(workspace));
+
+      for (const workspace of projectWorkspaces) {
+        // Update the workspace to point to the updated project
+        await models.workspace.update(workspace, {
+          parentId: project._id,
+        });
+
+        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+        try {
+          if (!workspaceMeta.gitRepositoryId) {
+            let vcs = getVCS();
+
+            if (!vcs) {
+              const driver = FileSystemDriver.create(
+                process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+              );
+
+              console.log('Initializing VCS');
+              vcs = await initVCS(driver, async conflicts => {
+                return new Promise((resolve, reject) => {
+                  if (conflicts.length) {
+                    reject('Not implemented');
+                  }
+
+                  resolve(conflicts);
+                });
+              });
+            }
+            invariant(vcs, 'VCS must be initialized');
+
+            await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
+            await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project });
+          }
+        } catch (e) {
+          console.warn('Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.', e);
+        }
+      }
     }
 
     status = 'completed';
