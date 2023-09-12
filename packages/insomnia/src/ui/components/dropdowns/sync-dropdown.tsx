@@ -461,7 +461,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     <div>
       <Dropdown
         className="wide tall"
-        aria-label='Select a branch to sync with'
+        aria-label='Sync Menu'
         onOpen={() => refreshVCSAndRefetchRemote()}
         closeOnSelect={false}
         isDisabled={initializing}
@@ -470,6 +470,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             <Fragment>Sync</Fragment> :
             <DropdownButton
               size="medium"
+              aria-label='Insomnia Sync'
               removeBorderRadius
               disableHoverBehavior={false}
               removePaddings={false}

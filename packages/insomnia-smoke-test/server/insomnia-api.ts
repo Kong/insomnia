@@ -3,15 +3,15 @@ import type { Application } from 'express';
 import { json } from 'express';
 
 const projectsByOrgId = new Map(Object.entries({
-  'team_195a6ce0edb1427eb2e8ba7b986072e4': [
-    {
-      id: 'proj_team_195a6ce0edb1427eb2e8ba7b986072e4',
-      name: 'Personal Workspace',
-    },
-  ],
   'org_7ef19d06-5a24-47ca-bc81-3dea011edec2': [
     {
       id: 'proj_org_7ef19d06-5a24-47ca-bc81-3dea011edec2',
+      name: 'Personal Workspace',
+    },
+  ],
+  'team_195a6ce0edb1427eb2e8ba7b986072e4': [
+    {
+      id: 'proj_team_195a6ce0edb1427eb2e8ba7b986072e4',
       name: 'Personal Workspace',
     },
   ],
@@ -31,7 +31,8 @@ const organizations = [
       'ownerAccountId': 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
     },
   },
-  // Team before migration
+  // Team Organization: Was a team before the migration now looks like this:
+  // Teams migrated to Organizations have an id that starts with team_ and the team id is the same as the organization id
   {
     'id': 'team_195a6ce0edb1427eb2e8ba7b986072e4',
     'name': '07df6d95b60e4593af0424c74d96637a-team',
