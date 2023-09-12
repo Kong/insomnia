@@ -1,7 +1,7 @@
 import React from 'react';
 import { ActionFunction, Form, Link, redirect } from 'react-router-dom';
 
-import { getStagingEnvironmentVariables } from '../../models/environment';
+import { settings } from '../../models';
 import { getLoginUrl } from '../auth-session-provider';
 import { Button } from '../components/themed-button';
 
@@ -33,8 +33,8 @@ export const action: ActionFunction = async ({
 }) => {
   const data = await request.formData();
   const provider = data.get('provider');
-  const stagingEnv = await getStagingEnvironmentVariables();
-  const url = new URL(getLoginUrl(stagingEnv.websiteURL || process.env.INSOMNIA_APP_WEBSITE_URL));
+  const { dev } = await settings.get();
+  const url = new URL(getLoginUrl(dev?.servers.website || process.env.INSOMNIA_APP_WEBSITE_URL || ''));
 
   if (typeof provider === 'string' && provider) {
     url.searchParams.set('provider', provider);

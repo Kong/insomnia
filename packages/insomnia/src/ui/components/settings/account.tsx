@@ -16,7 +16,7 @@ interface Props {
 }
 
 export const AccountSettings: FC<Props> = ({ user }) => {
-  const { env } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
 
   const logoutFetcher = useFetcher();
 
@@ -29,7 +29,7 @@ export const AccountSettings: FC<Props> = ({ user }) => {
           <code className="code--compact">{getEmail()}</code>
         </p>
         <br />
-        <Link button href={`${env.websiteURL}/app/settings/account`} className="btn btn--clicky">
+        <Link button href={`${settings.dev?.servers.website}/app/settings/account`} className="btn btn--clicky">
           Manage Account
         </Link>
         <PromptButton
@@ -46,7 +46,7 @@ export const AccountSettings: FC<Props> = ({ user }) => {
         <button
           className="space-left btn btn--clicky"
           onClick={() => {
-            window.main.openInBrowser(`${env.websiteURL}/app/settings/encryption`);
+            window.main.openInBrowser(`${settings.dev?.servers.website}/app/settings/encryption`);
           }}
         >
           Change Passphrase

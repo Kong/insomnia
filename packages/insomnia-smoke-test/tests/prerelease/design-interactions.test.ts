@@ -12,7 +12,7 @@ test.describe('Design interactions', async () => {
     const text = await loadFixture('unit-test.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
     await page.getByRole('menuitemradio', { name: 'Import' }).click();
-    await page.getByText('Clipboard').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     await page.getByText('unit-test.yaml').click();
@@ -20,37 +20,27 @@ test.describe('Design interactions', async () => {
     await page.click('a:has-text("Test")');
 
     // Run tests and check results
-    await page.click('#wrapper >> text=Run Tests');
+    await page.getByLabel('Run all tests').click();
     await expect(page.locator('.app')).toContainText('Request A is found');
     await expect(page.locator('.app')).toContainText('Request B is not found');
-    await expect(page.locator('.app')).toContainText('Tests Passed 2/2');
+    await expect(page.locator('.app')).toContainText('Tests passed');
 
     // Create a new test suite
-    await page.click('text=New Test Suite');
-    await page.click('text=Create Suite');
-    await page.click('button:has-text("New Suite")');
+    await page.click('text=New test suite');
+
+    // Rename test suite
+    await page.getByRole('button', { name: 'New Suite' }).click();
+    await page.getByRole('textbox').fill('New Suite 2');
+    await page.getByRole('textbox').press('Enter');
 
     // Add a new test
-    await page.locator('text=New Test').nth(1).click();
-    await page.click('div[role="dialog"] button:has-text("New Test")');
-    const label = await page.locator('option', { hasText: 'Request A' }).textContent() || '';
-    await page.locator('select[name="request"]').selectOption({
-      label,
-    });
+    await page.getByLabel('New test').click();
 
-    await page.click('#wrapper >> text=Run Tests');
-    await expect(page.locator('.app')).toContainText('Tests Passed 1/1');
-
-    // Rename a test
-    // TODO(filipe) - add this in another PR
-
-    // Rename a test suite
-    await page.click('button:has-text("Existing Test Suite")');
-    await page.click('span:has-text("Existing Test Suite")');
-    await page.locator('text=New TestRun Tests >> input[type="text"]').fill('Renamed');
-    await page.locator('text=New TestRun Tests >> input[type="text"]').press('Enter');
-    await page.click('button:has-text("Renamed")');
-
+    // Rename test
+    await page.getByRole('button', { name: 'Returns 200' }).click();
+    await page.getByRole('textbox').fill('Returns 200 and works');
+    await page.getByRole('textbox').press('Enter');
+    await page.getByRole('heading', { name: 'Returns 200 and works' }).click();
     // Use autocomplete inside the test code
     // TODO(filipe) - add this in another PR
   });

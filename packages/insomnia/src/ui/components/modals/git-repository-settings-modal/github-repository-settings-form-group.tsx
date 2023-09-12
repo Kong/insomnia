@@ -324,17 +324,17 @@ interface GitHubSignInFormProps {
 
 const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
   const [error, setError] = useState('');
-  const { env } = useRootLoaderData();
-  const [authUrl, setAuthUrl] = useState(() => generateAuthorizationUrl(env.websiteURL));
+  const { settings } = useRootLoaderData();
+  const [authUrl, setAuthUrl] = useState(() => generateAuthorizationUrl(settings.dev?.servers.website || ''));
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   // When we get a new token we reset the authenticating flag and auth url. This happens because we can use the generated url for only one authorization flow.
   useEffect(() => {
     if (token) {
       setIsAuthenticating(false);
-      setAuthUrl(generateAuthorizationUrl(env.websiteURL));
+      setAuthUrl(generateAuthorizationUrl(settings.dev?.servers.website || ''));
     }
-  }, [env.websiteURL, token]);
+  }, [settings.dev?.servers.website, token]);
 
   return (
     <AuthorizationFormContainer>

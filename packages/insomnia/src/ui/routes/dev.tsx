@@ -1,37 +1,31 @@
 import React from 'react';
 import { Button, Heading } from 'react-aria-components';
-import { ActionFunction, LoaderFunction, redirect, useFetcher, useLoaderData } from 'react-router-dom';
+import { ActionFunction, redirect, useFetcher } from 'react-router-dom';
 
-import { environment } from '../../models';
-import { getStagingEnvironmentVariables } from '../../models/environment';
+import { settings } from '../../models';
 import { invariant } from '../../utils/invariant';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
-
-interface LoaderData {
-  env: Record<string, string>;
-}
-
-export const loader: LoaderFunction = async (): Promise<LoaderData> => {
-  const stagingEnv = await getStagingEnvironmentVariables();
-
-  return {
-    env: stagingEnv,
-  };
-};
+import { useRootLoaderData } from './root';
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const data = Object.fromEntries(formData.entries());
 
-  const stagingEnv = await environment.getOrCreateForParentId('insomnia::staging');
+  const userSettings = await settings.get();
 
-  invariant(data.apiURL, 'Missing apiURL');
-  invariant(data.websiteURL, 'Missing websiteURL');
-  invariant(data.aiURL, 'Missing aiURL');
+  invariant(typeof data.apiURL === 'string', 'Missing apiURL');
+  invariant(typeof data.websiteURL === 'string', 'Missing websiteURL');
+  invariant(typeof data.aiURL === 'string', 'Missing aiURL');
 
-  await environment.update(stagingEnv, {
-    data,
+  await settings.update(userSettings, {
+    dev: {
+      servers: {
+        api: data.apiURL,
+        website: data.websiteURL,
+        ai: data.aiURL,
+      },
+    },
   });
 
   try {
@@ -46,9 +40,7 @@ export const action: ActionFunction = async ({ request }) => {
 };
 
 const Dev = () => {
-  const {
-    env: { apiURL, websiteURL, aiURL },
-  } = useLoaderData() as LoaderData;
+  const { settings } = useRootLoaderData();
 
   const { Form } = useFetcher();
 
@@ -80,7 +72,7 @@ const Dev = () => {
                   type="url"
                   required
                   placeholder='https://api.insomnia.rest'
-                  defaultValue={apiURL || ''}
+                  defaultValue={settings.dev?.servers.api || ''}
                 />
               </label>
               <label className="flex flex-col gap-2">
@@ -91,7 +83,7 @@ const Dev = () => {
                   name="websiteURL"
                   type="url"
                   placeholder='https://app.insomnia.rest'
-                  defaultValue={websiteURL || ''}
+                  defaultValue={settings.dev?.servers.website || ''}
                 />
               </label>
               <label className="flex flex-col gap-2">
@@ -102,7 +94,7 @@ const Dev = () => {
                   name="aiURL"
                   type="url"
                   placeholder='https://ai.insomnia.rest'
-                  defaultValue={aiURL || ''}
+                  defaultValue={settings.dev?.servers.ai || ''}
                 />
               </label>
               <div className='flex justify-end'>

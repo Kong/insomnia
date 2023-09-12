@@ -70,7 +70,7 @@ if (isDevelopment()) {
 }
 
 window.main.on('reload-plugins', async () => {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   await plugins.reloadPlugins();
   await themes.applyColorScheme(settings);
   templating.reload();

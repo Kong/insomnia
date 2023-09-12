@@ -9,7 +9,7 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 
-import { isLoggedIn } from '../account/session';
+import { isLoggedIn, SessionData, setSessionData } from '../account/session';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
@@ -48,27 +48,61 @@ initializeLogging();
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
-let initialEntry = isLoggedIn() ? '/organization' : '/scratchpad';
-
-if (!isLoggedIn()) {
-  initialEntry = '/dev';
-}
-
 try {
   if (process.env.INSOMNIA_SKIP_ONBOARDING) {
     window.localStorage.setItem('hasSeenOnboarding', process.env.INSOMNIA_SKIP_ONBOARDING);
+    window.localStorage.setItem('hasUserLoggedInBefore', process.env.INSOMNIA_SKIP_ONBOARDING);
   }
 
-  const hasSeenOnboarding = Boolean(window.localStorage.getItem('hasSeenOnboarding'));
-  const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
+  if (process.env.INSOMNIA_SESSION) {
 
-  if (hasSeenOnboarding || (hasUserLoggedInBefore && !isLoggedIn())) {
-    initialEntry = '/auth/login';
+    const session = JSON.parse(process.env.INSOMNIA_SESSION) as SessionData;
+    setSessionData(
+      session.id,
+      session.sessionExpiry,
+      session.accountId,
+      session.firstName,
+      session.lastName,
+      session.email,
+      session.symmetricKey,
+      session.publicKey,
+      session.encPrivateKey
+    );
   }
-
 } catch (e) {
-  console.log('User has not logged in before.');
+  console.log('Failed to parse session data', e);
 }
+
+function getInitialEntry() {
+  // If the user has not seen the onboarding, then show it
+  // Otherwise if the user is not logged in and has not logged in before, then show the login
+  // Otherwise if the user is logged in, then show the organization
+  try {
+    const hasSeenOnboarding = Boolean(window.localStorage.getItem('hasSeenOnboarding'));
+
+    if (!hasSeenOnboarding) {
+      return '/onboarding';
+    }
+
+    const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
+
+    if (isLoggedIn()) {
+      return '/organization';
+    }
+
+    if (hasUserLoggedInBefore) {
+      return '/auth/login';
+    }
+
+    return '/scratchpad';
+  } catch (e) {
+    return '/organization';
+  }
+}
+
+const initialEntry = getInitialEntry();
+
+console.log('Initial entry', initialEntry);
 
 const router = createMemoryRouter(
   // @TODO - Investigate file based routing to generate these routes:
@@ -82,7 +116,6 @@ const router = createMemoryRouter(
       children: [
         {
           path: 'dev',
-          loader: async (...args) => (await import('./routes/dev')).loader(...args),
           action: async (...args) => (await import('./routes/dev')).action(...args),
           element: <Dev />,
         },

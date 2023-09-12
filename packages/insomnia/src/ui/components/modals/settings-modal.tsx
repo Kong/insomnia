@@ -30,7 +30,7 @@ export const TAB_INDEX_PLUGINS = 'plugins';
 export const TAB_INDEX_AI = 'ai';
 
 const Dev = () => {
-  const { env } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
   const { Form } = useFetcher();
 
   return (
@@ -43,7 +43,7 @@ const Dev = () => {
           type="url"
           required
           placeholder='https://api.insomnia.rest'
-          defaultValue={env.apiURL || ''}
+          defaultValue={settings.dev?.servers.api || ''}
         />
       </label>
       <label className="flex text-sm flex-col gap-2">
@@ -54,7 +54,7 @@ const Dev = () => {
           name="websiteURL"
           type="url"
           placeholder='https://app.insomnia.rest'
-          defaultValue={env.websiteURL || ''}
+          defaultValue={settings.dev?.servers.website || ''}
         />
       </label>
       <label className="flex text-sm flex-col gap-2">
@@ -65,7 +65,7 @@ const Dev = () => {
           name="aiURL"
           type="url"
           placeholder='https://ai.insomnia.rest'
-          defaultValue={env.aiURL || ''}
+          defaultValue={settings.dev?.servers.ai || ''}
         />
       </label>
       <div className='flex justify-end'>

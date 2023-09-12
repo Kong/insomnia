@@ -81,7 +81,7 @@ async function getAllTeamProjects(organizationId: string) {
       name: string;
     }[];
   }>({
-    path: `/v1/teams/${organizationId}/team-projects`,
+    path: `/v1/organizations/${organizationId}/team-projects`,
     method: 'GET',
     sessionId,
   });
@@ -121,8 +121,6 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   try {
     remoteProjects = await getAllTeamProjects(organizationId);
 
-    console.log({ remoteProjects });
-
     const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
       id: string;
       name: string;
@@ -156,7 +154,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
       const existingProject = await models.project.getById(projectId);
 
       if (!existingProject) {
-        projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]?._id;
+        projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)?.[0]?._id;
         if (!projectId) {
           return redirect('/organization');
         }
@@ -175,7 +173,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     return redirect(`/organization/${organizationId}/project/${projectId}`);
   }
 
-  if (remoteProjects[0]?.id) {
+  if (remoteProjects?.[0]?.id) {
     return redirect(`/organization/${organizationId}/project/${remoteProjects[0].id}`);
   }
 
@@ -400,7 +398,7 @@ const ProjectRoute: FC = () => {
   });
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const { env } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
 
@@ -751,7 +749,7 @@ const ProjectRoute: FC = () => {
                   aria-label="Invite people to organization"
                   className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                   onPress={() => {
-                    window.main.openInBrowser(`${env.websiteURL}/app/dashboard/organizations/${organizationId}/members`);
+                    window.main.openInBrowser(`${settings.dev?.servers.website}/app/dashboard/organizations/${organizationId}/members`);
                   }}
                 >
                   <Icon icon="user-plus" />

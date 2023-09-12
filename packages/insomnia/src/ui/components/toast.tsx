@@ -89,7 +89,7 @@ export const Toast: FC = () => {
       disableUpdateNotification,
       updateAutomatically,
       updateChannel,
-    } = await models.settings.getOrCreate();
+    } = await models.settings.get();
     let updatedNotification: ToastNotification | null = null;
     // Try fetching user notification
     try {

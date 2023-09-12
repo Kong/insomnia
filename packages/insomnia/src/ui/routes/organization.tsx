@@ -44,7 +44,6 @@ import { OrganizationAvatar } from '../components/organization-avatar';
 import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
 import { PresenceProvider } from '../context/app/presence-context';
-import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import { useRootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 
@@ -88,6 +87,11 @@ export const indexLoader: LoaderFunction = async () => {
           organization,
           accountId,
         });
+      });
+
+      console.log({
+        organizations,
+        personalOrganization,
       });
 
       if (personalOrganization) {
@@ -145,7 +149,7 @@ export const loader: LoaderFunction = async () => {
 
       return {
         user,
-        settings: await models.settings.getOrCreate(),
+        settings: await models.settings.get(),
         organizations: organizations
           .sort((a, b) => a.name.localeCompare(b.name))
           .sort((a, b) => {
@@ -215,7 +219,7 @@ export const shouldOrganizationsRevalidate: ShouldRevalidateFunction = ({
 };
 
 const OrganizationRoute = () => {
-  const { env, settings } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
   const { organizations, user } =
     useLoaderData() as OrganizationLoaderData;
   const workspaceData = useRouteLoaderData(
@@ -249,7 +253,6 @@ const OrganizationRoute = () => {
 
   return (
     <PresenceProvider>
-      <NunjucksEnabledProvider>
         <div className="w-full h-full">
           <div className={`w-full h-full divide-x divide-solid divide-y divide-[--hl-md] ${workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace) ? 'grid-template-app-layout-with-banner' : 'grid-template-app-layout'} grid relative bg-[--color-bg]`}>
             <header className="[grid-area:Header] grid grid-cols-3 items-center">
@@ -312,7 +315,7 @@ const OrganizationRoute = () => {
 
                             if (action === 'account-settings') {
                               window.main.openInBrowser(
-                                `${env.websiteURL}/app/settings/account`,
+                                `${settings.dev?.servers.website}/app/settings/account`,
                               );
                             }
                           }}
@@ -422,13 +425,13 @@ const OrganizationRoute = () => {
                       onAction={action => {
                         if (action === 'join-organization') {
                           window.main.openInBrowser(
-                            getLoginUrl(env.websiteURL),
+                            getLoginUrl(settings.dev?.servers.website || ''),
                           );
                         }
 
                         if (action === 'new-organization') {
                           window.main.openInBrowser(
-                            `${env.websiteURL}/app/organization/create`,
+                            `${settings.dev?.servers.website}/app/organization/create`,
                           );
                         }
                       }}
@@ -460,6 +463,7 @@ const OrganizationRoute = () => {
               <div className="flex h-full">
                 <TooltipTrigger>
                   <Button
+                    data-testid="settings-button"
                     className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
                     onPress={showSettingsModal}
                   >
@@ -521,8 +525,7 @@ const OrganizationRoute = () => {
             </div>
           </div>
           <Toast />
-        </div>
-      </NunjucksEnabledProvider>
+      </div>
     </PresenceProvider>
   );
 };

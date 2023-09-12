@@ -56,7 +56,7 @@ export const fetchRequestData = async (requestId: string) => {
   const environment = activeEnvironment || await models.environment.getOrCreateForParentId(workspace._id);
   invariant(environment, 'failed to find environment ' + activeEnvironmentId);
 
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   invariant(settings, 'failed to create settings');
   const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
   const caCert = await models.caCertificate.findByParentId(workspaceId);
