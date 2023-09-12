@@ -15,7 +15,7 @@ import { insomniaFetch } from './insomniaFetch';
 const analytics = new Analytics({ writeKey: getSegmentWriteKey() });
 
 const getDeviceId = async () => {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   return settings.deviceId || (await models.settings.update(settings, { deviceId: uuidv4() })).deviceId;
 };
 
@@ -48,7 +48,7 @@ export async function trackSegmentEvent(
   event: SegmentEvent,
   properties?: Record<string, any>,
 ) {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   const allowAnalytics = settings.enableAnalytics || session.isLoggedIn();
   if (allowAnalytics) {
     try {
@@ -76,7 +76,7 @@ export async function trackSegmentEvent(
 }
 
 export async function trackPageView(name: string) {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   const allowAnalytics = settings.enableAnalytics || session.isLoggedIn();
   if (allowAnalytics) {
     try {

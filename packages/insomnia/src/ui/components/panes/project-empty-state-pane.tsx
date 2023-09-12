@@ -182,6 +182,7 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
           /> Clipboard
         </AlmostSquareButton>
         <AlmostSquareButton
+          aria-label='Clone git repository'
           onClick={cloneFromGit}
         >
           <i

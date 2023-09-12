@@ -4,9 +4,8 @@ import { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
 import { LoaderFunction, Outlet, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
-import { getApiBaseURL, getAppWebsiteBaseURL, isDevelopment } from '../../common/constants';
+import { isDevelopment } from '../../common/constants';
 import * as models from '../../models';
-import { getStagingEnvironmentVariables } from '../../models/environment';
 import { Settings } from '../../models/settings';
 import { reloadPlugins } from '../../plugins';
 import { createPlugin } from '../../plugins/create';
@@ -25,6 +24,7 @@ import {
 } from '../components/modals/settings-modal';
 import { AppHooks } from '../containers/app-hooks';
 import { AIProvider } from '../context/app/ai-context';
+import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import Modals from './modals';
 
 interface LoaderData {
@@ -33,11 +33,6 @@ interface LoaderData {
     picture: string;
   };
   settings: Settings;
-  env: {
-    websiteURL: string;
-    apiURL: string;
-    aiURL: string;
-  };
 }
 
 export const useRootLoaderData = () => {
@@ -45,14 +40,18 @@ export const useRootLoaderData = () => {
 };
 
 export const loader: LoaderFunction = async (): Promise<LoaderData> => {
-  const stagingEnv = await getStagingEnvironmentVariables();
-
+  const settings = await models.settings.get();
+  const servers = settings.dev?.servers;
   return {
-    settings: await models.settings.getOrCreate(),
-    env: {
-      websiteURL: stagingEnv.websiteURL || getAppWebsiteBaseURL(),
-      apiURL: stagingEnv.apiURL || getApiBaseURL(),
-      aiURL: stagingEnv.aiURL || 'https://ai.insomnia.rest',
+    settings: {
+      ...settings,
+      dev: {
+        servers: {
+          ai: process.env.INSOMNIA_AI_URL || servers?.ai || '',
+          api: process.env.INSOMNIA_API_URL || servers?.api || '',
+          website: process.env.INSOMNIA_APP_WEBSITE_URL || servers?.website || '',
+        },
+      },
     },
   };
 };
@@ -158,7 +157,7 @@ const Root = () => {
                     '0.0.1',
                     mainJsContent,
                   );
-                  const settings = await models.settings.getOrCreate();
+                  const settings = await models.settings.get();
                   await models.settings.update(settings, {
                     theme: parsedTheme.name,
                   });
@@ -222,22 +221,24 @@ const Root = () => {
 
   return (
     <AIProvider>
-      <ErrorBoundary>
-        <div className="app">
-          <Outlet />
-        </div>
-        <Modals />
-        <AppHooks />
-        {/* triggered by insomnia://app/import */}
-        {importUri && (
-          <ImportModal
-            onHide={() => setImportUri('')}
-            projectName="Insomnia"
-            organizationId={organizationId}
-            from={{ type: 'uri', defaultValue: importUri }}
-          />
-        )}
-      </ErrorBoundary>
+      <NunjucksEnabledProvider>
+        <ErrorBoundary>
+          <div className="app">
+            <Outlet />
+          </div>
+          <Modals />
+          <AppHooks />
+          {/* triggered by insomnia://app/import */}
+          {importUri && (
+            <ImportModal
+              onHide={() => setImportUri('')}
+              projectName="Insomnia"
+              organizationId={organizationId}
+              from={{ type: 'uri', defaultValue: importUri }}
+            />
+          )}
+        </ErrorBoundary>
+      </NunjucksEnabledProvider>
     </AIProvider>
   );
 };

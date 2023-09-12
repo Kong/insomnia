@@ -117,6 +117,12 @@ export async function getOrCreate() {
   return results[0];
 }
 
+export async function get() {
+  const results = await db.all<Settings>(type) || [];
+
+  return results[0];
+}
+
 /**
  * Ensure map is updated when new hotkeys are added
  */

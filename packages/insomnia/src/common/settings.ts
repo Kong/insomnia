@@ -145,4 +145,11 @@ export interface Settings {
   useBulkParametersEditor: boolean;
   validateAuthSSL: boolean;
   validateSSL: boolean;
+  dev?: {
+    servers: {
+      website: string;
+      api: string;
+      ai: string;
+    };
+  };
 }

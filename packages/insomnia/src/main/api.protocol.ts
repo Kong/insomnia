@@ -1,7 +1,7 @@
 import { app, net, protocol } from 'electron';
 
 import { getApiBaseURL } from '../common/constants';
-import { getStagingEnvironmentVariables } from '../models/environment';
+import { settings } from '../models';
 export interface RegisterProtocolOptions {
   scheme: string;
 }
@@ -21,8 +21,8 @@ export async function registerInsomniaStreamProtocol() {
   }
 
   protocol.handle(scheme, async function(request) {
-    const stagingEnv = await getStagingEnvironmentVariables();
-    const apiURL = stagingEnv.apiURL || getApiBaseURL();
+    const { dev } = await settings.get();
+    const apiURL = dev?.servers.api || getApiBaseURL();
     const url = new URL(`${apiURL}/${request.url.replace(`${scheme}://`, '')}`);
     const sessionId = new URLSearchParams(url.search).get('sessionId');
     request.headers.append('X-Session-Id', sessionId || '');

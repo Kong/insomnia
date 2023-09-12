@@ -102,18 +102,23 @@ export default (app: Application) => {
   });
 
   // Projects
-  app.get('/api/v1/teams/:orgId/team-projects', (_req, res) => {
+  app.get('/api/v1/organizations/:orgId/team-projects', (_req, res) => {
     res.status(200).send({
       data: projectsByOrgId.get(_req.params.orgId),
     });
   });
 
-  app.delete('/api/v1/teams/:orgId/team-projects/:projectId', json(), (_req, res) => {
-    projectsByOrgId.delete(_req.params.orgId);
+  app.delete('/api/v1/organizations/:orgId/team-projects/:projectId', json(), (_req, res) => {
+    const projects = projectsByOrgId.get(_req.params.orgId)?.filter(project => project.id !== _req.params.projectId);
+    if (!projects) {
+      res.status(500).send();
+      return;
+    }
+    projectsByOrgId.set(_req.params.orgId, projects);
     res.status(200).send();
   });
 
-  app.patch('/api/v1/teams/:orgId/team-projects/:projectId', json(), (_req, res) => {
+  app.patch('/api/v1/organizations/:orgId/team-projects/:projectId', json(), (_req, res) => {
     const updatedProjects = projectsByOrgId.get(_req.params.orgId)?.map(project => {
       if (project.id === _req.params.projectId) {
         return {
@@ -128,10 +133,35 @@ export default (app: Application) => {
     res.status(200).send();
   });
 
-  app.post('/api/v1/organizations/personal/team-projects', json(), (_req, res) => {
-    const personalOrg = organizations.find(org => org.metadata.organizationType === 'personal');
+  app.post('/api/v1/organizations/:organizationId/team-projects', json(), (_req, res) => {
+    const { organizationId } = _req.params;
 
-    if (!personalOrg) {
+    if (organizationId === 'personal') {
+      const personalOrg = organizations.find(org => org.metadata.organizationType === 'personal');
+
+      if (!personalOrg) {
+        res.status(500).send();
+        return;
+      }
+
+      const newProject = {
+        id: `proj_${randomUUID()}`,
+        name: _req.body.name,
+      };
+
+      const projects = [
+        ...(projectsByOrgId.get(personalOrg.id) || []),
+        newProject,
+      ];
+
+      projectsByOrgId.set(personalOrg.id, projects);
+      res.status(200).send({ ...newProject, organizationId: personalOrg.id });
+      return;
+    }
+
+    const organization = organizations.find(org => org.id === organizationId);
+
+    if (!organization) {
       res.status(500).send();
       return;
     }
@@ -142,11 +172,11 @@ export default (app: Application) => {
     };
 
     const projects = [
-      ...(projectsByOrgId.get(personalOrg.id) || []),
+      ...(projectsByOrgId.get(organization.id) || []),
       newProject,
     ];
 
-    projectsByOrgId.set(personalOrg.id, projects);
-    res.status(200).send({ ...newProject, organizationId: personalOrg.id });
+    projectsByOrgId.set(organization.id, projects);
+    res.status(200).send({ ...newProject, organizationId: organization.id });
   });
 };

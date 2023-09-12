@@ -7,6 +7,12 @@ const testWithLegacyDatabase = test.extend({
 
     await use(dataPath);
   },
+  userConfig: async ({ userConfig }, use) => {
+    await use({
+      ...userConfig,
+      session: undefined,
+    });
+  },
 });
 
 testWithLegacyDatabase('Run data migration to version 8', async ({ page, userConfig }) => {

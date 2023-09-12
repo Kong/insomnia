@@ -1,7 +1,7 @@
 import { v4 } from 'uuid';
 
 import { getApiBaseURL, getGitHubGraphQLApiURL } from '../../common/constants';
-import { getStagingEnvironmentVariables } from '../../models/environment';
+import { settings } from '../../models';
 
 export const GITHUB_TOKEN_STORAGE_KEY = 'github-oauth-token';
 export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();
@@ -42,9 +42,8 @@ export async function exchangeCodeForToken({
       'Invalid state parameter. It looks like the authorization flow was not initiated by the app.'
     );
   }
-
-  const stagingEnv = await getStagingEnvironmentVariables();
-  const apiURL = stagingEnv.apiURL || getApiBaseURL();
+  const { dev } = await settings.get();
+  const apiURL = dev?.servers.api || getApiBaseURL();
 
   return window.main.axiosRequest({
     url: apiURL + '/v1/oauth/github',
