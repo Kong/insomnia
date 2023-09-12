@@ -258,6 +258,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
             <DropdownButton
               size="medium"
               variant='text'
+              aria-label='Git Sync'
               removePaddings={false}
               removeBorderRadius
               style={{
@@ -434,6 +435,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
           triggerButton={
             <DropdownButton
               size="medium"
+              aria-label='Git Sync'
               variant='text'
               removePaddings={false}
               removeBorderRadius

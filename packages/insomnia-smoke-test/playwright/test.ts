@@ -27,11 +27,12 @@ export const test = baseTest.extend<{
   app: ElectronApplication;
   dataPath: string;
   fixturesPath: string;
-  storageStatePath: string;
   userConfig: {
     skipOnboarding: boolean;
     publicKey: string;
     secretKey: string;
+    code: string;
+    sessionId: string;
   };
 }>({
   app: async ({ playwright, trace, dataPath, userConfig }, use, testInfo) => {
@@ -94,5 +95,14 @@ export const test = baseTest.extend<{
     const insomniaDataPath = randomDataPath();
 
     await use(insomniaDataPath);
+  },
+  userConfig: async ({ }, use) => {
+    await use({
+      skipOnboarding: true,
+      publicKey: 'txb/w8DASTpPQqeHE/hpI3ABKzit+pv5n2We5dbtYRo=',
+      secretKey: 'Tb1QKsI3wVZxhS8TuQESHB2x7f68PzeTzTMmLpnnFVU=',
+      code: 'BTxpIfgXY1VgUpoPpqA25RkCPGQ2MAkZsaY6IZ0bamd0WsYQlJM6iy8PV9hEHS1Gk96SBC6%2BM%2FGhv8IaVl1N6V5wdghHwU2sGKGkW%2Fevx1HiqAUsAqIry8aWRqAkc0n3KmW%2B%2F8lyeHCpy5jhsXqMMqXMbZh8dN1q%2ByRe2C6MJS1A706KbPUhI7PRi%2FsmK0TcNT7lgBKKHRVzPTvjpLcjgzSJFL4K%2BEzgY9Ue4gh0gPw89sM9dV%2F2sAlpw0LA7rF06NyoPhA%3D',
+      sessionId: '',
+    });
   },
 });
