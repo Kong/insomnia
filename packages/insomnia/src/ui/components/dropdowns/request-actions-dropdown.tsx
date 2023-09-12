@@ -27,7 +27,7 @@ import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 
 interface Props {
-  activeEnvironment?: Environment | null;
+  activeEnvironment: Environment;
   activeProject: Project;
   isPinned: Boolean;
   request: Request | GrpcRequest | WebSocketRequest;
