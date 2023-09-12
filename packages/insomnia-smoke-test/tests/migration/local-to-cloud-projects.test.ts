@@ -10,6 +10,8 @@ const testWithLegacyDatabase = test.extend({
 });
 
 testWithLegacyDatabase('Run data migration to version 8', async ({ page, userConfig }) => {
+  // Migration takes a while, adding this to avoid test timeout before it ends
+  test.slow();
 
   await page.getByLabel('Continue with Google').click(),
 
