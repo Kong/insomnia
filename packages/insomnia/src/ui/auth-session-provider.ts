@@ -9,12 +9,22 @@ interface AuthBox {
   token: string;
   key: string;
 }
+const { INSOMNIA_PUBLIC_KEY, INSOMNIA_SECRET_KEY } = process.env;
+
 const sessionKeyPair = keyPair();
 encodeBase64(sessionKeyPair.publicKey).then(res => {
-  window.localStorage.setItem('insomnia.publicKey', res);
+  try {
+    window.localStorage.setItem('insomnia.publicKey', INSOMNIA_PUBLIC_KEY || res);
+  } catch (error) {
+    console.error('Failed to store public key in localStorage.');
+  }
 });
 encodeBase64(sessionKeyPair.secretKey).then(res => {
-  window.localStorage.setItem('insomnia.secretKey', res);
+  try {
+    window.localStorage.setItem('insomnia.secretKey', INSOMNIA_SECRET_KEY || res);
+  } catch (error) {
+    console.error('Failed to store secret key in localStorage.');
+  }
 });
 /**
  * Keypair used for the login handshake.
