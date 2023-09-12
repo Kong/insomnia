@@ -18,23 +18,36 @@ interface EnvOptions {
   INSOMNIA_GITHUB_API_URL: string;
   INSOMNIA_GITLAB_API_URL: string;
   INSOMNIA_UPDATES_URL: string;
+  INSOMNIA_SKIP_ONBOARDING: string;
+  INSOMNIA_PUBLIC_KEY: string;
+  INSOMNIA_SECRET_KEY: string;
 }
 
 export const test = baseTest.extend<{
   app: ElectronApplication;
   dataPath: string;
+  fixturesPath: string;
+  storageStatePath: string;
+  userConfig: {
+    skipOnboarding: boolean;
+    publicKey: string;
+    secretKey: string;
+  };
 }>({
-  app: async ({ playwright, trace, dataPath }, use, testInfo) => {
+  app: async ({ playwright, trace, dataPath, userConfig }, use, testInfo) => {
     const webServerUrl = testInfo.config.webServer?.url;
 
     const options: EnvOptions = {
       INSOMNIA_DATA_PATH: dataPath,
       INSOMNIA_API_URL: webServerUrl + '/api',
       INSOMNIA_APP_WEBSITE_URL: webServerUrl + '/website',
-      INSOMNIA_AI_URL: '/ai',
+      INSOMNIA_AI_URL: webServerUrl + '/ai',
       INSOMNIA_GITHUB_API_URL: webServerUrl + '/github-api/graphql',
       INSOMNIA_GITLAB_API_URL: webServerUrl + '/gitlab-api',
       INSOMNIA_UPDATES_URL: webServerUrl || 'https://updates.insomnia.rest',
+      INSOMNIA_SKIP_ONBOARDING: String(userConfig.skipOnboarding),
+      INSOMNIA_PUBLIC_KEY: userConfig.publicKey,
+      INSOMNIA_SECRET_KEY: userConfig.secretKey,
     };
 
     const electronApp = await playwright._electron.launch({
@@ -49,6 +62,7 @@ export const test = baseTest.extend<{
     });
 
     const appContext = electronApp.context();
+
     const traceMode: TraceMode = typeof trace === 'string' ? trace as TraceMode : trace.mode;
 
     const defaultTraceOptions = { screenshots: true, snapshots: true, sources: true };

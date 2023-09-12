@@ -102,7 +102,7 @@ export interface WorkspaceWithMetadata {
   specFormat: 'openapi' | 'swagger' | null;
   name: string;
   apiSpec: ApiSpec | null;
-specFormatVersion: string | null;
+  specFormatVersion: string | null;
   workspace: Workspace;
   workspaceMeta: WorkspaceMeta;
   clientCertificates: ClientCertificate[];

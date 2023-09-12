@@ -55,9 +55,14 @@ if (!isLoggedIn()) {
 }
 
 try {
+  if (process.env.INSOMNIA_SKIP_ONBOARDING) {
+    window.localStorage.setItem('hasSeenOnboarding', process.env.INSOMNIA_SKIP_ONBOARDING);
+  }
+
+  const hasSeenOnboarding = Boolean(window.localStorage.getItem('hasSeenOnboarding'));
   const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
 
-  if (hasUserLoggedInBefore && !isLoggedIn()) {
+  if (hasSeenOnboarding || (hasUserLoggedInBefore && !isLoggedIn())) {
     initialEntry = '/auth/login';
   }
 
