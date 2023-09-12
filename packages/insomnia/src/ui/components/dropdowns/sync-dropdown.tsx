@@ -3,12 +3,15 @@ import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval, useMount } from 'react-use';
 
+import { getAccountId } from '../../../account/session';
 import * as session from '../../../account/session';
+import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import { database as db, Operation } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
+import { FeatureFlagInfo } from '../../../models/organization';
 import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { Snapshot, Status } from '../../../sync/types';
@@ -18,11 +21,14 @@ import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-proj
 import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
+import { useOrganizationLoaderData } from '../../../ui/routes/organization';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
+import { showModal } from '../modals';
 import { showError } from '../modals';
+import { AskModal } from '../modals/ask-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncDeleteModal } from '../modals/sync-delete-modal';
@@ -86,6 +92,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     syncItems,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const remoteProjects = projects.filter(isRemoteProject);
+  const { organizations } = useOrganizationLoaderData();
+  const currentOrg = organizations.find(organization => (organization.id === organizationId));
 
   const refetchRemoteBranch = useCallback(async () => {
     if (session.isLoggedIn()) {
@@ -347,6 +355,29 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     },
   }];
 
+  const gitSyncValue = JSON.parse(currentOrg?.metadata?.canGitSync || '') as FeatureFlagInfo;
+  const gitSyncIsEnabled = gitSyncValue?.enabled;
+  const accountId = getAccountId();
+  const showUpgradePlanModal = () => {
+    showModal(AskModal, {
+      title: 'Upgrading Plan',
+      message:
+        accountId === currentOrg?.metadata?.ownerAccountId ?
+          'Git Sync feature is only enabled for Team plan or above, please upgrade your plan to continue using this feature.' :
+          'Git Sync feature is only enabled for Team plan or above, please ask organization owner to upgrade plan and continue using this feature.'
+      ,
+      yesText: 'Upgrade',
+      noText: 'Cancel',
+      onDone: async (isYes: boolean) => {
+        if (isYes) {
+          window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+        }
+      },
+      hideNo: true,
+      hideYes: accountId !== currentOrg?.metadata?.ownerAccountId,
+    });
+  };
+
   if (!vcs.hasBackendProject()) {
     return (
       <div>
@@ -390,7 +421,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                 variant='contained'
                 bg='surprise'
                 onClick={async () => {
-                  setIsGitRepoSettingsModalOpen(true);
+                  gitSyncIsEnabled ?
+                    setIsGitRepoSettingsModalOpen(true) :
+                    showUpgradePlanModal();
                 }}
                 style={{
                   width: '100%',
@@ -549,7 +582,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               variant='contained'
               bg='surprise'
               onClick={async () => {
-                setIsGitRepoSettingsModalOpen(true);
+                gitSyncIsEnabled ?
+                  setIsGitRepoSettingsModalOpen(true) :
+                  showUpgradePlanModal();
               }}
               style={{
                 width: '100%',
