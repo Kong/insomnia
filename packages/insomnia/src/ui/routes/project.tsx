@@ -877,7 +877,7 @@ const ProjectRoute: FC = () => {
                         {item.workspace.name}
                       </Heading>
                       <div className="flex-1 flex flex-col gap-2 justify-end text-sm text-[--hl]">
-                        {item.spec?.info?.version && (
+                        {typeof item.spec?.info?.version === 'string' && (
                           <div className="flex-1 pt-2">
                             {item.spec.info.version.startsWith('v') ? '' : 'v'}
                             {item.spec.info.version}
