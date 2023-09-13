@@ -69,6 +69,13 @@ export function init(): BaseSettings {
     useBulkParametersEditor: false,
     validateAuthSSL: true,
     validateSSL: true,
+    dev: {
+      servers: {
+        ai: '',
+        api: '',
+        website: '',
+      },
+    },
   };
 }
 
