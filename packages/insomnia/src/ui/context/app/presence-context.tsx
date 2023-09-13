@@ -56,7 +56,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
         const response = await window.main.insomniaFetch<{
             data: UserPresence[];
           }>({
-            path: `/v1/teams/${sanitizeTeamId(organizationId)}/collaborators`,
+            path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
             method: 'POST',
             sessionId,
             data: {
@@ -88,7 +88,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
           const response = await window.main.insomniaFetch<{
               data: UserPresence[];
             }>({
-              path: `/v1/teams/${sanitizeTeamId(organizationId)}/collaborators`,
+              path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
               method: 'POST',
               sessionId,
               data: {
@@ -118,7 +118,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
         const response = await window.main.insomniaFetch<{
                 data: UserPresence[];
               }>({
-                path: `/v1/teams/${sanitizeTeamId(organizationId)}/collaborators`,
+                path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
                 method: 'POST',
                 sessionId,
                 data: {

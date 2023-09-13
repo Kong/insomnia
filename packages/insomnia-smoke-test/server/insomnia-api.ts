@@ -49,7 +49,7 @@ const organizations = [
 
 const user = {
   'id': 'email|64f0dd619ab0786da330d83a',
-  'email': 'sleepyhead@email.com',
+  'email': 'insomnia-user@konghq.com',
   'name': 'Rick Morty',
   'picture': '',
   'bio': 'My BIO',
