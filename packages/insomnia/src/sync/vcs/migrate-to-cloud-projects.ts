@@ -92,54 +92,9 @@ export const migrateLocalToCloudProjects = async () => {
     }
 
     for (const remoteProject of remoteProjects) {
-      const project = await models.project.update(remoteProject, {
-        _id: `proj_${remoteProject.remoteId}`,
-        remoteId: remoteProject.remoteId,
+      await models.project.update(remoteProject, {
         parentId: remoteProject.parentId,
       });
-
-      // For each workspace in the local project
-      const projectWorkspaces = (await database.find<Workspace>(models.workspace.type, {
-        parentId: remoteProject._id,
-      })).filter(workspace => !isScratchpad(workspace));
-
-      for (const workspace of projectWorkspaces) {
-        // Update the workspace to point to the updated project
-        await models.workspace.update(workspace, {
-          parentId: project._id,
-        });
-
-        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-
-        try {
-          if (!workspaceMeta.gitRepositoryId) {
-            let vcs = getVCS();
-
-            if (!vcs) {
-              const driver = FileSystemDriver.create(
-                process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-              );
-
-              console.log('Initializing VCS');
-              vcs = await initVCS(driver, async conflicts => {
-                return new Promise((resolve, reject) => {
-                  if (conflicts.length) {
-                    reject('Not implemented');
-                  }
-
-                  resolve(conflicts);
-                });
-              });
-            }
-            invariant(vcs, 'VCS must be initialized');
-
-            await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
-            await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project });
-          }
-        } catch (e) {
-          console.warn('Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.', e);
-        }
-      }
     }
 
     status = 'completed';
