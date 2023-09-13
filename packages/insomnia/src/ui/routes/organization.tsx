@@ -402,7 +402,7 @@ const OrganizationRoute = () => {
                         ) : (
                           <OrganizationAvatar
                             alt={organization.display_name}
-                            src={organization.branding.logo_url}
+                            src={organization.branding?.logo_url || ''}
                           />
                         )}
                       </NavLink>
