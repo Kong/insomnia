@@ -35,6 +35,7 @@ describe('app.import.*', () => {
       modified: 222,
       parentId: project._id,
     });
+    await models.settings.getOrCreate();
   });
 
   it('uri', async () => {
@@ -135,6 +136,7 @@ describe('app.export.*', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     project = await models.project.create();
+    await models.settings.getOrCreate();
     await models.workspace.create({
       _id: 'wrk_1',
       created: 111,
