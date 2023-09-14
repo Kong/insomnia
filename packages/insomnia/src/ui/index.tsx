@@ -13,7 +13,9 @@ import { isLoggedIn, SessionData, setSessionData } from '../account/session';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
+  getInsomniaSession,
   getProductName,
+  getSkipOnboarding,
   isDevelopment,
 } from '../common/constants';
 import { database } from '../common/database';
@@ -49,14 +51,15 @@ document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
 try {
-  if (process.env.INSOMNIA_SKIP_ONBOARDING) {
-    window.localStorage.setItem('hasSeenOnboarding', process.env.INSOMNIA_SKIP_ONBOARDING);
-    window.localStorage.setItem('hasUserLoggedInBefore', process.env.INSOMNIA_SKIP_ONBOARDING);
+  const skipOnboarding = getSkipOnboarding();
+  const insomniaSession = getInsomniaSession();
+  if (skipOnboarding) {
+    window.localStorage.setItem('hasSeenOnboarding', skipOnboarding.toString());
+    window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
   }
 
-  if (process.env.INSOMNIA_SESSION) {
-
-    const session = JSON.parse(process.env.INSOMNIA_SESSION) as SessionData;
+  if (insomniaSession) {
+    const session = JSON.parse(insomniaSession) as SessionData;
     setSessionData(
       session.id,
       session.sessionExpiry,
