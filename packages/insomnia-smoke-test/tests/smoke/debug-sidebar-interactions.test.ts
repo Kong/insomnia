@@ -57,7 +57,7 @@ test.describe('Debug-Sidebar', async () => {
       await page.locator('.app').press('Escape');
     });
 
-    test.only('Open properties of the collection', async ({ page }) => {
+    test('Open properties of the collection', async ({ page }) => {
       await page.getByLabel('Workspace actions', { exact: true }).click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByText('Collection Settings').click();
