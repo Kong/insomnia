@@ -70,6 +70,18 @@ interface UserProfileResponse {
   family_name: string;
 }
 
+type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
+type PaymentSchedules = 'month' | 'year';
+
+interface CurrentPlan {
+  isActive: boolean;
+  period: PaymentSchedules;
+  planId: string;
+  price: number;
+  quantity: number;
+  type: PersonalPlanType;
+};
+
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
@@ -89,13 +101,12 @@ export const indexLoader: LoaderFunction = async () => {
         });
       });
 
-      console.log({
-        organizations,
-        personalOrganization,
-      });
-
       if (personalOrganization) {
         return redirect(`/organization/${personalOrganization.id}`);
+      }
+
+      if (organizations.length > 0) {
+        return redirect(`/organization/${organizations[0].id}`);
       }
     } catch (error) {
       console.log('Failed to load Organizations', error);
@@ -109,6 +120,7 @@ export const indexLoader: LoaderFunction = async () => {
 export interface OrganizationLoaderData {
   organizations: Organization[];
   user?: UserProfileResponse;
+  currentPlan?: CurrentPlan;
 }
 
 export const loader: LoaderFunction = async () => {
@@ -147,8 +159,15 @@ export const loader: LoaderFunction = async () => {
         sessionId,
       });
 
+      const currentPlan = await window.main.insomniaFetch<CurrentPlan>({
+        method: 'GET',
+        path: '/v1/billing/current-plan',
+        sessionId,
+      });
+
       return {
         user,
+        currentPlan,
         settings: await models.settings.get(),
         organizations: organizations
           .sort((a, b) => a.name.localeCompare(b.name))
@@ -218,6 +237,42 @@ export const shouldOrganizationsRevalidate: ShouldRevalidateFunction = ({
   return isSwitchingBetweenOrganizations;
 };
 
+const UpgradeButton = () => {
+  const { currentPlan } = useOrganizationLoaderData();
+  const { settings } = useRootLoaderData();
+
+  // If user has a team or enterprise plan we navigate them to the Enterprise contact page.
+  if (['team', 'enterprise'].includes(currentPlan?.type || '')) {
+    return (
+      <Button
+        className="px-4 bg-[--color-surprise] text-[--color-font-surprise] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        onPress={() => {
+          window.main.openInBrowser('https://insomnia.rest/pricing/contact');
+        }}
+      >
+        {currentPlan?.type === 'enterprise' ? '+ Add more seats' : 'Upgrade'}
+      </Button>
+    );
+  }
+
+  let to = '/app/subscription/update?plan=individual&payment_schedule=year';
+
+  if (currentPlan?.type === 'individual') {
+    to = `/app/subscription/update?plan=team&payment_schedule=${currentPlan?.period}`;
+  }
+
+  return (
+    <Button
+      onPress={() => {
+        window.main.openInBrowser(settings.dev?.servers.website + to);
+      }}
+      className="px-4 bg-[--color-surprise] text-[--color-font-surprise] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+    >
+      Upgrade
+    </Button>
+  );
+};
+
 const OrganizationRoute = () => {
   const { settings } = useRootLoaderData();
   const { organizations, user } =
@@ -262,7 +317,7 @@ const OrganizationRoute = () => {
                 </div>
                 {!user ? <GitHubStarsButton /> : null}
               </div>
-              <div className="flex gap-2 flex-nowrap items-center justify-center">
+            <div className="flex place-content-stretch gap-2 flex-nowrap items-center justify-center">
                 {workspaceData && isDesign(workspaceData?.activeWorkspace) && (
                   <nav className="flex rounded-full justify-between content-evenly font-semibold bg-[--hl-xs] p-[--padding-xxs]">
                     {[
@@ -291,7 +346,7 @@ const OrganizationRoute = () => {
                   <Fragment>
                     <PresentUsers />
                     <MenuTrigger>
-                      <Button className="px-1 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    <Button className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                         <Avatar
                           src={user.picture}
                           alt={user.name}
@@ -357,6 +412,7 @@ const OrganizationRoute = () => {
                     </NavLink>
                   </Fragment>
                 )}
+              <UpgradeButton />
               </div>
             </header>
             {isScratchpadWorkspace ? (

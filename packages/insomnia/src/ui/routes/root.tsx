@@ -47,9 +47,9 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
       ...settings,
       dev: {
         servers: {
-          ai: process.env.INSOMNIA_AI_URL || servers?.ai || '',
-          api: process.env.INSOMNIA_API_URL || servers?.api || '',
-          website: process.env.INSOMNIA_APP_WEBSITE_URL || servers?.website || '',
+          ai: process.env['INSOMNIA_AI_URL'] || servers?.ai || '',
+          api: process.env['INSOMNIA_API_URL'] || servers?.api || '',
+          website: process.env['INSOMNIA_APP_WEBSITE_URL'] || servers?.website || '',
         },
       },
     },

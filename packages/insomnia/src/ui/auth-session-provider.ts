@@ -3,25 +3,25 @@ import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
 import * as Sentry from '@sentry/electron';
 
 import * as session from '../account/session';
+import { getInsomniaPublicKey, getInsomniaSecretKey } from '../common/constants';
 import { invariant } from '../utils/invariant';
 
 interface AuthBox {
   token: string;
   key: string;
 }
-const { INSOMNIA_PUBLIC_KEY, INSOMNIA_SECRET_KEY } = process.env;
 
 const sessionKeyPair = keyPair();
 encodeBase64(sessionKeyPair.publicKey).then(res => {
   try {
-    window.localStorage.setItem('insomnia.publicKey', INSOMNIA_PUBLIC_KEY || res);
+    window.localStorage.setItem('insomnia.publicKey', getInsomniaPublicKey() || res);
   } catch (error) {
     console.error('Failed to store public key in localStorage.');
   }
 });
 encodeBase64(sessionKeyPair.secretKey).then(res => {
   try {
-    window.localStorage.setItem('insomnia.secretKey', INSOMNIA_SECRET_KEY || res);
+    window.localStorage.setItem('insomnia.secretKey', getInsomniaSecretKey() || res);
   } catch (error) {
     console.error('Failed to store secret key in localStorage.');
   }
