@@ -52,6 +52,7 @@ import { invariant } from '../../utils/invariant';
 import { RequestActionsDropdown } from '../components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
+import { EditableInput } from '../components/editable-input';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
@@ -78,6 +79,7 @@ import {
   CreateRequestType,
   useRequestGroupMetaPatcher,
   useRequestMetaPatcher,
+  useRequestPatcher,
 } from '../hooks/use-request';
 import {
   GrpcRequestLoaderData,
@@ -180,6 +182,7 @@ export const Debug: FC = () => {
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
 
   const patchRequestMeta = useRequestMetaPatcher();
+  const patchRequest = useRequestPatcher();
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
       for (const change of changes) {
@@ -884,7 +887,14 @@ export const Debug: FC = () => {
                           gRPC
                         </span>
                       )}
-                      <span className="truncate">{item.doc.name}</span>
+                      <EditableInput
+                        onChange={name => {
+                          if (name) {
+                            patchRequest(item.doc._id, { name });
+                          }
+                        }}
+                        value={item.doc.name}
+                      />
                       <span className="flex-1" />
                       {item.pinned && (
                         <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
@@ -971,7 +981,14 @@ export const Debug: FC = () => {
                             icon={item.collapsed ? 'folder' : 'folder-open'}
                           />
                         )}
-                        <span className="truncate">{item.doc.name}</span>
+                        <EditableInput
+                          onChange={name => {
+                            if (name) {
+                              patchRequest(item.doc._id, { name });
+                            }
+                          }}
+                          value={item.doc.name}
+                        />
                         <span className="flex-1" />
                         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
                         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}

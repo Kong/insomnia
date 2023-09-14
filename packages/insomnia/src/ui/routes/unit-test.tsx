@@ -81,35 +81,35 @@ const TestRoute: FC = () => {
     icon: IconName;
     action: (suiteId: string) => void;
   }[] = [
-    {
-      id: 'run-tests',
-      name: 'Run tests',
-      icon: 'play',
-      action: suiteId => {
-        runAllTestsFetcher.submit(
-          {},
-          {
-            method: 'POST',
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/run-all-tests`,
-          }
-        );
+      {
+        id: 'run-tests',
+        name: 'Run tests',
+        icon: 'play',
+        action: suiteId => {
+          runAllTestsFetcher.submit(
+            {},
+            {
+              method: 'POST',
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/run-all-tests`,
+            }
+          );
+        },
       },
-    },
-    {
-      id: 'delete-suite',
-      name: 'Delete suite',
-      icon: 'trash',
-      action: suiteId => {
-        deleteUnitTestSuiteFetcher.submit(
-          {},
-          {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/delete`,
-            method: 'POST',
-          }
-        );
+      {
+        id: 'delete-suite',
+        name: 'Delete suite',
+        icon: 'trash',
+        action: suiteId => {
+          deleteUnitTestSuiteFetcher.submit(
+            {},
+            {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/delete`,
+              method: 'POST',
+            }
+          );
+        },
       },
-    },
-  ];
+    ];
 
   return (
     <SidebarLayout
@@ -170,13 +170,15 @@ const TestRoute: FC = () => {
                         name="name"
                         ariaLabel="Test suite name"
                         onChange={name => {
-                          renameTestSuiteFetcher.submit(
-                            { name },
-                            {
-                              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}/rename`,
-                              method: 'POST',
-                            }
-                          );
+                          if (name) {
+                            renameTestSuiteFetcher.submit(
+                              { name },
+                              {
+                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}/rename`,
+                                method: 'POST',
+                              }
+                            );
+                          }
                         }}
                       />
                       <span className="flex-1" />
