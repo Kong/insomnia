@@ -57,7 +57,7 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   }, [aiAccessFetcher, organizationId, loggedIn]);
 
-  const isAIEnabled = Boolean(aiAccessFetcher.data?.enabled);
+  // const isAIEnabled = Boolean(aiAccessFetcher.data?.enabled);
 
   const aiGenerateTestsProgressStream = aiGenerateTestsFetcher.data as TransformStream;
 
@@ -105,7 +105,7 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
           });
         },
         access: {
-          enabled: isAIEnabled,
+          enabled: true,
           loading: aiAccessFetcher.state !== 'idle',
         },
       }}

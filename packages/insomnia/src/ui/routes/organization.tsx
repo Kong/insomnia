@@ -395,6 +395,7 @@ const OrganizationRoute = () => {
                         </Menu>
                       </Popover>
                     </MenuTrigger>
+                  <UpgradeButton />
                   </Fragment>
                 ) : (
                   <Fragment>
@@ -411,8 +412,7 @@ const OrganizationRoute = () => {
                       Sign Up
                     </NavLink>
                   </Fragment>
-                )}
-              <UpgradeButton />
+              )}
               </div>
             </header>
             {isScratchpadWorkspace ? (
