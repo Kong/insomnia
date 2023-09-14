@@ -7,7 +7,6 @@ import {
   responseTransform,
   sendCurlAndWriteTimeline,
   tryToInterpolateRequest,
-  tryToTransformRequestWithPlugins,
 } from '../network/network';
 import { invariant } from '../utils/invariant';
 import { database } from './database';
@@ -72,7 +71,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     } = await fetchInsoRequestData(requestId);
     // NOTE: inso ignores active environment, using the one passed in
     const renderResult = await tryToInterpolateRequest(request, environmentId, RENDER_PURPOSE_SEND);
-    const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+    const renderedRequest = renderResult.request;
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
       clientCertificates,
