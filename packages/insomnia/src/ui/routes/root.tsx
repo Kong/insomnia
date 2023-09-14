@@ -27,7 +27,7 @@ import { AIProvider } from '../context/app/ai-context';
 import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-context';
 import Modals from './modals';
 
-interface LoaderData {
+export interface RootLoaderData {
   user?: {
     name: string;
     picture: string;
@@ -36,10 +36,10 @@ interface LoaderData {
 }
 
 export const useRootLoaderData = () => {
-  return useRouteLoaderData('root') as LoaderData;
+  return useRouteLoaderData('root') as RootLoaderData;
 };
 
-export const loader: LoaderFunction = async (): Promise<LoaderData> => {
+export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
   const settings = await models.settings.get();
   const servers = settings.dev?.servers;
   return {
