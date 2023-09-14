@@ -93,7 +93,7 @@ const FeatureWizardView = () => {
       <Route
         path="/"
         element={
-          <ul className="grid grid-cols-3 gap-2 justify-center p-4">
+          <ul className="grid grid-cols-3 gap-2 h-80 justify-center p-4">
             {features.map(feature => (
               <li key={feature.id}>
                 <Link
@@ -122,7 +122,7 @@ const FeatureWizardView = () => {
               key={feature.id}
               path={feature.id}
               element={
-                <div className="flex text-left flex-col gap-4 bg-[--color-bg] p-4 relative">
+                <div className="flex text-left flex-col h-80 gap-4 bg-[--color-bg] p-4 relative">
                   <h1 className="flex justify-between text-lg">
                     <span>{feature.title}</span>
                     <span>
