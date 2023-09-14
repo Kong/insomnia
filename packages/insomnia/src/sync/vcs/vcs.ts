@@ -122,10 +122,6 @@ export class VCS {
     await this.setBackendProject(project);
   }
 
-  async teams() {
-    return this._queryTeams();
-  }
-
   async backendProjectTeams() {
     return this._queryBackendProjectTeams();
   }
@@ -1030,22 +1026,6 @@ export class VCS {
       'projectKey',
     );
     return projectKey.encSymmetricKey as string;
-  }
-
-  async _queryTeams() {
-    const { teams } = await this._runGraphQL(
-      `
-        query {
-          teams {
-            id
-            name
-          }
-        }
-      `,
-      {},
-      'teams',
-    );
-    return teams as Team[];
   }
 
   async _queryBackendProjects(teamId: string, teamProjectId: string) {
