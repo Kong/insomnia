@@ -5,7 +5,7 @@ import { KeyCombination } from './settings';
 const env = process['env'];
 
 // App Stuff
-export const getSkipOnboarding = () => Boolean(env.SKIP_ONBOARDING);
+export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
 export const getInsomniaSession = () => env.INSOMNIA_SESSION;
 export const getInsomniaSecretKey = () => env.INSOMNIA_SECRET_KEY;
 export const getInsomniaPublicKey = () => env.INSOMNIA_PUBLIC_KEY;
