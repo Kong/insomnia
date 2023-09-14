@@ -367,7 +367,7 @@ export const convert: Converter = rawData => {
   }
 
   // Parse the whole thing into one big tokenized list
-  const parseEntries = parse(rawData);
+  const parseEntries = parse(rawData.replace(/\n/g, ' '));
 
   // ~~~~~~~~~~~~~~~~~~~~~~ //
   // Aggregate the commands //
