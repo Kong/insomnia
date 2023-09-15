@@ -17,6 +17,7 @@ import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
 import { EnvironmentEditor, EnvironmentEditorHandle } from '../editors/environment-editor';
 import { HelpTooltip } from '../help-tooltip';
+import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { Tooltip } from '../tooltip';
 
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
@@ -243,6 +244,10 @@ export const WorkspaceEnvironmentsEditModal = (props: ModalProps) => {
   useEffect(() => {
     modalRef.current?.show();
   }, []);
+
+  useDocBodyKeyboardShortcuts({
+    environment_closeEditor: () => modalRef.current?.hide(),
+  });
 
   if (!routeData) {
     return null;

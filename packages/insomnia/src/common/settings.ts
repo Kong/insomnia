@@ -41,6 +41,7 @@ export type KeyboardShortcut =
   | 'request_send'
   | 'request_showOptions'
   | 'environment_showEditor'
+  | 'environment_closeEditor'
   | 'environment_showSwitchMenu'
   | 'request_toggleHttpMethodMenu'
   | 'request_toggleHistory'
