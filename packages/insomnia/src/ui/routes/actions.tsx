@@ -850,30 +850,6 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
   }
 };
 
-export const accessGitSyncAction: ActionFunction = async ({ params }) => {
-  const { organizationId, projectId, workspaceId } = params;
-
-  invariant(typeof organizationId === 'string', 'Organization ID is required');
-  invariant(typeof projectId === 'string', 'Project ID is required');
-  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-
-  try {
-    const response = await window.main.insomniaFetch<Organization>({
-      method: 'POST',
-      path: `/v1/organizations/${organizationId}`,
-      sessionId: session.getCurrentSessionId(),
-      data: {
-        teamId: organizationId,
-      },
-    });
-
-    return response.metadata.canGitSync;
-  } catch (err) {
-    console.log(err);
-    return { enabled: false, reason: err.message };
-  }
-};
-
 export const createEnvironmentAction: ActionFunction = async ({
   params,
   request,

@@ -15,6 +15,7 @@ import {
   PullFromGitRemoteResult,
   PushToGitRemoteResult,
 } from '../../routes/git-actions';
+import { useOrganizationLoaderData } from '../../routes/organization';
 import {
   Dropdown,
   DropdownButton,
@@ -47,7 +48,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
     workspaceId: string;
   };
   const dropdownRef = useRef<DropdownHandle>(null);
-
+  const { organizations } = useOrganizationLoaderData();
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] =
     useState(false);
   const [isGitBranchesModalOpen, setIsGitBranchesModalOpen] = useState(false);
@@ -263,9 +264,9 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
     });
   };
 
-  const gitFlagIsEnabled = false; // TODO: use loader data to set it
+  const canGitSync = organizations.find(o => o.id === organizationId)?.metadata.canGitSync;
 
-  if (gitFlagIsEnabled && isSynced) {
+  if (canGitSync?.enabled && isSynced) {
     dropdown = (
       <div className={className}>
         <Dropdown
@@ -443,7 +444,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
         </Dropdown>
       </div>
     );
-  } else if (gitFlagIsEnabled && !isSynced) {
+  } else if (canGitSync?.enabled && !isSynced) {
     dropdown = (
       <div className={className}>
         <Dropdown
@@ -547,6 +548,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
       </div>
     );
   } else {
+    console.log('[git] Git Sync is not enabled for this organization', canGitSync);
     dropdown = (
       <div className={className}>
         <Button
