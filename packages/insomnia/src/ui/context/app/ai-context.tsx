@@ -57,6 +57,7 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   }, [aiAccessFetcher, organizationId, loggedIn]);
 
+  // TODO(v2): remove before merge
   // const isAIEnabled = Boolean(aiAccessFetcher.data?.enabled);
 
   const aiGenerateTestsProgressStream = aiGenerateTestsFetcher.data as TransformStream;
@@ -105,6 +106,7 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
           });
         },
         access: {
+          // TODO(v2): remove before merge
           enabled: true,
           loading: aiAccessFetcher.state !== 'idle',
         },

@@ -26,13 +26,13 @@ import {
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { showAlert, showModal } from '../modals';
+import { AskModal } from '../modals/ask-modal';
 import { GitBranchesModal } from '../modals/git-branches-modal';
 import { GitLogModal } from '../modals/git-log-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { GitStagingModal } from '../modals/git-staging-modal';
 import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
-import { AskModal } from '../modals/ask-modal';
 
 interface Props {
   gitRepository: GitRepository | null;
@@ -251,8 +251,8 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
 
   const showUpgradePlanModal = () => {
     showModal(AskModal, {
-      title: "Upgrading Plan",
-      message: `Role-based access control (RBAC) is only enabled for Team plan or above, please upgrade your plan.`,
+      title: 'Upgrade Plan',
+      message: 'Git Sync is only enabled for Team plan or above, please upgrade your plan to continue using this feature.',
       yesText: 'Upgrade Plan',
       noText: 'Cancel',
       onDone: async (isYes: boolean) => {
@@ -260,7 +260,7 @@ export const GitSyncDropdown: FC<Props> = ({ className, gitRepository, isInsomni
           window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
         }
       },
-    })
+    });
   };
 
   const gitFlagIsEnabled = false; // TODO: use loader data to set it

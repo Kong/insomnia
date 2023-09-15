@@ -64,7 +64,7 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
             {noText}
           </button>
           <button
-            className="btn"
+            className="btn ml-2"
             onClick={() => {
               modalRef.current?.hide();
               onDone?.(true);

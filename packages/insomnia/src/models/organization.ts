@@ -3,6 +3,8 @@ interface Branding {
 }
 
 export interface Metadata {
+  canGitSync: { enabled: true } | { enabled: false; reason: string };
+  organizationPlan: 'free' | 'individual' | 'team' | 'enterprise';
   organizationType: string;
   ownerAccountId: string;
 }

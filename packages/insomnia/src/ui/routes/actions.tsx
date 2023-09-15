@@ -12,6 +12,7 @@ import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { getById, update } from '../../models/helpers/request-operations';
+import { Organization } from '../../models/organization';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
@@ -843,7 +844,33 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
       enabled: response.enabled,
     };
   } catch (err) {
+    // TODO(v2): remove before merge
+    console.log(err);
     return { enabled: false };
+  }
+};
+
+export const accessGitSyncAction: ActionFunction = async ({ params }) => {
+  const { organizationId, projectId, workspaceId } = params;
+
+  invariant(typeof organizationId === 'string', 'Organization ID is required');
+  invariant(typeof projectId === 'string', 'Project ID is required');
+  invariant(typeof workspaceId === 'string', 'Workspace ID is required');
+
+  try {
+    const response = await window.main.insomniaFetch<Organization>({
+      method: 'POST',
+      path: `/v1/organizations/${organizationId}`,
+      sessionId: session.getCurrentSessionId(),
+      data: {
+        teamId: organizationId,
+      },
+    });
+
+    return response.metadata.canGitSync;
+  } catch (err) {
+    console.log(err);
+    return { enabled: false, reason: err.message };
   }
 };
 
