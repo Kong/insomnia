@@ -164,10 +164,10 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     codeMirror.current.on('focus', () => codeMirror.current?.getTextArea().parentElement?.setAttribute('data-focused', 'on'));
     codeMirror.current.on('keyHandled', (_: CodeMirror.Editor, _keyName: string, event: Event) => event.stopPropagation());
     // Prevent these things if we're type === "password"
-    const preventDefault = (_: CodeMirror.Editor, event: Event) => type?.toLowerCase() === 'password' && event.preventDefault();
-    codeMirror.current.on('copy', preventDefault);
-    codeMirror.current.on('cut', preventDefault);
-    codeMirror.current.on('dragstart', preventDefault);
+    // const preventDefault = (_: CodeMirror.Editor, event: Event) => type?.toLowerCase() === 'password' && event.preventDefault();
+    // codeMirror.current.on('copy', preventDefault);
+    // codeMirror.current.on('cut', preventDefault);
+    // codeMirror.current.on('dragstart', preventDefault);
     codeMirror.current.setCursor({ line: -1, ch: -1 });
 
     // Actually set the value
