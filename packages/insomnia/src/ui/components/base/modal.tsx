@@ -81,7 +81,7 @@ export const Modal = forwardRef<ModalHandle, ModalProps>(({
 
   const handleKeydown = createKeybindingsHandler({
     'Escape': () => {
-      hide();
+      containerRef.current?.focus();
     },
   });
   useEffect(() => {
