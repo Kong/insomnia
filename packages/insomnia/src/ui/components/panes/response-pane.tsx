@@ -162,6 +162,7 @@ export const ResponsePane: FC<Props> = ({
           <ResponseViewer
             key={activeResponse._id}
             bytes={Math.max(activeResponse.bytesContent, activeResponse.bytesRead)}
+            maxResponseSizeKB={settings.maxResponseSizeKB}
             contentType={activeResponse.contentType || ''}
             disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
             disablePreviewLinks={settings.disableResponsePreviewLinks}

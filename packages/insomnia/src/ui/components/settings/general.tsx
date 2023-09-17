@@ -253,6 +253,12 @@ export const General: FC = () => {
           help="Enter the maximum size in kibibytes to show on the response timeline. Decrease the number for less detailed responses."
           min={0}
         />
+        <NumberSetting
+          label="Response threshold size (KB)"
+          setting='maxResponseSizeKB'
+          help="Enter the maximum size in kilobytes to show on the response. Enter 0 to disable thresholding."
+          min={0}
+        />
       </div>
 
       <hr className="pad-top" />

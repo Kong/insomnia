@@ -130,6 +130,7 @@ export interface Settings {
   maxHistoryResponses: number;
   maxRedirects: number;
   maxTimelineDataSizeKB: number;
+  maxResponseSizeKB: number;
   noProxy: string;
   nunjucksPowerUserMode: boolean;
   pluginConfig: PluginConfigMap;

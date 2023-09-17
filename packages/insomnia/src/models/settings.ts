@@ -53,6 +53,7 @@ export function init(): BaseSettings {
     maxHistoryResponses: 20,
     maxRedirects: 10,
     maxTimelineDataSizeKB: 10,
+    maxResponseSizeKB: 5_000,
     noProxy: '',
     nunjucksPowerUserMode: false,
     pluginConfig: {},
