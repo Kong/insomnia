@@ -43,10 +43,10 @@ import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
 import { Organization } from '../../models/organization';
 import {
-  DEFAULT_PROJECT_ID,
   isRemoteProject,
   Project,
   RemoteProject,
+  SCRATCHPAD_PROJECT_ID,
 } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
@@ -691,7 +691,7 @@ const ProjectRoute: FC = () => {
                             maxAvatars={3}
                             items={item.presence}
                           />
-                          {item._id !== DEFAULT_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} />}
+                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} />}
                         </div>
                       </Item>
                     );
@@ -746,7 +746,7 @@ const ProjectRoute: FC = () => {
               </GridList>
               <div className='flex flex-col py-[--padding-sm]'>
                 <Button
-                  aria-label="Invite people to organization"
+                  aria-label="Invite collaborators to organization"
                   className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                   onPress={() => {
                     window.main.openInBrowser(`${settings.dev?.servers.website}/app/dashboard/organizations/${organizationId}/members`);
@@ -755,7 +755,7 @@ const ProjectRoute: FC = () => {
                   <Icon icon="user-plus" />
 
                   <span className="truncate">
-                    Invite people to organization
+                    Invite collaborators to organization
                   </span>
                 </Button>
                 <Button

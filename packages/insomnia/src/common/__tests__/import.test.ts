@@ -3,8 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { request, requestGroup, workspace } from '../../models';
-import { DEFAULT_PROJECT_ID } from '../../models/project';
+import { project, request, requestGroup, workspace } from '../../models';
 import * as importUtil from '../import';
 
 describe('isApiSpecImport()', () => {
@@ -39,20 +38,22 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
 
+    const projectToImportTo = await project.create();
+
     const scanResult = await importUtil.scanResources({
       content,
     });
 
-    expect(scanResult.type.id).toBe('curl');
+    expect(scanResult.type?.id).toBe('curl');
     expect(scanResult.errors.length).toBe(0);
 
     await importUtil.importResourcesToProject({
-      projectId: DEFAULT_PROJECT_ID,
+      projectId: projectToImportTo._id,
     });
 
     const workspacesCount = await workspace.count();
     const projectWorkspaces = await workspace.findByParentId(
-      DEFAULT_PROJECT_ID
+      projectToImportTo._id
     );
     const curlRequests = await request.findByParentId(projectWorkspaces[0]._id);
 
@@ -97,21 +98,21 @@ describe('importRaw()', () => {
   it('should import a postman collection to a new workspace', async () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'postman', 'aws-signature-auth-v2_0-input.json');
     const content = fs.readFileSync(fixturePath, 'utf8').toString();
-
+    const projectToImportTo = await project.create();
     const scanResult = await importUtil.scanResources({
       content,
     });
 
-    expect(scanResult.type.id).toBe('postman');
+    expect(scanResult.type?.id).toBe('postman');
     expect(scanResult.errors.length).toBe(0);
 
     await importUtil.importResourcesToProject({
-      projectId: DEFAULT_PROJECT_ID,
+      projectId: projectToImportTo._id,
     });
 
     const workspacesCount = await workspace.count();
     const projectWorkspaces = await workspace.findByParentId(
-      DEFAULT_PROJECT_ID
+      projectToImportTo._id
     );
 
     const requestGroups = await requestGroup.findByParentId(projectWorkspaces[0]._id);
