@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { FC, Fragment, useEffect, useRef } from 'react';
+import React, { FC, Fragment, useEffect, useRef, KeyboardEvent } from 'react';
 import { ListDropTargetDelegate, ListKeyboardDelegate, mergeProps, OverlayContainer, useDraggableCollection, useDraggableItem, useDropIndicator, useDroppableCollection, useDroppableItem, useFocusRing, useListBox, useOption } from 'react-aria';
 import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { DraggableCollectionState, DroppableCollectionState, Item, ListState, useDraggableCollectionState, useDroppableCollectionState, useListState } from 'react-stately';
@@ -311,10 +311,16 @@ export const WorkspaceEnvironmentsEditModal = (props: ModalProps) => {
       sourceEnv.metaSortKey = targetEnv.metaSortKey + 1;
     }
     updateEnvironment(sourceEnv._id, { metaSortKey: sourceEnv.metaSortKey });
-  }
+  };
+
+  const handleKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === 'Enter') {
+      modalRef.current?.hide();
+    }
+  };
 
   return (
-    <OverlayContainer>
+    <OverlayContainer onKeyDown={handleKeyDown} tabIndex={0}>
       <Modal ref={modalRef} wide tall onHide={props.onHide}>
         <ModalHeader>Manage Environments</ModalHeader>
         <ModalBody noScroll className="env-modal">
