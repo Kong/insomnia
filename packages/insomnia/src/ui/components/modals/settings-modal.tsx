@@ -1,7 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useFetcher } from 'react-router-dom';
 
-import { getEmail } from '../../../account/session';
+import { getEmail, isLoggedIn } from '../../../account/session';
 import { getAppVersion, getProductName } from '../../../common/constants';
 import { useRootLoaderData } from '../../routes/root';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
@@ -81,7 +81,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
   const [defaultTabKey, setDefaultTabKey] = useState('general');
   const modalRef = useRef<ModalHandle>(null);
   const email = getEmail();
-
+  const showEmail = isLoggedIn();
   useImperativeHandle(ref, () => ({
     hide: () => {
       modalRef.current?.hide();
@@ -98,7 +98,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
         {getProductName()} Preferences
         <span className="faint txt-sm">
           &nbsp;&nbsp;–&nbsp; v{getAppVersion()}
-          {email ? ` – ${email}` : null}
+          {(showEmail && email) ? ` – ${email}` : null}
         </span>
       </ModalHeader>
       <ModalBody noScroll>
