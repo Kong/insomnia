@@ -16,6 +16,7 @@ import { CreateRequestType, useRequestGroupPatcher } from '../../hooks/use-reque
 import { RootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
+import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
@@ -227,13 +228,6 @@ export const RequestGroupActionsDropdown = ({
         action: () =>
           handleRename(),
       },
-      {
-        id: 'Delete',
-        name: 'Delete',
-        icon: 'trash',
-        action: () =>
-          handleDeleteFolder(),
-      },
       ...actionPlugins.map(plugin => ({
         id: plugin.label,
         name: plugin.label,
@@ -253,6 +247,12 @@ export const RequestGroupActionsDropdown = ({
   return (
     <Fragment>
     <MenuTrigger onOpenChange={isOpen => isOpen && onOpen()}>
+      <PromptButton
+        onClick={() => handleDeleteFolder()}
+        className="opacity-0 hover:opacity-100"
+      >
+        <Icon icon='trash' />
+      </PromptButton>
       <Button
         data-testid={`Dropdown-${toKebabCase(requestGroup.name)}`}
         aria-label="Request Group Actions"
