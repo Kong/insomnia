@@ -54,7 +54,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
     const handleWindowClose = async () => {
       try {
         const response = await window.main.insomniaFetch<{
-            data: UserPresence[];
+          data?: UserPresence[];
           }>({
             path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
             method: 'POST',
@@ -64,9 +64,9 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
               file: '',
             },
           });
-
-        if (response?.data?.length > 0) {
-          setPresence(response.data);
+        const rows = response?.data || [];
+        if (rows.length > 0) {
+          setPresence(rows);
         }
       } catch (e) {
         console.log('Error parsing response', e);
@@ -86,7 +86,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
       if (sessionId) {
         try {
           const response = await window.main.insomniaFetch<{
-              data: UserPresence[];
+            data?: UserPresence[];
             }>({
               path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
               method: 'POST',
@@ -97,9 +97,9 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
               },
             });
 
-          const { data } = response;
-          if (data.length > 0) {
-            setPresence(response.data);
+          const rows = response?.data || [];
+          if (rows.length > 0) {
+            setPresence(rows);
           }
         } catch (e) {
           console.log('Error parsing response', e);
@@ -116,7 +116,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
     if (sessionId) {
       try {
         const response = await window.main.insomniaFetch<{
-                data: UserPresence[];
+          data?: UserPresence[];
               }>({
                 path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
                 method: 'POST',
@@ -127,9 +127,9 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
                 },
               });
 
-        const { data } = response;
-        if (data.length > 0) {
-          setPresence(response.data);
+        const rows = response?.data || [];
+        if (rows.length > 0) {
+          setPresence(rows);
         }
       } catch (e) {
         console.log('Error parsing response', e);
