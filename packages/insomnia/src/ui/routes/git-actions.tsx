@@ -10,7 +10,6 @@ import * as models from '../../models';
 import { isApiSpec } from '../../models/api-spec';
 import { GitRepository } from '../../models/git-repository';
 import { createGitRepository } from '../../models/helpers/git-repository-operations';
-import { DEFAULT_PROJECT_ID } from '../../models/project';
 import {
   isWorkspace,
   Workspace,
@@ -523,7 +522,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
     const existingWorkspace = await models.workspace.getById(workspace._id);
 
     if (existingWorkspace) {
-      return redirect(`/organization/${existingWorkspace.parentId}/project/${existingWorkspace.parentId || DEFAULT_PROJECT_ID}/workspace/${existingWorkspace._id}/debug`);
+      return redirect(`/organization/${existingWorkspace.parentId}/project/${existingWorkspace.parentId}/workspace/${existingWorkspace._id}/debug`);
     }
 
     // Loop over all model folders in root

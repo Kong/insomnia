@@ -57,8 +57,9 @@ export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
 };
 
 const Root = () => {
-  const { organizationId } = useParams() as {
+  const { organizationId, projectId } = useParams() as {
     organizationId: string;
+    projectId: string;
   };
 
   const [importUri, setImportUri] = useState('');
@@ -233,6 +234,7 @@ const Root = () => {
             <ImportModal
               onHide={() => setImportUri('')}
               projectName="Insomnia"
+              defaultProjectId={projectId}
               organizationId={organizationId}
               from={{ type: 'uri', defaultValue: importUri }}
             />

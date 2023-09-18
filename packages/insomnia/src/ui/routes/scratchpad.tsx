@@ -1,8 +1,23 @@
 import { LoaderFunction, redirect } from 'react-router-dom';
 
-import { DEFAULT_PROJECT_ID, seed } from '../../models/project';
+import { getProductName } from '../../common/constants';
+import * as models from '../../models';
 
 export const loader: LoaderFunction = async () => {
-  await seed();
-  return redirect(`/organization/${DEFAULT_PROJECT_ID}/project/${DEFAULT_PROJECT_ID}/workspace/wrk_scratchpad/debug`);
+  try {
+    const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
+    const scratchPad = await models.workspace.getById('wrk_scratchpad');
+    if (!scratchpadProject) {
+      console.log('Initializing Scratch Pad Project');
+      await models.project.create({ _id: models.project.SCRATCHPAD_PROJECT_ID, name: getProductName(), remoteId: null });
+    }
+
+    if (!scratchPad) {
+      console.log('Initializing Scratch Pad');
+      await models.workspace.create({ _id: 'wrk_scratchpad', name: 'Scratch Pad', parentId: models.project.SCRATCHPAD_PROJECT_ID, scope: 'collection' });
+    }
+  } catch (err) {
+    console.warn('Failed to create default project. It probably already exists', err);
+  }
+  return redirect(`/organization/${models.project.SCRATCHPAD_PROJECT_ID}/project/${models.project.SCRATCHPAD_PROJECT_ID}/workspace/${models.workspace.SCRATCHPAD_WORKSPACE_ID}/debug`);
 };
