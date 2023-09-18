@@ -17,9 +17,14 @@ export const action: ActionFunction = async ({
   const data = await request.json();
 
   invariant(typeof data?.code === 'string', 'Expected code to be a string');
-
-  await submitAuthCode(data.code);
-
+  const fetchError = await submitAuthCode(data.code);
+  if (fetchError) {
+    return {
+      errors: {
+        message: 'Invalid code: ' + fetchError,
+      },
+    };
+  }
   console.log('Login successful');
   window.localStorage.setItem('hasLoggedIn', 'true');
 
@@ -90,6 +95,7 @@ const Authorize = () => {
               If your browser does not open the Insomnia app automatically you
               can manually add the generated token here:
             </p>
+
             <form
               onSubmit={e => {
                 e.preventDefault();
@@ -134,6 +140,7 @@ const Authorize = () => {
                   Log in
                 </button>
               </div>
+              {authorizeFetcher.data?.errors?.message && <p>{authorizeFetcher.data.errors.message}</p>}
             </form>
           </div>
         </Fragment>
