@@ -11,6 +11,7 @@ interface StyledTabProps {
 
 const StyledTab = styled.div<StyledTabProps>(({ isNested, isSelected }) => ({
   display: 'flex',
+  cursor: 'pointer',
   alignItems: 'center',
   justifyContent: 'center',
   whiteSpace: 'nowrap',
