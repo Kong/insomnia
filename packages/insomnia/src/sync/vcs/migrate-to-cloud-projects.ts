@@ -69,7 +69,7 @@ export const migrateLocalToCloudProjects = async (vcs: VCS) => {
             invariant(vcs, 'VCS must be initialized');
 
             await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
-            await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project });
+            await pushSnapshotOnInitialize({ vcs, workspace, project });
           }
         } catch (e) {
           console.warn('Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.', e);

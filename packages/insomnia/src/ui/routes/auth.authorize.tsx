@@ -29,8 +29,9 @@ export const action: ActionFunction = async ({
   window.localStorage.setItem('hasLoggedIn', 'true');
 
   const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
-  await migrateCollectionsIntoRemoteProject(new VCS(driver));
-  await migrateLocalToCloudProjects();
+  const vcs = new VCS(driver);
+  await migrateCollectionsIntoRemoteProject(vcs);
+  await migrateLocalToCloudProjects(vcs);
 
   return redirect('/organization');
 };

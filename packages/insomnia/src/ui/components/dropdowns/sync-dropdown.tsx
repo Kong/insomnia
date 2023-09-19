@@ -145,8 +145,10 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
 
     try {
       // NOTE pushes the first snapshot automatically
-      await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta: activeWorkspaceMeta, project });
-      await refreshVCSAndRefetchRemote();
+      if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
+        await pushSnapshotOnInitialize({ vcs, workspace, project });
+        await refreshVCSAndRefetchRemote();
+      }
     } catch (err) {
       console.log('[sync_menu] Error refreshing sync state', err);
     } finally {
