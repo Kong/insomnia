@@ -8,7 +8,6 @@ import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
-import { Account } from '../settings/account';
 import { AI } from '../settings/ai';
 import { General } from '../settings/general';
 import { ImportExport } from '../settings/import-export';
@@ -121,11 +120,6 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
           <TabItem key="keyboard" title="Keyboard">
             <PanelContainer className="pad">
               <Shortcuts />
-            </PanelContainer>
-          </TabItem>
-          <TabItem key="account" title="Account">
-            <PanelContainer className="pad">
-              <Account />
             </PanelContainer>
           </TabItem>
           <TabItem key="plugins" title="Plugins">
