@@ -2,13 +2,10 @@ interface Branding {
   logo_url: string;
 }
 
-export const featureMetadataDefaultValue = '{ "enabled": false, "reason": "original feature value is undefined" }';
-
 export interface Metadata {
   organizationType: string;
   ownerAccountId: string;
   canGitSync: string;
-  canRBAC: string;
 }
 
 export interface FeatureMetadata {

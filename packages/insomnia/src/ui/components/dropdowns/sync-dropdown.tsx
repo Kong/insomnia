@@ -11,7 +11,7 @@ import { database as db, Operation } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { FeatureMetadata, featureMetadataDefaultValue } from '../../../models/organization';
+import { type FeatureMetadata, isOwnerOfOrganization } from '../../../models/organization';
 import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { Snapshot, Status } from '../../../sync/types';
@@ -28,6 +28,7 @@ import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
 import { showModal } from '../modals';
 import { showError } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
@@ -356,26 +357,42 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     },
   }];
 
-  const gitSyncIsEnabled: FeatureMetadata = JSON.parse(currentOrg?.metadata?.canGitSync || featureMetadataDefaultValue);
+  let isGitSyncEnabled = false;
+  if (currentOrg?.metadata?.canGitSync) {
+    try {
+      const gitSyncFeature: FeatureMetadata = JSON.parse(currentOrg.metadata.canGitSync);
+      isGitSyncEnabled = gitSyncFeature.enabled;
+    } catch (e) {
+      console.log('Failed to parse canGitSync feature metadata', e);
+    }
+  }
+
   const accountId = getAccountId();
+
   const showUpgradePlanModal = () => {
-    showModal(AskModal, {
-      title: 'Upgrading Plan',
-      message:
-        accountId === currentOrg?.metadata?.ownerAccountId ?
-          'Git Sync feature is only enabled for Team plan or above, please upgrade your plan to continue using this feature.' :
-          'Git Sync feature is only enabled for Team plan or above, please ask organization owner to upgrade plan and continue using this feature.'
-      ,
-      yesText: 'Upgrade',
-      noText: 'Cancel',
-      onDone: async (isYes: boolean) => {
-        if (isYes) {
-          window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
-        }
-      },
-      hideNo: true,
-      hideYes: accountId !== currentOrg?.metadata?.ownerAccountId,
+    if (!currentOrg || !accountId) {
+      return;
+    }
+    const isOwner = isOwnerOfOrganization({
+      organization: currentOrg,
+      accountId,
     });
+
+    isOwner ?
+      showModal(AskModal, {
+        title: 'Upgrade Plan',
+        message: 'Git Sync is only enabled for Team plan or above, please upgrade your plan.',
+        yesText: 'Upgrade',
+        noText: 'Cancel',
+        onDone: async (isYes: boolean) => {
+          if (isYes) {
+            window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+          }
+        },
+      }) : showModal(AlertModal, {
+        title: 'Upgrade Plan',
+        message: 'Git Sync is only enabled for Team plan or above, please ask the organization owner to upgrade.',
+      });
   };
 
   if (!vcs.hasBackendProject()) {
@@ -421,7 +438,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                 variant='contained'
                 bg='surprise'
                 onClick={async () => {
-                  gitSyncIsEnabled ?
+                  isGitSyncEnabled ?
                     setIsGitRepoSettingsModalOpen(true) :
                     showUpgradePlanModal();
                 }}
@@ -582,7 +599,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               variant='contained'
               bg='surprise'
               onClick={async () => {
-                gitSyncIsEnabled ?
+                isGitSyncEnabled ?
                   setIsGitRepoSettingsModalOpen(true) :
                   showUpgradePlanModal();
               }}

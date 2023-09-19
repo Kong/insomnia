@@ -10,8 +10,6 @@ interface State {
   yesText: string;
   noText: string;
   onDone?: (success: boolean) => Promise<void>;
-  hideYes?: boolean;
-  hideNo?: boolean;
 }
 export interface AskModalOptions {
   title?: string;
@@ -19,8 +17,6 @@ export interface AskModalOptions {
   onDone?: (success: boolean) => Promise<void>;
   yesText?: string;
   noText?: string;
-  hideYes?: boolean;
-  hideNo?: boolean;
 }
 export interface AskModalHandle {
   show: (options: AskModalOptions) => void;
@@ -34,58 +30,48 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
     yesText: 'Yes',
     noText: 'No',
     onDone: async () => { },
-    hideYes: false,
-    hideNo: false,
   });
 
   useImperativeHandle(ref, () => ({
     hide: () => {
       modalRef.current?.hide();
     },
-    show: ({ title, message, onDone, yesText, noText, hideYes, hideNo }) => {
+    show: ({ title, message, onDone, yesText, noText }) => {
       setState({
         title: title || 'Confirm',
         message: message || 'No message provided',
         yesText: yesText || 'Yes',
         noText: noText || 'No',
         onDone,
-        hideYes,
-        hideNo,
       });
       modalRef.current?.show();
     },
   }), []);
-  const { message, title, yesText, noText, onDone, hideYes, hideNo } = state;
+  const { message, title, yesText, noText, onDone } = state;
   return (
     <Modal ref={modalRef}>
       <ModalHeader>{title || 'Confirm?'}</ModalHeader>
       <ModalBody className="wide pad">{message}</ModalBody>
       <ModalFooter>
         <div>
-          {
-            !hideNo &&
-            <button
-              className="btn"
-              onClick={() => {
-                modalRef.current?.hide();
-                onDone?.(false);
-              }}
-            >
-              {noText}
-            </button>
-          }
-          {
-            !hideYes &&
-            <button
-              className="btn"
-              onClick={() => {
-                modalRef.current?.hide();
-                onDone?.(true);
-              }}
-            >
-              {yesText}
-            </button>
-          }
+          <button
+            className="btn"
+            onClick={() => {
+              modalRef.current?.hide();
+              onDone?.(false);
+            }}
+          >
+            {noText}
+          </button>
+          <button
+            className="btn"
+            onClick={() => {
+              modalRef.current?.hide();
+              onDone?.(true);
+            }}
+          >
+            {yesText}
+          </button>
         </div>
       </ModalFooter>
     </Modal>
