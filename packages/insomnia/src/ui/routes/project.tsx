@@ -51,6 +51,8 @@ import {
 import { isDesign, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { Team } from '../../sync/types';
+import { showModal } from '../../ui/components/modals';
+import { AskModal } from '../../ui/components/modals/ask-modal';
 import { invariant } from '../../utils/invariant';
 import { AvatarGroup } from '../components/avatar';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
@@ -466,8 +468,32 @@ const ProjectRoute: FC = () => {
     }
   }, [createNewProjectFetcher.data, createNewProjectFetcher.state]);
 
+  const currentOrg = organizations.find(organization => (organization.id === organizationId));
+  const gitSyncIsEnabled = currentOrg?.metadata?.canGitSync?.enabled;
+  const showUpgradePlanModal = () => {
+    showModal(AskModal, {
+      title: 'Upgrading Plan',
+      message:
+        accountId === currentOrg?.metadata?.ownerAccountId ?
+          'Git Sync feature is only enabled for Team plan or above, please upgrade your plan to continue using this feature.' :
+          'Git Sync feature is only enabled for Team plan or above, please ask organization owner to upgrade plan and continue using this feature.'
+      ,
+      yesText: 'Upgrade',
+      noText: 'Cancel',
+      onDone: async (isYes: boolean) => {
+        if (isYes) {
+          window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+        }
+      },
+      hideNo: true,
+      hideYes: accountId !== currentOrg?.metadata?.ownerAccountId,
+    });
+  };
+
   const importFromGit = () => {
-    setIsGitRepositoryCloneModalOpen(true);
+    gitSyncIsEnabled ?
+      setIsGitRepositoryCloneModalOpen(true)
+      : showUpgradePlanModal();
   };
 
   const createInProjectActionList: {

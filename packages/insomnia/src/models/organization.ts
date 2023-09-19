@@ -5,15 +5,9 @@ interface Branding {
 export interface Metadata {
   organizationType: string;
   ownerAccountId: string;
-  canGitSync: string;
-  canRBAC: string;
+  canGitSync: { enabled: true } | { enabled: false; reason: string };
+  canRBAC: { enabled: true } | { enabled: false; reason: string };
 }
-
-// FeatureFlagInfo is the structure of canGitSync and canRBAC string value.
-export interface FeatureFlagInfo {
-  enabled: boolean;
-  reason: string;
-};
 
 export interface Organization {
   id: string;

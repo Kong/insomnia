@@ -1,6 +1,12 @@
 import React, { FC } from 'react';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { getAccountId } from '../../../account/session';
+import { getAppWebsiteBaseURL } from '../../../common/constants';
+import { useOrganizationLoaderData } from '../../../ui/routes/organization';
+import { showModal } from '../modals';
+import { AskModal } from '../modals/ask-modal';
 import { Button } from '../themed-button';
 
 const PostmanIcon = (props: React.SVGProps<SVGSVGElement>) => {
@@ -100,6 +106,32 @@ interface Props {
 }
 
 export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, importFrom, cloneFromGit }) => {
+  const { organizationId } = useParams<{ organizationId: string }>();
+  const { organizations } = useOrganizationLoaderData();
+  const currentOrg = organizations.find(organization => (organization.id === organizationId));
+  const accountId = getAccountId();
+
+  const gitSyncIsEnabled = currentOrg?.metadata?.canGitSync?.enabled;
+  const showUpgradePlanModal = () => {
+    showModal(AskModal, {
+      title: 'Upgrading Plan',
+      message:
+        accountId === currentOrg?.metadata?.ownerAccountId ?
+          'Git Sync feature is only enabled for Team plan or above, please upgrade your plan to continue using this feature.' :
+          'Git Sync feature is only enabled for Team plan or above, please ask organization owner to upgrade plan and continue using this feature.'
+      ,
+      yesText: 'Upgrade',
+      noText: 'Cancel',
+      onDone: async (isYes: boolean) => {
+        if (isYes) {
+          window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+        }
+      },
+      hideNo: true,
+      hideYes: accountId !== currentOrg?.metadata?.ownerAccountId,
+    });
+  };
+
   return (
     <Wrapper>
       <Title>This is an empty project, to get started create your first resource:</Title>
@@ -183,7 +215,13 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
         </AlmostSquareButton>
         <AlmostSquareButton
           aria-label='Clone git repository'
-          onClick={cloneFromGit}
+          onClick={
+            () => {
+              gitSyncIsEnabled ?
+                cloneFromGit() :
+                showUpgradePlanModal();
+            }
+          }
         >
           <i
             className='fa fa-code-fork'

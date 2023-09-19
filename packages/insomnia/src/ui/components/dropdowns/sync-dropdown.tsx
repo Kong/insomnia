@@ -11,7 +11,6 @@ import { database as db, Operation } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { FeatureFlagInfo } from '../../../models/organization';
 import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { Snapshot, Status } from '../../../sync/types';
@@ -355,8 +354,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     },
   }];
 
-  const gitSyncValue = JSON.parse(currentOrg?.metadata?.canGitSync || '') as FeatureFlagInfo;
-  const gitSyncIsEnabled = gitSyncValue?.enabled;
+  const gitSyncIsEnabled = currentOrg?.metadata?.canGitSync?.enabled;
   const accountId = getAccountId();
   const showUpgradePlanModal = () => {
     showModal(AskModal, {
