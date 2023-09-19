@@ -130,7 +130,7 @@ const UnitTestItemView = ({
 
                 console.log(selectedItem);
 
-                return <Fragment>{selectedItem.name}</Fragment>;
+                return <Fragment><span className={'w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-' + selectedItem.method}>{selectedItem.method}</span> {selectedItem.name}</Fragment>;
               }}
             </SelectValue>
             <Icon icon="caret-down" />
@@ -146,6 +146,7 @@ const UnitTestItemView = ({
                 >
                   {({ isSelected }) => (
                     <Fragment>
+                      <span className={'w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-' + item.method}>{item.method}</span>
                       <span>{item.name}</span>
                       {isSelected && (
                         <Icon
