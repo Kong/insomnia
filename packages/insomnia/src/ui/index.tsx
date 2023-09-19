@@ -905,7 +905,6 @@ router.subscribe(({ location }) => {
 
 async function renderApp() {
   await database.initClient();
-  await models.project.seed();
   await initPlugins();
 
   const settings = await models.settings.getOrCreate();

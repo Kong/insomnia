@@ -6,7 +6,7 @@ import * as models from '../../models';
 export const loader: LoaderFunction = async () => {
   try {
     const scratchpadProject = await models.project.getById(models.project.SCRATCHPAD_PROJECT_ID);
-    const scratchPad = await models.workspace.getById('wrk_scratchpad');
+    const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('Initializing Scratch Pad Project');
       await models.project.create({ _id: models.project.SCRATCHPAD_PROJECT_ID, name: getProductName(), remoteId: null });
@@ -14,7 +14,7 @@ export const loader: LoaderFunction = async () => {
 
     if (!scratchPad) {
       console.log('Initializing Scratch Pad');
-      await models.workspace.create({ _id: 'wrk_scratchpad', name: 'Scratch Pad', parentId: models.project.SCRATCHPAD_PROJECT_ID, scope: 'collection' });
+      await models.workspace.create({ _id: models.workspace.SCRATCHPAD_WORKSPACE_ID, name: 'Scratch Pad', parentId: models.project.SCRATCHPAD_PROJECT_ID, scope: 'collection' });
     }
   } catch (err) {
     console.warn('Failed to create default project. It probably already exists', err);
