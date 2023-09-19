@@ -2,21 +2,8 @@
 import type { PropsWithChildren } from 'react';
 import React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import styled from 'styled-components';
 
 import TrailLines, { TrailsLineHandle } from './trail-lines';
-
-const LineContainer = styled('div')({
-  position: 'relative',
-  zIndex: 0,
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  margin: '0 auto',
-  transform: 'translateZ(0)',
-  width: '100%',
-  overflow: 'hidden',
-});
 
 interface Size {
   width: number;
@@ -69,7 +56,10 @@ export const TrailLinesContainer = ({ children }: PropsWithChildren) => {
   };
 
   return (
-    <LineContainer ref={containerRef}>
+    <div
+      ref={containerRef}
+      className='z-0 flex justify-center items-center m-0 auto w-full overflow-hidden'
+    >
       <div>
         {dimensions && <TrailLines id="start" ref={startTailRef} width={dimensions.width} height={dimensions.height} />}
       </div>
@@ -81,6 +71,6 @@ export const TrailLinesContainer = ({ children }: PropsWithChildren) => {
           <TrailLines id="end" ref={endTailRef} width={dimensions.width} height={dimensions.height} reverse />
         )}
       </div>
-    </LineContainer>
+    </div>
   );
 };
