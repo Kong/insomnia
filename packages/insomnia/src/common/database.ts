@@ -35,6 +35,7 @@ export interface SpecificQuery {
   $gt?: number;
   $in?: string[];
   $nin?: string[];
+  $ne?: string;
 }
 
 export type ModelQuery<T extends BaseModel> = Partial<Record<keyof T, SpecificQuery>>;

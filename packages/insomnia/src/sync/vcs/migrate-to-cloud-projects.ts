@@ -1,7 +1,7 @@
 import { getCurrentSessionId } from '../../account/session';
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { isRemoteProject, isScratchpadProject, Project } from '../../models/project';
+import { isScratchpadProject, Project } from '../../models/project';
 import { Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from './initialize-backend-project';
@@ -61,11 +61,6 @@ export const migrateLocalToCloudProjects = async (vcs: VCS) => {
       }));
 
       for (const workspace of projectWorkspaces) {
-        // Update the workspace to point to the newly created project
-        await models.workspace.update(workspace, {
-          parentId: project._id,
-        });
-
         const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
         // Initialize Sync on the workspace if it's not using Git sync
@@ -78,6 +73,7 @@ export const migrateLocalToCloudProjects = async (vcs: VCS) => {
           }
         } catch (e) {
           console.warn('Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.', e);
+          // TODO: here we should show the try again dialog
         }
       }
     }
