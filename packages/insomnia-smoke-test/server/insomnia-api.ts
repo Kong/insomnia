@@ -29,7 +29,7 @@ const organizations = [
     'metadata': {
       'organizationType': 'personal',
       'ownerAccountId': 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
-      'canGitSync': { enabled: true },
+      'canGitSync': '{ "enabled": true }',
     },
   },
   // Team Organization: Was a team before the migration now looks like this:
@@ -44,7 +44,7 @@ const organizations = [
     'metadata': {
       'organizationType': 'team',
       'ownerAccountId': 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
-      'canGitSync': { enabled: true },
+      'canGitSync': '{ "enabled": true }',
     },
   },
 ];

@@ -31,6 +31,7 @@ import {
   DASHBOARD_SORT_ORDERS,
   DashboardSortOrder,
   dashboardSortOrderName,
+  getAppWebsiteBaseURL,
 } from '../../common/constants';
 import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
@@ -41,6 +42,7 @@ import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
+import { FeatureMetadata, featureMetadataDefaultValue } from '../../models/organization';
 import { Organization } from '../../models/organization';
 import {
   DEFAULT_PROJECT_ID,
@@ -469,7 +471,7 @@ const ProjectRoute: FC = () => {
   }, [createNewProjectFetcher.data, createNewProjectFetcher.state]);
 
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
-  const gitSyncIsEnabled = currentOrg?.metadata?.canGitSync?.enabled;
+  const gitSyncIsEnabled: FeatureMetadata = JSON.parse(currentOrg?.metadata?.canGitSync || featureMetadataDefaultValue);
   const showUpgradePlanModal = () => {
     showModal(AskModal, {
       title: 'Upgrading Plan',

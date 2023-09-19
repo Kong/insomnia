@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 import { getAccountId } from '../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../common/constants';
+import { FeatureMetadata, featureMetadataDefaultValue } from '../../../models/organization';
 import { useOrganizationLoaderData } from '../../../ui/routes/organization';
 import { showModal } from '../modals';
 import { AskModal } from '../modals/ask-modal';
@@ -111,7 +112,7 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
   const accountId = getAccountId();
 
-  const gitSyncIsEnabled = currentOrg?.metadata?.canGitSync?.enabled;
+  const gitSyncIsEnabled: FeatureMetadata = JSON.parse(currentOrg?.metadata?.canGitSync || featureMetadataDefaultValue);
   const showUpgradePlanModal = () => {
     showModal(AskModal, {
       title: 'Upgrading Plan',

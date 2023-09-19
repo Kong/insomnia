@@ -11,6 +11,7 @@ import { database as db, Operation } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
+import { FeatureMetadata, featureMetadataDefaultValue } from '../../../models/organization';
 import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { Snapshot, Status } from '../../../sync/types';
@@ -35,6 +36,7 @@ import { SyncHistoryModal } from '../modals/sync-history-modal';
 import { SyncStagingModal } from '../modals/sync-staging-modal';
 import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
+
 // TODO: handle refetching logic in one place not here in a component
 
 // Refresh dropdown periodically
@@ -354,7 +356,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     },
   }];
 
-  const gitSyncIsEnabled = currentOrg?.metadata?.canGitSync?.enabled;
+  const gitSyncIsEnabled: FeatureMetadata = JSON.parse(currentOrg?.metadata?.canGitSync || featureMetadataDefaultValue);
   const accountId = getAccountId();
   const showUpgradePlanModal = () => {
     showModal(AskModal, {
