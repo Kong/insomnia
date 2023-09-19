@@ -3,7 +3,6 @@ import * as models from '../../models';
 import { BaseModel, canSync } from '../../models';
 import { Project } from '../../models/project';
 import { Workspace } from '../../models/workspace';
-import { WorkspaceMeta } from '../../models/workspace-meta';
 import { StatusCandidate } from '../types';
 import { VCS } from './vcs';
 
