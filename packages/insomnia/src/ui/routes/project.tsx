@@ -121,20 +121,25 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   try {
     remoteProjects = await getAllTeamProjects(organizationId);
 
-    const projectsToUpdate = await Promise.all(remoteProjects.map(async (prj: {
-      id: string;
-      name: string;
-    }) => models.initModel<RemoteProject>(
-      models.project.type,
-      {
-        _id: prj.id,
-        remoteId: prj.id,
-        name: prj.name,
-        parentId: organizationId,
-      }
-    )));
-
-    await database.batchModifyDocs({ upsert: projectsToUpdate });
+    // pull down remote projects and create any that don't exist
+    const syncedRemoteProjects = await database.find<Project>(models.project.type, {
+      remoteId: { $in: remoteProjects.map(p => p.id) },
+    });
+    // doesn't exist locally
+    const unsyncedRemoteProjects = remoteProjects.filter(p => !syncedRemoteProjects.find(sp => sp.remoteId === p.id));
+    // create them
+    unsyncedRemoteProjects.forEach(async prj => {
+      models.initModel<RemoteProject>(
+        models.project.type,
+        {
+          remoteId: prj.id,
+          name: prj.name,
+          parentId: organizationId,
+        }
+      );
+    });
+    // TODO: fix change name of remote projects on other machine
+    // TODO: handle deleted remote projects, by deleting on the remote also?
   } catch (err) {
     console.log('Could not fetch remote projects.');
   }

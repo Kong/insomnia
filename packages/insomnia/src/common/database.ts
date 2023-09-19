@@ -17,7 +17,7 @@ import { generateId } from './misc';
 export interface Query {
   _id?: string | SpecificQuery;
   parentId?: string | SpecificQuery | null;
-  remoteId?: string | null;
+  remoteId?: string | SpecificQuery | null;
   plugin?: string;
   key?: string;
   environmentId?: string | null;
