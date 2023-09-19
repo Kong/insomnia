@@ -55,8 +55,6 @@ export const TrailLinesContainer = ({ children }: PropsWithChildren) => {
     const childrenWidth = childrenContainerRef.current?.clientWidth;
     const childrenHeight = childrenContainerRef.current?.clientHeight;
 
-    console.log({ containerWidth, containerHeight, childrenWidth, childrenHeight });
-
     if (!containerWidth || !containerHeight || !childrenWidth || !childrenHeight) {
       return;
     }
