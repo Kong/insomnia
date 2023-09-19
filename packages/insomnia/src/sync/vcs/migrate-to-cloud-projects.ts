@@ -1,16 +1,26 @@
 import { getCurrentSessionId } from '../../account/session';
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { isRemoteProject } from '../../models/project';
-import { isScratchpad, Workspace } from '../../models/workspace';
+import { isRemoteProject, isScratchpadProject, Project } from '../../models/project';
+import { Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
-import FileSystemDriver from '../store/drivers/file-system-driver';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from './initialize-backend-project';
-import { getVCS, initVCS } from './vcs';
+import { VCS } from './vcs';
 
 let status: 'idle' | 'pending' | 'error' | 'completed' = 'idle';
 
-export const migrateLocalToCloudProjects = async () => {
+// TODO:
+// Error handling and return type for errors
+// Should we migrate empty projects? We can but should we
+export const shouldRunMigration = async () => {
+  const localProjects = await database.find<Project>(models.project.type, {
+    remoteId: null,
+  });
+
+  return localProjects.filter(project => !isScratchpadProject(project)).length > 0;
+};
+
+export const migrateLocalToCloudProjects = async (vcs: VCS) => {
   if (status !== 'idle' && status !== 'error') {
     return;
   }
@@ -21,9 +31,11 @@ export const migrateLocalToCloudProjects = async () => {
     const sessionId = getCurrentSessionId();
     invariant(sessionId, 'User must be logged in to migrate projects');
 
-    const allProjects = await models.project.all();
-    const localProjects = allProjects.filter(p => !isRemoteProject(p));
-    const remoteProjects = allProjects.filter(p => isRemoteProject(p));
+    // Local projects except scratchpad
+    const localProjects = await database.find<Project>(models.project.type, {
+      remoteId: null,
+      _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
+    });
 
     // @TODO There's a chance user's can't create projects in their personal organization. We should handle this case.
     for (const localProject of localProjects) {
@@ -37,16 +49,16 @@ export const migrateLocalToCloudProjects = async () => {
         sessionId,
       });
 
-      const project = await models.project.create({
-        _id: newCloudProject.id,
+      const project = await models.project.update(localProject, {
         name: newCloudProject.name,
-        remoteId: newCloudProject.organizationId,
+        remoteId: newCloudProject.id,
+        parentId: newCloudProject.organizationId,
       });
 
       // For each workspace in the local project
       const projectWorkspaces = (await database.find<Workspace>(models.workspace.type, {
         parentId: localProject._id,
-      })).filter(workspace => !isScratchpad(workspace));
+      }));
 
       for (const workspace of projectWorkspaces) {
         // Update the workspace to point to the newly created project
@@ -59,24 +71,6 @@ export const migrateLocalToCloudProjects = async () => {
         // Initialize Sync on the workspace if it's not using Git sync
         try {
           if (!workspaceMeta.gitRepositoryId) {
-            let vcs = getVCS();
-
-            if (!vcs) {
-              const driver = FileSystemDriver.create(
-                process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-              );
-
-              console.log('Initializing VCS');
-              vcs = await initVCS(driver, async conflicts => {
-                return new Promise((resolve, reject) => {
-                  if (conflicts.length) {
-                    reject('Not implemented');
-                  }
-
-                  resolve(conflicts);
-                });
-              });
-            }
             invariant(vcs, 'VCS must be initialized');
 
             await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
@@ -86,15 +80,6 @@ export const migrateLocalToCloudProjects = async () => {
           console.warn('Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.', e);
         }
       }
-
-      // Delete the local project
-      await models.project.remove(localProject);
-    }
-
-    for (const remoteProject of remoteProjects) {
-      await models.project.update(remoteProject, {
-        parentId: remoteProject.parentId,
-      });
     }
 
     status = 'completed';
