@@ -1,50 +1,15 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import styled from 'styled-components';
 
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 
-const Background = styled('div')({
-  position: 'relative',
-  height: '100%',
-  width: '100%',
-  textAlign: 'center',
-  display: 'flex',
-  background: 'var(--color-bg)',
-});
-
 const Auth = () => {
   return (
-    <Background>
+    <div className='relative h-full w-full text-center flex bg-[--color-bg]'>
       <TrailLinesContainer>
-        <div
-          style={{
-            display:'flex',
-            justifyContent:'center',
-            alignItems:'center',
-            flexDirection:'column',
-            height:'100%',
-            minHeight: 450,
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 'var(--padding-sm)',
-              padding: 'var(--padding-lg)',
-              paddingTop: 32,
-              minWidth: '340px',
-              maxWidth: '400px',
-              borderRadius: 'var(--radius-md)',
-              position: 'relative',
-              background: 'var(--hl-sm)',
-              margin: 0,
-            }}
-          >
+        <div className='flex flex-col justify-center items-center h-full min-h-[450px]'>
+          <div className='flex flex-col items-center justify-center gap-[--padding-sm] p-[--padding-lg] pt-[32px] min-w-[400px] max-w-lg rounded-md relative bg-[--hl-sm] m-0'>
             <InsomniaLogo
               width={64}
               height={64}
@@ -59,7 +24,7 @@ const Auth = () => {
           </div>
         </div>
       </TrailLinesContainer>
-    </Background>
+    </div>
   );
 };
 
