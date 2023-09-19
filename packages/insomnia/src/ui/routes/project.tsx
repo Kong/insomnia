@@ -597,7 +597,7 @@ const ProjectRoute: FC = () => {
                   </Popover>
                 </Select>
               </div>
-              <div className="flex flex-col flex-1">
+              <div className="flex overflow-hidden flex-col flex-1">
                 <Heading className="p-[--padding-sm] uppercase text-xs">
                   Projects ({projectsCount})
                 </Heading>
@@ -701,7 +701,7 @@ const ProjectRoute: FC = () => {
               <GridList
                 aria-label="Scope filter"
                 items={scopeActionList}
-                className="overflow-y-auto flex-1 data-[empty]:py-0 py-[--padding-sm]"
+                className="overflow-y-auto flex-shrink-0 data-[empty]:py-0 py-[--padding-sm]"
                 disallowEmptySelection
                 selectedKeys={[searchParams.get('scope') || 'all']}
                 selectionMode="single"
@@ -744,7 +744,7 @@ const ProjectRoute: FC = () => {
                   );
                 }}
               </GridList>
-              <div className='flex flex-col py-[--padding-sm]'>
+              <div className='flex flex-shrink-0 flex-col py-[--padding-sm]'>
                 <Button
                   aria-label="Invite collaborators to organization"
                   className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
