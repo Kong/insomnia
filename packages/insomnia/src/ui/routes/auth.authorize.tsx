@@ -150,7 +150,7 @@ const Authorize = () => {
         <div className="flex flex-col gap-3 rounded-md bg-[--hl-sm] p-[--padding-md]">
           <Heading className="text-lg flex items-center p-8 gap-8">
             <i className="fa fa-spinner fa-spin" aria-hidden="true" />
-            Authenticating
+            Synchronizing...
           </Heading>
         </div>
       )}
