@@ -78,5 +78,7 @@ export async function all() {
 }
 
 export function isDefaultOrganizationProject(project: Project) {
-  return project.remoteId?.startsWith('proj_org');
+  // legacy remoteId = proj_team_xxx
+  // new remoteId = proj_org_xxx
+  return project.remoteId?.startsWith('proj_team') || project.remoteId?.startsWith('proj_org');
 }
