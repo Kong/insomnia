@@ -21,6 +21,7 @@ import {
   useRouteLoaderData,
 } from 'react-router-dom';
 
+import * as session from '../../account/session';
 import {
   getAccountId,
   getCurrentSessionId,
@@ -228,6 +229,39 @@ export const loader: LoaderFunction = async () => {
     user: null,
     organizations: [],
   };
+};
+
+export interface FeatureStatus {
+  enabled: boolean;
+  reason?: string;
+}
+
+export interface FeatureList {
+  gitSync: FeatureStatus;
+  orgBasicRbac: FeatureStatus;
+}
+
+export const singleOrgLoader: LoaderFunction = async ({ params }) => {
+  const { organizationId } = params;
+
+  try {
+    const response = await window.main.insomniaFetch<{ features: FeatureList }>({
+      method: 'GET',
+      path: `/v1/organizations/${organizationId}/features`,
+      sessionId: session.getCurrentSessionId(),
+    });
+
+    return {
+      features: response.features,
+    };
+  } catch (err) {
+    return {
+      features: {
+        gitSync: { enabled: false },
+        orgBasicRbac: { enabled: false },
+      },
+    };
+  }
 };
 
 export const useOrganizationLoaderData = () => {

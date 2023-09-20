@@ -1,11 +1,11 @@
 import React, { FC } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { getAccountId } from '../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../common/constants';
-import { FeatureMetadata, isOwnerOfOrganization } from '../../../models/organization';
-import { useOrganizationLoaderData } from '../../../ui/routes/organization';
+import { isOwnerOfOrganization } from '../../../models/organization';
+import { type FeatureList, useOrganizationLoaderData } from '../../../ui/routes/organization';
 import { showModal } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
@@ -111,17 +111,9 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
   const { organizationId } = useParams<{ organizationId: string }>();
   const { organizations } = useOrganizationLoaderData();
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
+  const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
 
-  let isGitSyncEnabled = false;
-  if (currentOrg?.metadata?.canGitSync) {
-    try {
-      const gitSyncFeature: FeatureMetadata = JSON.parse(currentOrg.metadata.canGitSync);
-      isGitSyncEnabled = gitSyncFeature.enabled;
-    } catch (e) {
-      console.log('Failed to parse canGitSync feature metadata', e);
-    }
-  }
-
+  const isGitSyncEnabled = features.gitSync.enabled;
   const accountId = getAccountId();
 
   const showUpgradePlanModal = () => {
