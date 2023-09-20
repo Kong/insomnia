@@ -133,16 +133,15 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     // doesn't exist locally
     const unsyncedRemoteProjects = remoteProjects.filter(p => !syncedRemoteProjects.find(sp => sp.remoteId === p.id));
     // create them
-    unsyncedRemoteProjects.forEach(async prj => {
-      models.initModel<RemoteProject>(
-        models.project.type,
+    await Promise.all(unsyncedRemoteProjects.map(async prj => {
+      await models.project.create(
         {
           remoteId: prj.id,
           name: prj.name,
           parentId: organizationId,
         }
       );
-    });
+    }));
     // TODO: fix change name of remote projects on other machine
     // TODO: handle deleted remote projects, by deleting on the remote also?
   } catch (err) {
