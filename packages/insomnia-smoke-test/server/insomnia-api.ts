@@ -106,7 +106,7 @@ export default (app: Application) => {
   });
 
   // Billing
-  app.patch('/api/v1/billing/current-plan', json(), (_req, res) => {
+  app.get('/api/v1/billing/current-plan', json(), (_req, res) => {
     res.status(200).send(currentPlan);
   });
 
