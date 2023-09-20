@@ -94,7 +94,7 @@ export const renameProjectAction: ActionFunction = async ({
       error: string;
       message?: string;
     }>({
-      path: `/v1/organizations/${project.parentId}/team-projects/${projectId}`,
+      path: `/v1/organizations/${project.parentId}/team-projects/${project.remoteId}`,
       method: 'PATCH',
       sessionId,
       data: {
@@ -131,7 +131,7 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
       error: string;
       message?: string;
     }>({
-      path: `/v1/organizations/${organizationId}/team-projects/${projectId}`,
+      path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
       method: 'DELETE',
       sessionId,
     });
