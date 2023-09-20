@@ -37,7 +37,6 @@ export const migrateLocalToCloudProjects = async (vcs: VCS) => {
       _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
     });
 
-    // @TODO There's a chance user's can't create projects in their personal organization. We should handle this case.
     for (const localProject of localProjects) {
       // -- Create a remote project
       const newCloudProject = await window.main.insomniaFetch<{ id: string; name: string; organizationId: string }>({

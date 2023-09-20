@@ -53,21 +53,18 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
 
     const handleWindowClose = async () => {
       try {
-        const response = await window.main.insomniaFetch<{
+        window.main.insomniaFetch<{
           data?: UserPresence[];
           }>({
             path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
             method: 'POST',
             sessionId,
+            retries: 0,
             data: {
               project: '',
               file: '',
             },
           });
-        const rows = response?.data || [];
-        if (rows.length > 0) {
-          setPresence(rows);
-        }
       } catch (e) {
         console.log('Error parsing response', e);
       }
