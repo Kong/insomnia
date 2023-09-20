@@ -6,7 +6,7 @@ import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintO
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
-import { JSONPath } from 'jsonpath-plus';
+import jq from 'node-jq';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 import { useMount, useUnmount } from 'react-use';
@@ -209,26 +209,31 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       return code;
     }
   };
-  const prettifyJSON = (code: string, filter?: string) => {
+  const prettifyJSON = async (code: string, filter?: string) => {
     try {
-      let jsonString = code;
+      let jsonString: any = code;
       if (updateFilter && filter) {
         try {
-          const codeObj = JSON.parse(code);
-          const results = JSONPath({ json: codeObj, path: filter.trim() });
-          jsonString = JSON.stringify(results);
+          if (filter.startsWith('.')) {
+            const codeObj = JSON.parse(code);
+            const results = await jq.run(`${filter.trim()}`, codeObj, { input: 'json' });
+            jsonString = results;
+          } else {
+            console.log('[jq] Error: ', 'Please start the query with dot (.), for instance: .books');
+            jsonString = '{}';
+          }
         } catch (err) {
-          console.log('[jsonpath] Error: ', err);
-          jsonString = '[]';
+          console.log('[jq] Error: ', err);
+          jsonString = '{}';
         }
       }
-      return jsonPrettify(jsonString, indentChars, autoPrettify);
+     return jsonPrettify(jsonString, indentChars, autoPrettify);
     } catch (error) {
       // That's Ok, just leave it
       return code;
     }
   };
-  const maybePrettifyAndSetValue = (code?: string, forcePrettify?: boolean, filter?: string) => {
+  const maybePrettifyAndSetValue = async (code?: string, forcePrettify?: boolean, filter?: string) => {
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
@@ -239,7 +244,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       if (mode?.includes('xml')) {
         code = prettifyXML(code, filter);
       } else if (mode?.includes('json')) {
-        code = prettifyJSON(code, filter);
+        code = await prettifyJSON(code, filter);
       }
     }
     // this prevents codeMirror from needlessly setting the same thing repeatedly (which has the effect of moving the user's cursor and resetting the viewport scroll: a bad user experience)
@@ -253,7 +258,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody: () => {
       if (mode?.includes('json') || mode?.includes('xml')) {
-        maybePrettifyAndSetValue(codeMirror.current?.getValue());
+        maybePrettifyAndSetValue(codeMirror.current?.getValue()).then();
       }
     },
   });
@@ -554,7 +559,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                 type="text"
                 title="Filter response body"
                 defaultValue={filter || ''}
-                placeholder={mode?.includes('json') ? '$.store.books[*].author' : '/store/books/author'}
+                placeholder={mode?.includes('json') ? '.store.book[].author' : '/store/books/author'}
                 onKeyDown={createKeybindingsHandler({
                   'Enter': () => {
                     const filter = inputRef.current?.value;

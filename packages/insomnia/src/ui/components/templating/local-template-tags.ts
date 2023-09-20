@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { format } from 'date-fns';
 import fs from 'fs';
 import iconv from 'iconv-lite';
-import { JSONPath } from 'jsonpath-plus';
+import jq from 'node-jq';
 import os from 'os';
 import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
@@ -160,18 +160,19 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           ],
         },
         {
-          displayName: 'JSONPath Filter',
-          help: 'Some OS functions return objects. Use JSONPath queries to extract desired values.',
+          displayName: 'jq Filter',
+          help: 'Some OS functions return objects. Use jq queries to extract desired values.',
           hide: args => !['userInfo', 'cpus'].includes(args[0].value + ''),
           type: 'string',
         },
       ],
-      run(_context, fnName: 'arch' | 'cpus', filter) {
-        let value = os[fnName]();
+      async run(_context, fnName: 'arch' | 'cpus', filter) {
+        let value: any = os[fnName]();
 
-        if (JSONPath && ['userInfo', 'cpus'].includes(fnName)) {
+        if (jq && ['userInfo', 'cpus'].includes(fnName)) {
           try {
-            value = JSONPath({ json: value, path: filter })[0];
+            value = await jq.run(`${filter.trim()}`, value, { input: 'json' });
+            value = JSON.parse(value);
           } catch (err) { }
         }
 
@@ -252,21 +253,21 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   },
   {
     templateTag: {
-      displayName: 'JSONPath',
-      name: 'jsonpath',
-      description: 'pull data from JSON strings with JSONPath',
+      displayName: 'jq',
+      name: 'jq',
+      description: 'pull data from JSON strings with jq',
       args: [
         {
           displayName: 'JSON string',
           type: 'string',
         },
         {
-          displayName: 'JSONPath Filter',
+          displayName: 'jq Filter',
           encoding: 'base64', // So it doesn't cause syntax errors
           type: 'string',
         },
       ],
-      run(_context, jsonString, filter) {
+      async run(_context, jsonString, filter) {
         let body;
         try {
           body = JSON.parse(jsonString);
@@ -274,15 +275,16 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           throw new Error(`Invalid JSON: ${err.message}`);
         }
 
-        let results;
+        let results: any;
         try {
-          results = JSONPath({ json: body, path: filter });
+          results = await jq.run(`${filter.trim()}`, body, { input: 'json' });
+          results = JSON.parse(results);
         } catch (err) {
-          throw new Error(`Invalid JSONPath query: ${filter}`);
+          throw new Error(`Invalid jq query: ${filter}`);
         }
 
         if (results.length === 0) {
-          throw new Error(`JSONPath query returned no results: ${filter}`);
+          throw new Error(`jq query returned no results: ${filter}`);
         }
 
         return results[0];
@@ -512,7 +514,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           displayName: args => {
             switch (args[0].value) {
               case 'body':
-                return 'Filter (JSONPath or XPath)';
+                return 'Filter (jq or XPath)';
               case 'header':
                 return 'Header Name';
               default:
@@ -677,9 +679,9 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             body = bodyBuffer.toString();
           }
 
-          if (sanitizedFilter.indexOf('$') === 0) {
+          if (sanitizedFilter.indexOf('.') === 0) {
             let bodyJSON;
-            let results;
+            let results: any;
 
             try {
               bodyJSON = JSON.parse(body);
@@ -688,9 +690,10 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             }
 
             try {
-              results = JSONPath({ json: bodyJSON, path: sanitizedFilter });
+              results = await jq.run(`${sanitizedFilter.trim()}`, bodyJSON, { input: 'json' });
+              results = JSON.parse(results);
             } catch (err) {
-              throw new Error(`Invalid JSONPath query: ${sanitizedFilter}`);
+              throw new Error(`Invalid jq query: ${sanitizedFilter}`);
             }
 
             if (results.length === 0) {
@@ -698,13 +701,13 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             }
 
             if (results.length > 1) {
-              return JSON.stringify(results);
+              return JSON.stringify(results).replace(/"/g, '');
             }
 
             if (typeof results[0] !== 'string') {
               return JSON.stringify(results[0]);
             } else {
-              return results[0];
+              return results[0].replace(/"/g, '');
             }
           } else {
             const DOMParser = (await import('xmldom')).DOMParser;
