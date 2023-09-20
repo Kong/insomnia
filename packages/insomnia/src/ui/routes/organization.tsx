@@ -30,6 +30,7 @@ import { isOwnerOfOrganization, isPersonalOrganization, Organization } from '../
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
+import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
 import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
@@ -85,6 +86,11 @@ interface CurrentPlan {
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
+    // Check if there are any migrations to run before loading organizations
+    if (await shouldRunMigration()) {
+      return redirect('/auth/migrate');
+    }
+
     try {
       const { organizations } =
         await window.main.insomniaFetch<OrganizationsResponse>({

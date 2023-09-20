@@ -29,6 +29,7 @@ import { AppLoadingIndicator } from './components/app-loading-indicator';
 import Auth from './routes/auth';
 import Authorize from './routes/auth.authorize';
 import Login from './routes/auth.login';
+import { Migrate } from './routes/auth.migrate';
 import Dev from './routes/dev';
 import { ErrorRoute } from './routes/error';
 import Onboarding from './routes/onboarding';
@@ -104,8 +105,6 @@ function getInitialEntry() {
 }
 
 const initialEntry = getInitialEntry();
-
-console.log('Initial entry', initialEntry);
 
 const router = createMemoryRouter(
   // @TODO - Investigate file based routing to generate these routes:
@@ -878,6 +877,12 @@ const router = createMemoryRouter(
               path: 'authorize',
               action: async (...args) => (await import('./routes/auth.authorize')).action(...args),
               element: <Authorize />,
+            },
+            {
+              path: 'migrate',
+              loader: async (...args) => (await import('./routes/auth.migrate')).loader(...args),
+              action: async (...args) => (await import('./routes/auth.migrate')).action(...args),
+              element: <Migrate />,
             },
           ],
         },

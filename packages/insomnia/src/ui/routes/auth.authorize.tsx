@@ -2,12 +2,11 @@ import React, { Fragment } from 'react';
 import { Heading } from 'react-aria-components';
 import { ActionFunction, redirect, useFetcher, useFetchers, useNavigate } from 'react-router-dom';
 
-import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import { migrateCollectionsIntoRemoteProject } from '../../sync/vcs/migrate-collections';
-import { migrateLocalToCloudProjects } from '../../sync/vcs/migrate-to-cloud-projects';
-import { VCS } from '../../sync/vcs/vcs';
+import { isLoggedIn } from '../../account/session';
+import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
 import { invariant } from '../../utils/invariant';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
+import { Icon } from '../components/icon';
 import { Button } from '../components/themed-button';
 import { useRootLoaderData } from './root';
 
@@ -28,10 +27,9 @@ export const action: ActionFunction = async ({
   console.log('Login successful');
   window.localStorage.setItem('hasLoggedIn', 'true');
 
-  const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
-  const vcs = new VCS(driver);
-  await migrateCollectionsIntoRemoteProject(vcs);
-  await migrateLocalToCloudProjects(vcs);
+  if (isLoggedIn() && await shouldRunMigration()) {
+    throw redirect('/auth/migrate');
+  }
 
   return redirect('/organization');
 };
@@ -150,17 +148,11 @@ const Authorize = () => {
         <div className="flex flex-col gap-3 rounded-md bg-[--hl-sm] p-[--padding-md]">
           <Heading className="text-lg flex items-center p-8 gap-8">
             <i className="fa fa-spinner fa-spin" aria-hidden="true" />
-            Synchronizing...
+            Authenticating...
           </Heading>
         </div>
       )}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          width: '100%',
-        }}
-      >
+      <div className='flex justify-center w-full'>
         <Button
           variant="text"
           style={{
@@ -170,7 +162,8 @@ const Authorize = () => {
             navigate('/auth/login');
           }}
         >
-          <i className="fa fa-arrow-left" /> Go Back
+          <Icon icon="arrow-left" />
+          <span>Go Back</span>
         </Button>
       </div>
     </div>
