@@ -1,7 +1,7 @@
 import { getCurrentSessionId } from '../../account/session';
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { isScratchpadProject, Project } from '../../models/project';
+import { isScratchpadProject, Project, RemoteProject } from '../../models/project';
 import { Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from './initialize-backend-project';
@@ -39,7 +39,7 @@ export const migrateLocalToCloudProjects = async (vcs: VCS) => {
 
     for (const localProject of localProjects) {
       // -- Create a remote project
-      const newCloudProject = await window.main.insomniaFetch<{ id: string; name: string; organizationId: string }>({
+      const newCloudProject = await window.main.insomniaFetch<{ id: string; name: string; organizationId: string } | void>({
         path: '/v1/organizations/personal/team-projects',
         method: 'POST',
         data: {
@@ -47,6 +47,8 @@ export const migrateLocalToCloudProjects = async (vcs: VCS) => {
         },
         sessionId,
       });
+
+      invariant(typeof newCloudProject?.id === 'string', 'Failed to create remote project');
 
       const project = await models.project.update(localProject, {
         name: newCloudProject.name,
@@ -75,6 +77,16 @@ export const migrateLocalToCloudProjects = async (vcs: VCS) => {
           // TODO: here we should show the try again dialog
         }
       }
+    }
+
+    const remoteProjects = await database.find<RemoteProject>(models.project.type, {
+      remoteId: { $ne: null },
+    });
+
+    for (const remoteProject of remoteProjects) {
+      await models.project.update(remoteProject, {
+        parentId: remoteProject.remoteId,
+      });
     }
 
     status = 'completed';

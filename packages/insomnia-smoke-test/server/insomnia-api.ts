@@ -2,6 +2,15 @@ import { randomUUID } from 'crypto';
 import type { Application } from 'express';
 import { json } from 'express';
 
+const currentPlan = {
+  isActive: true,
+  period: 'year',
+  planId: 'team',
+  price: 100,
+  quantity: 10,
+  type: 'team',
+};
+
 const projectsByOrgId = new Map(Object.entries({
   'org_7ef19d06-5a24-47ca-bc81-3dea011edec2': [
     {
@@ -94,6 +103,11 @@ export default (app: Application) => {
 
   app.get('/api/auth/whoami', (_req, res) => {
     res.status(200).send(whoami);
+  });
+
+  // Billing
+  app.patch('/api/v1/billing/current-plan', json(), (_req, res) => {
+    res.status(200).send(currentPlan);
   });
 
   // Organizations
