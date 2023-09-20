@@ -30,7 +30,7 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProjects, 
   const defaultBranchMissing = !remoteBranches.includes(DEFAULT_BRANCH_NAME);
 
   // Find or create the remote project locally
-  let project = remoteProjects.find(({ _id }) => _id === teamProjectId);
+  let project = remoteProjects.find(({ remoteId }) => remoteId === teamProjectId);
   if (!project) {
     project = await initializeProjectFromTeam(backendProject.team);
     await database.upsert(project);

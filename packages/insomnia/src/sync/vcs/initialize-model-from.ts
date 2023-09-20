@@ -10,6 +10,7 @@ export const initializeProjectFromTeam = (team: Team) => models.initModel<Remote
   {
     _id: `${models.project.prefix}_${team.id}`,
     remoteId: team.id,
+    parentId: team.id,
     name: team.name,
   }
 );
