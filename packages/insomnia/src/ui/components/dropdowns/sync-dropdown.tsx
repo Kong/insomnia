@@ -22,6 +22,7 @@ import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useOrganizationLoaderData } from '../../../ui/routes/organization';
+import { invariant } from '../../../utils/invariant';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
@@ -185,7 +186,10 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       ...state,
       loadingProjectPull: true,
     }));
-    const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects, teamProjectId: project._id });
+
+    invariant(project.remoteId, 'Project is not remote');
+
+    const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects, teamProjectId: project.remoteId });
     if (pulledIntoProject.project._id !== project._id) {
       // If pulled into a different project, reactivate the workspace
       navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}`);
@@ -205,8 +209,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
 
     try {
       const branch = await vcs.getBranch();
+      invariant(project.remoteId, 'Project is not remote');
       await interceptAccessError({
-        callback: () => vcs.push({ teamId: project.parentId, teamProjectId: project._id }),
+        callback: () => vcs.push({ teamId: project.parentId, teamProjectId: project.remoteId }),
         action: 'push',
         resourceName: branch,
         resourceType: 'branch',
@@ -233,9 +238,10 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     }));
 
     try {
+      invariant(project.remoteId, 'Project is not remote');
       const branch = await vcs.getBranch();
       const delta = await interceptAccessError({
-        callback: () => vcs.pull({ candidates: syncItems, teamId: project.parentId, teamProjectId: project._id }),
+        callback: () => vcs.pull({ candidates: syncItems, teamId: project.parentId, teamProjectId: project.remoteId }),
         action: 'pull',
         resourceName: branch,
         resourceType: 'branch',
