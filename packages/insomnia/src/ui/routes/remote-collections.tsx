@@ -23,7 +23,7 @@ export const pullRemoteCollectionAction: ActionFunction = async ({ request, para
   const vcs = getVCS();
   invariant(vcs, 'VCS is not defined');
 
-  const remoteBackendProjects = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: projectId });
+  const remoteBackendProjects = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
 
   const backendProject = remoteBackendProjects.find(p => p.id === backendProjectId);
 
@@ -42,7 +42,7 @@ export const pullRemoteCollectionAction: ActionFunction = async ({ request, para
   // Remove all backend projects for workspace first
   await newVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
 
-  await pullBackendProject({ vcs: newVCS, backendProject, remoteProjects, teamProjectId: projectId });
+  await pullBackendProject({ vcs: newVCS, backendProject, remoteProjects, teamProjectId: remoteId });
 
   return null;
 };
@@ -80,7 +80,7 @@ export const remoteCollectionsLoader: LoaderFunction = async ({ params }): Promi
     // Map the backend projects to ones with workspaces in parallel
     const localBackendProjects = (await Promise.all(getWorkspacesByLocalProjects)).filter(isNotNullOrUndefined);
 
-    const remoteBackendProjects = (await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: project._id })).filter(({ id, rootDocumentId }) => {
+    const remoteBackendProjects = (await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: project.remoteId })).filter(({ id, rootDocumentId }) => {
       const localBackendProjectExists = localBackendProjects.find(p => p.id === id);
       const workspaceExists = Boolean(models.workspace.getById(rootDocumentId));
       // Mark as missing if:
