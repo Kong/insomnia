@@ -122,18 +122,20 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     `locationHistoryEntry:${organizationId}`
   );
 
-  let remoteProjects: Team[] = [];// Check if the org has any remote projects and redirect to the first one
+  let cloudProjects: Team[] = [];// Check if the org has any remote projects and redirect to the first one
   try {
-    remoteProjects = await getAllTeamProjects(organizationId);
-
-    // pull down remote projects and create any that don't exist
-    const syncedRemoteProjects = await database.find<Project>(models.project.type, {
-      remoteId: { $in: remoteProjects.map(p => p.id) },
+    cloudProjects = await getAllTeamProjects(organizationId);
+    const cloudRemoteIds = cloudProjects.map(p => p.id);
+    const synced = await database.find<Project>(models.project.type, {
+      remoteId: { $in: cloudRemoteIds },
     });
+    // console.log('synced projects: ', synced);
     // doesn't exist locally
-    const unsyncedRemoteProjects = remoteProjects.filter(p => !syncedRemoteProjects.find(sp => sp.remoteId === p.id));
+    const delta = cloudProjects.filter(p => !synced.find(sp => sp.remoteId === p.id));
+
+    // console.log('delta projects: ', delta);
     // create them
-    await Promise.all(unsyncedRemoteProjects.map(async prj => {
+    await Promise.all(delta.map(async prj => {
       await models.project.create(
         {
           remoteId: prj.id,
@@ -142,6 +144,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
         }
       );
     }));
+    // console.log('created projects: ', delta.length);
     // TODO: fix change name of remote projects on other machine
     // TODO: handle deleted remote projects, by deleting on the remote also?
   } catch (err) {
@@ -182,8 +185,8 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     return redirect(`/organization/${organizationId}/project/${projectId}`);
   }
 
-  if (remoteProjects?.[0]?.id) {
-    return redirect(`/organization/${organizationId}/project/${remoteProjects[0].id}`);
+  if (cloudProjects?.[0]?.id) {
+    return redirect(`/organization/${organizationId}/project/${cloudProjects[0].id}`);
   }
 
   return redirect(`/organization/${organizationId}`);
