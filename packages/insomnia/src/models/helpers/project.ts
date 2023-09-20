@@ -1,7 +1,7 @@
-import { isLocalProject, isRemoteProject, Project } from '../project';
+import { isDefaultOrganizationProject, Project } from '../project';
 export const sortProjects = (projects: Project[]) => [
-  ...projects.filter(p => isLocalProject(p))
+  ...projects.filter(p => isDefaultOrganizationProject(p))
     .sort((a, b) => a.name.localeCompare(b.name)),
-  ...projects.filter(isRemoteProject)
+  ...projects.filter(p => !isDefaultOrganizationProject(p))
     .sort((a, b) => a.name.localeCompare(b.name)),
 ];
