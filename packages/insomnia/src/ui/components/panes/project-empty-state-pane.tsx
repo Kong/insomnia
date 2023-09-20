@@ -1,6 +1,14 @@
 import React, { FC } from 'react';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { getAccountId } from '../../../account/session';
+import { getAppWebsiteBaseURL } from '../../../common/constants';
+import { FeatureMetadata, isOwnerOfOrganization } from '../../../models/organization';
+import { useOrganizationLoaderData } from '../../../ui/routes/organization';
+import { showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
+import { AskModal } from '../modals/ask-modal';
 import { Button } from '../themed-button';
 
 const PostmanIcon = (props: React.SVGProps<SVGSVGElement>) => {
@@ -100,6 +108,48 @@ interface Props {
 }
 
 export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, importFrom, cloneFromGit }) => {
+  const { organizationId } = useParams<{ organizationId: string }>();
+  const { organizations } = useOrganizationLoaderData();
+  const currentOrg = organizations.find(organization => (organization.id === organizationId));
+
+  let isGitSyncEnabled = false;
+  if (currentOrg?.metadata?.canGitSync) {
+    try {
+      const gitSyncFeature: FeatureMetadata = JSON.parse(currentOrg.metadata.canGitSync);
+      isGitSyncEnabled = gitSyncFeature.enabled;
+    } catch (e) {
+      console.log('Failed to parse canGitSync feature metadata', e);
+    }
+  }
+
+  const accountId = getAccountId();
+
+  const showUpgradePlanModal = () => {
+    if (!currentOrg || !accountId) {
+      return;
+    }
+    const isOwner = isOwnerOfOrganization({
+      organization: currentOrg,
+      accountId,
+    });
+
+    isOwner ?
+      showModal(AskModal, {
+        title: 'Upgrade Plan',
+        message: 'Git Sync is only enabled for Team plan or above, please upgrade your plan.',
+        yesText: 'Upgrade',
+        noText: 'Cancel',
+        onDone: async (isYes: boolean) => {
+          if (isYes) {
+            window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+          }
+        },
+      }) : showModal(AlertModal, {
+        title: 'Upgrade Plan',
+        message: 'Git Sync is only enabled for Team plan or above, please ask the organization owner to upgrade.',
+      });
+  };
+
   return (
     <Wrapper>
       <Title>This is an empty project, to get started create your first resource:</Title>
@@ -183,7 +233,13 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
         </AlmostSquareButton>
         <AlmostSquareButton
           aria-label='Clone git repository'
-          onClick={cloneFromGit}
+          onClick={
+            () => {
+              isGitSyncEnabled ?
+                cloneFromGit() :
+                showUpgradePlanModal();
+            }
+          }
         >
           <i
             className='fa fa-code-fork'

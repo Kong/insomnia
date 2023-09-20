@@ -1,6 +1,6 @@
 import React, { FC, ReactNode, useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useRevalidator } from 'react-router-dom';
+import { useFetcher } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -12,7 +12,6 @@ import * as models from '../../../models/index';
 import { isRequest } from '../../../models/request';
 import { isScratchpad, Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
-import { invariant } from '../../../utils/invariant';
 import { FileInputButton } from '../base/file-input-button';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -76,7 +75,7 @@ interface Props extends ModalProps {
   caCertificate: CaCertificate | null;
 }
 
-export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertificates, caCertificate, onHide }: Props) => {
+export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertificate, onHide }: Props) => {
   const hasDescription = !!workspace.description;
   const isScratchpadWorkspace = isScratchpad(workspace);
   const modalRef = useRef<ModalHandle>(null);
@@ -91,7 +90,6 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
     showDescription: hasDescription,
     defaultPreviewMode: hasDescription,
   });
-  const { revalidate } = useRevalidator();
   const activeWorkspaceName = workspace.name;
   useEffect(() => {
     modalRef.current?.show();
@@ -507,48 +505,7 @@ export const WorkspaceSettingsModal = ({ workspace, workspaceMeta, clientCertifi
                       </form>
                     )}
                   </PanelContainer>,
-                }, ...isScratchpadWorkspace ? [] : [{
-                  title: 'Git Sync',
-                  children: <PanelContainer className="pad">
-                    <div className="form-control form-control--outlined">
-                      <label
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 'var(--padding-xs)',
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={Boolean(workspaceMeta?.gitRepositoryId)}
-                          onChange={async () => {
-                            if (workspaceMeta?.gitRepositoryId) {
-                              await models.workspaceMeta.update(workspaceMeta, {
-                                gitRepositoryId: null,
-                              });
-                            } else {
-                              invariant(workspaceMeta, 'Workspace meta not found');
-
-                              const repo = await models.gitRepository.create({
-                                uri: '',
-                              });
-
-                              await models.workspaceMeta.update(workspaceMeta, {
-                                gitRepositoryId: repo._id,
-                              });
-                            }
-
-                            revalidate();
-                          }}
-                        />
-                        Enable Git Sync
-                      </label>
-                      <p>
-                        By enabling Git Sync, you can sync your workspace with a Git repository. This will disable the ability to sync with Insomnia Sync.
-                      </p>
-                    </div>
-                  </PanelContainer>,
-                }]]}
+                }]}
               aria-label="Workspace settings tabs"
             >
               {props => (

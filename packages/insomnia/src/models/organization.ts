@@ -5,6 +5,12 @@ interface Branding {
 export interface Metadata {
   organizationType: string;
   ownerAccountId: string;
+  canGitSync: string;
+}
+
+export interface FeatureMetadata {
+  enabled: boolean;
+  reason?: string;
 }
 
 export interface Organization {

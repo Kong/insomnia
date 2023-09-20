@@ -3,12 +3,15 @@ import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval, useMount } from 'react-use';
 
+import { getAccountId } from '../../../account/session';
 import * as session from '../../../account/session';
+import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import { database as db, Operation } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
+import { type FeatureMetadata, isOwnerOfOrganization } from '../../../models/organization';
 import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { Snapshot, Status } from '../../../sync/types';
@@ -18,11 +21,15 @@ import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-proj
 import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
+import { useOrganizationLoaderData } from '../../../ui/routes/organization';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
+import { showModal } from '../modals';
 import { showError } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
+import { AskModal } from '../modals/ask-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncDeleteModal } from '../modals/sync-delete-modal';
@@ -30,6 +37,7 @@ import { SyncHistoryModal } from '../modals/sync-history-modal';
 import { SyncStagingModal } from '../modals/sync-staging-modal';
 import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
+
 // TODO: handle refetching logic in one place not here in a component
 
 // Refresh dropdown periodically
@@ -86,6 +94,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     syncItems,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const remoteProjects = projects.filter(isRemoteProject);
+  const { organizations } = useOrganizationLoaderData();
+  const currentOrg = organizations.find(organization => (organization.id === organizationId));
 
   const refetchRemoteBranch = useCallback(async () => {
     if (session.isLoggedIn()) {
@@ -349,6 +359,44 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     },
   }];
 
+  let isGitSyncEnabled = false;
+  if (currentOrg?.metadata?.canGitSync) {
+    try {
+      const gitSyncFeature: FeatureMetadata = JSON.parse(currentOrg.metadata.canGitSync);
+      isGitSyncEnabled = gitSyncFeature.enabled;
+    } catch (e) {
+      console.log('Failed to parse canGitSync feature metadata', e);
+    }
+  }
+
+  const accountId = getAccountId();
+
+  const showUpgradePlanModal = () => {
+    if (!currentOrg || !accountId) {
+      return;
+    }
+    const isOwner = isOwnerOfOrganization({
+      organization: currentOrg,
+      accountId,
+    });
+
+    isOwner ?
+      showModal(AskModal, {
+        title: 'Upgrade Plan',
+        message: 'Git Sync is only enabled for Team plan or above, please upgrade your plan.',
+        yesText: 'Upgrade',
+        noText: 'Cancel',
+        onDone: async (isYes: boolean) => {
+          if (isYes) {
+            window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+          }
+        },
+      }) : showModal(AlertModal, {
+        title: 'Upgrade Plan',
+        message: 'Git Sync is only enabled for Team plan or above, please ask the organization owner to upgrade.',
+      });
+  };
+
   if (!vcs.hasBackendProject()) {
     return (
       <div>
@@ -392,7 +440,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                 variant='contained'
                 bg='surprise'
                 onClick={async () => {
-                  setIsGitRepoSettingsModalOpen(true);
+                  isGitSyncEnabled ?
+                    setIsGitRepoSettingsModalOpen(true) :
+                    showUpgradePlanModal();
                 }}
                 style={{
                   width: '100%',
@@ -551,7 +601,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               variant='contained'
               bg='surprise'
               onClick={async () => {
-                setIsGitRepoSettingsModalOpen(true);
+                isGitSyncEnabled ?
+                  setIsGitRepoSettingsModalOpen(true) :
+                  showUpgradePlanModal();
               }}
               style={{
                 width: '100%',
