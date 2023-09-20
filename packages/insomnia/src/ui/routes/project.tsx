@@ -47,12 +47,10 @@ import { Organization } from '../../models/organization';
 import {
   isRemoteProject,
   Project,
-  RemoteProject,
   SCRATCHPAD_PROJECT_ID,
 } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
-import { Team } from '../../sync/types';
 import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
 import { invariant } from '../../utils/invariant';
@@ -73,6 +71,11 @@ import { usePresenceContext } from '../context/app/presence-context';
 import { useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
+interface TeamProject {
+  id: string;
+  name: string;
+}
+
 async function getAllTeamProjects(organizationId: string) {
   const sessionId = getCurrentSessionId() || '';
   console.log('Fetching projects for team', organizationId);
@@ -91,7 +94,7 @@ async function getAllTeamProjects(organizationId: string) {
     sessionId,
   });
 
-  return response.data as Team[];
+  return response.data as TeamProject[];
 }
 
 export interface WorkspaceWithMetadata {
@@ -114,6 +117,58 @@ export interface WorkspaceWithMetadata {
   caCertificate: CaCertificate | null;
 }
 
+async function syncTeamProjects({
+  organizationId,
+  teamProjects,
+}: {
+  teamProjects: TeamProject[];
+  organizationId: string;
+}) {
+  const existingRemoteProjects = await database.find<Project>(models.project.type, {
+    remoteId: { $in: teamProjects.map(p => p.id) },
+  });
+
+  const existingRemoteProjectsRemoteIds = existingRemoteProjects.map(p => p.remoteId);
+  const remoteProjectsThatNeedToBeCreated = teamProjects.filter(p => !existingRemoteProjectsRemoteIds.includes(p.id));
+
+  await Promise.all(remoteProjectsThatNeedToBeCreated.map(async prj => {
+    await models.project.create(
+      {
+        remoteId: prj.id,
+        name: prj.name,
+        parentId: organizationId,
+      }
+    );
+  }));
+
+  const remoteProjectsThatNeedToBeUpdated = await database.find<Project>(models.project.type, {
+    // Name is not in the list of remote projects
+    name: { $nin: teamProjects.map(p => p.name) },
+    // Remote ID is in the list of remote projects
+    remoteId: { $in: teamProjects.map(p => p.id) },
+  });
+
+  await Promise.all(remoteProjectsThatNeedToBeUpdated.map(async prj => {
+    const remoteProject = teamProjects.find(p => p.id === prj.remoteId);
+    if (remoteProject) {
+      await models.project.update(prj, {
+        name: remoteProject.name,
+      });
+    }
+  }));
+
+  // Remove any remote projects from the current organization that are not in the list of remote projects
+  const removedRemoteProjects = await database.find<Project>(models.project.type, {
+    parentId: organizationId,
+    // Remote ID is not in the list of remote projects
+    remoteId: { $nin: teamProjects.map(p => p.id) },
+  });
+
+  await Promise.all(removedRemoteProjects.map(async prj => {
+    await models.project.remove(prj);
+  }));
+}
+
 export const indexLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
@@ -122,31 +177,16 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     `locationHistoryEntry:${organizationId}`
   );
 
-  let cloudProjects: Team[] = [];// Check if the org has any remote projects and redirect to the first one
-  try {
-    cloudProjects = await getAllTeamProjects(organizationId);
-    const cloudRemoteIds = cloudProjects.map(p => p.id);
-    const synced = await database.find<Project>(models.project.type, {
-      remoteId: { $in: cloudRemoteIds },
-    });
-    // console.log('synced projects: ', synced);
-    // doesn't exist locally
-    const delta = cloudProjects.filter(p => !synced.find(sp => sp.remoteId === p.id));
+  let teamProjects: TeamProject[] = [];
 
-    // console.log('delta projects: ', delta);
-    // create them
-    await Promise.all(delta.map(async prj => {
-      await models.project.create(
-        {
-          remoteId: prj.id,
-          name: prj.name,
-          parentId: organizationId,
-        }
-      );
-    }));
-    // console.log('created projects: ', delta.length);
-    // TODO: fix change name of remote projects on other machine
-    // TODO: handle deleted remote projects, by deleting on the remote also?
+  try {
+    teamProjects = await getAllTeamProjects(organizationId);
+    if (teamProjects.length > 0) {
+      await syncTeamProjects({
+        organizationId,
+        teamProjects,
+      });
+    }
   } catch (err) {
     console.log('Could not fetch remote projects.');
   }
@@ -162,31 +202,24 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     );
 
     if (match && match.params.organizationId && match.params.projectId) {
-      let projectId = match.params.projectId;
-      const existingProject = await models.project.getById(projectId);
+      const existingProject = await models.project.getById(match.params.projectId);
 
-      if (!existingProject) {
-        projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)?.[0]?._id;
-        if (!projectId) {
-          return redirect('/organization');
-        }
+      if (existingProject) {
+        console.log('Redirecting to last visited project', existingProject._id);
+        return redirect(`/organization/${match?.params.organizationId}/project/${existingProject._id}`);
       }
-
-      console.log('Redirecting to last visited project', projectId);
-
-      return redirect(`/organization/${match?.params.organizationId}/project/${projectId}`);
     }
   }
 
+  const allOrganizationProjects = await database.find<Project>(models.project.type, {
+    parentId: organizationId,
+  }) || [];
+
   // Check if the org has any projects and redirect to the first one
-  const projectId = (await models.project.all()).filter(proj => proj.parentId === organizationId)[0]?._id;
+  const projectId = allOrganizationProjects[0]?._id;
 
   if (projectId) {
     return redirect(`/organization/${organizationId}/project/${projectId}`);
-  }
-
-  if (cloudProjects?.[0]?.id) {
-    return redirect(`/organization/${organizationId}/project/${cloudProjects[0].id}`);
   }
 
   return redirect(`/organization/${organizationId}`);
