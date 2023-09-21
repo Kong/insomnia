@@ -49,7 +49,7 @@ describe('pullBackendProject()', () => {
       });
 
       // Act
-      await pullBackendProject({ vcs, backendProject, remoteProjects: [project].filter(isRemoteProject), teamProjectId: project._id });
+      await pullBackendProject({ vcs, backendProject, remoteProjects: [project].filter(isRemoteProject), teamProjectId: project.remoteId });
 
       // Assert
       expect(project?.name).not.toBe(backendProject.team.name); // should not rename if the project already exists
