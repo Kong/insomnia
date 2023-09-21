@@ -27,6 +27,7 @@ import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
+import { JSONPath } from 'jsonpath-plus';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
 
@@ -214,16 +215,19 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       let jsonString: any = code;
       if (updateFilter && filter) {
         try {
+          if (filter.startsWith('$')) {
+            const codeObj = JSON.parse(code);
+            const results = JSONPath({ json: codeObj, path: filter.trim() });
+            jsonString = JSON.stringify(results);
+          }
+
           if (filter.startsWith('.')) {
             const codeObj = JSON.parse(code);
             const results = await jq.run(`${filter.trim()}`, codeObj, { input: 'json' });
             jsonString = results;
-          } else {
-            console.log('[jq] Error: ', 'Please start the query with dot (.), for instance: .books');
-            jsonString = '{}';
           }
         } catch (err) {
-          console.log('[jq] Error: ', err);
+          console.log('JSON query Error: ', err);
           jsonString = '{}';
         }
       }
@@ -559,7 +563,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
                 type="text"
                 title="Filter response body"
                 defaultValue={filter || ''}
-                placeholder={mode?.includes('json') ? '.store.book[].author' : '/store/books/author'}
+                placeholder={mode?.includes('json') ? 'jq: .store.book[].author or JSONPath: $.store.books[*].author' : '/store/books/author'}
                 onKeyDown={createKeybindingsHandler({
                   'Enter': () => {
                     const filter = inputRef.current?.value;

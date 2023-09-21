@@ -28,6 +28,7 @@ const JqHelper: FC = () => (
     <p>
       Use <Link href="https://github.com/jqlang/jq/wiki/For-JSONPath-users">Jq</Link> to filter the response body. Here are some examples that you might use on a book store API:
     </p>
+    <br />
     <HelpExamples
       helpExamples={[
         { code: '.store.book[].title', description: 'Get titles of all books in the store' },
@@ -36,8 +37,23 @@ const JqHelper: FC = () => (
         { code: '.store.book[] | select(.isbn)', description: 'Get all books in the store with an isbn number' },
       ]}
     />
+    <br />
+    <p>
+      Use <Link href="http://goessner.net/articles/JsonPath/">JSONPath</Link> to filter the response body. Here are some examples that you might use on a book store API:
+    </p>
+    <br />
+    <HelpExamples
+      helpExamples={[
+        { code: '$.store.books[*].title', description: 'Get titles of all books in the store' },
+        { code: '$.store.books[?(@.price < 10)].title', description: 'Get books costing less than $10' },
+        { code: '$.store.books[-1:]', description: 'Get the last book in the store' },
+        { code: '$.store.books.length', description: 'Get the number of books in the store' },
+        { code: '$.store.books[?(@.title.match(/lord.*rings/i))]', description: 'Get book by title regular expression' },
+      ]}
+    />
     <p className="notice info">
-      Insomnia uses <Link href="https://www.npmjs.com/package/node-jq">node-jq</Link>.
+      Insomnia supports both <Link href="https://www.npmjs.com/package/node-jq">jq</Link> and <Link href="https://www.npmjs.com/package/jsonpath-plus">JSONPath</Link>.
+      Note that there's <Link href="https://cburgmer.github.io/json-path-comparison/">no standard</Link> for JSONPath.
     </p>
   </ModalBody>
 );

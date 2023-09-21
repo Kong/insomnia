@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { format } from 'date-fns';
 import fs from 'fs';
 import iconv from 'iconv-lite';
+import { JSONPath } from 'jsonpath-plus';
 import jq from 'node-jq';
 import os from 'os';
 import { CookieJar } from 'tough-cookie';
@@ -160,8 +161,8 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           ],
         },
         {
-          displayName: 'jq Filter',
-          help: 'Some OS functions return objects. Use jq queries to extract desired values.',
+          displayName: 'jq / JSONPath Filter',
+          help: 'Some OS functions return objects. Use jq or JSONPath queries to extract desired values.',
           hide: args => !['userInfo', 'cpus'].includes(args[0].value + ''),
           type: 'string',
         },
@@ -169,10 +170,16 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
       async run(_context, fnName: 'arch' | 'cpus', filter) {
         let value: any = os[fnName]();
 
-        if (jq && ['userInfo', 'cpus'].includes(fnName)) {
+        if (jq  && ['userInfo', 'cpus'].includes(fnName)) {
           try {
-            value = await jq.run(`${filter.trim()}`, value, { input: 'json' });
-            value = JSON.parse(value);
+            if (filter.indexOf('$') === 0) {
+              value = JSONPath({ json: value, path: filter })[0];
+            }
+
+            if (filter.indexOf('.') === 0) {
+              value = await jq.run(`${filter.trim()}`, value, { input: 'json' });
+              value = JSON.parse(value);
+            }
           } catch (err) { }
         }
 
@@ -285,6 +292,45 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         if (results.length === 0) {
           throw new Error(`jq query returned no results: ${filter}`);
+        }
+
+        return results[0];
+      },
+    },
+  },
+  {
+    templateTag: {
+      displayName: 'JSONPath',
+      name: 'JSONPath',
+      description: 'pull data from JSON strings with JSONPath',
+      args: [
+        {
+          displayName: 'JSON string',
+          type: 'string',
+        },
+        {
+          displayName: 'JSONPath Filter',
+          encoding: 'base64', // So it doesn't cause syntax errors
+          type: 'string',
+        },
+      ],
+      run(_context, jsonString, filter) {
+        let body;
+        try {
+          body = JSON.parse(jsonString);
+        } catch (err) {
+          throw new Error(`Invalid JSON: ${err.message}`);
+        }
+
+        let results: any;
+        try {
+          results = JSONPath({ json: body, path: filter });
+        } catch (err) {
+          throw new Error(`Invalid JSONPath query: ${filter}`);
+        }
+
+        if (results.length === 0) {
+          throw new Error(`JSONPath query returned no results: ${filter}`);
         }
 
         return results[0];
@@ -425,7 +471,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         // If we don't have a key, default to request ID.
         // We do this because we may render the prompt multiple times per request.
-        // We cache it under the requestId so it only prompts once. We then clear
+        // We cache it under the requestId, so it only prompts once. We then clear
         // the cache in a response hook when the request is sent.
         const titleHash = crypto
           .createHash('md5')
@@ -514,7 +560,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
           displayName: args => {
             switch (args[0].value) {
               case 'body':
-                return 'Filter (jq or XPath)';
+                return 'Filter (jq or JSONPath or XPath)';
               case 'header':
                 return 'Header Name';
               default:
@@ -608,7 +654,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         }
 
-        // Make sure we only send the request once per render so we don't have infinite recursion
+        // Make sure we only send the request once per render, so we don't have infinite recursion
         const requestChain = context.context.getExtraInfo?.('requestChain') || [];
         if (requestChain.some((id: any) => id === request._id)) {
           console.log('[response tag] Preventing recursive render');
@@ -679,7 +725,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             body = bodyBuffer.toString();
           }
 
-          if (sanitizedFilter.indexOf('.') === 0) {
+          if (sanitizedFilter.indexOf('.') === 0 || sanitizedFilter.indexOf('$') === 0) {
             let bodyJSON;
             let results: any;
 
@@ -689,11 +735,25 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
               throw new Error(`Invalid JSON: ${err.message}`);
             }
 
-            try {
-              results = await jq.run(`${sanitizedFilter.trim()}`, bodyJSON, { input: 'json' });
-              results = JSON.parse(results);
-            } catch (err) {
-              throw new Error(`Invalid jq query: ${sanitizedFilter}`);
+            if (sanitizedFilter.indexOf('.') === 0) {
+               try {
+                 results = await jq.run (`${sanitizedFilter.trim ()}`, bodyJSON, { input: 'json' });
+                 results = JSON.parse (results);
+               } catch (err) {
+                 throw new Error (`Invalid jq query: ${sanitizedFilter}`);
+               }
+            }
+
+            if (sanitizedFilter.indexOf('$') === 0) {
+              try {
+                results = JSONPath({ json: bodyJSON, path: sanitizedFilter });
+              } catch (err) {
+                throw new Error(`Invalid JSONPath query: ${sanitizedFilter}`);
+              }
+            }
+
+            if (typeof results === 'object') {
+              return JSON.stringify(results);
             }
 
             if (results.length === 0) {
@@ -701,13 +761,13 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             }
 
             if (results.length > 1) {
-              return JSON.stringify(results).replace(/"/g, '');
+              return JSON.stringify(results);
             }
 
             if (typeof results[0] !== 'string') {
               return JSON.stringify(results[0]);
             } else {
-              return results[0].replace(/"/g, '');
+              return results[0];
             }
           } else {
             const DOMParser = (await import('xmldom')).DOMParser;
