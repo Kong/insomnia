@@ -25,7 +25,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { getAccountId, getCurrentSessionId } from '../../account/session';
+import { getAccountId, getCurrentSessionId, isLoggedIn } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   DASHBOARD_SORT_ORDERS,
@@ -42,7 +42,7 @@ import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
-import { FeatureMetadata, isOwnerOfOrganization } from '../../models/organization';
+import { FeatureMetadata, isOwnerOfOrganization, isScratchpadOrganizationId } from '../../models/organization';
 import { Organization } from '../../models/organization';
 import {
   isRemoteProject,
@@ -124,6 +124,10 @@ async function syncTeamProjects({
   teamProjects: TeamProject[];
   organizationId: string;
 }) {
+
+  // assumption: api teamProjects is the source of truth for migrated projects
+  // once migrated orgs become the source of truth for projects
+  // its important that migration be completed before this code is run
   const existingRemoteProjects = await database.find<Project>(models.project.type, {
     remoteId: { $in: teamProjects.map(p => p.id) },
   });
@@ -131,6 +135,7 @@ async function syncTeamProjects({
   const existingRemoteProjectsRemoteIds = existingRemoteProjects.map(p => p.remoteId);
   const remoteProjectsThatNeedToBeCreated = teamProjects.filter(p => !existingRemoteProjectsRemoteIds.includes(p.id));
 
+  // this will create a new project for any remote projects that don't exist in the current organization
   await Promise.all(remoteProjectsThatNeedToBeCreated.map(async prj => {
     await models.project.create(
       {
@@ -159,6 +164,7 @@ async function syncTeamProjects({
 
   // Remove any remote projects from the current organization that are not in the list of remote projects
   const removedRemoteProjects = await database.find<Project>(models.project.type, {
+    // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
     parentId: organizationId,
     // Remote ID is not in the list of remote projects
     remoteId: { $nin: teamProjects.map(p => p.id) },
@@ -181,7 +187,8 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
   try {
     teamProjects = await getAllTeamProjects(organizationId);
-    if (teamProjects.length > 0) {
+    // ensure we don't sync projects in the wrong place
+    if (teamProjects.length > 0 && isLoggedIn() && !isScratchpadOrganizationId(organizationId)) {
       await syncTeamProjects({
         organizationId,
         teamProjects,

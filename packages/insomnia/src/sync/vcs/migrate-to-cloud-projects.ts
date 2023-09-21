@@ -1,7 +1,7 @@
 import { getCurrentSessionId } from '../../account/session';
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { isScratchpadProject, Project, RemoteProject } from '../../models/project';
+import { Project, RemoteProject } from '../../models/project';
 import { Workspace } from '../../models/workspace';
 import { invariant } from '../../utils/invariant';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from './initialize-backend-project';
@@ -22,10 +22,18 @@ let status: 'idle' | 'pending' | 'error' | 'completed' = 'idle';
 export const shouldRunMigration = async () => {
   const localProjects = await database.find<Project>(models.project.type, {
     remoteId: null,
+    _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
+  });
+  const legacyRemoteProjects = await database.find<RemoteProject>(models.project.type, {
+    remoteId: { $ne: null },
+    parentId: null,
   });
 
-  return localProjects.filter(project => !isScratchpadProject(project)).length > 0;
+  return localProjects.length > 0 || legacyRemoteProjects.length > 0;
 };
+
+// Second time we run this, whats gonna happen?
+// we will get duplicate projects in the cloud and local with the same but no workspaces in the duplicate
 
 export const migrateLocalToCloudProjects = async (vcs: VCS) => {
   if (status !== 'idle' && status !== 'error') {
@@ -38,19 +46,28 @@ export const migrateLocalToCloudProjects = async (vcs: VCS) => {
     const sessionId = getCurrentSessionId();
     invariant(sessionId, 'User must be logged in to migrate projects');
 
-    // Local projects except scratchpad
-    const localProjects = await database.find<Project>(models.project.type, {
-      remoteId: null,
-      _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
-    });
-
+    // Migrate legacy remote projects to new organization structure
     const legacyRemoteProjects = await database.find<RemoteProject>(models.project.type, {
       remoteId: { $ne: null },
       parentId: null,
     });
 
+    for (const remoteProject of legacyRemoteProjects) {
+      await models.project.update(remoteProject, {
+        // Remote Id was previously the teamId
+        parentId: remoteProject.remoteId,
+        // _id was previously the remoteId
+        remoteId: remoteProject._id,
+      });
+    }
+
+    // Local projects except scratchpad
+    const localProjects = await database.find<Project>(models.project.type, {
+      remoteId: null,
+      _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
+    });
     for (const localProject of localProjects) {
-      // -- Create a remote project
+      // -- Unsafe to run twice, will cause duplicates unless we would need to match ids
       const newCloudProject = await window.main.insomniaFetch<{ id: string; name: string; organizationId: string } | void>({
         path: '/v1/organizations/personal/team-projects',
         method: 'POST',
@@ -89,15 +106,6 @@ export const migrateLocalToCloudProjects = async (vcs: VCS) => {
           // TODO: here we should show the try again dialog
         }
       }
-    }
-
-    for (const remoteProject of legacyRemoteProjects) {
-      await models.project.update(remoteProject, {
-        // Remote Id was previously the teamId
-        parentId: remoteProject.remoteId,
-        // _id was previously the remoteId
-        remoteId: remoteProject._id,
-      });
     }
 
     status = 'completed';

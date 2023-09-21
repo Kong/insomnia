@@ -20,7 +20,9 @@ export interface Organization {
   branding?: Branding;
   metadata: Metadata;
 }
-
+export const SCRATCHPAD_ORGANIZATION_ID = 'org_scratchpad';
+export const isScratchpadOrganizationId = (organizationId: string) =>
+  organizationId === SCRATCHPAD_ORGANIZATION_ID;
 export const isPersonalOrganization = (organization: Organization) =>
   organization.metadata.organizationType === 'personal';
 
