@@ -11,7 +11,14 @@ let status: 'idle' | 'pending' | 'error' | 'completed' = 'idle';
 
 // TODO:
 // Error handling and return type for errors
-// Should we migrate empty projects? We can but should we
+
+// Migration:
+// Team ~= Project > Workspaces
+// In the previous API: { _id: 'proj_team_123', remoteId: 'team_123', parentId: null }
+
+// Organization > TeamProject > Workspaces
+// In the new API: { _id: 'proj_team_123', remoteId: 'proj_team_123', parentId: 'team_123' }
+
 export const shouldRunMigration = async () => {
   const localProjects = await database.find<Project>(models.project.type, {
     remoteId: null,
@@ -35,6 +42,11 @@ export const migrateLocalToCloudProjects = async (vcs: VCS) => {
     const localProjects = await database.find<Project>(models.project.type, {
       remoteId: null,
       _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
+    });
+
+    const legacyRemoteProjects = await database.find<RemoteProject>(models.project.type, {
+      remoteId: { $ne: null },
+      parentId: null,
     });
 
     for (const localProject of localProjects) {
@@ -79,13 +91,12 @@ export const migrateLocalToCloudProjects = async (vcs: VCS) => {
       }
     }
 
-    const remoteProjects = await database.find<RemoteProject>(models.project.type, {
-      remoteId: { $ne: null },
-    });
-
-    for (const remoteProject of remoteProjects) {
+    for (const remoteProject of legacyRemoteProjects) {
       await models.project.update(remoteProject, {
+        // Remote Id was previously the teamId
         parentId: remoteProject.remoteId,
+        // _id was previously the remoteId
+        remoteId: remoteProject._id,
       });
     }
 
