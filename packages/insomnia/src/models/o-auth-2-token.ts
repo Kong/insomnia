@@ -21,6 +21,7 @@ export interface BaseOAuth2Token {
   // Should be Date.now() if valid
   // Debug
   xResponseId: string | null;
+  xAuthHash: string | null;
   xError: string | null;
   // Error handling
   error: string;
@@ -41,6 +42,7 @@ export function init(): BaseOAuth2Token {
     // Should be Date.now() if valid
     // Debug
     xResponseId: null,
+    xAuthHash: null,
     xError: null,
     // Error handling
     error: '',

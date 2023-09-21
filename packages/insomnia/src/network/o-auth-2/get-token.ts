@@ -85,6 +85,7 @@ export const getOAuth2Token = async (
     return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({
       ...data,
       access_token: data.access_token || data.id_token,
+      xAuthHash: createAuthHash(authentication),
     }));
   }
   invariant(authentication.accessTokenUrl, 'Missing access token URL');
@@ -164,8 +165,12 @@ export const getOAuth2Token = async (
 
   const response = await sendAccessTokenRequest(requestId, authentication, params, headers);
   const old = await models.oAuth2Token.getOrCreateByParentId(requestId);
+
   return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel(
-    oauthResponseToAccessToken(authentication.accessTokenUrl, response)
+    {
+      ...oauthResponseToAccessToken(authentication.accessTokenUrl, response),
+      xAuthHash: createAuthHash(authentication),
+    }
   ));
 };
 // 1. get token from db and return if valid
@@ -181,8 +186,15 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   if (!token) {
     return null;
   }
+  const newAuthHash = createAuthHash(authentication);
+  const isSameAuth = token.xAuthHash === newAuthHash;
+  if (!isSameAuth) {
+    return null;
+  }
+
   const expiresAt = token.expiresAt || Infinity;
   const isExpired = Date.now() > expiresAt;
+
   if (!isExpired && !forceRefresh) {
     return token;
   }
@@ -245,6 +257,7 @@ async function getExistingAccessTokenAndRefreshIfExpired(
   return models.oAuth2Token.update(old, transformNewAccessTokenToOauthModel({
     ...data,
     refresh_token: data.refresh_token || token.refreshToken,
+    xAuthHash: newAuthHash,
   }));
 }
 
@@ -285,6 +298,7 @@ const transformNewAccessTokenToOauthModel = (accessToken: Partial<Record<AuthKey
     xResponseId: accessToken.xResponseId || null,
     // Special Case for empty body or http error code custom messages
     xError: accessToken.xError || null,
+    xAuthHash: accessToken.xAuthHash || null,
   };
 };
 
@@ -352,3 +366,9 @@ const tryToParse = (body: string): Record<string, any> | null => {
 };
 
 const insertAuthKeyIf = (name: AuthKeys, value?: string) => value ? [{ name, value }] : [];
+
+const createAuthHash = (authentication: AuthTypeOAuth2) => {
+  const hash = crypto.createHash('sha256');
+  hash.update(JSON.stringify(authentication));
+  return hash.digest('hex');
+};
