@@ -301,7 +301,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
   {
     templateTag: {
       displayName: 'JSONPath',
-      name: 'JSONPath',
+      name: 'jsonpath',
       description: 'pull data from JSON strings with JSONPath',
       args: [
         {
