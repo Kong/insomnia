@@ -9,7 +9,7 @@ export const loader: LoaderFunction = async () => {
     const scratchPad = await models.workspace.getById(models.workspace.SCRATCHPAD_WORKSPACE_ID);
     if (!scratchpadProject) {
       console.log('Initializing Scratch Pad Project');
-      await models.project.create({ _id: models.project.SCRATCHPAD_PROJECT_ID, name: getProductName(), remoteId: null });
+      await models.project.create({ _id: models.project.SCRATCHPAD_PROJECT_ID, name: getProductName(), remoteId: null, parentId: models.organization.SCRATCHPAD_ORGANIZATION_ID });
     }
 
     if (!scratchPad) {
@@ -19,5 +19,5 @@ export const loader: LoaderFunction = async () => {
   } catch (err) {
     console.warn('Failed to create default project. It probably already exists', err);
   }
-  return redirect(`/organization/${models.project.SCRATCHPAD_PROJECT_ID}/project/${models.project.SCRATCHPAD_PROJECT_ID}/workspace/${models.workspace.SCRATCHPAD_WORKSPACE_ID}/debug`);
+  return redirect(`/organization/${models.organization.SCRATCHPAD_ORGANIZATION_ID}/project/${models.project.SCRATCHPAD_PROJECT_ID}/workspace/${models.workspace.SCRATCHPAD_WORKSPACE_ID}/debug`);
 };
