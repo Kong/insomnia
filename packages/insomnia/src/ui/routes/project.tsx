@@ -22,6 +22,7 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
+  useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
 
@@ -42,7 +43,7 @@ import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
-import { FeatureMetadata, isOwnerOfOrganization, isScratchpadOrganizationId } from '../../models/organization';
+import { isOwnerOfOrganization, isScratchpadOrganizationId } from '../../models/organization';
 import { Organization } from '../../models/organization';
 import {
   isRemoteProject,
@@ -68,7 +69,7 @@ import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
 import { usePresenceContext } from '../context/app/presence-context';
-import { useOrganizationLoaderData } from './organization';
+import { type FeatureList, useOrganizationLoaderData } from './organization';
 import { useRootLoaderData } from './root';
 
 interface TeamProject {
@@ -261,7 +262,7 @@ export const loader: LoaderFunction = async ({
   const projectName = search.get('projectName') || '';
 
   const project = await models.project.getById(projectId);
-  invariant(project, 'Project was not found');
+  invariant(project, `Project was not found ${projectId}`);
 
   const projectWorkspaces = await models.workspace.findByParentId(projectId);
 
@@ -412,6 +413,7 @@ const ProjectRoute: FC = () => {
 
   const { organizations } = useOrganizationLoaderData();
   const { presence } = usePresenceContext();
+  const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
 
   const accountId = getAccountId();
 
@@ -519,15 +521,7 @@ const ProjectRoute: FC = () => {
   }, [createNewProjectFetcher.data, createNewProjectFetcher.state]);
 
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
-  let isGitSyncEnabled = false;
-  if (currentOrg?.metadata?.canGitSync) {
-    try {
-      const gitSyncFeature: FeatureMetadata = JSON.parse(currentOrg.metadata.canGitSync);
-      isGitSyncEnabled = gitSyncFeature.enabled;
-    } catch (e) {
-      console.log('Failed to parse canGitSync feature metadata', e);
-    }
-  }
+  const isGitSyncEnabled = features.gitSync.enabled;
 
   const showUpgradePlanModal = () => {
     if (!currentOrg || !accountId) {

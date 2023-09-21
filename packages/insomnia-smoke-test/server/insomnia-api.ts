@@ -38,7 +38,6 @@ const organizations = [
     'metadata': {
       'organizationType': 'personal',
       'ownerAccountId': 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
-      'canGitSync': '{ "enabled": true }',
     },
   },
   // Team Organization: Was a team before the migration now looks like this:
@@ -53,10 +52,17 @@ const organizations = [
     'metadata': {
       'organizationType': 'team',
       'ownerAccountId': 'acct_64a477e6b59d43a5a607f84b4f73e3ce',
-      'canGitSync': '{ "enabled": true }',
     },
   },
 ];
+
+const organizationFeatures = {
+  features: {
+    gitSync: {
+      enabled: true,
+    },
+  },
+};
 
 const user = {
   'id': 'email|64f0dd619ab0786da330d83a',
@@ -115,6 +121,10 @@ export default (app: Application) => {
     res.status(200).send({
       organizations: organizations,
     });
+  });
+
+  app.get('/api/v1/organizations/:orgId/features', (_req, res) => {
+    res.status(200).send(organizationFeatures);
   });
 
   // Projects

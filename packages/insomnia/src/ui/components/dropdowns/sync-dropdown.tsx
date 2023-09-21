@@ -11,7 +11,7 @@ import { database as db, Operation } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { type FeatureMetadata, isOwnerOfOrganization } from '../../../models/organization';
+import { isOwnerOfOrganization } from '../../../models/organization';
 import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { Snapshot, Status } from '../../../sync/types';
@@ -21,7 +21,7 @@ import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-proj
 import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import { useOrganizationLoaderData } from '../../../ui/routes/organization';
+import { type FeatureList, useOrganizationLoaderData } from '../../../ui/routes/organization';
 import { invariant } from '../../../utils/invariant';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -97,6 +97,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   const remoteProjects = projects.filter(isRemoteProject);
   const { organizations } = useOrganizationLoaderData();
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
+  const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
 
   const refetchRemoteBranch = useCallback(async () => {
     if (session.isLoggedIn()) {
@@ -365,16 +366,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     },
   }];
 
-  let isGitSyncEnabled = false;
-  if (currentOrg?.metadata?.canGitSync) {
-    try {
-      const gitSyncFeature: FeatureMetadata = JSON.parse(currentOrg.metadata.canGitSync);
-      isGitSyncEnabled = gitSyncFeature.enabled;
-    } catch (e) {
-      console.log('Failed to parse canGitSync feature metadata', e);
-    }
-  }
-
+  const isGitSyncEnabled = features.gitSync.enabled;
   const accountId = getAccountId();
 
   const showUpgradePlanModal = () => {
