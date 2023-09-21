@@ -26,6 +26,7 @@ import {
   getAccountId,
   getCurrentSessionId,
 } from '../../account/session';
+import { getAppWebsiteBaseURL } from '../../common/constants';
 import * as models from '../../models';
 import { isOwnerOfOrganization, isPersonalOrganization, Organization } from '../../models/organization';
 import { isDesign, isScratchpad } from '../../models/workspace';
@@ -279,7 +280,6 @@ export const shouldOrganizationsRevalidate: ShouldRevalidateFunction = ({
 
 const UpgradeButton = () => {
   const { currentPlan } = useOrganizationLoaderData();
-  const { settings } = useRootLoaderData();
 
   // If user has a team or enterprise plan we navigate them to the Enterprise contact page.
   if (['team', 'enterprise'].includes(currentPlan?.type || '')) {
@@ -304,7 +304,7 @@ const UpgradeButton = () => {
   return (
     <Button
       onPress={() => {
-        window.main.openInBrowser(settings.dev?.servers.website + to);
+        window.main.openInBrowser(getAppWebsiteBaseURL() + to);
       }}
       className="px-4 bg-[--color-surprise] text-[--color-font-surprise] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
     >
@@ -410,7 +410,7 @@ const OrganizationRoute = () => {
 
                             if (action === 'account-settings') {
                               window.main.openInBrowser(
-                                `${settings.dev?.servers.website}/app/settings/account`,
+                                `${getAppWebsiteBaseURL()}/app/settings/account`,
                               );
                             }
                           }}
@@ -521,13 +521,13 @@ const OrganizationRoute = () => {
                       onAction={action => {
                         if (action === 'join-organization') {
                           window.main.openInBrowser(
-                            getLoginUrl(settings.dev?.servers.website || ''),
+                            getLoginUrl(),
                           );
                         }
 
                         if (action === 'new-organization') {
                           window.main.openInBrowser(
-                            `${settings.dev?.servers.website}/app/organization/create`,
+                            `${getAppWebsiteBaseURL()}/app/organization/create`,
                           );
                         }
                       }}

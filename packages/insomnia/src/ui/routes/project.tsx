@@ -70,7 +70,6 @@ import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
 import { usePresenceContext } from '../context/app/presence-context';
 import { type FeatureList, useOrganizationLoaderData } from './organization';
-import { useRootLoaderData } from './root';
 
 interface TeamProject {
   id: string;
@@ -452,7 +451,6 @@ const ProjectRoute: FC = () => {
   });
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const { settings } = useRootLoaderData();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
     useState(false);
 
@@ -834,7 +832,7 @@ const ProjectRoute: FC = () => {
                   aria-label="Invite collaborators"
                   className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                   onPress={() => {
-                    window.main.openInBrowser(`${settings.dev?.servers.website}/app/dashboard/organizations/${organizationId}/collaborators`);
+                    window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
                   }}
                 >
                   <Icon icon="user-plus" />

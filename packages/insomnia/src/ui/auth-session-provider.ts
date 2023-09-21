@@ -2,7 +2,7 @@ import { decodeBase64, encodeBase64 } from '@getinsomnia/api-client/base64';
 import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
 
 import * as session from '../account/session';
-import { getInsomniaPublicKey, getInsomniaSecretKey } from '../common/constants';
+import { getAppWebsiteBaseURL, getInsomniaPublicKey, getInsomniaSecretKey } from '../common/constants';
 import { invariant } from '../utils/invariant';
 
 interface AuthBox {
@@ -45,14 +45,14 @@ export async function submitAuthCode(code: string) {
   }
 }
 
-export function getLoginUrl(websiteUrl: string) {
+export function getLoginUrl() {
   const publicKey = window.localStorage.getItem('insomnia.publicKey');
   if (!publicKey) {
     console.log('No public key found');
     return '';
   }
 
-  const url = new URL(websiteUrl);
+  const url = new URL(getAppWebsiteBaseURL());
 
   url.pathname = '/app/auth-app/';
   url.searchParams.set('loginKey', encodeURIComponent(publicKey));

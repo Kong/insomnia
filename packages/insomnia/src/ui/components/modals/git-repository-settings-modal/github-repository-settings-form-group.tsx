@@ -11,7 +11,6 @@ import {
   GITHUB_GRAPHQL_API_URL,
   signOut,
 } from '../../../../sync/git/github-oauth-provider';
-import { useRootLoaderData } from '../../../routes/root';
 import { Button } from '../../themed-button';
 import { showAlert, showError } from '..';
 
@@ -324,17 +323,16 @@ interface GitHubSignInFormProps {
 
 const GitHubSignInForm = ({ token }: GitHubSignInFormProps) => {
   const [error, setError] = useState('');
-  const { settings } = useRootLoaderData();
-  const [authUrl, setAuthUrl] = useState(() => generateAuthorizationUrl(settings.dev?.servers.website || ''));
+  const [authUrl, setAuthUrl] = useState(() => generateAuthorizationUrl());
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   // When we get a new token we reset the authenticating flag and auth url. This happens because we can use the generated url for only one authorization flow.
   useEffect(() => {
     if (token) {
       setIsAuthenticating(false);
-      setAuthUrl(generateAuthorizationUrl(settings.dev?.servers.website || ''));
+      setAuthUrl(generateAuthorizationUrl());
     }
-  }, [settings.dev?.servers.website, token]);
+  }, [token]);
 
   return (
     <AuthorizationFormContainer>

@@ -8,7 +8,6 @@ import { invariant } from '../../utils/invariant';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Icon } from '../components/icon';
 import { Button } from '../components/themed-button';
-import { useRootLoaderData } from './root';
 
 export const action: ActionFunction = async ({
   request,
@@ -35,9 +34,7 @@ export const action: ActionFunction = async ({
 };
 
 const Authorize = () => {
-  const { settings } = useRootLoaderData();
-
-  const url = getLoginUrl(settings.dev?.servers.website || '');
+  const url = getLoginUrl();
   const copyUrl = () => {
     window.clipboard.writeText(url);
   };

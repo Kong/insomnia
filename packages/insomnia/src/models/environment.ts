@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 
 import { database as db } from '../common/database';
-import { type BaseModel, settings } from './index';
+import { type BaseModel } from './index';
 
 export const name = 'Environment';
 export const type = 'Environment';
@@ -129,13 +129,3 @@ export function remove(environment: Environment) {
 export function all() {
   return db.all<Environment>(type);
 }
-
-export async function getStagingEnvironmentVariables() {
-  const { dev } = await settings.get();
-
-  return {
-    apiURL: dev?.servers.api,
-    websiteURL: dev?.servers.website,
-    aiURL: dev?.servers.ai,
-  };
-};
