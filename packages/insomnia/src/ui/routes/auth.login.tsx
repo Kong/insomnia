@@ -1,7 +1,6 @@
 import React from 'react';
 import { ActionFunction, Form, Link, redirect } from 'react-router-dom';
 
-import { settings } from '../../models';
 import { getLoginUrl } from '../auth-session-provider';
 import { Button } from '../components/themed-button';
 
@@ -33,8 +32,7 @@ export const action: ActionFunction = async ({
 }) => {
   const data = await request.formData();
   const provider = data.get('provider');
-  const { dev } = await settings.get();
-  const url = new URL(getLoginUrl(dev?.servers.website || process.env.INSOMNIA_APP_WEBSITE_URL || ''));
+  const url = new URL(getLoginUrl());
 
   if (typeof provider === 'string' && provider) {
     url.searchParams.set('provider', provider);

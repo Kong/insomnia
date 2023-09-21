@@ -41,18 +41,9 @@ export const useRootLoaderData = () => {
 
 export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
   const settings = await models.settings.get();
-  const servers = settings.dev?.servers;
+
   return {
-    settings: {
-      ...settings,
-      dev: {
-        servers: {
-          ai: process.env['INSOMNIA_AI_URL'] || servers?.ai || '',
-          api: process.env['INSOMNIA_API_URL'] || servers?.api || '',
-          website: process.env['INSOMNIA_APP_WEBSITE_URL'] || servers?.website || '',
-        },
-      },
-    },
+    settings,
   };
 };
 

@@ -1,9 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
-import { useFetcher } from 'react-router-dom';
 
 import { getEmail, isLoggedIn } from '../../../account/session';
 import { getAppVersion, getProductName } from '../../../common/constants';
-import { useRootLoaderData } from '../../routes/root';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -14,7 +12,6 @@ import { ImportExport } from '../settings/import-export';
 import { Plugins } from '../settings/plugins';
 import { Shortcuts } from '../settings/shortcuts';
 import { ThemePanel } from '../settings/theme-panel';
-import { Button } from '../themed-button';
 import { showModal } from './index';
 
 export interface SettingsModalHandle {
@@ -27,54 +24,6 @@ export const TAB_INDEX_SHORTCUTS = 'keyboard';
 export const TAB_INDEX_THEMES = 'themes';
 export const TAB_INDEX_PLUGINS = 'plugins';
 export const TAB_INDEX_AI = 'ai';
-
-const Dev = () => {
-  const { settings } = useRootLoaderData();
-  const { Form } = useFetcher();
-
-  return (
-    <Form action="/dev" method="POST" className="flex flex-col gap-3 w-full p-2">
-      <label className="flex text-sm flex-col gap-2">
-        <span className="text-[--color-font]">API Url</span>
-        <input
-          className="py-2 w-full px-4 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-          name="apiURL"
-          type="url"
-          required
-          placeholder='https://api.insomnia.rest'
-          defaultValue={settings.dev?.servers.api || ''}
-        />
-      </label>
-      <label className="flex text-sm flex-col gap-2">
-        <span className="text-[--color-font]">Website Url</span>
-        <input
-          required
-          className="py-2 w-full px-4 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-          name="websiteURL"
-          type="url"
-          placeholder='https://app.insomnia.rest'
-          defaultValue={settings.dev?.servers.website || ''}
-        />
-      </label>
-      <label className="flex text-sm flex-col gap-2">
-        <span className="text-[--color-font]">InsomniaAI Url</span>
-        <input
-          required
-          className="py-2 w-full px-4 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-          name="aiURL"
-          type="url"
-          placeholder='https://ai.insomnia.rest'
-          defaultValue={settings.dev?.servers.ai || ''}
-        />
-      </label>
-      <div className='flex justify-end'>
-        <Button type="submit" className="px-4 py-1 bg-[#4000BF] flex items-center justify-center gap-2 aria-pressed:bg-opacity-90 focus:bg-opacity-90 font-semibold rounded-sm text-[--color-font-surprise] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-          Save
-        </Button>
-      </div>
-    </Form>
-  );
-};
 
 export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props, ref) => {
   const [defaultTabKey, setDefaultTabKey] = useState('general');
@@ -131,9 +80,6 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             <PanelContainer className="pad">
               <AI />
             </PanelContainer>
-          </TabItem>
-          <TabItem key="dev" title="Dev">
-            <Dev />
           </TabItem>
         </Tabs>
       </ModalBody>

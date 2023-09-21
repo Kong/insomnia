@@ -30,7 +30,6 @@ import Auth from './routes/auth';
 import Authorize from './routes/auth.authorize';
 import Login from './routes/auth.login';
 import { Migrate } from './routes/auth.migrate';
-import Dev from './routes/dev';
 import { ErrorRoute } from './routes/error';
 import Onboarding from './routes/onboarding';
 import { OnboardingCloudMigration } from './routes/onboarding.cloud-migration';
@@ -116,11 +115,6 @@ const router = createMemoryRouter(
       loader: async (...args) => (await import('./routes/root')).loader(...args),
       errorElement: <ErrorRoute />,
       children: [
-        {
-          path: 'dev',
-          action: async (...args) => (await import('./routes/dev')).action(...args),
-          element: <Dev />,
-        },
         {
           path: '/scratchpad',
           loader: async (...args) => (await import('./routes/scratchpad')).loader(...args),

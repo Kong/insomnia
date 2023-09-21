@@ -5,7 +5,7 @@ import { ActionFunction, redirect } from 'react-router-dom';
 
 import * as session from '../../account/session';
 import { parseApiSpec, resolveComponentSchemaRefs } from '../../common/api-specs';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../common/constants';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC, getAIServiceURL } from '../../common/constants';
 import { database } from '../../common/database';
 import { database as db } from '../../common/database';
 import { importResourcesToWorkspace, scanResources } from '../../common/import';
@@ -699,10 +699,9 @@ export const generateCollectionAndTestsAction: ActionFunction = async ({ params 
         }
 
         const methodInfo = resolveComponentSchemaRefs(spec, getMethodInfo(request));
-        const { dev } = await models.settings.get();
         const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
-          origin: dev?.servers.ai || 'https://ai.insomnia.rest',
+          origin: getAIServiceURL(),
           path: '/v1/generate-test',
           sessionId: session.getCurrentSessionId(),
           data: {
@@ -778,14 +777,12 @@ export const generateTestsAction: ActionFunction = async ({ params }) => {
     total,
   });
 
-  const { dev } = await models.settings.get();
-
   async function generateTests() {
     async function generateTest(test: Partial<UnitTest>) {
       try {
         const response = await window.main.insomniaFetch<{ test: { requestId: string } }>({
           method: 'POST',
-          origin: dev?.servers.ai || 'https://ai.insomnia.rest',
+          origin: getAIServiceURL(),
           path: '/v1/generate-test',
           sessionId: session.getCurrentSessionId(),
           data: {
@@ -825,12 +822,11 @@ export const accessAIApiAction: ActionFunction = async ({ params }) => {
   const { organizationId } = params;
 
   invariant(typeof organizationId === 'string', 'Organization ID is required');
-  const { dev } = await models.settings.get();
 
   try {
     const response = await window.main.insomniaFetch<{ enabled: boolean }>({
       method: 'POST',
-      origin: dev?.servers.ai || 'https://ai.insomnia.rest',
+      origin: getAIServiceURL(),
       path: '/v1/access',
       sessionId: session.getCurrentSessionId(),
       data: {

@@ -1,7 +1,6 @@
 import { v4 } from 'uuid';
 
-import { getApiBaseURL, getGitHubGraphQLApiURL } from '../../common/constants';
-import { settings } from '../../models';
+import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL } from '../../common/constants';
 
 export const GITHUB_TOKEN_STORAGE_KEY = 'github-oauth-token';
 export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();
@@ -13,12 +12,12 @@ export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();
  */
 const statesCache = new Set<string>();
 
-export function generateAuthorizationUrl(websiteURL: string) {
+export function generateAuthorizationUrl() {
   const state = v4();
   const scopes = ['repo', 'read:user', 'user:email'];
   const scope = scopes.join(' ');
 
-  const url = new URL(websiteURL + '/oauth/github');
+  const url = new URL(getAppWebsiteBaseURL() + '/oauth/github');
 
   statesCache.add(state);
 
@@ -42,8 +41,8 @@ export async function exchangeCodeForToken({
       'Invalid state parameter. It looks like the authorization flow was not initiated by the app.'
     );
   }
-  const { dev } = await settings.get();
-  const apiURL = dev?.servers.api || getApiBaseURL();
+
+  const apiURL = getApiBaseURL();
 
   return window.main.axiosRequest({
     url: apiURL + '/v1/oauth/github',
