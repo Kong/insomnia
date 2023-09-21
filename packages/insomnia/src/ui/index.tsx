@@ -172,6 +172,11 @@ const router = createMemoryRouter(
             },
             {
               path: ':organizationId',
+              id: ':organizationId',
+              loader: async (...args) =>
+                (
+                  await import('./routes/organization')
+                ).singleOrgLoader(...args),
               children: [
                 {
                   index: true,
