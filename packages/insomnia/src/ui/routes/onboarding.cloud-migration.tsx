@@ -2,9 +2,8 @@ import React from 'react';
 import { Button } from 'react-aria-components';
 import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-router-dom';
 
-import { database } from '../../common/database';
 import { exportAllData } from '../../common/export-all-data';
-import { project } from '../../models';
+import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { showAlert } from '../components/modals';
 import { TrailLinesContainer } from '../components/trail-lines-container';
@@ -16,11 +15,7 @@ export const action: ActionFunction = async () => {
 };
 
 export const loader: LoaderFunction = async () => {
-  const localProjects = await database.find(project.type, {
-    remoteId: null,
-  });
-
-  if (localProjects.length > 0) {
+  if (await shouldRunMigration()) {
     return null;
   }
 
