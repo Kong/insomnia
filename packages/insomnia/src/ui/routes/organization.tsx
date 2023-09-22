@@ -482,11 +482,11 @@ const OrganizationRoute = () => {
                   <TooltipTrigger key={organization.id}>
                     <Link>
                       <NavLink
-                        className={({ isActive }) =>
+                        className={({ isActive, isPending }) =>
                           `select-none text-[--color-font-surprise] hover:no-underline transition-all duration-150 bg-gradient-to-br box-border from-[#4000BF] to-[#154B62] font-bold outline-[3px] rounded-md w-[28px] h-[28px] flex items-center justify-center active:outline overflow-hidden outline-offset-[3px] outline ${isActive
                             ? 'outline-[--color-font]'
                             : 'outline-transparent focus:outline-[--hl-md] hover:outline-[--hl-md]'
-                          }`
+                          } ${isPending ? 'animate-pulse' : ''}`
                         }
                         to={`/organization/${organization.id}`}
                       >
