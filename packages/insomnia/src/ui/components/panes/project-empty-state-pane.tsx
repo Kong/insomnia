@@ -148,7 +148,6 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
       <div
         style={{
           display: 'flex',
-          flexWrap: 'wrap',
           justifyContent: 'center',
           width: '100%',
           gap: 'var(--padding-md)',
