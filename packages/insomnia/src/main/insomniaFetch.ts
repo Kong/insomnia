@@ -27,6 +27,7 @@ const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): 
     if (response.status === 502 && retries < 5) {
       retries++;
       await delay(retries * 1000);
+      console.log(`Received 502 from ${url} retrying`);
       return exponentialBackOff(url, init, retries);
     }
     if (!response.ok) {
