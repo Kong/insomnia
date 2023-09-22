@@ -43,39 +43,6 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
 
-  // Update presence when the app window closes
-  useEffect(() => {
-    const sessionId = getCurrentSessionId();
-
-    if (!sessionId) {
-      return;
-    }
-
-    const handleWindowClose = async () => {
-      try {
-        window.main.insomniaFetch<{
-          data?: UserPresence[];
-          }>({
-            path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
-            method: 'POST',
-            sessionId,
-            retries: 0,
-            data: {
-              project: '',
-              file: '',
-            },
-          });
-      } catch (e) {
-        console.log('Error parsing response', e);
-      }
-    };
-
-    window.addEventListener('beforeunload', handleWindowClose);
-    return () => {
-      window.removeEventListener('beforeunload', handleWindowClose);
-    };
-  }, [organizationId]);
-
   // Update presence when the user switches org, projects, workspaces
   useEffect(() => {
     async function updatePresence() {
@@ -132,7 +99,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
         console.log('Error parsing response', e);
       }
     }
-  }, 1000 * 30);
+  }, 1000 * 60);
 
   useEffect(() => {
     const sessionId = getCurrentSessionId();
