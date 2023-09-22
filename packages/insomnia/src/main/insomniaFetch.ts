@@ -26,7 +26,7 @@ const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): 
     const response = await net.fetch(url, init);
     if (response.status === 502 && retries < 5) {
       retries++;
-      await delay(retries * 200);
+      await delay(retries * 1000);
       return exponentialBackOff(url, init, retries);
     }
     if (!response.ok) {
