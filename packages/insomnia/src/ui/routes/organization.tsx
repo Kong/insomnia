@@ -92,6 +92,49 @@ const organizationsData: OrganizationLoaderData = {
   currentPlan: undefined,
 };
 
+function sortOrganizations(organizations: Organization[]) {
+  const accountId = getAccountId();
+
+  return organizations
+    .sort((organizationA, organizationB) => organizationA.name.localeCompare(organizationB.name))
+    .sort((organizationA, organizationB) => {
+      if (isPersonalOrganization(organizationA) && !isPersonalOrganization(organizationB)) {
+        return -1;
+      } else if (
+        !isPersonalOrganization(organizationA) &&
+        isPersonalOrganization(organizationB)
+      ) {
+        return 1;
+      } else {
+        return 0;
+      }
+    })
+    .sort((organizationA, organizationB) => {
+      if (isOwnerOfOrganization({
+        organization: organizationA,
+        accountId: accountId || '',
+      }) && !isOwnerOfOrganization({
+        organization: organizationB,
+        accountId: accountId || '',
+      })) {
+        return -1;
+      } else if (
+        !isOwnerOfOrganization({
+          organization: organizationA,
+          accountId: accountId || '',
+        }) &&
+        isOwnerOfOrganization({
+          organization: organizationB,
+          accountId: accountId || '',
+        })
+      ) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+}
+
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
@@ -143,7 +186,7 @@ export const indexLoader: LoaderFunction = async () => {
 
       const { organizations } = organizationsResult;
 
-      organizationsData.organizations = organizations;
+      organizationsData.organizations = sortOrganizations(organizations);
       organizationsData.user = user;
       organizationsData.currentPlan = currentPlan;
 
@@ -197,7 +240,7 @@ export const syncOrganizationsAction: ActionFunction = async () => {
       invariant(user, 'Failed to load user');
       invariant(currentPlan, 'Failed to load current plan');
 
-      organizationsData.organizations = organizationsResult.organizations;
+      organizationsData.organizations = sortOrganizations(organizationsResult.organizations);
       organizationsData.user = user;
       organizationsData.currentPlan = currentPlan;
     } catch (error) {
