@@ -1,8 +1,9 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
 import { getCurrentSessionId } from '../../../account/session';
+import { ProjectsLoaderData } from '../../routes/project';
 
 const PresenceContext = createContext<{
   presence: UserPresence[];
@@ -33,14 +34,14 @@ interface UserPresenceEvent extends UserPresence {
 export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
   const {
     organizationId,
-    projectId,
     workspaceId,
   } = useParams() as {
     organizationId: string;
-    projectId: string;
     workspaceId: string;
   };
 
+  const projectData = useRouteLoaderData('/project') as ProjectsLoaderData | null;
+  const remoteId = projectData?.activeProject.remoteId;
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const syncOrganizationsFetcher = useFetcher();
 
@@ -48,7 +49,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
   useEffect(() => {
     async function updatePresence() {
       const sessionId = getCurrentSessionId();
-      if (sessionId) {
+      if (sessionId && remoteId) {
         try {
           const response = await window.main.insomniaFetch<{
             data?: UserPresence[];
@@ -57,7 +58,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
               method: 'POST',
               sessionId,
               data: {
-                project: projectId,
+                project: remoteId,
                 file: workspaceId,
               },
             });
@@ -73,12 +74,12 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
     }
 
     updatePresence();
-  }, [organizationId, projectId, workspaceId]);
+  }, [organizationId, remoteId, workspaceId]);
 
   // Update presence every minute
   useInterval(async () => {
     const sessionId = getCurrentSessionId();
-    if (sessionId) {
+    if (sessionId && remoteId) {
       try {
         const response = await window.main.insomniaFetch<{
           data?: UserPresence[];
@@ -87,7 +88,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
                 method: 'POST',
                 sessionId,
                 data: {
-                  project: projectId,
+                  project: remoteId,
                   file: workspaceId,
                 },
               });
@@ -104,51 +105,48 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
 
   useEffect(() => {
     const sessionId = getCurrentSessionId();
+    if (sessionId && remoteId) {
+      try {
+        const source = new EventSource(`insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams?sessionId=${sessionId}`);
 
-    if (!sessionId) {
-      return;
-    }
+        source.addEventListener('message', e => {
+          try {
+            const presenceEvent = JSON.parse(e.data) as UserPresenceEvent;
 
-    try {
-      const source = new EventSource(`insomnia-event-source://v1/teams/${sanitizeTeamId(organizationId)}/streams?sessionId=${sessionId}`);
+            if (presenceEvent.type === 'PresentUserLeave') {
+              setPresence(prev => prev.filter(p => {
+                const isSameUser = p.acct === presenceEvent.acct;
+                const isSameProjectFile = p.file === presenceEvent.file && p.project === presenceEvent.project;
 
-      source.addEventListener('message', e => {
-        try {
-          const presenceEvent = JSON.parse(e.data) as UserPresenceEvent;
+                // Remove any presence events we have for the same user in this project/file
+                if (isSameUser && isSameProjectFile) {
+                  return false;
+                }
 
-          if (presenceEvent.type === 'PresentUserLeave') {
-            setPresence(prev => prev.filter(p => {
-              const isSameUser = p.acct === presenceEvent.acct;
-              const isSameProjectFile = p.file === presenceEvent.file && p.project === presenceEvent.project;
-
-              // Remove any presence events we have for the same user in this project/file
-              if (isSameUser && isSameProjectFile) {
-                return false;
-              }
-
-              return true;
-            }));
-          } else if (presenceEvent.type === 'PresentStateChanged') {
-            setPresence(prev => [...prev.filter(p => p.acct !== presenceEvent.acct), presenceEvent]);
-          } else if (presenceEvent.type === 'OrganizationChanged') {
-            syncOrganizationsFetcher.submit({}, {
-              action: '/organization/sync',
-              method: 'POST',
-            });
+                return true;
+              }));
+            } else if (presenceEvent.type === 'PresentStateChanged') {
+              setPresence(prev => [...prev.filter(p => p.acct !== presenceEvent.acct), presenceEvent]);
+            } else if (presenceEvent.type === 'OrganizationChanged') {
+              syncOrganizationsFetcher.submit({}, {
+                action: '/organization/sync',
+                method: 'POST',
+              });
+            }
+          } catch (e) {
+            console.log('Error parsing response from SSE', e);
           }
-        } catch (e) {
-          console.log('Error parsing response from SSE', e);
-        }
-      });
-      return () => {
-        source.close();
-      };
-    } catch (e) {
-      console.log('ERROR', e);
-      return;
+        });
+        return () => {
+          source.close();
+        };
+      } catch (e) {
+        console.log('ERROR', e);
+        return;
+      }
     }
-
-  }, [organizationId, syncOrganizationsFetcher]);
+    return;
+  }, [organizationId, remoteId, syncOrganizationsFetcher]);
 
   return (
     <PresenceContext.Provider

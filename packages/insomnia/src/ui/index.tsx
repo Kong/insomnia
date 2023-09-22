@@ -190,6 +190,8 @@ const router = createMemoryRouter(
                 },
                 {
                   path: 'project',
+                  id: '/project',
+                  loader: async (...args) => (await import('./routes/project')).projectLoader(...args),
                   children: [
                     {
                       path: ':projectId',

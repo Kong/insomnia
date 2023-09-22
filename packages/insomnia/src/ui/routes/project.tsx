@@ -232,6 +232,30 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   return redirect(`/organization/${organizationId}`);
 };
 
+export interface ProjectsLoaderData {
+  activeProject: Project;
+}
+
+export const projectLoader: LoaderFunction = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const projectPath = matchPath('/organization/:organizationId/project/:projectId', url.pathname);
+
+    if (!projectPath || !projectPath.params.projectId) {
+      return null;
+    }
+
+    const activeProject = await models.project.getById(projectPath.params.projectId);
+    invariant(activeProject, `Project was not found ${projectPath.params.projectId}`);
+
+    return {
+      activeProject,
+    };
+  } catch (err) {
+    return null;
+  }
+};
+
 export interface ProjectLoaderData {
   workspaces: WorkspaceWithMetadata[];
   allFilesCount: number;
@@ -418,7 +442,7 @@ const ProjectRoute: FC = () => {
 
   const workspacesWithPresence = workspaces.map(workspace => {
     const workspacePresence = presence
-      .filter(p => p.project === projectId && p.file === workspace._id)
+      .filter(p => p.project === activeProject.remoteId && p.file === workspace._id)
       .filter(p => p.acct !== accountId)
       .map(user => {
         return {
@@ -435,7 +459,7 @@ const ProjectRoute: FC = () => {
 
   const projectsWithPresence = projects.map(project => {
     const projectPresence = presence
-      .filter(p => p.project === project._id)
+      .filter(p => p.project === project.remoteId)
       .filter(p => p.acct !== accountId)
       .map(user => {
         return {
