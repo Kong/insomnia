@@ -511,10 +511,29 @@ const ProjectRoute: FC = () => {
 
   useEffect(() => {
     if (createNewProjectFetcher.data && createNewProjectFetcher.data.error && createNewProjectFetcher.state === 'idle') {
-      showAlert({
-        title: 'Could not create project',
-        message: createNewProjectFetcher.data.error,
-      });
+      if (createNewProjectFetcher.data.error === 'NEEDS_TO_UPGRADE') {
+        showModal(AskModal, {
+          title: 'Upgrade your plan',
+          message: 'You are currently on the Free plan where you can invite as many collaborators as you want as long as you don\'t have more than one project. Since you have more than one project, you need to upgrade to "Individual" or above to continue.',
+          yesText: 'Upgrade',
+          noText: 'Cancel',
+          onDone: async (isYes: boolean) => {
+            if (isYes) {
+              window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=individual`);
+            }
+          },
+        });
+      } else if (createNewProjectFetcher.data.error === 'FORBIDDEN') {
+        showAlert({
+          title: 'Could not create project.',
+          message: 'You do not have permission to create a project in this organization.',
+        });
+      } else {
+        showAlert({
+          title: 'Could not create project.',
+          message: createNewProjectFetcher.data.error,
+        });
+      }
     }
   }, [createNewProjectFetcher.data, createNewProjectFetcher.state]);
 
