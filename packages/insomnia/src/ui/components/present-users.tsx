@@ -10,8 +10,9 @@ export const PresentUsers = () => {
   const { presence } = usePresenceContext();
   const { workspaceId } = useParams() as { workspaceId: string };
   const projectData = useRouteLoaderData('/project') as ProjectsLoaderData | null;
+  const remoteId = projectData?.activeProject.remoteId;
 
-  if (!presence) {
+  if (!presence || !remoteId) {
     return null;
   }
 
@@ -19,7 +20,7 @@ export const PresentUsers = () => {
 
   const activeUsers = presence
     .filter(p => {
-      return p.project === projectData?.activeProject.remoteId && p.file === workspaceId;
+      return p.project === remoteId && p.file === workspaceId;
     })
     .filter(p => p.acct !== accountId)
     .map(user => {

@@ -36,11 +36,12 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
     organizationId,
     workspaceId,
   } = useParams() as {
-      organizationId: string;
+    organizationId: string;
     workspaceId: string;
   };
 
   const projectData = useRouteLoaderData('/project') as ProjectsLoaderData | null;
+  const remoteId = projectData?.activeProject.remoteId;
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const syncOrganizationsFetcher = useFetcher();
@@ -49,7 +50,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
   useEffect(() => {
     async function updatePresence() {
       const sessionId = getCurrentSessionId();
-      if (sessionId) {
+      if (sessionId && remoteId) {
         try {
           const response = await window.main.insomniaFetch<{
             data?: UserPresence[];
@@ -58,7 +59,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
               method: 'POST',
               sessionId,
               data: {
-                project: projectData?.activeProject.remoteId,
+                project: remoteId,
                 file: workspaceId,
               },
             });
@@ -74,12 +75,12 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
     }
 
     updatePresence();
-  }, [organizationId, projectData?.activeProject.remoteId, workspaceId]);
+  }, [organizationId, remoteId, workspaceId]);
 
   // Update presence every minute
   useInterval(async () => {
     const sessionId = getCurrentSessionId();
-    if (sessionId) {
+    if (sessionId && remoteId) {
       try {
         const response = await window.main.insomniaFetch<{
           data?: UserPresence[];
@@ -88,7 +89,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
                 method: 'POST',
                 sessionId,
                 data: {
-                  project: projectData?.activeProject.remoteId,
+                  project: remoteId,
                   file: workspaceId,
                 },
               });
