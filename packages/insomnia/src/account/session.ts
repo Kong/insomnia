@@ -155,10 +155,12 @@ export function getCurrentSessionId() {
       const { sessionExpiry } = JSON.parse(window.localStorage.getItem(_getSessionKey(sessionId)) || '{}');
       const isExpired = sessionExpiry && new Date(sessionExpiry).getTime() < Date.now();
       if (isExpired) {
+        console.log('Session has expired', sessionExpiry);
         return '';
       }
       return sessionId;
     } catch (e) {
+      console.log('Error in expiry logic', e);
       return '';
     }
   } else {
