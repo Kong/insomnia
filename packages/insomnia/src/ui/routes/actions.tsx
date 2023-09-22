@@ -51,8 +51,13 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
     });
 
     if (!newCloudProject || 'error' in newCloudProject) {
+      let error = 'An unexpected error occurred while creating the project. Please try again.';
+      if (newCloudProject.error === 'FORBIDDEN' || newCloudProject.error === 'NEEDS_TO_UPGRADE') {
+        error = newCloudProject.error;
+      }
+
       return {
-        error: newCloudProject.error === 'FORBIDDEN' ? 'You do not have permission to create a project in this organization.' : 'An unexpected error occurred while creating the project. Please try again.',
+        error,
       };
     }
 
@@ -66,7 +71,9 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
     return redirect(`/organization/${organizationId}/project/${project._id}`);
   } catch (err) {
     console.log(err);
-    return null;
+    return {
+      error: err instanceof Error ? err.message : `An unexpected error occurred while creating the project. Please try again. ${err}`,
+    };
   }
 };
 
