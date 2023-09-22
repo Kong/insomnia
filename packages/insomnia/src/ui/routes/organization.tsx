@@ -28,7 +28,7 @@ import {
   getCurrentSessionId,
 } from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import { isOwnerOfOrganization, isPersonalOrganization, Organization } from '../../models/organization';
+import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
@@ -92,9 +92,7 @@ const organizationsData: OrganizationLoaderData = {
   currentPlan: undefined,
 };
 
-function sortOrganizations(organizations: Organization[]) {
-  const accountId = getAccountId();
-  invariant(accountId, 'Account ID is not defined');
+function sortOrganizations(accountId: string, organizations: Organization[]): Organization[] {
   const home = organizations.find(organization => isPersonalOrganization(organization) && isOwnerOfOrganization({
     organization,
     accountId,
@@ -108,7 +106,7 @@ function sortOrganizations(organizations: Organization[]) {
     accountId,
   })).sort((a, b) => a.name.localeCompare(b.name));
   return [
-    home,
+    ...(home ? [home] : []),
     ...myOrgs,
     ...notMyOrgs,
   ];
@@ -165,7 +163,9 @@ export const indexLoader: LoaderFunction = async () => {
 
       const { organizations } = organizationsResult;
 
-      organizationsData.organizations = sortOrganizations(organizations);
+      const accountId = getAccountId();
+      invariant(accountId, 'Account ID is not defined');
+      organizationsData.organizations = sortOrganizations(accountId, organizations);
       organizationsData.user = user;
       organizationsData.currentPlan = currentPlan;
 
@@ -218,8 +218,9 @@ export const syncOrganizationsAction: ActionFunction = async () => {
       invariant(organizationsResult, 'Failed to load organizations');
       invariant(user, 'Failed to load user');
       invariant(currentPlan, 'Failed to load current plan');
-
-      organizationsData.organizations = sortOrganizations(organizationsResult.organizations);
+      const accountId = getAccountId();
+      invariant(accountId, 'Account ID is not defined');
+      organizationsData.organizations = sortOrganizations(accountId, organizationsResult.organizations);
       organizationsData.user = user;
       organizationsData.currentPlan = currentPlan;
     } catch (error) {
@@ -259,11 +260,16 @@ export interface FeatureList {
 }
 
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
-  const { organizationId } = params;
+  const { organizationId } = params as { organizationId: string };
   const fallbackFeatures = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
   };
+  if (isScratchpadOrganizationId(organizationId)) {
+    return {
+      features: fallbackFeatures,
+    };
+  }
   try {
     const response = await window.main.insomniaFetch<{ features: FeatureList } | undefined>({
       method: 'GET',
