@@ -167,6 +167,7 @@ const router = createMemoryRouter(
             {
               path: ':organizationId',
               id: ':organizationId',
+              shouldRevalidate: shouldOrganizationsRevalidate,
               loader: async (...args) =>
                 (
                   await import('./routes/organization')

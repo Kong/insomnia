@@ -244,23 +244,23 @@ export interface FeatureList {
 
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params;
-
+  const fallbackFeatures = {
+    gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
+    orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
+  };
   try {
-    const response = await window.main.insomniaFetch<{ features: FeatureList }>({
+    const response = await window.main.insomniaFetch<{ features: FeatureList } | undefined>({
       method: 'GET',
       path: `/v1/organizations/${organizationId}/features`,
       sessionId: session.getCurrentSessionId(),
     });
 
     return {
-      features: response.features,
+      features: response?.features || fallbackFeatures,
     };
   } catch (err) {
     return {
-      features: {
-        gitSync: { enabled: false },
-        orgBasicRbac: { enabled: false },
-      },
+      features: fallbackFeatures,
     };
   }
 };
