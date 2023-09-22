@@ -9,7 +9,7 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "strictNullChecks": true,
-    "types": ["node", "vite/client"],
+    "types": ["node", "vite/client", "is-valid-path"],
   },
   "include": [
     "**/*.d.ts",

@@ -3,7 +3,6 @@ import { format } from 'date-fns';
 import fs from 'fs';
 import iconv from 'iconv-lite';
 import { JSONPath } from 'jsonpath-plus';
-import jq from 'node-jq';
 import os from 'os';
 import { CookieJar } from 'tough-cookie';
 import * as uuid from 'uuid';
@@ -14,6 +13,7 @@ import { Response } from '../../../models/response';
 import { TemplateTag } from '../../../plugins';
 import { PluginTemplateTag } from '../../../templating/extensions';
 import { invariant } from '../../../utils/invariant';
+import run from '../../../utils/node-jq/src/jq';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '../../../utils/url/querystring';
 
 const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
@@ -177,7 +177,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
             }
 
             if (filter.indexOf('.') === 0) {
-              value = await jq.run(`${filter.trim()}`, value, { input: 'json' });
+              value = await run(`${filter.trim()}`, value, { input: 'json' });
               value = JSON.parse(value);
             }
           } catch (err) { }
@@ -284,7 +284,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
         let results: any;
         try {
-          results = await jq.run(`${filter.trim()}`, body, { input: 'json' });
+          results = await run(`${filter.trim()}`, body, { input: 'json' });
           results = JSON.parse(results);
         } catch (err) {
           throw new Error(`Invalid jq query: ${filter}`);
@@ -737,7 +737,7 @@ const localTemplatePlugins: { templateTag: PluginTemplateTag }[] = [
 
             if (sanitizedFilter.indexOf('.') === 0) {
                try {
-                 results = await jq.run (`${sanitizedFilter.trim ()}`, bodyJSON, { input: 'json' });
+                 results = await run (`${sanitizedFilter.trim ()}`, bodyJSON, { input: 'json' });
                  results = JSON.parse (results);
                } catch (err) {
                  throw new Error (`Invalid jq query: ${sanitizedFilter}`);

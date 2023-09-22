@@ -6,7 +6,7 @@ import CodeMirror, { CodeMirrorLinkClickCallback, EditorConfiguration, ShowHintO
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
-import jq from 'node-jq';
+import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 import { useMount, useUnmount } from 'react-use';
@@ -27,7 +27,7 @@ import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
-import { JSONPath } from 'jsonpath-plus';
+import run from '../../../utils/node-jq/src/jq';
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
 
@@ -223,7 +223,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
 
           if (filter.startsWith('.')) {
             const codeObj = JSON.parse(code);
-            const results = await jq.run(`${filter.trim()}`, codeObj, { input: 'json' });
+            const results = await run(`${filter.trim()}`, codeObj, { input: 'json' });
             jsonString = results;
           }
         } catch (err) {

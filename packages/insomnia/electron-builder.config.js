@@ -37,6 +37,10 @@ const config = {
       to: '.',
       filter: 'opensource-licenses.txt',
     },
+    {
+      from: './src/utils/node-jq/bin',
+      to: './src/utils/node-jq/bin',
+    },
   ],
   extraMetadata: {
     main: 'main.min.js', // Override the main path in package.json
@@ -67,6 +71,7 @@ const config = {
     asarUnpack: [
       'node_modules/@getinsomnia/node-libcurl',
     ],
+    x64ArchFiles: '*',
   },
   dmg: {
     window: {
