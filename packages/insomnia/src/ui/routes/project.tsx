@@ -418,7 +418,7 @@ const ProjectRoute: FC = () => {
 
   const workspacesWithPresence = workspaces.map(workspace => {
     const workspacePresence = presence
-      .filter(p => p.project === projectId && p.file === workspace._id)
+      .filter(p => p.project === activeProject.remoteId && p.file === workspace._id)
       .filter(p => p.acct !== accountId)
       .map(user => {
         return {
@@ -435,7 +435,7 @@ const ProjectRoute: FC = () => {
 
   const projectsWithPresence = projects.map(project => {
     const projectPresence = presence
-      .filter(p => p.project === project._id)
+      .filter(p => p.project === project.remoteId)
       .filter(p => p.acct !== accountId)
       .map(user => {
         return {

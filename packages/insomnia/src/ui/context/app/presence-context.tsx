@@ -1,8 +1,9 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
 import { getCurrentSessionId } from '../../../account/session';
+import { ProjectLoaderData } from '../../routes/project';
 
 const PresenceContext = createContext<{
   presence: UserPresence[];
@@ -33,13 +34,13 @@ interface UserPresenceEvent extends UserPresence {
 export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
   const {
     organizationId,
-    projectId,
     workspaceId,
   } = useParams() as {
-    organizationId: string;
-    projectId: string;
+      organizationId: string;
     workspaceId: string;
   };
+
+  const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const syncOrganizationsFetcher = useFetcher();
@@ -57,7 +58,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
               method: 'POST',
               sessionId,
               data: {
-                project: projectId,
+                project: projectData?.activeProject.remoteId,
                 file: workspaceId,
               },
             });
@@ -73,7 +74,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
     }
 
     updatePresence();
-  }, [organizationId, projectId, workspaceId]);
+  }, [organizationId, projectData?.activeProject.remoteId, workspaceId]);
 
   // Update presence every minute
   useInterval(async () => {
@@ -87,7 +88,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
                 method: 'POST',
                 sessionId,
                 data: {
-                  project: projectId,
+                  project: projectData?.activeProject.remoteId,
                   file: workspaceId,
                 },
               });

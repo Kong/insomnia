@@ -1,16 +1,15 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { getAccountId } from '../../account/session';
 import { usePresenceContext } from '../context/app/presence-context';
+import { ProjectLoaderData } from '../routes/project';
 import { AvatarGroup } from './avatar';
 
 export const PresentUsers = () => {
   const { presence } = usePresenceContext();
-  const { projectId, workspaceId } = useParams() as {
-    workspaceId: string;
-    projectId: string;
-  };
+  const { workspaceId } = useParams() as { workspaceId: string };
+  const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
 
   if (!presence) {
     return null;
@@ -20,7 +19,7 @@ export const PresentUsers = () => {
 
   const activeUsers = presence
     .filter(p => {
-      return p.project === projectId && p.file === workspaceId;
+      return p.project === projectData?.activeProject.remoteId && p.file === workspaceId;
     })
     .filter(p => p.acct !== accountId)
     .map(user => {
