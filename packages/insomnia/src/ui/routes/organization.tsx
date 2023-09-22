@@ -34,6 +34,7 @@ import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
 import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
 import { getVCS, initVCS } from '../../sync/vcs/vcs';
+import { invariant } from '../../utils/invariant';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
 import { GitHubStarsButton } from '../components/github-stars-button';
@@ -118,25 +119,29 @@ export const indexLoader: LoaderFunction = async () => {
         });
       }
 
-      console.log('Fetching organizations');
-
-      const { organizations } = await window.main.insomniaFetch<OrganizationsResponse>({
+      const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
         method: 'GET',
         path: '/v1/organizations',
         sessionId,
       });
 
-      const user = await window.main.insomniaFetch<UserProfileResponse>({
+      const user = await window.main.insomniaFetch<UserProfileResponse | void>({
         method: 'GET',
         path: '/v1/user/profile',
         sessionId,
       });
 
-      const currentPlan = await window.main.insomniaFetch<CurrentPlan>({
+      const currentPlan = await window.main.insomniaFetch<CurrentPlan | void>({
         method: 'GET',
         path: '/v1/billing/current-plan',
         sessionId,
       });
+
+      invariant(organizationsResult, 'Failed to load organizations');
+      invariant(user, 'Failed to load user');
+      invariant(currentPlan, 'Failed to load current plan');
+
+      const { organizations } = organizationsResult;
 
       organizationsData.organizations = organizations;
       organizationsData.user = user;
@@ -168,27 +173,36 @@ export const indexLoader: LoaderFunction = async () => {
 export const syncOrganizationsAction: ActionFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
-    const { organizations } = await window.main.insomniaFetch<OrganizationsResponse>({
-      method: 'GET',
-      path: '/v1/organizations',
-      sessionId,
-    });
+    try {
 
-    const user = await window.main.insomniaFetch<UserProfileResponse>({
-      method: 'GET',
-      path: '/v1/user/profile',
-      sessionId,
-    });
+      const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
+        method: 'GET',
+        path: '/v1/organizations',
+        sessionId,
+      });
 
-    const currentPlan = await window.main.insomniaFetch<CurrentPlan>({
-      method: 'GET',
-      path: '/v1/billing/current-plan',
-      sessionId,
-    });
+      const user = await window.main.insomniaFetch<UserProfileResponse | void>({
+        method: 'GET',
+        path: '/v1/user/profile',
+        sessionId,
+      });
 
-    organizationsData.organizations = organizations;
-    organizationsData.user = user;
-    organizationsData.currentPlan = currentPlan;
+      const currentPlan = await window.main.insomniaFetch<CurrentPlan | void>({
+        method: 'GET',
+        path: '/v1/billing/current-plan',
+        sessionId,
+      });
+
+      invariant(organizationsResult, 'Failed to load organizations');
+      invariant(user, 'Failed to load user');
+      invariant(currentPlan, 'Failed to load current plan');
+
+      organizationsData.organizations = organizationsResult.organizations;
+      organizationsData.user = user;
+      organizationsData.currentPlan = currentPlan;
+    } catch (error) {
+      console.log('Failed to load Organizations', error);
+    }
   }
 
   return null;
