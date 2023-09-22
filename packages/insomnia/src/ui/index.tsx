@@ -157,12 +157,15 @@ const router = createMemoryRouter(
           path: 'organization',
           id: '/organization',
           loader: async (...args) => (await import('./routes/organization')).loader(...args),
-          shouldRevalidate: shouldOrganizationsRevalidate,
           element: <Suspense fallback={<AppLoadingIndicator />}><Organization /></Suspense>,
           children: [
             {
               index: true,
               loader: async (...args) => (await import('./routes/organization')).indexLoader(...args),
+            },
+            {
+              path: 'sync',
+              action: async (...args) => (await import('./routes/organization')).syncOrganizationsAction(...args),
             },
             {
               path: ':organizationId',

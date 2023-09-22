@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from 'react-aria-components';
 import {
+  ActionFunction,
   LoaderFunction,
   NavLink,
   Outlet,
@@ -27,7 +28,6 @@ import {
   getCurrentSessionId,
 } from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import * as models from '../../models';
 import { isOwnerOfOrganization, isPersonalOrganization, Organization } from '../../models/organization';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
@@ -85,6 +85,12 @@ interface CurrentPlan {
   type: PersonalPlanType;
 };
 
+const organizationsData: OrganizationLoaderData = {
+  organizations: [],
+  user: undefined,
+  currentPlan: undefined,
+};
+
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
@@ -94,12 +100,47 @@ export const indexLoader: LoaderFunction = async () => {
     }
 
     try {
-      const { organizations } =
-        await window.main.insomniaFetch<OrganizationsResponse>({
-          method: 'GET',
-          path: '/v1/organizations',
-          sessionId,
+      let vcs = getVCS();
+      if (!vcs) {
+        const driver = FileSystemDriver.create(
+          process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+        );
+
+        console.log('Initializing VCS');
+        vcs = await initVCS(driver, async conflicts => {
+          return new Promise(resolve => {
+            showModal(SyncMergeModal, {
+              conflicts,
+              handleDone: (conflicts?: MergeConflict[]) =>
+                resolve(conflicts || []),
+            });
+          });
         });
+      }
+
+      console.log('Fetching organizations');
+
+      const { organizations } = await window.main.insomniaFetch<OrganizationsResponse>({
+        method: 'GET',
+        path: '/v1/organizations',
+        sessionId,
+      });
+
+      const user = await window.main.insomniaFetch<UserProfileResponse>({
+        method: 'GET',
+        path: '/v1/user/profile',
+        sessionId,
+      });
+
+      const currentPlan = await window.main.insomniaFetch<CurrentPlan>({
+        method: 'GET',
+        path: '/v1/billing/current-plan',
+        sessionId,
+      });
+
+      organizationsData.organizations = organizations;
+      organizationsData.user = user;
+      organizationsData.currentPlan = currentPlan;
 
       const personalOrganization = organizations.filter(isPersonalOrganization).find(organization => {
         const accountId = getAccountId();
@@ -121,8 +162,36 @@ export const indexLoader: LoaderFunction = async () => {
       return redirect('/auth/login');
     }
   }
-
   return redirect('/auth/login');
+};
+
+export const syncOrganizationsAction: ActionFunction = async () => {
+  const sessionId = getCurrentSessionId();
+  if (sessionId) {
+    const { organizations } = await window.main.insomniaFetch<OrganizationsResponse>({
+      method: 'GET',
+      path: '/v1/organizations',
+      sessionId,
+    });
+
+    const user = await window.main.insomniaFetch<UserProfileResponse>({
+      method: 'GET',
+      path: '/v1/user/profile',
+      sessionId,
+    });
+
+    const currentPlan = await window.main.insomniaFetch<CurrentPlan>({
+      method: 'GET',
+      path: '/v1/billing/current-plan',
+      sessionId,
+    });
+
+    organizationsData.organizations = organizations;
+    organizationsData.user = user;
+    organizationsData.currentPlan = currentPlan;
+  }
+
+  return null;
 };
 
 export interface OrganizationLoaderData {
@@ -132,104 +201,15 @@ export interface OrganizationLoaderData {
 }
 
 export const loader: LoaderFunction = async () => {
-  const sessionId = getCurrentSessionId();
-
-  if (sessionId) {
-    try {
-      let vcs = getVCS();
-      if (!vcs) {
-        const driver = FileSystemDriver.create(
-          process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-        );
-
-        console.log('Initializing VCS');
-        vcs = await initVCS(driver, async conflicts => {
-          return new Promise(resolve => {
-            showModal(SyncMergeModal, {
-              conflicts,
-              handleDone: (conflicts?: MergeConflict[]) =>
-                resolve(conflicts || []),
-            });
-          });
-        });
-      }
-
-      const { organizations } =
-        await window.main.insomniaFetch<OrganizationsResponse>({
-          method: 'GET',
-          path: '/v1/organizations',
-          sessionId,
-        });
-
-      const user = await window.main.insomniaFetch<UserProfileResponse>({
-        method: 'GET',
-        path: '/v1/user/profile',
-        sessionId,
-      });
-
-      const currentPlan = await window.main.insomniaFetch<CurrentPlan>({
-        method: 'GET',
-        path: '/v1/billing/current-plan',
-        sessionId,
-      });
-
-      return {
-        user,
-        currentPlan,
-        settings: await models.settings.get(),
-        organizations: organizations
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .sort((a, b) => {
-            if (isPersonalOrganization(a) && !isPersonalOrganization(b)) {
-              return -1;
-            } else if (
-              !isPersonalOrganization(a) &&
-              isPersonalOrganization(b)
-            ) {
-              return 1;
-            } else {
-              return 0;
-            }
-          })
-          .sort((a, b) => {
-            const accountId = getAccountId();
-            if (isOwnerOfOrganization({
-              organization: a,
-              accountId: accountId || '',
-            }) && !isOwnerOfOrganization({
-              organization: b,
-              accountId: accountId || '',
-            })) {
-              return -1;
-            } else if (
-              !isOwnerOfOrganization({
-                organization: a,
-                accountId: accountId || '',
-              }) &&
-              isOwnerOfOrganization({
-                organization: b,
-                accountId: accountId || '',
-              })
-            ) {
-              return 1;
-            } else {
-              return 0;
-            }
-          }),
-      };
-    } catch (err) {
-      console.log('Failed to load Teams', err);
-      return {
-        user: null,
-        organizations: [],
-      };
-    }
+  if (session.isLoggedIn()) {
+    return organizationsData;
+  } else {
+    return {
+      organizations: [],
+      user: undefined,
+      currentPlan: undefined,
+    };
   }
-
-  return {
-    user: null,
-    organizations: [],
-  };
 };
 
 export interface FeatureStatus {
@@ -368,11 +348,11 @@ const OrganizationRoute = () => {
                       <NavLink
                         key={item.id}
                         to={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/${item.id}`}
-                        className={({ isActive }) =>
+                        className={({ isActive, isPending }) =>
                           `${isActive
                             ? 'text-[--color-font] bg-[--color-bg]'
                             : ''
-                          } no-underline transition-colors text-center outline-none min-w-[4rem] uppercase text-[--color-font] text-xs px-[--padding-xs] py-[--padding-xxs] rounded-full`
+                          } ${isPending ? 'animate-pulse' : ''} no-underline transition-colors text-center outline-none min-w-[4rem] uppercase text-[--color-font] text-xs px-[--padding-xs] py-[--padding-xxs] rounded-full`
                         }
                       >
                         {item.name}

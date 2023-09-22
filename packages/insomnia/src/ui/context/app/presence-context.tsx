@@ -1,5 +1,5 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
 import { getCurrentSessionId } from '../../../account/session';
@@ -27,7 +27,7 @@ export interface UserPresence {
 }
 
 interface UserPresenceEvent extends UserPresence {
-  type: 'PresentUserLeave' | 'PresentStateChanged';
+  type: 'PresentUserLeave' | 'PresentStateChanged' | 'OrganizationChanged';
 }
 
 export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
@@ -42,6 +42,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
   };
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
+  const syncOrganizationsFetcher = useFetcher();
 
   // Update presence when the user switches org, projects, workspaces
   useEffect(() => {
@@ -129,6 +130,11 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
             }));
           } else if (presenceEvent.type === 'PresentStateChanged') {
             setPresence(prev => [...prev.filter(p => p.acct !== presenceEvent.acct), presenceEvent]);
+          } else if (presenceEvent.type === 'OrganizationChanged') {
+            syncOrganizationsFetcher.submit({}, {
+              action: '/organization/sync',
+              method: 'POST',
+            });
           }
         } catch (e) {
           console.log('Error parsing response from SSE', e);
@@ -142,7 +148,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
       return;
     }
 
-  }, [organizationId]);
+  }, [organizationId, syncOrganizationsFetcher]);
 
   return (
     <PresenceContext.Provider
