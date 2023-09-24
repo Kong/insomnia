@@ -225,11 +225,10 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   // Check if the org has any projects and redirect to the first one
   const projectId = allOrganizationProjects[0]?._id;
 
-  if (projectId) {
-    return redirect(`/organization/${organizationId}/project/${projectId}`);
-  }
+  invariant(projectId, 'No projects found for this organization.');
 
-  return redirect(`/organization/${organizationId}`);
+  return redirect(`/organization/${organizationId}/project/${projectId}`);
+
 };
 
 export interface ProjectsLoaderData {
