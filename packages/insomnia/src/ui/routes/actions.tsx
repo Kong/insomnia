@@ -157,7 +157,9 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
     return redirect(`/organization/${organizationId}`);
   } catch (err) {
     console.log(err);
-    return null;
+    return {
+      error: err instanceof Error ? err.message : `An unexpected error occurred while deleting the project. Please try again. ${err}`,
+    };
   }
 };
 

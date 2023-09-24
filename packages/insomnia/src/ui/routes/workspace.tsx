@@ -64,7 +64,7 @@ export const workspaceLoader: LoaderFunction = async ({
   params,
 }): Promise<WorkspaceLoaderData> => {
   const { organizationId, projectId, workspaceId } = params;
-  invariant(projectId, 'Organization ID is required');
+  invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
   invariant(workspaceId, 'Workspace ID is required');
 
