@@ -16,7 +16,7 @@ import { GitRepository } from '../../models/git-repository';
 import { GrpcRequest } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { sortProjects } from '../../models/helpers/project';
-import { isRemoteProject, Project } from '../../models/project';
+import { Project } from '../../models/project';
 import { Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { RequestGroupMeta } from '../../models/request-group-meta';
@@ -63,9 +63,10 @@ export const workspaceLoader: LoaderFunction = async ({
   request,
   params,
 }): Promise<WorkspaceLoaderData> => {
-  const { projectId, workspaceId } = params;
-  invariant(workspaceId, 'Workspace ID is required');
+  const { organizationId, projectId, workspaceId } = params;
+  invariant(projectId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
+  invariant(workspaceId, 'Workspace ID is required');
 
   const activeWorkspace = await models.workspace.getById(workspaceId);
 
@@ -108,9 +109,9 @@ export const workspaceLoader: LoaderFunction = async ({
     workspaceId,
   );
 
-  const allProjects = await models.project.all();
-
-  const organizationProjects = allProjects.filter(proj => !isRemoteProject(proj));
+  const organizationProjects = await database.find<Project>(models.project.type, {
+    parentId: organizationId,
+  }) || [];
 
   const projects = sortProjects(organizationProjects);
   const syncItemsList: (
