@@ -99,7 +99,7 @@ function getInitialEntry() {
 
     return '/scratchpad';
   } catch (e) {
-    return '/organization';
+    return '/scratchpad';
   }
 }
 
