@@ -1,7 +1,8 @@
 import * as path from 'path';
 import React, { FC, useEffect, useState } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
+import { isLoggedIn } from '../../../account/session';
 import {
   NPM_PACKAGE_BASE,
   PLUGIN_HUB_BASE,
@@ -12,7 +13,7 @@ import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { RootLoaderData } from '../../routes/root';
+import { useRootLoaderData } from '../../routes/root';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
@@ -26,7 +27,8 @@ interface State {
   isInstallingFromNpm: boolean;
   isRefreshingPlugins: boolean;
 }
-export const Plugins: FC = () => {
+
+export const PluginsSettings: FC = () => {
   const [state, setState] = useState<State>({
     plugins: [],
     npmPluginValue: '',
@@ -45,7 +47,7 @@ export const Plugins: FC = () => {
   } = state;
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRootLoaderData();
 
   useEffect(() => {
     refreshPlugins();
@@ -264,6 +266,39 @@ export const Plugins: FC = () => {
         >
           Reload Plugins
           {isRefreshingPlugins && <i className="fa fa-refresh fa-spin space-left" />}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export const Plugins = () => {
+  const navigate = useNavigate();
+  if (isLoggedIn()) {
+    return <PluginsSettings />;
+  }
+
+  return (
+    <div className='flex flex-col gap-4'>
+      <div className="border-solid border-[--hl-md] notice surprise p-4 rounded-md">
+        Log in to Insomnia to enable Plugins
+      </div>
+      <div className='flex gap-2'>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={
+            () => navigate('/auth/login')
+          }
+        >
+          Log in
+        </Button>
+        <Button
+          onClick={() => navigate('/auth/login')}
+          size="small"
+          variant="contained"
+        >
+          Sign Up
         </Button>
       </div>
     </div>

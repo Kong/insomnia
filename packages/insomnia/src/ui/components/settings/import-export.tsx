@@ -2,11 +2,13 @@ import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useFetcher, useParams } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { isLoggedIn } from '../../../account/session';
 import { getProductName } from '../../../common/constants';
 import { docsImportExport } from '../../../common/documentation';
 import { exportAllToFile } from '../../../common/export';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
+import { isScratchpad } from '../../../models/workspace';
 import { ProjectLoaderData } from '../../routes/project';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -57,8 +59,11 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         <p>
           Your format isn't supported? <Link href={docsImportExport}>Add Your Own</Link>.
         </p>
-        <div className="pad-top">
+        <div className="flex pt-4 gap-4">
           {workspaceData?.activeWorkspace ?
+            isScratchpad(workspaceData.activeWorkspace) ?
+              <Button onClick={() => setIsExportModalOpen(true)}>Export the "{activeWorkspaceName}" {getWorkspaceLabel(workspaceData.activeWorkspace).singular}</Button>
+              :
             (<Dropdown
               aria-label='Export Data Dropdown'
               triggerButton={
@@ -88,22 +93,31 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
               </DropdownSection>
             </Dropdown>) : (<Button onClick={handleExportAllToFile}>{`Export files from the "${projectName}" ${strings.project.singular}`}</Button>)
           }
-          &nbsp;&nbsp;
           <Button
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 'var(--padding-sm)',
             }}
+            disabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
             onClick={() => setIsImportModalOpen(true)}
           >
             <i className="fa fa-file-import" />
             {`Import to the "${projectName}" ${strings.project.singular}`}
           </Button>
-          &nbsp;&nbsp;
-          <Link href="https://insomnia.rest/create-run-button" className="btn btn--compact" button>
+
+          <Button
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--padding-sm)',
+            }}
+            disabled={!isLoggedIn()}
+            onClick={() => window.main.openInBrowser('https://insomnia.rest/create-run-button')}
+          >
+            <i className="fa fa-file-import" />
             Create Run Button
-          </Link>
+          </Button>
         </div>
       </div>
       {isImportModalOpen && (

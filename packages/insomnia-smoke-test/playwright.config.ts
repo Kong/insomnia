@@ -20,6 +20,12 @@ const config: PlaywrightTestConfig = {
       testMatch: /critical\/.*.test.ts/,
       retries: 0,
     },
+    {
+      // Single critical path test, runs on release recurring
+      name: 'Migration',
+      testMatch: /migration\/.*.test.ts/,
+      retries: 0,
+    },
   ],
   webServer: {
     command: 'npm run serve',

@@ -17,7 +17,7 @@ test.describe('gRPC interactions', () => {
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
     await page.getByRole('menuitemradio', { name: 'Import' }).click();
-    await page.getByText('Clipboard').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     await page.getByText('CollectionPreRelease gRPCjust now').click();

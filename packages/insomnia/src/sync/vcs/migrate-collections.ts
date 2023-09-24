@@ -4,8 +4,8 @@ import { isNotNullOrUndefined } from '../../common/misc';
 import * as models from '../../models';
 import { isRemoteProject, RemoteProject } from '../../models/project';
 import {  isCollection, Workspace } from '../../models/workspace';
+import { invariant } from '../../utils/invariant';
 import { Team } from '../types';
-import { initializeProjectFromTeam } from './initialize-model-from';
 import { VCS } from './vcs';
 
 export const logCollectionMovedToProject = (collection: Workspace, remoteProject: RemoteProject) => {
@@ -21,6 +21,7 @@ export const logCollectionMovedToProject = (collection: Workspace, remoteProject
   });
 };
 
+// Migrate any collections with sync setup and no remote project into a remote project
 export const migrateCollectionsIntoRemoteProject = async (vcs: VCS) => {
   console.log('[sync] checking for collections which need to be moved into a remote project');
 
@@ -56,12 +57,9 @@ export const migrateCollectionsIntoRemoteProject = async (vcs: VCS) => {
       continue;
     }
 
-    let remoteProject = findRemoteProjectByTeam(remoteBackendProject.team);
+    const remoteProject = findRemoteProjectByTeam(remoteBackendProject.team);
 
-    if (!remoteProject) {
-      remoteProject = await initializeProjectFromTeam(remoteBackendProject.team);
-      upsert.push(remoteProject);
-    }
+    invariant(remoteProject, 'expected remote project to exist');
 
     collection.parentId = remoteProject._id;
     upsert.push(collection);

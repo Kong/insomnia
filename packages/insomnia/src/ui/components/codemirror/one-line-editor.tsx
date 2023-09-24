@@ -4,7 +4,6 @@ import classnames from 'classnames';
 import clone from 'clone';
 import CodeMirror, { EditorConfiguration } from 'codemirror';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
 import { useMount, useUnmount } from 'react-use';
 
 import { DEBOUNCE_MILLIS } from '../../../common/constants';
@@ -13,7 +12,7 @@ import { KeyCombination } from '../../../common/settings';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
-import { RootLoaderData } from '../../routes/root';
+import { useRootLoaderData } from '../../routes/root';
 import { isKeyCombinationInRegistry } from '../settings/shortcuts';
 export interface OneLineEditorProps {
   defaultValue: string;
@@ -46,7 +45,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
   const codeMirror = useRef<CodeMirror.EditorFromTextArea | null>(null);
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRootLoaderData();
   const { handleRender, handleGetRenderContext } = useNunjucks();
 
   useMount(() => {

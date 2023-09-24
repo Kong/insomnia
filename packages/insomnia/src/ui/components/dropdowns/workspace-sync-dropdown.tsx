@@ -2,6 +2,7 @@ import { FC, useEffect, useRef, useState } from 'react';
 import React from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { isLoggedIn } from '../../../account/session';
 import { generateId } from '../../../common/misc';
 import { isRemoteProject } from '../../../models/project';
 import FileSystemDriver from '../../../sync/store/drivers/file-system-driver';
@@ -75,6 +76,10 @@ export const WorkspaceSyncDropdown: FC = () => {
   const vcs = useVCS({
     workspaceId: activeWorkspace?._id,
   });
+
+  if (!isLoggedIn()) {
+    return null;
+  }
 
   if (isRemoteProject(activeProject) && vcs && !activeWorkspaceMeta?.gitRepositoryId) {
     return (

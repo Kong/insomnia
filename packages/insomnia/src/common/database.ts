@@ -17,11 +17,12 @@ import { generateId } from './misc';
 export interface Query {
   _id?: string | SpecificQuery;
   parentId?: string | SpecificQuery | null;
-  remoteId?: string | null;
+  remoteId?: string | SpecificQuery | null;
   plugin?: string;
   key?: string;
   environmentId?: string | null;
   protoFileId?: string;
+  name?: string | SpecificQuery;
 }
 
 type Sort = Record<string, any>;
@@ -35,6 +36,7 @@ export interface SpecificQuery {
   $gt?: number;
   $in?: string[];
   $nin?: string[];
+  $ne?: string | null;
 }
 
 export type ModelQuery<T extends BaseModel> = Partial<Record<keyof T, SpecificQuery>>;
