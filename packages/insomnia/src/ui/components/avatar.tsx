@@ -85,6 +85,8 @@ const AvatarPlaceholder = styled.div<{size: 'small' | 'medium'; animate: boolean
   font-weight: bold;
 `;
 
+// https://css-tricks.com/pre-caching-image-with-react-suspense/
+// can be improved when api sends image expiry headers
 class ImageCache {
   __cache: Record<string, { value: Promise<string> | string; timestamp: number }> = {};
   ttl: number;

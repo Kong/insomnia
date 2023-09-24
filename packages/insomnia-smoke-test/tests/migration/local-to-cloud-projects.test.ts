@@ -15,6 +15,7 @@ const testWithLegacyDatabase = test.extend({
   },
 });
 
+// tests new cloud project create but not the vcs part as its too complex to stub the gql endpoint
 testWithLegacyDatabase('Run data migration to version 8', async ({ page, userConfig }) => {
   // Migration takes a while, adding this to avoid test timeout before it ends
   test.slow();

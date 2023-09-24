@@ -51,6 +51,8 @@ document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
 try {
+  // In order to run playwight tests that simulate a logged in user
+  // we need to inject state into localStorage
   const skipOnboarding = getSkipOnboarding();
   const insomniaSession = getInsomniaSession();
   if (skipOnboarding) {

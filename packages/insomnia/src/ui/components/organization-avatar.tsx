@@ -20,6 +20,8 @@ const getNameInitials = (name: string) => {
   return `${firstWord.charAt(0)}${lastWord ? lastWord.charAt(0) : ''}`;
 };
 
+// https://css-tricks.com/pre-caching-image-with-react-suspense/
+// can be improved when api sends image expiry headers
 class ImageCache {
   __cache: Record<string, { value: Promise<string> | string; timestamp: number }> = {};
   ttl: number;
