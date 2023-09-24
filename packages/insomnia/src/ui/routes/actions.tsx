@@ -119,7 +119,9 @@ export const renameProjectAction: ActionFunction = async ({
     return null;
   } catch (err) {
     console.log(err);
-    return null;
+    return {
+      error: err instanceof Error ? err.message : `An unexpected error occurred while renaming the project. Please try again. ${err}`,
+    };
   }
 };
 
