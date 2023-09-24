@@ -49,7 +49,7 @@ describe('pullBackendProject()', () => {
       });
 
       // Act
-      await pullBackendProject({ vcs, backendProject, remoteProjects: [project].filter(isRemoteProject), teamProjectId: project.remoteId });
+      await pullBackendProject({ vcs, backendProject, remoteProject: project });
 
       // Assert
       expect(project?.name).not.toBe(backendProject.team.name); // should not rename if the project already exists
@@ -68,13 +68,14 @@ describe('pullBackendProject()', () => {
     });
 
     it('should insert a project and workspace with parent', async () => {
+      const project = await models.project.create({
+        name: `${backendProject.team.name} unique`,
+        remoteId: backendProject.team.id,
+      });
       // Act
-      await pullBackendProject({ vcs, backendProject, remoteProjects: [], teamProjectId: backendProject.team.id });
+      await pullBackendProject({ vcs, backendProject, remoteProject: project });
 
       // Assert
-      const project = await models.project.getByRemoteId(backendProject.team.id);
-      expect(project?.name).toBe(backendProject.team.name);
-
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
@@ -91,12 +92,14 @@ describe('pullBackendProject()', () => {
     it('should update a workspace if the name or parentId is different', async () => {
       // Arrange
       await models.workspace.create({ _id: backendProject.rootDocumentId, name: 'someName' });
-
+      const project = await models.project.create({
+        name: `${backendProject.team.name} unique`,
+        remoteId: backendProject.team.id,
+      });
       // Act
-      await pullBackendProject({ vcs, backendProject, remoteProjects: [], teamProjectId: backendProject.team.id });
+      await pullBackendProject({ vcs, backendProject, remoteProject: project });
 
       // Assert
-      const project = await models.project.getByRemoteId(backendProject.team.id);
 
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
@@ -119,13 +122,14 @@ describe('pullBackendProject()', () => {
       const existingReq = await models.request.create({ parentId: existingWrk._id });
 
       vcs.allDocuments.mockResolvedValue([existingWrk, existingReq]);
-
+      const project = await models.project.create({
+        name: `${backendProject.team.name} unique`,
+        remoteId: backendProject.team.id,
+      });
       // Act
-      await pullBackendProject({ vcs, backendProject, remoteProjects: [], teamProjectId: backendProject.team.id });
+      await pullBackendProject({ vcs, backendProject, remoteProject: project });
 
       // Assert
-      const project = await models.project.getByRemoteId(backendProject.team.id);
-
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
@@ -151,7 +155,7 @@ describe('pullBackendProject()', () => {
     vcs.getRemoteBranches.mockRejectedValue(new Error('invalid access to project'));
 
     // Act
-    const action = () => pullBackendProject({ vcs, backendProject, remoteProjects: [], teamProjectId: '' });
+    const action = () => pullBackendProject({ vcs, backendProject, remoteProject: { remoteId: '' } });
 
     // Assert
     expect(vcs.pull).not.toHaveBeenCalled();

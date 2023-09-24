@@ -1,9 +1,7 @@
 import { ActionFunction, LoaderFunction } from 'react-router-dom';
 
-import { database } from '../../common/database';
 import { isNotNullOrUndefined } from '../../common/misc';
 import * as models from '../../models';
-import { RemoteProject } from '../../models/project';
 import { BackendProject } from '../../sync/types';
 import { pullBackendProject } from '../../sync/vcs/pull-backend-project';
 import { getVCS } from '../../sync/vcs/vcs';
@@ -29,20 +27,16 @@ export const pullRemoteCollectionAction: ActionFunction = async ({ request, para
 
   invariant(backendProject, 'Backend project not found');
 
-  const remoteProjects = await database.find<RemoteProject>(models.project.type, {
-    // @ts-expect-error -- Improve database query typing
-    $not: {
-      parentId: null,
-      remoteId: null,
-    },
-  });
+  const project = await models.project.getById(projectId);
+
+  invariant(project?.remoteId, 'Project is not a remote project');
 
   // Clone old VCS so we don't mess anything up while working on other backend projects
   const newVCS = vcs.newInstance();
   // Remove all backend projects for workspace first
   await newVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
 
-  await pullBackendProject({ vcs: newVCS, backendProject, remoteProjects, teamProjectId: remoteId });
+  await pullBackendProject({ vcs: newVCS, backendProject, remoteProject: project });
 
   return null;
 };

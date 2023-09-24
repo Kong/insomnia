@@ -91,10 +91,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   const navigate = useNavigate();
   const {
     activeWorkspaceMeta,
-    projects,
     syncItems,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const remoteProjects = projects.filter(isRemoteProject);
   const { organizations } = useOrganizationLoaderData();
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
   const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
@@ -190,7 +188,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
 
     invariant(project.remoteId, 'Project is not remote');
 
-    const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects, teamProjectId: project.remoteId });
+    const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProject: project });
     if (pulledIntoProject.project._id !== project._id) {
       // If pulled into a different project, reactivate the workspace
       navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}`);
