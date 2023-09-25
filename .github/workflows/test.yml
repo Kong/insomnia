@@ -18,8 +18,6 @@ concurrency:
 jobs:
   Test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
       - name: Checkout branch
         uses: actions/checkout@v3
@@ -103,8 +101,10 @@ jobs:
       - name: Smoke test Inso CLI
         run: npm run test:smoke:cli
 
+      # This step should always run even when previous steps fail
       - name: Upload smoke test traces
         uses: actions/upload-artifact@v3
+        if: failure()
         with:
           if-no-files-found: ignore
           name: ubuntu-smoke-test-traces-${{ github.run_number }}

@@ -1,21 +1,29 @@
 import { decodeBase64, encodeBase64 } from '@getinsomnia/api-client/base64';
 import { keyPair, open } from '@getinsomnia/api-client/sealedbox';
-import * as Sentry from '@sentry/electron';
 
 import * as session from '../account/session';
-import { getAppWebsiteBaseURL } from '../common/constants';
+import { getAppWebsiteBaseURL, getInsomniaPublicKey, getInsomniaSecretKey } from '../common/constants';
 import { invariant } from '../utils/invariant';
 
 interface AuthBox {
   token: string;
   key: string;
 }
+
 const sessionKeyPair = keyPair();
 encodeBase64(sessionKeyPair.publicKey).then(res => {
-  window.localStorage.setItem('insomnia.publicKey', res);
+  try {
+    window.localStorage.setItem('insomnia.publicKey', getInsomniaPublicKey() || res);
+  } catch (error) {
+    console.error('Failed to store public key in localStorage.');
+  }
 });
 encodeBase64(sessionKeyPair.secretKey).then(res => {
-  window.localStorage.setItem('insomnia.secretKey', res);
+  try {
+    window.localStorage.setItem('insomnia.secretKey', getInsomniaSecretKey() || res);
+  } catch (error) {
+    console.error('Failed to store secret key in localStorage.');
+  }
 });
 /**
  * Keypair used for the login handshake.
@@ -33,16 +41,21 @@ export async function submitAuthCode(code: string) {
     const box: AuthBox = JSON.parse(decoder.decode(boxData));
     await session.absorbKey(box.token, box.key);
   } catch (error) {
-    Sentry.captureException(error);
-    throw error;
+    return error.message;
   }
 }
 
-export async function getLoginUrl() {
+export function getLoginUrl() {
   const publicKey = window.localStorage.getItem('insomnia.publicKey');
   if (!publicKey) {
     console.log('No public key found');
     return '';
   }
-  return `${getAppWebsiteBaseURL()}/app/auth-app/?loginKey=${encodeURIComponent(publicKey)}`;
+
+  const url = new URL(getAppWebsiteBaseURL());
+
+  url.pathname = '/app/auth-app/';
+  url.searchParams.set('loginKey', encodeURIComponent(publicKey));
+
+  return url.toString();
 }
