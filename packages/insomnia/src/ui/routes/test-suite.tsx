@@ -31,24 +31,24 @@ import { EditableInput } from '../components/editable-input';
 import { Icon } from '../components/icon';
 
 const UnitTestItemView = ({
-  unitTest,
-}: {
+                            unitTest,
+                          }: {
   unitTest: UnitTest;
   testsRunning: boolean;
 }) => {
-  const editorRef = useRef<CodeEditorHandle>(null);
-  const { projectId, workspaceId, organizationId } = useParams() as {
+  const editorRef = useRef<CodeEditorHandle> (null);
+  const { projectId, workspaceId, organizationId } = useParams () as {
     workspaceId: string;
     projectId: string;
     organizationId: string;
   };
-  const { unitTestSuite, requests } = useRouteLoaderData(
-    ':testSuiteId'
+  const { unitTestSuite, requests } = useRouteLoaderData (
+    ':testSuiteId',
   ) as LoaderData;
 
-  const deleteUnitTestFetcher = useFetcher();
-  const runTestFetcher = useFetcher();
-  const updateUnitTestFetcher = useFetcher();
+  const deleteUnitTestFetcher = useFetcher ();
+  const runTestFetcher = useFetcher ();
+  const updateUnitTestFetcher = useFetcher ();
 
   const lintOptions = {
     globals: {
@@ -67,22 +67,22 @@ const UnitTestItemView = ({
     esversion: 8, // ES8 syntax (async/await, etc)
   };
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState (false);
 
   return (
     <div className="p-[--padding-sm] flex-shrink-0 overflow-hidden">
       <div className="flex items-center gap-2 w-full">
         <Button
           className="flex flex-shrink-0 flex-nowrap items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-          onPress={() => setIsOpen(!isOpen)}
+          onPress={() => setIsOpen (!isOpen)}
         >
-          <Icon icon={isOpen ? 'chevron-down' : 'chevron-right'} />
+          <Icon icon={isOpen ? 'chevron-down' : 'chevron-right'}/>
         </Button>
         <Heading className="flex-1 truncate">
           <EditableInput
             onChange={name => {
               if (name) {
-                updateUnitTestFetcher.submit(
+                updateUnitTestFetcher.submit (
                   {
                     code: unitTest.code,
                     name,
@@ -91,7 +91,7 @@ const UnitTestItemView = ({
                   {
                     action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
                     method: 'POST',
-                  }
+                  },
                 );
               }
             }}
@@ -102,7 +102,7 @@ const UnitTestItemView = ({
           className="flex-shrink-0"
           aria-label="Request for test"
           onSelectionChange={requestId => {
-            updateUnitTestFetcher.submit(
+            updateUnitTestFetcher.submit (
               {
                 code: unitTest.code,
                 name: unitTest.name,
@@ -111,29 +111,49 @@ const UnitTestItemView = ({
               {
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
                 method: 'post',
-              }
+              },
             );
           }}
           selectedKey={unitTest.requestId}
-          items={requests.map(request => ({
+          items={requests.map (request => ({
             ...request,
             id: request._id,
             key: request._id,
           }))}
         >
-          <Button aria-label='Select a request' className="px-4 py-1 flex flex-1 h-6 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+          <Button
+            aria-label="Select a request"
+            className="px-4 py-1 flex flex-1 h-6 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          >
             <SelectValue<Request> className="flex truncate items-center justify-center gap-2">
               {({ isPlaceholder, selectedItem }) => {
                 if (isPlaceholder || !selectedItem) {
                   return <span>Select a request</span>;
                 }
-                return <Fragment><span className={'w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-' + selectedItem.method}>{selectedItem.method}</span> {selectedItem.name}</Fragment>;
+                console.log (selectedItem);
+                return <Fragment>
+                          <span
+                            className={
+                              `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
+                              ${{
+                                'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+                                'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+                                'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                                'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                                'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+                                'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+                                'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+                              }[selectedItem.method] || 'text-[--color-font] bg-[--hl-md]'}`
+                            }
+                          >{selectedItem.method}</span> {selectedItem.name}</Fragment>;
               }}
             </SelectValue>
-            <Icon icon="caret-down" />
+            <Icon icon="caret-down"/>
           </Button>
           <Popover className="min-w-max">
-            <ListBox<Request> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[50vh] focus:outline-none">
+            <ListBox<Request>
+              className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[50vh] focus:outline-none"
+            >
               {item => (
                 <Item
                   className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -143,7 +163,20 @@ const UnitTestItemView = ({
                 >
                   {({ isSelected }) => (
                     <Fragment>
-                      <span className={'w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-' + item.method}>{item.method}</span>
+                      <span
+                        className={
+                          `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
+                      ${{
+                        'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+                        'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+                        'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                        'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                        'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+                        'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+                        'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+                      }[item.method] || 'text-[--color-font] bg-[--hl-md]'}`
+                      }
+                      >{item.method}</span>
                       <span>{item.name}</span>
                       {isSelected && (
                         <Icon
@@ -162,30 +195,30 @@ const UnitTestItemView = ({
         <Button
           className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => {
-            deleteUnitTestFetcher.submit(
+            deleteUnitTestFetcher.submit (
               {},
               {
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/delete`,
                 method: 'POST',
-              }
+              },
             );
           }}
         >
-          <Icon icon="trash" />
+          <Icon icon="trash"/>
         </Button>
         <Button
           className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => {
-            runTestFetcher.submit(
+            runTestFetcher.submit (
               {},
               {
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/run`,
                 method: 'post',
-              }
+              },
             );
           }}
         >
-          <Icon icon="play" />
+          <Icon icon="play"/>
         </Button>
       </div>
       {isOpen && (
@@ -196,15 +229,15 @@ const UnitTestItemView = ({
           showPrettifyButton
           defaultValue={unitTest ? unitTest.code : ''}
           getAutocompleteSnippets={() => {
-            const value = editorRef.current?.getValue() || '';
+            const value = editorRef.current?.getValue () || '';
             const variables = value
-              .split('const ')
-              .filter(x => x)
-              .map(x => x.split(' ')[0]);
+              .split ('const ')
+              .filter (x => x)
+              .map (x => x.split (' ')[0]);
             const numbers = variables
-              .map(x => parseInt(x.match(/(\d+)/)?.[0] || ''))
-              ?.filter(x => !isNaN(x));
-            const highestNumberedConstant = Math.max(...numbers);
+              .map (x => parseInt (x.match (/(\d+)/)?.[0] || ''))
+              ?.filter (x => !isNaN (x));
+            const highestNumberedConstant = Math.max (...numbers);
             const variableName = 'response' + (highestNumberedConstant + 1);
             return [
               {
@@ -214,7 +247,7 @@ const UnitTestItemView = ({
                   `const ${variableName} = await insomnia.send();\n` +
                   `expect(${variableName}.status).to.equal(200);`,
               },
-              ...requests.map(({ name, _id }) => ({
+              ...requests.map (({ name, _id }) => ({
                 name: `Send: ${name}`,
                 displayValue: '',
                 value:
@@ -225,7 +258,7 @@ const UnitTestItemView = ({
           }}
           lintOptions={lintOptions}
           onChange={code =>
-            updateUnitTestFetcher.submit(
+            updateUnitTestFetcher.submit (
               {
                 code,
                 name: unitTest.name,
@@ -234,7 +267,7 @@ const UnitTestItemView = ({
               {
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
                 method: 'post',
-              }
+              },
             )
           }
           mode="javascript"
@@ -247,27 +280,27 @@ const UnitTestItemView = ({
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
   const { organizationId, projectId, workspaceId } = params;
-  invariant(organizationId, 'organizationId is required');
-  invariant(projectId, 'projectId is required');
-  invariant(workspaceId, 'workspaceId is required');
+  invariant (organizationId, 'organizationId is required');
+  invariant (projectId, 'projectId is required');
+  invariant (workspaceId, 'workspaceId is required');
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await models.workspaceMeta.getByParentId (workspaceId);
   if (workspaceMeta?.activeUnitTestSuiteId) {
-    const unitTestSuite = await models.unitTestSuite.getById(
-      workspaceMeta.activeUnitTestSuiteId
+    const unitTestSuite = await models.unitTestSuite.getById (
+      workspaceMeta.activeUnitTestSuiteId,
     );
 
     if (unitTestSuite) {
-      return redirect(
-        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}`
+      return redirect (
+        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}`,
       );
     }
   }
 
-  const unitTestSuites = await models.unitTestSuite.findByParentId(workspaceId);
+  const unitTestSuites = await models.unitTestSuite.findByParentId (workspaceId);
   if (unitTestSuites.length > 0) {
-    return redirect(
-      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuites[0]._id}`
+    return redirect (
+      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuites[0]._id}`,
     );
   }
   return null;
@@ -278,35 +311,36 @@ interface LoaderData {
   unitTestSuite: UnitTestSuite;
   requests: Request[];
 }
+
 export const loader: LoaderFunction = async ({
-  params,
-}): Promise<LoaderData> => {
+                                               params,
+                                             }): Promise<LoaderData> => {
   const { workspaceId, testSuiteId } = params;
 
-  invariant(workspaceId, 'Workspace ID is required');
-  invariant(testSuiteId, 'Test Suite ID is required');
+  invariant (workspaceId, 'Workspace ID is required');
+  invariant (testSuiteId, 'Test Suite ID is required');
 
-  const workspace = await models.workspace.getById(workspaceId);
-  invariant(workspace, 'Workspace not found');
-  const workspaceEntities = await database.withDescendants(workspace);
-  const requests: Request[] = workspaceEntities.filter(isRequest);
+  const workspace = await models.workspace.getById (workspaceId);
+  invariant (workspace, 'Workspace not found');
+  const workspaceEntities = await database.withDescendants (workspace);
+  const requests: Request[] = workspaceEntities.filter (isRequest);
 
-  const unitTestSuite = await database.getWhere(models.unitTestSuite.type, {
+  const unitTestSuite = await database.getWhere (models.unitTestSuite.type, {
     _id: testSuiteId,
   });
 
-  const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
+  const workspaceMeta = await models.workspaceMeta.getByParentId (workspaceId);
 
   if (workspaceMeta && workspaceMeta?.activeUnitTestSuiteId !== testSuiteId) {
-    await models.workspaceMeta.update(workspaceMeta, {
+    await models.workspaceMeta.update (workspaceMeta, {
       activeUnitTestSuiteId: testSuiteId,
     });
   }
 
-  invariant(unitTestSuite, 'Test Suite not found');
+  invariant (unitTestSuite, 'Test Suite not found');
 
-  const unitTests = (await database.withDescendants(unitTestSuite)).filter(
-    isUnitTest
+  const unitTests = (await database.withDescendants (unitTestSuite)).filter (
+    isUnitTest,
   );
 
   return {
@@ -317,24 +351,24 @@ export const loader: LoaderFunction = async ({
 };
 
 const TestSuiteRoute = () => {
-  const { organizationId, projectId, workspaceId } = useParams() as {
+  const { organizationId, projectId, workspaceId } = useParams () as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
     testSuiteId: string;
   };
-  const { unitTestSuite, unitTests } = useRouteLoaderData(
-    ':testSuiteId'
+  const { unitTestSuite, unitTests } = useRouteLoaderData (
+    ':testSuiteId',
   ) as LoaderData;
 
-  const createUnitTestFetcher = useFetcher();
-  const runAllTestsFetcher = useFetcher();
-  const renameTestSuiteFetcher = useFetcher();
+  const createUnitTestFetcher = useFetcher ();
+  const runAllTestsFetcher = useFetcher ();
+  const renameTestSuiteFetcher = useFetcher ();
 
   const testsRunning = runAllTestsFetcher.state === 'submitting';
 
   const testSuiteName =
-    renameTestSuiteFetcher.formData?.get('name')?.toString() ??
+    renameTestSuiteFetcher.formData?.get ('name')?.toString () ??
     unitTestSuite.name;
   return (
     <div className="flex flex-col h-full w-full overflow-hidden divide-solid divide-y divide-[--hl-md]">
@@ -343,12 +377,12 @@ const TestSuiteRoute = () => {
           <EditableInput
             onChange={name =>
               name &&
-              renameTestSuiteFetcher.submit(
+              renameTestSuiteFetcher.submit (
                 { name },
                 {
                   action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/rename`,
                   method: 'POST',
-                }
+                },
               )
             }
             value={testSuiteName}
@@ -358,46 +392,48 @@ const TestSuiteRoute = () => {
           aria-label="New test"
           className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() =>
-            createUnitTestFetcher.submit(
+            createUnitTestFetcher.submit (
               {
                 name: 'Returns 200',
               },
               {
                 method: 'POST',
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/new`,
-              }
+              },
             )
           }
         >
-          <Icon icon="plus" />
+          <Icon icon="plus"/>
           <span>New test</span>
         </Button>
         <Button
           aria-label="Run all tests"
           className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => {
-            runAllTestsFetcher.submit(
+            runAllTestsFetcher.submit (
               {},
               {
                 method: 'POST',
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/run-all-tests`,
-              }
+              },
             );
           }}
         >
           {testsRunning ? 'Running... ' : 'Run tests'}
-          <i className="fa fa-play space-left" />
+          <i className="fa fa-play space-left"/>
         </Button>
       </div>
       {unitTests.length === 0 && (
-        <div className="h-full w-full flex-1 overflow-y-auto divide-solid divide-y divide-[--hl-md] p-[--padding-md] flex flex-col items-center gap-2 overflow-hidden text-[--hl-lg]">
+        <div
+          className="h-full w-full flex-1 overflow-y-auto divide-solid divide-y divide-[--hl-md] p-[--padding-md] flex flex-col items-center gap-2 overflow-hidden text-[--hl-lg]"
+        >
           <Heading className="text-lg p-[--padding-sm] font-bold flex-1 flex items-center flex-col gap-2">
-            <Icon icon="vial" className="flex-1 w-28" />
+            <Icon icon="vial" className="flex-1 w-28"/>
             <span>Add unit tests to verify your API</span>
           </Heading>
           <div className="flex-1 w-full flex flex-col justify-evenly items-center gap-2 p-[--padding-sm]">
             <p className="flex items-center gap-2">
-              <Icon icon="lightbulb" />
+              <Icon icon="lightbulb"/>
               <span className="truncate">
                 You can run these tests in CI with Inso CLI
               </span>
@@ -409,7 +445,7 @@ const TestSuiteRoute = () => {
                   href={documentationLinks.unitTesting.url}
                 >
                   <span className="truncate">Unit testing in Insomnia</span>
-                  <Icon icon="external-link" />
+                  <Icon icon="external-link"/>
                 </a>
               </li>
               <li>
@@ -418,7 +454,7 @@ const TestSuiteRoute = () => {
                   href={documentationLinks.introductionToInsoCLI.url}
                 >
                   <span className="truncate">Introduction to Inso CLI</span>
-                  <Icon icon="external-link" />
+                  <Icon icon="external-link"/>
                 </a>
               </li>
             </ul>
@@ -427,7 +463,7 @@ const TestSuiteRoute = () => {
       )}
       {unitTests.length > 0 && (
         <ul className="flex-1 flex flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto">
-          {unitTests.map(unitTest => (
+          {unitTests.map (unitTest => (
             <UnitTestItemView
               key={unitTest._id}
               unitTest={unitTest}
