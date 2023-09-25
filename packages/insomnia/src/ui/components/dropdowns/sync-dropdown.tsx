@@ -3,12 +3,15 @@ import React, { FC, Fragment, useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval, useMount } from 'react-use';
 
+import { getAccountId } from '../../../account/session';
 import * as session from '../../../account/session';
+import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import { database as db, Operation } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
+import { isOwnerOfOrganization } from '../../../models/organization';
 import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { Snapshot, Status } from '../../../sync/types';
@@ -18,19 +21,24 @@ import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-proj
 import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
+import { type FeatureList, useOrganizationLoaderData } from '../../../ui/routes/organization';
+import { invariant } from '../../../utils/invariant';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
-import { showError, showModal } from '../modals';
+import { showModal } from '../modals';
+import { showError } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
+import { AskModal } from '../modals/ask-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
-import { LoginModal } from '../modals/login-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncDeleteModal } from '../modals/sync-delete-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
 import { SyncStagingModal } from '../modals/sync-staging-modal';
 import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
+
 // TODO: handle refetching logic in one place not here in a component
 
 // Refresh dropdown periodically
@@ -83,10 +91,11 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   const navigate = useNavigate();
   const {
     activeWorkspaceMeta,
-    projects,
     syncItems,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const remoteProjects = projects.filter(isRemoteProject);
+  const { organizations } = useOrganizationLoaderData();
+  const currentOrg = organizations.find(organization => (organization.id === organizationId));
+  const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
 
   const refetchRemoteBranch = useCallback(async () => {
     if (session.isLoggedIn()) {
@@ -146,8 +155,10 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
 
     try {
       // NOTE pushes the first snapshot automatically
-      await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta: activeWorkspaceMeta, project });
-      await refreshVCSAndRefetchRemote();
+      if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
+        await pushSnapshotOnInitialize({ vcs, workspace, project });
+        await refreshVCSAndRefetchRemote();
+      }
     } catch (err) {
       console.log('[sync_menu] Error refreshing sync state', err);
     } finally {
@@ -174,7 +185,10 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
       ...state,
       loadingProjectPull: true,
     }));
-    const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects });
+
+    invariant(project.remoteId, 'Project is not remote');
+
+    const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProject: project });
     if (pulledIntoProject.project._id !== project._id) {
       // If pulled into a different project, reactivate the workspace
       navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}`);
@@ -194,8 +208,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
 
     try {
       const branch = await vcs.getBranch();
+      invariant(project.remoteId, 'Project is not remote');
       await interceptAccessError({
-        callback: () => vcs.push(project.remoteId),
+        callback: () => vcs.push({ teamId: project.parentId, teamProjectId: project.remoteId }),
         action: 'push',
         resourceName: branch,
         resourceType: 'branch',
@@ -222,9 +237,10 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     }));
 
     try {
+      invariant(project.remoteId, 'Project is not remote');
       const branch = await vcs.getBranch();
       const delta = await interceptAccessError({
-        callback: () => vcs.pull(syncItems, project.remoteId),
+        callback: () => vcs.pull({ candidates: syncItems, teamId: project.parentId, teamProjectId: project.remoteId }),
         action: 'pull',
         resourceName: branch,
         resourceType: 'branch',
@@ -348,6 +364,35 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     },
   }];
 
+  const isGitSyncEnabled = features.gitSync.enabled;
+  const accountId = getAccountId();
+
+  const showUpgradePlanModal = () => {
+    if (!currentOrg || !accountId) {
+      return;
+    }
+    const isOwner = isOwnerOfOrganization({
+      organization: currentOrg,
+      accountId,
+    });
+
+    isOwner ?
+      showModal(AskModal, {
+        title: 'Upgrade Plan',
+        message: 'Git Sync is only enabled for Team plan or above, please upgrade your plan.',
+        yesText: 'Upgrade',
+        noText: 'Cancel',
+        onDone: async (isYes: boolean) => {
+          if (isYes) {
+            window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+          }
+        },
+      }) : showModal(AlertModal, {
+        title: 'Upgrade Plan',
+        message: 'Git Sync is only enabled for Team plan or above, please ask the organization owner to upgrade.',
+      });
+  };
+
   if (!vcs.hasBackendProject()) {
     return (
       <div>
@@ -365,7 +410,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               style={{
                 width: '100%',
                 borderRadius: '0',
-                borderTop: '1px solid var(--hl-md)',
                 height: 'var(--line-height-sm)',
               }}
             >
@@ -392,7 +436,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                 variant='contained'
                 bg='surprise'
                 onClick={async () => {
-                  setIsGitRepoSettingsModalOpen(true);
+                  isGitSyncEnabled ?
+                    setIsGitRepoSettingsModalOpen(true) :
+                    showUpgradePlanModal();
                 }}
                 style={{
                   width: '100%',
@@ -463,7 +509,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     <div>
       <Dropdown
         className="wide tall"
-        aria-label='Select a branch to sync with'
+        aria-label='Sync Menu'
         onOpen={() => refreshVCSAndRefetchRemote()}
         closeOnSelect={false}
         isDisabled={initializing}
@@ -472,6 +518,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
             <Fragment>Sync</Fragment> :
             <DropdownButton
               size="medium"
+              aria-label='Insomnia Sync'
               removeBorderRadius
               disableHoverBehavior={false}
               removePaddings={false}
@@ -479,7 +526,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               style={{
                 width: '100%',
                 borderRadius: '0',
-                borderTop: '1px solid var(--hl-md)',
                 height: 'var(--line-height-sm)',
               }}
             >
@@ -551,7 +597,9 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
               variant='contained'
               bg='surprise'
               onClick={async () => {
-                setIsGitRepoSettingsModalOpen(true);
+                isGitSyncEnabled ?
+                  setIsGitRepoSettingsModalOpen(true) :
+                  showUpgradePlanModal();
               }}
               style={{
                 width: '100%',
@@ -570,17 +618,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           aria-label='Sync Branches List'
           title={syncMenuHeader}
         >
-
-          <DropdownItem aria-label='Login'>
-            {!session.isLoggedIn() && (
-              <ItemContent
-                icon="sign-in"
-                label="Log In"
-                onClick={() => showModal(LoginModal)}
-              />
-            )}
-          </DropdownItem>
-
           <DropdownItem aria-label='Branches'>
             <ItemContent
               icon="code-fork"

@@ -11,7 +11,7 @@ import { insomniaFetch } from './insomniaFetch';
 
 export async function backupIfNewerVersionAvailable() {
   try {
-    const settings = await models.settings.getOrCreate();
+    const settings = await models.settings.get();
     console.log('[main] Checking for newer version than ', version);
     const response = await insomniaFetch<{ url: string }>({
       method: 'GET',

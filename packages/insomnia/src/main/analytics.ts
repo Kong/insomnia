@@ -4,19 +4,18 @@ import { v4 as uuidv4 } from 'uuid';
 import * as session from '../account/session';
 import { getAccountId } from '../account/session';
 import {
-  getApiBaseURL,
   getAppPlatform,
   getAppVersion,
   getProductName,
   getSegmentWriteKey,
 } from '../common/constants';
 import * as models from '../models/index';
-import { axiosRequest } from './network/axios-request';
+import { insomniaFetch } from './insomniaFetch';
 
 const analytics = new Analytics({ writeKey: getSegmentWriteKey() });
 
 const getDeviceId = async () => {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   return settings.deviceId || (await models.settings.update(settings, { deviceId: uuidv4() })).deviceId;
 };
 
@@ -49,7 +48,7 @@ export async function trackSegmentEvent(
   event: SegmentEvent,
   properties?: Record<string, any>,
 ) {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   const allowAnalytics = settings.enableAnalytics || session.isLoggedIn();
   if (allowAnalytics) {
     try {
@@ -77,7 +76,7 @@ export async function trackSegmentEvent(
 }
 
 export async function trackPageView(name: string) {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   const allowAnalytics = settings.enableAnalytics || session.isLoggedIn();
   if (allowAnalytics) {
     try {
@@ -101,12 +100,10 @@ export async function trackPageView(name: string) {
 
 export async function sendTelemetry() {
   if (session.isLoggedIn()) {
-    axiosRequest({
+    insomniaFetch({
       method: 'POST',
-      url: `${getApiBaseURL()}/v1/telemetry/`,
-      headers: {
-        'X-Session-Id': session.getCurrentSessionId(),
-      },
+      path: '/v1/telemetry/',
+      sessionId: session.getCurrentSessionId(),
     }).catch((error: unknown) => {
       console.warn('[analytics] Unexpected error while sending telemetry', error);
     });

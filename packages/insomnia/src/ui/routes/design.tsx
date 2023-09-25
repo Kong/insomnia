@@ -14,23 +14,29 @@ import React, {
   useState,
 } from 'react';
 import {
+  Breadcrumbs,
   Button,
   GridList,
   Heading,
   Item,
+  Link,
   ListBox,
   Menu,
   MenuTrigger,
   Popover,
+  Select,
+  SelectValue,
   ToggleButton,
   Tooltip,
   TooltipTrigger,
 } from 'react-aria-components';
 import {
   LoaderFunction,
+  NavLink,
   useFetcher,
   useLoaderData,
   useParams,
+  useRouteLoaderData,
 } from 'react-router-dom';
 import { SwaggerUIBundle } from 'swagger-ui-dist';
 import YAML from 'yaml';
@@ -40,6 +46,7 @@ import { parseApiSpec } from '../../common/api-specs';
 import { ACTIVITY_SPEC } from '../../common/constants';
 import { debounce } from '../../common/misc';
 import { ApiSpec } from '../../models/api-spec';
+import { Environment } from '../../models/environment';
 import * as models from '../../models/index';
 import { invariant } from '../../utils/invariant';
 import {
@@ -47,9 +54,12 @@ import {
   CodeEditorHandle,
 } from '../components/codemirror/code-editor';
 import { DesignEmptyState } from '../components/design-empty-state';
+import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { Icon } from '../components/icon';
 import { InsomniaAI } from '../components/insomnia-ai-icon';
+import { CookiesModal } from '../components/modals/cookies-modal';
+import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { formatMethodName } from '../components/tags/method-tag';
 import { useAIContext } from '../context/app/ai-context';
@@ -57,6 +67,7 @@ import {
   useActiveApiSpecSyncVCSVersion,
   useGitVCSVersion,
 } from '../hooks/use-vcs-version';
+import { WorkspaceLoaderData } from './workspace';
 
 interface LoaderData {
   lintMessages: LintMessage[];
@@ -188,7 +199,25 @@ const Design: FC = () => {
     projectId: string;
     workspaceId: string;
   };
+  const {
+    activeProject,
+    activeEnvironment,
+    activeCookieJar,
+    subEnvironments,
+    baseEnvironment,
+  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
+  const setActiveEnvironmentFetcher = useFetcher();
+  const environmentsList = [baseEnvironment, ...subEnvironments].map(e => ({
+    id: e._id,
+    name: e.name,
+    color: e.color,
+  }));
+
+  const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
+  const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
+
   const { apiSpec, lintMessages, rulesetPath, parsedSpec } = useLoaderData() as LoaderData;
+
   const editor = createRef<CodeEditorHandle>();
   const { generating, generateTestsFromSpec, access } = useAIContext();
   const updateApiSpecFetcher = useFetcher();
@@ -362,6 +391,131 @@ const Design: FC = () => {
       className='[&_.sidebar]:flex [&_.sidebar]:flex-col [&_.sidebar]:w-full [&_.sidebar]:h-full'
       renderPageSidebar={
         <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md]'>
+          <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
+            <Breadcrumbs className='react-aria-Breadcrumbs pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
+              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
+                <Link data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                  <NavLink
+                    to={`/organization/${organizationId}/project/${activeProject._id}`}
+                  >
+                    <Icon className='text-xs' icon="chevron-left" />
+                  </NavLink>
+                </Link>
+                <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
+              </Item>
+              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
+                <WorkspaceDropdown />
+              </Item>
+            </Breadcrumbs>
+            <div className="flex w-full items-center gap-2 justify-between">
+              <Select
+                aria-label="Select an environment"
+                onSelectionChange={environmentId => {
+                  setActiveEnvironmentFetcher.submit(
+                    {
+                      environmentId,
+                    },
+                    {
+                      method: 'POST',
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/environment/set-active`,
+                    }
+                  );
+                }}
+                selectedKey={activeEnvironment._id}
+                items={environmentsList}
+              >
+                <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                  <SelectValue<Environment> className="flex truncate items-center justify-center gap-2">
+                    {({ isPlaceholder, selectedItem }) => {
+                      if (
+                        isPlaceholder ||
+                        (selectedItem &&
+                          selectedItem._id === baseEnvironment._id) ||
+                        !selectedItem
+                      ) {
+                        return (
+                          <Fragment>
+                            <Icon icon="cancel" />
+                            No Environment
+                          </Fragment>
+                        );
+                      }
+
+                      return (
+                        <Fragment>
+                          <Icon
+                            icon="circle"
+                            style={{
+                              color: selectedItem.color ?? 'var(--color-font)',
+                            }}
+                          />
+                          {selectedItem.name}
+                        </Fragment>
+                      );
+                    }}
+                  </SelectValue>
+                  <Icon icon="caret-down" />
+                </Button>
+                <Popover className="min-w-max">
+                  <ListBox<Environment>
+                    key={activeEnvironment._id}
+                    className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                  >
+                    {item => (
+                      <Item
+                        id={item._id}
+                        key={item._id}
+                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                        aria-label={item.name}
+                        textValue={item.name}
+                        value={item}
+                      >
+                        {({ isSelected }) => (
+                          <Fragment>
+                            <Icon
+                              icon={
+                                item._id === baseEnvironment._id
+                                  ? 'cancel'
+                                  : 'circle'
+                              }
+                              style={{
+                                color: item.color ?? 'var(--color-font)',
+                              }}
+                            />
+                            <span>
+                              {item._id === baseEnvironment._id
+                                ? 'No Environment'
+                                : item.name}
+                            </span>
+                            {isSelected && (
+                              <Icon
+                                icon="check"
+                                className="text-[--color-success] justify-self-end"
+                              />
+                            )}
+                          </Fragment>
+                        )}
+                      </Item>
+                    )}
+                  </ListBox>
+                </Popover>
+              </Select>
+              <Button
+                aria-label='Manage Environments'
+                onPress={() => setEnvironmentModalOpen(true)}
+                className="flex flex-shrink-0 items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              >
+                <Icon icon="gear" />
+              </Button>
+            </div>
+            <Button
+              onPress={() => setIsCookieModalOpen(true)}
+              className="px-4 py-1 flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            >
+              <Icon icon="cookie-bite" />
+              {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies
+            </Button>
+          </div>
           <div className="flex flex-shrink-0 items-center gap-2 p-[--padding-sm]">
             <Heading className="text-[--hl] uppercase">Spec</Heading>
             <span className="flex-1" />
@@ -836,6 +990,14 @@ const Design: FC = () => {
             )}
           </div>
           <WorkspaceSyncDropdown />
+          {isEnvironmentModalOpen && (
+            <WorkspaceEnvironmentsEditModal
+              onHide={() => setEnvironmentModalOpen(false)}
+            />
+          )}
+          {isCookieModalOpen && (
+            <CookiesModal onHide={() => setIsCookieModalOpen(false)} />
+          )}
         </div>
       }
       renderPaneTwo={isSpecPaneOpen && <SwaggerUIDiv text={apiSpec.contents} />}

@@ -7,7 +7,6 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
-import { DEFAULT_PROJECT_ID } from '../../../models/project';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';
 import { NeDBClient } from '../ne-db-client';
 import { assertAsyncError, setupDateMocks } from './util';
@@ -21,9 +20,12 @@ describe('NeDBClient', () => {
     workspaceBuilder.reset();
     setupDateMocks();
     // Create some sample models
-    await models.project.all();
+    await models.project.create({
+      _id: 'proj_1',
+    });
     await models.workspace.create({
       _id: 'wrk_1',
+      parentId: 'proj_1',
     });
     await models.request.create({
       _id: 'req_1',
@@ -43,7 +45,7 @@ describe('NeDBClient', () => {
 
   describe('readdir()', () => {
     it('reads model IDs from model type folders', async () => {
-      const neDbClient = new NeDBClient('wrk_1', DEFAULT_PROJECT_ID);
+      const neDbClient = new NeDBClient('wrk_1', 'proj_1');
       const reqDir = path.join(GIT_INSOMNIA_DIR, models.request.type);
       const wrkDir = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
       expect(await neDbClient.readdir(GIT_CLONE_DIR)).toEqual([GIT_INSOMNIA_DIR_NAME]);
@@ -71,7 +73,7 @@ describe('NeDBClient', () => {
       const wrk1Yml = path.join(GIT_INSOMNIA_DIR, models.workspace.type, 'wrk_1.yml');
       const req1Yml = path.join(GIT_INSOMNIA_DIR, models.request.type, 'req_1.yml');
       const reqXYml = path.join(GIT_INSOMNIA_DIR, models.request.type, 'req_x.yml');
-      const pNeDB = new NeDBClient('wrk_1', DEFAULT_PROJECT_ID);
+      const pNeDB = new NeDBClient('wrk_1', 'proj_1');
       expect(YAML.parse((await pNeDB.readFile(wrk1Yml, 'utf8')).toString())).toEqual(
         expect.objectContaining({
           _id: 'wrk_1',
@@ -100,7 +102,7 @@ describe('NeDBClient', () => {
         type: 'file',
       });
       // Act
-      const neDbClient = new NeDBClient('wrk_1', DEFAULT_PROJECT_ID);
+      const neDbClient = new NeDBClient('wrk_1', 'proj_1');
       // Assert
       expect(await neDbClient.stat(GIT_CLONE_DIR)).toEqual(dirType);
       expect(await neDbClient.stat(GIT_INSOMNIA_DIR)).toEqual(dirType);
@@ -115,7 +117,7 @@ describe('NeDBClient', () => {
       // Arrange
       const upsertSpy = jest.spyOn(db, 'upsert');
       const workspaceId = 'wrk_1';
-      const neDbClient = new NeDBClient(workspaceId, DEFAULT_PROJECT_ID);
+      const neDbClient = new NeDBClient(workspaceId, 'proj_1');
       const env = {
         _id: 'env_1',
         type: models.environment.type,
@@ -133,7 +135,7 @@ describe('NeDBClient', () => {
     it('should write files in GIT_INSOMNIA_DIR directory to db', async () => {
       // Arrange
       const workspaceId = 'wrk_1';
-      const neDbClient = new NeDBClient(workspaceId, DEFAULT_PROJECT_ID);
+      const neDbClient = new NeDBClient(workspaceId, 'proj_1');
       const upsertSpy = jest.spyOn(db, 'upsert');
       const env = {
         _id: 'env_1',
@@ -180,7 +182,7 @@ describe('NeDBClient', () => {
     it('should throw error if id does not match', async () => {
       // Arrange
       const workspaceId = 'wrk_1';
-      const neDbClient = new NeDBClient(workspaceId, DEFAULT_PROJECT_ID);
+      const neDbClient = new NeDBClient(workspaceId, 'proj_1');
       const env = {
         _id: 'env_1',
         type: models.environment.type,
@@ -198,7 +200,7 @@ describe('NeDBClient', () => {
     it('should throw error if type does not match', async () => {
       // Arrange
       const workspaceId = 'wrk_1';
-      const neDbClient = new NeDBClient(workspaceId, DEFAULT_PROJECT_ID);
+      const neDbClient = new NeDBClient(workspaceId, 'proj_1');
       const env = {
         _id: 'env_1',
         type: models.environment.type,
@@ -217,7 +219,7 @@ describe('NeDBClient', () => {
   describe('mkdir()', () => {
     it('should throw error', async () => {
       const workspaceId = 'wrk_1';
-      const neDbClient = new NeDBClient(workspaceId, DEFAULT_PROJECT_ID);
+      const neDbClient = new NeDBClient(workspaceId, 'proj_1');
       const promiseResult = neDbClient.mkdir();
       await expect(promiseResult).rejects.toThrowError('NeDBClient is not writable');
     });

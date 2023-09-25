@@ -12,6 +12,19 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  font-size: 11px;
+}
+
+.grid-template-app-layout-with-banner {
+  grid-template: 
+    'Header Header' auto
+    'Banner Banner' 30px
+    'Navbar Content' 1fr
+    'Statusbar Statusbar' 30px [row-end]
+    / 50px 1fr;
+}
+
 .grid-template-app-layout {
   grid-template:
     'Header Header' auto
@@ -25,6 +38,7 @@
   flex-wrap: wrap;
   list-style: none;
   align-items: center;
+  flex-wrap: nowrap;
   margin: 0;
   padding: 0;
   gap: 0.5rem;
@@ -36,10 +50,12 @@
   align-items: center;
   gap: 0.5rem;
   color: var(--color-font);
+  outline: none;
+  box-shadow: none;
 }
 
-.react-aria-Breadcrumbs .react-aria-Item:not(:last-child):after {
-  content: '/';
+.react-aria-Breadcrumbs .react-aria-Item:focus {
+  outline: none;
 }
 
 input[type="search"]::-webkit-search-cancel-button {

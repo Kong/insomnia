@@ -4,7 +4,7 @@ import { database as db } from '../common/database';
 import { strings } from '../common/strings';
 import type { BaseModel } from './index';
 import * as models from './index';
-import { DEFAULT_PROJECT_ID, isProjectId } from './project';
+import { isProjectId } from './project';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -51,7 +51,6 @@ export function migrate(doc: Workspace) {
     doc = _migrateExtractClientCertificates(doc);
     doc = _migrateEnsureName(doc);
     doc = _migrateScope(doc);
-    doc = _migrateIntoDefaultProject(doc);
     return doc;
   } catch (e) {
     console.log('[db] Error during workspace migration', e);
@@ -147,17 +146,14 @@ function _migrateScope(workspace: MigrationWorkspace) {
   return workspace as Workspace;
 }
 
-function _migrateIntoDefaultProject(workspace: Workspace) {
-  if (!workspace.parentId) {
-    console.log(`[db] No workspace parentId found for ${workspace._id} setting default ${DEFAULT_PROJECT_ID}`);
-    workspace.parentId = DEFAULT_PROJECT_ID;
-  }
-
-  return workspace;
-}
-
 function expectParentToBeProject(parentId?: string | null) {
   if (parentId && !isProjectId(parentId)) {
     throw new Error('Expected the parent of a Workspace to be a Project');
   }
+}
+
+export const SCRATCHPAD_WORKSPACE_ID = 'wrk_scratchpad';
+
+export function isScratchpad(workspace: Workspace) {
+  return workspace._id === SCRATCHPAD_WORKSPACE_ID;
 }

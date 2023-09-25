@@ -12,12 +12,12 @@ import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydow
 import { DisconnectButton } from './disconnect-button';
 
 const Button = styled.button<{ warning?: boolean }>(({ warning }) => ({
+  borderRadius: 'var(--radius-sm)',
   paddingRight: 'var(--padding-md)',
   paddingLeft: 'var(--padding-md)',
   textAlign: 'center',
   background: warning ? 'var(--color-danger)' : 'var(--color-surprise)',
   color: 'var(--color-font-surprise)',
-  flex: '0 0 100px',
   ':hover': {
     filter: 'brightness(0.8)',
   },
@@ -149,9 +149,11 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
             type="text"
           />
         </StyledUrlBar>
-        {isConnectingOrClosed
-          ? <Button type="submit">Connect</Button>
-          : <DisconnectButton requestId={request._id} />}
+        <div className='flex p-1'>
+          {isConnectingOrClosed
+            ? <Button type="submit">Connect</Button>
+            : <DisconnectButton requestId={request._id} />}
+        </div>
       </Form>
     </>
   );

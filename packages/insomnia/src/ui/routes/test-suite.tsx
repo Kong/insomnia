@@ -100,7 +100,7 @@ const UnitTestItemView = ({
         </Heading>
         <Select
           className="flex-shrink-0"
-          aria-label="Select a request"
+          aria-label="Request for test"
           onSelectionChange={requestId => {
             updateUnitTestFetcher.submit(
               {
@@ -121,15 +121,12 @@ const UnitTestItemView = ({
             key: request._id,
           }))}
         >
-          <Button className="px-4 py-1 flex flex-1 h-6 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+          <Button aria-label='Select a request' className="px-4 py-1 flex flex-1 h-6 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
             <SelectValue<Request> className="flex truncate items-center justify-center gap-2">
               {({ isPlaceholder, selectedItem }) => {
                 if (isPlaceholder || !selectedItem) {
                   return <span>Select a request</span>;
                 }
-
-                console.log(selectedItem);
-
                 return <Fragment><span className={'w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-' + selectedItem.method}>{selectedItem.method}</span> {selectedItem.name}</Fragment>;
               }}
             </SelectValue>
@@ -376,7 +373,7 @@ const TestSuiteRoute = () => {
           <span>New test</span>
         </Button>
         <Button
-          aria-label="Project actions"
+          aria-label="Run all tests"
           className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => {
             runAllTestsFetcher.submit(

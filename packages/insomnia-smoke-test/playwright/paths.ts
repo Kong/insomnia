@@ -12,6 +12,16 @@ export const loadFixture = async (fixturePath: string) => {
   return buffer.toString('utf-8');
 };
 
+export const copyFixtureDatabase = async (fixturePath: string, dataPath: string) => {
+  const fixtureDir = path.join(__dirname, '..', 'fixtures', fixturePath);
+
+  if (!fs.existsSync(fixtureDir)) {
+    throw new Error(`Cannot find fixture directory ${fixtureDir}`);
+  }
+
+  await fs.promises.cp(fixtureDir, dataPath, { recursive: true });
+};
+
 export const randomDataPath = () => path.join(os.tmpdir(), 'insomnia-smoke-test', `${uuidv4()}`);
 export const INSOMNIA_DATA_PATH = randomDataPath();
 
