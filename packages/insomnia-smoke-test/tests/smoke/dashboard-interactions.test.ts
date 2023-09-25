@@ -13,7 +13,7 @@ test.describe('Dashboard', async () => {
 
       // Create new project
       await page.getByRole('button', { name: 'Create new Project' }).click();
-      await page.locator('text=Create').nth(1).click();
+      await page.getByRole('button', { name: 'Create', exact: true }).click();
 
       // Check empty project
       await expect(page.locator('.app')).toContainText('This is an empty project, to get started create your first resource:');
@@ -23,6 +23,7 @@ test.describe('Dashboard', async () => {
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByPlaceholder('My Project').click();
       await page.getByPlaceholder('My Project').fill('My Project123');
+      await page.getByRole('button', { name: 'Update' }).click();
 
       // Check that the project name is updated on modal
       await expect(page.locator('.app')).toContainText('My Project123');
@@ -34,12 +35,12 @@ test.describe('Dashboard', async () => {
       // Delete project
       await page.getByRole('row', { name: 'My Project' }).getByRole('button', { name: 'Project Actions' }).click();
       await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-      // Click text=NameActions Delete >> button
-      await page.click('text=NameActions Delete >> button');
+
+      await page.getByRole('button', { name: 'Delete' }).click();
       await page.getByRole('button', { name: 'Click to confirm' }).click();
 
       // After deleting project, return to default Insomnia Dashboard
-      await expect(page.locator('.app')).toContainText('Insomnia');
+      await expect(page.locator('.app')).toContainText('Personal Workspace');
       await expect(page.locator('.app')).not.toContainText('My Project123');
       await expect(page.locator('.app')).toContainText('New Document');
       await page.getByLabel('All Files (0)').click();
@@ -57,7 +58,7 @@ test.describe('Dashboard', async () => {
       const text = await loadFixture('multiple-workspaces.yaml');
       await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
       await page.getByRole('menuitemradio', { name: 'Import' }).click();
-      await page.getByText('Clipboard').click();
+      await page.locator('[data-test-id="import-from-clipboard"]').click();
       await page.getByRole('button', { name: 'Scan' }).click();
       await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
       await page.getByText('CollectionSmoke testsjust now').click();
@@ -94,7 +95,7 @@ test.describe('Dashboard', async () => {
       // Create new document
       await page.getByRole('button', { name: 'Create in project' }).click();
       await page.getByRole('menuitemradio', { name: 'Design Document' }).click();
-      await page.locator('text=Create').nth(1).click();
+      await page.getByRole('button', { name: 'Create', exact: true }).click();
 
       await page.getByTestId('project').click();
 
@@ -131,7 +132,7 @@ test.describe('Dashboard', async () => {
       // Create new collection
       await page.getByRole('button', { name: 'Create in project' }).click();
       await page.getByRole('menuitemradio', { name: 'Request Collection' }).click();
-      await page.locator('text=Create').nth(1).click();
+      await page.getByRole('button', { name: 'Create', exact: true }).click();
 
       await page.getByTestId('project').click();
 

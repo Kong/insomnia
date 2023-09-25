@@ -55,7 +55,7 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
     const workspace = await models.workspace.getById(workspaceId);
     invariant(workspace, 'failed to find workspace');
 
-    const settings = await models.settings.getOrCreate();
+    const settings = await models.settings.get();
     invariant(settings, 'failed to create settings');
     const clientCertificates = await models.clientCertificate.findByParentId(workspaceId);
     const caCert = await models.caCertificate.findByParentId(workspaceId);

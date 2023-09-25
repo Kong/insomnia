@@ -5,6 +5,10 @@ import { KeyCombination } from './settings';
 const env = process['env'];
 
 // App Stuff
+export const getSkipOnboarding = () => env.INSOMNIA_SKIP_ONBOARDING;
+export const getInsomniaSession = () => env.INSOMNIA_SESSION;
+export const getInsomniaSecretKey = () => env.INSOMNIA_SECRET_KEY;
+export const getInsomniaPublicKey = () => env.INSOMNIA_PUBLIC_KEY;
 export const getAppVersion = () => version;
 export const getProductName = () => appConfig.productName;
 export const getAppDefaultTheme = () => appConfig.theme;
@@ -132,6 +136,7 @@ export enum UpdateURL {
 
 // API
 export const getApiBaseURL = () => env.INSOMNIA_API_URL || 'https://api.insomnia.rest';
+export const getAIServiceURL = () => env.INSOMNIA_AI_URL || 'https://ai.insomnia.rest';
 
 export const getUpdatesBaseURL = () => env.INSOMNIA_UPDATES_URL || 'https://updates.insomnia.rest';
 

@@ -1,20 +1,10 @@
-import React, { Fragment, useCallback } from 'react';
+import React, { Fragment } from 'react';
 
-import { isLoggedIn } from '../../../account/session';
 import { useAIContext } from '../../context/app/ai-context';
 import { Link } from '../base/link';
 import { InsomniaAI } from '../insomnia-ai-icon';
-import { hideAllModals, showModal } from '../modals';
-import { LoginModal } from '../modals/login-modal';
 
 export const AI = () => {
-  const loggedIn = isLoggedIn();
-
-  const handleLogin = useCallback((event: React.SyntheticEvent<HTMLAnchorElement>) => {
-    event.preventDefault();
-    hideAllModals();
-    showModal(LoginModal);
-  }, []);
 
   const {
     access: {
@@ -27,7 +17,7 @@ export const AI = () => {
     return <div>Loading...</div>;
   }
 
-  if (loggedIn && enabled) {
+  if (enabled) {
     return <Fragment>
       <div
         className="notice pad success"
@@ -73,14 +63,9 @@ export const AI = () => {
   return (
     <Fragment>
       <div
-        className="notice pad surprise"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
+        className="notice pad surprise flex flex-col items-center gap-2"
       >
-        <h1 className="no-margin-top">Try Insomnia AI <InsomniaAI /></h1>
+        <h1 className="mt-0 flex items-center gap-2 text-xl">Try Insomnia AI <InsomniaAI /></h1>
         <p>
           Improve your productivity with Insomnia AI and perform complex operations in 1-click, like auto-generating API tests for your documents and collections.
           <br />
@@ -94,11 +79,6 @@ export const AI = () => {
           </Link>
         </div>
       </div>
-      {!loggedIn ? <p>
-        Or{' '}<a href="#" onClick={handleLogin} className="theme--link">
-          Log In
-        </a>
-      </p> : null}
     </Fragment >
   );
 };

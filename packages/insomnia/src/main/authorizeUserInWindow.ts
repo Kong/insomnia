@@ -34,7 +34,7 @@ export function authorizeUserInWindow({
     // Fetch user setting to determine whether to validate SSL certificates during auth
     const {
       validateAuthSSL,
-    } = await models.settings.getOrCreate();
+    } = await models.settings.get();
 
     // Create a child window
     const child = new BrowserWindow({

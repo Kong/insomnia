@@ -3,7 +3,6 @@ import { ActionFunction } from 'react-router-dom';
 
 import { fetchImportContentFromURI, importResourcesToProject, importResourcesToWorkspace, scanResources, ScanResult } from '../../common/import';
 import * as models from '../../models';
-import { DEFAULT_PROJECT_ID } from '../../models/project';
 import { invariant } from '../../utils/invariant';
 
 export interface ScanForResourcesActionResult extends ScanResult { }
@@ -63,14 +62,11 @@ export const importResourcesAction: ActionFunction = async ({ request }): Promis
   const formData = await request.formData();
 
   const organizationId = formData.get('organizationId');
-  let projectId = formData.get('projectId');
+  const projectId = formData.get('projectId');
   const workspaceId = formData.get('workspaceId');
 
   invariant(typeof organizationId === 'string', 'OrganizationId is required.');
-  // when importing through insomnia://app/import, projectId is not provided
-  if (typeof projectId !== 'string' || !projectId) {
-    projectId = DEFAULT_PROJECT_ID;
-  }
+  invariant(typeof projectId === 'string', 'ProjectId is required.');
 
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found.');

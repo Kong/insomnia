@@ -220,12 +220,14 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                 </Tooltip>
               </Button>
             </StyledDropdownWrapper>
-            <GrpcSendButton
-              running={running}
-              methodType={methodType}
-              handleCancel={() => window.main.grpc.cancel(requestId)}
-              handleStart={handleRequestSend}
-            />
+            <div className='flex p-1'>
+              <GrpcSendButton
+                running={running}
+                methodType={methodType}
+                handleCancel={() => window.main.grpc.cancel(requestId)}
+                handleStart={handleRequestSend}
+              />
+            </div>
           </StyledUrlBar>
         </PaneHeader>
         <PaneBody>
