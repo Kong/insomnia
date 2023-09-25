@@ -7,7 +7,7 @@ import * as models from '../../models';
 import { isUrlMatchedInNoProxyRule } from '../../network/is-url-matched-in-no-proxy-rule';
 import { setDefaultProtocol } from '../../utils/url/protocol';
 export const axiosRequest = async (config: AxiosRequestConfig): Promise<AxiosResponse> => {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   const isHttps = config.url?.indexOf('https:') === 0;
   let proxyUrl: string | null = null;
 

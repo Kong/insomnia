@@ -21,7 +21,13 @@ const buttonProps: ButtonProps = {
 export const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, handleStart, handleCancel }) => {
   if (running) {
     return (
-      <Button {...buttonProps} onClick={handleCancel}>
+      <Button
+        style={{
+          borderRadius: 'var(--radius-sm)',
+        }}
+        {...buttonProps}
+        onClick={handleCancel}
+      >
         Cancel
       </Button>
     );
@@ -29,14 +35,26 @@ export const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, 
 
   if (!methodType) {
     return (
-      <Button {...buttonProps} disabled>
+      <Button
+        style={{
+          borderRadius: 'var(--radius-sm)',
+        }}
+        {...buttonProps}
+        disabled
+      >
         Send
       </Button>
     );
   }
 
   return (
-    <Button {...buttonProps} onClick={handleStart}>
+    <Button
+      style={{
+        borderRadius: 'var(--radius-sm)',
+      }}
+      {...buttonProps}
+      onClick={handleStart}
+    >
       {methodType === 'unary' ? 'Send' : 'Start'}
     </Button>
   );

@@ -14,7 +14,7 @@ test('can render schema and send GraphQL requests', async ({ app, page }) => {
 
   // Import from clipboard
   await page.getByRole('menuitemradio', { name: 'Import' }).click();
-  await page.getByText('Clipboard').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionSmoke GraphQLjust now').click();
@@ -51,7 +51,7 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
   const text = await loadFixture('graphql.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
   await page.getByRole('menuitemradio', { name: 'Import' }).click();
-  await page.getByText('Clipboard').click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionSmoke GraphQLjust now').click();

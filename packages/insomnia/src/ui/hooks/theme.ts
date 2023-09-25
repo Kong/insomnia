@@ -1,17 +1,16 @@
 import { ChangeEvent, useCallback, useState } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
 import { useAsync } from 'react-use';
 
 import { ThemeSettings } from '../../models/settings';
 import { ColorScheme, getThemes } from '../../plugins';
 import { applyColorScheme, PluginTheme } from '../../plugins/misc';
-import { RootLoaderData } from '../routes/root';
+import { useRootLoaderData } from '../routes/root';
 import { useSettingsPatcher } from './use-request';
 
 export const useThemes = () => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRootLoaderData();
   const {
     lightTheme,
     darkTheme,

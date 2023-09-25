@@ -15,7 +15,7 @@ interface AxiosRequestMockUserSettings {
 }
 
 jest.mock('axios');
-jest.spyOn(models.settings, 'getOrCreate');
+jest.spyOn(models.settings, 'get');
 
 describe('axiosRequest used for git-sync', () => {
   beforeEach(globalBeforeEach);
@@ -46,7 +46,7 @@ describe('axiosRequest used for git-sync', () => {
         noProxy: '',
         validateSSL: false,
       };
-      (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
+      (models.settings.get as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
       const response = await axiosRequest({ url: 'https://git.acme.com/username/repo-name.git/git-upload-pack' });
       expect(response.config.proxy).toBe(false);
     });
@@ -59,7 +59,7 @@ describe('axiosRequest used for git-sync', () => {
         noProxy: 'localhost,127.0.0.1',
         validateSSL: false,
       };
-      (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
+      (models.settings.get as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
       const response = await axiosRequest({ url: 'http://git.acme.com/username/repo-name.git/git-upload-pack' });
       expect(response.config.proxy).toEqual({ host: 'some.proxy.com', port: 8080 });
     });
@@ -72,7 +72,7 @@ describe('axiosRequest used for git-sync', () => {
         noProxy: 'localhost,127.0.0.1',
         validateSSL: false,
       };
-      (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
+      (models.settings.get as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
       const response = await axiosRequest({ url: 'http://git.acme.com/username/repo-name.git/git-upload-pack' });
       expect(response.config.proxy).toBe(false);
     });
@@ -85,7 +85,7 @@ describe('axiosRequest used for git-sync', () => {
         noProxy: 'localhost,127.0.0.1',
         validateSSL: false,
       };
-      (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
+      (models.settings.get as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
       const response = await axiosRequest({ url: 'https://git.acme.com/username/repo-name.git/git-upload-pack' });
       expect(response.config.proxy).toEqual({ host: 'some.proxy.com', port: 8080 });
     });
@@ -98,7 +98,7 @@ describe('axiosRequest used for git-sync', () => {
         noProxy: 'localhost,127.0.0.1',
         validateSSL: false,
       };
-      (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
+      (models.settings.get as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
       const response = await axiosRequest({ url: 'http://git.acme.com/username/repo-name.git/git-upload-pack' });
       expect(response.config.proxy).toEqual({ host: 'some.proxy.com', port: 8081 });
     });
@@ -111,7 +111,7 @@ describe('axiosRequest used for git-sync', () => {
         noProxy: 'localhost,127.0.0.1',
         validateSSL: false,
       };
-      (models.settings.getOrCreate as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
+      (models.settings.get as unknown as jest.Mock).mockImplementation(() => mockInsomniaConfigPanelUserSettings);
       const response = await axiosRequest({ url: 'https://git.acme.com/username/repo-name.git/git-upload-pack' });
       expect(response.config.proxy).toEqual({ host: 'some.proxy.com', port: 8080 });
     });

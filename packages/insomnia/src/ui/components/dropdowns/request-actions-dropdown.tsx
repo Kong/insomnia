@@ -1,7 +1,7 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Fragment, useCallback, useState } from 'react';
 import { Button, Item, Menu, MenuTrigger, Popover } from 'react-aria-components';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 
 import { exportHarRequest } from '../../../common/har';
 import { toKebabCase } from '../../../common/misc';
@@ -19,15 +19,14 @@ import type { RequestAction } from '../../../plugins';
 import { getRequestActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { useRequestMetaPatcher, useRequestPatcher } from '../../hooks/use-request';
-import { RootLoaderData } from '../../routes/root';
-import { type DropdownProps } from '../base/dropdown';
+import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 
-interface Props extends Omit<DropdownProps, 'children'> {
+interface Props {
   activeEnvironment: Environment;
   activeProject: Project;
   isPinned: Boolean;
@@ -43,7 +42,7 @@ export const RequestActionsDropdown = ({
 }: Props) => {
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRootLoaderData();
   const patchRequestMeta = useRequestMetaPatcher();
   const patchRequest = useRequestPatcher();
   const { hotKeyRegistry } = settings;

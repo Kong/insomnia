@@ -32,16 +32,17 @@ CodeMirror.defineExtension('makeLinksClickable', function(this: CodeMirror.Edito
     movedDuringClick = false;
   });
   el.addEventListener('mouseup', event => {
-    if (movedDuringClick) {
+    if (movedDuringClick || !event.target) {
       return;
     }
 
-    // @ts-expect-error -- type unsoundness
-    const cls = event.target.className;
+    if (event.target instanceof HTMLElement) {
+      const cls = event.target.className;
 
-    if (cls.indexOf('cm-clickable') >= 0) {
-      // @ts-expect-error -- mapping unsoundness
-      handleClick(decode(event.target.innerHTML));
+      if (cls.indexOf('cm-clickable') >= 0) {
+        handleClick(decode(event.target.innerHTML));
+      }
     }
+
   });
 });

@@ -1,6 +1,5 @@
-import React, { createContext, FC, PropsWithChildren, useContext, useEffect } from 'react';
+import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useRef } from 'react';
 import { useFetcher, useFetchers, useParams } from 'react-router-dom';
-import { usePrevious } from 'react-use';
 
 import { isLoggedIn } from '../../../account/session';
 
@@ -39,26 +38,26 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
   const loading = useFetchers().filter(loader => loader.formAction?.includes('/ai/generate/')).some(loader => loader.state !== 'idle');
 
   const loggedIn = isLoggedIn();
-
-  const prevProjectId = usePrevious(projectId);
+  const previousOrganizationIdRef = useRef(organizationId);
 
   useEffect(() => {
     if (!loggedIn) {
       return;
     }
 
+    const organizationIdHasChanged = previousOrganizationIdRef.current !== organizationId;
     const fetcherHasNotRun = aiAccessFetcher.state === 'idle' && !aiAccessFetcher.data;
-    const projectIdHasChanged = prevProjectId !== projectId;
 
-    if (fetcherHasNotRun || projectIdHasChanged) {
+    if (fetcherHasNotRun && organizationIdHasChanged) {
+      previousOrganizationIdRef.current = organizationId;
       aiAccessFetcher.submit({}, {
         method: 'post',
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/ai/access`,
+        action: `/organization/${organizationId}/ai/access`,
       });
     }
-  }, [aiAccessFetcher, organizationId, projectId, workspaceId, loggedIn, prevProjectId]);
+  }, [aiAccessFetcher, organizationId, loggedIn]);
 
-  const isAIEnabled = aiAccessFetcher.data?.enabled ?? false;
+  const isAIEnabled = Boolean(aiAccessFetcher.data?.enabled);
 
   const aiGenerateTestsProgressStream = aiGenerateTestsFetcher.data as TransformStream;
 
