@@ -4,7 +4,6 @@ import { getApiBaseURL, getAppWebsiteBaseURL, getGitHubGraphQLApiURL } from '../
 
 export const GITHUB_TOKEN_STORAGE_KEY = 'github-oauth-token';
 export const GITHUB_GRAPHQL_API_URL = getGitHubGraphQLApiURL();
-const getOauthPageURL = () => getAppWebsiteBaseURL() + '/oauth/github';
 
 /**
  * This cache stores the states that are generated for the OAuth flow.
@@ -18,7 +17,7 @@ export function generateAuthorizationUrl() {
   const scopes = ['repo', 'read:user', 'user:email'];
   const scope = scopes.join(' ');
 
-  const url = new URL(getOauthPageURL());
+  const url = new URL(getAppWebsiteBaseURL() + '/oauth/github');
 
   statesCache.add(state);
 
@@ -43,8 +42,10 @@ export async function exchangeCodeForToken({
     );
   }
 
+  const apiURL = getApiBaseURL();
+
   return window.main.axiosRequest({
-    url: getApiBaseURL() + '/v1/oauth/github',
+    url: apiURL + '/v1/oauth/github',
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

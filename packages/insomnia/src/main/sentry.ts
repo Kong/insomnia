@@ -13,7 +13,7 @@ let enabled = false;
  * Watch setting for changes. This must be called after the DB is initialized.
  */
 export function sentryWatchAnalyticsEnabled() {
-  models.settings.getOrCreate().then(settings => {
+  models.settings.get().then(settings => {
     enabled = settings.enableAnalytics || session.isLoggedIn();
   });
 

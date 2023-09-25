@@ -133,7 +133,7 @@ const openCurlConnection = async (
     }
     const readyStateChannel = `curl.${request._id}.readyState`;
 
-    const settings = await models.settings.getOrCreate();
+    const settings = await models.settings.get();
     const start = performance.now();
     const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), options.url));
@@ -223,7 +223,7 @@ const openCurlConnection = async (
         settingStoreCookies: request.settingStoreCookies,
         bodyCompression: null,
       };
-      const settings = await models.settings.getOrCreate();
+      const settings = await models.settings.get();
       const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
@@ -271,7 +271,7 @@ const openCurlConnection = async (
 };
 
 const createErrorResponse = async (responseId: string, requestId: string, environmentId: string | null, timelinePath: string, message: string) => {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,

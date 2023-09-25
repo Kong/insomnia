@@ -11,6 +11,7 @@ import githubApi from './github-api';
 import gitlabApi from './gitlab-api';
 import { schema } from './graphql';
 import { startGRPCServer } from './grpc';
+import insomniaApi from './insomnia-api';
 import { oauthRoutes } from './oauth';
 import { startWebSocketServer } from './websocket';
 
@@ -47,6 +48,7 @@ app.use('/auth/basic', basicAuthRouter);
 
 githubApi(app);
 gitlabApi(app);
+insomniaApi(app);
 
 app.get('/delay/seconds/:duration', (req, res) => {
   const delaySec = Number.parseInt(req.params.duration || '2');

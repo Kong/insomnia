@@ -1,12 +1,8 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { DEFAULT_PROJECT_ID } from '../../project';
 import { sortProjects } from '../project';
 
-const defaultProject = { name: 'a', remoteId: null, _id: DEFAULT_PROJECT_ID };
-
-const localA = { name: 'a', remoteId: null, _id: 'localA' };
-const localB = { name: 'b', remoteId: null, _id: 'localB' };
+const defaultOrgProject = { name: 'a', remoteId: 'proj_team_123456789345678987654', _id: 'not important' };
 
 const remoteA = { name: 'a', remoteId: 'notNull', _id: 'remoteA' };
 const remoteB = { name: 'b', remoteId: 'notNull', _id: 'remoteB' };
@@ -16,18 +12,14 @@ describe('sortProjects', () => {
   it('sorts projects by default > local > remote > name', () => {
     const unSortedProjects = [
       remoteA,
-      localB,
-      defaultProject,
+      defaultOrgProject,
       remoteB,
-      localA,
       remote0,
     ];
     const result = sortProjects(unSortedProjects);
 
     const sortedProjects = [
-      defaultProject,
-      localA,
-      localB,
+      defaultOrgProject,
       remote0,
       remoteA,
       remoteB,

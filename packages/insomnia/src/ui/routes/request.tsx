@@ -74,7 +74,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
   }
   const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
   invariant(activeRequestMeta, 'Request meta not found');
-  const { filterResponsesByEnv } = await models.settings.getOrCreate();
+  const { filterResponsesByEnv } = await models.settings.get();
 
   const responseModelName = isWebSocketRequestId(requestId) ? 'webSocketResponse' : 'response';
   const activeResponse = activeRequestMeta.activeResponseId
