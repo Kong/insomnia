@@ -79,14 +79,14 @@ export const init = async () => {
   if (isUpdateSupported()) {
     // perhaps disable this method of upgrading just incase it trigger before backup is complete
     // on app start
-    const settings = await models.settings.getOrCreate();
+    const settings = await models.settings.get();
     const updateUrl = getUpdateUrl(settings.updateChannel);
     if (settings.updateAutomatically && updateUrl) {
       _checkForUpdates(updateUrl);
     }
     // on an interval (3h)
     setInterval(async () => {
-      const settings = await models.settings.getOrCreate();
+      const settings = await models.settings.get();
       const updateUrl = getUpdateUrl(settings.updateChannel);
       if (settings.updateAutomatically && updateUrl) {
         _checkForUpdates(updateUrl);
@@ -96,7 +96,7 @@ export const init = async () => {
     // on check now button pushed
     ipcMain.on('manualUpdateCheck', async () => {
       console.log('[updater] Manual update check');
-      const settings = await models.settings.getOrCreate();
+      const settings = await models.settings.get();
       const updateUrl = isUpdateSupported() && getUpdateUrl(settings.updateChannel);
       if (!updateUrl) {
         _sendUpdateStatus('Updates Not Supported');

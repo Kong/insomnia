@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="font-src 'self' data:; connect-src * data:; default-src * insomnia://*; img-src blob: data: * insomnia://*; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src blob: data: mediastream: * insomnia://*;"
+      content="font-src 'self' data:; connect-src * data: api: insomnia-event-source:; default-src * insomnia://*; img-src blob: data: * insomnia://*; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src blob: data: mediastream: * insomnia://*;"
     />
     <link rel="stylesheet" href="./ui/css/styles.css" />
   </head>
@@ -37,7 +37,7 @@
               cy="36"
               r="36"
               fill="none"
-              stroke="var(--hl)"
+              stroke="var(--hl, rgb(130, 130, 130))"
               stroke-opacity="0.1"
               stroke-width="4px"
               transform="translate(-323 -111) translate(359.016 147.016) scale(4.24956)"
@@ -47,7 +47,7 @@
               cy="36"
               r="36"
               fill="none"
-              stroke="var(--hl)"
+              stroke="var(--hl, rgb(130, 130, 130))"
               stroke-opacity="0.8"
               stroke-width="4px"
               stroke-dasharray="56,172,0,0"

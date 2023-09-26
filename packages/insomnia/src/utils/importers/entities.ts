@@ -70,7 +70,8 @@ export type ImportRequestType =
 
 export interface ImportRequest<T extends {} = {}> extends Comment {
   _id?: string;
-  _type?: ImportRequestType;
+  // @TODO Fix me
+  _type?: string;
   authentication?: Authentication;
   body?: Body;
   cookies?: Cookie[];

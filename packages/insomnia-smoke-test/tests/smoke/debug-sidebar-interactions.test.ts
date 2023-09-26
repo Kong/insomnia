@@ -10,7 +10,7 @@ test.describe('Debug-Sidebar', async () => {
     const text = await loadFixture('simple.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
     await page.getByRole('menuitemradio', { name: 'Import' }).click();
-    await page.getByText('Clipboard').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     await page.getByText('Collectionsimplejust now').click();
@@ -58,8 +58,8 @@ test.describe('Debug-Sidebar', async () => {
     });
 
     test('Open properties of the collection', async ({ page }) => {
-      await page.getByTestId('workspace-dropdown').locator('button').click();
-      await page.getByRole('menuitem', { name: 'Settings' }).click();
+      await page.getByLabel('Workspace actions', { exact: true }).click();
+      await page.getByRole('menuitemradio', { name: 'Settings' }).click();
       await page.getByText('Collection Settings').click();
     });
 

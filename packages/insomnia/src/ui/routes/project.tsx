@@ -1,5 +1,5 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
-import React, { FC, Fragment, useState } from 'react';
+import React, { FC, Fragment, useEffect, useState } from 'react';
 import {
   Button,
   GridList,
@@ -22,16 +22,19 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
+  useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
 
+import { getAccountId, getCurrentSessionId, isLoggedIn } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   DASHBOARD_SORT_ORDERS,
   DashboardSortOrder,
   dashboardSortOrderName,
-  getProductName,
+  getAppWebsiteBaseURL,
 } from '../../common/constants';
+import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
@@ -40,31 +43,59 @@ import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
 import { sortProjects } from '../../models/helpers/project';
+import { isOwnerOfOrganization, isScratchpadOrganizationId } from '../../models/organization';
+import { Organization } from '../../models/organization';
 import {
-  DEFAULT_ORGANIZATION_ID,
-  defaultOrganization,
-  Organization,
-} from '../../models/organization';
-import {
-  DEFAULT_PROJECT_ID,
   isRemoteProject,
   Project,
+  SCRATCHPAD_PROJECT_ID,
 } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
+import { showModal } from '../../ui/components/modals';
+import { AskModal } from '../../ui/components/modals/ask-modal';
 import { invariant } from '../../utils/invariant';
+import { AvatarGroup } from '../components/avatar';
 import { ProjectDropdown } from '../components/dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from '../components/dropdowns/remote-workspaces-dropdown';
 import { WorkspaceCardDropdown } from '../components/dropdowns/workspace-card-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { showAlert, showPrompt } from '../components/modals';
+import { AlertModal } from '../components/modals/alert-modal';
 import { GitRepositoryCloneModal } from '../components/modals/git-repository-settings-modal/git-repo-clone-modal';
 import { ImportModal } from '../components/modals/import-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
-import { useOrganizationLoaderData } from './organization';
+import { usePresenceContext } from '../context/app/presence-context';
+import { type FeatureList, useOrganizationLoaderData } from './organization';
+
+interface TeamProject {
+  id: string;
+  name: string;
+}
+
+async function getAllTeamProjects(organizationId: string) {
+  const sessionId = getCurrentSessionId() || '';
+  console.log('Fetching projects for team', organizationId);
+  if (!sessionId) {
+    return [];
+  }
+
+  const response = await window.main.insomniaFetch<{
+    data: {
+      id: string;
+      name: string;
+    }[];
+  }>({
+    path: `/v1/organizations/${organizationId}/team-projects`,
+    method: 'GET',
+    sessionId,
+  });
+
+  return response.data as TeamProject[];
+}
 
 export interface WorkspaceWithMetadata {
   _id: string;
@@ -86,6 +117,64 @@ export interface WorkspaceWithMetadata {
   caCertificate: CaCertificate | null;
 }
 
+async function syncTeamProjects({
+  organizationId,
+  teamProjects,
+}: {
+  teamProjects: TeamProject[];
+  organizationId: string;
+}) {
+
+  // assumption: api teamProjects is the source of truth for migrated projects
+  // once migrated orgs become the source of truth for projects
+  // its important that migration be completed before this code is run
+  const existingRemoteProjects = await database.find<Project>(models.project.type, {
+    remoteId: { $in: teamProjects.map(p => p.id) },
+  });
+
+  const existingRemoteProjectsRemoteIds = existingRemoteProjects.map(p => p.remoteId);
+  const remoteProjectsThatNeedToBeCreated = teamProjects.filter(p => !existingRemoteProjectsRemoteIds.includes(p.id));
+
+  // this will create a new project for any remote projects that don't exist in the current organization
+  await Promise.all(remoteProjectsThatNeedToBeCreated.map(async prj => {
+    await models.project.create(
+      {
+        remoteId: prj.id,
+        name: prj.name,
+        parentId: organizationId,
+      }
+    );
+  }));
+
+  const remoteProjectsThatNeedToBeUpdated = await database.find<Project>(models.project.type, {
+    // Name is not in the list of remote projects
+    name: { $nin: teamProjects.map(p => p.name) },
+    // Remote ID is in the list of remote projects
+    remoteId: { $in: teamProjects.map(p => p.id) },
+  });
+
+  await Promise.all(remoteProjectsThatNeedToBeUpdated.map(async prj => {
+    const remoteProject = teamProjects.find(p => p.id === prj.remoteId);
+    if (remoteProject) {
+      await models.project.update(prj, {
+        name: remoteProject.name,
+      });
+    }
+  }));
+
+  // Remove any remote projects from the current organization that are not in the list of remote projects
+  const removedRemoteProjects = await database.find<Project>(models.project.type, {
+    // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
+    parentId: organizationId,
+    // Remote ID is not in the list of remote projects
+    remoteId: { $nin: teamProjects.map(p => p.id) },
+  });
+
+  await Promise.all(removedRemoteProjects.map(async prj => {
+    await models.project.remove(prj);
+  }));
+}
+
 export const indexLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
@@ -94,6 +183,22 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     `locationHistoryEntry:${organizationId}`
   );
 
+  let teamProjects: TeamProject[] = [];
+
+  try {
+    teamProjects = await getAllTeamProjects(organizationId);
+    // ensure we don't sync projects in the wrong place
+    if (teamProjects.length > 0 && isLoggedIn() && !isScratchpadOrganizationId(organizationId)) {
+      await syncTeamProjects({
+        organizationId,
+        teamProjects,
+      });
+    }
+  } catch (err) {
+    console.log('Could not fetch remote projects.');
+  }
+
+  // Check if the last visited project exists and redirect to it
   if (prevOrganizationLocation) {
     const match = matchPath(
       {
@@ -104,27 +209,50 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
     );
 
     if (match && match.params.organizationId && match.params.projectId) {
-      return redirect(
-        `/organization/${match?.params.organizationId}/project/${match?.params.projectId}`
-      );
+      const existingProject = await models.project.getById(match.params.projectId);
+
+      if (existingProject) {
+        console.log('Redirecting to last visited project', existingProject._id);
+        return redirect(`/organization/${match?.params.organizationId}/project/${existingProject._id}`);
+      }
     }
   }
 
-  if (models.organization.DEFAULT_ORGANIZATION_ID === organizationId) {
-    const localProjects = (await models.project.all()).filter(
-      proj => !isRemoteProject(proj)
-    );
-    if (localProjects[0]._id) {
-      return redirect(
-        `/organization/${organizationId}/project/${localProjects[0]._id}`
-      );
-    }
-  } else {
-    const projectId = organizationId;
-    return redirect(`/organization/${organizationId}/project/${projectId}`);
-  }
+  const allOrganizationProjects = await database.find<Project>(models.project.type, {
+    parentId: organizationId,
+  }) || [];
 
-  return;
+  // Check if the org has any projects and redirect to the first one
+  const projectId = allOrganizationProjects[0]?._id;
+
+  invariant(projectId, 'No projects found for this organization.');
+
+  return redirect(`/organization/${organizationId}/project/${projectId}`);
+
+};
+
+export interface ProjectsLoaderData {
+  activeProject: Project;
+}
+
+export const projectLoader: LoaderFunction = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const projectPath = matchPath('/organization/:organizationId/project/:projectId', url.pathname);
+
+    if (!projectPath || !projectPath.params.projectId) {
+      return null;
+    }
+
+    const activeProject = await models.project.getById(projectPath.params.projectId);
+    invariant(activeProject, `Project was not found ${projectPath.params.projectId}`);
+
+    return {
+      activeProject,
+    };
+  } catch (err) {
+    return null;
+  }
 };
 
 export interface ProjectLoaderData {
@@ -135,15 +263,19 @@ export interface ProjectLoaderData {
   projectsCount: number;
   activeProject: Project;
   projects: Project[];
-  organization: Organization;
 }
 
 export const loader: LoaderFunction = async ({
   params,
   request,
 }): Promise<ProjectLoaderData> => {
+  const sessionId = getCurrentSessionId();
+  if (!sessionId) {
+    throw redirect('/auth/login');
+  }
   const search = new URL(request.url).searchParams;
-  const { projectId, organizationId } = params;
+  const { organizationId } = params;
+  const { projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'projectId parameter is required');
   const sortOrder = search.get('sortOrder') || 'modified-desc';
@@ -151,20 +283,10 @@ export const loader: LoaderFunction = async ({
   const scope = search.get('scope') || 'all';
   const projectName = search.get('projectName') || '';
 
-  let project = await models.project.getById(projectId);
-  if (!project) {
-    const defaultProject = await models.project.getById(DEFAULT_PROJECT_ID);
-    project =
-      defaultProject ||
-      (await models.project.create({
-        _id: DEFAULT_PROJECT_ID,
-        name: getProductName(),
-        remoteId: null,
-      }));
-  }
-  invariant(project, 'Project was not found');
+  const project = await models.project.getById(projectId);
+  invariant(project, `Project was not found ${projectId}`);
 
-  const projectWorkspaces = await models.workspace.findByParentId(project._id);
+  const projectWorkspaces = await models.workspace.findByParentId(projectId);
 
   const getWorkspaceMetaData = async (
     workspace: Workspace
@@ -272,25 +394,15 @@ export const loader: LoaderFunction = async ({
     )
     .sort((a, b) => sortMethodMap[sortOrder as DashboardSortOrder](a, b));
 
-  const allProjects = await models.project.all();
-
-  const organizationProjects =
-    organizationId === DEFAULT_ORGANIZATION_ID
-      ? allProjects.filter(proj => !isRemoteProject(proj))
-      : [project];
+  const organizationProjects = await database.find<Project>(models.project.type, {
+    parentId: organizationId,
+  }) || [];
 
   const projects = sortProjects(organizationProjects).filter(p =>
-    p.name.toLowerCase().includes(projectName.toLowerCase())
+    p.name?.toLowerCase().includes(projectName.toLowerCase())
   );
 
   return {
-    organization:
-      organizationId === DEFAULT_ORGANIZATION_ID
-        ? defaultOrganization
-        : {
-            _id: organizationId,
-            name: projects[0].name,
-          },
     workspaces,
     projects,
     projectsCount: organizationProjects.length,
@@ -310,7 +422,6 @@ const ProjectRoute: FC = () => {
     workspaces,
     activeProject,
     projects,
-    organization,
     allFilesCount,
     collectionsCount,
     documentsCount,
@@ -323,6 +434,44 @@ const ProjectRoute: FC = () => {
   };
 
   const { organizations } = useOrganizationLoaderData();
+  const { presence } = usePresenceContext();
+  const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
+
+  const accountId = getAccountId();
+
+  const workspacesWithPresence = workspaces.map(workspace => {
+    const workspacePresence = presence
+      .filter(p => p.project === activeProject.remoteId && p.file === workspace._id)
+      .filter(p => p.acct !== accountId)
+      .map(user => {
+        return {
+          key: user.acct,
+          alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+          src: user.avatar,
+        };
+      });
+    return {
+      ...workspace,
+      presence: workspacePresence,
+    };
+  });
+
+  const projectsWithPresence = projects.map(project => {
+    const projectPresence = presence
+      .filter(p => p.project === project.remoteId)
+      .filter(p => p.acct !== accountId)
+      .map(user => {
+        return {
+          key: user.acct,
+          alt: user.firstName || user.lastName ? `${user.firstName} ${user.lastName}` : user.acct,
+          src: user.avatar,
+        };
+      });
+    return {
+      ...project,
+      presence: projectPresence,
+    };
+  });
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [isGitRepositoryCloneModalOpen, setIsGitRepositoryCloneModalOpen] =
@@ -336,6 +485,7 @@ const ProjectRoute: FC = () => {
   const [importModalType, setImportModalType] = useState<
     'uri' | 'file' | 'clipboard' | null
   >(null);
+
   const createNewCollection = () => {
     showPrompt({
       title: 'Create New Request Collection',
@@ -350,7 +500,7 @@ const ProjectRoute: FC = () => {
             scope: 'collection',
           },
           {
-            action: `/organization/${organization._id}/project/${activeProject._id}/workspace/new`,
+            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
             method: 'post',
           }
         );
@@ -372,7 +522,7 @@ const ProjectRoute: FC = () => {
             scope: 'design',
           },
           {
-            action: `/organization/${organization._id}/project/${activeProject._id}/workspace/new`,
+            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
             method: 'post',
           }
         );
@@ -382,8 +532,67 @@ const ProjectRoute: FC = () => {
 
   const createNewProjectFetcher = useFetcher();
 
+  useEffect(() => {
+    if (createNewProjectFetcher.data && createNewProjectFetcher.data.error && createNewProjectFetcher.state === 'idle') {
+      if (createNewProjectFetcher.data.error === 'NEEDS_TO_UPGRADE') {
+        showModal(AskModal, {
+          title: 'Upgrade your plan',
+          message: 'You are currently on the Free plan where you can invite as many collaborators as you want as long as you don\'t have more than one project. Since you have more than one project, you need to upgrade to "Individual" or above to continue.',
+          yesText: 'Upgrade',
+          noText: 'Cancel',
+          onDone: async (isYes: boolean) => {
+            if (isYes) {
+              window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=individual`);
+            }
+          },
+        });
+      } else if (createNewProjectFetcher.data.error === 'FORBIDDEN') {
+        showAlert({
+          title: 'Could not create project.',
+          message: 'You do not have permission to create a project in this organization.',
+        });
+      } else {
+        showAlert({
+          title: 'Could not create project.',
+          message: createNewProjectFetcher.data.error,
+        });
+      }
+    }
+  }, [createNewProjectFetcher.data, createNewProjectFetcher.state]);
+
+  const currentOrg = organizations.find(organization => (organization.id === organizationId));
+  const isGitSyncEnabled = features.gitSync.enabled;
+
+  const showUpgradePlanModal = () => {
+    if (!currentOrg || !accountId) {
+      return;
+    }
+    const isOwner = isOwnerOfOrganization({
+      organization: currentOrg,
+      accountId,
+    });
+
+    isOwner ?
+      showModal(AskModal, {
+        title: 'Upgrade Plan',
+        message: 'Git Sync is only enabled for Team plan or above, please upgrade your plan.',
+        yesText: 'Upgrade',
+        noText: 'Cancel',
+        onDone: async (isYes: boolean) => {
+          if (isYes) {
+            window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+          }
+        },
+      }) : showModal(AlertModal, {
+        title: 'Upgrade Plan',
+        message: 'Git Sync is only enabled for Team plan or above, please ask the organization owner to upgrade.',
+      });
+  };
+
   const importFromGit = () => {
-    setIsGitRepositoryCloneModalOpen(true);
+    isGitSyncEnabled ?
+      setIsGitRepositoryCloneModalOpen(true)
+      : showUpgradePlanModal();
   };
 
   const createInProjectActionList: {
@@ -477,10 +686,10 @@ const ProjectRoute: FC = () => {
                   selectedKey={organizationId}
                   items={organizations}
                 >
-                  <Button className="px-4 py-1 flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                  <Button className="px-4 py-1 font-bold flex flex-1 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                     <SelectValue<Organization> className="flex truncate items-center justify-center gap-2">
                       {({ selectedItem }) => {
-                        return selectedItem?.name;
+                        return selectedItem?.display_name || 'Select an organization';
                       }}
                     </SelectValue>
                     <Icon icon="caret-down" />
@@ -489,16 +698,16 @@ const ProjectRoute: FC = () => {
                     <ListBox<Organization> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
                       {item => (
                         <Item
-                          id={item._id}
-                          key={item._id}
+                          id={item.id}
+                          key={item.id}
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                          aria-label={item.name}
-                          textValue={item.name}
+                          aria-label={item.display_name}
+                          textValue={item.display_name}
                           value={item}
                         >
                           {({ isSelected }) => (
                             <Fragment>
-                              <span>{item.name}</span>
+                              <span>{item.display_name}</span>
                               {isSelected && (
                                 <Icon
                                   icon="check"
@@ -513,82 +722,64 @@ const ProjectRoute: FC = () => {
                   </Popover>
                 </Select>
               </div>
-              <div className="flex flex-col flex-1">
+              <div className="flex overflow-hidden flex-col flex-1">
                 <Heading className="p-[--padding-sm] uppercase text-xs">
                   Projects ({projectsCount})
                 </Heading>
-                {organizationId === DEFAULT_ORGANIZATION_ID && (
-                  <div className="flex justify-between gap-1 p-[--padding-sm]">
-                    <SearchField
-                      aria-label="Projects filter"
-                      className="group relative flex-1"
-                      defaultValue={searchParams.get('filter')?.toString() ?? ''}
-                      onChange={projectName => {
-                        setSearchParams({
-                          ...Object.fromEntries(searchParams.entries()),
-                          projectName,
-                        });
-                      }}
-                    >
-                      <Input
-                        placeholder="Filter"
-                        className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
-                      />
-                      <div className="flex items-center px-2 absolute right-0 top-0 h-full">
-                        <Button className="flex group-data-[empty]:hidden items-center justify-center aspect-square w-5 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                          <Icon icon="close" />
-                        </Button>
-                      </div>
-                    </SearchField>
+                <div className="flex justify-between gap-1 p-[--padding-sm]">
+                  <SearchField
+                    aria-label="Projects filter"
+                    className="group relative flex-1"
+                    defaultValue={searchParams.get('filter')?.toString() ?? ''}
+                    onChange={projectName => {
+                      setSearchParams({
+                        ...Object.fromEntries(searchParams.entries()),
+                        projectName,
+                      });
+                    }}
+                  >
+                    <Input
+                      placeholder="Filter"
+                      className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                    />
+                    <div className="flex items-center px-2 absolute right-0 top-0 h-full">
+                      <Button className="flex group-data-[empty]:hidden items-center justify-center aspect-square w-5 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                        <Icon icon="close" />
+                      </Button>
+                    </div>
+                  </SearchField>
 
-                    <Button
-                      onPress={() => {
-                        if (activeProject.remoteId) {
-                          showAlert({
-                            title: 'This capability is coming soon',
-                            okLabel: 'Close',
-                            message: (
-                              <div>
-                                <p>
-                                  At the moment it is not possible to create more
-                                  cloud projects within a team in Insomnia.
-                                </p>
-                                <p>🚀 This feature is coming soon!</p>
-                              </div>
-                            ),
-                          });
-                        } else {
-                          const defaultValue = `My ${strings.project.singular}`;
-                          showPrompt({
-                            title: `Create New ${strings.project.singular}`,
-                            submitName: 'Create',
-                            placeholder: defaultValue,
-                            defaultValue,
-                            selectText: true,
-                            onComplete: async name =>
-                              createNewProjectFetcher.submit(
-                                {
-                                  name,
-                                },
-                                {
-                                  action: `/organization/${organizationId}/project/new`,
-                                  method: 'post',
-                                }
-                              ),
-                          });
-                        }
-                      }}
-                      aria-label="Create new Project"
-                      className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                    >
-                      <Icon icon="plus-circle" />
-                    </Button>
-                  </div>
-                )}
+                  <Button
+                    onPress={() => {
+                      const defaultValue = `My ${strings.project.singular}`;
+                      showPrompt({
+                        title: `Create New ${strings.project.singular}`,
+                        submitName: 'Create',
+                        placeholder: defaultValue,
+                        defaultValue,
+                        selectText: true,
+                        onComplete: async name =>
+                          createNewProjectFetcher.submit(
+                            {
+                              name,
+                            },
+                            {
+                              action: `/organization/${organizationId}/project/new`,
+                              method: 'post',
+                            }
+                          ),
+                      });
+                    }}
+                    aria-label="Create new Project"
+                    className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  >
+                    <Icon icon="plus-circle" />
+                  </Button>
+                </div>
 
                 <GridList
                   aria-label="Projects"
-                  items={projects}
+                  items={projectsWithPresence}
                   className="overflow-y-auto flex-1 data-[empty]:py-0 py-[--padding-sm]"
                   disallowEmptySelection
                   selectedKeys={[activeProject._id]}
@@ -620,7 +811,12 @@ const ProjectRoute: FC = () => {
                           />
                           <span className="truncate">{item.name}</span>
                           <span className="flex-1" />
-                          {item._id !== DEFAULT_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} />}
+                          <AvatarGroup
+                            size="small"
+                            maxAvatars={3}
+                            items={item.presence}
+                          />
+                          {item._id !== SCRATCHPAD_PROJECT_ID && <ProjectDropdown organizationId={organizationId} project={item} />}
                         </div>
                       </Item>
                     );
@@ -630,7 +826,7 @@ const ProjectRoute: FC = () => {
               <GridList
                 aria-label="Scope filter"
                 items={scopeActionList}
-                className="overflow-y-auto flex-1 data-[empty]:py-0 py-[--padding-sm]"
+                className="overflow-y-auto flex-shrink-0 data-[empty]:py-0 py-[--padding-sm]"
                 disallowEmptySelection
                 selectedKeys={[searchParams.get('scope') || 'all']}
                 selectionMode="single"
@@ -673,19 +869,34 @@ const ProjectRoute: FC = () => {
                   );
                 }}
               </GridList>
-              <Button
-                aria-label="Explore subscriptions"
-                className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                onPress={() => {
-                  window.main.openInBrowser('https://insomnia.rest/pricing');
-                }}
-              >
-                <Icon icon="arrow-up-right-from-square" />
+              <div className='flex flex-shrink-0 flex-col py-[--padding-sm]'>
+                <Button
+                  aria-label="Invite collaborators"
+                  className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                  onPress={() => {
+                    window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
+                  }}
+                >
+                  <Icon icon="user-plus" />
 
-                <span className="truncate capitalize">
-                  Explore subscriptions
-                </span>
-              </Button>
+                  <span className="truncate">
+                    Invite collaborators
+                  </span>
+                </Button>
+                <Button
+                  aria-label="Help and Feedback"
+                  className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                  onPress={() => {
+                    window.main.openInBrowser('https://insomnia.rest/support');
+                  }}
+                >
+                  <Icon icon="message" />
+
+                  <span className="truncate">
+                    Help and feedback
+                  </span>
+                </Button>
+              </div>
             </div>
           }
           renderPaneOne={
@@ -813,7 +1024,7 @@ const ProjectRoute: FC = () => {
 
               <GridList
                 aria-label="Workspaces"
-                items={workspaces}
+                items={workspacesWithPresence}
                 onAction={key => {
                   navigate(
                     `/organization/${organizationId}/project/${projectId}/workspace/${key}/debug`
@@ -849,24 +1060,31 @@ const ProjectRoute: FC = () => {
                       textValue={item.name}
                       className="[&_[role=gridcell]]:flex-1 [&_[role=gridcell]]:overflow-hidden [&_[role=gridcell]]:flex [&_[role=gridcell]]:flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
                     >
-                      <div className="flex gap-2">
-                        <div className="flex items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
+                      <div className="flex gap-2 h-[20px]">
+                        <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
                           {isDesign(item.workspace) ? (
-                            <div className="px-2 rounded-s-sm bg-[--color-info] text-[--color-font-info]">
+                            <div className="px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm bg-[--color-info] text-[--color-font-info]">
                               <Icon icon="file" />
                             </div>
                           ) : (
-                            <div className="px-2 rounded-s-sm bg-[--color-surprise] text-[--color-font-surprise]">
+                              <div className="px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm bg-[--color-surprise] text-[--color-font-surprise]">
                               <Icon icon="bars" />
                             </div>
                           )}
-                          <span className="truncate pr-2">
+                          <span>
                             {isDesign(item.workspace)
                               ? 'Document'
                               : 'Collection'}
                           </span>
                         </div>
                         <span className="flex-1" />
+                        {item.presence.length > 0 && (
+                          <AvatarGroup
+                            size="small"
+                            maxAvatars={3}
+                            items={item.presence}
+                          />
+                        )}
                         <WorkspaceCardDropdown
                           {...item}
                           project={activeProject}

@@ -1,17 +1,30 @@
-
-export const type = 'Organization';
-export const prefix = 'org';
-
-export interface Organization {
-  _id: string;
-  name: string;
+interface Branding {
+  logo_url: string;
 }
 
-export const DEFAULT_ORGANIZATION_ID = `${prefix}_default-project`;
+export interface Metadata {
+  organizationType: string;
+  ownerAccountId: string;
+}
 
-export const defaultOrganization: Organization = {
-  _id: DEFAULT_ORGANIZATION_ID,
-  name: 'Personal Projects',
-};
+export interface Organization {
+  id: string;
+  name: string;
+  display_name: string;
+  branding?: Branding;
+  metadata: Metadata;
+}
+export const SCRATCHPAD_ORGANIZATION_ID = 'org_scratchpad';
+export const isScratchpadOrganizationId = (organizationId: string) =>
+  organizationId === SCRATCHPAD_ORGANIZATION_ID;
+export const isPersonalOrganization = (organization: Organization) =>
+  organization.metadata.organizationType === 'personal';
 
-export const isDefaultOrganization = (organization: Organization) => organization._id === DEFAULT_ORGANIZATION_ID;
+export const isOwnerOfOrganization = ({
+  organization,
+  accountId,
+}: {
+  organization: Organization;
+  accountId: string;
+}) =>
+  organization.metadata.ownerAccountId === accountId;

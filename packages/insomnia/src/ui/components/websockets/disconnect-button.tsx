@@ -4,6 +4,8 @@ import styled from 'styled-components';
 import { Dropdown as OriginalDropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 
 const SplitButton = styled.div({
+  borderRadius: 'var(--radius-sm)',
+  overflow: 'hidden',
   display: 'flex',
   color: 'var(--color-font-surprise)',
 });

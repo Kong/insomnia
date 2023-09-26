@@ -10,6 +10,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     await models.project.all();
+    await models.settings.getOrCreate();
   });
 
   it('exports a single workspace and some requests only as an HTTP Archive', async () => {

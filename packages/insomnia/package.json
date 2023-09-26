@@ -1,6 +1,6 @@
 {
   "name": "insomnia",
-  "version": "2023.5.8",
+  "version": "8.0.0-beta.0",
   "productName": "Insomnia",
   "private": true,
   "description": "The Collaborative API Design Tool",
@@ -58,6 +58,7 @@
     "electron-context-menu": "^3.6.1",
     "electron-log": "^4.4.8",
     "grpc-reflection-js": "0.3.0",
+    "gsap": "^3.11.3",
     "hawk": "9.0.1",
     "hkdf": "^0.0.2",
     "hosted-git-info": "5.2.1",

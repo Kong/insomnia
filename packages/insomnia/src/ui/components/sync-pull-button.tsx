@@ -2,6 +2,7 @@ import React, { FC, ReactNode, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { VCS } from '../../sync/vcs/vcs';
+import { invariant } from '../../utils/invariant';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { showError } from './modals';
 interface Props {
@@ -26,9 +27,10 @@ export const SyncPullButton: FC<Props> = props => {
     const oldBranch = await newVCS.getBranch();
     let failed = false;
     try {
+      invariant(activeProject.remoteId, 'Project is not remote');
       // Clone old VCS so we don't mess anything up while working on other projects
       await newVCS.checkout([], branch);
-      await newVCS.pull([], activeProject.remoteId);
+      await newVCS.pull({ candidates: [], teamId: activeProject.parentId, teamProjectId: activeProject.remoteId });
     } catch (err) {
       showError({
         title: 'Pull Error',

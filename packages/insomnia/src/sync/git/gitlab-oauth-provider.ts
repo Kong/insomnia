@@ -25,9 +25,10 @@ const getGitLabConfig = async () => {
     };
   }
 
+  const apiURL = getApiBaseURL();
   // Otherwise fetch the config for the GitLab API
   return window.main.axiosRequest({
-    url: getApiBaseURL() + '/v1/oauth/gitlab/config',
+    url: apiURL + '/v1/oauth/gitlab/config',
     method: 'GET',
   }).then(({ data }) => {
     return {
