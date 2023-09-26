@@ -14,7 +14,7 @@ async function renderImage() {
 
   if (appConfigVersion.includes('beta')) {
     type = 'beta';
-    const appConfigRevision = appConfigVersion.match(/^\d{4}\.\d+\.\d+-beta\.(\d+)/);
+    const appConfigRevision = appConfigVersion.match(/^\d+\.\d+\.\d+-beta\.(\d+)/);
     if (!appConfigRevision) {
       throw new Error('Invalid app version beta revision');
     }
@@ -24,7 +24,7 @@ async function renderImage() {
   }
 
   // Ignore any semver prerelease/build tags
-  const cleanedAppConfigVersion = appConfigVersion.match(type === 'major' ? /^(\d{4}\.\d+)/ : /^(\d{4}\.\d+\.\d+)/);
+  const cleanedAppConfigVersion = appConfigVersion.match(type === 'major' ? /^(\d+\.\d+)/ : /^(\d+\.\d+\.\d+)/);
   if (!cleanedAppConfigVersion) {
     throw new Error('Invalid app version');
   }
@@ -71,7 +71,7 @@ async function renderImage() {
     // Manually kern the beta revision text over to the left for some numbers
     // as they are slimmer in Inter
     // This is not perfect as everything is not centered, but it's good enough
-    const minorAndPatch = appConfigVersion.match(/^\d{4}\.(\d+).(\d+)/);
+    const minorAndPatch = appConfigVersion.match(/^\d+\.(\d+).(\d+)/);
     if (minorAndPatch) {
       const minor = minorAndPatch[1];
       const patch = minorAndPatch[2];
