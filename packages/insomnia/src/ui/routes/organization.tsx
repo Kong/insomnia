@@ -188,9 +188,12 @@ export const indexLoader: LoaderFunction = async () => {
       }
     } catch (error) {
       console.log('Failed to load Organizations', error);
+      await session.logout();
       return redirect('/auth/login');
     }
   }
+
+  await session.logout();
   return redirect('/auth/login');
 };
 

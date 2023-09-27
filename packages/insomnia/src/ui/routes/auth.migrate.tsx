@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Button, Heading } from 'react-aria-components';
 import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-router-dom';
 
-import { getCurrentSessionId } from '../../account/session';
+import { getCurrentSessionId, logout } from '../../account/session';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { migrateCollectionsIntoRemoteProject } from '../../sync/vcs/migrate-collections';
 import { migrateLocalToCloudProjects, shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
@@ -24,6 +24,7 @@ interface MigrationActionData {
 export const action: ActionFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (!sessionId) {
+    await logout();
     return redirect('/auth/login');
   }
 
