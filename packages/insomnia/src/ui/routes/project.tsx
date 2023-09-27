@@ -26,7 +26,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import { getAccountId, getCurrentSessionId, isLoggedIn } from '../../account/session';
+import { getAccountId, getCurrentSessionId, isLoggedIn, logout } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   DASHBOARD_SORT_ORDERS,
@@ -271,6 +271,7 @@ export const loader: LoaderFunction = async ({
 }): Promise<ProjectLoaderData> => {
   const sessionId = getCurrentSessionId();
   if (!sessionId) {
+    await logout();
     throw redirect('/auth/login');
   }
   const search = new URL(request.url).searchParams;

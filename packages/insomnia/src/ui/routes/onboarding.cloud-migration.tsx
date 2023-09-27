@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from 'react-aria-components';
 import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-router-dom';
 
+import { logout } from '../../account/session';
 import { exportAllData } from '../../common/export-all-data';
 import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
 import { InsomniaLogo } from '../components/insomnia-icon';
@@ -9,6 +10,7 @@ import { showAlert } from '../components/modals';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 
 export const action: ActionFunction = async () => {
+  await logout();
   return redirect('/auth/login');
 };
 
@@ -17,6 +19,7 @@ export const loader: LoaderFunction = async () => {
     return null;
   }
 
+  await logout();
   return redirect('/auth/login');
 };
 
