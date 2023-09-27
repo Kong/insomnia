@@ -41,12 +41,12 @@ export const OnboardingCloudMigration = () => {
               <h1 className='text-xl text-center'>Activating cloud synchronization</h1>
               <div className='flex flex-col gap-4'>
                 <p>
-                  We have detected that you have previously created data with Insomnia, which will be automatically synchronized to the cloud after logging-in or creating a new account. Your data is end-to-end encrypted (E2EE) and secure.
+                  We have detected that you have previously created data with Insomnia, which will be automatically synchronized to the cloud after logging-in or creating a new account.
                 </p>
                 <ul className='text-left flex flex-col gap-2'>
-                  <li><i className="fa fa-check text-emerald-600" /> End-to-end encryption (E2EE) enabled.</li>
-                  <li><i className="fa fa-check text-emerald-600" /> Automatic sync across clients enabled.</li>
-                  <li><i className="fa fa-check text-emerald-600" /> Unlimited user collaboration activated.</li>
+                  <li><i className="fa fa-check text-emerald-600" /> Your data in the cloud is end-to-end encrypted (E2EE) and secure.</li>
+                  <li><i className="fa fa-check text-emerald-600" /> With Git Sync your data can be stored on a third party Git repository.</li>
+                  <li><i className="fa fa-check text-emerald-600" /> In Scratch Pad your data is always stored locally.</li>
                 </ul>
               </div>
               <div className="flex justify-center items-center py-6">
