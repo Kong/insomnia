@@ -24,6 +24,7 @@ export const shouldRunMigration = async () => {
     remoteId: null,
     _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
   });
+
   const legacyRemoteProjects = await database.find<RemoteProject>(models.project.type, {
     remoteId: { $ne: null },
     parentId: null,
@@ -111,5 +112,6 @@ export const migrateLocalToCloudProjects = async (vcs: VCS) => {
     status = 'completed';
   } catch (err) {
     console.warn('Failed to migrate projects to cloud', err);
+    throw err;
   }
 };
