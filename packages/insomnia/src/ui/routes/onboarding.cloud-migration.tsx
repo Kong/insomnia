@@ -9,8 +9,6 @@ import { showAlert } from '../components/modals';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 
 export const action: ActionFunction = async () => {
-  window.localStorage.setItem('hasSeenOnboarding', 'true');
-
   return redirect('/auth/login');
 };
 
