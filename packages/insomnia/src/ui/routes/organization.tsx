@@ -115,9 +115,11 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
-    // Check if there are any migrations to run before loading organizations
+    // Check if there are any migrations to run before loading organizations.
+    // If there are migrations, we need to log the user out and redirect them to the login page
     if (await shouldRunMigration()) {
-      return redirect('/auth/migrate');
+      await session.logout();
+      return redirect('/auth/login');
     }
 
     try {
