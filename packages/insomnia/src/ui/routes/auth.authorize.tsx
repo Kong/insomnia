@@ -46,7 +46,9 @@ const Authorize = () => {
   const authFetchers = allFetchers.filter(f => f.formAction === '/auth/authorize');
 
   const isAuthenticating = authFetchers.some(f => f.state !== 'idle');
-
+  // 1 first time sign up
+  // 2 login and migration
+  // 3 login and redirect back with token
   return (
     <div className="flex flex-col gap-[--padding-md] text-[--color-font]">
       <Heading className="text-2xl font-bold text-center px-3">
@@ -55,17 +57,13 @@ const Authorize = () => {
       {!isAuthenticating && (
         <Fragment>
           <p>
-            A new page should have opened in your default web browser. To
-            continue, please log in via the browser.
+            A new page should have opened in your default web browser. Please log in.
+            If you choose to login with SSO and it uses a different email to your previous login your teams will not be migrated.
           </p>
           <div className="flex flex-col gap-3 rounded-md bg-[--hl-sm] p-[--padding-md]">
-            <Heading className="flex gap-[--padding-xs] items-center">
-              <i className="fa fa-info-circle" aria-hidden="true" />
-              If you are facing issues with your browser:
-            </Heading>
             <p className="text-[rgba(var(--color-font-rgb),0.8))] text-start">
-              If your browser did not open, copy and paste the following URL
-              into your browser:
+              If you were not redirected back here after creating an account, please copy and paste the following URL
+              into your browser to complete login.
             </p>
             <div className="form-control form-control--outlined no-pad-top flex">
               <input
@@ -89,7 +87,7 @@ const Authorize = () => {
             </div>
             <p className="text-[rgba(var(--color-font-rgb),0.8))] text-start">
               If your browser does not open the Insomnia app automatically you
-              can manually add the generated token here:
+              can manually add the generated token here.
             </p>
 
             <form
