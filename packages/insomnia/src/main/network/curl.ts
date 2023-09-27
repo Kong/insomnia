@@ -13,7 +13,7 @@ import { CookieJar } from '../../models/cookie-jar';
 import { Environment } from '../../models/environment';
 import { RequestAuthentication, RequestHeader } from '../../models/request';
 import { Response } from '../../models/response';
-import { addSetCookiesToToughCookieJar } from '../../network/network';
+import { addSetCookiesToToughCookieJar } from '../../network/set-cookie-util';
 import { urlMatchesCertHost } from '../../network/url-matches-cert-host';
 import { invariant } from '../../utils/invariant';
 import { setDefaultProtocol } from '../../utils/url/protocol';
@@ -90,6 +90,7 @@ interface OpenCurlRequestOptions {
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
   initialPayload?: string;
+  suppressUserAgent: boolean;
 }
 const openCurlConnection = async (
   _event: Electron.IpcMainInvokeEvent,
@@ -132,12 +133,12 @@ const openCurlConnection = async (
     }
     const readyStateChannel = `curl.${request._id}.readyState`;
 
-    const settings = await models.settings.getOrCreate();
+    const settings = await models.settings.get();
     const start = performance.now();
     const clientCertificates = await models.clientCertificate.findByParentId(options.workspaceId);
     const filteredClientCertificates = clientCertificates.filter(c => !c.disabled && urlMatchesCertHost(setDefaultProtocol(c.host, 'https:'), options.url));
     const { curl, debugTimeline } = createConfiguredCurlInstance({
-      req: { ...request, cookieJar: options.cookieJar, cookies: [] },
+      req: { ...request, cookieJar: options.cookieJar, cookies: [], suppressUserAgent: options.suppressUserAgent },
       finalUrl: options.url,
       settings,
       caCert: caCertificate,
@@ -222,7 +223,7 @@ const openCurlConnection = async (
         settingStoreCookies: request.settingStoreCookies,
         bodyCompression: null,
       };
-      const settings = await models.settings.getOrCreate();
+      const settings = await models.settings.get();
       const res = await models.response.create(responsePatch, settings.maxHistoryResponses);
       models.requestMeta.updateOrCreateByParentId(request._id, { activeResponseId: res._id });
 
@@ -270,7 +271,7 @@ const openCurlConnection = async (
 };
 
 const createErrorResponse = async (responseId: string, requestId: string, environmentId: string | null, timelinePath: string, message: string) => {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.get();
   const responsePatch = {
     _id: responseId,
     parentId: requestId,

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useFetcher, useParams } from 'react-router-dom';
+import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
 import type { RequestGroup } from '../../../models/request-group';
 import { invariant } from '../../../utils/invariant';
@@ -18,7 +18,7 @@ export interface RequestGroupSettingsModalOptions {
 }
 interface State {
   defaultPreviewMode: boolean;
-  activeWorkspaceIdToCopyTo: string | null;
+  activeWorkspaceIdToCopyTo: string;
 }
 export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps & {
   requestGroup: RequestGroup;
@@ -36,16 +36,16 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData;
   const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
   const [state, setState] = useState<State>({
-    activeWorkspaceIdToCopyTo: null,
+    activeWorkspaceIdToCopyTo: '',
     defaultPreviewMode: !!requestGroup.description,
   });
   const patchRequestGroup = useRequestGroupPatcher();
   const requestFetcher = useFetcher();
 
   const duplicateRequestGroup = (r: Partial<RequestGroup>) => {
-    requestFetcher.submit(JSON.stringify(r),
+    requestFetcher.submit(r,
       {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/${requestGroup._id}/duplicate`,
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/duplicate`,
         method: 'post',
         encType: 'application/json',
       });
@@ -53,17 +53,18 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
   useEffect(() => {
     modalRef.current?.show();
   }, []);
-
+  const navigate = useNavigate();
   const handleMoveToWorkspace = async () => {
     invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
     patchRequestGroup(requestGroup._id, { parentId: state.activeWorkspaceIdToCopyTo });
     modalRef.current?.hide();
+    navigate(`/organization/${organizationId}/project/${projectId}/workspace/${state.activeWorkspaceIdToCopyTo}/debug`);
   };
 
   const handleCopyToWorkspace = async () => {
     invariant(state.activeWorkspaceIdToCopyTo, 'Workspace ID is required');
     duplicateRequestGroup({
-      metaSortKey: -1e9, // Move to top of sort order
+      _id: requestGroup._id,
       name: requestGroup.name, // Because duplicate will add (Copy) suffix if name is not provided in patch
       parentId: state.activeWorkspaceIdToCopyTo,
     });
@@ -118,17 +119,24 @@ export const RequestGroupSettingsModal = ({ requestGroup, onHide }: ModalProps &
                   placed at the root of the new workspace's folder structure.
                 </HelpTooltip>
                 <select
-                  value={activeWorkspaceIdToCopyTo || '__NULL__'}
-                  onChange={event => setState(state => ({ ...state, activeWorkspaceIdToCopyTo: event.currentTarget.value === '__NULL__' ? null : event.currentTarget.value }))}
+                  value={activeWorkspaceIdToCopyTo}
+                  onChange={event => {
+                    const activeWorkspaceIdToCopyTo = event.currentTarget.value;
+                    setState(state => ({
+                      ...state,
+                      activeWorkspaceIdToCopyTo,
+                    }));
+                  }}
                 >
-                  <option value="__NULL__">-- Select Workspace --</option>
+                  <option value="">-- Select Workspace --</option>
                   {workspacesForActiveProject
                     .filter(w => workspaceId !== w._id)
                     .map(w => (
                       <option key={w._id} value={w._id}>
                         {w.name}
                       </option>
-                    ))}
+                    ))
+                  }
                 </select>
               </label>
             </div>

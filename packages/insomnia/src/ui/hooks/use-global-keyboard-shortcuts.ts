@@ -1,20 +1,20 @@
 import { useRouteLoaderData } from 'react-router-dom';
 
-import * as models from '../../models';
 import * as plugins from '../../plugins';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
 import { showModal } from '../components/modals';
 import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
-import { RootLoaderData } from '../routes/root';
+import { useRootLoaderData } from '../routes/root';
 import { WorkspaceLoaderData } from '../routes/workspace';
-import { useSettingsPatcher } from './use-request';
+import { useSettingsPatcher, useWorkspaceMetaPatcher } from './use-request';
 export const useGlobalKeyboardShortcuts = () => {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRootLoaderData();
   const { activeWorkspaceMeta } = workspaceData || {};
   const patchSettings = useSettingsPatcher();
+  const patchWorkspaceMeta = useWorkspaceMetaPatcher();
 
   useDocBodyKeyboardShortcuts({
     plugin_reload:
@@ -26,10 +26,6 @@ export const useGlobalKeyboardShortcuts = () => {
     preferences_showKeyboardShortcuts:
       () => showModal(SettingsModal, { tab: TAB_INDEX_SHORTCUTS }),
     sidebar_toggle:
-      () => {
-        if (activeWorkspaceMeta) {
-          models.workspaceMeta.update(activeWorkspaceMeta, { sidebarHidden: !activeWorkspaceMeta.sidebarHidden });
-        }
-      },
+      () => activeWorkspaceMeta && patchWorkspaceMeta(activeWorkspaceMeta.parentId, { sidebarHidden: !activeWorkspaceMeta.sidebarHidden }),
   });
 };

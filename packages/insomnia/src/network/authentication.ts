@@ -62,13 +62,18 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     // ID of "{{request_id}}.graphql". Here we are removing the .graphql suffix and
     // pretending we are fetching a token for the original request. This makes sure
     // the same tokens are used for schema fetching. See issue #835 on GitHub.
-    const tokenId = requestId.match(/\.graphql$/) ? requestId.replace(/\.graphql$/, '') : requestId;
-    const oAuth2Token = await getOAuth2Token(tokenId, authentication as AuthTypeOAuth2);
+    try {
+      const tokenId = requestId.match(/\.graphql$/) ? requestId.replace(/\.graphql$/, '') : requestId;
+      const oAuth2Token = await getOAuth2Token(tokenId, authentication as AuthTypeOAuth2);
 
-    if (oAuth2Token) {
-      const token = oAuth2Token.accessToken;
-      return _buildBearerHeader(token, authentication.tokenPrefix);
-    } else {
+      if (oAuth2Token) {
+        const token = oAuth2Token.accessToken;
+        return _buildBearerHeader(token, authentication.tokenPrefix);
+      }
+      return;
+    } catch (err) {
+      // TODO: Show this error in the UI
+      console.log('[oauth2] Failed to get token', err);
       return;
     }
   }

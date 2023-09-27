@@ -1,4 +1,13 @@
-import React, { useRef } from 'react';
+import React, { Fragment, useRef, useState } from 'react';
+import {
+  Button,
+  Heading,
+  Item,
+  ListBox,
+  Popover,
+  Select,
+  SelectValue,
+} from 'react-aria-components';
 import {
   LoaderFunction,
   redirect,
@@ -6,7 +15,6 @@ import {
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
-import styled from 'styled-components';
 
 import { database } from '../../common/database';
 import { documentationLinks } from '../../common/documentation';
@@ -15,34 +23,23 @@ import { isRequest, Request } from '../../models/request';
 import { isUnitTest, UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
 import { invariant } from '../../utils/invariant';
-import { Editable } from '../components/base/editable';
-import { CodeEditor, CodeEditorHandle } from '../components/codemirror/code-editor';
-import { ListGroup, UnitTestItem } from '../components/list-group';
-import { showModal, showPrompt } from '../components/modals';
-import { SelectModal } from '../components/modals/select-modal';
-import { EmptyStatePane } from '../components/panes/empty-state-pane';
-import { SvgIcon } from '../components/svg-icon';
-import { Button } from '../components/themed-button';
-import { UnitTestEditable } from '../components/unit-test-editable';
-
-const HeaderButton = styled(Button)({
-  '&&': {
-    marginRight: 'var(--padding-md)',
-  },
-});
+import {
+  CodeEditor,
+  CodeEditorHandle,
+} from '../components/codemirror/code-editor';
+import { EditableInput } from '../components/editable-input';
+import { Icon } from '../components/icon';
 
 const UnitTestItemView = ({
   unitTest,
-  testsRunning,
 }: {
   unitTest: UnitTest;
   testsRunning: boolean;
 }) => {
   const editorRef = useRef<CodeEditorHandle>(null);
-  const { projectId, workspaceId, testSuiteId, organizationId } = useParams() as {
+  const { projectId, workspaceId, organizationId } = useParams() as {
     workspaceId: string;
     projectId: string;
-    testSuiteId: string;
     organizationId: string;
   };
   const { unitTestSuite, requests } = useRouteLoaderData(
@@ -70,55 +67,168 @@ const UnitTestItemView = ({
     esversion: 8, // ES8 syntax (async/await, etc)
   };
 
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <UnitTestItem
-      key={unitTest._id}
-      item={unitTest}
-      onSetActiveRequest={event =>
-        updateUnitTestFetcher.submit(
-          {
-            code: unitTest.code,
-            name: unitTest.name,
-            requestId:
-              event.currentTarget.value === '__NULL__'
-                ? ''
-                : event.currentTarget.value,
-          },
-          {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
-            method: 'post',
-          }
-        )
-      }
-      onDeleteTest={() =>
-        deleteUnitTestFetcher.submit(
-          {},
-          {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test/${unitTest._id}/delete`,
-            method: 'post',
-          }
-        )
-      }
-      onRunTest={() =>
-        runTestFetcher.submit(
-          {},
-          {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${testSuiteId}/test/${unitTest._id}/run`,
-            method: 'post',
-          }
-        )
-      }
-      testsRunning={testsRunning || runTestFetcher.state === 'submitting'}
-      selectedRequestId={unitTest.requestId}
-      selectableRequests={requests}
-      testNameEditable={
-        <UnitTestEditable
-          onSubmit={name =>
-            name &&
+    <div className="p-[--padding-sm] flex-shrink-0 overflow-hidden">
+      <div className="flex items-center gap-2 w-full">
+        <Button
+          className="flex flex-shrink-0 flex-nowrap items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          onPress={() => setIsOpen(!isOpen)}
+        >
+          <Icon icon={isOpen ? 'chevron-down' : 'chevron-right'} />
+        </Button>
+        <Heading className="flex-1 truncate">
+          <EditableInput
+            onChange={name => {
+              if (name) {
+                updateUnitTestFetcher.submit(
+                  {
+                    code: unitTest.code,
+                    name,
+                    requestId: unitTest.requestId || '',
+                  },
+                  {
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
+                    method: 'POST',
+                  }
+                );
+              }
+            }}
+            value={unitTest.name}
+          />
+        </Heading>
+        <Select
+          className="flex-shrink-0"
+          aria-label="Request for test"
+          onSelectionChange={requestId => {
             updateUnitTestFetcher.submit(
               {
                 code: unitTest.code,
-                name,
+                name: unitTest.name,
+                requestId,
+              },
+              {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
+                method: 'post',
+              }
+            );
+          }}
+          selectedKey={unitTest.requestId}
+          items={requests.map(request => ({
+            ...request,
+            id: request._id,
+            key: request._id,
+          }))}
+        >
+          <Button aria-label='Select a request' className="px-4 py-1 flex flex-1 h-6 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+            <SelectValue<Request> className="flex truncate items-center justify-center gap-2">
+              {({ isPlaceholder, selectedItem }) => {
+                if (isPlaceholder || !selectedItem) {
+                  return <span>Select a request</span>;
+                }
+
+                return <Fragment>{selectedItem.name}</Fragment>;
+              }}
+            </SelectValue>
+            <Icon icon="caret-down" />
+          </Button>
+          <Popover className="min-w-max">
+            <ListBox<Request> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[50vh] focus:outline-none">
+              {item => (
+                <Item
+                  className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                  aria-label={item.name}
+                  textValue={item.name}
+                  value={item}
+                >
+                  {({ isSelected }) => (
+                    <Fragment>
+                      <span>{item.name}</span>
+                      {isSelected && (
+                        <Icon
+                          icon="check"
+                          className="text-[--color-success] justify-self-end"
+                        />
+                      )}
+                    </Fragment>
+                  )}
+                </Item>
+              )}
+            </ListBox>
+          </Popover>
+        </Select>
+
+        <Button
+          className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          onPress={() => {
+            deleteUnitTestFetcher.submit(
+              {},
+              {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/delete`,
+                method: 'POST',
+              }
+            );
+          }}
+        >
+          <Icon icon="trash" />
+        </Button>
+        <Button
+          className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          onPress={() => {
+            runTestFetcher.submit(
+              {},
+              {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/run`,
+                method: 'post',
+              }
+            );
+          }}
+        >
+          <Icon icon="play" />
+        </Button>
+      </div>
+      {isOpen && (
+        <CodeEditor
+          id="unit-test-editor"
+          ref={editorRef}
+          dynamicHeight
+          showPrettifyButton
+          defaultValue={unitTest ? unitTest.code : ''}
+          getAutocompleteSnippets={() => {
+            const value = editorRef.current?.getValue() || '';
+            const variables = value
+              .split('const ')
+              .filter(x => x)
+              .map(x => x.split(' ')[0]);
+            const numbers = variables
+              .map(x => parseInt(x.match(/(\d+)/)?.[0] || ''))
+              ?.filter(x => !isNaN(x));
+            const highestNumberedConstant = Math.max(...numbers);
+            const variableName = 'response' + (highestNumberedConstant + 1);
+            return [
+              {
+                name: 'Send: Current request',
+                displayValue: '',
+                value:
+                  `const ${variableName} = await insomnia.send();\n` +
+                  `expect(${variableName}.status).to.equal(200);`,
+              },
+              ...requests.map(({ name, _id }) => ({
+                name: `Send: ${name}`,
+                displayValue: '',
+                value:
+                  `const ${variableName} = await insomnia.send('${_id}');\n` +
+                  `expect(${variableName}.status).to.equal(200);`,
+              })),
+            ];
+          }}
+          lintOptions={lintOptions}
+          onChange={code =>
+            updateUnitTestFetcher.submit(
+              {
+                code,
+                name: unitTest.name,
                 requestId: unitTest.requestId || '',
               },
               {
@@ -127,75 +237,11 @@ const UnitTestItemView = ({
               }
             )
           }
-          value={`${updateUnitTestFetcher.formData?.get('name') ?? ''}` || unitTest.name}
+          mode="javascript"
+          placeholder=""
         />
-      }
-    >
-      <CodeEditor
-        id="unit-test-editor"
-        ref={editorRef}
-        dynamicHeight
-        showPrettifyButton
-        defaultValue={unitTest ? unitTest.code : ''}
-        getAutocompleteSnippets={() => {
-          const value = editorRef.current?.getValue() || '';
-          const variables = value.split('const ').filter(x => x).map(x => x.split(' ')[0]);
-          const numbers = variables.map(x => parseInt(x.match(/(\d+)/)?.[0] || ''))?.filter(x => !isNaN(x));
-          const highestNumberedConstant = Math.max(...numbers);
-          const variableName = 'response' + (highestNumberedConstant + 1);
-          return [
-            {
-              name: 'Send Current Request',
-              displayValue: '',
-              value: `const ${variableName} = await insomnia.send();\n` +
-              `expect(${variableName}.status).to.equal(200);`,
-            },
-            {
-              name: 'Send Request By ID',
-              displayValue: '',
-              value: async () => {
-                return new Promise(resolve => {
-                  showModal(SelectModal, {
-                    title: 'Select Request',
-                    message: 'Select a request to fill',
-                    value: '__NULL__',
-                    options: [
-                      {
-                        name: '-- Select Request --',
-                        value: '__NULL__',
-                      },
-                      ...requests.map(({ name, _id }) => ({
-                        name,
-                        displayValue: '',
-                        value: `const ${variableName} = await insomnia.send('${_id}');\n` +
-                        `expect(${variableName}.status).to.equal(200);`,
-                      })),
-                    ],
-                    onDone: (value: string | null) => resolve(value),
-                  });
-                });
-              },
-            },
-          ];
-        }}
-        lintOptions={lintOptions}
-        onChange={code =>
-          updateUnitTestFetcher.submit(
-            {
-              code,
-              name: unitTest.name,
-              requestId: unitTest.requestId || '',
-            },
-            {
-              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/update`,
-              method: 'post',
-            }
-          )
-        }
-        mode="javascript"
-        placeholder=""
-      />
-    </UnitTestItem>
+      )}
+    </div>
   );
 };
 
@@ -207,7 +253,9 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
   const workspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   if (workspaceMeta?.activeUnitTestSuiteId) {
-    const unitTestSuite = await models.unitTestSuite.getById(workspaceMeta.activeUnitTestSuiteId);
+    const unitTestSuite = await models.unitTestSuite.getById(
+      workspaceMeta.activeUnitTestSuiteId
+    );
 
     if (unitTestSuite) {
       return redirect(
@@ -230,7 +278,9 @@ interface LoaderData {
   unitTestSuite: UnitTestSuite;
   requests: Request[];
 }
-export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> => {
+export const loader: LoaderFunction = async ({
+  params,
+}): Promise<LoaderData> => {
   const { workspaceId, testSuiteId } = params;
 
   invariant(workspaceId, 'Workspace ID is required');
@@ -273,7 +323,9 @@ const TestSuiteRoute = () => {
     workspaceId: string;
     testSuiteId: string;
   };
-  const { unitTestSuite, unitTests } = useRouteLoaderData(':testSuiteId') as LoaderData;
+  const { unitTestSuite, unitTests } = useRouteLoaderData(
+    ':testSuiteId'
+  ) as LoaderData;
 
   const createUnitTestFetcher = useFetcher();
   const runAllTestsFetcher = useFetcher();
@@ -281,90 +333,109 @@ const TestSuiteRoute = () => {
 
   const testsRunning = runAllTestsFetcher.state === 'submitting';
 
-  const testSuiteName = renameTestSuiteFetcher.formData?.get('name')?.toString() ?? unitTestSuite.name;
+  const testSuiteName =
+    renameTestSuiteFetcher.formData?.get('name')?.toString() ??
+    unitTestSuite.name;
   return (
-    <div className="unit-tests theme--pane__body">
-      <div className="unit-tests__top-header">
-        <h2>
-          <Editable
-            singleClick
-            onSubmit={name => name && renameTestSuiteFetcher.submit(
-              { name },
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/rename`,
-                method: 'post',
-              }
-            )
+    <div className="flex flex-col h-full w-full overflow-hidden divide-solid divide-y divide-[--hl-md]">
+      <div className="flex flex-shrink-0 gap-2 p-[--padding-md]">
+        <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full truncate flex-1">
+          <EditableInput
+            onChange={name =>
+              name &&
+              renameTestSuiteFetcher.submit(
+                { name },
+                {
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/rename`,
+                  method: 'POST',
+                }
+              )
             }
             value={testSuiteName}
           />
-        </h2>
-        <HeaderButton
-          variant="outlined"
-          onClick={() => {
-            showPrompt({
-              title: 'New Test',
-              defaultValue: 'Returns 200',
-              submitName: 'New Test',
-              label: 'Test Name',
-              selectText: true,
-              onComplete: name => {
-                createUnitTestFetcher.submit(
-                  {
-                    name,
-                  },
-                  {
-                    method: 'post',
-                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/new`,
-                  }
-                );
+        </Heading>
+        <Button
+          aria-label="New test"
+          className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          onPress={() =>
+            createUnitTestFetcher.submit(
+              {
+                name: 'Returns 200',
               },
-            });
-          }}
+              {
+                method: 'POST',
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/new`,
+              }
+            )
+          }
         >
-          New Test
-        </HeaderButton>
-        <HeaderButton
-          variant="contained"
-          bg="surprise"
-          onClick={() => {
+          <Icon icon="plus" />
+          <span>New test</span>
+        </Button>
+        <Button
+          aria-label="Run all tests"
+          className="px-4 py-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          onPress={() => {
             runAllTestsFetcher.submit(
               {},
               {
-                method: 'post',
+                method: 'POST',
                 action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/run-all-tests`,
               }
             );
           }}
-          size="default"
-          disabled={testsRunning}
         >
-          {testsRunning ? 'Running... ' : 'Run Tests'}
+          {testsRunning ? 'Running... ' : 'Run tests'}
           <i className="fa fa-play space-left" />
-        </HeaderButton>
+        </Button>
       </div>
-      {unitTests.length === 0 ? (
-        <div style={{ height: '100%' }}>
-          <EmptyStatePane
-            icon={<SvgIcon icon="vial" />}
-            documentationLinks={[
-              documentationLinks.unitTesting,
-              documentationLinks.introductionToInsoCLI,
-            ]}
-            title="Add unit tests to verify your API"
-            secondaryAction="You can run these tests in CI with Inso CLI"
-          />
+      {unitTests.length === 0 && (
+        <div className="h-full w-full flex-1 overflow-y-auto divide-solid divide-y divide-[--hl-md] p-[--padding-md] flex flex-col items-center gap-2 overflow-hidden text-[--hl-lg]">
+          <Heading className="text-lg p-[--padding-sm] font-bold flex-1 flex items-center flex-col gap-2">
+            <Icon icon="vial" className="flex-1 w-28" />
+            <span>Add unit tests to verify your API</span>
+          </Heading>
+          <div className="flex-1 w-full flex flex-col justify-evenly items-center gap-2 p-[--padding-sm]">
+            <p className="flex items-center gap-2">
+              <Icon icon="lightbulb" />
+              <span className="truncate">
+                You can run these tests in CI with Inso CLI
+              </span>
+            </p>
+            <ul className="flex flex-col gap-2">
+              <li>
+                <a
+                  className="font-bold flex items-center gap-2 text-sm hover:text-[--hl] focus:text-[--hl] transition-colors"
+                  href={documentationLinks.unitTesting.url}
+                >
+                  <span className="truncate">Unit testing in Insomnia</span>
+                  <Icon icon="external-link" />
+                </a>
+              </li>
+              <li>
+                <a
+                  className="font-bold flex items-center gap-2 text-sm hover:text-[--hl] focus:text-[--hl] transition-colors"
+                  href={documentationLinks.introductionToInsoCLI.url}
+                >
+                  <span className="truncate">Introduction to Inso CLI</span>
+                  <Icon icon="external-link" />
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
-      ) : null}
-      <ListGroup>
-        {unitTests.map(unitTest => (
-          <UnitTestItemView
-            key={unitTest._id}
-            unitTest={unitTest}
-            testsRunning={testsRunning}
-          />
-        ))}
-      </ListGroup>
+      )}
+      {unitTests.length > 0 && (
+        <ul className="flex-1 flex flex-col divide-y divide-solid divide-[--hl-md] overflow-y-auto">
+          {unitTests.map(unitTest => (
+            <UnitTestItemView
+              key={unitTest._id}
+              unitTest={unitTest}
+              testsRunning={testsRunning}
+            />
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

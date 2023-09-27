@@ -11,13 +11,13 @@ test.describe('gRPC interactions', () => {
   let streamMessage: Locator;
 
   test.beforeEach(async ({ app, page }) => {
-    await page.getByRole('button', { name: 'Create' }).click();
+    await page.getByRole('button', { name: 'Create in project' }).click();
 
     const text = await loadFixture('grpc.yaml');
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-    await page.getByRole('menuitem', { name: 'Import' }).click();
-    await page.getByText('Clipboard').click();
+    await page.getByRole('menuitemradio', { name: 'Import' }).click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     await page.getByText('CollectionPreRelease gRPCjust now').click();
@@ -26,11 +26,11 @@ test.describe('gRPC interactions', () => {
       has: page.locator('.CodeMirror-activeline'),
     });
     streamMessage = page.locator('[data-testid="request-pane"] button:has-text("Stream")');
-    await page.locator('button:has-text("Route Guide ExampleOPEN")').click();
+    await page.getByLabel('Request Collection').getByRole('row', { name: 'Route Guide Example' }).click();
   });
 
   test('can send unidirectional requests', async ({ page }) => {
-    await page.getByRole('button', { name: 'gRPC Unary', exact: true }).click();
+    await page.getByLabel('Request Collection').getByText('Unary', { exact: true }).click();
     await page.locator('[data-testid="request-pane"] >> text=Unary').click();
     await page.click('text=Send');
 
@@ -41,7 +41,7 @@ test.describe('gRPC interactions', () => {
   });
 
   test('can send bidirectional requests', async ({ page }) => {
-    await page.click('button:has-text("gRPCBidirectional Stream")');
+    await page.getByLabel('Request Collection').getByRole('row', { name: 'Bidirectional Stream' }).click();
     await page.locator('text=Bi-directional Streaming').click();
     await page.click('text=Start');
 
@@ -60,7 +60,7 @@ test.describe('gRPC interactions', () => {
   });
 
   test('can send client stream requests', async ({ page }) => {
-    await page.click('button:has-text("gRPCClient Stream")');
+    await page.getByLabel('Request Collection').getByRole('row', { name: 'Client Stream' }).click();
     await page.click('text=Client Streaming');
     await page.click('text=Start');
 
@@ -78,7 +78,7 @@ test.describe('gRPC interactions', () => {
   });
 
   test('can send server stream requests', async ({ page }) => {
-    await page.click('button:has-text("gRPCServer Stream")');
+    await page.getByLabel('Request Collection').getByRole('row', { name: 'Server Stream' }).click();
     await page.click('text=Server Streaming');
     await page.click('text=Start');
 

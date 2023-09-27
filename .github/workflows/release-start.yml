@@ -44,8 +44,13 @@ jobs:
         if: github.event.inputs.channel == 'stable' && github.event.inputs.version
         run: npm --workspaces version "${{ github.event.inputs.version }}"
 
+      # required for 8.0.0 beta
+      - name: App version (initial alpha/beta where we specify a new general version)
+        if: github.event.inputs.channel != 'stable' && github.event.inputs.version
+        run: npm --workspaces version "${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.0"
+
       - name: App version (alpha/beta)
-        if: github.event.inputs.channel != 'stable'
+        if: github.event.inputs.channel != 'stable' && !github.event.inputs.version
         run: npm --workspaces version --preid "${{ github.event.inputs.channel }}" prerelease
 
       - name: Get version
@@ -84,8 +89,13 @@ jobs:
         if: github.event.inputs.channel == 'stable' && github.event.inputs.version
         run: npm --workspaces version "${{ github.event.inputs.version }}"
 
+      # required for 8.0.0 beta
+      - name: (Re-run) App version (initial alpha/beta where we specify a new general version)
+        if: github.event.inputs.channel != 'stable' && github.event.inputs.version
+        run: npm --workspaces version "${{ github.event.inputs.version }}-${{ github.event.inputs.channel }}.0"
+
       - name: (Re-run) App version (alpha/beta)
-        if: github.event.inputs.channel != 'stable'
+        if: github.event.inputs.channel != 'stable' && !github.event.inputs.version
         run: npm --workspaces version --preid "${{ github.event.inputs.channel }}" prerelease
 
       - name: Git Commit

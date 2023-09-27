@@ -24,7 +24,6 @@ import { Response } from '../../models/response';
 import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
 import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../../network/network';
-import { convert } from '../../utils/importers/convert';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
@@ -53,11 +52,13 @@ export interface RequestLoaderData {
 }
 
 export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData | WebSocketRequestLoaderData | GrpcRequestLoaderData> => {
-  const { requestId, workspaceId } = params;
+  const { organizationId, projectId, requestId, workspaceId } = params;
   invariant(requestId, 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');
   const activeRequest = await requestOperations.getById(requestId);
-  invariant(activeRequest, 'Request not found');
+  if (!activeRequest) {
+    throw redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
+  }
   const activeWorkspaceMeta = await models.workspaceMeta.getByParentId(workspaceId);
   invariant(activeWorkspaceMeta, 'Active workspace meta not found');
   // NOTE: loaders shouldnt mutate data, this should be moved somewhere else
@@ -73,7 +74,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
   }
   const activeRequestMeta = await models.requestMeta.updateOrCreateByParentId(requestId, { lastActive: Date.now() });
   invariant(activeRequestMeta, 'Request meta not found');
-  const { filterResponsesByEnv } = await models.settings.getOrCreate();
+  const { filterResponsesByEnv } = await models.settings.get();
 
   const responseModelName = isWebSocketRequestId(requestId) ? 'webSocketResponse' : 'response';
   const activeResponse = activeRequestMeta.activeResponseId
@@ -96,7 +97,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
 export const createRequestAction: ActionFunction = async ({ request, params }) => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
-  const { requestType, parentId, clipboardText } = await request.json() as { requestType: CreateRequestType; parentId?: string; clipboardText?: string };
+  const { requestType, parentId, req } = await request.json() as { requestType: CreateRequestType; parentId?: string; req?: Request };
 
   let activeRequestId;
   if (requestType === 'HTTP') {
@@ -104,7 +105,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
       parentId: parentId || workspaceId,
       method: METHOD_GET,
       name: 'New Request',
-      headers: [{ name: 'User-Agent', value: `Insomnia/${version}` }],
+      headers: [{ name: 'User-Agent', value: `insomnia/${version}` }],
     }))._id;
   }
   if (requestType === 'gRPC') {
@@ -118,7 +119,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
       parentId: parentId || workspaceId,
       method: METHOD_POST,
       headers: [
-        { name: 'User-Agent', value: `Insomnia/${version}` },
+        { name: 'User-Agent', value: `insomnia/${version}` },
         { name: 'Content-Type', value: CONTENT_TYPE_JSON },
       ],
       body: {
@@ -134,7 +135,7 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
       method: METHOD_GET,
       url: '',
       headers: [
-        { name: 'User-Agent', value: `Insomnia/${version}` },
+        { name: 'User-Agent', value: `insomnia/${version}` },
         { name: 'Accept', value: CONTENT_TYPE_EVENT_STREAM },
       ],
       name: 'New Event Stream',
@@ -144,27 +145,22 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
     activeRequestId = (await models.webSocketRequest.create({
       parentId: parentId || workspaceId,
       name: 'New WebSocket Request',
-      headers: [{ name: 'User-Agent', value: `Insomnia/${version}` }],
+      headers: [{ name: 'User-Agent', value: `insomnia/${version}` }],
     }))._id;
   }
   if (requestType === 'From Curl') {
-    // TODO: if no clipboard text show modal
-    if (!clipboardText) {
+    if (!req) {
       return null;
     }
     try {
-      const { data } = await convert(clipboardText);
-      const { resources } = data;
-      const r = resources[0];
-
       activeRequestId = (await models.request.create({
         parentId: parentId || workspaceId,
-        url: r.url,
-        method: r.method,
-        headers: r.headers,
-        body: r.body as RequestBody,
-        authentication: r.authentication,
-        parameters: r.parameters as RequestParameter[],
+        url: req.url,
+        method: req.method,
+        headers: req.headers,
+        body: req.body as RequestBody,
+        authentication: req.authentication,
+        parameters: req.parameters as RequestParameter[],
       }))._id;
     } catch (error) {
       console.error(error);
@@ -252,6 +248,7 @@ export interface ConnectActionParams {
   headers: RequestHeader[];
   authentication: RequestAuthentication;
   cookieJar: CookieJar;
+  suppressUserAgent: boolean;
 }
 export const connectAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
@@ -278,6 +275,7 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
       headers: rendered.headers,
       authentication: rendered.authentication,
       cookieJar: rendered.cookieJar,
+      suppressUserAgent: rendered.suppressUserAgent,
     });
   }
   // HACK: even more elaborate hack to get the request to update
@@ -286,7 +284,6 @@ export const connectAction: ActionFunction = async ({ request, params }) => {
       for (const change of changes) {
         const [event, doc] = change;
         if (isRequestMeta(doc) && doc.parentId === requestId && event === 'update') {
-          console.log('Response meta received', doc);
           resolve(null);
         }
       }

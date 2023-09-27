@@ -95,3 +95,5 @@ export async function duplicate(requestGroup: RequestGroup, patch: Partial<Reque
     ...patch,
   });
 }
+
+export const isRequestGroupId = (id: string) => id.startsWith(prefix);

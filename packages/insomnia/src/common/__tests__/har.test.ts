@@ -14,6 +14,7 @@ describe('export', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     await models.project.all();
+    await models.settings.getOrCreate();
   });
 
   describe('exportHar()', () => {

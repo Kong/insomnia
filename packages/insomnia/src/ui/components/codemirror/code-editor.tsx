@@ -8,7 +8,6 @@ import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
 import { JSONPath } from 'jsonpath-plus';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
 import { useMount, useUnmount } from 'react-use';
 import vkBeautify from 'vkbeautify';
 
@@ -20,7 +19,7 @@ import { NunjucksParsedTag } from '../../../templating/utils';
 import { jsonPrettify } from '../../../utils/prettify/json';
 import { queryXPath } from '../../../utils/xpath/query';
 import { useGatedNunjucks } from '../../context/nunjucks/use-gated-nunjucks';
-import { RootLoaderData } from '../../routes/root';
+import { useRootLoaderData } from '../../routes/root';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { FilterHelpModal } from '../modals/filter-help-modal';
@@ -172,7 +171,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
   const [originalCode, setOriginalCode] = useState('');
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRootLoaderData();
   const indentSize = settings.editorIndentSize;
   const indentWithTabs = shouldIndentWithTabs({ mode, indentWithTabs: settings.editorIndentWithTabs });
   const indentChars = indentWithTabs ? '\t' : new Array((indentSize || TAB_SIZE) + 1).join(' ');
@@ -338,7 +337,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       }
     });
 
-    codeMirror.current.on('keydown', (_: CodeMirror.Editor, event: KeyboardEvent) => {
+    codeMirror.current.on('keydown', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
       const pressedKeyComb: KeyCombination = {
         ctrl: event.ctrlKey,
         alt: event.altKey,
@@ -363,19 +362,18 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         event.codemirrorIgnore = true;
       } else {
         event.stopPropagation();
-      }
-    });
-    codeMirror.current.on('keyup', (doc: CodeMirror.Editor, event: KeyboardEvent) => {
-      // Enable graphql completion if we're in that mode
-      if (doc.getOption('mode') === 'graphql') {
-        // Only operate on one-letter keys. This will filter out
-        // any special keys (Backspace, Enter, etc)
-        const isModifier = event.metaKey || event.ctrlKey || event.altKey || event.key.length > 1;
-        // You don't want to re-trigger the hint dropdown if it's already open
-        // for other reasons, like forcing its display with Ctrl+Space
-        const isDropdownActive = codeMirror.current?.isHintDropdownActive();
-        if (!isModifier && !isDropdownActive) {
-          doc.execCommand('autocomplete');
+
+        // Enable graphql completion if we're in that mode
+        if (doc.getOption('mode') === 'graphql') {
+          // Only operate on one-letter keys. This will filter out
+          // any special keys (Backspace, Enter, etc)
+          const isModifier = event.metaKey || event.ctrlKey || event.altKey || event.key.length > 1;
+          // You don't want to re-trigger the hint dropdown if it's already open
+          // for other reasons, like forcing its display with Ctrl+Space
+          const isDropdownActive = codeMirror.current?.isHintDropdownActive();
+          if ((isAutoCompleteBinding || !isModifier) && !isDropdownActive) {
+            doc.execCommand('autocomplete');
+          }
         }
       }
     });

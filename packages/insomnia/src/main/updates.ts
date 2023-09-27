@@ -10,7 +10,6 @@ import {
 import { delay } from '../common/misc';
 import * as models from '../models/index';
 import { invariant } from '../utils/invariant';
-import { exportAllWorkspaces } from './export';
 const isUpdateSupported = () => {
   if (process.platform === 'linux') {
     console.log('[updater] Not supported on this platform', process.platform);
@@ -62,7 +61,6 @@ export const init = async () => {
   autoUpdater.on('update-downloaded', async (_error, releaseNotes, releaseName) => {
     console.log(`[updater] Downloaded ${releaseName}`);
     _sendUpdateStatus('Performing backup...');
-    await exportAllWorkspaces();
     _sendUpdateStatus('Updated (Restart Required)');
 
     dialog.showMessageBox({
@@ -70,7 +68,7 @@ export const init = async () => {
       buttons: ['Restart', 'Later'],
       title: 'Application Update',
       message: process.platform === 'win32' ? releaseNotes : releaseName,
-      detail: 'A new version has been downloaded. Restart the application to apply the updates.',
+      detail: 'A new version of Insomnia has been downloaded. Restart the application to apply the updates.',
     }).then(returnValue => {
       if (returnValue.response === 0) {
         autoUpdater.quitAndInstall();
@@ -79,15 +77,16 @@ export const init = async () => {
   });
 
   if (isUpdateSupported()) {
+    // perhaps disable this method of upgrading just incase it trigger before backup is complete
     // on app start
-    const settings = await models.settings.getOrCreate();
+    const settings = await models.settings.get();
     const updateUrl = getUpdateUrl(settings.updateChannel);
     if (settings.updateAutomatically && updateUrl) {
       _checkForUpdates(updateUrl);
     }
     // on an interval (3h)
     setInterval(async () => {
-      const settings = await models.settings.getOrCreate();
+      const settings = await models.settings.get();
       const updateUrl = getUpdateUrl(settings.updateChannel);
       if (settings.updateAutomatically && updateUrl) {
         _checkForUpdates(updateUrl);
@@ -97,7 +96,7 @@ export const init = async () => {
     // on check now button pushed
     ipcMain.on('manualUpdateCheck', async () => {
       console.log('[updater] Manual update check');
-      const settings = await models.settings.getOrCreate();
+      const settings = await models.settings.get();
       const updateUrl = isUpdateSupported() && getUpdateUrl(settings.updateChannel);
       if (!updateUrl) {
         _sendUpdateStatus('Updates Not Supported');

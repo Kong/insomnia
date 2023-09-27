@@ -80,7 +80,7 @@ const Radio: FC<{
         defaultChecked={defaultChecked}
         onChange={onChange}
       />
-      <RadioLabel htmlFor={id}>{children}</RadioLabel>
+      <RadioLabel data-test-id={`import-from-${value}`} htmlFor={id}>{children}</RadioLabel>
     </div>
   );
 };
@@ -484,6 +484,7 @@ const ScanResourcesForm = ({
   return (
     <Fragment>
       <form
+        aria-label="Import from"
         id={id}
         onSubmit={onSubmit}
         method="post"

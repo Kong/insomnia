@@ -64,7 +64,7 @@ export default async function(lookupName: string) {
       console.log(`[plugins] Moving plugin from ${tmpDir} to ${pluginDir}`);
 
       // Move entire module to plugins folder
-      await cp(path.join(tmpDir, moduleName), pluginDir, { recursive: true });
+      await cp(path.join(tmpDir, moduleName), pluginDir, { recursive: true, verbatimSymlinks: true });
 
       // Move each dependency into node_modules folder
       const pluginModulesDir = path.join(pluginDir, 'node_modules');
@@ -78,7 +78,7 @@ export default async function(lookupName: string) {
         }
 
         const dest = path.join(pluginModulesDir, filename);
-        await cp(src, dest, { recursive: true });
+        await cp(src, dest, { recursive: true, verbatimSymlinks: true });
       }
     } catch (err) {
       reject(err);

@@ -10,20 +10,20 @@ test('can send gRPC requests with reflection', async ({ app, page }) => {
     has: page.locator('.CodeMirror-activeline'),
   });
 
-  await page.getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('button', { name: 'Create in project' }).click();
 
   const text = await loadFixture('grpc.yaml');
   await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
-  await page.getByRole('menuitem', { name: 'Import' }).click();
-  await page.getByText('Clipboard').click();
+  await page.getByRole('menuitemradio', { name: 'Import' }).click();
+  await page.locator('[data-test-id="import-from-clipboard"]').click();
   await page.getByRole('button', { name: 'Scan' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionPreRelease gRPCjust now').click();
 
-  await page.getByRole('button', { name: 'Route Guide Example' }).click();
+  await page.getByLabel('Request Collection').getByRole('row', { name: 'Route Guide Example' }).click();
 
-  await page.getByRole('button', { name: 'UnaryWithOutProtoFile' }).click();
+  await page.getByLabel('Request Collection').getByRole('row', { name: 'UnaryWithOutProtoFile' }).click();
   await expect(page.getByRole('button', { name: 'Select Method' })).toBeDisabled();
   await page.getByTestId('button-server-reflection').click();
 

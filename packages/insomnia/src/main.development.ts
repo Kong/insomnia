@@ -1,3 +1,4 @@
+
 import electron, { app, ipcMain, session } from 'electron';
 import { BrowserWindow } from 'electron';
 import contextMenu from 'electron-context-menu';
@@ -8,6 +9,8 @@ import { userDataFolder } from '../config/config.json';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
 import log, { initializeLogging } from './common/log';
+import { registerInsomniaStreamProtocol } from './main/api.protocol';
+import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
@@ -23,6 +26,7 @@ import type { ToastNotification } from './ui/components/toast';
 
 initializeSentry();
 
+registerInsomniaStreamProtocol();
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
   process.exit(0);
@@ -228,7 +232,8 @@ async function _trackStats() {
     launches: oldStats.launches + 1,
   });
 
-  ipcMain.once('halfSecondAfterAppStart', () => {
+  ipcMain.once('halfSecondAfterAppStart', async () => {
+    backupIfNewerVersionAvailable();
     const { currentVersion, launches, lastVersion } = stats;
 
     const firstLaunch = launches === 1;
@@ -244,7 +249,7 @@ async function _trackStats() {
       message: `Updated to ${currentVersion}`,
     };
     // Wait a bit before showing the user because the app just launched.
-    setTimeout(() => {
+    setTimeout(async () => {
       for (const window of BrowserWindow.getAllWindows()) {
         // @ts-expect-error -- TSCONVERSION likely needs to be window.webContents.send instead
         window.send('show-notification', notification);

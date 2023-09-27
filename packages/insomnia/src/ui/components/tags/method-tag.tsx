@@ -1,6 +1,7 @@
 import React, { FC, memo } from 'react';
 
-import { METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
+import { CONTENT_TYPE_GRAPHQL, METHOD_DELETE, METHOD_OPTIONS } from '../../../common/constants';
+import { isEventStreamRequest, Request } from '../../../models/request';
 
 interface Props {
   method: string;
@@ -10,7 +11,18 @@ interface Props {
 function removeVowels(str: string) {
   return str.replace(/[aeiouyAEIOUY]/g, '');
 }
-function formatMethodName(method: string) {
+
+export const getMethodShortHand = (doc: Request) => {
+  if (isEventStreamRequest(doc)) {
+    return 'SSE';
+  }
+  const isGraphQL = doc.body?.mimeType === CONTENT_TYPE_GRAPHQL;
+  if (isGraphQL) {
+    return 'GQL';
+  }
+  return formatMethodName(doc.method);
+};
+export function formatMethodName(method: string) {
   let methodName = method || '';
 
   if (method === METHOD_DELETE || method === METHOD_OPTIONS) {
