@@ -98,6 +98,9 @@ const config = {
     iconUrl:
       'https://github.com/kong/insomnia/blob/develop/packages/insomnia/src/icons/icon.ico?raw=true',
   },
+  portable: {
+    artifactName: `${BINARY_PREFIX}-\${version}-portable.\${ext}`,
+  },
   linux: {
     artifactName: `${BINARY_PREFIX}-\${version}.\${ext}`,
     executableName: 'insomnia',
