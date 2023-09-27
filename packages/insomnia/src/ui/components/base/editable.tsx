@@ -73,6 +73,7 @@ export const Editable: FC<Props> = ({
 
   const handleKeyDown = createKeybindingsHandler({
     'Enter': handleEditEnd,
+    // TODO: is this also broken for vim mode?
     'Escape': () => {
       if (inputRef.current) {
         // Set the input to the original value

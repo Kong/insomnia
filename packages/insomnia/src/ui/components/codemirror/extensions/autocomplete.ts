@@ -188,7 +188,8 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.Editor,
 
   let keydownTimeoutHandle: NodeJS.Timeout | null = null;
   cm.on('keydown', (cm: CodeMirror.Editor, event) => {
-    // Close autocomplete on Escape if it's open
+    // Close autocomplete on Escape if it's open. In vim mode, this will require
+    // a second keypress to leave insert mode.
     if (cm.isHintDropdownActive() && event.key === 'Escape') {
       if (!cm.state.completionActive) {
         return;

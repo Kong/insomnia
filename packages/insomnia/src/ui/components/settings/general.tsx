@@ -157,10 +157,17 @@ export const General: FC = () => {
         <EnumSetting<EditorKeyMap>
           label="Text Editor Key Map"
           setting="editorKeyMap"
-          help={isMac() && settings.editorKeyMap === EditorKeyMap.vim && (
+          help={settings.editorKeyMap === EditorKeyMap.vim && (
             <Fragment>
-              To enable key-repeating with Vim on macOS, see <Link href={docsKeyMaps}>
-                documentation <i className="fa fa-external-link-square" /></Link>
+              To prevent the Escape key from closing modals, you can set a custom
+              keyboard shortcut for 'Close Modal Dialog'.
+              {isMac() && (
+                <Fragment>
+                  <br /><br />
+                  To enable key-repeating with Vim on macOS, see <Link href={docsKeyMaps}>
+                    documentation <i className="fa fa-external-link-square" /></Link>
+                </Fragment>
+              )}
             </Fragment>
           )}
           values={[

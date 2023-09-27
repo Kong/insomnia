@@ -10,6 +10,7 @@ import { strings } from './strings';
 export const keyboardShortcutDescriptions: Record<KeyboardShortcut, string> = {
   'workspace_showSettings': `Show ${strings.document.singular} / ${strings.collection.singular} Settings`,
   'request_showSettings': 'Show Request Settings',
+  'workspace_closeModal': 'Close Modal Dialog',
   'preferences_showKeyboardShortcuts': 'Show Keyboard Shortcuts',
   'preferences_showGeneral': 'Show App Preferences',
   'request_quickSwitch': 'Switch Requests',
@@ -46,6 +47,10 @@ const defaultRegistry: HotKeyRegistry = {
   workspace_showSettings: {
     macKeys: [{ shift: true, meta: true, keyCode: keyboardKeys.comma.keyCode }],
     winLinuxKeys: [{ ctrl: true, shift: true, keyCode: keyboardKeys.comma.keyCode }],
+  },
+  workspace_closeModal: {
+    macKeys: [{ keyCode: keyboardKeys.esc.keyCode }],
+    winLinuxKeys: [{ keyCode: keyboardKeys.esc.keyCode }],
   },
   request_showSettings: {
     macKeys: [{ alt: true, shift: true, meta: true, keyCode: keyboardKeys.comma.keyCode }],

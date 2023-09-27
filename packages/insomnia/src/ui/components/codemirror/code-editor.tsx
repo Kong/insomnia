@@ -350,16 +350,12 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
         'showAutocomplete': settings.hotKeyRegistry.showAutocomplete,
       });
       // Stop the editor from handling global keyboard shortcuts except for the autocomplete binding
+      // This includes the shortcut for closing modals, which defaults to Escape
       const isShortcutButNotAutocomplete = isUserDefinedKeyboardShortcut && !isAutoCompleteBinding;
-      // Should not capture escape in order to exit modals
-      const isEscapeKey = event.code === 'Escape';
       if (isShortcutButNotAutocomplete) {
         // @ts-expect-error -- unsound property assignment
         event.codemirrorIgnore = true;
         // Stop the editor from handling the escape key
-      } else if (isEscapeKey) {
-        // @ts-expect-error -- unsound property assignment
-        event.codemirrorIgnore = true;
       } else {
         event.stopPropagation();
 

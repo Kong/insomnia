@@ -74,6 +74,8 @@ export const EditableInput = ({
                 setIsEditable(false);
               }
 
+              // TODO: might this also be broken for vim mode? I can't find
+              // a good example of usage to test with, other than unit tests
               if (e.key === 'Escape') {
                 e.stopPropagation();
                 setIsEditable(false);
