@@ -27,7 +27,7 @@ jobs:
           - os: "macos-latest"
             build-targets: "zip"
           - os: "windows-latest"
-            build-targets: "portable"
+            build-targets: "squirrel"
           - os: "ubuntu-latest"
             build-targets: "tar.gz"
     steps:
