@@ -409,7 +409,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
     properties: vcsSegmentEventProperties('git', 'clone'),
   });
   repoSettingsPatch.needsFullClone = true;
-  repoSettingsPatch.uri = addDotGit(repoSettingsPatch.uri);
+
   const fsClient = MemClient.createClient();
 
   const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
