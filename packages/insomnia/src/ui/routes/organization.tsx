@@ -188,8 +188,8 @@ export const indexLoader: LoaderFunction = async () => {
       }
     } catch (error) {
       console.log('Failed to load Organizations', error);
-      await session.logout();
-      return redirect('/auth/login');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Network connectivity issue: Failed to load Organizations. ${errorMessage}`);
     }
   }
 
