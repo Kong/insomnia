@@ -652,11 +652,9 @@ const OrganizationRoute = () => {
                     const [dirPath] = filePaths;
 
                     try {
-                      console.time('Export');
                       dirPath && await exportAllData({
                         dirPath,
                       });
-                      console.timeEnd('Export');
                     } catch (e) {
                       showAlert({
                         title: 'Export Failed',
