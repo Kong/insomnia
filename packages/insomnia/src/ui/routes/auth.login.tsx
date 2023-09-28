@@ -112,14 +112,14 @@ const Login = () => {
           }
         },
       });
+    } else {
+      loginFetcher.submit({
+        provider,
+      }, {
+        action: '/auth/login',
+        method: 'POST',
+      });
     }
-
-    loginFetcher.submit({
-      provider,
-    }, {
-      action: '/auth/login',
-      method: 'POST',
-    });
   };
 
   return (
