@@ -911,7 +911,6 @@ router.subscribe(({ location }) => {
     location.pathname
   );
 
-  localStorage.setItem('locationHistoryEntry', location.pathname);
   match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, location.pathname);
 });
 

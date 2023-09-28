@@ -115,9 +115,11 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
-    // Check if there are any migrations to run before loading organizations
+    // Check if there are any migrations to run before loading organizations.
+    // If there are migrations, we need to log the user out and redirect them to the login page
     if (await shouldRunMigration()) {
-      return redirect('/auth/migrate');
+      await session.logout();
+      return redirect('/auth/login');
     }
 
     try {
@@ -186,9 +188,12 @@ export const indexLoader: LoaderFunction = async () => {
       }
     } catch (error) {
       console.log('Failed to load Organizations', error);
-      return redirect('/auth/login');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Network connectivity issue: Failed to load Organizations. ${errorMessage}`);
     }
   }
+
+  await session.logout();
   return redirect('/auth/login');
 };
 
