@@ -269,15 +269,15 @@ export const loader: LoaderFunction = async ({
   params,
   request,
 }): Promise<ProjectLoaderData> => {
+  const { organizationId, projectId } = params;
+  invariant(organizationId, 'Organization ID is required');
   const sessionId = getCurrentSessionId();
+
   if (!sessionId) {
     await logout();
     throw redirect('/auth/login');
   }
   const search = new URL(request.url).searchParams;
-  const { organizationId } = params;
-  const { projectId } = params;
-  invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'projectId parameter is required');
   const sortOrder = search.get('sortOrder') || 'modified-desc';
   const filter = search.get('filter') || '';
