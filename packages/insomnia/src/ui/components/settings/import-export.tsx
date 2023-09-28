@@ -34,7 +34,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const workspacesFetcher = useFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized) {
+    if (isIdleAndUninitialized && organizationId) {
       workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
     }
   }, [organizationId, projectId, workspacesFetcher]);
@@ -47,6 +47,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     exportAllToFile(projectName, workspacesForActiveProject);
     hideSettingsModal();
   };
+
+  if (!organizationId) {
+    return null;
+  }
  // here we should list all the folders which contain insomnia.*.db files
  // and have some big red button to overwrite the current data with the backup
  // and once complete trigger an app restart?
@@ -137,6 +141,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           onHide={() => setIsExportModalOpen(false)}
         />
       )}
+      <
     </Fragment>
   );
 };
