@@ -34,14 +34,14 @@ const GoogleIcon = (props: React.ReactSVGElement['props']) => {
 };
 
 interface LoaderData {
-  hasMigrations: boolean;
+  hasProjectsToMigrate: boolean;
 }
 
 export const loader: LoaderFunction = async () => {
-  const hasMigrations = await shouldRunMigration();
+  const hasProjectsToMigrate = await shouldRunMigration();
 
   return {
-    hasMigrations,
+    hasProjectsToMigrate,
   };
 };
 
@@ -66,7 +66,7 @@ const Login = () => {
   const loginFetcher = useFetcher();
 
   const login = async (provider: string) => {
-    if (data.hasMigrations) {
+    if (data.hasProjectsToMigrate) {
       showModal(AskModal, {
         title: 'Continue with Insomnia cloud synchronization',
         yesText: 'Continue',
@@ -115,6 +115,13 @@ const Login = () => {
         },
       });
     }
+
+    loginFetcher.submit({
+      provider,
+    }, {
+      action: '/auth/login',
+      method: 'POST',
+    });
   };
 
   return (
