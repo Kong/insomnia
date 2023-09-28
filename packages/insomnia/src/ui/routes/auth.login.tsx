@@ -274,7 +274,7 @@ const Login = () => {
 
                     <Button
                       onPress={() => {
-                        window.main.openInBrowser(`${getAppWebsiteBaseURL()}/subscribe?plan=team`);
+                        window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscribe?plan=team`);
                       }}
                       aria-label='Sign up to the Team Plan'
                       className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
