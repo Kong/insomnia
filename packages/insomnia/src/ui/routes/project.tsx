@@ -273,9 +273,7 @@ export const loader: LoaderFunction = async ({
   invariant(organizationId, 'Organization ID is required');
   const sessionId = getCurrentSessionId();
 
-  const isLoggedInOrInScratchpad = sessionId || isScratchpadOrganizationId(organizationId);
-
-  if (!isLoggedInOrInScratchpad) {
+  if (!sessionId) {
     await logout();
     throw redirect('/auth/login');
   }

@@ -9,6 +9,7 @@ import { exportAllToFile } from '../../../common/export';
 import { exportAllData } from '../../../common/export-all-data';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
+import { isScratchpadOrganizationId } from '../../../models/organization';
 import { isScratchpad } from '../../../models/workspace';
 import { ProjectLoaderData } from '../../routes/project';
 import { WorkspaceLoaderData } from '../../routes/workspace';
@@ -37,7 +38,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const workspacesFetcher = useFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized && organizationId) {
+    if (isIdleAndUninitialized && organizationId && !isScratchpadOrganizationId(organizationId)) {
       workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
     }
   }, [organizationId, projectId, workspacesFetcher]);
