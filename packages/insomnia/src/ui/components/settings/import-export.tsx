@@ -6,6 +6,7 @@ import { isLoggedIn } from '../../../account/session';
 import { getProductName } from '../../../common/constants';
 import { docsImportExport } from '../../../common/documentation';
 import { exportAllToFile } from '../../../common/export';
+import { exportAllData } from '../../../common/export-all-data';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { isScratchpad } from '../../../models/workspace';
@@ -13,6 +14,8 @@ import { ProjectLoaderData } from '../../routes/project';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
+import { Icon } from '../icon';
+import { showAlert } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { ImportModal } from '../modals/import-modal';
 import { Button } from '../themed-button';
@@ -63,7 +66,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         <p>
           Your format isn't supported? <Link href={docsImportExport}>Add Your Own</Link>.
         </p>
-        <div className="flex pt-4 gap-4">
+        <div className="flex flex-col pt-4 gap-4">
           {workspaceData?.activeWorkspace ?
             isScratchpad(workspaceData.activeWorkspace) ?
               <Button onClick={() => setIsExportModalOpen(true)}>Export the "{activeWorkspaceName}" {getWorkspaceLabel(workspaceData.activeWorkspace).singular}</Button>
@@ -97,6 +100,48 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
               </DropdownSection>
             </Dropdown>) : (<Button onClick={handleExportAllToFile}>{`Export files from the "${projectName}" ${strings.project.singular}`}</Button>)
           }
+          <Button
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--padding-sm)',
+            }}
+            onClick={async () => {
+              const { filePaths, canceled } = await window.dialog.showOpenDialog({
+                properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
+                buttonLabel: 'Select',
+                title: 'Export All Insomnia Data',
+              });
+
+              if (canceled) {
+                return;
+              }
+
+              const [dirPath] = filePaths;
+
+              try {
+                dirPath && await exportAllData({
+                  dirPath,
+                });
+              } catch (e) {
+                showAlert({
+                  title: 'Export Failed',
+                  message: 'An error occurred while exporting data. Please try again.',
+                });
+                console.error(e);
+              }
+
+              showAlert({
+                title: 'Export Complete',
+                message: 'All your data have been successfully exported',
+              });
+            }}
+            aria-label='Export all data'
+            className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
+          >
+            <Icon icon="file-export" />
+            <span>Export all data</span>
+          </Button>
           <Button
             style={{
               display: 'flex',
@@ -141,7 +186,6 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           onHide={() => setIsExportModalOpen(false)}
         />
       )}
-      <
     </Fragment>
   );
 };
