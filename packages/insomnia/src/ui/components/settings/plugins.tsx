@@ -1,8 +1,6 @@
 import * as path from 'path';
 import React, { FC, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
-import { isLoggedIn } from '../../../account/session';
 import {
   NPM_PACKAGE_BASE,
   PLUGIN_HUB_BASE,
@@ -28,7 +26,7 @@ interface State {
   isRefreshingPlugins: boolean;
 }
 
-export const PluginsSettings: FC = () => {
+export const Plugins: FC = () => {
   const [state, setState] = useState<State>({
     plugins: [],
     npmPluginValue: '',
@@ -266,39 +264,6 @@ export const PluginsSettings: FC = () => {
         >
           Reload Plugins
           {isRefreshingPlugins && <i className="fa fa-refresh fa-spin space-left" />}
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-export const Plugins = () => {
-  const navigate = useNavigate();
-  if (isLoggedIn()) {
-    return <PluginsSettings />;
-  }
-
-  return (
-    <div className='flex flex-col gap-4'>
-      <div className="border-solid border-[--hl-md] notice surprise p-4 rounded-md">
-        Log in to Insomnia to enable Plugins
-      </div>
-      <div className='flex gap-2'>
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={
-            () => navigate('/auth/login')
-          }
-        >
-          Log in
-        </Button>
-        <Button
-          onClick={() => navigate('/auth/login')}
-          size="small"
-          variant="contained"
-        >
-          Sign Up
         </Button>
       </div>
     </div>
