@@ -38,7 +38,7 @@ interface LoaderData {
 }
 
 export const loader: LoaderFunction = async () => {
-  const hasMigrations = await shouldRunMigration() || true;
+  const hasMigrations = await shouldRunMigration();
 
   return {
     hasMigrations,
