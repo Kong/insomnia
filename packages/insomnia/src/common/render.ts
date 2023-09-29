@@ -15,6 +15,7 @@ import * as templatingUtils from '../templating/utils';
 import { setDefaultProtocol } from '../utils/url/protocol';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
 import { database as db } from './database';
+import { updateEnvWithAWS } from "./aws-loader";
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -326,6 +327,10 @@ export async function getRenderContext(
     workspace ? workspace._id : 'n/a',
   );
   const subEnvironment = await models.environment.getById(environmentId || 'n/a');
+  if (subEnvironment) {
+    await updateEnvWithAWS(subEnvironment)
+  }
+
   const keySource: Record<string, string> = {};
 
   // Function that gets Keys and stores their Source location
