@@ -483,27 +483,6 @@ const OrganizationRoute = () => {
               )}
             </div>
           </header>
-          {isScratchpadWorkspace ? (
-            <div className="flex h-[30px] items-center [grid-area:Banner] text-white bg-gradient-to-r from-[#7400e1] to-[#4000bf]">
-              <div className="flex flex-shrink-0 basis-[50px] h-full">
-                <div className="border-solid border-r-[--hl-xl] border-r border-l border-l-[--hl-xl] box-border flex items-center justify-center w-full h-full">
-                  <Icon icon="edit" />
-                </div>
-              </div>
-              <div className="py-[--padding-xs] overflow-hidden px-[--padding-md] w-full h-full flex items-center text-xs">
-                <p className='w-full truncate leading-normal'>
-                  Welcome to the local Scratch Pad. To get the most out of
-                  Insomnia and see your projects{' '}
-                  <NavLink
-                    to="/auth/login"
-                    className="font-bold text-white inline-flex"
-                  >
-                    login or create an account →
-                  </NavLink>
-                </p>
-              </div>
-            </div>
-          ) : null}
           <div className="[grid-area:Navbar]">
             <nav className="flex flex-col items-center place-content-stretch gap-[--padding-md] w-full h-full overflow-y-auto py-[--padding-md]">
               {organizations.map(organization => (
