@@ -204,7 +204,7 @@ const GitLabRepositoryForm = ({
       {token && (
         <div className="form-control form-control--outlined">
           <label>
-            GitLab URI
+            GitLab URI (https, including .git suffix)
             <input
               className="form-control"
               defaultValue={uri}
