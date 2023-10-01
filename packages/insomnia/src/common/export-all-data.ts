@@ -133,11 +133,16 @@ export async function exportWorkspaceData({
     },
   });
 
-  const environments = await database.find<Environment>(environment.type, {
+  const subEnvironments = await database.find<Environment>(environment.type, {
     parentId: {
       $in: baseEnvironments.map(environment => environment._id),
     },
   });
+
+  const allEnvironments = [
+    ...baseEnvironments,
+    ...subEnvironments,
+  ];
 
   const cookieJars = await database.find<CookieJar>(cookieJar.type, {
     parentId: {
@@ -177,7 +182,7 @@ export async function exportWorkspaceData({
       workspaceToExport,
       ...requests,
       ...allRequestGroups,
-      ...environments,
+      ...allEnvironments,
       ...cookieJars,
       ...apiSpecs,
       ...protoFiles,

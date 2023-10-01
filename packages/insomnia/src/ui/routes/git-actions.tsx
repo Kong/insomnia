@@ -30,7 +30,6 @@ import parseGitPath from '../../sync/git/parse-git-path';
 import { routableFSClient } from '../../sync/git/routable-fs-client';
 import { shallowClone } from '../../sync/git/shallow-clone';
 import {
-  addDotGit,
   getOauth2FormatName,
 } from '../../sync/git/utils';
 import { invariant } from '../../utils/invariant';
@@ -409,7 +408,7 @@ export const cloneGitRepoAction: ActionFunction = async ({
     properties: vcsSegmentEventProperties('git', 'clone'),
   });
   repoSettingsPatch.needsFullClone = true;
-  repoSettingsPatch.uri = addDotGit(repoSettingsPatch.uri);
+
   const fsClient = MemClient.createClient();
 
   const providerName = getOauth2FormatName(repoSettingsPatch.credentials);
