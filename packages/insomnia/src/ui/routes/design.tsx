@@ -390,7 +390,7 @@ const Design: FC = () => {
     <SidebarLayout
       className='[&_.sidebar]:flex [&_.sidebar]:flex-col [&_.sidebar]:w-full [&_.sidebar]:h-full'
       renderPageSidebar={
-        <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md]'>
+        <div className='flex h-full flex-col divide-y divide-solid divide-[--hl-md] overflow-hidden'>
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
             <Breadcrumbs className='react-aria-Breadcrumbs pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
               <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">

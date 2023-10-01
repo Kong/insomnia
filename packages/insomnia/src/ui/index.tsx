@@ -873,6 +873,7 @@ const router = createMemoryRouter(
           children: [
             {
               path: 'login',
+              loader: async (...args) => (await import('./routes/auth.login')).loader(...args),
               action: async (...args) => (await import('./routes/auth.login')).action(...args),
               element: <Login />,
             },
@@ -911,7 +912,6 @@ router.subscribe(({ location }) => {
     location.pathname
   );
 
-  localStorage.setItem('locationHistoryEntry', location.pathname);
   match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, location.pathname);
 });
 

@@ -96,9 +96,6 @@ const config = {
       {
         target: 'squirrel',
       },
-      {
-        target: 'portable',
-      },
     ],
   },
   squirrelWindows: {

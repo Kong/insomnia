@@ -266,7 +266,7 @@ const GitHubRepositoryForm = ({
       {token && (
         <div className="form-control form-control--outlined">
           <label>
-            GitHub URI
+            GitHub URI (https, including .git suffix)
             <input
               className="form-control"
               defaultValue={uri}
