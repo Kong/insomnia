@@ -28,6 +28,7 @@ import {
   getCurrentSessionId,
 } from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
+import { exportAllData } from '../../common/export-all-data';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
@@ -41,7 +42,7 @@ import { GitHubStarsButton } from '../components/github-stars-button';
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
 import { InsomniaAILogo } from '../components/insomnia-icon';
-import { showModal } from '../components/modals';
+import { showAlert, showModal } from '../components/modals';
 import { showSettingsModal } from '../components/modals/settings-modal';
 import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { OrganizationAvatar } from '../components/organization-avatar';
@@ -634,6 +635,46 @@ const OrganizationRoute = () => {
                     : 'Log in to Insomnia to sync your data.'}
                 </Tooltip>
               </TooltipTrigger>
+              {isScratchpadOrganizationId(organizationId) ? (
+                <Button
+                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                  onPress={async () => {
+                    const { filePaths, canceled } = await window.dialog.showOpenDialog({
+                      properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
+                      buttonLabel: 'Select',
+                      title: 'Export All Insomnia Data',
+                    });
+
+                    if (canceled) {
+                      return;
+                    }
+
+                    const [dirPath] = filePaths;
+
+                    try {
+                      dirPath && await exportAllData({
+                        dirPath,
+                      });
+                    } catch (e) {
+                      showAlert({
+                        title: 'Export Failed',
+                        message: 'An error occurred while exporting data. Please try again.',
+                      });
+                      console.error(e);
+                    }
+
+                    showAlert({
+                      title: 'Export Complete',
+                      message: 'All your data have been successfully exported',
+                    });
+                  }}
+                >
+                  <Icon
+                    icon="file-export"
+                  />
+                  Export your data
+                </Button>
+              ) : null}
             </div>
             <Link>
               <a

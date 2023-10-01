@@ -222,7 +222,7 @@ export const OnboardingCloudMigration = () => {
               <Form method='POST' className='gap-2 flex justify-between items-center'>
                 <div>
                   <p
-                    className='text-[10px]'
+                    className='text-base'
                     style={{
                       color: 'rgba(var(--color-font-rgb), 0.8)',
                     }}
@@ -242,11 +242,9 @@ export const OnboardingCloudMigration = () => {
                         const [dirPath] = filePaths;
 
                         try {
-                          console.time('Export');
                           dirPath && await exportAllData({
                             dirPath,
                           });
-                          console.timeEnd('Export');
                         } catch (e) {
                           showAlert({
                             title: 'Export Failed',

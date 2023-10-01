@@ -24,7 +24,7 @@ export const action: ActionFunction = async ({
     };
   }
   console.log('Login successful');
-  window.localStorage.setItem('hasLoggedIn', 'true');
+  window.localStorage.setItem('hasUserLoggedInBefore', 'true');
 
   if (isLoggedIn() && await shouldRunMigration()) {
     throw redirect('/auth/migrate');

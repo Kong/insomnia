@@ -873,6 +873,7 @@ const router = createMemoryRouter(
           children: [
             {
               path: 'login',
+              loader: async (...args) => (await import('./routes/auth.login')).loader(...args),
               action: async (...args) => (await import('./routes/auth.login')).action(...args),
               element: <Login />,
             },
