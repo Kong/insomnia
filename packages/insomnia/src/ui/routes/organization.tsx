@@ -21,6 +21,7 @@ import {
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
+import { useLocalStorage } from 'react-use';
 
 import * as session from '../../account/session';
 import {
@@ -349,6 +350,11 @@ const OrganizationRoute = () => {
     ':workspaceId',
   ) as WorkspaceLoaderData | null;
   const logoutFetcher = useFetcher();
+  const [isScratchPadBannerDismissed, setIsScratchPadBannerDismissed] = useLocalStorage('scratchpad-banner-dismissed', '');
+  const isScratchpadWorkspace =
+    workspaceData?.activeWorkspace &&
+    isScratchpad(workspaceData.activeWorkspace);
+  const isScratchPadBannerVisible = !isScratchPadBannerDismissed && isScratchpadWorkspace;
 
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
@@ -370,14 +376,10 @@ const OrganizationRoute = () => {
     };
   }, []);
 
-  const isScratchpadWorkspace =
-    workspaceData?.activeWorkspace &&
-    isScratchpad(workspaceData.activeWorkspace);
-
   return (
     <PresenceProvider>
       <div className="w-full h-full">
-        <div className={`w-full h-full divide-x divide-solid divide-y divide-[--hl-md] ${workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace) ? 'grid-template-app-layout-with-banner' : 'grid-template-app-layout'} grid relative bg-[--color-bg]`}>
+        <div className={`w-full h-full divide-x divide-solid divide-y divide-[--hl-md] ${isScratchPadBannerVisible ? 'grid-template-app-layout-with-banner' : 'grid-template-app-layout'} grid relative bg-[--color-bg]`}>
           <header className="[grid-area:Header] grid grid-cols-3 items-center">
             <div className="flex items-center">
               <div className="flex w-[50px] py-2">
@@ -483,7 +485,7 @@ const OrganizationRoute = () => {
               )}
             </div>
           </header>
-          {isScratchpadWorkspace ? (
+          {isScratchPadBannerVisible ? (
             <div className="flex h-[30px] items-center [grid-area:Banner] text-white bg-gradient-to-r from-[#7400e1] to-[#4000bf]">
               <div className="flex flex-shrink-0 basis-[50px] h-full">
                 <div className="border-solid border-r-[--hl-xl] border-r border-l border-l-[--hl-xl] box-border flex items-center justify-center w-full h-full">
@@ -502,6 +504,14 @@ const OrganizationRoute = () => {
                   </NavLink>
                 </p>
               </div>
+              <Button
+                className="flex flex-shrink-0 mr-2 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                onPress={() => {
+                  setIsScratchPadBannerDismissed('true');
+                }}
+              >
+                <Icon icon="x" />
+              </Button>
             </div>
           ) : null}
           <div className="[grid-area:Navbar]">
