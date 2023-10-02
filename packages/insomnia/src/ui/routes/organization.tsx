@@ -18,6 +18,7 @@ import {
   ShouldRevalidateFunction,
   useFetcher,
   useLoaderData,
+  useNavigate,
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
@@ -350,6 +351,7 @@ const OrganizationRoute = () => {
     ':workspaceId',
   ) as WorkspaceLoaderData | null;
   const logoutFetcher = useFetcher();
+  const navigate = useNavigate();
   const [isScratchPadBannerDismissed, setIsScratchPadBannerDismissed] = useLocalStorage('scratchpad-banner-dismissed', '');
   const isScratchpadWorkspace =
     workspaceData?.activeWorkspace &&
@@ -618,7 +620,12 @@ const OrganizationRoute = () => {
                 </Tooltip>
               </TooltipTrigger>
               <TooltipTrigger>
-                <Button className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all">
+                <Button
+                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
+                  onPress={() => {
+                    !user && navigate('/auth/login');
+                  }}
+                >
                   <Icon
                     icon="circle"
                     className={
