@@ -494,8 +494,9 @@ const OrganizationRoute = () => {
               </div>
               <div className="py-[--padding-xs] overflow-hidden px-[--padding-md] w-full h-full flex items-center text-xs">
                 <p className='w-full truncate leading-normal'>
-                  Welcome to the local Scratch Pad. To get the most out of
-                  Insomnia and see your projects{' '}
+                  Welcome to the Scratch Pad where you can work locally with up to 1 collection.
+                  To create more and see your projects
+                  {' '}
                   <NavLink
                     to="/auth/login"
                     className="font-bold text-white inline-flex"
