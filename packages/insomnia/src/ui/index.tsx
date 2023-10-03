@@ -911,8 +911,16 @@ router.subscribe(({ location }) => {
     },
     location.pathname
   );
+  // Hack to use localstorage to avoid sending tracking events on page actions
+  const previousOrgRoute = localStorage.getItem(`locationHistoryEntry:${match?.params.organizationId}`);
+  const currentRoute = location.pathname;
+  // transforms /organization/:org_* to /organization/:org_id
+  const routeWithoutUUID = currentRoute.replace(/_[a-f0-9]{32}/g, '_id');
+  if (previousOrgRoute !== currentRoute) {
+    window.main.trackPageView({ name: routeWithoutUUID });
+  }
 
-  match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, location.pathname);
+  match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, currentRoute);
 });
 
 async function renderApp() {
