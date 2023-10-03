@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Dialog, DialogTrigger, Heading, Modal, ModalOverlay } from 'react-aria-components';
-import { ActionFunction, Link, LoaderFunction, redirect, useFetcher, useLoaderData } from 'react-router-dom';
+import { ActionFunction, Link, LoaderFunction, redirect, useFetcher, useLoaderData, useNavigate } from 'react-router-dom';
 
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { exportAllData } from '../../common/export-all-data';
@@ -66,7 +66,7 @@ const Login = () => {
   const loginFetcher = useFetcher();
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState('email');
-
+  const navigate = useNavigate();
   const login = (provider: string) => {
     if (data.hasProjectsToMigrate) {
       setIsMigrationModalOpen(true);
@@ -170,9 +170,14 @@ const Login = () => {
       </p>
 
       <div className='flex gap-[--padding-md] justify-between'>
-        <Link
+        <Button
+          onPress={() => {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.selectScratchpad,
+            });
+            navigate('/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug');
+          }}
           aria-label='Use the Scratch Pad'
-          to={'/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug'}
           className='flex outline-none transition-colors justify-center text-[rgba(var(--color-font-rgb),0.8)] text-sm gap-[--padding-xs] hover:text-[--color-font] focus:text-[--color-font]'
         >
           <div>
@@ -181,7 +186,7 @@ const Login = () => {
           <span>
             Use the local Scratch Pad
           </span>
-        </Link>
+        </Button>
         <DialogTrigger>
           <Button
             aria-label='Export data and more'
@@ -275,6 +280,9 @@ const Login = () => {
                         showAlert({
                           title: 'Export Complete',
                           message: 'All your data have been successfully exported',
+                        });
+                        window.main.trackSegmentEvent({
+                          event: SegmentEvent.exportAllCollections,
                         });
                       }}
                       aria-label='Export all data'

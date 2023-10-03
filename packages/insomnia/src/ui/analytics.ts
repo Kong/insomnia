@@ -12,6 +12,7 @@ export enum SegmentEvent {
   requestExecute = 'Request Executed',
   projectLocalCreate = 'Local Project Created',
   projectLocalDelete = 'Local Project Deleted',
+  selectScratchpad = 'Scratchpad Selected at Login',
   testSuiteCreate = 'Test Suite Created',
   testSuiteDelete = 'Test Suite Deleted',
   unitTestCreate = 'Unit Test Created',
