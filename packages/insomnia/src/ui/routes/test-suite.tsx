@@ -76,7 +76,7 @@ const UnitTestItemView = ({
     <div className="p-[--padding-sm] flex-shrink-0 overflow-hidden">
       <div className="flex items-center gap-2 w-full">
         <Button
-          className="flex flex-shrink-0 flex-nowrap items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex flex-shrink-0 flex-nowrap items-center justify-center aspect-square h-8 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => setIsOpen(!isOpen)}
         >
           <Icon icon={isOpen ? 'chevron-down' : 'chevron-right'} />
@@ -124,7 +124,7 @@ const UnitTestItemView = ({
             key: request._id,
           }))}
         >
-          <Button aria-label='Select a request' className="px-4 py-1 flex flex-1 h-6 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+          <Button aria-label='Select a request' className="px-4 py-1 flex flex-1 h-8 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
             <SelectValue<Request> className="flex truncate items-center justify-center gap-2">
               {({ isPlaceholder, selectedItem: request }) => {
                 if (isPlaceholder || !request) {
@@ -223,7 +223,7 @@ const UnitTestItemView = ({
         </Select>
 
         <Button
-          className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex flex-shrink-0 items-center justify-center aspect-square h-8 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => {
             deleteUnitTestFetcher.submit(
               {},
@@ -237,7 +237,7 @@ const UnitTestItemView = ({
           <Icon icon="trash" />
         </Button>
         <Button
-          className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex flex-shrink-0 items-center justify-center aspect-square h-8 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => {
             runTestFetcher.submit(
               {},
