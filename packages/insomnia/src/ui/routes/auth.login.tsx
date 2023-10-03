@@ -289,9 +289,14 @@ const Login = () => {
           </ModalOverlay>
         </DialogTrigger>
       </div>
-      <ModalOverlay onOpenChange={setIsMigrationModalOpen} isOpen={isMigrationModalOpen} isDismissable className="w-full h-[--visual-viewport-height] fixed top-0 left-0 flex items-center justify-center bg-black/30">
+      <ModalOverlay
+        onOpenChange={setIsMigrationModalOpen}
+        isOpen={isMigrationModalOpen}
+        isDismissable
+        className="w-full h-[--visual-viewport-height] fixed top-0 left-0 flex items-center justify-center bg-black/30"
+      >
         <Modal className="max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
-          <Dialog className="outline-none">
+          <Dialog onClose={() => setIsMigrationModalOpen(false)} className="outline-none">
             {({ close }) => (
               <div className='flex flex-col gap-4'>
                 <div className='flex gap-2 items-center justify-between'>
