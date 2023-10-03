@@ -354,8 +354,8 @@ export const WorkspaceEnvironmentsEditModal = (props: ModalProps) => {
               >
                 <DropdownItem aria-label='Environment'>
                   <ItemContent
-                    icon="eye"
-                    label="Environment"
+                    icon="refresh"
+                    label="Shared Environment"
                     onClick={async () => {
                       createEnvironmentFetcher.submit({
                         isPrivate: false,
@@ -370,7 +370,7 @@ export const WorkspaceEnvironmentsEditModal = (props: ModalProps) => {
                 </DropdownItem>
                 <DropdownItem aria-label='Private Environment'>
                   <ItemContent
-                    icon="eye-slash"
+                    icon="lock"
                     label="Private Environment"
                     onClick={async () => {
                       createEnvironmentFetcher.submit({
