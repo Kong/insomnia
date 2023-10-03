@@ -31,7 +31,6 @@ export interface GenerateCodeModalOptions {
   request?: Request;
 }
 export interface State {
-  cmd: string;
   request?: Request;
   target?: HTTPSnippetTarget;
   client?: HTTPSnippetClient;
@@ -49,18 +48,19 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
   let storedClient: HTTPSnippetClient | undefined;
   try {
     storedTarget = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as HTTPSnippetTarget;
-  } catch (error) {}
+  } catch (error) { }
 
   try {
     storedClient = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client') || '') as HTTPSnippetClient;
-  } catch (error) {}
+  } catch (error) { }
   const [state, setState] = useState<State>({
-    cmd: '',
     request: undefined,
     target: storedTarget,
     client: storedClient,
     targets: [],
   });
+
+  const [snippet, setSnippet] = useState<string>('');
 
   const generateCode = useCallback(async (request: Request, target?: HTTPSnippetTarget, client?: HTTPSnippetClient) => {
     const HTTPSnippet = (await import('httpsnippet')).default;
@@ -68,26 +68,25 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
     const targets = HTTPSnippet.availableTargets();
     const targetOrFallback = target || targets.find(t => t.key === 'shell') as HTTPSnippetTarget;
     const clientOrFallback = client || targetOrFallback.clients.find(t => t.key === 'curl') as HTTPSnippetClient;
-    // Some clients need a content-length for the request to succeed
-    const addContentLength = Boolean((TO_ADD_CONTENT_LENGTH[targetOrFallback.key] || []).find(c => c === clientOrFallback.key));
-    const har = await exportHarRequest(request._id, props.environmentId, addContentLength);
-    // @TODO Should we throw instead?
-    if (!har) {
-      return;
-    }
-    const snippet = new HTTPSnippet(har);
-    const cmd = snippet.convert(targetOrFallback.key, clientOrFallback.key) || '';
 
     setState({
       request,
-      cmd,
-      client:clientOrFallback,
-      target:targetOrFallback,
+      client: clientOrFallback,
+      target: targetOrFallback,
       targets,
     });
     // Save client/target for next time
     window.localStorage.setItem('insomnia::generateCode::client', JSON.stringify(clientOrFallback));
     window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(targetOrFallback));
+
+    // Some clients need a content-length for the request to succeed
+    const addContentLength = Boolean((TO_ADD_CONTENT_LENGTH[targetOrFallback.key] || []).find(c => c === clientOrFallback.key));
+    const har = await exportHarRequest(request._id, props.environmentId, addContentLength);
+    if (har) {
+      const snippet = new HTTPSnippet(har);
+      const cmd = snippet.convert(targetOrFallback.key, clientOrFallback.key) || '';
+      setSnippet(cmd);
+    }
   }, [props.environmentId]);
 
   useImperativeHandle(ref, () => ({
@@ -103,7 +102,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
     },
   }), [generateCode, state]);
 
-  const { cmd, target, targets, client, request } = state;
+  const { target, targets, client, request } = state;
   // NOTE: Just some extra precautions in case the target is messed up
   let clients: HTTPSnippetClient[] = [];
   if (target && Array.isArray(target.clients)) {
@@ -170,7 +169,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
             ))}
           </Dropdown>
           &nbsp;&nbsp;
-          <CopyButton content={cmd} className="pull-right" />
+          <CopyButton content={snippet} className="pull-right" />
         </div>
         {target && <CodeEditor
           id="generate-code-modal-content"
@@ -179,7 +178,7 @@ export const GenerateCodeModal = forwardRef<GenerateCodeModalHandle, Props>((pro
           key={Date.now()}
           mode={MODE_MAP[target.key] || target.key}
           ref={editorRef}
-          defaultValue={cmd}
+          defaultValue={snippet}
         />}
       </ModalBody>
       <ModalFooter>
