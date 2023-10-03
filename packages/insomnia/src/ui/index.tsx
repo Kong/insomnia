@@ -118,10 +118,6 @@ const router = createMemoryRouter(
       errorElement: <ErrorRoute />,
       children: [
         {
-          path: '/scratchpad',
-          loader: async (...args) => (await import('./routes/scratchpad')).loader(...args),
-        },
-        {
           path: 'onboarding/*',
           element: <Onboarding />,
         },
