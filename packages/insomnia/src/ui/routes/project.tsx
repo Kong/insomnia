@@ -179,6 +179,7 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
 
+  // When org icon is clicked this ensures we remember the last visited page
   const prevOrganizationLocation = localStorage.getItem(
     `locationHistoryEntry:${organizationId}`
   );

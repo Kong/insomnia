@@ -99,9 +99,9 @@ function getInitialEntry() {
       return '/auth/login';
     }
 
-    return '/scratchpad';
+    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
   } catch (e) {
-    return '/scratchpad';
+    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
   }
 }
 
@@ -903,7 +903,7 @@ const router = createMemoryRouter(
 );
 
 // Store the last location in local storage
-router.subscribe(({ location }) => {
+router.subscribe(({ location, navigation }) => {
   const match = matchPath(
     {
       path: '/organization/:organizationId',
@@ -911,12 +911,14 @@ router.subscribe(({ location }) => {
     },
     location.pathname
   );
-  // Hack to use localstorage to avoid sending tracking events on page actions
-  const previousOrgRoute = localStorage.getItem(`locationHistoryEntry:${match?.params.organizationId}`);
+  const nextRoute = navigation.location?.pathname;
   const currentRoute = location.pathname;
-  // transforms /organization/:org_* to /organization/:org_id
-  const routeWithoutUUID = currentRoute.replace(/_[a-f0-9]{32}/g, '_id');
-  if (previousOrgRoute !== currentRoute) {
+  // Use navigation send tracking events on page change
+  const bothHaveValueButNotEqual = nextRoute && currentRoute && nextRoute !== currentRoute;
+  if (bothHaveValueButNotEqual) {
+    // transforms /organization/:org_* to /organization/:org_id
+    const routeWithoutUUID = nextRoute.replace(/_[a-f0-9]{32}/g, '_id');
+    // console.log('Tracking page view', { name: routeWithoutUUID });
     window.main.trackPageView({ name: routeWithoutUUID });
   }
 

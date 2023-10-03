@@ -171,7 +171,7 @@ const Login = () => {
       <div className='flex gap-[--padding-md] justify-between'>
         <Link
           aria-label='Use the Scratch Pad'
-          to={'/scratchpad'}
+          to={'/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug'}
           className='flex outline-none transition-colors justify-center text-[rgba(var(--color-font-rgb),0.8)] text-sm gap-[--padding-xs] hover:text-[--color-font] focus:text-[--color-font]'
         >
           <div>
@@ -214,7 +214,7 @@ const Login = () => {
                       You can use Insomnia without an account and without connecting to the cloud by using the local Scratch Pad.
                     </p>
                     <Link
-                      to="/scratchpad"
+                      to="/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug"
                       aria-label='Go to Scratch Pad'
                       className="px-4 py-1 outline-none font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
                     >
