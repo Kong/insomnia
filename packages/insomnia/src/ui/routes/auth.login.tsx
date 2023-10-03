@@ -5,6 +5,7 @@ import { ActionFunction, Link, LoaderFunction, redirect, useFetcher, useLoaderDa
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { exportAllData } from '../../common/export-all-data';
 import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
+import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Icon } from '../components/icon';
 import { showAlert } from '../components/modals';
@@ -527,6 +528,9 @@ const Login = () => {
                             showAlert({
                               title: 'Export Complete',
                               message: 'All your data have been successfully exported',
+                            });
+                            window.main.trackSegmentEvent({
+                              event: SegmentEvent.exportAllCollections,
                             });
                           }}
                           className='focus:text-[--color-font] hover:text-[--color-font] font-bold transition-colors'

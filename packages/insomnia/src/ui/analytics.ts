@@ -4,6 +4,7 @@ export enum SegmentEvent {
   dataExport = 'Data Exported',
   dataImport = 'Data Imported',
   documentCreate = 'Document Created',
+  exportAllCollections = 'Exported All Collections',
   kongConnected = 'Kong Connected',
   kongSync = 'Kong Synced',
   requestBodyTypeSelect = 'Request Body Type Selected',
