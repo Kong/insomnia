@@ -28,11 +28,8 @@ import { NunjucksEnabledProvider } from '../context/nunjucks/nunjucks-enabled-co
 import Modals from './modals';
 
 export interface RootLoaderData {
-  user?: {
-    name: string;
-    picture: string;
-  };
   settings: Settings;
+  workspaceCount: number;
 }
 
 export const useRootLoaderData = () => {
@@ -41,9 +38,10 @@ export const useRootLoaderData = () => {
 
 export const loader: LoaderFunction = async (): Promise<RootLoaderData> => {
   const settings = await models.settings.get();
-
+  const workspaceCount = await models.workspace.count();
   return {
     settings,
+    workspaceCount,
   };
 };
 
