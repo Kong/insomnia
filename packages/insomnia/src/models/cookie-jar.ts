@@ -14,6 +14,7 @@ export const canDuplicate = true;
 export const canSync = false;
 
 export interface Cookie {
+  // TODO: this id is a duplicate key, should be removed and all the junk too
   id: string;
   key: string;
   value: string;
