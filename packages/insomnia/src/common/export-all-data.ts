@@ -1,12 +1,11 @@
 import { mkdir, writeFile } from 'fs/promises';
 import { join } from 'path';
 
-import { apiSpec, cookieJar, environment, grpcRequest, project, protoDirectory, protoFile, request, requestGroup, unitTest, unitTestSuite, webSocketPayload, webSocketRequest, workspace } from '../models';
+import { apiSpec, cookieJar, environment, grpcRequest, protoDirectory, protoFile, request, requestGroup, unitTest, unitTestSuite, webSocketPayload, webSocketRequest, workspace } from '../models';
 import { ApiSpec } from '../models/api-spec';
 import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
 import { GrpcRequest } from '../models/grpc-request';
-import type { Project } from '../models/project';
 import { ProtoDirectory } from '../models/proto-directory';
 import { ProtoFile } from '../models/proto-file';
 import { Request } from '../models/request';
