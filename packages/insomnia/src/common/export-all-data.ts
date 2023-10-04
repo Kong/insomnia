@@ -214,18 +214,13 @@ export async function exportAllData({
 }): Promise<void> {
   const insomniaExportFolder = join(dirPath, `insomnia-export.${Date.now()}`);
   await mkdir(insomniaExportFolder);
-  const projects = await database.all<Project>(project.type);
 
-  for (const project of projects) {
-    const workspaces = await database.find<Workspace>(workspace.type, {
-      parentId: project._id,
+  const workspaces = await database.find<Workspace>(workspace.type);
+
+  for (const workspace of workspaces) {
+    await exportWorkspaceData({
+      workspaceId: workspace._id,
+      dirPath: insomniaExportFolder,
     });
-
-    for (const workspace of workspaces) {
-      await exportWorkspaceData({
-        workspaceId: workspace._id,
-        dirPath: insomniaExportFolder,
-      });
-    }
   }
 }
