@@ -139,7 +139,6 @@ export const CookieList: FC<CookieListProps> = ({
         {cookies.map(cookie => (
           <CookieRow
             cookie={cookie}
-            index={cookie.id}
             key={cookie.id}
             deleteCookie={handleCookieDelete}
           />
