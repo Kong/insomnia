@@ -1018,7 +1018,7 @@ export const Debug: FC = () => {
                         )}
                         {isRequestGroup(item.doc) && (
                           <Icon
-                            className="w-6"
+                            className="w-6 flex-shrink-0"
                             icon={item.collapsed ? 'folder' : 'folder-open'}
                           />
                         )}
