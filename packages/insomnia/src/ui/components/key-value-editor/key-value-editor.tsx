@@ -58,6 +58,7 @@ export const KeyValueEditor: FC<Props> = ({
   valuePlaceholder,
 }) => {
   // We should make the pair.id property required and pass them in from the parent
+  // smelly
   const pairsWithIds = pairs.map(pair => ({ ...pair, id: pair.id || generateId('pair') }));
 
   const readOnlyPairs = [
@@ -79,6 +80,7 @@ export const KeyValueEditor: FC<Props> = ({
             onChange([
               ...pairs,
               {
+                // smelly
                 id: generateId('pair'),
                 name: '',
                 value: '',
@@ -108,6 +110,7 @@ export const KeyValueEditor: FC<Props> = ({
             hideButtons
             readOnly
             onClick={() => onChange([...pairs, {
+              // smelly
               id: generateId('pair'),
               name: '',
               value: '',
