@@ -37,7 +37,7 @@ import { PlatformKeyCombinations } from '../../common/settings';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
 import { Environment } from '../../models/environment';
-import { isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import {
   isEventStreamRequest,
@@ -45,11 +45,12 @@ import {
   isRequestId,
   Request,
 } from '../../models/request';
-import { isRequestGroup } from '../../models/request-group';
+import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import {
   isWebSocketRequest,
   isWebSocketRequestId,
+  WebSocketRequest,
 } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { RequestActionsDropdown } from '../components/dropdowns/request-actions-dropdown';
@@ -142,6 +143,10 @@ const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
 const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useReadyState({ requestId, protocol: 'curl' });
   return readyState ? <ConnectionCircle className='flex-shrink-0' data-testid="EventStreamSpinner__Connected" /> : null;
+};
+
+const getRequestNameOrFallback = (doc: Request | RequestGroup | GrpcRequest | WebSocketRequest): string => {
+  return !isRequestGroup(doc) ? doc.name || doc.url || 'Untitled request' : doc.name || 'Untitled folder';
 };
 
 export const Debug: FC = () => {
@@ -878,6 +883,7 @@ export const Debug: FC = () => {
               }}
             >
               {item => {
+
                 return (
                   <Item
                     key={item.doc._id}
@@ -916,7 +922,7 @@ export const Debug: FC = () => {
                           gRPC
                         </span>
                       )}
-                      <span className="truncate">{item.doc.name}</span>
+                      <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
                       <span className="flex-1" />
                       {item.pinned && (
                         <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
@@ -1016,7 +1022,7 @@ export const Debug: FC = () => {
                             icon={item.collapsed ? 'folder' : 'folder-open'}
                           />
                         )}
-                        <span className="truncate">{item.doc.name}</span>
+                        <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
                         <span className="flex-1" />
                         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
                         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}

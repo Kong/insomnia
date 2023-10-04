@@ -203,7 +203,7 @@ export const Plugins: FC = () => {
         </div>
       </form>
       <hr />
-      <div className="text-right">
+      <div className="text-right mt-2">
         <Button
           onClick={() => window.main.openInBrowser(PLUGIN_HUB_BASE)}
         >

@@ -19,9 +19,11 @@ import {
 import { database } from '../../common/database';
 import { documentationLinks } from '../../common/documentation';
 import * as models from '../../models';
+import { isGrpcRequest } from '../../models/grpc-request';
 import { isRequest, Request } from '../../models/request';
 import { isUnitTest, UnitTest } from '../../models/unit-test';
 import { UnitTestSuite } from '../../models/unit-test-suite';
+import { isWebSocketRequest } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import {
   CodeEditor,
@@ -29,6 +31,7 @@ import {
 } from '../components/codemirror/code-editor';
 import { EditableInput } from '../components/editable-input';
 import { Icon } from '../components/icon';
+import { getMethodShortHand } from '../components/tags/method-tag';
 
 const UnitTestItemView = ({
   unitTest,
@@ -73,7 +76,7 @@ const UnitTestItemView = ({
     <div className="p-[--padding-sm] flex-shrink-0 overflow-hidden">
       <div className="flex items-center gap-2 w-full">
         <Button
-          className="flex flex-shrink-0 flex-nowrap items-center justify-center aspect-square h-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex flex-shrink-0 flex-nowrap items-center justify-center aspect-square h-8 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => setIsOpen(!isOpen)}
         >
           <Icon icon={isOpen ? 'chevron-down' : 'chevron-right'} />
@@ -121,30 +124,90 @@ const UnitTestItemView = ({
             key: request._id,
           }))}
         >
-          <Button aria-label='Select a request' className="px-4 py-1 flex flex-1 h-6 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+          <Button aria-label='Select a request' className="px-4 py-1 flex flex-1 h-8 items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
             <SelectValue<Request> className="flex truncate items-center justify-center gap-2">
-              {({ isPlaceholder, selectedItem }) => {
-                if (isPlaceholder || !selectedItem) {
+              {({ isPlaceholder, selectedItem: request }) => {
+                if (isPlaceholder || !request) {
                   return <span>Select a request</span>;
                 }
 
-                return <Fragment>{selectedItem.name}</Fragment>;
+                return (
+                  <Fragment>
+                    {isRequest(request) && (
+                      <span
+                        className={
+                          `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
+                              ${{
+                            'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+                            'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+                            'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                            'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                            'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+                            'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+                            'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+                          }[request.method] || 'text-[--color-font] bg-[--hl-md]'}`
+                        }
+                      >
+                        {getMethodShortHand(request)}
+                      </span>
+                    )}
+                    {isWebSocketRequest(request) && (
+                      <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+                        WS
+                      </span>
+                    )}
+                    {isGrpcRequest(request) && (
+                      <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+                        gRPC
+                      </span>
+                    )}
+                    <span>{request.name || request.url || 'Untitled request'}</span>
+                  </Fragment>
+                );
               }}
             </SelectValue>
             <Icon icon="caret-down" />
           </Button>
           <Popover className="min-w-max">
             <ListBox<Request> className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[50vh] focus:outline-none">
-              {item => (
+              {request => (
                 <Item
                   className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                  aria-label={item.name}
-                  textValue={item.name}
-                  value={item}
+                  aria-label={request.name}
+                  textValue={request.name}
+                  value={request}
                 >
                   {({ isSelected }) => (
                     <Fragment>
-                      <span>{item.name}</span>
+                      {isRequest(request) && (
+                        <span
+                          className={
+                            `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
+                            ${{
+                              'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+                              'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+                              'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                              'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                              'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+                              'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+                              'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+                            }[request.method] || 'text-[--color-font] bg-[--hl-md]'}`
+                          }
+                        >
+                          {getMethodShortHand(request)}
+                        </span>
+                      )}
+                      {isWebSocketRequest(request) && (
+                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+                          WS
+                        </span>
+                      )}
+                      {isGrpcRequest(request) && (
+                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+                          gRPC
+                        </span>
+                      )}
+                      <span>{request.name || request.url || 'Untitled request'}</span>
                       {isSelected && (
                         <Icon
                           icon="check"
@@ -160,7 +223,7 @@ const UnitTestItemView = ({
         </Select>
 
         <Button
-          className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex flex-shrink-0 items-center justify-center aspect-square h-8 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => {
             deleteUnitTestFetcher.submit(
               {},
@@ -174,7 +237,7 @@ const UnitTestItemView = ({
           <Icon icon="trash" />
         </Button>
         <Button
-          className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          className="flex flex-shrink-0 items-center justify-center aspect-square h-8 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => {
             runTestFetcher.submit(
               {},

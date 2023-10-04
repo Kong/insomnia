@@ -11,6 +11,7 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { isScratchpadOrganizationId } from '../../../models/organization';
 import { isScratchpad } from '../../../models/workspace';
+import { SegmentEvent } from '../../analytics';
 import { ProjectLoaderData } from '../../routes/project';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
@@ -135,6 +136,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
               showAlert({
                 title: 'Export Complete',
                 message: 'All your data have been successfully exported',
+              });
+              window.main.trackSegmentEvent({
+                event: SegmentEvent.exportAllCollections,
               });
             }}
             aria-label='Export all data'

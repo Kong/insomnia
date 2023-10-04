@@ -183,7 +183,7 @@ export const workspaceLoader: LoaderFunction = async ({
                 doc.description,
                 ...(isRequestGroup(doc) ? [] : [doc.url]),
               ],
-              { splitSpace: true, loose: true }
+              { splitSpace: false, loose: true }
             )?.indexes);
           const shouldHide = Boolean(filter && !isMatched(filter));
           const hidden = parentIsCollapsed || shouldHide;
