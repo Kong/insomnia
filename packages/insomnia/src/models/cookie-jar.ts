@@ -1,8 +1,8 @@
 import crypto from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
-
 export const name = 'Cookie Jar';
 
 export const type = 'CookieJar';
@@ -14,7 +14,6 @@ export const canDuplicate = true;
 export const canSync = false;
 
 export interface Cookie {
-  // TODO: this id is a duplicate key, should be removed and all the junk too
   id: string;
   key: string;
   value: string;
@@ -74,7 +73,7 @@ export async function getOrCreateForParentId(parentId: string) {
     return create({
       parentId,
       // Deterministic ID. It helps reduce sync complexity since we won't have to
-      // de-duplicate environments.
+      // de-duplicate cookie jar.
       _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
     });
   } else {
@@ -98,7 +97,7 @@ export async function update(cookieJar: CookieJar, patch: Partial<CookieJar> = {
 function migrateCookieId(cookieJar: CookieJar) {
   for (const cookie of cookieJar.cookies) {
     if (!cookie.id) {
-      cookie.id = Math.random().toString().replace('0.', '');
+      cookie.id = uuidv4();
     }
   }
 
