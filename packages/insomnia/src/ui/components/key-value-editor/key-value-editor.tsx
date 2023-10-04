@@ -66,7 +66,7 @@ export const KeyValueEditor: FC<Props> = ({
     { name: 'Sec-WebSocket-Key', value: '<calculated at runtime>' },
     { name: 'Sec-WebSocket-Version', value: '13' },
     { name: 'Sec-WebSocket-Extensions', value: 'permessage-deflate; client_max_window_bits' },
-  ];
+  ].map(pair => ({ ...pair, id: generateId('pair') }));
 
   const [showDescription, setShowDescription] = React.useState(false);
 
@@ -118,8 +118,8 @@ export const KeyValueEditor: FC<Props> = ({
             addPair={() => { }}
           />
         )}
-        {isWebSocketRequest ? readOnlyPairs.map((pair, i) => (
-          <li key={i} className="key-value-editor__row-wrapper">
+        {isWebSocketRequest ? readOnlyPairs.map(pair => (
+          <li key={pair.id} className="key-value-editor__row-wrapper">
             <div className="key-value-editor__row">
               <div className="form-control form-control--underlined form-control--wide">
                 <input
