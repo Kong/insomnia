@@ -5,6 +5,7 @@ import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-rout
 import { logout } from '../../account/session';
 import { exportAllData } from '../../common/export-all-data';
 import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
+import { SegmentEvent } from '../analytics';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { showAlert } from '../components/modals';
 import { TrailLinesContainer } from '../components/trail-lines-container';
@@ -256,6 +257,9 @@ export const OnboardingCloudMigration = () => {
                         showAlert({
                           title: 'Export Complete',
                           message: 'All your data have been successfully exported',
+                        });
+                        window.main.trackSegmentEvent({
+                          event: SegmentEvent.exportAllCollections,
                         });
                       }}
                       className='focus:text-[--color-font] hover:text-[--color-font] font-bold transition-colors'

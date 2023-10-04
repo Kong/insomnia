@@ -99,9 +99,9 @@ function getInitialEntry() {
       return '/auth/login';
     }
 
-    return '/scratchpad';
+    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
   } catch (e) {
-    return '/scratchpad';
+    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
   }
 }
 
@@ -117,10 +117,6 @@ const router = createMemoryRouter(
       loader: async (...args) => (await import('./routes/root')).loader(...args),
       errorElement: <ErrorRoute />,
       children: [
-        {
-          path: '/scratchpad',
-          loader: async (...args) => (await import('./routes/scratchpad')).loader(...args),
-        },
         {
           path: 'onboarding/*',
           element: <Onboarding />,
@@ -903,7 +899,7 @@ const router = createMemoryRouter(
 );
 
 // Store the last location in local storage
-router.subscribe(({ location }) => {
+router.subscribe(({ location, navigation }) => {
   const match = matchPath(
     {
       path: '/organization/:organizationId',
@@ -911,8 +907,18 @@ router.subscribe(({ location }) => {
     },
     location.pathname
   );
+  const nextRoute = navigation.location?.pathname;
+  const currentRoute = location.pathname;
+  // Use navigation send tracking events on page change
+  const bothHaveValueButNotEqual = nextRoute && currentRoute && nextRoute !== currentRoute;
+  if (bothHaveValueButNotEqual) {
+    // transforms /organization/:org_* to /organization/:org_id
+    const routeWithoutUUID = nextRoute.replace(/_[a-f0-9]{32}/g, '_id');
+    // console.log('Tracking page view', { name: routeWithoutUUID });
+    window.main.trackPageView({ name: routeWithoutUUID });
+  }
 
-  match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, location.pathname);
+  match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, currentRoute);
 });
 
 async function renderApp() {

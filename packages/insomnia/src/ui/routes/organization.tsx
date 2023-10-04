@@ -344,7 +344,8 @@ const UpgradeButton = () => {
 };
 
 const OrganizationRoute = () => {
-  const { settings } = useRootLoaderData();
+  const { settings, workspaceCount } = useRootLoaderData();
+
   const { organizations, user } =
     useLoaderData() as OrganizationLoaderData;
   const workspaceData = useRouteLoaderData(
@@ -638,7 +639,7 @@ const OrganizationRoute = () => {
                   />{' '}
                   {user
                     ? status.charAt(0).toUpperCase() + status.slice(1)
-                    : 'Log in to sync your data'}
+                    : `Log in to sync your data (${workspaceCount} files)`}
                 </Button>
                 <Tooltip
                   placement="top"
