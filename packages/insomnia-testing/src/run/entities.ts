@@ -15,6 +15,7 @@ interface NodeErr {
 }
 
 export interface TestResult {
+  id: string;
   title: string;
   fullTitle: string;
   file?: string;
