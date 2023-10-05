@@ -26,7 +26,6 @@ test.describe('gRPC interactions', () => {
       has: page.locator('.CodeMirror-activeline'),
     });
     streamMessage = page.locator('[data-testid="request-pane"] button:has-text("Stream")');
-    await page.getByLabel('Request Collection').getByRole('row', { name: 'Route Guide Example' }).click();
   });
 
   test('can send unidirectional requests', async ({ page }) => {
