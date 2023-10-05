@@ -16,6 +16,7 @@ import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown'
 import { ErrorBoundary } from '../error-boundary';
 import { Pane, PaneHeader as OriginalPaneHeader } from '../panes/pane';
 import { PlaceholderResponsePane } from '../panes/placeholder-response-pane';
+import { ResponsePane } from '../panes/response-pane';
 import { SvgIcon } from '../svg-icon';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
@@ -94,6 +95,9 @@ export const RealtimeResponsePane: FC<{ requestId: string }> = () => {
         <PlaceholderResponsePane />
       </Pane>
     );
+  }
+  if (activeResponse.contentType !== 'text/event-stream') {
+    return <ResponsePane runningRequests={{}} />;
   }
   return <RealtimeActiveResponsePane response={activeResponse} />;
 };

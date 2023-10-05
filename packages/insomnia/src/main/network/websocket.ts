@@ -297,6 +297,8 @@ const openWebSocketConnection = async (
         eventLogPath: responseBodyPath,
         settingSendCookies: request.settingSendCookies,
         settingStoreCookies: request.settingStoreCookies,
+        // TODO: decide if this is the right thing to do, ws doesn't have a content type
+        contentType: 'text/event-stream',
       };
       const settings = await models.settings.get();
       const res = await models.webSocketResponse.create(responsePatch, settings.maxHistoryResponses);
