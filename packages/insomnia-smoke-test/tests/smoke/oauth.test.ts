@@ -28,9 +28,6 @@ test('can make oauth2 requests', async ({ app, page }) => {
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
   await page.getByText('CollectionOAuth Testingjust now').click();
 
-  // Authorization code
-  await projectView.getByLabel('Request Collection').getByRole('row', { name: 'Authorization Code' }).click();
-
   // No PKCE
   await projectView.getByLabel('Request Collection').getByRole('row', { name: 'No PKCE' }).click();
   await expect(page.locator('.app')).toContainText('http://127.0.0.1:4010/oidc/me');
@@ -102,9 +99,6 @@ test('can make oauth2 requests', async ({ app, page }) => {
   }
   await page.locator('button:has-text("Clear OAuth 2 session")').click();
   await page.keyboard.press('Escape');
-
-  // Implicit
-  await page.getByLabel('Request Collection').getByRole('row', { name: 'Implicit' }).click();
 
   // ID Token
   await page.getByLabel('Request Collection').getByRole('row', { name: 'ID Token' }).click();
