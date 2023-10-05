@@ -222,6 +222,7 @@ const openCurlConnection = async (
         settingSendCookies: request.settingSendCookies,
         settingStoreCookies: request.settingStoreCookies,
         bodyCompression: null,
+        contentType: CurlConnections.get(options.requestId)?.getInfo(Curl.info.CONTENT_TYPE) as string || '',
       };
       const settings = await models.settings.get();
       const res = await models.response.create(responsePatch, settings.maxHistoryResponses);

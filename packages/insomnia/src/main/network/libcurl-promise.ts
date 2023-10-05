@@ -205,6 +205,7 @@ export const curlRequest = (options: CurlRequestOptions) => new Promise<CurlRequ
         bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD) as number,
         elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000,
         url: curl.getInfo(Curl.info.EFFECTIVE_URL) as string,
+        contentType: curl.getInfo(Curl.info.CONTENT_TYPE) as string,
       };
       curl.close();
       await waitForStreamToFinish(responseBodyWriteStream);
