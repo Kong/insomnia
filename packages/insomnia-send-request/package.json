@@ -2,7 +2,7 @@
   "private": true,
   "name": "insomnia-send-request",
   "license": "Apache-2.0",
-  "version": "8.1.0",
+  "version": "8.2.0",
   "author": "Kong <office@konghq.com>",
   "main": "dist/index.js",
   "types": "dist/send-request/index.d.ts",
