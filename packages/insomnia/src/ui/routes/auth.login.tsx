@@ -9,6 +9,7 @@ import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Icon } from '../components/icon';
 import { showAlert } from '../components/modals';
+import { useRootLoaderData } from './root';
 
 const GoogleIcon = (props: React.ReactSVGElement['props']) => {
   return (
@@ -67,6 +68,8 @@ const Login = () => {
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState('email');
   const navigate = useNavigate();
+  const { workspaceCount } = useRootLoaderData();
+
   const login = (provider: string) => {
     if (data.hasProjectsToMigrate) {
       setIsMigrationModalOpen(true);
@@ -289,7 +292,7 @@ const Login = () => {
                       className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
                     >
                       <Icon icon="file-export" />
-                      <span>Export all data</span>
+                      <span>Export all data {`(${workspaceCount} files)`}</span>
                     </Button>
                   </div>
                 )}
@@ -542,7 +545,7 @@ const Login = () => {
                             });
                           }}
                           className='focus:text-[--color-font] hover:text-[--color-font] font-bold transition-colors'
-                        > export your data </Button> for portability.
+                        > export your data </Button> for portability. {`(${workspaceCount} files)`}
                       </p>
                     </div>
                     <Button

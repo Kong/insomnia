@@ -13,6 +13,7 @@ import { isScratchpadOrganizationId } from '../../../models/organization';
 import { isScratchpad } from '../../../models/workspace';
 import { SegmentEvent } from '../../analytics';
 import { ProjectLoaderData } from '../../routes/project';
+import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
@@ -35,7 +36,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
   const projectName = workspaceData?.activeProject.name ?? getProductName();
-
+  const { workspaceCount } = useRootLoaderData();
   const workspacesFetcher = useFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
@@ -145,7 +146,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
           >
             <Icon icon="file-export" />
-            <span>Export all data</span>
+            <span>Export all data {`(${workspaceCount} files)`}</span>
           </Button>
           <Button
             style={{
