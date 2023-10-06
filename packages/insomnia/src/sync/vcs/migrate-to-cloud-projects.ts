@@ -39,6 +39,11 @@ export const shouldMigrateProjectUnderOrganization = async () => {
 // do we care about project or should we only care about the workspaces?
 // depends on the recovery, reassing project to org or just workspaces to different project
 
+// nice to have:
+// a way to clean up the old projects
+// import workspaces into personal org
+// move projects into current org
+
 const hasOrphanedProjects = async (projectIdsWithinMyOrg: string[]) => {
   const projectIdsWithinMyOrgAndScratchPad = [...projectIdsWithinMyOrg, models.project.SCRATCHPAD_PROJECT_ID];
   const orphanedProjectCount = await database.count<Project>(models.project.type, {
