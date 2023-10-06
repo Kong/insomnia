@@ -804,7 +804,6 @@ strong {
   animation: AIfadeIn 0.5s 0.5s ease-in-out forwards;
 }
 /* Styles */
-
 /* Layout */
 .form-control {
   outline: none;
@@ -1657,6 +1656,10 @@ html {
 .editor .CodeMirror-cursor {
   border-left: 1px solid var(--color-font);
 }
+
+[theme="default"] .editor .CodeMirror-foldmarker {
+  color: var(--color-font-surprise);
+}
 .editor .CodeMirror-foldmarker {
   color: var(--color-surprise);
   text-shadow: none;
@@ -1674,6 +1677,14 @@ html {
 .editor .cm-meta,
 .editor .cm-qualifier {
   color: var(--color-font);
+}
+[theme="default"] .editor .cm-atom,
+[theme="default"] .editor .cm-number,
+[theme="default"] .editor .cm-keyword,
+[theme="default"] .editor .cm-variable-3,
+[theme="default"] .editor .cm-link,
+[theme="default"] .editor .cm-header {
+  color: var(--color-font-surprise);
 }
 .editor .cm-atom {
   color: var(--color-surprise);
@@ -1968,6 +1979,12 @@ html {
 .CodeMirror-info .info-description > * {
   margin: var(--padding-xs) 0 var(--padding-sm) 0;
 }
+
+[theme="default"] .CodeMirror-info .type-name,
+[theme="default"] .CodeMirror-info .arg-name {
+  color: var(--color-font-surprise);
+}
+
 .CodeMirror-info .type-name {
   color: var(--color-surprise);
 }
@@ -2364,6 +2381,15 @@ input.editable {
 .markdown-preview__content .hljs .hljs-builtin-name,
 .markdown-preview__content .hljs .hljs-type,
 .markdown-preview__content .hljs .hljs-tag .hljs-attr {
+  color: var(--color-surprise);
+}
+[theme="default"] .markdown-preview__content .hljs .hljs-literal,
+[theme="default"] .markdown-preview__content .hljs .hljs-template-variable,
+[theme="default"] .markdown-preview__content .hljs .hljs-built_in,
+[theme="default"] .markdown-preview__content .hljs .hljs-keyword,
+[theme="default"] .markdown-preview__content .hljs .hljs-builtin-name,
+[theme="default"] .markdown-preview__content .hljs .hljs-type,
+[theme="default"] .markdown-preview__content .hljs .hljs-tag .hljs-attr {
   color: var(--color-surprise);
 }
 .markdown-preview__content .hljs .hljs-symbol,
@@ -3465,4 +3491,12 @@ input.editable {
   top: 0;
   bottom: 0;
   z-index: 9999;
+}
+
+.servers {
+  margin-top: 1rem;
+}
+
+.pane-two {
+  z-index: 0;
 }

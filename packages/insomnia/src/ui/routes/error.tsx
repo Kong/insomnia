@@ -1,26 +1,15 @@
 import React from 'react';
 import { FC } from 'react';
+import { Button } from 'react-aria-components';
 import {
   isRouteErrorResponse,
+  useFetcher,
   useNavigate,
   useNavigation,
   useRouteError,
 } from 'react-router-dom';
-import styled from 'styled-components';
 
-import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
-import { Button } from '../components/themed-button';
-
-const Container = styled.div({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  height: '100%',
-  width: '100%',
-});
-
-const Spinner = () => <i className="fa fa-spin fa-refresh" />;
+import { Icon } from '../components/icon';
 
 export const ErrorRoute: FC = () => {
   const error = useRouteError();
@@ -44,21 +33,39 @@ export const ErrorRoute: FC = () => {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const errorMessage = getErrorMessage(error);
+  const logoutFetcher = useFetcher();
 
   return (
-    <Container>
-      <h1 style={{ color: 'var(--color-font)' }}>Application Error</h1>
-      <p style={{ color: 'var(--color-font)' }}>
-        Failed to render. Please report to <a href="https://github.com/Kong/insomnia/issues">our Github Issues</a>
+    <div className="flex gap-2 flex-col items-center justify-center h-full w-full overflow-hidden">
+      <h1 className='text-[--color-font] text-2xl flex items-center gap-2'><Icon className='text-[--color-danger]' icon="exclamation-triangle" /> Application Error</h1>
+      <p className='text-[--color-font]'>
+        Failed to render. Please report to <a className='font-bold underline' href="https://github.com/Kong/insomnia/issues">our Github Issues</a>
       </p>
-      <span style={{ color: 'var(--color-font)' }}>
-        <code className="selectable" style={{ wordBreak: 'break-word', margin: 'var(--padding-sm)' }}>{errorMessage}</code>
-      </span>
-      <Button onClick={() => navigate(`/organization/${DEFAULT_ORGANIZATION_ID}`)}>
-        Try to reload the app{' '}
-        <span>{navigation.state === 'loading' ? <Spinner /> : null}</span>
-      </Button>
-      <code className="selectable" style={{ wordBreak: 'break-word', margin: 'var(--padding-sm)' }}>{getErrorStack(error)}</code>
-    </Container>
+      <div className='text-[--color-font] p-6'>
+        <code className="break-words p-2">{errorMessage}</code>
+      </div>
+      <div className='flex gap-2 items-center'>
+        <Button className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base" onPress={() => navigate('/organization')}>
+          Try to reload the app{' '}
+          <span>{navigation.state === 'loading' ? <Icon icon="spinner" className='animate-spin' /> : null}</span>
+        </Button>
+        <Button
+          className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
+          onPress={() => logoutFetcher.submit(
+            {},
+            {
+              action: '/auth/logout',
+              method: 'POST',
+            },
+          )}
+        >
+          Logout{' '}
+          <span>{navigation.state === 'loading' ? <Icon icon="spinner" className='animate-spin' /> : null}</span>
+        </Button>
+      </div>
+      <div className='text-[--color-font] p-6 overflow-y-auto'>
+        <code className="break-all p-2">{getErrorStack(error)}</code>
+      </div>
+    </div>
   );
 };

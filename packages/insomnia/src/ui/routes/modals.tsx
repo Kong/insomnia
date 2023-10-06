@@ -13,7 +13,6 @@ import { ErrorModal } from '../components/modals/error-modal';
 import { FilterHelpModal } from '../components/modals/filter-help-modal';
 import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { GenerateConfigModal } from '../components/modals/generate-config-modal';
-import { LoginModal } from '../components/modals/login-modal';
 import { NunjucksModal } from '../components/modals/nunjucks-modal';
 import { PromptModal } from '../components/modals/prompt-modal';
 import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
@@ -42,7 +41,6 @@ const Modals: FC = () => {
         <WrapperModal
           ref={instance => registerModal(instance, 'WrapperModal')}
         />
-        <LoginModal ref={instance => registerModal(instance, 'LoginModal')} />
         <AskModal ref={instance => registerModal(instance, 'AskModal')} />
         <SelectModal
           ref={instance => registerModal(instance, 'SelectModal')}

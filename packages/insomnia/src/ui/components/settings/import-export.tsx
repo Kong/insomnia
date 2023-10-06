@@ -2,15 +2,23 @@ import React, { FC, Fragment, useEffect, useState } from 'react';
 import { useFetcher, useParams } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { isLoggedIn } from '../../../account/session';
 import { getProductName } from '../../../common/constants';
 import { docsImportExport } from '../../../common/documentation';
 import { exportAllToFile } from '../../../common/export';
+import { exportAllData } from '../../../common/export-all-data';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
+import { isScratchpadOrganizationId } from '../../../models/organization';
+import { isScratchpad } from '../../../models/workspace';
+import { SegmentEvent } from '../../analytics';
 import { ProjectLoaderData } from '../../routes/project';
+import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
+import { Icon } from '../icon';
+import { showAlert } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { ImportModal } from '../modals/import-modal';
 import { Button } from '../themed-button';
@@ -28,11 +36,11 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
   const projectName = workspaceData?.activeProject.name ?? getProductName();
-
+  const { workspaceCount } = useRootLoaderData();
   const workspacesFetcher = useFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized) {
+    if (isIdleAndUninitialized && organizationId && !isScratchpadOrganizationId(organizationId)) {
       workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
     }
   }, [organizationId, projectId, workspacesFetcher]);
@@ -45,6 +53,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     exportAllToFile(projectName, workspacesForActiveProject);
     hideSettingsModal();
   };
+
+  if (!organizationId) {
+    return null;
+  }
  // here we should list all the folders which contain insomnia.*.db files
  // and have some big red button to overwrite the current data with the backup
  // and once complete trigger an app restart?
@@ -57,8 +69,11 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         <p>
           Your format isn't supported? <Link href={docsImportExport}>Add Your Own</Link>.
         </p>
-        <div className="pad-top">
+        <div className="flex flex-col pt-4 gap-4">
           {workspaceData?.activeWorkspace ?
+            isScratchpad(workspaceData.activeWorkspace) ?
+              <Button onClick={() => setIsExportModalOpen(true)}>Export the "{activeWorkspaceName}" {getWorkspaceLabel(workspaceData.activeWorkspace).singular}</Button>
+              :
             (<Dropdown
               aria-label='Export Data Dropdown'
               triggerButton={
@@ -88,22 +103,76 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
               </DropdownSection>
             </Dropdown>) : (<Button onClick={handleExportAllToFile}>{`Export files from the "${projectName}" ${strings.project.singular}`}</Button>)
           }
-          &nbsp;&nbsp;
           <Button
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 'var(--padding-sm)',
             }}
+            onClick={async () => {
+              const { filePaths, canceled } = await window.dialog.showOpenDialog({
+                properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
+                buttonLabel: 'Select',
+                title: 'Export All Insomnia Data',
+              });
+
+              if (canceled) {
+                return;
+              }
+
+              const [dirPath] = filePaths;
+
+              try {
+                dirPath && await exportAllData({
+                  dirPath,
+                });
+              } catch (e) {
+                showAlert({
+                  title: 'Export Failed',
+                  message: 'An error occurred while exporting data. Please try again.',
+                });
+                console.error(e);
+              }
+
+              showAlert({
+                title: 'Export Complete',
+                message: 'All your data have been successfully exported',
+              });
+              window.main.trackSegmentEvent({
+                event: SegmentEvent.exportAllCollections,
+              });
+            }}
+            aria-label='Export all data'
+            className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
+          >
+            <Icon icon="file-export" />
+            <span>Export all data {`(${workspaceCount} files)`}</span>
+          </Button>
+          <Button
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--padding-sm)',
+            }}
+            disabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
             onClick={() => setIsImportModalOpen(true)}
           >
             <i className="fa fa-file-import" />
             {`Import to the "${projectName}" ${strings.project.singular}`}
           </Button>
-          &nbsp;&nbsp;
-          <Link href="https://insomnia.rest/create-run-button" className="btn btn--compact" button>
+
+          <Button
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--padding-sm)',
+            }}
+            disabled={!isLoggedIn()}
+            onClick={() => window.main.openInBrowser('https://insomnia.rest/create-run-button')}
+          >
+            <i className="fa fa-file-import" />
             Create Run Button
-          </Link>
+          </Button>
         </div>
       </div>
       {isImportModalOpen && (

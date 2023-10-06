@@ -13,7 +13,7 @@ import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { CreateRequestType, useRequestGroupPatcher } from '../../hooks/use-request';
-import { RootLoaderData } from '../../routes/root';
+import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { Icon } from '../icon';
@@ -33,7 +33,7 @@ export const RequestGroupActionsDropdown = ({
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRootLoaderData();
   const { hotKeyRegistry } = settings;
   const [actionPlugins, setActionPlugins] = useState<RequestGroupAction[]>([]);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});

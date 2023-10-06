@@ -1,6 +1,5 @@
 import * as path from 'path';
 import React, { FC, useEffect, useState } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
 
 import {
   NPM_PACKAGE_BASE,
@@ -12,7 +11,7 @@ import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import { reload } from '../../../templating/index';
 import { useSettingsPatcher } from '../../hooks/use-request';
-import { RootLoaderData } from '../../routes/root';
+import { useRootLoaderData } from '../../routes/root';
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
@@ -26,6 +25,7 @@ interface State {
   isInstallingFromNpm: boolean;
   isRefreshingPlugins: boolean;
 }
+
 export const Plugins: FC = () => {
   const [state, setState] = useState<State>({
     plugins: [],
@@ -45,7 +45,7 @@ export const Plugins: FC = () => {
   } = state;
   const {
     settings,
-  } = useRouteLoaderData('root') as RootLoaderData;
+  } = useRootLoaderData();
 
   useEffect(() => {
     refreshPlugins();
@@ -203,7 +203,7 @@ export const Plugins: FC = () => {
         </div>
       </form>
       <hr />
-      <div className="text-right">
+      <div className="text-right mt-2">
         <Button
           onClick={() => window.main.openInBrowser(PLUGIN_HUB_BASE)}
         >

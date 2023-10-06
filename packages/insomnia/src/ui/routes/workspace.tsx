@@ -16,8 +16,7 @@ import { GitRepository } from '../../models/git-repository';
 import { GrpcRequest } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { sortProjects } from '../../models/helpers/project';
-import { DEFAULT_ORGANIZATION_ID } from '../../models/organization';
-import { isRemoteProject, Project } from '../../models/project';
+import { Project } from '../../models/project';
 import { Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { RequestGroupMeta } from '../../models/request-group-meta';
@@ -64,11 +63,13 @@ export const workspaceLoader: LoaderFunction = async ({
   request,
   params,
 }): Promise<WorkspaceLoaderData> => {
-  const { projectId, workspaceId, organizationId } = params;
-  invariant(workspaceId, 'Workspace ID is required');
+  const { organizationId, projectId, workspaceId } = params;
+  invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
+  invariant(workspaceId, 'Workspace ID is required');
 
   const activeWorkspace = await models.workspace.getById(workspaceId);
+
   invariant(activeWorkspace, 'Workspace not found');
 
   // I don't know what to say man, this is just how it is
@@ -108,12 +109,9 @@ export const workspaceLoader: LoaderFunction = async ({
     workspaceId,
   );
 
-  const allProjects = await models.project.all();
-
-  const organizationProjects =
-    organizationId === DEFAULT_ORGANIZATION_ID
-      ? allProjects.filter(proj => !isRemoteProject(proj))
-      : [activeProject];
+  const organizationProjects = await database.find<Project>(models.project.type, {
+    parentId: organizationId,
+  }) || [];
 
   const projects = sortProjects(organizationProjects);
   const syncItemsList: (
@@ -185,7 +183,7 @@ export const workspaceLoader: LoaderFunction = async ({
                 doc.description,
                 ...(isRequestGroup(doc) ? [] : [doc.url]),
               ],
-              { splitSpace: true, loose: true }
+              { splitSpace: false, loose: true }
             )?.indexes);
           const shouldHide = Boolean(filter && !isMatched(filter));
           const hidden = parentIsCollapsed || shouldHide;

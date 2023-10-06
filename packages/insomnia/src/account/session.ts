@@ -6,6 +6,7 @@ type LoginCallback = (isLoggedIn: boolean) => void;
 
 export interface WhoamiResponse {
   sessionAge: number;
+  sessionExpiry: number;
   accountId: string;
   email: string;
   firstName: string;
@@ -29,6 +30,7 @@ export interface WhoamiResponse {
 export interface SessionData {
   accountId: string;
   id: string;
+  sessionExpiry: Date;
   email: string;
   firstName: string;
   lastName: string;
@@ -46,6 +48,7 @@ export function onLoginLogout(loginCallback: LoginCallback) {
 export async function absorbKey(sessionId: string, key: string) {
   // Get and store some extra info (salts and keys)
   const {
+    sessionExpiry,
     publicKey,
     encPrivateKey,
     encSymmetricKey,
@@ -55,9 +58,13 @@ export async function absorbKey(sessionId: string, key: string) {
     lastName,
   } = await _whoami(sessionId);
   const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
+
+  const sessionExpiryDate = new Date(Date.now() + (sessionExpiry * 1000));
+
   // Store the information for later
   setSessionData(
     sessionId,
+    sessionExpiryDate,
     accountId,
     firstName,
     lastName,
@@ -98,7 +105,7 @@ export async function changePasswordWithToken(rawNewPassphrase: string, confirma
   const symmetricKey = JSON.stringify(_getSymmetricKey());
   const newEncSymmetricKeyJSON = crypt.encryptAES(newSecret, symmetricKey);
   const newEncSymmetricKey = JSON.stringify(newEncSymmetricKeyJSON);
-  return window.main.insomniaFetch({
+  await window.main.insomniaFetch({
     method: 'POST',
     path: '/auth/change-password',
     data: {
@@ -113,7 +120,7 @@ export async function changePasswordWithToken(rawNewPassphrase: string, confirma
 }
 
 export function sendPasswordChangeCode() {
-  return window.main.insomniaFetch({
+  window.main.insomniaFetch({
     method: 'POST',
     path: '/auth/send-password-code',
     sessionId: getCurrentSessionId(),
@@ -143,7 +150,24 @@ export function getPrivateKey() {
 
 export function getCurrentSessionId() {
   if (window) {
-    return window.localStorage.getItem('currentSessionId');
+    const sessionId = window.localStorage.getItem('currentSessionId');
+    try {
+      const { sessionExpiry } = JSON.parse(window.localStorage.getItem(_getSessionKey(sessionId)) || '{}');
+      if (typeof sessionExpiry !== 'string' || !sessionExpiry) {
+        console.log('No session expiry found', sessionExpiry);
+        return '';
+      }
+
+      const isExpired = new Date(sessionExpiry).getTime() < Date.now();
+      if (isExpired) {
+        console.log('Session has expired', sessionExpiry);
+        return '';
+      }
+      return sessionId;
+    } catch (e) {
+      console.log('Error in expiry logic', e);
+      return '';
+    }
   } else {
     return '';
   }
@@ -176,16 +200,19 @@ export function isLoggedIn() {
 
 /** Log out and delete session data */
 export async function logout() {
-  try {
-    await window.main.insomniaFetch({
-      method: 'POST',
-      path: '/auth/logout',
-      sessionId: getCurrentSessionId(),
-    });
-  } catch (error) {
-    // Not a huge deal if this fails, but we don't want it to prevent the
-    // user from signing out.
-    console.warn('Failed to logout', error);
+  const sessionId = getCurrentSessionId();
+  if (sessionId) {
+    try {
+      window.main.insomniaFetch({
+        method: 'POST',
+        path: '/auth/logout',
+        sessionId,
+      });
+    } catch (error) {
+      // Not a huge deal if this fails, but we don't want it to prevent the
+      // user from signing out.
+      console.warn('Failed to logout', error);
+    }
   }
 
   _unsetSessionData();
@@ -195,6 +222,7 @@ export async function logout() {
 /** Set data for the new session and store it encrypted with the sessionId */
 export function setSessionData(
   id: string,
+  sessionExpiry: Date,
   accountId: string,
   firstName: string,
   lastName: string,
@@ -205,6 +233,7 @@ export function setSessionData(
 ) {
   const sessionData: SessionData = {
     id,
+    sessionExpiry,
     accountId,
     symmetricKey,
     publicKey,
@@ -218,13 +247,6 @@ export function setSessionData(
   // NOTE: We're setting this last because the stuff above might fail
   window.localStorage.setItem('currentSessionId', id);
   return sessionData;
-}
-export async function listTeams() {
-  return window.main.insomniaFetch({
-    method: 'GET',
-    path: '/api/teams',
-    sessionId: getCurrentSessionId(),
-  });
 }
 
 // ~~~~~~~~~~~~~~~~ //
@@ -247,7 +269,7 @@ async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse>
 }
 
 function _getAuthSalts(email: string) {
-  return window.main.insomniaFetch({
+  return window.main.insomniaFetch<{ saltKey: string; saltAuth: string }>({
     method: 'POST',
     path: '/auth/login-s',
     data: { email },

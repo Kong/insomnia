@@ -9,27 +9,35 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 
+import { isLoggedIn, SessionData, setSessionData } from '../account/session';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
+  getInsomniaSession,
   getProductName,
+  getSkipOnboarding,
   isDevelopment,
 } from '../common/constants';
 import { database } from '../common/database';
 import { initializeLogging } from '../common/log';
 import * as models from '../models';
-import { DEFAULT_ORGANIZATION_ID } from '../models/organization';
-import { DEFAULT_PROJECT_ID } from '../models/project';
 import { initNewOAuthSession } from '../network/o-auth-2/get-token';
 import { init as initPlugins } from '../plugins';
 import { applyColorScheme } from '../plugins/misc';
 import { invariant } from '../utils/invariant';
 import { AppLoadingIndicator } from './components/app-loading-indicator';
+import Auth from './routes/auth';
+import Authorize from './routes/auth.authorize';
+import Login from './routes/auth.login';
+import { Migrate } from './routes/auth.migrate';
 import { ErrorRoute } from './routes/error';
+import Onboarding from './routes/onboarding';
+import { OnboardingCloudMigration } from './routes/onboarding.cloud-migration';
 import { shouldOrganizationsRevalidate } from './routes/organization';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
 
+const Organization = lazy(() => import('./routes/organization'));
 const Project = lazy(() => import('./routes/project'));
 const Workspace = lazy(() => import('./routes/workspace'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
@@ -42,12 +50,62 @@ initializeLogging();
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
 
-let locationHistoryEntry = `/organization/${DEFAULT_ORGANIZATION_ID}/project/${DEFAULT_PROJECT_ID}`;
-const prevLocationHistoryEntry = localStorage.getItem('locationHistoryEntry');
+try {
+  // In order to run playwight tests that simulate a logged in user
+  // we need to inject state into localStorage
+  const skipOnboarding = getSkipOnboarding();
+  const insomniaSession = getInsomniaSession();
+  if (skipOnboarding) {
+    window.localStorage.setItem('hasSeenOnboarding', skipOnboarding.toString());
+    window.localStorage.setItem('hasUserLoggedInBefore', skipOnboarding.toString());
+  }
 
-if (prevLocationHistoryEntry && matchPath({ path: '/organization/:organizationId', end: false }, prevLocationHistoryEntry)) {
-  locationHistoryEntry = prevLocationHistoryEntry;
+  if (insomniaSession) {
+    const session = JSON.parse(insomniaSession) as SessionData;
+    setSessionData(
+      session.id,
+      session.sessionExpiry,
+      session.accountId,
+      session.firstName,
+      session.lastName,
+      session.email,
+      session.symmetricKey,
+      session.publicKey,
+      session.encPrivateKey
+    );
+  }
+} catch (e) {
+  console.log('Failed to parse session data', e);
 }
+
+function getInitialEntry() {
+  // If the user has not seen the onboarding, then show it
+  // Otherwise if the user is not logged in and has not logged in before, then show the login
+  // Otherwise if the user is logged in, then show the organization
+  try {
+    const hasSeenOnboarding = Boolean(window.localStorage.getItem('hasSeenOnboarding'));
+
+    if (!hasSeenOnboarding) {
+      return '/onboarding';
+    }
+
+    const hasUserLoggedInBefore = window.localStorage.getItem('hasUserLoggedInBefore');
+
+    if (isLoggedIn()) {
+      return '/organization';
+    }
+
+    if (hasUserLoggedInBefore) {
+      return '/auth/login';
+    }
+
+    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
+  } catch (e) {
+    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
+  }
+}
+
+const initialEntry = getInitialEntry();
 
 const router = createMemoryRouter(
   // @TODO - Investigate file based routing to generate these routes:
@@ -55,11 +113,20 @@ const router = createMemoryRouter(
     {
       path: '/',
       id: 'root',
-      loader: async (...args) =>
-        (await import('./routes/root')).loader(...args),
       element: <Root />,
+      loader: async (...args) => (await import('./routes/root')).loader(...args),
       errorElement: <ErrorRoute />,
       children: [
+        {
+          path: 'onboarding/*',
+          element: <Onboarding />,
+        },
+        {
+          path: 'onboarding/cloud-migration',
+          loader: async (...args) => (await import('./routes/onboarding.cloud-migration')).loader(...args),
+          action: async (...args) => (await import('./routes/onboarding.cloud-migration')).action(...args),
+          element: <OnboardingCloudMigration />,
+        },
         {
           path: 'import',
           children: [
@@ -87,11 +154,25 @@ const router = createMemoryRouter(
         {
           path: 'organization',
           id: '/organization',
-          shouldRevalidate: shouldOrganizationsRevalidate,
           loader: async (...args) => (await import('./routes/organization')).loader(...args),
+          element: <Suspense fallback={<AppLoadingIndicator />}><Organization /></Suspense>,
           children: [
             {
+              index: true,
+              loader: async (...args) => (await import('./routes/organization')).indexLoader(...args),
+            },
+            {
+              path: 'sync',
+              action: async (...args) => (await import('./routes/organization')).syncOrganizationsAction(...args),
+            },
+            {
               path: ':organizationId',
+              id: ':organizationId',
+              shouldRevalidate: shouldOrganizationsRevalidate,
+              loader: async (...args) =>
+                (
+                  await import('./routes/organization')
+                ).singleOrgLoader(...args),
               children: [
                 {
                   index: true,
@@ -99,7 +180,16 @@ const router = createMemoryRouter(
                     (await import('./routes/project')).indexLoader(...args),
                 },
                 {
+                  path: 'ai/access',
+                  action: async (...args) =>
+                    (
+                      await import('./routes/actions')
+                    ).accessAIApiAction(...args),
+                },
+                {
                   path: 'project',
+                  id: '/project',
+                  loader: async (...args) => (await import('./routes/project')).projectLoader(...args),
                   children: [
                     {
                       path: ':projectId',
@@ -579,13 +669,6 @@ const router = createMemoryRouter(
                                     },
                                   ],
                                 },
-                                {
-                                  path: 'access',
-                                  action: async (...args) =>
-                                    (
-                                      await import('./routes/actions')
-                                    ).accessAIApiAction(...args),
-                                },
                               ],
                             },
                             {
@@ -778,16 +861,45 @@ const router = createMemoryRouter(
             },
           ],
         },
+        {
+          path: 'auth',
+          element: <Suspense fallback={<AppLoadingIndicator />}>
+            <Auth />
+          </Suspense>,
+          children: [
+            {
+              path: 'login',
+              loader: async (...args) => (await import('./routes/auth.login')).loader(...args),
+              action: async (...args) => (await import('./routes/auth.login')).action(...args),
+              element: <Login />,
+            },
+            {
+              path: 'logout',
+              action: async (...args) => (await import('./routes/auth.logout')).action(...args),
+            },
+            {
+              path: 'authorize',
+              action: async (...args) => (await import('./routes/auth.authorize')).action(...args),
+              element: <Authorize />,
+            },
+            {
+              path: 'migrate',
+              loader: async (...args) => (await import('./routes/auth.migrate')).loader(...args),
+              action: async (...args) => (await import('./routes/auth.migrate')).action(...args),
+              element: <Migrate />,
+            },
+          ],
+        },
       ],
     },
   ],
   {
-    initialEntries: [locationHistoryEntry],
-  },
+    initialEntries: [initialEntry],
+  }
 );
 
 // Store the last location in local storage
-router.subscribe(({ location }) => {
+router.subscribe(({ location, navigation }) => {
   const match = matchPath(
     {
       path: '/organization/:organizationId',
@@ -795,14 +907,22 @@ router.subscribe(({ location }) => {
     },
     location.pathname
   );
+  const nextRoute = navigation.location?.pathname;
+  const currentRoute = location.pathname;
+  // Use navigation send tracking events on page change
+  const bothHaveValueButNotEqual = nextRoute && currentRoute && nextRoute !== currentRoute;
+  if (bothHaveValueButNotEqual) {
+    // transforms /organization/:org_* to /organization/:org_id
+    const routeWithoutUUID = nextRoute.replace(/_[a-f0-9]{32}/g, '_id');
+    // console.log('Tracking page view', { name: routeWithoutUUID });
+    window.main.trackPageView({ name: routeWithoutUUID });
+  }
 
-  localStorage.setItem('locationHistoryEntry', location.pathname);
-  match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, location.pathname);
+  match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, currentRoute);
 });
 
 async function renderApp() {
   await database.initClient();
-
   await initPlugins();
 
   const settings = await models.settings.getOrCreate();

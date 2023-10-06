@@ -4,7 +4,7 @@ const sidebarBackground = {
   notice: '#f0e137',
   warning: '#ff9a1f',
   danger: '#ff5631',
-  surprise: '#a896ff',
+  surprise: '#4000BF',
   info: '#46c1e6',
 };
 
@@ -62,7 +62,7 @@ export default {
           notice: '#d8c84d',
           warning: '#ec8702',
           danger: '#e15251',
-          surprise: '#8776d5',
+          surprise: '#4000BF',
           info: '#20aed9',
         },
       },

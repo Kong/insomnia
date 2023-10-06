@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 
 import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import { type BaseModel } from './index';
 
 export const name = 'Environment';
 export const type = 'Environment';
@@ -70,13 +70,26 @@ export async function getOrCreateForParentId(parentId: string) {
   });
 
   if (!environments.length) {
-    return create({
-      parentId,
-      name: 'Base Environment',
-      // Deterministic base env ID. It helps reduce sync complexity since we won't have to
-      // de-duplicate environments.
-      _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
-    });
+    // Deterministic base env ID. It helps reduce sync complexity since we won't have to
+    // de-duplicate environments.
+    const baseEnvironmentId = `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`;
+    try {
+      const baseEnvironment = await create({
+        parentId,
+        name: 'Base Environment',
+        _id: baseEnvironmentId,
+      });
+
+      return baseEnvironment;
+    } catch (e) {
+      const existingEnvironment = await getById(baseEnvironmentId);
+
+      if (existingEnvironment) {
+        return existingEnvironment;
+      }
+
+      throw e;
+    }
   }
 
   return environments[environments.length - 1];

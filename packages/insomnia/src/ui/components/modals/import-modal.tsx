@@ -8,9 +8,11 @@ import React, {
   useState,
 } from 'react';
 import { OverlayContainer, useDrop } from 'react-aria';
+import { Heading } from 'react-aria-components';
 import { useFetcher } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { isScratchpadProject } from '../../../models/project';
 import {
   ImportResourcesActionResult,
   ScanForResourcesActionResult,
@@ -80,7 +82,7 @@ const Radio: FC<{
         defaultChecked={defaultChecked}
         onChange={onChange}
       />
-      <RadioLabel htmlFor={id}>{children}</RadioLabel>
+      <RadioLabel data-test-id={`import-from-${value}`} htmlFor={id}>{children}</RadioLabel>
     </div>
   );
 };
@@ -431,6 +433,17 @@ export const ImportModal: FC<ImportModalProps> = ({
   const totalWorkspaces = scanResourcesFetcher.data?.workspaces?.length || 0;
   const shouldImportToWorkspace = !!defaultWorkspaceId && totalWorkspaces <= 1;
   const header = shouldImportToWorkspace ? `Import to "${workspaceName}" Workspace` : `Import to "${projectName}" Project`;
+  const isScratchPad = defaultProjectId && isScratchpadProject({
+    _id: defaultProjectId,
+  });
+
+  const cannotImportToWorkspace = totalWorkspaces > 1 && isScratchPad;
+
+  const importErrors = [
+    ...(importFetcher.data?.errors || []),
+    ...cannotImportToWorkspace ? ['Cannot import multiple files to ScratchPad. Please try to import your files one by one.'] : [],
+  ];
+
   return (
     <OverlayContainer onClick={e => e.stopPropagation()}>
       <Modal ref={modalRef} onHide={onHide}>
@@ -441,8 +454,9 @@ export const ImportModal: FC<ImportModalProps> = ({
             defaultProjectId={defaultProjectId}
             defaultWorkspaceId={shouldImportToWorkspace ? defaultWorkspaceId : ''}
             scanResult={scanResourcesFetcher.data}
-            errors={importFetcher.data?.errors}
-            disabled={importFetcher.state !== 'idle'}
+            errors={importErrors}
+            loading={importFetcher.state !== 'idle'}
+            disabled={importErrors.length > 0}
             onSubmit={e => {
               e.preventDefault();
               importFetcher.submit(e.currentTarget, {
@@ -484,6 +498,7 @@ const ScanResourcesForm = ({
   return (
     <Fragment>
       <form
+        aria-label="Import from"
         id={id}
         onSubmit={onSubmit}
         method="post"
@@ -634,6 +649,7 @@ const ImportResourcesForm = ({
   onSubmit,
   errors,
   disabled,
+  loading,
 }: {
   scanResult: ScanForResourcesActionResult;
   organizationId: string;
@@ -642,6 +658,7 @@ const ImportResourcesForm = ({
   errors?: string[];
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   disabled: boolean;
+    loading: boolean;
 }
 ) => {
   const id = useId();
@@ -794,10 +811,8 @@ const ImportResourcesForm = ({
       <div>
         {errors && errors.length > 0 && (
           <div className="notice error margin-top-sm">
-            <p>
-              <strong>Error while importing to Insomnia:</strong>
-              {errors[0]}
-            </p>
+            <Heading className='font-bold'>Error while importing to Insomnia:</Heading>
+            <p>{errors[0]}</p>
           </div>
         )}
       </div>
@@ -823,7 +838,7 @@ const ImportResourcesForm = ({
           form={id}
           className="btn"
         >
-          {disabled ? (
+          {loading ? (
             <div>
               <i className="fa fa-spinner fa-spin" /> Importing
             </div>

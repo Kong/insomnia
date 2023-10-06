@@ -3,7 +3,7 @@ import { FocusScope } from 'react-aria';
 import { Button, Input } from 'react-aria-components';
 
 export const EditableInput = ({
-  value,
+  value = 'Untitled',
   ariaLabel,
   name,
   onChange,

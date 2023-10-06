@@ -3,11 +3,13 @@ import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
 import {
+  Breadcrumbs,
   Button,
   DropIndicator,
   GridList,
   Input,
   Item,
+  Link,
   ListBox,
   Menu,
   MenuTrigger,
@@ -19,6 +21,7 @@ import {
 } from 'react-aria-components';
 import {
   LoaderFunction,
+  NavLink,
   redirect,
   useFetcher,
   useNavigate,
@@ -34,7 +37,7 @@ import { PlatformKeyCombinations } from '../../common/settings';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
 import { Environment } from '../../models/environment';
-import { isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { getByParentId as getGrpcRequestMetaByParentId } from '../../models/grpc-request-meta';
 import {
   isEventStreamRequest,
@@ -42,15 +45,17 @@ import {
   isRequestId,
   Request,
 } from '../../models/request';
-import { isRequestGroup } from '../../models/request-group';
+import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { getByParentId as getRequestMetaByParentId } from '../../models/request-meta';
 import {
   isWebSocketRequest,
   isWebSocketRequestId,
+  WebSocketRequest,
 } from '../../models/websocket-request';
 import { invariant } from '../../utils/invariant';
 import { RequestActionsDropdown } from '../components/dropdowns/request-actions-dropdown';
 import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
+import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
@@ -84,7 +89,7 @@ import {
   RequestLoaderData,
   WebSocketRequestLoaderData,
 } from './request';
-import { RootLoaderData } from './root';
+import { useRootLoaderData } from './root';
 import { Child, WorkspaceLoaderData } from './workspace';
 
 export interface GrpcMessage {
@@ -132,12 +137,16 @@ export const loader: LoaderFunction = async ({ params }) => {
 
 const WebSocketSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useReadyState({ requestId, protocol: 'webSocket' });
-  return readyState ? <ConnectionCircle data-testid="WebSocketSpinner__Connected" /> : null;
+  return readyState ? <ConnectionCircle className='flex-shrink-0' data-testid="WebSocketSpinner__Connected" /> : null;
 };
 
 const EventStreamSpinner = ({ requestId }: { requestId: string }) => {
   const readyState = useReadyState({ requestId, protocol: 'curl' });
-  return readyState ? <ConnectionCircle data-testid="EventStreamSpinner__Connected" /> : null;
+  return readyState ? <ConnectionCircle className='flex-shrink-0' data-testid="EventStreamSpinner__Connected" /> : null;
+};
+
+const getRequestNameOrFallback = (doc: Request | RequestGroup | GrpcRequest | WebSocketRequest): string => {
+  return !isRequestGroup(doc) ? doc.name || doc.url || 'Untitled request' : doc.name || 'Untitled folder';
 };
 
 export const Debug: FC = () => {
@@ -194,7 +203,7 @@ export const Debug: FC = () => {
     });
   }, []);
 
-  const { settings } = useRouteLoaderData('root') as RootLoaderData;
+  const { settings } = useRootLoaderData();
   const [runningRequests, setRunningRequests] = useState<
     Record<string, boolean>
   >({});
@@ -622,6 +631,21 @@ export const Debug: FC = () => {
       renderPageSidebar={
         <div className="flex flex-1 flex-col overflow-hidden divide-solid divide-y divide-[--hl-md]">
           <div className="flex flex-col items-start gap-2 justify-between p-[--padding-sm]">
+            <Breadcrumbs className='react-aria-Breadcrumbs pb-[--padding-sm] border-b border-solid border-[--hl-sm] font-bold w-full'>
+              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
+                <Link data-testid="project" className="px-1 py-1 aspect-square h-7 flex flex-shrink-0 outline-none data-[focused]:outline-none items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                  <NavLink
+                    to={`/organization/${organizationId}/project/${activeProject._id}`}
+                  >
+                    <Icon className='text-xs' icon="chevron-left" />
+                  </NavLink>
+                </Link>
+                <span aria-hidden role="separator" className='text-[--hl-lg] h-4 outline outline-1' />
+              </Item>
+              <Item className="react-aria-Item h-full outline-none data-[focused]:outline-none">
+                <WorkspaceDropdown />
+              </Item>
+            </Breadcrumbs>
             <div className="flex w-full items-center gap-2 justify-between">
               <Select
                 aria-label="Select an environment"
@@ -859,6 +883,7 @@ export const Debug: FC = () => {
               }}
             >
               {item => {
+
                 return (
                   <Item
                     key={item.doc._id}
@@ -870,21 +895,34 @@ export const Debug: FC = () => {
                     >
                       <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                       {isRequest(item.doc) && (
-                        <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-${item.doc.method}`}>
+                        <span
+                          className={
+                            `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
+                            ${{
+                              'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+                              'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+                              'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                              'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                              'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+                              'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+                              'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+                            }[item.doc.method] || 'text-[--color-font] bg-[--hl-md]'}`
+                          }
+                        >
                           {getMethodShortHand(item.doc)}
                         </span>
                       )}
                       {isWebSocketRequest(item.doc) && (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center info justify-center">
+                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
                           WS
                         </span>
                       )}
                       {isGrpcRequest(item.doc) && (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center method-grpc justify-center">
+                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
                           gRPC
                         </span>
                       )}
-                      <span className="truncate">{item.doc.name}</span>
+                      <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
                       <span className="flex-1" />
                       {item.pinned && (
                         <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
@@ -951,27 +989,40 @@ export const Debug: FC = () => {
                         <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                         <Button slot="drag" className="hidden" />
                         {isRequest(item.doc) && (
-                          <span className={`w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center http-method-${item.doc.method}`}>
+                          <span
+                            className={
+                              `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
+                              ${{
+                                'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+                                'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+                                'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                                'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                                'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+                                'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+                                'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+                              }[item.doc.method] || 'text-[--color-font] bg-[--hl-md]'}`
+                            }
+                          >
                             {getMethodShortHand(item.doc)}
                           </span>
                         )}
                         {isWebSocketRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center info justify-center">
+                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center info justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
                             WS
                           </span>
                         )}
                         {isGrpcRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center method-grpc justify-center">
+                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
                             gRPC
                           </span>
                         )}
                         {isRequestGroup(item.doc) && (
                           <Icon
-                            className="w-6"
+                            className="w-6 flex-shrink-0"
                             icon={item.collapsed ? 'folder' : 'folder-open'}
                           />
                         )}
-                        <span className="truncate">{item.doc.name}</span>
+                        <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
                         <span className="flex-1" />
                         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
                         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}

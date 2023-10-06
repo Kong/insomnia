@@ -43,7 +43,7 @@ export const CustomRepositorySettingsFormGroup: FunctionComponent<Props> = ({
     >
       <div className="form-control form-control--outlined">
         <label>
-          Git URI (https)
+          Git URI (https, including .git suffix)
           <input
             type="url"
             required

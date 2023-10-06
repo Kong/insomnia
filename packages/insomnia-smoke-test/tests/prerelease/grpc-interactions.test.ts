@@ -17,7 +17,7 @@ test.describe('gRPC interactions', () => {
     await app.evaluate(async ({ clipboard }, text) => clipboard.writeText(text), text);
 
     await page.getByRole('menuitemradio', { name: 'Import' }).click();
-    await page.getByText('Clipboard').click();
+    await page.locator('[data-test-id="import-from-clipboard"]').click();
     await page.getByRole('button', { name: 'Scan' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
     await page.getByText('CollectionPreRelease gRPCjust now').click();
@@ -26,7 +26,6 @@ test.describe('gRPC interactions', () => {
       has: page.locator('.CodeMirror-activeline'),
     });
     streamMessage = page.locator('[data-testid="request-pane"] button:has-text("Stream")');
-    await page.getByLabel('Request Collection').getByRole('row', { name: 'Route Guide Example' }).click();
   });
 
   test('can send unidirectional requests', async ({ page }) => {
