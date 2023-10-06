@@ -1,27 +1,28 @@
 import React, { FC, Fragment, useEffect, useState } from 'react';
+import { Button, Heading, Item, ListBox, Popover, Select, SelectValue } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { isLoggedIn } from '../../../account/session';
 import { getProductName } from '../../../common/constants';
-import { docsImportExport } from '../../../common/documentation';
+import { database } from '../../../common/database';
 import { exportAllToFile } from '../../../common/export';
 import { exportAllData } from '../../../common/export-all-data';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
-import { isScratchpadOrganizationId } from '../../../models/organization';
+import { isScratchpadOrganizationId, Organization } from '../../../models/organization';
+import { Project } from '../../../models/project';
 import { isScratchpad } from '../../../models/workspace';
 import { SegmentEvent } from '../../analytics';
+import { useOrganizationLoaderData } from '../../routes/organization';
 import { ProjectLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { Link } from '../base/link';
+import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
 import { showAlert } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { ImportModal } from '../modals/import-modal';
-import { Button } from '../themed-button';
 interface Props {
   hideSettingsModal: () => void;
 }
@@ -33,10 +34,37 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     workspaceId,
   } = useParams() as { organizationId: string; projectId: string; workspaceId?: string };
 
+  const [hiddenProjects, setHiddenProjects] = useState<(Project & { workspacesCount: number })[]>([]);
+
+  useEffect(() => {
+    // @TODO - Move to a loader
+    const getHiddenProjects = async () => {
+      // @TODO - Select only hidden projects.
+      const projects = await database.all<Project>('Project');
+
+      const hiddenProjects = [];
+
+      for (const project of projects) {
+        const workspacesCount = await database.count('Workspace', {
+          parentId: project._id,
+        });
+
+        hiddenProjects.push({
+          ...project,
+          workspacesCount,
+        });
+      }
+
+      setHiddenProjects(hiddenProjects);
+    };
+    getHiddenProjects();
+  }, []);
+
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
   const projectName = workspaceData?.activeProject.name ?? getProductName();
   const { workspaceCount } = useRootLoaderData();
+  const { organizations } = useOrganizationLoaderData();
   const workspacesFetcher = useFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
@@ -60,115 +88,214 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
 
   return (
     <Fragment>
-      <div data-testid="import-export-tab">
-        <p>
-          If you have reset your passphrase or signed in with a new account, you may have some projects without a known organization, you can export all to recover them.
-        </p>
-        <div className="flex flex-col pt-4 gap-4">
-          {workspaceData?.activeWorkspace ?
-            isScratchpad(workspaceData.activeWorkspace) ?
-              <Button onClick={() => setIsExportModalOpen(true)}>Export the "{activeWorkspaceName}" {getWorkspaceLabel(workspaceData.activeWorkspace).singular}</Button>
-              :
-            (<Dropdown
-              aria-label='Export Data Dropdown'
-              triggerButton={
-                <DropdownButton className="btn btn--clicky">
-                  Export Data <i className="fa fa-caret-down" />
-                </DropdownButton>
-              }
-            >
-              <DropdownSection
-                aria-label="Choose Export Type"
-                title="Choose Export Type"
-              >
-                <DropdownItem aria-label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(workspaceData.activeWorkspace).singular}`}>
-                  <ItemContent
-                    icon="home"
-                    label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(workspaceData.activeWorkspace).singular}`}
-                    onClick={() => setIsExportModalOpen(true)}
-                  />
-                </DropdownItem>
-                <DropdownItem aria-label={`Export files from the "${projectName}" ${strings.project.singular}`}>
-                  <ItemContent
-                    icon="empty"
-                    label={`Export files from the "${projectName}" ${strings.project.singular}`}
-                    onClick={handleExportAllToFile}
-                  />
-                </DropdownItem>
-              </DropdownSection>
-            </Dropdown>) : (<Button onClick={handleExportAllToFile}>{`Export files from the "${projectName}" ${strings.project.singular}`}</Button>)
-          }
-          <Button
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--padding-sm)',
-            }}
-            onClick={async () => {
-              const { filePaths, canceled } = await window.dialog.showOpenDialog({
-                properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
-                buttonLabel: 'Select',
-                title: 'Export All Insomnia Data',
-              });
-
-              if (canceled) {
-                return;
-              }
-
-              const [dirPath] = filePaths;
-
-              try {
-                dirPath && await exportAllData({
-                  dirPath,
+      <div data-testid="import-export-tab" className='flex flex-col gap-4'>
+        <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
+          <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="file-export" /> Export:</Heading>
+          <div className="flex gap-2 flex-wrap">
+            {workspaceData?.activeWorkspace ?
+              isScratchpad(workspaceData.activeWorkspace) ?
+                <Button className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm" onPress={() => setIsExportModalOpen(true)}>Export the "{activeWorkspaceName}" {getWorkspaceLabel(workspaceData.activeWorkspace).singular}</Button>
+                :
+                (
+                  <Dropdown
+                    aria-label='Export Data Dropdown'
+                    triggerButton={
+                      <Button className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                        Export Data <i className="fa fa-caret-down" />
+                      </Button>
+                    }
+                  >
+                    <DropdownSection
+                      aria-label="Choose Export Type"
+                      title="Choose Export Type"
+                    >
+                      <DropdownItem aria-label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(workspaceData.activeWorkspace).singular}`}>
+                        <ItemContent
+                          icon="home"
+                          label={`Export the "${activeWorkspaceName}" ${getWorkspaceLabel(workspaceData.activeWorkspace).singular}`}
+                          onClick={() => setIsExportModalOpen(true)}
+                        />
+                      </DropdownItem>
+                      <DropdownItem aria-label={`Export files from the "${projectName}" ${strings.project.singular}`}>
+                        <ItemContent
+                          icon="empty"
+                          label={`Export files from the "${projectName}" ${strings.project.singular}`}
+                          onClick={handleExportAllToFile}
+                        />
+                      </DropdownItem>
+                    </DropdownSection>
+                  </Dropdown>
+                ) : (
+                <Button
+                  className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  onPress={handleExportAllToFile}
+                >
+                  {`Export files from the "${projectName}" ${strings.project.singular}`}
+                </Button>
+              )
+            }
+            <Button
+              className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              onPress={async () => {
+                const { filePaths, canceled } = await window.dialog.showOpenDialog({
+                  properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
+                  buttonLabel: 'Select',
+                  title: 'Export All Insomnia Data',
                 });
-              } catch (e) {
+
+                if (canceled) {
+                  return;
+                }
+
+                const [dirPath] = filePaths;
+
+                try {
+                  dirPath && await exportAllData({
+                    dirPath,
+                  });
+                } catch (e) {
+                  showAlert({
+                    title: 'Export Failed',
+                    message: 'An error occurred while exporting data. Please try again.',
+                  });
+                  console.error(e);
+                }
+
                 showAlert({
-                  title: 'Export Failed',
-                  message: 'An error occurred while exporting data. Please try again.',
+                  title: 'Export Complete',
+                  message: 'All your data have been successfully exported',
                 });
-                console.error(e);
-              }
+                window.main.trackSegmentEvent({
+                  event: SegmentEvent.exportAllCollections,
+                });
+              }}
+              aria-label='Export all data'
+            >
+              <Icon icon="file-export" />
+              <span>Export all data {`(${workspaceCount} files)`}</span>
+            </Button>
 
-              showAlert({
-                title: 'Export Complete',
-                message: 'All your data have been successfully exported',
-              });
-              window.main.trackSegmentEvent({
-                event: SegmentEvent.exportAllCollections,
-              });
-            }}
-            aria-label='Export all data'
-            className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
-          >
-            <Icon icon="file-export" />
-            <span>Export all data {`(${workspaceCount} files)`}</span>
-          </Button>
-          <Button
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--padding-sm)',
-            }}
-            disabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
-            onClick={() => setIsImportModalOpen(true)}
-          >
-            <i className="fa fa-file-import" />
-            {`Import to the "${projectName}" ${strings.project.singular}`}
-          </Button>
-
-          <Button
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--padding-sm)',
-            }}
-            disabled={!isLoggedIn()}
-            onClick={() => window.main.openInBrowser('https://insomnia.rest/create-run-button')}
-          >
-            <i className="fa fa-file-import" />
-            Create Run Button
-          </Button>
+            <Button
+              className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              isDisabled={!isLoggedIn()}
+              onPress={() => window.main.openInBrowser('https://insomnia.rest/create-run-button')}
+            >
+              <i className="fa fa-file-import" />
+              Create Run Button
+            </Button>
+          </div>
         </div>
+        <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
+          <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="file-import" /> Import:</Heading>
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+              isDisabled={workspaceData?.activeWorkspace && isScratchpad(workspaceData?.activeWorkspace)}
+              onPress={() => setIsImportModalOpen(true)}
+            >
+              <Icon icon="file-import" />
+            {`Import to the "${projectName}" ${strings.project.singular}`}
+            </Button>
+          </div>
+        </div>
+        {hiddenProjects.length > 0 && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
+          <div className='flex flex-col gap-1'>
+            <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="cancel" /> Untracked projects ({hiddenProjects.length}) (FIXME: Currently showing all Projects)</Heading>
+            <p className='text-[--hl] text-sm'>
+              <Icon icon="info-circle" /> These projects are not associated with any organization in your account.
+            </p>
+          </div>
+          <div className='flex flex-col gap-1 overflow-y-auto divide-y divide-solid divide-[--hl-md]'>
+            {hiddenProjects.map(project => (
+              <div key={project._id} className="flex items-center gap-2 justify-between py-2">
+                <div className='flex flex-col gap-1'>
+                  <Heading className='text-base font-semibold flex items-center gap-2'>
+                    {project.name}
+                    <span className='text-xs text-[--hl]'>
+                      Id: {project._id}
+                    </span>
+                  </Heading>
+                  <p className='text-sm'>
+                    This project contains {project.workspacesCount} {project.workspacesCount === 1 ? 'file' : 'files'}.
+                  </p>
+                </div>
+                <form
+                  className='flex items-center gap-2'
+                  onSubmit={e => {
+                    e.preventDefault();
+                    const data = new FormData(e.currentTarget);
+
+                    const organizationId = data.get('organizationId') as string;
+
+                    console.log({ organizationId });
+
+                    // @TODO Pass the organizationId to an action that will move the project to the organization.
+                  }}
+                >
+                  <Select
+                    aria-label="Select an organization"
+                    name="organizationId"
+                    items={organizations}
+                  >
+                    <Button className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                      <SelectValue<Organization> className="flex truncate items-center justify-center gap-2">
+                        {({ selectedItem }) => {
+                          if (!selectedItem) {
+                            return (
+                              <Fragment>
+                                <span>
+                                  Select an organization
+                                </span>
+                              </Fragment>
+                            );
+                          }
+
+                          return (
+                            <Fragment>
+                              {selectedItem.display_name}
+                            </Fragment>
+                          );
+                        }}
+                      </SelectValue>
+                      <Icon icon="caret-down" />
+                    </Button>
+                    <Popover className="min-w-max">
+                      <ListBox<Organization>
+                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+                      >
+                        {item => (
+                          <Item
+                            id={item.id}
+                            key={item.id}
+                            className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                            aria-label={item.name}
+                            textValue={item.name}
+                            value={item}
+                          >
+                            {({ isSelected }) => (
+                              <Fragment>
+                                {item.display_name}
+                                {isSelected && (
+                                  <Icon
+                                    icon="check"
+                                    className="text-[--color-success] justify-self-end"
+                                  />
+                                )}
+                              </Fragment>
+                            )}
+                          </Item>
+                        )}
+                      </ListBox>
+                    </Popover>
+                  </Select>
+                  <Button type="submit" className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    Move
+                  </Button>
+                </form>
+              </div>
+            ))}
+          </div>
+        </div>}
       </div>
       {isImportModalOpen && (
         <ImportModal
