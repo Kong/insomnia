@@ -38,6 +38,7 @@ import { MergeConflict } from '../../sync/types';
 import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
 import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
+import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
 import { GitHubStarsButton } from '../components/github-stars-button';
@@ -639,7 +640,7 @@ const OrganizationRoute = () => {
                   />{' '}
                   {user
                     ? status.charAt(0).toUpperCase() + status.slice(1)
-                    : `Log in to sync your data (${workspaceCount} files)`}
+                    : 'Log in to sync your data'}
                 </Button>
                 <Tooltip
                   placement="top"
@@ -686,12 +687,15 @@ const OrganizationRoute = () => {
                       title: 'Export Complete',
                       message: 'All your data have been successfully exported',
                     });
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.exportAllCollections,
+                    });
                   }}
                 >
                   <Icon
                     icon="file-export"
                   />
-                  Export your data
+                  Export your data {`(${workspaceCount} files)`}
                 </Button>
               ) : null}
             </div>
