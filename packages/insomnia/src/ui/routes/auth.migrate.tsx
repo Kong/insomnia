@@ -5,12 +5,12 @@ import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-rout
 import { getCurrentSessionId, logout } from '../../account/session';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { migrateCollectionsIntoRemoteProject } from '../../sync/vcs/migrate-collections';
-import { migrateLocalToCloudProjects, shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
+import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-to-cloud-projects';
 import { VCS } from '../../sync/vcs/vcs';
 import { Icon } from '../components/icon';
 
 export const loader: LoaderFunction = async () => {
-  if (!shouldRunMigration()) {
+  if (!shouldMigrateProjectUnderOrganization()) {
     return redirect('/organization');
   }
 
@@ -32,7 +32,7 @@ export const action: ActionFunction = async () => {
     const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
     const vcs = new VCS(driver);
     await migrateCollectionsIntoRemoteProject(vcs);
-    await migrateLocalToCloudProjects();
+    await migrateProjectsIntoOrganization();
 
     return redirect('/organization');
   } catch (err) {

@@ -35,7 +35,7 @@ import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganization
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
-import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
+import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-to-cloud-projects';
 import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -121,7 +121,7 @@ export const indexLoader: LoaderFunction = async () => {
   if (sessionId) {
     // Check if there are any migrations to run before loading organizations.
     // If there are migrations, we need to log the user out and redirect them to the login page
-    if (await shouldRunMigration()) {
+    if (await shouldMigrateProjectUnderOrganization()) {
       await session.logout();
       return redirect('/auth/login');
     }

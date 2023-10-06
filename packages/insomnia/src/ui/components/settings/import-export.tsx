@@ -57,17 +57,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   if (!organizationId) {
     return null;
   }
- // here we should list all the folders which contain insomnia.*.db files
- // and have some big red button to overwrite the current data with the backup
- // and once complete trigger an app restart?
+
   return (
     <Fragment>
       <div data-testid="import-export-tab">
-        <div className="no-margin-top">
-          Import format will be automatically detected.
-        </div>
         <p>
-          Your format isn't supported? <Link href={docsImportExport}>Add Your Own</Link>.
+          If you have reset your passphrase or signed in with a new account, you may have some projects without a known organization, you can export all to recover them.
         </p>
         <div className="flex flex-col pt-4 gap-4">
           {workspaceData?.activeWorkspace ?

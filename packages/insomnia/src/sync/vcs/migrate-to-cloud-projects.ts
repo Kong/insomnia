@@ -21,25 +21,37 @@ let status: 'idle' | 'pending' | 'error' | 'completed' = 'idle';
 // Organization > TeamProject > Workspaces
 // In the new API: { _id: 'proj_team_123', remoteId: 'proj_team_123', parentId: 'team_123' }
 
-export const shouldRunMigration = async () => {
-  const localProjects = await database.find<Project>(models.project.type, {
+export const shouldMigrateProjectUnderOrganization = async () => {
+  const localProjectCount = await database.count<Project>(models.project.type, {
     remoteId: null,
     parentId: null,
     _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
   });
 
-  const legacyRemoteProjects = await database.find<RemoteProject>(models.project.type, {
+  const legacyRemoteProjectCount = await database.count<RemoteProject>(models.project.type, {
     remoteId: { $ne: null },
     parentId: null,
   });
 
-  return localProjects.length > 0 || legacyRemoteProjects.length > 0;
+  return localProjectCount > 0 || legacyRemoteProjectCount > 0;
+};
+
+// do we care about project or should we only care about the workspaces?
+// depends on the recovery, reassing project to org or just workspaces to different project
+
+const hasOrphanedProjects = async (projectIdsWithinMyOrg: string[]) => {
+  const projectIdsWithinMyOrgAndScratchPad = [...projectIdsWithinMyOrg, models.project.SCRATCHPAD_PROJECT_ID];
+  const orphanedProjectCount = await database.count<Project>(models.project.type, {
+    _id: { $nin: projectIdsWithinMyOrgAndScratchPad },
+  });
+
+  return orphanedProjectCount > 0;
 };
 
 // Second time we run this, whats gonna happen?
 // we will get duplicate projects in the cloud and local with the same but no workspaces in the duplicate
 
-export const migrateLocalToCloudProjects = async () => {
+export const migrateProjectsIntoOrganization = async () => {
   if (status !== 'idle' && status !== 'error') {
     return;
   }
@@ -67,10 +79,10 @@ export const migrateLocalToCloudProjects = async () => {
 
     // whatever
     // export all
-    // show a alert desribing the state of the ophaned projects and instructing export all and reimport
-    // show a recovery ux to move old workspaces into existing projects
-    // show projects without valid parentIds/null in the home organization
-    // show disabled orgs in the sidebar from previous account where you can see the data
+    // 1. show a alert describing the state of the orphaned projects and instructing export all and reimport
+    // 2. show a recovery ux to move old workspaces into existing projects
+    // 3. show orphaned projects in the home organization
+    // 4. show disabled orgs in the sidebar from previous account where you can see the data
 
     // todo
     // 1. [x] only assign parentIds and migrate old remote logic
