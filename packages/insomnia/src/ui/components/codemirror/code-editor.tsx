@@ -221,7 +221,13 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
           jsonString = '[]';
         }
       }
-      return jsonPrettify(jsonString, indentChars, autoPrettify);
+      try {
+        // Try to parse the JSON to make sure it's valid
+        JSON.parse(jsonString);
+        return jsonPrettify(jsonString, indentChars, autoPrettify);
+      } catch (_) {
+        return jsonString;
+      }
     } catch (error) {
       // That's Ok, just leave it
       return code;
