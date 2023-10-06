@@ -55,7 +55,7 @@ import { PresenceProvider } from '../context/app/presence-context';
 import { useRootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 
-interface OrganizationsResponse {
+export interface OrganizationsResponse {
   start: number;
   limit: number;
   length: number;
@@ -175,13 +175,12 @@ export const indexLoader: LoaderFunction = async () => {
       organizationsData.user = user;
       organizationsData.currentPlan = currentPlan;
 
-      const personalOrganization = organizations.filter(isPersonalOrganization).find(organization => {
-        const accountId = getAccountId();
-        return accountId && isOwnerOfOrganization({
-          organization,
-          accountId,
-        });
-      });
+      const personalOrganization = organizations.filter(isPersonalOrganization)
+        .find(organization =>
+          isOwnerOfOrganization({
+            organization,
+            accountId,
+          }));
 
       if (personalOrganization) {
         return redirect(`/organization/${personalOrganization.id}`);

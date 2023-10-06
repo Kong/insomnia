@@ -32,7 +32,7 @@ export const action: ActionFunction = async () => {
     const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
     const vcs = new VCS(driver);
     await migrateCollectionsIntoRemoteProject(vcs);
-    await migrateLocalToCloudProjects(vcs);
+    await migrateLocalToCloudProjects();
 
     return redirect('/organization');
   } catch (err) {

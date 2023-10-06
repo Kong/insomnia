@@ -1,8 +1,10 @@
-import { getCurrentSessionId } from '../../account/session';
+import { getAccountId, getCurrentSessionId } from '../../account/session';
 import { database } from '../../common/database';
 import * as models from '../../models';
+import { isOwnerOfOrganization, isPersonalOrganization } from '../../models/organization';
 import { Project, RemoteProject } from '../../models/project';
 import { Workspace } from '../../models/workspace';
+import { OrganizationsResponse } from '../../ui/routes/organization';
 import { invariant } from '../../utils/invariant';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from './initialize-backend-project';
 import { VCS } from './vcs';
@@ -22,6 +24,7 @@ let status: 'idle' | 'pending' | 'error' | 'completed' = 'idle';
 export const shouldRunMigration = async () => {
   const localProjects = await database.find<Project>(models.project.type, {
     remoteId: null,
+    parentId: null,
     _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
   });
 
@@ -36,7 +39,7 @@ export const shouldRunMigration = async () => {
 // Second time we run this, whats gonna happen?
 // we will get duplicate projects in the cloud and local with the same but no workspaces in the duplicate
 
-export const migrateLocalToCloudProjects = async (vcs: VCS) => {
+export const migrateLocalToCloudProjects = async () => {
   if (status !== 'idle' && status !== 'error') {
     return;
   }
@@ -47,71 +50,81 @@ export const migrateLocalToCloudProjects = async (vcs: VCS) => {
     const sessionId = getCurrentSessionId();
     invariant(sessionId, 'User must be logged in to migrate projects');
 
-    // Migrate legacy remote projects to new organization structure
+    // local projects what if they dont have a parentId?
+    // after migration: all projects have a parentId
+
+    // no more hostage projects
+    // when will we know what org is you have?
+    // already migrated: all things are globes
+    // already migrated with a blank account what happens to previous account data?
+    // go to whatever
+
+    // about to migrate: have one or more projects without parentIds/null
+    // if the project doesn't have remoteId we can throw in the home org
+    // if the project has a remoteId, and is in the org, we know it should have org as a parentId
+    // if the project has a remoteId, and is not in my logged in org
+    // go to the whatever
+
+    // whatever
+    // export all
+    // show a alert desribing the state of the ophaned projects and instructing export all and reimport
+    // show a recovery ux to move old workspaces into existing projects
+    // show projects without valid parentIds/null in the home organization
+    // show disabled orgs in the sidebar from previous account where you can see the data
+
+    // todo
+    // 1. [x] only assign parentIds and migrate old remote logic
+    // 2. count orphaned projects
+    // 3. decide which approach take for orphaned projects
+    // 4. decide if theres no reason to keep migrateCollectionsIntoRemoteProject
+
+    // assign remote project parentIds to new organization structure
+    // the remote id field used to track team_id (remote concept for matching 1:1 with this project) which is now org_id
+    // the _id field used to track the proj_team_id which was a wrapper for the team_id prefixing proj_to the above id,
+    // which is now the remoteId for tracking the projects within an org
     const legacyRemoteProjects = await database.find<RemoteProject>(models.project.type, {
       remoteId: { $ne: null },
       parentId: null,
     });
-
     for (const remoteProject of legacyRemoteProjects) {
       await models.project.update(remoteProject, {
-        // Remote Id was previously the teamId
         parentId: remoteProject.remoteId,
-        // _id was previously the remoteId
         remoteId: remoteProject._id,
       });
     }
 
-    // Local projects except scratchpad
+    // Local projects without organizations except scratchpad
     const localProjects = await database.find<Project>(models.project.type, {
       remoteId: null,
+      parentId: null,
       _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
     });
+    const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
+      method: 'GET',
+      path: '/v1/organizations',
+      sessionId,
+    });
+    const accountId = getAccountId();
+    invariant(organizationsResult, 'Failed to fetch organizations');
+    invariant(accountId, 'Failed to get account id');
+    const { organizations } = organizationsResult;
+    const personalOrganization = organizations.filter(isPersonalOrganization)
+      .find(organization =>
+        isOwnerOfOrganization({
+          organization,
+          accountId,
+        }));
+    invariant(personalOrganization, 'Failed to find personal organization');
+
     for (const localProject of localProjects) {
-      // -- Unsafe to run twice, will cause duplicates unless we would need to match ids
-      const newCloudProject = await window.main.insomniaFetch<{ id: string; name: string; organizationId: string } | void>({
-        path: '/v1/organizations/personal/team-projects',
-        method: 'POST',
-        data: {
-          name: localProject.name,
-        },
-        sessionId,
+      await models.project.update(localProject, {
+        parentId: personalOrganization.id,
       });
-
-      invariant(typeof newCloudProject?.id === 'string', 'Failed to create remote project');
-
-      const project = await models.project.update(localProject, {
-        name: newCloudProject.name,
-        remoteId: newCloudProject.id,
-        parentId: newCloudProject.organizationId,
-      });
-
-      // For each workspace in the local project
-      const projectWorkspaces = (await database.find<Workspace>(models.workspace.type, {
-        parentId: localProject._id,
-      }));
-
-      for (const workspace of projectWorkspaces) {
-        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-
-        // Initialize Sync on the workspace if it's not using Git sync
-        try {
-          if (!workspaceMeta.gitRepositoryId) {
-            invariant(vcs, 'VCS must be initialized');
-
-            await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace });
-            await pushSnapshotOnInitialize({ vcs, workspace, project });
-          }
-        } catch (e) {
-          console.warn('Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.', e);
-          // TODO: here we should show the try again dialog
-        }
-      }
     }
 
     status = 'completed';
   } catch (err) {
-    console.warn('Failed to migrate projects to cloud', err);
+    console.warn('Failed to migrate projects to personal workspace', err);
     throw err;
   }
 };
