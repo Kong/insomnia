@@ -108,22 +108,24 @@ export const renameProjectAction: ActionFunction = async ({
   invariant(sessionId, 'User must be logged in to rename a project');
 
   try {
-    const response = await window.main.insomniaFetch<void | {
-      error: string;
-      message?: string;
-    }>({
-      path: `/v1/organizations/${project.parentId}/team-projects/${project.remoteId}`,
-      method: 'PATCH',
-      sessionId,
-      data: {
-        name,
-      },
-    });
+    if (project.remoteId) {
+      const response = await window.main.insomniaFetch<void | {
+        error: string;
+        message?: string;
+      }>({
+        path: `/v1/organizations/${project.parentId}/team-projects/${project.remoteId}`,
+        method: 'PATCH',
+        sessionId,
+        data: {
+          name,
+        },
+      });
 
-    if (response && 'error' in response) {
-      return {
-        error: response.error === 'FORBIDDEN' ? 'You do not have permission to rename this project.' : 'An unexpected error occurred while renaming the project. Please try again.',
-      };
+      if (response && 'error' in response) {
+        return {
+          error: response.error === 'FORBIDDEN' ? 'You do not have permission to rename this project.' : 'An unexpected error occurred while renaming the project. Please try again.',
+        };
+      }
     }
 
     await models.project.update(project, { name });
