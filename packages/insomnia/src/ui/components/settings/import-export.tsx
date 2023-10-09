@@ -10,7 +10,8 @@ import { exportAllToFile } from '../../../common/export';
 import { exportAllData } from '../../../common/export-all-data';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
-import { isScratchpadOrganizationId, Organization } from '../../../models/organization';
+import * as models from '../../../models';
+import { isScratchpadOrganizationId, Organization, SCRATCHPAD_ORGANIZATION_ID } from '../../../models/organization';
 import { Project } from '../../../models/project';
 import { isScratchpad } from '../../../models/workspace';
 import { SegmentEvent } from '../../analytics';
@@ -40,8 +41,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   useEffect(() => {
     // @TODO - Move to a loader
     const getHiddenProjects = async () => {
-      // @TODO - Select only hidden projects.
-      const listOfOrganizationIds = organizations.map(o => o.id);
+      const listOfOrganizationIds = [...organizations.map(o => o.id), SCRATCHPAD_ORGANIZATION_ID];
       const projects = await database.find<Project>('Project', {
         parentId: { $nin: listOfOrganizationIds },
       });
@@ -62,7 +62,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       setHiddenProjects(hiddenProjects);
     };
     getHiddenProjects();
-  }, []);
+  }, [organizations]);
 
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
@@ -231,7 +231,11 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                     const organizationId = data.get('organizationId') as string;
 
                     console.log({ organizationId });
-
+                    models.project.update(project, {
+                      parentId: organizationId,
+                      // TODO: make the convert to local project work
+                      // remoteId: null,
+                    });
                     // @TODO Pass the organizationId to an action that will move the project to the organization.
                   }}
                 >
