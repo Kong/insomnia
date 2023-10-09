@@ -197,7 +197,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
               onPress={() => setIsImportModalOpen(true)}
             >
               <Icon icon="file-import" />
-            {`Import to the "${projectName}" ${strings.project.singular}`}
+              {`Import to the "${projectName}" ${strings.project.singular}`}
             </Button>
           </div>
         </div>
@@ -228,11 +228,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                     e.preventDefault();
                     const data = new FormData(e.currentTarget);
                     const organizationId = data.get('organizationId') as string;
-
-                    models.project.update(project, {
-                      parentId: organizationId,
-                      remoteId: null,
-                    });
+                    if (organizationId) {
+                      models.project.update(project, {
+                        parentId: organizationId,
+                        remoteId: null,
+                      });
+                    }
                     // @TODO Pass the organizationId to an action that will move the project to the organization.
                   }}
                 >
