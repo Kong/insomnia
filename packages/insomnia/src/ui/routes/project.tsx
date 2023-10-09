@@ -168,6 +168,20 @@ async function syncTeamProjects({
       });
     }
   }));
+
+  // Turn remote projects from the current organization that are not in the list of remote projects into local projects.
+  const removedRemoteProjects = await database.find<Project>(models.project.type, {
+    // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
+    parentId: organizationId,
+    // Remote ID is not in the list of remote projects
+    remoteId: { $nin: teamProjects.map(p => p.id) },
+  });
+
+  await Promise.all(removedRemoteProjects.map(async prj => {
+    await models.project.update(prj, {
+      remoteId: null,
+    });
+  }));
 }
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
