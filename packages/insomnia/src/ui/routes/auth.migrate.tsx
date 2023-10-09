@@ -3,10 +3,7 @@ import { Button, Heading } from 'react-aria-components';
 import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-router-dom';
 
 import { getCurrentSessionId, logout } from '../../account/session';
-import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import { migrateCollectionsIntoRemoteProject } from '../../sync/vcs/migrate-collections';
 import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
-import { VCS } from '../../sync/vcs/vcs';
 import { Icon } from '../components/icon';
 
 export const loader: LoaderFunction = async () => {
@@ -29,11 +26,7 @@ export const action: ActionFunction = async () => {
   }
 
   try {
-    const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
-    const vcs = new VCS(driver);
-    await migrateCollectionsIntoRemoteProject(vcs);
     await migrateProjectsIntoOrganization();
-
     return redirect('/organization');
   } catch (err) {
     return {
