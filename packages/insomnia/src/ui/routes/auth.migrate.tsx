@@ -5,12 +5,12 @@ import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-rout
 import { getCurrentSessionId, logout } from '../../account/session';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { migrateCollectionsIntoRemoteProject } from '../../sync/vcs/migrate-collections';
-import { migrateLocalToCloudProjects, shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
+import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { VCS } from '../../sync/vcs/vcs';
 import { Icon } from '../components/icon';
 
 export const loader: LoaderFunction = async () => {
-  if (!shouldRunMigration()) {
+  if (!shouldMigrateProjectUnderOrganization()) {
     return redirect('/organization');
   }
 
@@ -32,7 +32,7 @@ export const action: ActionFunction = async () => {
     const driver = FileSystemDriver.create(process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'));
     const vcs = new VCS(driver);
     await migrateCollectionsIntoRemoteProject(vcs);
-    await migrateLocalToCloudProjects(vcs);
+    await migrateProjectsIntoOrganization();
 
     return redirect('/organization');
   } catch (err) {
@@ -61,13 +61,13 @@ export const Migrate = () => {
   return (
     <div className="flex flex-col gap-[--padding-md] text-[--color-font]">
       <Heading className="text-2xl font-bold text-center px-3">
-        Migrating data to Insomnia Cloud
+        Initializing Organizations
       </Heading>
       {isMigrating && (
         <div className="flex flex-col gap-3 rounded-md bg-[--hl-sm] p-[--padding-md]">
           <Heading className="text-lg flex items-center p-8 gap-8">
             <Icon icon="spinner" className="fa-spin" />
-            <span>Running migration...</span>
+            <span>Fetching your organizations...</span>
           </Heading>
         </div>
       )}

@@ -2,17 +2,25 @@ import { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import {
   Button,
+  Dialog,
+  DialogTrigger,
   GridList,
   Heading,
   Input,
   Item,
+  Label,
   ListBox,
   Menu,
   MenuTrigger,
+  Modal,
+  ModalOverlay,
   Popover,
+  Radio,
+  RadioGroup,
   SearchField,
   Select,
   SelectValue,
+  TextField,
 } from 'react-aria-components';
 import {
   LoaderFunction,
@@ -37,7 +45,6 @@ import {
 import { database } from '../../common/database';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
-import { strings } from '../../common/strings';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
@@ -160,18 +167,6 @@ async function syncTeamProjects({
         name: remoteProject.name,
       });
     }
-  }));
-
-  // Remove any remote projects from the current organization that are not in the list of remote projects
-  const removedRemoteProjects = await database.find<Project>(models.project.type, {
-    // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
-    parentId: organizationId,
-    // Remote ID is not in the list of remote projects
-    remoteId: { $nin: teamProjects.map(p => p.id) },
-  });
-
-  await Promise.all(removedRemoteProjects.map(async prj => {
-    await models.project.remove(prj);
   }));
 }
 
@@ -750,33 +745,94 @@ const ProjectRoute: FC = () => {
                       </Button>
                     </div>
                   </SearchField>
+                  <DialogTrigger>
+                    <Button
+                      aria-label="Create new Project"
+                      className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    >
+                      <Icon icon="plus-circle" />
+                    </Button>
+                    <ModalOverlay isDismissable className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30">
+                      <Modal className="max-w-2xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
+                        <Dialog className="outline-none">
+                          {({ close }) => (
+                            <div className='flex flex-col gap-4'>
+                              <div className='flex gap-2 items-center justify-between'>
+                                <Heading className='text-2xl'>Create a new project</Heading>
+                                <Button
+                                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                                  onPress={close}
+                                >
+                                  <Icon icon="x" />
+                                </Button>
+                              </div>
+                              <form
+                                className='flex flex-col gap-4'
+                                onSubmit={e => {
+                                  createNewProjectFetcher.submit(e.currentTarget, {
+                                    action: `/organization/${organizationId}/project/new`,
+                                    method: 'post',
+                                  });
 
-                  <Button
-                    onPress={() => {
-                      const defaultValue = `My ${strings.project.singular}`;
-                      showPrompt({
-                        title: `Create New ${strings.project.singular}`,
-                        submitName: 'Create',
-                        placeholder: defaultValue,
-                        defaultValue,
-                        selectText: true,
-                        onComplete: async name =>
-                          createNewProjectFetcher.submit(
-                            {
-                              name,
-                            },
-                            {
-                              action: `/organization/${organizationId}/project/new`,
-                              method: 'post',
-                            }
-                          ),
-                      });
-                    }}
-                    aria-label="Create new Project"
-                    className="flex items-center justify-center h-full aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  >
-                    <Icon icon="plus-circle" />
-                  </Button>
+                                  close();
+                                }}
+                              >
+                                <TextField
+                                  autoFocus
+                                  name="name"
+                                  defaultValue="My project"
+                                  className="group relative flex-1 flex flex-col gap-2"
+                                >
+                                  <Label className='text-sm text-[--hl]'>
+                                    Project name
+                                  </Label>
+                                  <Input
+                                    placeholder="My project"
+                                    className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
+                                  />
+                                </TextField>
+                                <RadioGroup name="type" defaultValue="remote" className="flex flex-col gap-2">
+                                  <Label className="text-sm text-[--hl]">
+                                    Project type
+                                  </Label>
+                                  <div className="flex gap-2">
+                                    <Radio
+                                      value="remote"
+                                      className="data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                                    >
+                                      <Icon icon="globe" />
+                                      <Heading className="text-lg font-bold">Secure Cloud</Heading>
+                                      <p className='pt-2'>
+                                        End-to-end encrypted (E2EE) and synced securely to the cloud, ideal for collaboration.
+                                      </p>
+                                    </Radio>
+                                    <Radio
+                                      value="local"
+                                      className="data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                                    >
+                                      <Icon icon="laptop" />
+                                      <Heading className="text-lg font-bold">Local Vault</Heading>
+                                      <p className="pt-2">
+                                        Stored locally only with no cloud. Ideal when collaboration is not needed.
+                                      </p>
+                                    </Radio>
+                                  </div>
+                                </RadioGroup>
+                                <div className="flex justify-end">
+                                  <Button
+                                    type="submit"
+                                    className="hover:no-underline bg-[#4000BF] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                                  >
+                                    Create
+                                  </Button>
+                                </div>
+                              </form>
+                            </div>
+                          )}
+                        </Dialog>
+                      </Modal>
+                    </ModalOverlay>
+                  </DialogTrigger>
                 </div>
 
                 <GridList

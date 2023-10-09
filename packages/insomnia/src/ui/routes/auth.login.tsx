@@ -4,7 +4,7 @@ import { ActionFunction, Link, LoaderFunction, redirect, useFetcher, useLoaderDa
 
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { exportAllData } from '../../common/export-all-data';
-import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
+import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Icon } from '../components/icon';
@@ -39,7 +39,7 @@ interface LoaderData {
 }
 
 export const loader: LoaderFunction = async () => {
-  const hasProjectsToMigrate = await shouldRunMigration();
+  const hasProjectsToMigrate = await shouldMigrateProjectUnderOrganization();
 
   return {
     hasProjectsToMigrate,

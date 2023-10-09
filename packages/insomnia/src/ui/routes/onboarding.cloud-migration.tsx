@@ -4,7 +4,7 @@ import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-rout
 
 import { logout } from '../../account/session';
 import { exportAllData } from '../../common/export-all-data';
-import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
+import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { SegmentEvent } from '../analytics';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { showAlert } from '../components/modals';
@@ -17,7 +17,7 @@ export const action: ActionFunction = async () => {
 };
 
 export const loader: LoaderFunction = async () => {
-  if (await shouldRunMigration()) {
+  if (await shouldMigrateProjectUnderOrganization()) {
     return null;
   }
 
