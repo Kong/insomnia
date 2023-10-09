@@ -5,19 +5,17 @@ import { useRouteLoaderData } from 'react-router-dom';
 
 import { isLoggedIn } from '../../../account/session';
 import { getProductName } from '../../../common/constants';
-import { database } from '../../../common/database';
 import { exportAllToFile } from '../../../common/export';
 import { exportAllData } from '../../../common/export-all-data';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
-import * as models from '../../../models';
-import { isScratchpadOrganizationId, Organization, SCRATCHPAD_ORGANIZATION_ID } from '../../../models/organization';
-import { Project } from '../../../models/project';
+import { isScratchpadOrganizationId, Organization } from '../../../models/organization';
 import { isScratchpad } from '../../../models/workspace';
 import { SegmentEvent } from '../../analytics';
 import { useOrganizationLoaderData } from '../../routes/organization';
 import { ProjectLoaderData } from '../../routes/project';
 import { useRootLoaderData } from '../../routes/root';
+import { LoaderData } from '../../routes/untracked-projects';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Icon } from '../icon';
@@ -36,33 +34,17 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   } = useParams() as { organizationId: string; projectId: string; workspaceId?: string };
   const { organizations } = useOrganizationLoaderData();
 
-  const [hiddenProjects, setHiddenProjects] = useState<(Project & { workspacesCount: number })[]>([]);
+  const untrackedProjectsFetcher = useFetcher<LoaderData>();
+  const moveProjectFetcher = useFetcher();
 
   useEffect(() => {
-    // @TODO - Move to a loader
-    const getHiddenProjects = async () => {
-      const listOfOrganizationIds = [...organizations.map(o => o.id), SCRATCHPAD_ORGANIZATION_ID];
-      const projects = await database.find<Project>('Project', {
-        parentId: { $nin: listOfOrganizationIds },
-      });
+    const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
+    if (isIdleAndUninitialized) {
+      untrackedProjectsFetcher.load('/untracked-projects');
+    }
+  }, [untrackedProjectsFetcher, organizationId]);
 
-      const hiddenProjects = [];
-
-      for (const project of projects) {
-        const workspacesCount = await database.count('Workspace', {
-          parentId: project._id,
-        });
-
-        hiddenProjects.push({
-          ...project,
-          workspacesCount,
-        });
-      }
-
-      setHiddenProjects(hiddenProjects);
-    };
-    getHiddenProjects();
-  }, [organizations]);
+  const untrackedProjects = untrackedProjectsFetcher.data?.untrackedProjects || [];
 
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
@@ -201,15 +183,15 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
             </Button>
           </div>
         </div>
-        {hiddenProjects.length > 0 && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
+        {untrackedProjects.length > 0 && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
           <div className='flex flex-col gap-1'>
-            <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="cancel" /> Untracked projects ({hiddenProjects.length})</Heading>
+            <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="cancel" /> Untracked projects ({untrackedProjects.length})</Heading>
             <p className='text-[--hl] text-sm'>
               <Icon icon="info-circle" /> These projects are not associated with any organization in your account. You can move them to an organization below.
             </p>
           </div>
           <div className='flex flex-col gap-1 overflow-y-auto divide-y divide-solid divide-[--hl-md]'>
-            {hiddenProjects.map(project => (
+            {untrackedProjects.map(project => (
               <div key={project._id} className="flex items-center gap-2 justify-between py-2">
                 <div className='flex flex-col gap-1'>
                   <Heading className='text-base font-semibold flex items-center gap-2'>
@@ -226,15 +208,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                   className='flex items-center gap-2'
                   onSubmit={e => {
                     e.preventDefault();
-                    const data = new FormData(e.currentTarget);
-                    const organizationId = data.get('organizationId') as string;
-                    if (organizationId) {
-                      models.project.update(project, {
-                        parentId: organizationId,
-                        remoteId: null,
-                      });
-                    }
-                    // @TODO Pass the organizationId to an action that will move the project to the organization.
+                    moveProjectFetcher.submit(e.currentTarget, {
+                      action: `/organization/${organizationId}/project/${project._id}/move`,
+                      method: 'POST',
+                    });
                   }}
                 >
                   <Select

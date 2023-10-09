@@ -90,7 +90,7 @@ interface CurrentPlan {
   type: PersonalPlanType;
 };
 
-const organizationsData: OrganizationLoaderData = {
+export const organizationsData: OrganizationLoaderData = {
   organizations: [],
   user: undefined,
   currentPlan: undefined,
