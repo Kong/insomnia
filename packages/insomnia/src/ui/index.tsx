@@ -221,6 +221,13 @@ const router = createMemoryRouter(
                             ).moveProjectAction(...args),
                         },
                         {
+                          path: 'move-to-local',
+                          action: async (...args) =>
+                            (
+                              await import('./routes/actions')
+                            ).moveProjectToLocalAction(...args),
+                        },
+                        {
                           path: 'rename',
                           action: async (...args) =>
                             (
