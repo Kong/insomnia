@@ -63,6 +63,19 @@ export const ProjectSettingsModal: FC<ProjectSettingsModalProps> = ({ project, o
             <div className="form-control form-control--padded">
               <PromptButton
                 onClick={() =>
+                  organizationId && submit(
+                    { organizationId },
+                    { method: 'post', action: `/organization/${organizationId}/project/${project._id}/move-to-local` }
+                  )
+                }
+                className="width-auto btn btn--clicky inline-block"
+              >
+                <i className="fa fa-laptop" /> Convert project to Local Vault
+              </PromptButton>
+            </div>
+            <div className="form-control form-control--padded">
+              <PromptButton
+                onClick={() =>
                   submit(
                     {},
                     { method: 'post', action: `/organization/${organizationId}/project/${project._id}/delete` }
