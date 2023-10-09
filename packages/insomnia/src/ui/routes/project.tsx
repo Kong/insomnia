@@ -752,6 +752,7 @@ const ProjectRoute: FC = () => {
                           createNewProjectFetcher.submit(
                             {
                               name,
+                              localOrRemote: 'local',
                             },
                             {
                               action: `/organization/${organizationId}/project/new`,
