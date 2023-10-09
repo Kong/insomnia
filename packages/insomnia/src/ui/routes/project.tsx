@@ -161,18 +161,6 @@ async function syncTeamProjects({
       });
     }
   }));
-
-  // Remove any remote projects from the current organization that are not in the list of remote projects
-  const removedRemoteProjects = await database.find<Project>(models.project.type, {
-    // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
-    parentId: organizationId,
-    // Remote ID is not in the list of remote projects
-    remoteId: { $nin: teamProjects.map(p => p.id) },
-  });
-
-  await Promise.all(removedRemoteProjects.map(async prj => {
-    await models.project.remove(prj);
-  }));
 }
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
