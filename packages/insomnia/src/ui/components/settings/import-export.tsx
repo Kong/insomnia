@@ -203,7 +203,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         </div>
         {hiddenProjects.length > 0 && <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
           <div className='flex flex-col gap-1'>
-            <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="cancel" /> Untracked projects ({hiddenProjects.length}) (FIXME: Currently showing all Projects)</Heading>
+            <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="cancel" /> Untracked projects ({hiddenProjects.length})</Heading>
             <p className='text-[--hl] text-sm'>
               <Icon icon="info-circle" /> These projects are not associated with any organization in your account.
             </p>
@@ -227,14 +227,11 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                   onSubmit={e => {
                     e.preventDefault();
                     const data = new FormData(e.currentTarget);
-
                     const organizationId = data.get('organizationId') as string;
 
-                    console.log({ organizationId });
                     models.project.update(project, {
                       parentId: organizationId,
-                      // TODO: make the convert to local project work
-                      // remoteId: null,
+                      remoteId: null,
                     });
                     // @TODO Pass the organizationId to an action that will move the project to the organization.
                   }}
