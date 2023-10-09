@@ -3,11 +3,8 @@ import { database } from '../../common/database';
 import * as models from '../../models';
 import { isOwnerOfOrganization, isPersonalOrganization } from '../../models/organization';
 import { Project, RemoteProject } from '../../models/project';
-import { Workspace } from '../../models/workspace';
 import { OrganizationsResponse } from '../../ui/routes/organization';
 import { invariant } from '../../utils/invariant';
-import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from './initialize-backend-project';
-import { VCS } from './vcs';
 
 let status: 'idle' | 'pending' | 'error' | 'completed' = 'idle';
 
@@ -35,26 +32,6 @@ export const shouldMigrateProjectUnderOrganization = async () => {
 
   return localProjectCount > 0 || legacyRemoteProjectCount > 0;
 };
-
-// do we care about project or should we only care about the workspaces?
-// depends on the recovery, reassing project to org or just workspaces to different project
-
-// nice to have:
-// a way to clean up the old projects
-// import workspaces into personal org
-// move projects into current org
-
-const hasOrphanedProjects = async (projectIdsWithinMyOrg: string[]) => {
-  const projectIdsWithinMyOrgAndScratchPad = [...projectIdsWithinMyOrg, models.project.SCRATCHPAD_PROJECT_ID];
-  const orphanedProjectCount = await database.count<Project>(models.project.type, {
-    _id: { $nin: projectIdsWithinMyOrgAndScratchPad },
-  });
-
-  return orphanedProjectCount > 0;
-};
-
-// Second time we run this, whats gonna happen?
-// we will get duplicate projects in the cloud and local with the same but no workspaces in the duplicate
 
 export const migrateProjectsIntoOrganization = async () => {
   if (status !== 'idle' && status !== 'error') {

@@ -4,7 +4,7 @@ import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-rout
 
 import { logout } from '../../account/session';
 import { exportAllData } from '../../common/export-all-data';
-import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-to-cloud-projects';
+import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { SegmentEvent } from '../analytics';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { showAlert } from '../components/modals';

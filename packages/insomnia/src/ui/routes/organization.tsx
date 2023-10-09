@@ -35,7 +35,7 @@ import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganization
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
-import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-to-cloud-projects';
+import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
