@@ -60,11 +60,11 @@ export const ProjectSettingsModal: FC<ProjectSettingsModalProps> = ({ project, o
           </Form>
           {!isDefaultOrganizationProject(project) && <Fragment>
             <h2>Actions</h2>
-            <div className="form-control form-control--padded">
+            {project.remoteId && <div className="form-control form-control--padded">
               <PromptButton
                 onClick={() =>
-                  organizationId && submit(
-                    { organizationId },
+                  submit(
+                    {},
                     { method: 'post', action: `/organization/${organizationId}/project/${project._id}/move-to-local` }
                   )
                 }
@@ -72,7 +72,7 @@ export const ProjectSettingsModal: FC<ProjectSettingsModalProps> = ({ project, o
               >
                 <i className="fa fa-laptop" /> Convert project to Local Vault
               </PromptButton>
-            </div>
+            </div>}
             <div className="form-control form-control--padded">
               <PromptButton
                 onClick={() =>

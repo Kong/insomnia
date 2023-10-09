@@ -199,25 +199,45 @@ export const moveProjectAction: ActionFunction = async ({ request, params }) => 
   return null;
 };
 
-export const moveProjectToLocalAction: ActionFunction = async ({ request, params }) => {
-  const { projectId } = params as { projectId: string };
-  const formData = await request.formData();
-
-  const organizationId = formData.get('organizationId');
-
-  invariant(typeof organizationId === 'string', 'Organization ID is required');
-  invariant(typeof projectId === 'string', 'Project ID is required');
-
+export const moveProjectToLocalAction: ActionFunction = async ({ params }) => {
+  const { organizationId, projectId } = params;
+  invariant(organizationId, 'Organization ID is required');
+  invariant(projectId, 'Project ID is required');
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
-  // TODO: remove from remote by remoteId?
-  await models.project.update(project, {
-    parentId: organizationId,
-    // We move a project to another organization as local no matter what it was before
-    remoteId: null,
-  });
 
-  return null;
+  const sessionId = session.getCurrentSessionId();
+  invariant(sessionId, 'User must be logged in to delete a project');
+
+  try {
+    if (project.remoteId) {
+      const response = await window.main.insomniaFetch<void | {
+        error: string;
+        message?: string;
+      }>({
+        path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
+        method: 'DELETE',
+        sessionId,
+      });
+
+      if (response && 'error' in response) {
+        return {
+          error: response.error === 'FORBIDDEN' ? 'You do not have permission to delete this project.' : 'An unexpected error occurred while deleting the project. Please try again.',
+        };
+      }
+    }
+
+    await models.project.update(project, {
+      remoteId: null,
+    });
+
+    return redirect(`/organization/${organizationId}`);
+  } catch (err) {
+    console.log(err);
+    return {
+      error: err instanceof Error ? err.message : `An unexpected error occurred while deleting the project. Please try again. ${err}`,
+    };
+  }
 };
 
 // Workspace
