@@ -205,7 +205,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           <div className='flex flex-col gap-1'>
             <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="cancel" /> Untracked projects ({hiddenProjects.length})</Heading>
             <p className='text-[--hl] text-sm'>
-              <Icon icon="info-circle" /> These projects are not associated with any organization in your account.
+              <Icon icon="info-circle" /> These projects are not associated with any organization in your account. You can move them to an organization below.
             </p>
           </div>
           <div className='flex flex-col gap-1 overflow-y-auto divide-y divide-solid divide-[--hl-md]'>
