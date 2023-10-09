@@ -147,19 +147,21 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   invariant(sessionId, 'User must be logged in to delete a project');
 
   try {
-    const response = await window.main.insomniaFetch<void | {
-      error: string;
-      message?: string;
-    }>({
-      path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
-      method: 'DELETE',
-      sessionId,
-    });
+    if (project.remoteId) {
+      const response = await window.main.insomniaFetch<void | {
+        error: string;
+        message?: string;
+      }>({
+        path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
+        method: 'DELETE',
+        sessionId,
+      });
 
-    if (response && 'error' in response) {
-      return {
-        error: response.error === 'FORBIDDEN' ? 'You do not have permission to delete this project.' : 'An unexpected error occurred while deleting the project. Please try again.',
-      };
+      if (response && 'error' in response) {
+        return {
+          error: response.error === 'FORBIDDEN' ? 'You do not have permission to delete this project.' : 'An unexpected error occurred while deleting the project. Please try again.',
+        };
+      }
     }
 
     await models.stats.incrementDeletedRequestsForDescendents(project);
