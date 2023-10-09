@@ -778,31 +778,30 @@ const ProjectRoute: FC = () => {
                                 }}
                               >
                                 <TextField
-                                  aria-label="Project name"
                                   autoFocus
                                   name="name"
-                                  defaultValue='New project'
+                                  defaultValue="My project"
                                   className="group relative flex-1 flex flex-col gap-2"
                                 >
                                   <Label className='text-sm text-[--hl]'>
                                     Project name
                                   </Label>
                                   <Input
-                                    placeholder="New project"
+                                    placeholder="My project"
                                     className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                                   />
                                 </TextField>
-                                <RadioGroup name="type" defaultValue='remote' className="flex flex-col gap-2">
-                                  <Label className='text-sm text-[--hl]'>
+                                <RadioGroup name="type" defaultValue="remote" className="flex flex-col gap-2">
+                                  <Label className="text-sm text-[--hl]">
                                     Project type
                                   </Label>
-                                  <div className='flex gap-2'>
+                                  <div className="flex gap-2">
                                     <Radio
                                       value="remote"
                                       className="data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
                                       <Icon icon="globe" />
-                                      <Heading className='text-lg font-bold'>Secure Cloud</Heading>
+                                      <Heading className="text-lg font-bold">Secure Cloud</Heading>
                                       <p className='pt-2'>
                                         End-to-end encrypted (E2EE) and synced securely to the cloud, ideal for collaboration.
                                       </p>
@@ -812,14 +811,14 @@ const ProjectRoute: FC = () => {
                                       className="data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
                                       <Icon icon="laptop" />
-                                      <Heading className='text-lg font-bold'>Local Vault</Heading>
-                                      <p className='pt-2'>
+                                      <Heading className="text-lg font-bold">Local Vault</Heading>
+                                      <p className="pt-2">
                                         Stored locally only with no cloud. Ideal when collaboration is not needed.
                                       </p>
                                     </Radio>
                                   </div>
                                 </RadioGroup>
-                                <div className='flex justify-end'>
+                                <div className="flex justify-end">
                                   <Button
                                     type="submit"
                                     className="hover:no-underline bg-[#4000BF] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"

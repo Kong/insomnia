@@ -28,7 +28,7 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
   const formData = await request.formData();
-  const name = formData.get('name');
+  const name = formData.get('name') || 'My project';
   invariant(typeof name === 'string', 'Name is required');
   const projectType = formData.get('type');
   invariant(projectType === 'local' || projectType === 'remote', 'Project type is required');
