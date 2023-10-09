@@ -149,7 +149,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                       className="py-1 placeholder:italic w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors"
                     />
                   </TextField>
-                  <RadioGroup isDisabled={isDefaultOrganizationProject(project)} name="type" defaultValue={project.remoteId ? 'remote' : 'local'} className="flex flex-col gap-2">
+                  <RadioGroup name="type" defaultValue={project.remoteId ? 'remote' : 'local'} className="flex flex-col gap-2">
                     <Label className="text-sm text-[--hl]">
                       Project type
                     </Label>
@@ -167,7 +167,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                       <Radio
                         isDisabled={isDefaultOrganizationProject(project)}
                         value="local"
-                        className="data-[selected]:border-[--color-surprise] aria-disabled:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                        className="data-[selected]:border-[--color-surprise] data-[disabled]:opacity-25 data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                       >
                         <Icon icon="laptop" />
                         <Heading className="text-lg font-bold">Local Vault</Heading>
