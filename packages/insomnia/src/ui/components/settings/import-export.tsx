@@ -33,6 +33,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     projectId,
     workspaceId,
   } = useParams() as { organizationId: string; projectId: string; workspaceId?: string };
+  const { organizations } = useOrganizationLoaderData();
 
   const [hiddenProjects, setHiddenProjects] = useState<(Project & { workspacesCount: number })[]>([]);
 
@@ -40,7 +41,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     // @TODO - Move to a loader
     const getHiddenProjects = async () => {
       // @TODO - Select only hidden projects.
-      const projects = await database.all<Project>('Project');
+      const listOfOrganizationIds = organizations.map(o => o.id);
+      const projects = await database.find<Project>('Project', {
+        parentId: { $nin: listOfOrganizationIds },
+      });
 
       const hiddenProjects = [];
 
@@ -64,7 +68,6 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
   const projectName = workspaceData?.activeProject.name ?? getProductName();
   const { workspaceCount } = useRootLoaderData();
-  const { organizations } = useOrganizationLoaderData();
   const workspacesFetcher = useFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
