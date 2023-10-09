@@ -221,16 +221,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
           jsonString = '[]';
         }
       }
-
-      // Check if it's stringified JSON or just a string
-      jsonString = jsonString.trim();
-      const isBaseString = jsonString.startsWith('"') && jsonString.endsWith('"');
-      const isBaseJson = jsonString.startsWith('{') && jsonString.endsWith('}');
-      if (isBaseString || isBaseJson) {
-        return jsonPrettify(jsonString, indentChars, autoPrettify);
-      } else {
-        return jsonPrettify(JSON.stringify(jsonString, null, 2), indentChars, autoPrettify);
-      }
+      return jsonPrettify(jsonString, indentChars, autoPrettify);
     } catch (error) {
       // That's Ok, just leave it
       return code;

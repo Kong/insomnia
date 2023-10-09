@@ -36,6 +36,10 @@ export const jsonPrettify = (json?: string, indentChars = '\t', replaceUnicode =
     return '';
   }
 
+  if (!json.includes('{') && !json.includes('[') && !json.includes('"')) {
+    return json;
+  }
+
   // Convert the unicode. To correctly mimic JSON.stringify(JSON.parse(json), null, indentChars)
   // we need to convert all escaped unicode characters to proper unicode characters.
   if (replaceUnicode) {
