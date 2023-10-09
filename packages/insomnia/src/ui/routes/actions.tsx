@@ -30,13 +30,13 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   const formData = await request.formData();
   const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
-  const localOrRemote = formData.get('localOrRemote') as 'local' | 'remote';
-  invariant(typeof localOrRemote === 'string', 'localOrRemote is required');
+  const projectType = formData.get('type');
+  invariant(projectType === 'local' || projectType === 'remote', 'Project type is required');
 
   const sessionId = session.getCurrentSessionId();
   invariant(sessionId, 'User must be logged in to create a project');
 
-  if (localOrRemote === 'local') {
+  if (projectType === 'local') {
     const project = await models.project.create({
       name,
       parentId: organizationId,
