@@ -79,6 +79,22 @@ interface UserProfileResponse {
 }
 
 type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
+const formatCurrentPlanType = (type: PersonalPlanType) => {
+  switch (type) {
+    case 'free':
+      return 'Free';
+    case 'individual':
+      return 'Individual';
+    case 'team':
+      return 'Team';
+    case 'enterprise':
+      return 'Enterprise';
+    case 'enterprise-member':
+      return 'Enterprise Member';
+    default:
+      return 'Free';
+  }
+};
 type PaymentSchedules = 'month' | 'year';
 
 interface CurrentPlan {
@@ -346,7 +362,7 @@ const UpgradeButton = () => {
 const OrganizationRoute = () => {
   const { settings, workspaceCount } = useRootLoaderData();
 
-  const { organizations, user } =
+  const { organizations, user, currentPlan } =
     useLoaderData() as OrganizationLoaderData;
   const workspaceData = useRouteLoaderData(
     ':workspaceId',
@@ -364,7 +380,6 @@ const OrganizationRoute = () => {
     projectId?: string;
     workspaceId?: string;
   };
-
   const [status, setStatus] = useState<'online' | 'offline'>('online');
 
   useEffect(() => {
@@ -461,6 +476,15 @@ const OrganizationRoute = () => {
                         }}
                         className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                       >
+                        {currentPlan && Boolean(currentPlan.type) &&
+                          (<Item
+                            id="plan"
+                            className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                            aria-label="Plan"
+                          >
+                            <span>Plan: {formatCurrentPlanType(currentPlan.type)}</span>
+                          </Item>)
+                        }
                         <Item
                           id="account-settings"
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
