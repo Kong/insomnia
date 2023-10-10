@@ -315,7 +315,7 @@ const UpgradeButton = () => {
   if (['team', 'enterprise'].includes(currentPlan?.type || '')) {
     return (
       <Button
-        className="px-4 bg-[--color-surprise] text-[--color-font-surprise] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        className="px-4 text-[--color-font] hover:bg-[--hl-xs] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
         onPress={() => {
           window.main.openInBrowser('https://insomnia.rest/pricing/contact');
         }}
@@ -336,7 +336,7 @@ const UpgradeButton = () => {
       onPress={() => {
         window.main.openInBrowser(getAppWebsiteBaseURL() + to);
       }}
-      className="px-4 bg-[--color-surprise] text-[--color-font-surprise] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+      className="px-4 text-[--color-font] hover:bg-[--hl-xs] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
     >
       Upgrade
     </Button>
