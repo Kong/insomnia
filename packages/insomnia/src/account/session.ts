@@ -264,7 +264,7 @@ async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse>
   if (typeof response === 'string') {
     throw new Error('Unexpected plaintext response: ' + response);
   }
-  if (response && !response.encSymmetricKey) {
+  if (response && !response?.encSymmetricKey) {
     throw new Error('Unexpected response: ' + JSON.stringify(response));
   }
   return response;
