@@ -5,7 +5,7 @@ import { useRouteLoaderData } from 'react-router-dom';
 
 import { isLoggedIn } from '../../../account/session';
 import { getProductName } from '../../../common/constants';
-import { exportAllToFile } from '../../../common/export';
+import { exportProjectToFile } from '../../../common/export';
 import { exportAllData } from '../../../common/export-all-data';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
@@ -48,7 +48,6 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
 
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const activeWorkspaceName = workspaceData?.activeWorkspace.name;
-  const projectName = workspaceData?.activeProject.name ?? getProductName();
   const { workspaceCount } = useRootLoaderData();
   const workspacesFetcher = useFetcher();
   useEffect(() => {
@@ -57,13 +56,15 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
     }
   }, [organizationId, projectId, workspacesFetcher]);
-  const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData;
+  const projectLoaderData = workspacesFetcher?.data as ProjectLoaderData | undefined;
   const workspacesForActiveProject = projectLoaderData?.workspaces.map(w => w.workspace) || [];
+  const projectName = projectLoaderData?.activeProject.name ?? getProductName();
+
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  const handleExportAllToFile = () => {
-    exportAllToFile(projectName, workspacesForActiveProject);
+  const handleExportProjectToFile = () => {
+    exportProjectToFile(projectName, workspacesForActiveProject);
     hideSettingsModal();
   };
 
@@ -75,7 +76,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     <Fragment>
       <div data-testid="import-export-tab" className='flex flex-col gap-4'>
         <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
-          <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="file-export" /> Export:</Heading>
+          <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="file-export" /> Export</Heading>
           <div className="flex gap-2 flex-wrap">
             {workspaceData?.activeWorkspace ?
               isScratchpad(workspaceData.activeWorkspace) ?
@@ -105,7 +106,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                         <ItemContent
                           icon="empty"
                           label={`Export files from the "${projectName}" ${strings.project.singular}`}
-                          onClick={handleExportAllToFile}
+                          onClick={handleExportProjectToFile}
                         />
                       </DropdownItem>
                     </DropdownSection>
@@ -113,7 +114,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
                 ) : (
                 <Button
                   className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                  onPress={handleExportAllToFile}
+                  onPress={handleExportProjectToFile}
                 >
                   {`Export files from the "${projectName}" ${strings.project.singular}`}
                 </Button>
@@ -171,7 +172,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           </div>
         </div>
         <div className='rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2'>
-          <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="file-import" /> Import:</Heading>
+          <Heading className='text-lg font-bold flex items-center gap-2'><Icon icon="file-import" /> Import</Heading>
           <div className="flex gap-2 flex-wrap">
             <Button
               className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
