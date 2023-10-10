@@ -88,13 +88,14 @@ export const ExportRequestsModal = ({ workspace, onHide }: { workspace: Workspac
     return node.children.map(child => getSelectedRequestIds(child)).reduce((acc, reqIds) => [...acc, ...reqIds], []);
   };
 
-  const setItemSelected = (node: Node, isSelected: boolean, id?: string) => {
+  const setItemSelected = (node: Node, isSelected: boolean, id?: string | null) => {
     if (id === null || node.doc._id === id) {
       // Switch the flags of all children in this subtree.
-      node.children.forEach(child => setItemSelected(child, isSelected));
+      node.children.forEach(child => setItemSelected(child, isSelected, null));
       node.selectedRequests = isSelected ? node.totalRequests : 0;
       return true;
     }
+
     for (const child of node.children) {
       const found = setItemSelected(child, isSelected, id);
       if (found) {
