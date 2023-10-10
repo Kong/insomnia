@@ -154,7 +154,6 @@ export function getCurrentSessionId() {
     try {
       const { sessionExpiry } = JSON.parse(window.localStorage.getItem(_getSessionKey(sessionId)) || '{}');
       if (typeof sessionExpiry !== 'string' || !sessionExpiry) {
-        console.log('No session expiry found', sessionExpiry);
         return '';
       }
 

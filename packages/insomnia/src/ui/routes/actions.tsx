@@ -110,6 +110,7 @@ export const updateProjectAction: ActionFunction = async ({
   const sessionId = session.getCurrentSessionId();
 
   try {
+    // If its a cloud project, and we are renaming, then patch
     if (sessionId && project.remoteId && type === 'remote' && name !== project.name) {
       const response = await window.main.insomniaFetch<void | {
         error: string;
@@ -128,10 +129,12 @@ export const updateProjectAction: ActionFunction = async ({
           error: response.error === 'FORBIDDEN' ? 'You do not have permission to rename this project.' : 'An unexpected error occurred while renaming the project. Please try again.',
         };
       }
+
+      await models.project.update(project, { name });
+      return null;
     }
 
-    let remoteId = project.remoteId;
-
+    // convert from cloud to local
     if (type === 'local' && project.remoteId) {
       const response = await window.main.insomniaFetch<void | {
         error: string;
@@ -148,9 +151,10 @@ export const updateProjectAction: ActionFunction = async ({
         };
       }
 
-      remoteId = null;
+      await models.project.update(project, { name, remoteId: null });
+      return null;
     }
-
+    // convert from local to cloud
     if (type === 'remote' && !project.remoteId) {
       const newCloudProject = await window.main.insomniaFetch<{
         id: string;
@@ -178,11 +182,14 @@ export const updateProjectAction: ActionFunction = async ({
         };
       }
 
-      remoteId = newCloudProject.id;
+      await models.project.update(project, { name, remoteId: newCloudProject.id });
+      return null;
     }
 
-    await models.project.update(project, { name, remoteId });
+    // local project rename
+    await models.project.update(project, { name });
     return null;
+
   } catch (err) {
     console.log(err);
     return {
