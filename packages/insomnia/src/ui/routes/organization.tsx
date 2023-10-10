@@ -79,6 +79,22 @@ interface UserProfileResponse {
 }
 
 type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
+const formatCurrentPlanType = (type: PersonalPlanType) => {
+  switch (type) {
+    case 'free':
+      return 'Free';
+    case 'individual':
+      return 'Individual';
+    case 'team':
+      return 'Team';
+    case 'enterprise':
+      return 'Enterprise';
+    case 'enterprise-member':
+      return 'Enterprise Member';
+    default:
+      return 'Free';
+  }
+};
 type PaymentSchedules = 'month' | 'year';
 
 interface CurrentPlan {
@@ -315,7 +331,7 @@ const UpgradeButton = () => {
   if (['team', 'enterprise'].includes(currentPlan?.type || '')) {
     return (
       <Button
-        className="px-4 bg-[--color-surprise] text-[--color-font-surprise] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        className="px-4 text-[--color-font] hover:bg-[--hl-xs] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
         onPress={() => {
           window.main.openInBrowser('https://insomnia.rest/pricing/contact');
         }}
@@ -336,7 +352,7 @@ const UpgradeButton = () => {
       onPress={() => {
         window.main.openInBrowser(getAppWebsiteBaseURL() + to);
       }}
-      className="px-4 bg-[--color-surprise] text-[--color-font-surprise] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+      className="px-4 text-[--color-font] hover:bg-[--hl-xs] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
     >
       Upgrade
     </Button>
@@ -346,7 +362,7 @@ const UpgradeButton = () => {
 const OrganizationRoute = () => {
   const { settings, workspaceCount } = useRootLoaderData();
 
-  const { organizations, user } =
+  const { organizations, user, currentPlan } =
     useLoaderData() as OrganizationLoaderData;
   const workspaceData = useRouteLoaderData(
     ':workspaceId',
@@ -364,7 +380,6 @@ const OrganizationRoute = () => {
     projectId?: string;
     workspaceId?: string;
   };
-
   const [status, setStatus] = useState<'online' | 'offline'>('online');
 
   useEffect(() => {
@@ -417,6 +432,18 @@ const OrganizationRoute = () => {
             <div className="flex gap-[--padding-sm] items-center justify-end p-2">
               {user ? (
                 <Fragment>
+                  <Button
+                    aria-label="Invite collaborators"
+                    className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full text-[--hl]"
+                    onPress={() => {
+                      window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
+                    }}
+                  >
+                    <Icon icon="user-plus" />
+                    <span className="truncate">
+                      Invite
+                    </span>
+                  </Button>
                   <PresentUsers />
                   <MenuTrigger>
                     <Button className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
@@ -449,6 +476,15 @@ const OrganizationRoute = () => {
                         }}
                         className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                       >
+                        {currentPlan && Boolean(currentPlan.type) &&
+                          (<Item
+                            id="plan"
+                            className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                            aria-label="Plan"
+                          >
+                            <span>Plan: {formatCurrentPlanType(currentPlan.type)}</span>
+                          </Item>)
+                        }
                         <Item
                           id="account-settings"
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
