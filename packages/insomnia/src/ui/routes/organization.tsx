@@ -35,9 +35,10 @@ import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganization
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
-import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
+import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
+import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
 import { GitHubStarsButton } from '../components/github-stars-button';
@@ -54,7 +55,7 @@ import { PresenceProvider } from '../context/app/presence-context';
 import { useRootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 
-interface OrganizationsResponse {
+export interface OrganizationsResponse {
   start: number;
   limit: number;
   length: number;
@@ -89,7 +90,7 @@ interface CurrentPlan {
   type: PersonalPlanType;
 };
 
-const organizationsData: OrganizationLoaderData = {
+export const organizationsData: OrganizationLoaderData = {
   organizations: [],
   user: undefined,
   currentPlan: undefined,
@@ -120,7 +121,7 @@ export const indexLoader: LoaderFunction = async () => {
   if (sessionId) {
     // Check if there are any migrations to run before loading organizations.
     // If there are migrations, we need to log the user out and redirect them to the login page
-    if (await shouldRunMigration()) {
+    if (await shouldMigrateProjectUnderOrganization()) {
       await session.logout();
       return redirect('/auth/login');
     }
@@ -174,13 +175,12 @@ export const indexLoader: LoaderFunction = async () => {
       organizationsData.user = user;
       organizationsData.currentPlan = currentPlan;
 
-      const personalOrganization = organizations.filter(isPersonalOrganization).find(organization => {
-        const accountId = getAccountId();
-        return accountId && isOwnerOfOrganization({
-          organization,
-          accountId,
-        });
-      });
+      const personalOrganization = organizations.filter(isPersonalOrganization)
+        .find(organization =>
+          isOwnerOfOrganization({
+            organization,
+            accountId,
+          }));
 
       if (personalOrganization) {
         return redirect(`/organization/${personalOrganization.id}`);
@@ -639,7 +639,7 @@ const OrganizationRoute = () => {
                   />{' '}
                   {user
                     ? status.charAt(0).toUpperCase() + status.slice(1)
-                    : `Log in to sync your data (${workspaceCount} files)`}
+                    : 'Log in to sync your data'}
                 </Button>
                 <Tooltip
                   placement="top"
@@ -686,12 +686,15 @@ const OrganizationRoute = () => {
                       title: 'Export Complete',
                       message: 'All your data have been successfully exported',
                     });
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.exportAllCollections,
+                    });
                   }}
                 >
                   <Icon
                     icon="file-export"
                   />
-                  Export your data
+                  Export your data {`(${workspaceCount} files)`}
                 </Button>
               ) : null}
             </div>

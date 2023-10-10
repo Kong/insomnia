@@ -3,7 +3,7 @@ import { Heading } from 'react-aria-components';
 import { ActionFunction, redirect, useFetcher, useFetchers, useNavigate } from 'react-router-dom';
 
 import { isLoggedIn } from '../../account/session';
-import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
+import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { invariant } from '../../utils/invariant';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Icon } from '../components/icon';
@@ -26,7 +26,7 @@ export const action: ActionFunction = async ({
   console.log('Login successful');
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
 
-  if (isLoggedIn() && await shouldRunMigration()) {
+  if (isLoggedIn() && await shouldMigrateProjectUnderOrganization()) {
     throw redirect('/auth/migrate');
   }
 
