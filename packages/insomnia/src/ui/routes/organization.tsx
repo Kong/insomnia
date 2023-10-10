@@ -417,6 +417,18 @@ const OrganizationRoute = () => {
             <div className="flex gap-[--padding-sm] items-center justify-end p-2">
               {user ? (
                 <Fragment>
+                  <Button
+                    aria-label="Invite collaborators"
+                    className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full text-[--hl]"
+                    onPress={() => {
+                      window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
+                    }}
+                  >
+                    <Icon icon="user-plus" />
+                    <span className="truncate">
+                      Invite
+                    </span>
+                  </Button>
                   <PresentUsers />
                   <MenuTrigger>
                     <Button className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">

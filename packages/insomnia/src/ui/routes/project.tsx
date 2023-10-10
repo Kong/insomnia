@@ -943,19 +943,6 @@ const ProjectRoute: FC = () => {
               </GridList>
               <div className='flex flex-shrink-0 flex-col py-[--padding-sm]'>
                 <Button
-                  aria-label="Invite collaborators"
-                  className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                  onPress={() => {
-                    window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
-                  }}
-                >
-                  <Icon icon="user-plus" />
-
-                  <span className="truncate">
-                    Invite collaborators
-                  </span>
-                </Button>
-                <Button
                   aria-label="Help and Feedback"
                   className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                   onPress={() => {
