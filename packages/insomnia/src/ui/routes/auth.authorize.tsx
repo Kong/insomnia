@@ -54,7 +54,7 @@ const Authorize = () => {
       <Heading className="text-2xl font-bold text-center px-3">
         Authorizing Insomnia
       </Heading>
-      {!isAuthenticating && (
+      {(
         <Fragment>
           <p>
             A new page should have opened in your default web browser. Please log in.
@@ -129,8 +129,9 @@ const Authorize = () => {
                     alignItems: 'center',
                     gap: 'var(--padding-xs)',
                   }}
+                  disabled={isAuthenticating}
                 >
-                  <i className="fa fa-sign-in" aria-hidden="true" />
+                  <i className={`fa fa-${isAuthenticating ? 'spin' : 'sign-in'}`} aria-hidden="true" />
                   Log in
                 </button>
               </div>
@@ -138,14 +139,6 @@ const Authorize = () => {
             </form>
           </div>
         </Fragment>
-      )}
-      {isAuthenticating && (
-        <div className="flex flex-col gap-3 rounded-md bg-[--hl-sm] p-[--padding-md]">
-          <Heading className="text-lg flex items-center p-8 gap-8">
-            <i className="fa fa-spinner fa-spin" aria-hidden="true" />
-            Authenticating...
-          </Heading>
-        </div>
       )}
       <div className='flex justify-center w-full'>
         <Button
