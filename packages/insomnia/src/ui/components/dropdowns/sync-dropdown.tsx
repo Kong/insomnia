@@ -16,7 +16,6 @@ import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { Snapshot, Status } from '../../../sync/types';
 import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-backend-project';
-import { logCollectionMovedToProject } from '../../../sync/vcs/migrate-collections';
 import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-project-team';
 import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
@@ -192,7 +191,16 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     if (pulledIntoProject.project._id !== project._id) {
       // If pulled into a different project, reactivate the workspace
       navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}`);
-      logCollectionMovedToProject(workspace, pulledIntoProject.project);
+      console.log('[sync] collection has been moved to the remote project to which it belongs', {
+        collection: {
+          id: workspace._id,
+          name: workspace.name,
+        },
+        project: {
+          id: pulledIntoProject.project._id,
+          name: pulledIntoProject.project.name,
+        },
+      });
     }
     await refreshVCSAndRefetchRemote();
     setState(state => ({
