@@ -221,11 +221,11 @@ const router = createMemoryRouter(
                             ).moveProjectAction(...args),
                         },
                         {
-                          path: 'rename',
+                          path: 'update',
                           action: async (...args) =>
                             (
                               await import('./routes/actions')
-                            ).renameProjectAction(...args),
+                            ).updateProjectAction(...args),
                         },
                         {
                           path: 'git',

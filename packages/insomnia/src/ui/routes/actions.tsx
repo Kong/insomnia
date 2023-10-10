@@ -88,7 +88,7 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   }
 };
 
-export const renameProjectAction: ActionFunction = async ({
+export const updateProjectAction: ActionFunction = async ({
   request,
   params,
 }) => {
@@ -97,7 +97,10 @@ export const renameProjectAction: ActionFunction = async ({
   const name = formData.get('name');
   invariant(typeof name === 'string', 'Name is required');
 
-  const { projectId } = params;
+  const type = formData.get('type');
+  invariant(type === 'local' || type === 'remote', 'Project type is required');
+
+  const { organizationId, projectId } = params;
   invariant(projectId, 'Project ID is required');
 
   const project = await models.project.getById(projectId);
@@ -105,10 +108,10 @@ export const renameProjectAction: ActionFunction = async ({
   invariant(project, 'Project not found');
 
   const sessionId = session.getCurrentSessionId();
-  invariant(sessionId, 'User must be logged in to rename a project');
 
   try {
-    if (project.remoteId) {
+    // If its a cloud project, and we are renaming, then patch
+    if (sessionId && project.remoteId && type === 'remote' && name !== project.name) {
       const response = await window.main.insomniaFetch<void | {
         error: string;
         message?: string;
@@ -126,10 +129,67 @@ export const renameProjectAction: ActionFunction = async ({
           error: response.error === 'FORBIDDEN' ? 'You do not have permission to rename this project.' : 'An unexpected error occurred while renaming the project. Please try again.',
         };
       }
+
+      await models.project.update(project, { name });
+      return null;
     }
 
+    // convert from cloud to local
+    if (type === 'local' && project.remoteId) {
+      const response = await window.main.insomniaFetch<void | {
+        error: string;
+        message?: string;
+      }>({
+        path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
+        method: 'DELETE',
+        sessionId,
+      });
+
+      if (response && 'error' in response) {
+        return {
+          error: response.error === 'FORBIDDEN' ? 'You do not have permission to change this project.' : 'An unexpected error occurred while deleting the project. Please try again.',
+        };
+      }
+
+      await models.project.update(project, { name, remoteId: null });
+      return null;
+    }
+    // convert from local to cloud
+    if (type === 'remote' && !project.remoteId) {
+      const newCloudProject = await window.main.insomniaFetch<{
+        id: string;
+        name: string;
+      } | {
+        error: string;
+        message?: string;
+      }>({
+        path: `/v1/organizations/${organizationId}/team-projects`,
+        method: 'POST',
+        data: {
+          name,
+        },
+        sessionId,
+      });
+
+      if (!newCloudProject || 'error' in newCloudProject) {
+        let error = 'An unexpected error occurred while creating the project. Please try again.';
+        if (newCloudProject.error === 'FORBIDDEN' || newCloudProject.error === 'NEEDS_TO_UPGRADE') {
+          error = newCloudProject.error;
+        }
+
+        return {
+          error,
+        };
+      }
+
+      await models.project.update(project, { name, remoteId: newCloudProject.id });
+      return null;
+    }
+
+    // local project rename
     await models.project.update(project, { name });
     return null;
+
   } catch (err) {
     console.log(err);
     return {
