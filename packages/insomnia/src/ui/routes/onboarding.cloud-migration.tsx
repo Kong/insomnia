@@ -4,11 +4,12 @@ import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-rout
 
 import { logout } from '../../account/session';
 import { exportAllData } from '../../common/export-all-data';
-import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
+import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { SegmentEvent } from '../analytics';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { showAlert } from '../components/modals';
 import { TrailLinesContainer } from '../components/trail-lines-container';
+import { useRootLoaderData } from './root';
 
 export const action: ActionFunction = async () => {
   await logout();
@@ -16,7 +17,7 @@ export const action: ActionFunction = async () => {
 };
 
 export const loader: LoaderFunction = async () => {
-  if (await shouldRunMigration()) {
+  if (await shouldMigrateProjectUnderOrganization()) {
     return null;
   }
 
@@ -26,6 +27,7 @@ export const loader: LoaderFunction = async () => {
 
 export const OnboardingCloudMigration = () => {
   const { Form, state } = useFetcher();
+  const { workspaceCount } = useRootLoaderData();
   return (
     <div className='relative h-full w-full text-left text-base flex bg-[--color-bg]'>
       <TrailLinesContainer>
@@ -263,7 +265,7 @@ export const OnboardingCloudMigration = () => {
                         });
                       }}
                       className='focus:text-[--color-font] hover:text-[--color-font] font-bold transition-colors'
-                    > export your data </Button> for portability.
+                    > export your data </Button> for portability. {`(${workspaceCount} files)`}
                   </p>
                 </div>
                 <button disabled={state !== 'idle'} className='hover:no-underline font-bold bg-[#4000BF] text-sm hover:bg-opacity-90 py-2 px-3 text-[--color-font] transition-colors rounded-sm'>

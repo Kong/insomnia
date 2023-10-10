@@ -28,11 +28,22 @@ export const createNewProjectAction: ActionFunction = async ({ request, params }
   const { organizationId } = params;
   invariant(organizationId, 'Organization ID is required');
   const formData = await request.formData();
-  const name = formData.get('name');
+  const name = formData.get('name') || 'My project';
   invariant(typeof name === 'string', 'Name is required');
+  const projectType = formData.get('type');
+  invariant(projectType === 'local' || projectType === 'remote', 'Project type is required');
 
   const sessionId = session.getCurrentSessionId();
   invariant(sessionId, 'User must be logged in to create a project');
+
+  if (projectType === 'local') {
+    const project = await models.project.create({
+      name,
+      parentId: organizationId,
+    });
+
+    return redirect(`/organization/${organizationId}/project/${project._id}`);
+  }
 
   try {
     const newCloudProject = await window.main.insomniaFetch<{
@@ -97,22 +108,24 @@ export const renameProjectAction: ActionFunction = async ({
   invariant(sessionId, 'User must be logged in to rename a project');
 
   try {
-    const response = await window.main.insomniaFetch<void | {
-      error: string;
-      message?: string;
-    }>({
-      path: `/v1/organizations/${project.parentId}/team-projects/${project.remoteId}`,
-      method: 'PATCH',
-      sessionId,
-      data: {
-        name,
-      },
-    });
+    if (project.remoteId) {
+      const response = await window.main.insomniaFetch<void | {
+        error: string;
+        message?: string;
+      }>({
+        path: `/v1/organizations/${project.parentId}/team-projects/${project.remoteId}`,
+        method: 'PATCH',
+        sessionId,
+        data: {
+          name,
+        },
+      });
 
-    if (response && 'error' in response) {
-      return {
-        error: response.error === 'FORBIDDEN' ? 'You do not have permission to rename this project.' : 'An unexpected error occurred while renaming the project. Please try again.',
-      };
+      if (response && 'error' in response) {
+        return {
+          error: response.error === 'FORBIDDEN' ? 'You do not have permission to rename this project.' : 'An unexpected error occurred while renaming the project. Please try again.',
+        };
+      }
     }
 
     await models.project.update(project, { name });
@@ -136,19 +149,21 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
   invariant(sessionId, 'User must be logged in to delete a project');
 
   try {
-    const response = await window.main.insomniaFetch<void | {
-      error: string;
-      message?: string;
-    }>({
-      path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
-      method: 'DELETE',
-      sessionId,
-    });
+    if (project.remoteId) {
+      const response = await window.main.insomniaFetch<void | {
+        error: string;
+        message?: string;
+      }>({
+        path: `/v1/organizations/${organizationId}/team-projects/${project.remoteId}`,
+        method: 'DELETE',
+        sessionId,
+      });
 
-    if (response && 'error' in response) {
-      return {
-        error: response.error === 'FORBIDDEN' ? 'You do not have permission to delete this project.' : 'An unexpected error occurred while deleting the project. Please try again.',
-      };
+      if (response && 'error' in response) {
+        return {
+          error: response.error === 'FORBIDDEN' ? 'You do not have permission to delete this project.' : 'An unexpected error occurred while deleting the project. Please try again.',
+        };
+      }
     }
 
     await models.stats.incrementDeletedRequestsForDescendents(project);
@@ -161,6 +176,27 @@ export const deleteProjectAction: ActionFunction = async ({ params }) => {
       error: err instanceof Error ? err.message : `An unexpected error occurred while deleting the project. Please try again. ${err}`,
     };
   }
+};
+
+export const moveProjectAction: ActionFunction = async ({ request, params }) => {
+  const { projectId } = params as { projectId: string };
+  const formData = await request.formData();
+
+  const organizationId = formData.get('organizationId');
+
+  invariant(typeof organizationId === 'string', 'Organization ID is required');
+  invariant(typeof projectId === 'string', 'Project ID is required');
+
+  const project = await models.project.getById(projectId);
+  invariant(project, 'Project not found');
+
+  await models.project.update(project, {
+    parentId: organizationId,
+    // We move a project to another organization as local no matter what it was before
+    remoteId: null,
+  });
+
+  return null;
 };
 
 // Workspace

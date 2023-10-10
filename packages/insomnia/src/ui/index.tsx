@@ -152,6 +152,10 @@ const router = createMemoryRouter(
             (await import('./routes/actions')).updateSettingsAction(...args),
         },
         {
+          path: 'untracked-projects',
+          loader: async (...args) => (await import('./routes/untracked-projects')).loader(...args),
+        },
+        {
           path: 'organization',
           id: '/organization',
           loader: async (...args) => (await import('./routes/organization')).loader(...args),
@@ -208,6 +212,13 @@ const router = createMemoryRouter(
                             (
                               await import('./routes/actions')
                             ).deleteProjectAction(...args),
+                        },
+                        {
+                          path: 'move',
+                          action: async (...args) =>
+                            (
+                              await import('./routes/actions')
+                            ).moveProjectAction(...args),
                         },
                         {
                           path: 'rename',
