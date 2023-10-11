@@ -434,14 +434,14 @@ const OrganizationRoute = () => {
                 <Fragment>
                   <Button
                     aria-label="Invite collaborators"
-                    className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full text-[--hl]"
+                    className="px-4 text-[--color-font] hover:bg-[--hl-xs] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     onPress={() => {
                       window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
                     }}
                   >
                     <Icon icon="user-plus" />
                     <span className="truncate">
-                      Invite
+                      Share
                     </span>
                   </Button>
                   <PresentUsers />
