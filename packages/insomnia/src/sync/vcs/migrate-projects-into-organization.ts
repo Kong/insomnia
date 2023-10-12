@@ -1,9 +1,8 @@
 import { getAccountId, getCurrentSessionId } from '../../account/session';
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { isOwnerOfOrganization, isPersonalOrganization } from '../../models/organization';
+import { isOwnerOfOrganization, isPersonalOrganization, Organization } from '../../models/organization';
 import { Project, RemoteProject } from '../../models/project';
-import { OrganizationsResponse } from '../../ui/routes/organization';
 import { invariant } from '../../utils/invariant';
 
 let status: 'idle' | 'pending' | 'error' | 'completed' = 'idle';
@@ -33,7 +32,11 @@ export const shouldMigrateProjectUnderOrganization = async () => {
   return localProjectCount > 0 || legacyRemoteProjectCount > 0;
 };
 
-export const migrateProjectsIntoOrganization = async () => {
+export const migrateProjectsIntoOrganization = async ({
+  organizations,
+}: {
+  organizations: Organization[];
+}) => {
   if (status !== 'idle' && status !== 'error') {
     return;
   }
@@ -93,15 +96,9 @@ export const migrateProjectsIntoOrganization = async () => {
       parentId: null,
       _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
     });
-    const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
-      method: 'GET',
-      path: '/v1/organizations',
-      sessionId,
-    });
+
     const accountId = getAccountId();
-    invariant(organizationsResult, 'Failed to fetch organizations');
     invariant(accountId, 'Failed to get account id');
-    const { organizations } = organizationsResult;
     const personalOrganization = organizations.filter(isPersonalOrganization)
       .find(organization =>
         isOwnerOfOrganization({
