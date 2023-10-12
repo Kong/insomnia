@@ -10,6 +10,7 @@ import { exportAllData } from '../../../common/export-all-data';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { isScratchpadOrganizationId, Organization } from '../../../models/organization';
+import { Project } from '../../../models/project';
 import { isScratchpad } from '../../../models/workspace';
 import { SegmentEvent } from '../../analytics';
 import { useOrganizationLoaderData } from '../../routes/organization';
@@ -22,6 +23,106 @@ import { Icon } from '../icon';
 import { showAlert } from '../modals';
 import { ExportRequestsModal } from '../modals/export-requests-modal';
 import { ImportModal } from '../modals/import-modal';
+
+const UntrackedProject = ({
+  project,
+  organizationId,
+  organizations,
+}: {
+  project: Project & { workspacesCount: number };
+  organizationId: string;
+  organizations: Organization[];
+}) => {
+  const moveProjectFetcher = useFetcher();
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState<string | null>(null);
+
+  return (
+    <div key={project._id} className="flex items-center gap-2 justify-between py-2">
+      <div className='flex flex-col gap-1'>
+        <Heading className='text-base font-semibold flex items-center gap-2'>
+          {project.name}
+          <span className='text-xs text-[--hl]'>
+            Id: {project._id}
+          </span>
+        </Heading>
+        <p className='text-sm'>
+          This project contains {project.workspacesCount} {project.workspacesCount === 1 ? 'file' : 'files'}.
+        </p>
+      </div>
+      <moveProjectFetcher.Form
+        action={`/organization/${organizationId}/project/${project._id}/move`}
+        method='POST'
+        className='group flex items-center gap-2'
+      >
+        <Select
+          aria-label="Select an organization"
+          name="organizationId"
+          onSelectionChange={key => {
+            setSelectedOrganizationId(key.toString());
+          }}
+          selectedKey={selectedOrganizationId}
+          isDisabled={organizations.length === 0}
+          items={organizations}
+        >
+          <Button className="px-4 py-1 disabled:bg-[--hl-xs] disabled:cursor-not-allowed font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] data-[pressed]:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+            <SelectValue<Organization> className="flex truncate items-center justify-center gap-2">
+              {({ selectedItem }) => {
+                if (!selectedItem) {
+                  return (
+                    <Fragment>
+                      <span>
+                        Select an organization
+                      </span>
+                    </Fragment>
+                  );
+                }
+
+                return (
+                  <Fragment>
+                    {selectedItem.display_name}
+                  </Fragment>
+                );
+              }}
+            </SelectValue>
+            <Icon icon="caret-down" />
+          </Button>
+          <Popover className="min-w-max">
+            <ListBox<Organization>
+              className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+            >
+              {item => (
+                <Item
+                  id={item.id}
+                  key={item.id}
+                  className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                  aria-label={item.name}
+                  textValue={item.name}
+                  value={item}
+                >
+                  {({ isSelected }) => (
+                    <Fragment>
+                      {item.display_name}
+                      {isSelected && (
+                        <Icon
+                          icon="check"
+                          className="text-[--color-success] justify-self-end"
+                        />
+                      )}
+                    </Fragment>
+                  )}
+                </Item>
+              )}
+            </ListBox>
+          </Popover>
+        </Select>
+        <Button isDisabled={organizations.length === 0 || !selectedOrganizationId || moveProjectFetcher.state !== 'idle'} type="submit" className="px-4 py-1 group-invalid:opacity-30 disabled:bg-[--hl-xs] disabled:cursor-not-allowed font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+          Move
+        </Button>
+      </moveProjectFetcher.Form>
+    </div>
+  );
+};
+
 interface Props {
   hideSettingsModal: () => void;
 }
@@ -35,7 +136,6 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const { organizations } = useOrganizationLoaderData();
 
   const untrackedProjectsFetcher = useFetcher<LoaderData>();
-  const moveProjectFetcher = useFetcher();
 
   useEffect(() => {
     const isIdleAndUninitialized = untrackedProjectsFetcher.state === 'idle' && !untrackedProjectsFetcher.data;
@@ -193,89 +293,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           </div>
           <div className='flex flex-col gap-1 overflow-y-auto divide-y divide-solid divide-[--hl-md]'>
             {untrackedProjects.map(project => (
-              <div key={project._id} className="flex items-center gap-2 justify-between py-2">
-                <div className='flex flex-col gap-1'>
-                  <Heading className='text-base font-semibold flex items-center gap-2'>
-                    {project.name}
-                    <span className='text-xs text-[--hl]'>
-                      Id: {project._id}
-                    </span>
-                  </Heading>
-                  <p className='text-sm'>
-                    This project contains {project.workspacesCount} {project.workspacesCount === 1 ? 'file' : 'files'}.
-                  </p>
-                </div>
-                <form
-                  className='flex items-center gap-2'
-                  onSubmit={e => {
-                    e.preventDefault();
-                    moveProjectFetcher.submit(e.currentTarget, {
-                      action: `/organization/${organizationId}/project/${project._id}/move`,
-                      method: 'POST',
-                    });
-                  }}
-                >
-                  <Select
-                    aria-label="Select an organization"
-                    name="organizationId"
-                    items={organizations}
-                  >
-                    <Button className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                      <SelectValue<Organization> className="flex truncate items-center justify-center gap-2">
-                        {({ selectedItem }) => {
-                          if (!selectedItem) {
-                            return (
-                              <Fragment>
-                                <span>
-                                  Select an organization
-                                </span>
-                              </Fragment>
-                            );
-                          }
-
-                          return (
-                            <Fragment>
-                              {selectedItem.display_name}
-                            </Fragment>
-                          );
-                        }}
-                      </SelectValue>
-                      <Icon icon="caret-down" />
-                    </Button>
-                    <Popover className="min-w-max">
-                      <ListBox<Organization>
-                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-                      >
-                        {item => (
-                          <Item
-                            id={item.id}
-                            key={item.id}
-                            className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
-                            aria-label={item.name}
-                            textValue={item.name}
-                            value={item}
-                          >
-                            {({ isSelected }) => (
-                              <Fragment>
-                                {item.display_name}
-                                {isSelected && (
-                                  <Icon
-                                    icon="check"
-                                    className="text-[--color-success] justify-self-end"
-                                  />
-                                )}
-                              </Fragment>
-                            )}
-                          </Item>
-                        )}
-                      </ListBox>
-                    </Popover>
-                  </Select>
-                  <Button type="submit" className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
-                    Move
-                  </Button>
-                </form>
-              </div>
+              <UntrackedProject
+                key={project._id}
+                project={project}
+                organizationId={organizationId}
+                organizations={organizations}
+              />
             ))}
           </div>
         </div>}
