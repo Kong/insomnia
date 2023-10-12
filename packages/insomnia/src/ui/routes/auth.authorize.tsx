@@ -2,8 +2,6 @@ import React, { Fragment } from 'react';
 import { Heading } from 'react-aria-components';
 import { ActionFunction, redirect, useFetcher, useFetchers, useNavigate } from 'react-router-dom';
 
-import { isLoggedIn } from '../../account/session';
-import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { invariant } from '../../utils/invariant';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Icon } from '../components/icon';
@@ -25,10 +23,6 @@ export const action: ActionFunction = async ({
   }
   console.log('Login successful');
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
-
-  if (isLoggedIn() && await shouldMigrateProjectUnderOrganization()) {
-    throw redirect('/auth/migrate');
-  }
 
   return redirect('/organization');
 };
@@ -131,7 +125,7 @@ const Authorize = () => {
                   }}
                   disabled={isAuthenticating}
                 >
-                  <i className={`fa fa-${isAuthenticating ? 'spin' : 'sign-in'}`} aria-hidden="true" />
+                  <Icon icon={isAuthenticating ? 'spinner' : 'sign-in'} className={isAuthenticating ? 'animate-spin' : ''} />
                   Log in
                 </button>
               </div>

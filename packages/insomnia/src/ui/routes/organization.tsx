@@ -35,7 +35,7 @@ import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganization
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
-import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
+import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -135,13 +135,6 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
-    // Check if there are any migrations to run before loading organizations.
-    // If there are migrations, we need to log the user out and redirect them to the login page
-    if (await shouldMigrateProjectUnderOrganization()) {
-      await session.logout();
-      return redirect('/auth/login');
-    }
-
     try {
       let vcs = getVCS();
       if (!vcs) {
@@ -190,13 +183,18 @@ export const indexLoader: LoaderFunction = async () => {
       organizationsData.organizations = sortOrganizations(accountId, organizations);
       organizationsData.user = user;
       organizationsData.currentPlan = currentPlan;
-
       const personalOrganization = organizations.filter(isPersonalOrganization)
         .find(organization =>
           isOwnerOfOrganization({
             organization,
             accountId,
           }));
+      invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
+      if (await shouldMigrateProjectUnderOrganization()) {
+        await migrateProjectsIntoOrganization({
+          personalOrganization,
+        });
+      }
 
       if (personalOrganization) {
         return redirect(`/organization/${personalOrganization.id}`);

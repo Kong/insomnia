@@ -29,10 +29,8 @@ import { AppLoadingIndicator } from './components/app-loading-indicator';
 import Auth from './routes/auth';
 import Authorize from './routes/auth.authorize';
 import Login from './routes/auth.login';
-import { Migrate } from './routes/auth.migrate';
 import { ErrorRoute } from './routes/error';
 import Onboarding from './routes/onboarding';
-import { OnboardingCloudMigration } from './routes/onboarding.cloud-migration';
 import { shouldOrganizationsRevalidate } from './routes/organization';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
@@ -120,12 +118,6 @@ const router = createMemoryRouter(
         {
           path: 'onboarding/*',
           element: <Onboarding />,
-        },
-        {
-          path: 'onboarding/cloud-migration',
-          loader: async (...args) => (await import('./routes/onboarding.cloud-migration')).loader(...args),
-          action: async (...args) => (await import('./routes/onboarding.cloud-migration')).action(...args),
-          element: <OnboardingCloudMigration />,
         },
         {
           path: 'import',
@@ -880,7 +872,6 @@ const router = createMemoryRouter(
           children: [
             {
               path: 'login',
-              loader: async (...args) => (await import('./routes/auth.login')).loader(...args),
               action: async (...args) => (await import('./routes/auth.login')).action(...args),
               element: <Login />,
             },
@@ -892,12 +883,6 @@ const router = createMemoryRouter(
               path: 'authorize',
               action: async (...args) => (await import('./routes/auth.authorize')).action(...args),
               element: <Authorize />,
-            },
-            {
-              path: 'migrate',
-              loader: async (...args) => (await import('./routes/auth.migrate')).loader(...args),
-              action: async (...args) => (await import('./routes/auth.migrate')).action(...args),
-              element: <Migrate />,
             },
           ],
         },
