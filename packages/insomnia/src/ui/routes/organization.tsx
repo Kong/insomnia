@@ -183,19 +183,18 @@ export const indexLoader: LoaderFunction = async () => {
       organizationsData.organizations = sortOrganizations(accountId, organizations);
       organizationsData.user = user;
       organizationsData.currentPlan = currentPlan;
-
-      if (await shouldMigrateProjectUnderOrganization()) {
-        await migrateProjectsIntoOrganization({
-          organizations,
-        });
-      }
-
       const personalOrganization = organizations.filter(isPersonalOrganization)
         .find(organization =>
           isOwnerOfOrganization({
             organization,
             accountId,
           }));
+      invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
+      if (await shouldMigrateProjectUnderOrganization()) {
+        await migrateProjectsIntoOrganization({
+          personalOrganization,
+        });
+      }
 
       if (personalOrganization) {
         return redirect(`/organization/${personalOrganization.id}`);

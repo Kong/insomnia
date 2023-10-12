@@ -1,11 +1,7 @@
-import { getAccountId, getCurrentSessionId } from '../../account/session';
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { isOwnerOfOrganization, isPersonalOrganization, Organization } from '../../models/organization';
+import { Organization } from '../../models/organization';
 import { Project, RemoteProject } from '../../models/project';
-import { invariant } from '../../utils/invariant';
-
-let status: 'idle' | 'pending' | 'error' | 'completed' = 'idle';
 
 // TODO:
 // Error handling and return type for errors
@@ -31,23 +27,7 @@ export const shouldMigrateProjectUnderOrganization = async () => {
 
   return localProjectCount > 0 || legacyRemoteProjectCount > 0;
 };
-
-export const migrateProjectsIntoOrganization = async ({
-  organizations,
-}: {
-  organizations: Organization[];
-}) => {
-  if (status !== 'idle' && status !== 'error') {
-    return;
-  }
-
-  status = 'pending';
-
-  try {
-    const sessionId = getCurrentSessionId();
-    invariant(sessionId, 'User must be logged in to migrate projects');
-
-    // local projects what if they dont have a parentId?
+// local projects what if they dont have a parentId?
     // after migration: all projects have a parentId
 
     // no more hostage projects
@@ -79,6 +59,19 @@ export const migrateProjectsIntoOrganization = async ({
     // the remote id field used to track team_id (remote concept for matching 1:1 with this project) which is now org_id
     // the _id field used to track the proj_team_id which was a wrapper for the team_id prefixing proj_to the above id,
     // which is now the remoteId for tracking the projects within an org
+
+// NOTE: status is used to prevent multiple migrations from running at the same time
+let status: 'idle' | 'pending' | 'error' | 'completed' = 'idle';
+export const migrateProjectsIntoOrganization = async ({
+  personalOrganization,
+}: {
+  personalOrganization: Organization;
+}) => {
+  if (status !== 'idle' && status !== 'error') {
+    return;
+  }
+  status = 'pending';
+  try {
     const legacyRemoteProjects = await database.find<RemoteProject>(models.project.type, {
       remoteId: { $ne: null },
       parentId: null,
@@ -96,16 +89,6 @@ export const migrateProjectsIntoOrganization = async ({
       parentId: null,
       _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
     });
-
-    const accountId = getAccountId();
-    invariant(accountId, 'Failed to get account id');
-    const personalOrganization = organizations.filter(isPersonalOrganization)
-      .find(organization =>
-        isOwnerOfOrganization({
-          organization,
-          accountId,
-        }));
-    invariant(personalOrganization, 'Failed to find personal organization');
 
     for (const localProject of localProjects) {
       await models.project.update(localProject, {
