@@ -31,6 +31,7 @@ import Authorize from './routes/auth.authorize';
 import Login from './routes/auth.login';
 import { ErrorRoute } from './routes/error';
 import Onboarding from './routes/onboarding';
+import { Migrate } from './routes/onboarding.migrate';
 import { shouldOrganizationsRevalidate } from './routes/organization';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
@@ -118,6 +119,12 @@ const router = createMemoryRouter(
         {
           path: 'onboarding/*',
           element: <Onboarding />,
+        },
+        {
+          path: 'onboarding/migrate',
+          loader: async (...args) => (await import('./routes/onboarding.migrate')).loader(...args),
+          action: async (...args) => (await import('./routes/onboarding.migrate')).action(...args),
+          element: <Migrate />,
         },
         {
           path: 'import',

@@ -30,8 +30,11 @@ import {
   getCurrentSessionId,
 } from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
+import { database } from '../../common/database';
 import { exportAllData } from '../../common/export-all-data';
+import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
+import { Project } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
@@ -194,6 +197,24 @@ export const indexLoader: LoaderFunction = async () => {
         await migrateProjectsIntoOrganization({
           personalOrganization,
         });
+
+        const preferredProjectType = localStorage.getItem('prefers-project-type');
+        if (preferredProjectType === 'remote') {
+          const localProjects = await database.find<Project>('Project', {
+            parentId: personalOrganization.id,
+            remoteId: null,
+          });
+
+          // If any of those fail projects will still be under the organization as local projects
+          for (const project of localProjects) {
+            updateLocalProjectToRemote({
+              project,
+              organizationId: personalOrganization.id,
+              sessionId,
+              vcs,
+            });
+          }
+        }
       }
 
       if (personalOrganization) {
