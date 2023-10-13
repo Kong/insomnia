@@ -135,8 +135,8 @@ const config = {
     // same across all electron-builder applications, which causes package
     // conflicts
     fpm: [
-      '--rpm-rpmbuild-define=_build_id_links none'
-    ]
+      '--rpm-rpmbuild-define=_build_id_links none',
+    ],
   },
   snap: {
     base: 'core22',
