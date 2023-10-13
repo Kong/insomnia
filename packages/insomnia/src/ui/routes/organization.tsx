@@ -346,6 +346,11 @@ export const shouldOrganizationsRevalidate: ShouldRevalidateFunction = ({
 const UpgradeButton = () => {
   const { currentPlan } = useOrganizationLoaderData();
 
+  // For the enterprise-member plan we don't show the upgrade button.
+  if (currentPlan?.type === 'enterprise-member') {
+    return null;
+  }
+
   // If user has a team or enterprise plan we navigate them to the Enterprise contact page.
   if (['team', 'enterprise'].includes(currentPlan?.type || '')) {
     return (
@@ -623,9 +628,16 @@ const OrganizationRoute = () => {
                       }
 
                       if (action === 'new-organization') {
-                        window.main.openInBrowser(
-                          `${getAppWebsiteBaseURL()}/app/organization/create`,
-                        );
+                        if (currentPlan?.type !== 'enterprise-member') {
+                          window.main.openInBrowser(
+                            `${getAppWebsiteBaseURL()}/app/organization/create`,
+                          );
+                        } else {
+                          showAlert({
+                            title: 'Could not create new organization.',
+                            message: 'Your Insomnia account is tied to the enterprise corporate account. Please ask the owner of the enterprise billing to create one for you.',
+                          });
+                        }
                       }
                     }}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
