@@ -203,7 +203,7 @@ const Onboarding = () => {
                 )}
                 <Link
                   className="hover:no-underline bg-[#4000BF] text-sm hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
-                  to="/auth/login"
+                  to="/onboarding/migrate"
                   onClick={() => window.localStorage.setItem('hasSeenOnboarding', 'true')}
                 >
                   Continue
