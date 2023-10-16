@@ -2,8 +2,6 @@ import React, { Fragment } from 'react';
 import { Heading } from 'react-aria-components';
 import { ActionFunction, redirect, useFetcher, useFetchers, useNavigate } from 'react-router-dom';
 
-import { isLoggedIn } from '../../account/session';
-import { shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { invariant } from '../../utils/invariant';
 import { getLoginUrl, submitAuthCode } from '../auth-session-provider';
 import { Icon } from '../components/icon';
@@ -25,10 +23,6 @@ export const action: ActionFunction = async ({
   }
   console.log('Login successful');
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
-
-  if (isLoggedIn() && await shouldMigrateProjectUnderOrganization()) {
-    throw redirect('/auth/migrate');
-  }
 
   return redirect('/organization');
 };
@@ -54,7 +48,7 @@ const Authorize = () => {
       <Heading className="text-2xl font-bold text-center px-3">
         Authorizing Insomnia
       </Heading>
-      {!isAuthenticating && (
+      {(
         <Fragment>
           <p>
             A new page should have opened in your default web browser. Please log in.
@@ -129,8 +123,9 @@ const Authorize = () => {
                     alignItems: 'center',
                     gap: 'var(--padding-xs)',
                   }}
+                  disabled={isAuthenticating}
                 >
-                  <i className="fa fa-sign-in" aria-hidden="true" />
+                  <Icon icon={isAuthenticating ? 'spinner' : 'sign-in'} className={isAuthenticating ? 'animate-spin' : ''} />
                   Log in
                 </button>
               </div>
@@ -138,14 +133,6 @@ const Authorize = () => {
             </form>
           </div>
         </Fragment>
-      )}
-      {isAuthenticating && (
-        <div className="flex flex-col gap-3 rounded-md bg-[--hl-sm] p-[--padding-md]">
-          <Heading className="text-lg flex items-center p-8 gap-8">
-            <i className="fa fa-spinner fa-spin" aria-hidden="true" />
-            Authenticating...
-          </Heading>
-        </div>
       )}
       <div className='flex justify-center w-full'>
         <Button

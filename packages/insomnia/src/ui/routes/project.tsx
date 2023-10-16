@@ -168,6 +168,20 @@ async function syncTeamProjects({
       });
     }
   }));
+
+  // Turn remote projects from the current organization that are not in the list of remote projects into local projects.
+  const removedRemoteProjects = await database.find<Project>(models.project.type, {
+    // filter by this organization so no legacy data can be accidentally removed, because legacy had null parentId
+    parentId: organizationId,
+    // Remote ID is not in the list of remote projects
+    remoteId: { $nin: teamProjects.map(p => p.id) },
+  });
+
+  await Promise.all(removedRemoteProjects.map(async prj => {
+    await models.project.update(prj, {
+      remoteId: null,
+    });
+  }));
 }
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
@@ -928,19 +942,6 @@ const ProjectRoute: FC = () => {
                 }}
               </GridList>
               <div className='flex flex-shrink-0 flex-col py-[--padding-sm]'>
-                <Button
-                  aria-label="Invite collaborators"
-                  className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                  onPress={() => {
-                    window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
-                  }}
-                >
-                  <Icon icon="user-plus" />
-
-                  <span className="truncate">
-                    Invite collaborators
-                  </span>
-                </Button>
                 <Button
                   aria-label="Help and Feedback"
                   className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
