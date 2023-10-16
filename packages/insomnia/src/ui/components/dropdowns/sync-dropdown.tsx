@@ -16,7 +16,6 @@ import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { Snapshot, Status } from '../../../sync/types';
 import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-backend-project';
-import { logCollectionMovedToProject } from '../../../sync/vcs/migrate-collections';
 import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-project-team';
 import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
@@ -27,6 +26,7 @@ import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { Link } from '../base/link';
 import { HelpTooltip } from '../help-tooltip';
+import { Icon } from '../icon';
 import { showModal } from '../modals';
 import { showError } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
@@ -192,7 +192,16 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     if (pulledIntoProject.project._id !== project._id) {
       // If pulled into a different project, reactivate the workspace
       navigate(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}`);
-      logCollectionMovedToProject(workspace, pulledIntoProject.project);
+      console.log('[sync] collection has been moved to the remote project to which it belongs', {
+        collection: {
+          id: workspace._id,
+          name: workspace.name,
+        },
+        project: {
+          id: pulledIntoProject.project._id,
+          name: pulledIntoProject.project.name,
+        },
+      });
     }
     await refreshVCSAndRefetchRemote();
     setState(state => ({
@@ -329,7 +338,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
         <Link href={docsVersionControl}>
           <span className="no-wrap">
             <br />
-            Documentation <i className="fa fa-external-link" />
+            Documentation <Icon icon="external-link" />
           </span>
         </Link>
       </HelpTooltip>
@@ -340,7 +349,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
     return (
       <div>
         <button className="btn btn--compact wide">
-          <i className="fa fa-refresh fa-spin" /> Initializing
+          <Icon icon="refresh" className="animate-spin" /> Initializing
         </button>
       </div>
     );
@@ -422,7 +431,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                   width: '100%',
                 }}
               >
-                <i className="fa fa-cloud" /> Setup Sync
+                <Icon icon="cloud" /> Setup Sync
               </div>
             </DropdownButton>
           }
@@ -449,7 +458,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                   justifyContent: 'flex-start!important',
                 }}
               >
-                <i className="fa-brands fa-git-alt" /> Use Git Sync
+                <Icon icon={['fab', 'git-alt']} /> Use Git Sync
               </Button>
             </DropdownItem>
           </DropdownSection>
@@ -496,7 +505,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
   }
   const canPush = ahead > 0;
   const canPull = behind > 0;
-  const loadIcon = <i className="fa fa-spin fa-refresh fa--fixed-width" />;
   const pullToolTipMsg = canPull
     ? `There ${behind === 1 ? 'is' : 'are'} ${behind} snapshot${behind === 1 ? '' : 's'} to pull`
     : 'No changes to pull';
@@ -538,48 +546,25 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                   width: '100%',
                 }}
               >
-                <div className="ellipsis">
-                  <i className="fa fa-cloud space-right" />{' '}
+                <div className="truncate">
+                  <Icon icon="cloud" />{' '}
                   {initializing ? 'Initializing...' : currentBranch}
                 </div>
-                <div className="flex space-left">
+                <div className="flex items-center gap-2">
                   <Tooltip message={snapshotToolTipMsg} delay={800} position="bottom">
-                    <i
-                      style={{
-                        color: canCreateSnapshot ? 'var(--color-notice)' : 'var(--color-hl)',
-                      }}
-                      className={classnames('fa fa-cube fa--fixed-width', {
-                        'super-duper-faint': !canCreateSnapshot,
-                      })}
-                    />
+                    <Icon icon="cube" className={`transition-colors ${canCreateSnapshot ? '' : 'opacity-50'}`} />
                   </Tooltip>
 
                   {/* Only show cloud icons if logged in */}
                   {session.isLoggedIn() && (
                     <Fragment>
-                      {loadingPull ? (
-                        loadIcon
-                      ) : (
-                        <Tooltip message={pullToolTipMsg} delay={800} position="bottom">
-                          <i
-                            className={classnames('fa fa-cloud-download fa--fixed-width', {
-                              'super-duper-faint': !canPull,
-                            })}
-                          />
-                        </Tooltip>
-                      )}
+                      <Tooltip message={pullToolTipMsg} delay={800} position="bottom">
+                        <Icon icon="cloud-download" className={`transition-colors ${canPull ? '' : 'opacity-50'} ${loadingPull ? 'animate-pulse' : ''}`} />
+                      </Tooltip>
 
-                      {loadingPush ? (
-                        loadIcon
-                      ) : (
-                        <Tooltip message={pushToolTipMsg} delay={800} position="bottom">
-                          <i
-                            className={classnames('fa fa-cloud-upload fa--fixed-width', {
-                              'super-duper-faint': !canPush,
-                            })}
-                          />
-                        </Tooltip>
-                      )}
+                      <Tooltip message={pushToolTipMsg} delay={800} position="bottom">
+                        <Icon icon="cloud-upload" className={`transition-colors ${canPush ? '' : 'opacity-50'} ${loadingPush ? 'animate-pulse' : ''}`} />
+                      </Tooltip>
                     </Fragment>
                   )}
                 </div>
@@ -610,7 +595,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
                 justifyContent: 'flex-start!important',
               }}
             >
-              <i className="fa-brands fa-git-alt" /> Use Git Sync
+              <Icon icon={['fab', 'git-alt']} /> Use Git Sync
             </Button>
           </DropdownItem>
         </DropdownSection>
@@ -743,11 +728,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, workspace, project }) => {
           onHide={() => setIsSyncStagingModalOpen(false)}
         />
       )}
-      {/* {isSyncMergeModalOpen && (
-        <SyncMergeModal
-          onHide={() => setIsSyncMergeModalOpen(false)}
-        />
-      )} */}
       {isSyncHistoryModalOpen && (
         <SyncHistoryModal
           vcs={vcs}

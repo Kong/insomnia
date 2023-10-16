@@ -34,10 +34,7 @@ test.describe('Dashboard', async () => {
 
       // Delete project
       await page.getByRole('row', { name: 'My Project' }).getByRole('button', { name: 'Project Actions' }).click();
-      await page.getByRole('menuitemradio', { name: 'Settings' }).click();
-
-      await page.getByRole('button', { name: 'Delete' }).click();
-      await page.getByRole('button', { name: 'Click to confirm' }).click();
+      await page.getByRole('menuitemradio', { name: 'Delete' }).click();
 
       // After deleting project, return to default Insomnia Dashboard
       await expect(page.locator('.app')).toContainText('Personal Workspace');

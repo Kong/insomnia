@@ -29,10 +29,9 @@ import { AppLoadingIndicator } from './components/app-loading-indicator';
 import Auth from './routes/auth';
 import Authorize from './routes/auth.authorize';
 import Login from './routes/auth.login';
-import { Migrate } from './routes/auth.migrate';
 import { ErrorRoute } from './routes/error';
 import Onboarding from './routes/onboarding';
-import { OnboardingCloudMigration } from './routes/onboarding.cloud-migration';
+import { Migrate } from './routes/onboarding.migrate';
 import { shouldOrganizationsRevalidate } from './routes/organization';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
@@ -122,10 +121,10 @@ const router = createMemoryRouter(
           element: <Onboarding />,
         },
         {
-          path: 'onboarding/cloud-migration',
-          loader: async (...args) => (await import('./routes/onboarding.cloud-migration')).loader(...args),
-          action: async (...args) => (await import('./routes/onboarding.cloud-migration')).action(...args),
-          element: <OnboardingCloudMigration />,
+          path: 'onboarding/migrate',
+          loader: async (...args) => (await import('./routes/onboarding.migrate')).loader(...args),
+          action: async (...args) => (await import('./routes/onboarding.migrate')).action(...args),
+          element: <Migrate />,
         },
         {
           path: 'import',
@@ -150,6 +149,10 @@ const router = createMemoryRouter(
           path: 'settings/update',
           action: async (...args) =>
             (await import('./routes/actions')).updateSettingsAction(...args),
+        },
+        {
+          path: 'untracked-projects',
+          loader: async (...args) => (await import('./routes/untracked-projects')).loader(...args),
         },
         {
           path: 'organization',
@@ -210,11 +213,18 @@ const router = createMemoryRouter(
                             ).deleteProjectAction(...args),
                         },
                         {
-                          path: 'rename',
+                          path: 'move',
                           action: async (...args) =>
                             (
                               await import('./routes/actions')
-                            ).renameProjectAction(...args),
+                            ).moveProjectAction(...args),
+                        },
+                        {
+                          path: 'update',
+                          action: async (...args) =>
+                            (
+                              await import('./routes/actions')
+                            ).updateProjectAction(...args),
                         },
                         {
                           path: 'git',
@@ -869,7 +879,6 @@ const router = createMemoryRouter(
           children: [
             {
               path: 'login',
-              loader: async (...args) => (await import('./routes/auth.login')).loader(...args),
               action: async (...args) => (await import('./routes/auth.login')).action(...args),
               element: <Login />,
             },
@@ -881,12 +890,6 @@ const router = createMemoryRouter(
               path: 'authorize',
               action: async (...args) => (await import('./routes/auth.authorize')).action(...args),
               element: <Authorize />,
-            },
-            {
-              path: 'migrate',
-              loader: async (...args) => (await import('./routes/auth.migrate')).loader(...args),
-              action: async (...args) => (await import('./routes/auth.migrate')).action(...args),
-              element: <Migrate />,
             },
           ],
         },

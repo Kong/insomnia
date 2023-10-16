@@ -30,12 +30,15 @@ import {
   getCurrentSessionId,
 } from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
+import { database } from '../../common/database';
 import { exportAllData } from '../../common/export-all-data';
+import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
+import { Project } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
-import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
+import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -55,7 +58,7 @@ import { PresenceProvider } from '../context/app/presence-context';
 import { useRootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 
-interface OrganizationsResponse {
+export interface OrganizationsResponse {
   start: number;
   limit: number;
   length: number;
@@ -79,6 +82,22 @@ interface UserProfileResponse {
 }
 
 type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
+const formatCurrentPlanType = (type: PersonalPlanType) => {
+  switch (type) {
+    case 'free':
+      return 'Free';
+    case 'individual':
+      return 'Individual';
+    case 'team':
+      return 'Team';
+    case 'enterprise':
+      return 'Enterprise';
+    case 'enterprise-member':
+      return 'Enterprise Member';
+    default:
+      return 'Free';
+  }
+};
 type PaymentSchedules = 'month' | 'year';
 
 interface CurrentPlan {
@@ -90,7 +109,7 @@ interface CurrentPlan {
   type: PersonalPlanType;
 };
 
-const organizationsData: OrganizationLoaderData = {
+export const organizationsData: OrganizationLoaderData = {
   organizations: [],
   user: undefined,
   currentPlan: undefined,
@@ -119,13 +138,6 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
-    // Check if there are any migrations to run before loading organizations.
-    // If there are migrations, we need to log the user out and redirect them to the login page
-    if (await shouldRunMigration()) {
-      await session.logout();
-      return redirect('/auth/login');
-    }
-
     try {
       let vcs = getVCS();
       if (!vcs) {
@@ -174,14 +186,36 @@ export const indexLoader: LoaderFunction = async () => {
       organizationsData.organizations = sortOrganizations(accountId, organizations);
       organizationsData.user = user;
       organizationsData.currentPlan = currentPlan;
-
-      const personalOrganization = organizations.filter(isPersonalOrganization).find(organization => {
-        const accountId = getAccountId();
-        return accountId && isOwnerOfOrganization({
-          organization,
-          accountId,
+      const personalOrganization = organizations.filter(isPersonalOrganization)
+        .find(organization =>
+          isOwnerOfOrganization({
+            organization,
+            accountId,
+          }));
+      invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
+      if (await shouldMigrateProjectUnderOrganization()) {
+        await migrateProjectsIntoOrganization({
+          personalOrganization,
         });
-      });
+
+        const preferredProjectType = localStorage.getItem('prefers-project-type');
+        if (preferredProjectType === 'remote') {
+          const localProjects = await database.find<Project>('Project', {
+            parentId: personalOrganization.id,
+            remoteId: null,
+          });
+
+          // If any of those fail projects will still be under the organization as local projects
+          for (const project of localProjects) {
+            updateLocalProjectToRemote({
+              project,
+              organizationId: personalOrganization.id,
+              sessionId,
+              vcs,
+            });
+          }
+        }
+      }
 
       if (personalOrganization) {
         return redirect(`/organization/${personalOrganization.id}`);
@@ -312,11 +346,16 @@ export const shouldOrganizationsRevalidate: ShouldRevalidateFunction = ({
 const UpgradeButton = () => {
   const { currentPlan } = useOrganizationLoaderData();
 
+  // For the enterprise-member plan we don't show the upgrade button.
+  if (currentPlan?.type === 'enterprise-member') {
+    return null;
+  }
+
   // If user has a team or enterprise plan we navigate them to the Enterprise contact page.
   if (['team', 'enterprise'].includes(currentPlan?.type || '')) {
     return (
       <Button
-        className="px-4 bg-[--color-surprise] text-[--color-font-surprise] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        className="px-4 text-[--color-font] hover:bg-[--hl-xs] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
         onPress={() => {
           window.main.openInBrowser('https://insomnia.rest/pricing/contact');
         }}
@@ -337,7 +376,7 @@ const UpgradeButton = () => {
       onPress={() => {
         window.main.openInBrowser(getAppWebsiteBaseURL() + to);
       }}
-      className="px-4 bg-[--color-surprise] text-[--color-font-surprise] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+      className="px-4 text-[--color-font] hover:bg-[--hl-xs] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
     >
       Upgrade
     </Button>
@@ -347,7 +386,7 @@ const UpgradeButton = () => {
 const OrganizationRoute = () => {
   const { settings, workspaceCount } = useRootLoaderData();
 
-  const { organizations, user } =
+  const { organizations, user, currentPlan } =
     useLoaderData() as OrganizationLoaderData;
   const workspaceData = useRouteLoaderData(
     ':workspaceId',
@@ -365,7 +404,6 @@ const OrganizationRoute = () => {
     projectId?: string;
     workspaceId?: string;
   };
-
   const [status, setStatus] = useState<'online' | 'offline'>('online');
 
   useEffect(() => {
@@ -418,6 +456,18 @@ const OrganizationRoute = () => {
             <div className="flex gap-[--padding-sm] items-center justify-end p-2">
               {user ? (
                 <Fragment>
+                  <Button
+                    aria-label="Invite collaborators"
+                    className="px-4 text-[--color-font] hover:bg-[--hl-xs] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    onPress={() => {
+                      window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
+                    }}
+                  >
+                    <Icon icon="user-plus" />
+                    <span className="truncate">
+                      Share
+                    </span>
+                  </Button>
                   <PresentUsers />
                   <MenuTrigger>
                     <Button className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
@@ -450,6 +500,15 @@ const OrganizationRoute = () => {
                         }}
                         className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                       >
+                        {currentPlan && Boolean(currentPlan.type) &&
+                          (<Item
+                            id="plan"
+                            className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                            aria-label="Plan"
+                          >
+                            <span>Plan: {formatCurrentPlanType(currentPlan.type)}</span>
+                          </Item>)
+                        }
                         <Item
                           id="account-settings"
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -569,9 +628,16 @@ const OrganizationRoute = () => {
                       }
 
                       if (action === 'new-organization') {
-                        window.main.openInBrowser(
-                          `${getAppWebsiteBaseURL()}/app/organization/create`,
-                        );
+                        if (currentPlan?.type !== 'enterprise-member') {
+                          window.main.openInBrowser(
+                            `${getAppWebsiteBaseURL()}/app/organization/create`,
+                          );
+                        } else {
+                          showAlert({
+                            title: 'Could not create new organization.',
+                            message: 'Your Insomnia account is tied to the enterprise corporate account. Please ask the owner of the enterprise billing to create one for you.',
+                          });
+                        }
                       }
                     }}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
