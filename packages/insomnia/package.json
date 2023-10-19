@@ -13,7 +13,7 @@
     "url": "git+https://github.com/Kong/insomnia.git",
     "directory": "packages/insomnia"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "author": "Kong <office@konghq.com>",
   "main": "src/main.min.js",
   "scripts": {

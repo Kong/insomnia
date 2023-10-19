@@ -123,4 +123,4 @@ Search for, discover, and install plugins from the Insomnia [Plugin Hub](https:/
 
 ## License
 
-[MIT](LICENSE) &copy; [Insomnia](https://insomnia.rest)
+[Apache-2.0](LICENSE) &copy; [Insomnia](https://insomnia.rest)
