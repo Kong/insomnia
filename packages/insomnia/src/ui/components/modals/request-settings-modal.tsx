@@ -31,7 +31,8 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   const workspacesFetcher = useFetcher();
   useEffect(() => {
     const isIdleAndUninitialized = workspacesFetcher.state === 'idle' && !workspacesFetcher.data;
-    if (isIdleAndUninitialized) {
+    const isScratchPad = organizationId === "org_scratchpad" && projectId === "proj_scratchpad" && workspaceId === "wrk_scratchpad";
+    if (isIdleAndUninitialized && !isScratchPad) {
       workspacesFetcher.load(`/organization/${organizationId}/project/${projectId}`);
     }
   }, [organizationId, projectId, workspacesFetcher]);
