@@ -249,20 +249,23 @@ async function _trackStats() {
     launches: oldStats.launches + 1,
   });
 
-  const localProjectCount = await database.count<Project>(models.project.type, {
+  const localProjects = await database.count<Project>(models.project.type, {
     remoteId: null,
     parentId: { $ne: null },
     _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
   });
 
-  const remoteProjectCount = await database.count<RemoteProject>(models.project.type, {
+  const remoteProjects = await database.count<RemoteProject>(models.project.type, {
     remoteId: { $ne: null },
     parentId: { $ne: null },
   });
 
   await trackSegmentEvent(SegmentEvent.appStarted, {
-    localProjects: localProjectCount,
-    remoteProjects: remoteProjectCount,
+    localProjects,
+    remoteProjects,
+    createdRequests: stats.createdRequests,
+    deletedRequests: stats.deletedRequests,
+    executedRequests: stats.executedRequests,
   });
 
   ipcMain.once('halfSecondAfterAppStart', async () => {
