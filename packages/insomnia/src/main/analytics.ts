@@ -42,20 +42,19 @@ export enum SegmentEvent {
   vcsAction = 'VCS Action Executed',
   buttonClick = 'Button Clicked',
 }
+// TODO: migrating session state to main would be more suitable than doing this.
 const getAccountIdFromRenderer = async () => {
+  let sessionId = '';
   let accountId = '';
-  const windows = BrowserWindow.getAllWindows();
-  const mainWindow = windows?.[0];
-  const sessionId = await mainWindow.webContents.executeJavaScript('localStorage.getItem("currentSessionId");');
-  if (sessionId?.length) {
+  try {
+    const windows = BrowserWindow.getAllWindows();
+    const mainWindow = windows[0];
+    sessionId = await mainWindow.webContents.executeJavaScript('localStorage.getItem("currentSessionId");');
     const sessionJSON = await mainWindow.webContents.executeJavaScript(`localStorage.getItem("session__${(sessionId).slice(0, 10)}");`);
-    try {
-      const sessionData = JSON.parse(sessionJSON);
-      accountId = sessionData?.accountId ?? '';
-    } catch (e) {
-      console.log(`Error parsing session data: ${e}`);
-      return { sessionId, accountId };
-    }
+    const sessionData = JSON.parse(sessionJSON);
+    accountId = sessionData?.accountId ?? '';
+  } catch (e) {
+    return { sessionId, accountId };
   }
   return { sessionId, accountId };
 };
