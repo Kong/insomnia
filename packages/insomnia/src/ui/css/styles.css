@@ -61,7 +61,9 @@ html {
 input[type="search"]::-webkit-search-cancel-button {
   display: none;
 }
-
+.new-sidebar {
+  z-index: 0;
+}
 .new-sidebar .sidebar {
   display: flex;
   flex-direction: column;

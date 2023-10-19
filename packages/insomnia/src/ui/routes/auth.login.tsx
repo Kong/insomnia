@@ -1,8 +1,14 @@
 import React from 'react';
-import { ActionFunction, Form, Link, redirect } from 'react-router-dom';
+import { Button, Dialog, DialogTrigger, Heading, Modal, ModalOverlay } from 'react-aria-components';
+import { ActionFunction, Link, redirect, useFetcher, useNavigate } from 'react-router-dom';
 
+import { getAppWebsiteBaseURL } from '../../common/constants';
+import { exportAllData } from '../../common/export-all-data';
+import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
-import { Button } from '../components/themed-button';
+import { Icon } from '../components/icon';
+import { showAlert } from '../components/modals';
+import { useRootLoaderData } from './root';
 
 const GoogleIcon = (props: React.ReactSVGElement['props']) => {
   return (
@@ -43,213 +49,239 @@ export const action: ActionFunction = async ({
   return redirect('/auth/authorize');
 };
 
-const Login = () => (
-  <Form
-    style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 'var(--padding-md)',
-    }}
-    method="POST"
-  >
-    <p
-      style={{
-        textAlign: 'center',
-        color: 'var(--color-font)',
-        fontSize: 'var(--font-size-xl)',
-        padding: '0 var(--padding-md)',
-      }}
+const Login = () => {
+  const loginFetcher = useFetcher();
+  const navigate = useNavigate();
+  const { workspaceCount } = useRootLoaderData();
+
+  const login = (provider: string) => {
+      loginFetcher.submit({
+        provider,
+      }, {
+        action: '/auth/login',
+        method: 'POST',
+      });
+  };
+
+  return (
+    <div
+      className='flex flex-col gap-[--padding-md]'
     >
-      Welcome to Insomnia
-    </p>
-    <Button
-      aria-label='Continue with Google'
-      name="provider"
-      variant='outlined'
-      size="medium"
-      type="submit"
-      value="google"
-      style={{
-        width: '100%',
-        padding: 0,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          width: '100%',
-          height: '100%',
-          gap: 'var(--padding-md)',
+      <p className='text-center text-[--color-font] text-2xl py-[--padding-md]'>
+        Welcome to Insomnia
+      </p>
+      <p className='text-[--color-font] text-sm'>
+        Remember to use the same email address when using SSO.
+      </p>
+      <Button
+        aria-label='Continue with Google'
+        onPress={() => {
+          login('google');
         }}
+        className="w-full items-center border border-solid border-[--hl-md] flex justify-center gap-[--padding-md] aria-pressed:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
       >
-        <div
-          style={{
-            width: '40px',
-            height: '100%',
-            borderRight: '1px solid var(--hl-sm)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'var(--hl-xs)',
-          }}
-        >
+        <div className='w-[40px] h-[35px] border-r border-solid border-[--hl-sm] flex items-center justify-center bg-[--hl-xs]'>
           <GoogleIcon width="1em" />
         </div>
-        <span>
+        <span className='flex-1 items'>
           Continue with Google
+
         </span>
-      </div>
-    </Button>
-    <Button
-      aria-label='Continue with GitHub'
-      name="provider"
-      value="github"
-      variant='outlined'
-      size="medium"
-      type="submit"
-      style={{
-        width: '100%',
-        padding: 0,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          width: '100%',
-          height: '100%',
-          gap: 'var(--padding-md)',
+      </Button>
+      <Button
+        aria-label='Continue with GitHub'
+        onPress={() => {
+          login('github');
         }}
+        className="w-full items-center border border-solid border-[--hl-md] flex justify-center gap-[--padding-md] aria-pressed:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
       >
-        <div
-          style={{
-            width: '40px',
-            height: '100%',
-            borderRight: '1px solid var(--hl-sm)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'var(--hl-xs)',
-          }}
-        >
-          <i className='fa fa-github' />
+        <div className='w-[40px] h-[35px] border-r border-solid border-[--hl-sm] flex items-center justify-center bg-[--hl-xs]'>
+          <Icon icon={['fab', 'github']} />
         </div>
-        <span>
+        <span className='flex-1 items'>
           Continue with GitHub
         </span>
-      </div>
-    </Button>
-    <Button
-      aria-label='Continue with Email'
-      name="provider"
-      value="email"
-      variant='outlined'
-      size="medium"
-      type="submit"
-      style={{
-        width: '100%',
-        padding: 0,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          width: '100%',
-          height: '100%',
-          gap: 'var(--padding-md)',
+      </Button>
+      <Button
+        aria-label='Continue with Email'
+        onPress={() => {
+          login('email');
         }}
+        className="w-full items-center border border-solid border-[--hl-md] flex justify-center gap-[--padding-md] aria-pressed:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
       >
-        <div
-          style={{
-            width: '40px',
-            height: '100%',
-            borderRight: '1px solid var(--hl-sm)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'var(--hl-xs)',
-          }}
-        >
-          <i className='fa fa-envelope' />
+        <div className='w-[40px] h-[35px] border-r border-solid border-[--hl-sm] flex items-center justify-center bg-[--hl-xs]'>
+          <Icon icon="envelope" />
         </div>
-        <span>
+        <span className='flex-1 items'>
           Continue with Email
         </span>
-      </div>
-    </Button>
-    <Button
-      aria-label='Continue with SSO'
-      name="provider"
-      value="sso"
-      variant='outlined'
-      size="medium"
-      type="submit"
-      style={{
-        width: '100%',
-        padding: 0,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          width: '100%',
-          height: '100%',
-          gap: 'var(--padding-md)',
+      </Button>
+      <Button
+        aria-label='Continue with SSO'
+        onPress={() => {
+          login('sso');
         }}
+        className="w-full items-center border border-solid border-[--hl-md] flex justify-center gap-[--padding-md] aria-pressed:bg-[--hl-sm] rounded-md text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
       >
-        <div
-          style={{
-            width: '40px',
-            height: '100%',
-            borderRight: '1px solid var(--hl-sm)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'var(--hl-xs)',
-          }}
-        >
-          <i className='fa fa-key' />
+        <div className='w-[40px] h-[35px] border-r border-solid border-[--hl-sm] flex items-center justify-center bg-[--hl-xs]'>
+          <Icon icon="key" />
         </div>
-        <span>
+        <span className='flex-1 items'>
           Continue with SSO
         </span>
+      </Button>
+
+      <p className='text-[rgba(var(--color-font-rgb),0.8)] text-xs text-center'>
+        By signing up or using Insomnia, you agree to the{' '}
+        <a
+          className='font-bold outline-none transition-colors hover:text-[--color-font] focus:text-[--color-font]'
+          href="https://insomnia.rest/terms"
+          rel="noreferrer"
+        >
+          terms of service
+        </a>{' '}
+        and{' '}
+        <a
+          className='font-bold outline-none transition-colors hover:text-[--color-font] focus:text-[--color-font]'
+          href="https://insomnia.rest/privacy"
+          rel="noreferrer"
+        >
+          privacy policy
+        </a>
+        .
+      </p>
+
+      <div className='flex gap-[--padding-md] justify-between'>
+        <Button
+          onPress={() => {
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.selectScratchpad,
+            });
+            navigate('/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug');
+          }}
+          aria-label='Use the Scratch Pad'
+          className='flex outline-none transition-colors justify-center text-[rgba(var(--color-font-rgb),0.8)] text-sm gap-[--padding-xs] hover:text-[--color-font] focus:text-[--color-font]'
+        >
+          <div>
+            <i className='fa fa-edit' />
+          </div>
+          <span>
+            Use the local Scratch Pad
+          </span>
+        </Button>
+        <DialogTrigger>
+          <Button
+            aria-label='Export data and more'
+            className='flex transition-colors justify-center text-[rgba(var(--color-font-rgb),0.8)] text-sm gap-[--padding-xs] hover:text-[--color-font] focus:text-[--color-font]'
+          >
+            <div>
+              <i className='fa fa-database' />
+            </div>
+            <span>
+              Export data and more
+            </span>
+          </Button>
+          <ModalOverlay isDismissable className="w-full h-[--visual-viewport-height] fixed top-0 left-0 flex items-center justify-center bg-black/30">
+            <Modal className="max-w-lg w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
+              <Dialog className="outline-none">
+                {({ close }) => (
+                  <div className='flex flex-col gap-4'>
+                    <div className='flex gap-2 items-center justify-between'>
+                      <Heading className='text-2xl'>Export data and more</Heading>
+                      <Button
+                        className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                        onPress={close}
+                      >
+                        <Icon icon="x" />
+                      </Button>
+                    </div>
+                    <p className='text-sm text-[rgba(var(--color-font-rgb),0.8)]'>
+                      Insomnia never migrates your local data to the cloud if you don't first create an account and login. With an account, Insomnia encrypts your data (end-to-end-encryption, E2EE) and stores them in the cloud.
+                    </p>
+                    <p className='text-sm text-[rgba(var(--color-font-rgb),0.8)]'>
+                      You can use Insomnia without an account and without connecting to the cloud by using the local Scratch Pad.
+                    </p>
+                    <Link
+                      to="/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug"
+                      aria-label='Go to Scratch Pad'
+                      className="px-4 py-1 outline-none font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
+                    >
+                      <span>
+                        Go to Scratch Pad
+                      </span>
+                      <Icon icon='arrow-right' />
+                    </Link>
+
+                    <p className='text-sm text-[rgba(var(--color-font-rgb),0.8)]'>
+                      You can also use Insomnia with an account and Git Sync enabled, which stores the files in your Git repository.
+                    </p>
+
+                    <Button
+                      onPress={() => {
+                        window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscribe?plan=team`);
+                      }}
+                      aria-label='Sign up to the Team Plan'
+                      className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
+                    >
+                      <span>
+                        Sign up to the Team Plan
+                      </span>
+                      <Icon icon='arrow-right' />
+                    </Button>
+
+                    <p className='text-sm text-[rgba(var(--color-font-rgb),0.8)]'>
+                      Finally, here you can export your local Insomnia data (projects, collections and other files) for portability.
+                    </p>
+
+                    <Button
+                      onPress={async () => {
+                        const { filePaths, canceled } = await window.dialog.showOpenDialog({
+                          properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
+                          buttonLabel: 'Select',
+                          title: 'Export All Insomnia Data',
+                        });
+
+                        if (canceled) {
+                          return;
+                        }
+
+                        const [dirPath] = filePaths;
+
+                        try {
+                          dirPath && await exportAllData({
+                            dirPath,
+                          });
+                        } catch (e) {
+                          showAlert({
+                            title: 'Export Failed',
+                            message: 'An error occurred while exporting data. Please try again.',
+                          });
+                          console.error(e);
+                        }
+
+                        showAlert({
+                          title: 'Export Complete',
+                          message: 'All your data have been successfully exported',
+                        });
+                        window.main.trackSegmentEvent({
+                          event: SegmentEvent.exportAllCollections,
+                        });
+                      }}
+                      aria-label='Export all data'
+                      className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
+                    >
+                      <Icon icon="file-export" />
+                      <span>Export all data {`(${workspaceCount} files)`}</span>
+                    </Button>
+                  </div>
+                )}
+              </Dialog>
+            </Modal>
+          </ModalOverlay>
+        </DialogTrigger>
       </div>
-    </Button>
-    <Link
-      aria-label='Use the Scratch Pad'
-      to={'/scratchpad'}
-      className='flex transition-colors justify-center text-[rgba(var(--color-font-rgb),0.8)] text-sm gap-[--padding-xs] hover:text-[--color-font] focus:text-[--color-font]'
-    >
-      <div>
-        <i className='fa fa-edit' />
-      </div>
-      <span>
-        Or use the Scratch Pad
-      </span>
-    </Link>
-    <p className='text-[rgba(var(--color-font-rgb),0.8)] text-xs text-center'>
-      By signing up or using Insomnia, you agree to the{' '}
-      <a
-        className='font-bold transition-colors hover:text-[--color-font] focus:text-[--color-font]'
-        href="https://insomnia.rest/terms"
-        rel="noreferrer"
-      >
-        terms of service
-      </a>{' '}
-      and{' '}
-      <a
-        className='font-bold transition-colors hover:text-[--color-font] focus:text-[--color-font]'
-        href="https://insomnia.rest/privacy"
-        rel="noreferrer"
-      >
-        privacy policy
-      </a>
-      .
-    </p>
-  </Form>
-);
+    </div>
+  );
+};
 
 export default Login;

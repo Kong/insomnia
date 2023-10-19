@@ -18,6 +18,7 @@ env:
 jobs:
   build-and-upload-artifacts:
     # Skip jobs for release PRs
+    # windows on recurring should be portable
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     runs-on: ${{ matrix.os }}
     strategy:

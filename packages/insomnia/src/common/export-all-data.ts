@@ -1,12 +1,11 @@
 import { mkdir, writeFile } from 'fs/promises';
 import { join } from 'path';
 
-import { apiSpec, cookieJar, environment, grpcRequest, project, protoDirectory, protoFile, request, requestGroup, unitTest, unitTestSuite, webSocketPayload, webSocketRequest, workspace } from '../models';
+import { apiSpec, cookieJar, environment, grpcRequest, protoDirectory, protoFile, request, requestGroup, unitTest, unitTestSuite, webSocketPayload, webSocketRequest, workspace } from '../models';
 import { ApiSpec } from '../models/api-spec';
 import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
 import { GrpcRequest } from '../models/grpc-request';
-import type { Project } from '../models/project';
 import { ProtoDirectory } from '../models/proto-directory';
 import { ProtoFile } from '../models/proto-file';
 import { Request } from '../models/request';
@@ -133,11 +132,16 @@ export async function exportWorkspaceData({
     },
   });
 
-  const environments = await database.find<Environment>(environment.type, {
+  const subEnvironments = await database.find<Environment>(environment.type, {
     parentId: {
       $in: baseEnvironments.map(environment => environment._id),
     },
   });
+
+  const allEnvironments = [
+    ...baseEnvironments,
+    ...subEnvironments,
+  ];
 
   const cookieJars = await database.find<CookieJar>(cookieJar.type, {
     parentId: {
@@ -177,7 +181,7 @@ export async function exportWorkspaceData({
       workspaceToExport,
       ...requests,
       ...allRequestGroups,
-      ...environments,
+      ...allEnvironments,
       ...cookieJars,
       ...apiSpecs,
       ...protoFiles,
@@ -209,18 +213,13 @@ export async function exportAllData({
 }): Promise<void> {
   const insomniaExportFolder = join(dirPath, `insomnia-export.${Date.now()}`);
   await mkdir(insomniaExportFolder);
-  const projects = await database.all<Project>(project.type);
 
-  for (const project of projects) {
-    const workspaces = await database.find<Workspace>(workspace.type, {
-      parentId: project._id,
+  const workspaces = await database.find<Workspace>(workspace.type);
+
+  for (const workspace of workspaces) {
+    await exportWorkspaceData({
+      workspaceId: workspace._id,
+      dirPath: insomniaExportFolder,
     });
-
-    for (const workspace of workspaces) {
-      await exportWorkspaceData({
-        workspaceId: workspace._id,
-        dirPath: insomniaExportFolder,
-      });
-    }
   }
 }

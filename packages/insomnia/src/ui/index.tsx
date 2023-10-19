@@ -29,10 +29,9 @@ import { AppLoadingIndicator } from './components/app-loading-indicator';
 import Auth from './routes/auth';
 import Authorize from './routes/auth.authorize';
 import Login from './routes/auth.login';
-import { Migrate } from './routes/auth.migrate';
 import { ErrorRoute } from './routes/error';
 import Onboarding from './routes/onboarding';
-import { OnboardingCloudMigration } from './routes/onboarding.cloud-migration';
+import { Migrate } from './routes/onboarding.migrate';
 import { shouldOrganizationsRevalidate } from './routes/organization';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
@@ -99,9 +98,9 @@ function getInitialEntry() {
       return '/auth/login';
     }
 
-    return '/scratchpad';
+    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
   } catch (e) {
-    return '/scratchpad';
+    return '/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug';
   }
 }
 
@@ -118,18 +117,14 @@ const router = createMemoryRouter(
       errorElement: <ErrorRoute />,
       children: [
         {
-          path: '/scratchpad',
-          loader: async (...args) => (await import('./routes/scratchpad')).loader(...args),
-        },
-        {
           path: 'onboarding/*',
           element: <Onboarding />,
         },
         {
-          path: 'onboarding/cloud-migration',
-          loader: async (...args) => (await import('./routes/onboarding.cloud-migration')).loader(...args),
-          action: async (...args) => (await import('./routes/onboarding.cloud-migration')).action(...args),
-          element: <OnboardingCloudMigration />,
+          path: 'onboarding/migrate',
+          loader: async (...args) => (await import('./routes/onboarding.migrate')).loader(...args),
+          action: async (...args) => (await import('./routes/onboarding.migrate')).action(...args),
+          element: <Migrate />,
         },
         {
           path: 'import',
@@ -154,6 +149,10 @@ const router = createMemoryRouter(
           path: 'settings/update',
           action: async (...args) =>
             (await import('./routes/actions')).updateSettingsAction(...args),
+        },
+        {
+          path: 'untracked-projects',
+          loader: async (...args) => (await import('./routes/untracked-projects')).loader(...args),
         },
         {
           path: 'organization',
@@ -214,11 +213,18 @@ const router = createMemoryRouter(
                             ).deleteProjectAction(...args),
                         },
                         {
-                          path: 'rename',
+                          path: 'move',
                           action: async (...args) =>
                             (
                               await import('./routes/actions')
-                            ).renameProjectAction(...args),
+                            ).moveProjectAction(...args),
+                        },
+                        {
+                          path: 'update',
+                          action: async (...args) =>
+                            (
+                              await import('./routes/actions')
+                            ).updateProjectAction(...args),
                         },
                         {
                           path: 'git',
@@ -885,12 +891,6 @@ const router = createMemoryRouter(
               action: async (...args) => (await import('./routes/auth.authorize')).action(...args),
               element: <Authorize />,
             },
-            {
-              path: 'migrate',
-              loader: async (...args) => (await import('./routes/auth.migrate')).loader(...args),
-              action: async (...args) => (await import('./routes/auth.migrate')).action(...args),
-              element: <Migrate />,
-            },
           ],
         },
       ],
@@ -902,7 +902,7 @@ const router = createMemoryRouter(
 );
 
 // Store the last location in local storage
-router.subscribe(({ location }) => {
+router.subscribe(({ location, navigation }) => {
   const match = matchPath(
     {
       path: '/organization/:organizationId',
@@ -910,8 +910,18 @@ router.subscribe(({ location }) => {
     },
     location.pathname
   );
+  const nextRoute = navigation.location?.pathname;
+  const currentRoute = location.pathname;
+  // Use navigation send tracking events on page change
+  const bothHaveValueButNotEqual = nextRoute && currentRoute && nextRoute !== currentRoute;
+  if (bothHaveValueButNotEqual) {
+    // transforms /organization/:org_* to /organization/:org_id
+    const routeWithoutUUID = nextRoute.replace(/_[a-f0-9]{32}/g, '_id');
+    // console.log('Tracking page view', { name: routeWithoutUUID });
+    window.main.trackPageView({ name: routeWithoutUUID });
+  }
 
-  match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, location.pathname);
+  match?.params.organizationId && localStorage.setItem(`locationHistoryEntry:${match?.params.organizationId}`, currentRoute);
 });
 
 async function renderApp() {
