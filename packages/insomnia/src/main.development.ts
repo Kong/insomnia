@@ -260,7 +260,7 @@ async function _trackStats() {
     parentId: { $ne: null },
   });
 
-  await trackSegmentEvent(SegmentEvent.appStarted, {
+  trackSegmentEvent(SegmentEvent.appStarted, {
     localProjects,
     remoteProjects,
     createdRequests: stats.createdRequests,
