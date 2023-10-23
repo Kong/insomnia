@@ -23,7 +23,8 @@ import {
   Project,
 } from '../../../models/project';
 import { Icon } from '../icon';
-import { showAlert } from '../modals';
+import { showAlert, showModal } from '../modals';
+import { AskModal } from '../modals/ask-modal';
 
 interface Props {
   project: Project;
@@ -34,7 +35,7 @@ interface ProjectActionItem {
   id: string;
   name: string;
   icon: IconName;
-  action: (projectId: string) => void;
+  action: (projectId: string, projectName: string) => void;
 }
 
 export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
@@ -55,14 +56,25 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
       id: 'delete',
       name: 'Delete',
       icon: 'trash',
-      action: projectId =>
-        deleteProjectFetcher.submit(
-          {},
-          {
-            method: 'post',
-            action: `/organization/${organizationId}/project/${projectId}/delete`,
-          }
-        ),
+      action: (projectId: string, projectName: string) => {
+        showModal(AskModal, {
+          title: 'Delete Project',
+          message: `You are deleting the project "${projectName}" that may have collaborators. As a result of this, the project will be permanently deleted for every collaborator of the organization. Do you really want to continue?`,
+          yesText: 'Delete',
+          noText: 'Cancel',
+          onDone: async (isYes: boolean) => {
+            if (isYes) {
+              deleteProjectFetcher.submit(
+                {},
+                {
+                  method: 'post',
+                  action: `/organization/${organizationId}/project/${projectId}/delete`,
+                }
+              );
+            }
+          },
+        });
+      },
     }] satisfies ProjectActionItem[] : [],
   ];
 
@@ -89,7 +101,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
             aria-label="Project Actions Menu"
             selectionMode="single"
             onAction={key => {
-              projectActionList.find(({ id }) => key === id)?.action(project._id);
+              projectActionList.find(({ id }) => key === id)?.action(project._id, project.name);
             }}
             items={projectActionList}
             className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
