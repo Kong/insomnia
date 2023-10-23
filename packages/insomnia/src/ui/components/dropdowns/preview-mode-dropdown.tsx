@@ -1,13 +1,14 @@
 import fs from 'fs';
+import { readFile } from 'fs/promises';
 import React, { FC, useCallback } from 'react';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { getPreviewModeName, PREVIEW_MODE_SOURCE, PREVIEW_MODES } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
 import * as models from '../../../models';
-import { isRequest } from '../../../models/request';
+import { isRequest, Request } from '../../../models/request';
 import { isResponse } from '../../../models/response';
-import { useRequestMetaPatcher } from '../../hooks/use-request';
+import { CreateRequestType, useRequestMetaPatcher } from '../../hooks/use-request';
 import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 
@@ -84,6 +85,76 @@ export const PreviewModeDropdown: FC<Props> = ({
       });
     }
   }, [activeRequest, activeResponse]);
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
+
+  const createRequest = ({ requestType, parentId, req }: { requestType: CreateRequestType; parentId: string; req?: Partial<Request> }) =>
+    requestFetcher.submit(JSON.stringify({ requestType, parentId, req }),
+      {
+        encType: 'application/json',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new`,
+        method: 'post',
+      });
+
+  const mockResponse = async () => {
+    if (!activeResponse) {
+      return;
+    }
+    const { statusCode, statusMessage, headers, httpVersion, bytesContent, contentType } = activeResponse;
+    const body = await readFile(activeResponse.bodyPath, 'utf8');
+    console.log(activeResponse, {
+      'status': statusCode,
+      'statusText': statusMessage,
+      'httpVersion': httpVersion,
+      'headers': headers,
+      // todo: cookies
+      'cookies': [
+        {
+          'name': 'a',
+          'value': 'a',
+        },
+      ],
+      'content': {
+        'size': bytesContent,
+        'mimeType': contentType,
+        'text': body,
+      },
+      'redirectURL': '',
+      'headersSize': 323,
+      'bodySize': bytesContent,
+    });
+    // create bin and get id
+    const bin = await window.main.axiosRequest({
+      url: 'http://mockbin.org/bin/create',
+      method: 'post',
+      data: {
+        'status': statusCode,
+        'statusText': statusMessage,
+        'httpVersion': httpVersion,
+        'headers': headers,
+        'cookies': [],
+        'content': {
+          'size': bytesContent,
+          'mimeType': contentType,
+          'text': body,
+        },
+      },
+    });
+    console.log('here is your bin', bin?.data);
+    if (bin?.data) {
+      const id = bin.data;
+      createRequest({
+        requestType: 'HTTP',
+        parentId: workspaceId,
+        req: {
+          name: 'Mock Response of ' + activeRequest.name,
+          method: activeRequest.method,
+          url: `https://mockbin.org/bin/${id}`,
+        },
+      });
+    }
+  };
+
   const shouldPrettifyOption = activeResponse?.contentType.includes('json');
 
   return (
@@ -117,6 +188,13 @@ export const PreviewModeDropdown: FC<Props> = ({
         aria-label='Action Section'
         title="Action"
       >
+        <DropdownItem aria-label='Mock response'>
+          <ItemContent
+            icon="copy"
+            label="Mock response"
+            onClick={mockResponse}
+          />
+        </DropdownItem>
         <DropdownItem aria-label='Copy raw response'>
           <ItemContent
             icon="copy"
