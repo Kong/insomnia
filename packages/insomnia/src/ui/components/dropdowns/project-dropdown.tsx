@@ -59,7 +59,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
       action: (projectId: string, projectName: string) => {
         showModal(AskModal, {
           title: 'Delete Project',
-          message: `Do you really want to delete "${projectName}"?`,
+          message: `Do you really want to delete "${projectName}"? It will permanently remove all data for this project.`,
           yesText: 'Delete',
           noText: 'Cancel',
           onDone: async (isYes: boolean) => {
