@@ -102,28 +102,7 @@ export const PreviewModeDropdown: FC<Props> = ({
     }
     const { statusCode, statusMessage, headers, httpVersion, bytesContent, contentType } = activeResponse;
     const body = await readFile(activeResponse.bodyPath, 'utf8');
-    console.log(activeResponse, {
-      'status': statusCode,
-      'statusText': statusMessage,
-      'httpVersion': httpVersion,
-      'headers': headers,
-      // todo: cookies
-      'cookies': [
-        {
-          'name': 'a',
-          'value': 'a',
-        },
-      ],
-      'content': {
-        'size': bytesContent,
-        'mimeType': contentType,
-        'text': body,
-      },
-      'redirectURL': '',
-      'headersSize': 323,
-      'bodySize': bytesContent,
-    });
-    // create bin and get id
+    // transform response to mockbin format
     const bin = await window.main.axiosRequest({
       url: 'http://mockbin.org/bin/create',
       method: 'post',
@@ -132,6 +111,7 @@ export const PreviewModeDropdown: FC<Props> = ({
         'statusText': statusMessage,
         'httpVersion': httpVersion,
         'headers': headers,
+        // NOTE: cookies are sent as headers by insomnia
         'cookies': [],
         'content': {
           'size': bytesContent,
@@ -140,13 +120,17 @@ export const PreviewModeDropdown: FC<Props> = ({
         },
       },
     });
-    console.log('here is your bin', bin?.data);
+    // todo: record bin id in insomnia db
+    // todo: list all bins
+    // todo: show bin logs
+    // todo: handle error
     if (bin?.data) {
       const id = bin.data;
       createRequest({
         requestType: 'HTTP',
         parentId: workspaceId,
         req: {
+          ...activeRequest,
           name: 'Mock Response of ' + activeRequest.name,
           method: activeRequest.method,
           url: `https://mockbin.org/bin/${id}`,

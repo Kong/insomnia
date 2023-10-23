@@ -101,14 +101,19 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
 
   let activeRequestId;
   if (requestType === 'HTTP') {
-    activeRequestId = (await models.request.create({
-      parentId: parentId || workspaceId,
-      method: METHOD_GET,
-      name: req?.name || 'New Request',
-      headers: [{ name: 'User-Agent', value: `insomnia/${version}` }, ...req?.headers || []],
-      url: req?.url || '',
-
-    }))._id;
+    if (!req) {
+      activeRequestId = (await models.request.create({
+        parentId: parentId || workspaceId,
+        method: METHOD_GET,
+        headers: [{ name: 'User-Agent', value: `insomnia/${version}` }],
+      }))._id;
+    } else {
+      activeRequestId = (await models.request.create({
+        ...req,
+        _id: undefined,
+        parentId: parentId || workspaceId,
+      }))._id;
+    }
   }
   if (requestType === 'gRPC') {
     activeRequestId = (await models.grpcRequest.create({
