@@ -628,6 +628,28 @@ export const Debug: FC = () => {
     getItemKey: index => visibleCollection[index].doc._id,
   });
 
+  const onDoubleClickRequest = (item: Child) => {
+    if (isRequestGroup(item.doc)) {
+      showPrompt({
+        title: 'Rename Folder',
+        defaultValue: item.doc.name,
+        submitName: 'Rename',
+        selectText: true,
+        label: 'Name',
+        onComplete: name => patchGroup(item.doc._id, { name }),
+      });
+    } else {
+      showPrompt({
+        title: 'Rename Request',
+        defaultValue: item.doc.name,
+        submitName: 'Rename',
+        selectText: true,
+        label: 'Name',
+        onComplete: name => patchRequest(item.doc._id, { name }),
+      });
+    }
+  };
+
   return (
     <SidebarLayout
       className="new-sidebar"
@@ -912,6 +934,7 @@ export const Debug: FC = () => {
                   >
                     <div
                       className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                      onDoubleClick={() => onDoubleClickRequest(item)}
                     >
                       <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                       {isRequest(item.doc) && (
@@ -1005,27 +1028,7 @@ export const Debug: FC = () => {
                         style={{
                           paddingLeft: `${item.level + 1}rem`,
                         }}
-                        onDoubleClick={() => {
-                          if (isRequestGroup(item.doc)) {
-                            showPrompt({
-                              title: 'Rename Folder',
-                              defaultValue: item.doc.name,
-                              submitName: 'Rename',
-                              selectText: true,
-                              label: 'Name',
-                              onComplete: name => patchGroup(item.doc._id, { name }),
-                            });
-                          } else {
-                            showPrompt({
-                              title: 'Rename Request',
-                              defaultValue: item.doc.name,
-                              submitName: 'Rename',
-                              selectText: true,
-                              label: 'Name',
-                              onComplete: name => patchRequest(item.doc._id, { name }),
-                            });
-                          }
-                        }}
+                        onDoubleClick={() => onDoubleClickRequest(item)}
                       >
                         <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                         <Button slot="drag" className="hidden" />
