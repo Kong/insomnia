@@ -82,7 +82,9 @@ import { useReadyState } from '../hooks/use-ready-state';
 import {
   CreateRequestType,
   useRequestGroupMetaPatcher,
+  useRequestGroupPatcher,
   useRequestMetaPatcher,
+  useRequestPatcher,
 } from '../hooks/use-request';
 import {
   GrpcRequestLoaderData,
@@ -188,6 +190,8 @@ export const Debug: FC = () => {
     useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
 
+  const patchRequest = useRequestPatcher();
+  const patchGroup = useRequestGroupPatcher();
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
@@ -1000,6 +1004,27 @@ export const Debug: FC = () => {
                         className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
                         style={{
                           paddingLeft: `${item.level + 1}rem`,
+                        }}
+                        onDoubleClick={() => {
+                          if (isRequestGroup(item.doc)) {
+                            showPrompt({
+                              title: 'Rename Folder',
+                              defaultValue: item.doc.name,
+                              submitName: 'Rename',
+                              selectText: true,
+                              label: 'Name',
+                              onComplete: name => patchGroup(item.doc._id, { name }),
+                            });
+                          } else {
+                            showPrompt({
+                              title: 'Rename Request',
+                              defaultValue: item.doc.name,
+                              submitName: 'Rename',
+                              selectText: true,
+                              label: 'Name',
+                              onComplete: name => patchRequest(item.doc._id, { name }),
+                            });
+                          }
                         }}
                       >
                         <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
