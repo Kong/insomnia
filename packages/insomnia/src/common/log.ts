@@ -6,10 +6,11 @@ import { isDevelopment } from './constants';
 export const initializeLogging = () => {
   if (isDevelopment()) {
     // Disable file logging during development
-    log.transports.file.level = false;
+    // log.transports.file.level = false;
   } else {
     const fileTransport = log.transports.file;
     const logFile = fileTransport.getFile();
+    console.log({ fileTransport });
     // Set the max log file size to 10mb
     // When the log file exceeds this limit, it will be rotated to {file name}.old.log file.
     fileTransport.maxSize = 1024 * 1024 * 10;

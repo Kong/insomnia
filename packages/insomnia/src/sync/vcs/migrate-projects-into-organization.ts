@@ -16,19 +16,29 @@ import { Project, RemoteProject } from '../../models/project';
 // which was a wrapper for the team_id prefixing proj_to the above id,
 // which is now the remoteId for tracking the projects within an org
 
-export const shouldMigrateProjectUnderOrganization = async () => {
-  const localProjectCount = await database.count<Project>(models.project.type, {
+// export const shouldMigrateProjectUnderOrganization = async () => {
+//   const localProjectCount = await database.count<Project>(models.project.type, {
+//     remoteId: null,
+//     parentId: null,
+//     _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
+//   });
+
+//   const legacyRemoteProjectCount = await database.count<RemoteProject>(models.project.type, {
+//     remoteId: { $ne: null },
+//     parentId: null,
+//   });
+
+//   return localProjectCount > 0 || legacyRemoteProjectCount > 0;
+// };
+
+export const getUnclaimedFiles = async () => {
+  const unclaimedFiles = await database.find<Project>(models.project.type, {
     remoteId: null,
     parentId: null,
     _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
   });
 
-  const legacyRemoteProjectCount = await database.count<RemoteProject>(models.project.type, {
-    remoteId: { $ne: null },
-    parentId: null,
-  });
-
-  return localProjectCount > 0 || legacyRemoteProjectCount > 0;
+  return unclaimedFiles;
 };
 
 export const migrateProjectsIntoOrganization = async ({

@@ -17,6 +17,7 @@ export const projectHasSettings = (project: Pick<Project, '_id'>) => !isScratchp
 
 interface CommonProject {
   name: string;
+  localOnly: boolean;
 }
 
 export interface RemoteProject extends BaseModel, CommonProject {

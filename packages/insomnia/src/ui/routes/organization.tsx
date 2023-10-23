@@ -30,15 +30,11 @@ import {
   getCurrentSessionId,
 } from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import { database } from '../../common/database';
 import { exportAllData } from '../../common/export-all-data';
-import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
-import { Project } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
-import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -180,12 +176,15 @@ export const indexLoader: LoaderFunction = async () => {
       invariant(currentPlan, 'Failed to load current plan');
 
       const { organizations } = organizationsResult;
+      console.log({ sessionId });
+      console.log({ organizations });
 
       const accountId = getAccountId();
       invariant(accountId, 'Account ID is not defined');
       organizationsData.organizations = sortOrganizations(accountId, organizations);
       organizationsData.user = user;
       organizationsData.currentPlan = currentPlan;
+
       const personalOrganization = organizations.filter(isPersonalOrganization)
         .find(organization =>
           isOwnerOfOrganization({
@@ -193,29 +192,6 @@ export const indexLoader: LoaderFunction = async () => {
             accountId,
           }));
       invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
-      if (await shouldMigrateProjectUnderOrganization()) {
-        await migrateProjectsIntoOrganization({
-          personalOrganization,
-        });
-
-        const preferredProjectType = localStorage.getItem('prefers-project-type');
-        if (preferredProjectType === 'remote') {
-          const localProjects = await database.find<Project>('Project', {
-            parentId: personalOrganization.id,
-            remoteId: null,
-          });
-
-          // If any of those fail projects will still be under the organization as local projects
-          for (const project of localProjects) {
-            updateLocalProjectToRemote({
-              project,
-              organizationId: personalOrganization.id,
-              sessionId,
-              vcs,
-            });
-          }
-        }
-      }
 
       if (personalOrganization) {
         return redirect(`/organization/${personalOrganization.id}`);
@@ -487,7 +463,7 @@ const OrganizationRoute = () => {
                               {},
                               {
                                 action: '/auth/logout',
-                                method: 'POST',
+                                method: 'post',
                               },
                             );
                           }
