@@ -6,11 +6,13 @@ export const EditableInput = ({
   value = 'Untitled',
   ariaLabel,
   name,
+  paddingClass,
   onChange,
 }: {
   value: string;
   ariaLabel?: string;
   name?: string;
+    paddingClass?: string;
   onChange: (value: string) => void;
 }) => {
   const [isEditable, setIsEditable] = useState(false);
@@ -44,13 +46,19 @@ export const EditableInput = ({
     };
   }, [isEditable]);
 
+  const defaultPaddingClass = paddingClass != null && paddingClass.startsWith('px-') ? paddingClass : 'px-2';
+
   return (
     <>
+
       <Button
-        className={`items-center truncate justify-center px-2 data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all ${
-          isEditable ? 'hidden' : ''
-        }`}
-        onPress={() => {
+        className={
+          `items-center truncate justify-center px-2 data-[pressed]:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all
+            ${isEditable ? 'hidden' : ''}
+            ${defaultPaddingClass}
+          `
+        }
+        onPress={e => {
           setIsEditable(true);
         }}
         name={name}

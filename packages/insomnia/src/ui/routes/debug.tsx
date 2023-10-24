@@ -57,6 +57,7 @@ import { RequestActionsDropdown } from '../components/dropdowns/request-actions-
 import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
+import { EditableInput } from '../components/editable-input';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
@@ -628,28 +629,6 @@ export const Debug: FC = () => {
     getItemKey: index => visibleCollection[index].doc._id,
   });
 
-  const onDoubleClickRequest = (item: Child) => {
-    if (isRequestGroup(item.doc)) {
-      showPrompt({
-        title: 'Rename Folder',
-        defaultValue: item.doc.name,
-        submitName: 'Rename',
-        selectText: true,
-        label: 'Name',
-        onComplete: name => patchGroup(item.doc._id, { name }),
-      });
-    } else {
-      showPrompt({
-        title: 'Rename Request',
-        defaultValue: item.doc.name,
-        submitName: 'Rename',
-        selectText: true,
-        label: 'Name',
-        onComplete: name => patchRequest(item.doc._id, { name }),
-      });
-    }
-  };
-
   return (
     <SidebarLayout
       className="new-sidebar"
@@ -931,10 +910,11 @@ export const Debug: FC = () => {
                     key={item.doc._id}
                     id={item.doc._id}
                     className="group outline-none select-none"
+                    textValue={item.doc.name}
+                    data-testid={item.doc.name}
                   >
                     <div
                       className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                      onDoubleClick={() => onDoubleClickRequest(item)}
                     >
                       <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                       {isRequest(item.doc) && (
@@ -965,7 +945,19 @@ export const Debug: FC = () => {
                           gRPC
                         </span>
                       )}
-                      <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
+                      <EditableInput
+                        value={getRequestNameOrFallback(item.doc)}
+                        name="request name"
+                        ariaLabel="request name"
+                        paddingClass="px-0"
+                        onChange={name => {
+                          if (isRequestGroup(item.doc)) {
+                            patchGroup(item.doc._id, { name });
+                          } else {
+                            patchRequest(item.doc._id, { name });
+                          }
+                        }}
+                      />
                       <span className="flex-1" />
                       {item.pinned && (
                         <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
@@ -984,7 +976,7 @@ export const Debug: FC = () => {
               }}
             </GridList>
 
-            <div className='flex-1 overflow-y-auto' ref={parentRef}>
+            <div className='flex-1 overflow-y-auto' ref={parentRef} >
               <GridList
                 style={{ height: virtualizer.getTotalSize() }}
                 items={virtualizer.getVirtualItems()}
@@ -1018,6 +1010,7 @@ export const Debug: FC = () => {
                     <Item
                       className="group outline-none absolute top-0 left-0 select-none w-full"
                       textValue={item.doc.name}
+                      data-testid={item.doc.name}
                       style={{
                         height: `${virtualItem.size}`,
                         transform: `translateY(${virtualItem.start}px)`,
@@ -1028,7 +1021,6 @@ export const Debug: FC = () => {
                         style={{
                           paddingLeft: `${item.level + 1}rem`,
                         }}
-                        onDoubleClick={() => onDoubleClickRequest(item)}
                       >
                         <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
                         <Button slot="drag" className="hidden" />
@@ -1066,7 +1058,19 @@ export const Debug: FC = () => {
                             icon={item.collapsed ? 'folder' : 'folder-open'}
                           />
                         )}
-                        <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
+                        <EditableInput
+                          value={getRequestNameOrFallback(item.doc)}
+                          name="request name"
+                          ariaLabel="request name"
+                          paddingClass="px-0"
+                          onChange={name => {
+                            if (isRequestGroup(item.doc)) {
+                              patchGroup(item.doc._id, { name });
+                            } else {
+                              patchRequest(item.doc._id, { name });
+                            }
+                          }}
+                        />
                         <span className="flex-1" />
                         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
                         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
