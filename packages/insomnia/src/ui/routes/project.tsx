@@ -241,30 +241,6 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
 };
 
-export interface ProjectsLoaderData {
-  activeProject: Project;
-}
-
-export const projectLoader: LoaderFunction = async ({ request }) => {
-  try {
-    const url = new URL(request.url);
-    const projectPath = matchPath('/organization/:organizationId/project/:projectId', url.pathname);
-
-    if (!projectPath || !projectPath.params.projectId) {
-      return null;
-    }
-
-    const activeProject = await models.project.getById(projectPath.params.projectId);
-    invariant(activeProject, `Project was not found ${projectPath.params.projectId}`);
-
-    return {
-      activeProject,
-    };
-  } catch (err) {
-    return null;
-  }
-};
-
 export interface ProjectLoaderData {
   workspaces: WorkspaceWithMetadata[];
   allFilesCount: number;
