@@ -18,6 +18,7 @@ import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
+import { RequestBin } from '../../models/request-bin';
 import { isRequestMeta, RequestMeta } from '../../models/request-meta';
 import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
@@ -100,20 +101,24 @@ export const createRequestAction: ActionFunction = async ({ request, params }) =
   const { requestType, parentId, req } = await request.json() as { requestType: CreateRequestType; parentId?: string; req?: Request };
 
   let activeRequestId;
+  if (requestType === 'RequestBin') {
+    await database.docCreate<RequestBin>(models.requestBin.type, {
+      parentId: workspaceId,
+      name: 'New Request Bin',
+      url: req?.url || '',
+    });
+    activeRequestId = (await models.request.create({
+      ...req,
+      _id: undefined,
+      parentId: parentId || workspaceId,
+    }))._id;
+  }
   if (requestType === 'HTTP') {
-    if (!req) {
       activeRequestId = (await models.request.create({
         parentId: parentId || workspaceId,
         method: METHOD_GET,
         headers: [{ name: 'User-Agent', value: `insomnia/${version}` }],
       }))._id;
-    } else {
-      activeRequestId = (await models.request.create({
-        ...req,
-        _id: undefined,
-        parentId: parentId || workspaceId,
-      }))._id;
-    }
   }
   if (requestType === 'gRPC') {
     activeRequestId = (await models.grpcRequest.create({

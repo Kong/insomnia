@@ -28,6 +28,7 @@ import * as _project from './project';
 import * as _protoDirectory from './proto-directory';
 import * as _protoFile from './proto-file';
 import * as _request from './request';
+import * as _requestBin from './request-bin';
 import * as _requestGroup from './request-group';
 import * as _requestGroupMeta from './request-group-meta';
 import * as _requestMeta from './request-meta';
@@ -67,6 +68,7 @@ export const gitRepository = _gitRepository;
 export const oAuth2Token = _oAuth2Token;
 export const pluginData = _pluginData;
 export const request = _request;
+export const requestBin = _requestBin;
 export const requestGroup = _requestGroup;
 export const requestGroupMeta = _requestGroupMeta;
 export const requestMeta = _requestMeta;
@@ -106,6 +108,7 @@ export function all() {
     requestGroup,
     requestGroupMeta,
     request,
+    requestBin,
     requestVersion,
     requestMeta,
     response,

@@ -127,7 +127,7 @@ export const PreviewModeDropdown: FC<Props> = ({
     if (bin?.data) {
       const id = bin.data;
       createRequest({
-        requestType: 'HTTP',
+        requestType: 'RequestBin',
         parentId: workspaceId,
         req: {
           ...activeRequest,
@@ -172,10 +172,10 @@ export const PreviewModeDropdown: FC<Props> = ({
         aria-label='Action Section'
         title="Action"
       >
-        <DropdownItem aria-label='Mock response'>
+        <DropdownItem aria-label='Create example mock'>
           <ItemContent
             icon="copy"
-            label="Mock response"
+            label="Create example mock"
             onClick={mockResponse}
           />
         </DropdownItem>
