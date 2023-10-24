@@ -2,6 +2,7 @@ import fs from 'fs';
 import { extension as mimeExtension } from 'mime-types';
 import React, { FC, useCallback } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
+import styled from 'styled-components';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { getSetCookieHeaders } from '../../../common/misc';
@@ -34,7 +35,7 @@ interface Props {
 export const ResponsePane: FC<Props> = ({
   runningRequests,
 }) => {
-  const { activeRequest, activeRequestMeta, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const { activeRequest, activeRequestMeta, activeResponse, requestBins } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const filterHistory = activeRequestMeta.responseFilterHistory || [];
   const filter = activeRequestMeta.responseFilter || '';
   const patchRequestMeta = useRequestMetaPatcher();
@@ -223,6 +224,28 @@ export const ResponsePane: FC<Props> = ({
             />
           </ErrorBoundary>
         </TabItem>
+        <TabItem key="Mocks" title="Mocks">
+          <ErrorBoundary key={activeResponse._id} errorClassName="font-error pad text-center">
+            <table className="table--fancy table--striped table--compact">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requestBins.map(requestBin => (<tr className="selectable" key={requestBin.url}>
+                  <StyledTableDataCell>
+                    {requestBin.url}
+                  </StyledTableDataCell>
+                  <StyledTableDataCell>
+                    <button>[+][delete][log]</button>
+                  </StyledTableDataCell>
+                </tr>))}
+              </tbody>
+            </table>
+          </ErrorBoundary>
+        </TabItem>
       </Tabs>
       <ErrorBoundary errorClassName="font-error pad text-center">
         {runningRequests[activeRequest._id] && <ResponseTimer
@@ -232,3 +255,8 @@ export const ResponsePane: FC<Props> = ({
     </Pane>
   );
 };
+const StyledTableDataCell = styled.td.attrs({
+  className: 'force-wrap',
+})({
+  width: '50%',
+});

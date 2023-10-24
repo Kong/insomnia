@@ -37,6 +37,10 @@ export function getByParentId(parentId: string) {
   return db.getWhere<RequestBin>(type, { parentId });
 }
 
+export function findByParentId(parentId: string) {
+  return db.find<RequestBin>(type, { parentId });
+}
+
 export async function all() {
   return db.all<RequestBin>(type);
 }

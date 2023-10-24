@@ -50,6 +50,7 @@ export interface RequestLoaderData {
   activeResponse: Response | null;
   responses: Response[];
   requestVersions: RequestVersion[];
+  requestBins: RequestBin[];
 }
 
 export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData | WebSocketRequestLoaderData | GrpcRequestLoaderData> => {
@@ -92,6 +93,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     activeResponse,
     responses,
     requestVersions: await models.requestVersion.findByParentId(requestId),
+    requestBins: await models.requestBin.findByParentId(workspaceId),
   } as RequestLoaderData | WebSocketRequestLoaderData;
 };
 
