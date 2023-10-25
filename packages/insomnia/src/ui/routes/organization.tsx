@@ -716,7 +716,7 @@ const OrganizationRoute = () => {
                   />{' '}
                   {user
                     ? status.charAt(0).toUpperCase() + status.slice(1)
-                    : 'Log in to full application'}
+                    : 'Log in to see your projects'}
                 </Button>
                 <Tooltip
                   placement="top"
