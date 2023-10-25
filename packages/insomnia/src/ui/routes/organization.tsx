@@ -504,8 +504,22 @@ const OrganizationRoute = () => {
                               `${getAppWebsiteBaseURL()}/app/settings/account`,
                             );
                           }
+
+                          if (action === 'manage-organizations') {
+                            window.main.openInBrowser(
+                              `${getAppWebsiteBaseURL()}/app/dashboard/organizations`
+                            );
+                          }
                         }}
                       >
+                        <Item
+                          id="manage-organizations"
+                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                          aria-label="Manage organizations"
+                        >
+                          <Icon icon="users" />
+                          <span>Manage Organizations</span>
+                        </Item>
                         <Item
                           id="account-settings"
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -520,7 +534,7 @@ const OrganizationRoute = () => {
                           aria-label="logout"
                         >
                           <Icon icon="sign-out" />
-                          <span>Logout</span>
+                          <span>Log out</span>
                         </Item>
                       </Menu>
                     </Popover>
