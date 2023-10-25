@@ -11,7 +11,9 @@ import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
+import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
+import { CodeEditor } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
@@ -121,6 +123,7 @@ export const RequestPane: FC<Props> = ({
   const contentType =
     getContentTypeFromHeaders(activeRequest.headers) ||
     activeRequest.body.mimeType;
+
   return (
     <Pane type="request">
       <PaneHeader>
@@ -136,6 +139,69 @@ export const RequestPane: FC<Props> = ({
         </ErrorBoundary>
       </PaneHeader>
       <Tabs aria-label="Request pane tabs">
+        <TabItem key="builder" title="Builder">
+          <div className='p-5'>
+            <button
+              className="pull-right btn btn--clicky"
+              onClick={() => {
+                // stuff
+              }}
+            >Create Bin</button>
+            <Dropdown
+              aria-label='Examples'
+              triggerButton={
+                <DropdownButton
+                  variant='outlined'
+                  removePaddings={false}
+                  disableHoverBehavior={false}
+                >
+                  Example responses
+                  <i className="fa fa-caret-down pad-left-sm" />
+                </DropdownButton>
+              }
+            >
+              <DropdownItem aria-label='JSON'>
+                <ItemContent
+                  icon="plus"
+                  label="JSON"
+                  onClick={() => { }}
+                />
+              </DropdownItem>
+              <DropdownItem aria-label='Plaintext'>
+                <ItemContent
+                  icon="link"
+                  label="Plaintext"
+                  onClick={() => { }}
+                />
+              </DropdownItem>
+            </Dropdown>
+            <div className='form-control form-control--outlined'>
+              status
+              <input type="text" value="200" />
+            </div>
+            <div className='form-control form-control--outlined'>
+              headers
+              <CodeEditor
+                id="example-headers-editor"
+                onChange={() => { }}
+                className='min-h-[50px]'
+                defaultValue={`Content-Type: application/json
+User-Agent: insomnia/8.2.0`}
+              />
+            </div>
+            <div className='form-control form-control--outlined'>
+              body
+              <CodeEditor
+                id="example-body-editor"
+                className='min-h-[100px]'
+                onChange={() => { }}
+                defaultValue={`{
+  "a": "b"
+}`}
+              />
+            </div>
+          </div>
+        </TabItem>
         <TabItem key="content-type" title={<ContentTypeDropdown />}>
           <BodyEditor
             key={uniqueKey}
