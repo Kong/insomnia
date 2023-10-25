@@ -3,9 +3,9 @@
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![license](https://img.shields.io/github/license/Kong/insomnia.svg)](LICENSE)
 
-Insomnia is an open-source, cross-platform API client for GraphQL, REST, WebSockets, Server-sent events and gRPC.
+Insomnia is an open-source, cross-platform API client for GraphQL, REST, WebSockets, Server-sent events (SSE), gRPC and any other HTTP compatible protocol.
 
-With Inomnia you can:
+With Insomnia you can:
 
 * **Debug APIs** using the most popular protocols and formats.
 * **Design APIs** using the native OpenAPI editor and visual preview.
@@ -33,7 +33,7 @@ Insomnia is available for Mac, Windows, and Linux and can be downloaded from the
 You can use Insomnia without an account with **Scratch Pad**, or you can [create an account for free](https://insomnia.rest/pricing) to get access to the full capabilities of the product.
 
 Even with an account, Insomnia only stores your projects and files accordingly to the storage backend that you have selected, which can be Local Vault, Cloud Sync, Git Sync or any combination of them. As such you have
-the freedom to choose to store sensitive projects locally, while still being able to collaborate on others in the cloud or on Git.
+the freedom to choose to store sensitive projects locally, while still being able to collaborate on others in the cloud or on Git. It's the best of both worlds.
 
 ## Premium features and support
 
