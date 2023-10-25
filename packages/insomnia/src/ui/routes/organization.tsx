@@ -706,7 +706,7 @@ const OrganizationRoute = () => {
                   />{' '}
                   {user
                     ? status.charAt(0).toUpperCase() + status.slice(1)
-                    : 'Log in to sync your data'}
+                    : 'Log in to full application'}
                 </Button>
                 <Tooltip
                   placement="top"
@@ -715,7 +715,7 @@ const OrganizationRoute = () => {
                 >
                   {user
                     ? `You are ${status === 'online'
-                      ? 'securely connected to Insomnia Cloud'
+                      ? 'securely connected to Insomnia Cloud.'
                       : 'offline. Connect to sync your data.'
                     }`
                     : 'Log in to Insomnia to sync your data.'}
