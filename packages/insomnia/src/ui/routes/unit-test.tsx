@@ -36,6 +36,7 @@ import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dr
 import { EditableInput } from '../components/editable-input';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
+import { showPrompt } from '../components/modals';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { SidebarLayout } from '../components/sidebar-layout';
@@ -125,6 +126,27 @@ const TestRoute: FC = () => {
       },
     },
     {
+        id: 'rename',
+        name: 'Rename',
+        icon: 'edit',
+        action: suiteId => {
+          showPrompt({
+            title: 'Rename test suite',
+            defaultValue: unitTestSuites.find(s => s._id === suiteId)?.name,
+            submitName: 'Rename',
+            onComplete: name => {
+              name && renameTestSuiteFetcher.submit(
+                { name },
+                {
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/rename`,
+                  method: 'POST',
+                }
+              );
+            },
+          });
+        },
+      },
+      {
       id: 'delete-suite',
       name: 'Delete suite',
       icon: 'trash',
@@ -291,7 +313,7 @@ const TestRoute: FC = () => {
               </Button>
             </div>
             <GridList
-              aria-label="Projects"
+              aria-label="Tets Suites"
               items={unitTestSuites.map(suite => ({
                 id: suite._id,
                 key: suite._id,
@@ -325,7 +347,7 @@ const TestRoute: FC = () => {
                         name="name"
                         ariaLabel="Test suite name"
                         onChange={name => {
-                          renameTestSuiteFetcher.submit(
+                          name && renameTestSuiteFetcher.submit(
                             { name },
                             {
                               action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}/rename`,
