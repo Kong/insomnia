@@ -176,29 +176,35 @@ export const RequestPane: FC<Props> = ({
               </DropdownItem>
             </Dropdown>
             <div className='form-control form-control--outlined'>
-              status
-              <input type="text" value="200" />
+              <label>
+                Status
+                <input type="text" value="200" />
+              </label>
             </div>
             <div className='form-control form-control--outlined'>
-              headers
-              <CodeEditor
-                id="example-headers-editor"
-                onChange={() => { }}
-                className='min-h-[50px]'
-                defaultValue={`Content-Type: application/json
+              <label>
+                Headers
+                <CodeEditor
+                  id="example-headers-editor"
+                  onChange={() => { }}
+                  className='min-h-[50px]'
+                  defaultValue={`Content-Type: application/json
 User-Agent: insomnia/8.2.0`}
-              />
+                />
+              </label>
             </div>
             <div className='form-control form-control--outlined'>
-              body
-              <CodeEditor
-                id="example-body-editor"
-                className='min-h-[100px]'
-                onChange={() => { }}
-                defaultValue={`{
+              <label>
+                Body
+                <CodeEditor
+                  id="example-body-editor"
+                  className='min-h-[100px]'
+                  onChange={() => { }}
+                  defaultValue={`{
   "a": "b"
 }`}
-              />
+                />
+              </label>
             </div>
           </div>
         </TabItem>
