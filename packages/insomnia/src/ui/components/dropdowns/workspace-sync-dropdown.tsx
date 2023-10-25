@@ -8,6 +8,7 @@ import { isRemoteProject } from '../../../models/project';
 import FileSystemDriver from '../../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../../sync/types';
 import { getVCS, initVCS, VCS } from '../../../sync/vcs/vcs';
+import { FeatureList } from '../../routes/organization';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { showModal } from '../modals';
 import { SyncMergeModal } from '../modals/sync-merge-modal';
@@ -73,6 +74,8 @@ export const WorkspaceSyncDropdown: FC = () => {
     ':workspaceId'
   ) as WorkspaceLoaderData;
 
+  const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
+
   const vcs = useVCS({
     workspaceId: activeWorkspace?._id,
   });
@@ -92,7 +95,7 @@ export const WorkspaceSyncDropdown: FC = () => {
     );
   }
 
-  if (activeWorkspaceMeta?.gitRepositoryId || !isRemoteProject(activeProject)) {
+  if (features.gitSync.enabled && (activeWorkspaceMeta?.gitRepositoryId || !isRemoteProject(activeProject))) {
     return <GitSyncDropdown isInsomniaSyncEnabled={isRemoteProject(activeProject)} gitRepository={gitRepository} />;
   }
 
