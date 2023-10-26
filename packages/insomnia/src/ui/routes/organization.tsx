@@ -401,6 +401,10 @@ const OrganizationRoute = () => {
   const [status, setStatus] = useState<'online' | 'offline'>('online');
 
   useEffect(() => {
+    window.main.migration.prepare();
+  }, []);
+
+  useEffect(() => {
     const handleOnline = () => setStatus('online');
     const handleOffline = () => setStatus('offline');
     window.addEventListener('online', handleOnline);

@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 import { gRPCBridgeAPI } from './main/ipc/grpc';
 import { CurlBridgeAPI } from './main/network/curl';
+import { MigrationBridgeAPI } from './main/network/migration';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 
 const webSocket: WebSocketBridgeAPI = {
@@ -37,6 +38,20 @@ const grpc: gRPCBridgeAPI = {
   loadMethods: options => ipcRenderer.invoke('grpc.loadMethods', options),
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
 };
+
+const migration: MigrationBridgeAPI = {
+  prepare: () => ipcRenderer.invoke('migration.prepare'),
+  // close: options => ipcRenderer.send('webSocket.close', options),
+  // closeAll: () => ipcRenderer.send('webSocket.closeAll'),
+  // readyState: {
+  //   getCurrent: options => ipcRenderer.invoke('webSocket.readyState', options),
+  // },
+  // event: {
+  //   findMany: options => ipcRenderer.invoke('webSocket.event.findMany', options),
+  //   send: options => ipcRenderer.invoke('webSocket.event.send', options),
+  // },
+};
+
 const main: Window['main'] = {
   loginStateChange: () => ipcRenderer.send('loginStateChange'),
   restart: () => ipcRenderer.send('restart'),
@@ -59,6 +74,7 @@ const main: Window['main'] = {
   webSocket,
   grpc,
   curl,
+  migration,
   trackSegmentEvent: options => ipcRenderer.send('trackSegmentEvent', options),
   trackPageView: options => ipcRenderer.send('trackPageView', options),
   axiosRequest: options => ipcRenderer.invoke('axiosRequest', options),

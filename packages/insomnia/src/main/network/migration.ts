@@ -1,5 +1,6 @@
-// import { ipcMain } from 'electron/main';
+import { ipcMain } from 'electron';
 import type { LogFunctions } from 'electron-log';
+import log from 'electron-log';
 
 import { database } from '../../common/database';
 
@@ -30,51 +31,51 @@ interface MigrationProgress {
     inProgress: number;
     failed: number;
 }
-class MigrationQueue {
-    // private _logger: Logger;
+
+const logger = log.create('migrationLogger');
+logger.scope('migration');
+logger.transports.file.fileName = 'migration.log';
+
+class DataMigrator {
+    private _logger: Logger;
     public queue: Set<string> = new Set();
     public progress$ = new Event('migrationProgress');
     public status$ = new Event('migrationStatus');
 
-    // constructor(logger: Logger) {
-    // this._logger = logger;
-    // }
+    constructor(logger: Logger) {
+        this._logger = logger;
+    }
 
-    public prepare(teamProjectIds: string[]): void {
-        // this._logger.info('[migration] preparing');
-        teamProjectIds.forEach(id => {
-            this.queue.add(id);
-            // this._logger.info('[migration] team project queued');
-        });
+    public prepare(): void {
+        this._logger.info('[migration] preparing');
     }
 
     // for now, let's call them team projects
     public start(): void {
         if (this.queue.size === 0) {
-            // this._logger.info('[migration] attempted to start without preparing');
+            this._logger.info('[migration] attempted to start without preparing');
         }
-        // this._logger.info('[migration] start');
+        this._logger.info('[migration] start');
         this.queue.forEach((teamProjectId: string) => {
             database.find('project', { remoteId: teamProjectId }).then();
         });
     }
 
     public resume(): void {
-        // this._logger.info('[migration] resume');
+        this._logger.info('[migration] resume');
     }
 
     public pause(): void {
-        // this._logger.info('[migration] pause');
+        this._logger.info('[migration] pause');
     }
 
     public end(): void {
-        // this._logger.info('[migration] end');
+        this._logger.info('[migration] end');
     }
 }
-
-export const MigrationJobber = new MigrationQueue();
+const migration = new DataMigrator(logger);
 export const registerMigrationHandlers = () => {
-    // ipcMain.handle('webSocket.open', openWebSocketConnection);
+    ipcMain.handle('migration.prepare', () => migration.prepare());
     // ipcMain.handle('webSocket.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) => sendWebSocketEvent(options));
     // ipcMain.on('webSocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) => closeWebSocketConnection(options));
     // ipcMain.on('webSocket.closeAll', closeAllWebSocketConnections);
