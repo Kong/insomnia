@@ -1,4 +1,9 @@
 import React, { FC, useState } from 'react';
+import {
+  Button,
+  Tooltip,
+  TooltipTrigger,
+} from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -26,6 +31,7 @@ import {
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
+import { Icon } from '../icon';
 import { MarkdownPreview } from '../markdown-preview';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
@@ -141,12 +147,38 @@ export const RequestPane: FC<Props> = ({
       <Tabs aria-label="Request pane tabs">
         <TabItem key="builder" title="Builder">
           <div className='p-5'>
-            <button
-              className="pull-right btn btn--clicky"
-              onClick={() => {
-                // stuff
-              }}
-            >Create Bin</button>
+            <TooltipTrigger>
+              <Button
+                aria-label='Send'
+                className="pull-right btn btn--clicky ml-2"
+                onPress={() => {
+                  // stuff
+                }}
+              >Send</Button>
+              <Tooltip
+                placement="top"
+                offset={8}
+                className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+              >
+                Create a new bin and send a request to it
+              </Tooltip>
+            </TooltipTrigger>
+            <TooltipTrigger>
+              <Button
+                aria-label='Save'
+                className="pull-right btn btn--clicky ml-2"
+                onPress={() => {
+                  // stuff
+                }}
+              >Save</Button>
+              <Tooltip
+                placement="top"
+                offset={8}
+                className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+              >
+                Save this bin with a name and description
+              </Tooltip>
+            </TooltipTrigger>
             <Dropdown
               aria-label='Examples'
               triggerButton={
