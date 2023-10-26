@@ -16,7 +16,7 @@ import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
-import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
+import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { CodeEditor } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
@@ -179,6 +179,22 @@ export const RequestPane: FC<Props> = ({
                 Save this bin with a name and description
               </Tooltip>
             </TooltipTrigger>
+            <TooltipTrigger>
+              <Button
+                aria-label='Save'
+                className="pull-right btn btn--clicky ml-2"
+                onPress={() => {
+                  // stuff
+                }}
+              >Copy Bin URL</Button>
+              <Tooltip
+                placement="top"
+                offset={8}
+                className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
+              >
+                Copy bin URL to clipboard
+              </Tooltip>
+            </TooltipTrigger>
             <Dropdown
               aria-label='Examples'
               triggerButton={
@@ -192,20 +208,63 @@ export const RequestPane: FC<Props> = ({
                 </DropdownButton>
               }
             >
-              <DropdownItem aria-label='JSON'>
-                <ItemContent
-                  icon="plus"
-                  label="JSON"
-                  onClick={() => { }}
-                />
-              </DropdownItem>
-              <DropdownItem aria-label='Plaintext'>
-                <ItemContent
-                  icon="link"
-                  label="Plaintext"
-                  onClick={() => { }}
-                />
-              </DropdownItem>
+              <DropdownSection
+                aria-label="Saved"
+                title="Saved"
+              >
+                <DropdownItem aria-label='New Bin #1'>
+                  <ItemContent
+                    label="New Bin #1"
+                    onClick={() => { }}
+                  />
+                </DropdownItem>
+                <DropdownItem aria-label='New Bin #2'>
+                  <ItemContent
+                    label="New Bin #2"
+                    onClick={() => { }}
+                  />
+                </DropdownItem>
+              </DropdownSection>
+              <DropdownSection
+                aria-label="From Spec"
+                title="From Spec"
+              >
+                <DropdownItem aria-label='/user/create'>
+                  <ItemContent
+                    label="/user/create"
+                    onClick={() => { }}
+                  />
+                </DropdownItem>
+                <DropdownItem aria-label='/user/update'>
+                  <ItemContent
+                    label="/user/update"
+                    onClick={() => { }}
+                  />
+                </DropdownItem>
+                <DropdownItem aria-label='/user/delete'>
+                  <ItemContent
+                    label="/user/delete"
+                    onClick={() => { }}
+                  />
+                </DropdownItem>
+              </DropdownSection>
+              <DropdownSection
+                aria-label="Basic Section"
+                title="Basic"
+              >
+                <DropdownItem aria-label='JSON'>
+                  <ItemContent
+                    label="JSON"
+                    onClick={() => { }}
+                  />
+                </DropdownItem>
+                <DropdownItem aria-label='Plaintext'>
+                  <ItemContent
+                    label="Plaintext"
+                    onClick={() => { }}
+                  />
+                </DropdownItem>
+              </DropdownSection>
             </Dropdown>
             <div className='form-control form-control--outlined'>
               <label>
