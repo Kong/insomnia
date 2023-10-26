@@ -366,10 +366,10 @@ const UpgradeButton = ({
     );
   }
 
-  let to = '/app/subscription/update?plan=individual&payment_schedule=year';
+  let to = '/app/subscription/update?plan=individual&pay_schedule=year';
 
   if (currentPlan?.type === 'individual') {
-    to = `/app/subscription/update?plan=team&payment_schedule=${currentPlan?.period}`;
+    to = `/app/subscription/update?plan=team&pay_schedule=${currentPlan?.period}`;
   }
 
   return (
