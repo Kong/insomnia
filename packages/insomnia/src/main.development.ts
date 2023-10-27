@@ -67,7 +67,6 @@ app.on('ready', async () => {
   registergRPCHandlers();
   registerWebSocketHandlers();
   registerCurlHandlers();
-  registerMigrationHandlers();
   /**
  * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
  * see: https://github.com/electron/electron/issues/22995
@@ -97,6 +96,7 @@ app.on('ready', async () => {
   await _createModelInstances();
   sentryWatchAnalyticsEnabled();
   windowUtils.init();
+  registerMigrationHandlers();
   await _launchApp();
 
   // Init the rest

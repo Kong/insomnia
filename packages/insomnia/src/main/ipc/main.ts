@@ -15,7 +15,7 @@ import installPlugin from '../install-plugin';
 import { axiosRequest } from '../network/axios-request';
 import { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';
-import { MigrationBridgeAPI } from '../network/migration';
+import { MigrationServiceImpl } from '../network/migration';
 import { WebSocketBridgeAPI } from '../network/websocket';
 import { gRPCBridgeAPI } from './grpc';
 
@@ -38,7 +38,7 @@ export interface MainBridgeAPI {
   webSocket: WebSocketBridgeAPI;
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
-  migration: MigrationBridgeAPI;
+  migration: MigrationServiceImpl;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   axiosRequest: typeof axiosRequest;

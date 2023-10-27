@@ -3,29 +3,19 @@ import type { LogFunctions } from 'electron-log';
 import log from 'electron-log';
 
 import { database } from '../../common/database';
+import { project, workspace } from '../../models';
+import { insomniaFetch } from '../insomniaFetch';
 
-export interface MigrationBridgeAPI {
-    prepare: () => void;
+export interface MigrationServiceImpl {
+    prepare: () => Promise<void>;
     start: () => void;
     pause: () => void;
     resume: () => void;
     end: () => void;
-    progress: () => void;
-
-    // open: (options: OpenWebSocketRequestOptions) => void;
-    // close: typeof closeWebSocketConnection;
-    // closeAll: typeof closeAllWebSocketConnections;
-    // readyState: {
-    //     getCurrent: typeof getWebSocketReadyState;
-    // };
-    // event: {
-    //     findMany: typeof findMany;
-    //     send: typeof sendWebSocketEvent;
-    // };
 }
 
 type Logger = LogFunctions;
-interface MigrationProgress {
+export interface MigrationProgress {
     total: number;
     complete: number;
     inProgress: number;
@@ -36,18 +26,39 @@ const logger = log.create('migrationLogger');
 logger.scope('migration');
 logger.transports.file.fileName = 'migration.log';
 
-class DataMigrator {
+type HttpClient = typeof insomniaFetch;
+class MigrationService implements MigrationServiceImpl {
     private _logger: Logger;
+    private _http: HttpClient;
     public queue: Set<string> = new Set();
     public progress$ = new Event('migrationProgress');
     public status$ = new Event('migrationStatus');
 
-    constructor(logger: Logger) {
+    constructor(logger: Logger, http: HttpClient) {
         this._logger = logger;
+        this._http = http;
     }
 
-    public prepare(): void {
+    public async prepare(): Promise<void> {
         this._logger.info('[migration] preparing');
+        if (!database) {
+            this._logger.warn('[migration] in-memory database is not loaded yet');
+            return;
+        }
+
+        this._logger.info('[migration] querying database for all untracked projects');
+
+        const untracteds = await database.find(project.type, { remoteId: null, parentId: null, _id: { $ne: 'proj_scratchpad' } });
+        const projectsWithoutRemoteId = await database.find(project.type, { remoteId: null, parentId: { $ne: null }, _id: { $ne: 'proj_scratchpad' } });
+        const projectsWithoutParentId = await database.find(project.type, { parentId: null, remoteId: { $ne: null }, _id: { $ne: 'proj_scratchpad' } });
+        const allProjects = await database.find(project.type, { parentId: { $ne: null }, _id: { $ne: 'proj_scratchpad' } });
+        const allWorkspaces = await database.find(workspace.type, { parentId: { $ne: 'proj_scratchpad' } });
+
+        console.log({ allProjects });
+        console.log({ allWorkspaces });
+        console.log({ untracteds });
+        console.log({ projectsWithoutRemoteId });
+        console.log({ projectsWithoutParentId });
     }
 
     // for now, let's call them team projects
@@ -56,8 +67,8 @@ class DataMigrator {
             this._logger.info('[migration] attempted to start without preparing');
         }
         this._logger.info('[migration] start');
-        this.queue.forEach((teamProjectId: string) => {
-            database.find('project', { remoteId: teamProjectId }).then();
+        this.queue.forEach(() => {
+            // database.find('project', { remoteId: teamProjectId }).then();
         });
     }
 
@@ -73,12 +84,11 @@ class DataMigrator {
         this._logger.info('[migration] end');
     }
 }
-const migration = new DataMigrator(logger);
+const service = Object.freeze(new MigrationService(logger, insomniaFetch));
 export const registerMigrationHandlers = () => {
-    ipcMain.handle('migration.prepare', () => migration.prepare());
-    // ipcMain.handle('webSocket.event.send', (_, options: Parameters<typeof sendWebSocketEvent>[0]) => sendWebSocketEvent(options));
-    // ipcMain.on('webSocket.close', (_, options: Parameters<typeof closeWebSocketConnection>[0]) => closeWebSocketConnection(options));
-    // ipcMain.on('webSocket.closeAll', closeAllWebSocketConnections);
-    // ipcMain.handle('webSocket.readyState', (_, options: Parameters<typeof getWebSocketReadyState>[0]) => getWebSocketReadyState(options));
-    // ipcMain.handle('webSocket.event.findMany', (_, options: Parameters<typeof findMany>[0]) => findMany(options));
+    ipcMain.handle('migration.prepare', () => service.prepare());
+    ipcMain.handle('migration.start', () => service.start());
+    ipcMain.handle('migration.pause', () => service.pause());
+    ipcMain.handle('migration.resume', () => service.resume());
+    ipcMain.handle('migration.end', () => service.end());
 };
