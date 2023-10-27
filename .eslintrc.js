@@ -110,7 +110,7 @@ module.exports = {
     'react/jsx-max-props-per-line': [ERROR, { maximum: 1, when: 'multiline' }],
     'react/jsx-uses-react': ERROR,
     'react/jsx-uses-vars': ERROR,
-    'react/jsx-indent-props': [ERROR, 2],
+    'react/jsx-indent-props': OFF(UNKNOWN),
     'react/prop-types': OFF(UNKNOWN),
     'react/function-component-definition': [ERROR, {
       'namedComponents': 'arrow-function',
