@@ -84,12 +84,13 @@ export const BinEditor = () => {
       data: mockbinInput,
     });
     // todo: show bin logs
-    // todo: handle error
+    // todo: handle error better
     // todo create/update current bin url
 
     if (bin?.data) {
       return bin.data;
     }
+    console.log('Error: creating bin on remote');
     return '';
 
   };
@@ -97,17 +98,25 @@ export const BinEditor = () => {
   return (
     <div className='p-5'>
       <form
-        onSubmit={(e: FormEvent<HTMLFormElement>) => {
+        onSubmit={async (e: FormEvent<HTMLFormElement>) => {
           e.preventDefault();
           const formData = new FormData(e.currentTarget);
           const status = formData.get('status') as string;
           const headers = formData.get('example-headers-editor') as string;
           const body = formData.get('example-body-editor') as string;
           console.log(status, headers, body);
-          if (e.nativeEvent.submitter.name === 'send') {
+          const submitType = e.nativeEvent.submitter.name;
+          if (submitType === 'send') {
             console.log('TODO: create bin with current form and send request to it');
+            const bin = await formToMockBin({
+              statusCode: binStatus,
+              headers: binHeaders,
+              body: binBody,
+            });
+            const id = await createBinOnRemoteFromResponse(bin);
+            const url = 'https://mockbin.org/bin/' + id;
           }
-          if (e.nativeEvent.submitter.name === 'save') {
+          if (submitType === 'save') {
             console.log('save bin to local db and show in dropdown');
             showPrompt({
               title: 'Create a new bin',
@@ -126,13 +135,16 @@ export const BinEditor = () => {
               },
             });
           }
-          if (e.nativeEvent.submitter.name === 'copy') {
+          if (submitType === 'copy') {
             console.log('TODO: create bin with current form and copy url to clipboard');
-            formToMockBin({
+            const bin = await formToMockBin({
               statusCode: binStatus,
               headers: binHeaders,
               body: binBody,
             });
+            const id = await createBinOnRemoteFromResponse(bin);
+            const url = 'https://mockbin.org/bin/' + id;
+            window.clipboard.writeText(url);
           }
         }
         }
