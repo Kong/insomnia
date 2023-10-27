@@ -1,10 +1,12 @@
-import React, { FormEvent } from 'react';
+import { readFile } from 'fs/promises';
+import React, { FormEvent, useState } from 'react';
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { RequestBin } from '../../../models/request-bin';
+import { Response } from '../../../models/response';
 import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { CodeEditor } from '../codemirror/code-editor';
@@ -13,37 +15,34 @@ import { showPrompt } from '../modals';
 export const BinEditor = () => {
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
   const { activeRequest, requestBins } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-
-  // const mockResponse = async () => {
-  //   if (!activeResponse) {
-  //     return;
-  //   }
-  //   const { statusCode, statusMessage, headers, httpVersion, bytesContent, contentType } = activeResponse;
-  //   const body = await readFile(activeResponse.bodyPath, 'utf8');
-  //   // transform response to mockbin format
-  //   const bin = await window.main.axiosRequest({
-  //     url: 'http://mockbin.org/bin/create',
-  //     method: 'post',
-  //     data: {
-  //       'status': statusCode,
-  //       'statusText': statusMessage,
-  //       'httpVersion': httpVersion,
-  //       'headers': headers,
-  //       // NOTE: cookies are sent as headers by insomnia
-  //       'cookies': [],
-  //       'content': {
-  //         'size': bytesContent,
-  //         'mimeType': contentType,
-  //         'text': body,
-  //       },
-  //     },
-  //   });
+  const [binStatus, setBinStatus] = useState('202');
+  const createBinOnRemoteFromResponse = async (activeResponse: Response) => {
+    const { statusCode, statusMessage, headers, httpVersion, bytesContent, contentType } = activeResponse;
+    const body = await readFile(activeResponse.bodyPath, 'utf8');
+    const bin = await window.main.axiosRequest({
+      url: 'http://mockbin.org/bin/create',
+      method: 'post',
+      data: {
+        'status': statusCode,
+        'statusText': statusMessage,
+        'httpVersion': httpVersion,
+        'headers': headers,
+        // NOTE: cookies are sent as headers by insomnia
+        'cookies': [],
+        'content': {
+          'size': bytesContent,
+          'mimeType': contentType,
+          'text': body,
+        },
+      },
+    });
   //   // todo: record bin id in insomnia db
   //   // todo: list all bins
   //   // todo: show bin logs
   //   // todo: handle error
-  //   if (bin?.data) {
-  //     const id = bin.data;
+    if (bin?.data) {
+    // todo create/update current bin url
+    //     const id = bin.data;
   //     createRequest({
   //       requestType: 'RequestBin',
   //       parentId: workspaceId,
@@ -59,8 +58,9 @@ export const BinEditor = () => {
   //       name: 'New Request Bin',
   //       url: req?.url || '',
   //     });
-  //   }
-  // };
+    }
+  };
+
   return (
     <div className='p-5'>
       <form
@@ -171,7 +171,7 @@ export const BinEditor = () => {
               <ItemContent
                 label={bin.name}
                 onClick={() => {
-
+                  setBinStatus(bin.statusCode + '');
                 }}
               />
             </DropdownItem>
@@ -207,13 +207,17 @@ export const BinEditor = () => {
             <DropdownItem aria-label='JSON'>
               <ItemContent
                 label="JSON"
-                onClick={() => { }}
+                onClick={() => {
+                  setBinStatus('200');
+                }}
               />
             </DropdownItem>
             <DropdownItem aria-label='Plaintext'>
               <ItemContent
                 label="Plaintext"
-                onClick={() => { }}
+                onClick={() => {
+                  setBinStatus('200');
+                }}
               />
             </DropdownItem>
           </DropdownSection>
@@ -221,7 +225,7 @@ export const BinEditor = () => {
         <div className='form-control form-control--outlined'>
           <label>
             Status
-            <input name="status" type="text" defaultValue="200" />
+            <input name="status" type="number" value={binStatus} onChange={e => setBinStatus(e.target.value)} />
           </label>
         </div>
         <div className='form-control form-control--outlined'>
@@ -244,7 +248,7 @@ User-Agent: insomnia/8.2.0`}
               className='min-h-[100px]'
               onChange={() => { }}
               defaultValue={`{
-  "a": "b"
+"a": "b"
 }`}
             />
           </label>

@@ -18,7 +18,7 @@ export interface OneLineEditorProps {
   defaultValue: string;
   getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   id: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   onKeyDown?: (event: KeyboardEvent, value: string) => void;
   placeholder?: string;
   readOnly?: boolean;
@@ -230,6 +230,7 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
       <div className="editor__container input editor--single-line">
         <textarea
           id={id}
+          name={name}
           ref={textAreaRef}
           style={{ display: 'none' }}
           readOnly={readOnly}
