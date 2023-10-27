@@ -3,6 +3,7 @@ import React, { FormEvent, useRef, useState } from 'react';
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 
+import { RESPONSE_CODE_REASONS } from '../../../common/constants';
 import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { RequestBin } from '../../../models/request-bin';
@@ -11,7 +12,25 @@ import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 import { showPrompt } from '../modals';
-
+interface MockbinInput {
+  status: string;
+  statusText: string;
+  httpVersion: string;
+  headers: {
+    name: string;
+    value: string;
+  }[];
+  cookies: {
+    name: string;
+    value: string;
+  }[];
+  content: {
+    size: number;
+    // todo: test default here
+    mimeType: string;
+    text: string;
+  };
+};
 export const BinEditor = () => {
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
   const { activeRequest, requestBins } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
@@ -20,9 +39,9 @@ export const BinEditor = () => {
   const [binBody, setBinBody] = useState('');
   const headerEditorRef = useRef<CodeEditorHandle>(null);
   const bodyEditorRef = useRef<CodeEditorHandle>(null);
-  const responseToMockBin = async (activeResponse: Response) => {
-    const { statusCode, statusMessage, headers, httpVersion, bytesContent, contentType } = activeResponse;
-    const body = await readFile(activeResponse.bodyPath, 'utf8');
+  const responseToMockBin = async (res: Response) => {
+    const { statusCode, statusMessage, headers, httpVersion, bytesContent, contentType } = res;
+    const body = await readFile(res.bodyPath, 'utf8');
     return {
       'status': statusCode,
       'statusText': statusMessage,
@@ -37,12 +56,32 @@ export const BinEditor = () => {
       },
     };
   };
-  const createBinOnRemoteFromResponse = async (activeResponse: Response): Promise<string> => {
-    const mockbinData = await responseToMockBin(activeResponse);
+  const formToMockBin = async ({ statusCode, headers, body }: { statusCode: string; headers: string; body: string }) => {
+    const headersArray = headers.split(/\r?\n|\r/g).map(l => l.split(/:\s(.+)/))
+      .filter(([n]) => !!n)
+      .map(([name, value = '']) => ({ name, value }));
+    const contentType = headersArray.find(h => h.name.toLowerCase() === 'content-type')?.value || '';
+    console.log({ headers, headersArray });
+    return {
+      'status': statusCode,
+      'statusText': RESPONSE_CODE_REASONS[+statusCode] || '',
+      'httpVersion': 'HTTP/1.1',
+      'headers': headersArray,
+      // NOTE: cookies are sent as headers by insomnia
+      'cookies': [],
+      'content': {
+        'size': Buffer.byteLength(body),
+        'mimeType': contentType,
+        'text': body,
+      },
+    };
+  };
+
+  const createBinOnRemoteFromResponse = async (mockbinInput: MockbinInput): Promise<string> => {
     const bin = await window.main.axiosRequest({
       url: 'http://mockbin.org/bin/create',
       method: 'post',
-      data: mockbinData,
+      data: mockbinInput,
     });
     // todo: show bin logs
     // todo: handle error
@@ -89,6 +128,11 @@ export const BinEditor = () => {
           }
           if (e.nativeEvent.submitter.name === 'copy') {
             console.log('TODO: create bin with current form and copy url to clipboard');
+            formToMockBin({
+              statusCode: binStatus,
+              headers: binHeaders,
+              body: binBody,
+            });
           }
         }
         }
