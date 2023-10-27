@@ -20,49 +20,39 @@ export const BinEditor = () => {
   const [binBody, setBinBody] = useState('');
   const headerEditorRef = useRef<CodeEditorHandle>(null);
   const bodyEditorRef = useRef<CodeEditorHandle>(null);
-  const createBinOnRemoteFromResponse = async (activeResponse: Response) => {
+  const responseToMockBin = async (activeResponse: Response) => {
     const { statusCode, statusMessage, headers, httpVersion, bytesContent, contentType } = activeResponse;
     const body = await readFile(activeResponse.bodyPath, 'utf8');
+    return {
+      'status': statusCode,
+      'statusText': statusMessage,
+      'httpVersion': httpVersion,
+      'headers': headers,
+      // NOTE: cookies are sent as headers by insomnia
+      'cookies': [],
+      'content': {
+        'size': bytesContent,
+        'mimeType': contentType,
+        'text': body,
+      },
+    };
+  };
+  const createBinOnRemoteFromResponse = async (activeResponse: Response): Promise<string> => {
+    const mockbinData = await responseToMockBin(activeResponse);
     const bin = await window.main.axiosRequest({
       url: 'http://mockbin.org/bin/create',
       method: 'post',
-      data: {
-        'status': statusCode,
-        'statusText': statusMessage,
-        'httpVersion': httpVersion,
-        'headers': headers,
-        // NOTE: cookies are sent as headers by insomnia
-        'cookies': [],
-        'content': {
-          'size': bytesContent,
-          'mimeType': contentType,
-          'text': body,
-        },
-      },
+      data: mockbinData,
     });
-  //   // todo: record bin id in insomnia db
-  //   // todo: list all bins
-  //   // todo: show bin logs
-  //   // todo: handle error
-    if (bin?.data) {
+    // todo: show bin logs
+    // todo: handle error
     // todo create/update current bin url
-    //     const id = bin.data;
-  //     createRequest({
-  //       requestType: 'RequestBin',
-  //       parentId: workspaceId,
-  //       req: {
-  //         ...activeRequest,
-  //         name: 'Mock Response of ' + activeRequest.name,
-  //         method: activeRequest.method,
-  //         url: `https://mockbin.org/bin/${id}`,
-  //       },
-  //     });
-  //     await database.docCreate<RequestBin>(models.requestBin.type, {
-  //       parentId: workspaceId,
-  //       name: 'New Request Bin',
-  //       url: req?.url || '',
-  //     });
+
+    if (bin?.data) {
+      return bin.data;
     }
+    return '';
+
   };
 
   return (
