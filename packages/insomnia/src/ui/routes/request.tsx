@@ -18,6 +18,7 @@ import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
+import { RequestBin } from '../../models/request-bin';
 import { isRequestMeta, RequestMeta } from '../../models/request-meta';
 import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
@@ -49,6 +50,7 @@ export interface RequestLoaderData {
   activeResponse: Response | null;
   responses: Response[];
   requestVersions: RequestVersion[];
+  requestBins: RequestBin[];
 }
 
 export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData | WebSocketRequestLoaderData | GrpcRequestLoaderData> => {
@@ -91,6 +93,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     activeResponse,
     responses,
     requestVersions: await models.requestVersion.findByParentId(requestId),
+    requestBins: await models.requestBin.findByParentId(workspaceId),
   } as RequestLoaderData | WebSocketRequestLoaderData;
 };
 

@@ -1,9 +1,4 @@
 import React, { FC, useState } from 'react';
-import {
-  Button,
-  Tooltip,
-  TooltipTrigger,
-} from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -16,12 +11,11 @@ import { useRequestPatcher, useSettingsPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { RequestLoaderData } from '../../routes/request';
 import { WorkspaceLoaderData } from '../../routes/workspace';
-import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
-import { CodeEditor } from '../codemirror/code-editor';
 import { AuthDropdown } from '../dropdowns/auth-dropdown';
 import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
 import { AuthWrapper } from '../editors/auth/auth-wrapper';
+import { BinEditor } from '../editors/bin-editor';
 import { BodyEditor } from '../editors/body/body-editor';
 import {
   QueryEditor,
@@ -31,7 +25,6 @@ import {
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
-import { Icon } from '../icon';
 import { MarkdownPreview } from '../markdown-preview';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
@@ -129,7 +122,6 @@ export const RequestPane: FC<Props> = ({
   const contentType =
     getContentTypeFromHeaders(activeRequest.headers) ||
     activeRequest.body.mimeType;
-
   return (
     <Pane type="request">
       <PaneHeader>
@@ -146,158 +138,7 @@ export const RequestPane: FC<Props> = ({
       </PaneHeader>
       <Tabs aria-label="Request pane tabs">
         <TabItem key="builder" title="Builder">
-          <div className='p-5'>
-            <TooltipTrigger>
-              <Button
-                aria-label='Send'
-                className="pull-right btn btn--clicky ml-2"
-                onPress={() => {
-                  // stuff
-                }}
-              >Send</Button>
-              <Tooltip
-                placement="top"
-                offset={8}
-                className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-              >
-                Create a new bin and send a request to it
-              </Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger>
-              <Button
-                aria-label='Save'
-                className="pull-right btn btn--clicky ml-2"
-                onPress={() => {
-                  // stuff
-                }}
-              >Save</Button>
-              <Tooltip
-                placement="top"
-                offset={8}
-                className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-              >
-                Save this bin with a name and description
-              </Tooltip>
-            </TooltipTrigger>
-            <TooltipTrigger>
-              <Button
-                aria-label='Save'
-                className="pull-right btn btn--clicky ml-2"
-                onPress={() => {
-                  // stuff
-                }}
-              >Copy Bin URL</Button>
-              <Tooltip
-                placement="top"
-                offset={8}
-                className="border flex items-center gap-2 select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
-              >
-                Copy bin URL to clipboard
-              </Tooltip>
-            </TooltipTrigger>
-            <Dropdown
-              aria-label='Examples'
-              triggerButton={
-                <DropdownButton
-                  variant='outlined'
-                  removePaddings={false}
-                  disableHoverBehavior={false}
-                >
-                  Example responses
-                  <i className="fa fa-caret-down pad-left-sm" />
-                </DropdownButton>
-              }
-            >
-              <DropdownSection
-                aria-label="Saved"
-                title="Saved"
-              >
-                <DropdownItem aria-label='New Bin #1'>
-                  <ItemContent
-                    label="New Bin #1"
-                    onClick={() => { }}
-                  />
-                </DropdownItem>
-                <DropdownItem aria-label='New Bin #2'>
-                  <ItemContent
-                    label="New Bin #2"
-                    onClick={() => { }}
-                  />
-                </DropdownItem>
-              </DropdownSection>
-              <DropdownSection
-                aria-label="From Spec"
-                title="From Spec"
-              >
-                <DropdownItem aria-label='/user/create'>
-                  <ItemContent
-                    label="/user/create"
-                    onClick={() => { }}
-                  />
-                </DropdownItem>
-                <DropdownItem aria-label='/user/update'>
-                  <ItemContent
-                    label="/user/update"
-                    onClick={() => { }}
-                  />
-                </DropdownItem>
-                <DropdownItem aria-label='/user/delete'>
-                  <ItemContent
-                    label="/user/delete"
-                    onClick={() => { }}
-                  />
-                </DropdownItem>
-              </DropdownSection>
-              <DropdownSection
-                aria-label="Basic Section"
-                title="Basic"
-              >
-                <DropdownItem aria-label='JSON'>
-                  <ItemContent
-                    label="JSON"
-                    onClick={() => { }}
-                  />
-                </DropdownItem>
-                <DropdownItem aria-label='Plaintext'>
-                  <ItemContent
-                    label="Plaintext"
-                    onClick={() => { }}
-                  />
-                </DropdownItem>
-              </DropdownSection>
-            </Dropdown>
-            <div className='form-control form-control--outlined'>
-              <label>
-                Status
-                <input type="text" value="200" />
-              </label>
-            </div>
-            <div className='form-control form-control--outlined'>
-              <label>
-                Headers
-                <CodeEditor
-                  id="example-headers-editor"
-                  onChange={() => { }}
-                  className='min-h-[50px]'
-                  defaultValue={`Content-Type: application/json
-User-Agent: insomnia/8.2.0`}
-                />
-              </label>
-            </div>
-            <div className='form-control form-control--outlined'>
-              <label>
-                Body
-                <CodeEditor
-                  id="example-body-editor"
-                  className='min-h-[100px]'
-                  onChange={() => { }}
-                  defaultValue={`{
-  "a": "b"
-}`}
-                />
-              </label>
-            </div>
-          </div>
+          <BinEditor />
         </TabItem>
         <TabItem key="content-type" title={<ContentTypeDropdown />}>
           <BodyEditor
