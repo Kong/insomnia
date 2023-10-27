@@ -1,5 +1,5 @@
 import { readFile } from 'fs/promises';
-import React, { FormEvent, useState } from 'react';
+import React, { FormEvent, useRef, useState } from 'react';
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 
@@ -9,13 +9,17 @@ import { RequestBin } from '../../../models/request-bin';
 import { Response } from '../../../models/response';
 import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
-import { CodeEditor } from '../codemirror/code-editor';
+import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 import { showPrompt } from '../modals';
 
 export const BinEditor = () => {
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
   const { activeRequest, requestBins } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const [binStatus, setBinStatus] = useState('202');
+  const [binHeaders, setBinHeaders] = useState('');
+  const [binBody, setBinBody] = useState('');
+  const headerEditorRef = useRef<CodeEditorHandle>(null);
+  const bodyEditorRef = useRef<CodeEditorHandle>(null);
   const createBinOnRemoteFromResponse = async (activeResponse: Response) => {
     const { statusCode, statusMessage, headers, httpVersion, bytesContent, contentType } = activeResponse;
     const body = await readFile(activeResponse.bodyPath, 'utf8');
@@ -158,7 +162,7 @@ export const BinEditor = () => {
               removePaddings={false}
               disableHoverBehavior={false}
             >
-              Example responses
+              Load from template
               <i className="fa fa-caret-down pad-left-sm" />
             </DropdownButton>
           }
@@ -172,6 +176,8 @@ export const BinEditor = () => {
                 label={bin.name}
                 onClick={() => {
                   setBinStatus(bin.statusCode + '');
+                  headerEditorRef.current?.setValue(bin.headers);
+                  bodyEditorRef.current?.setValue(bin.body);
                 }}
               />
             </DropdownItem>
@@ -209,6 +215,8 @@ export const BinEditor = () => {
                 label="JSON"
                 onClick={() => {
                   setBinStatus('200');
+                  headerEditorRef.current?.setValue('Content-Type: application/json');
+                  bodyEditorRef.current?.setValue('{\n    \"foo\": \"Hello Word\"\n}');
                 }}
               />
             </DropdownItem>
@@ -217,6 +225,8 @@ export const BinEditor = () => {
                 label="Plaintext"
                 onClick={() => {
                   setBinStatus('200');
+                  headerEditorRef.current?.setValue('Content-Type: text/plain');
+                  bodyEditorRef.current?.setValue('Hello World');
                 }}
               />
             </DropdownItem>
@@ -232,11 +242,11 @@ export const BinEditor = () => {
           <label>
             Headers
             <CodeEditor
+              ref={headerEditorRef}
               id="example-headers-editor"
-              onChange={() => { }}
               className='min-h-[50px]'
-              defaultValue={`Content-Type: application/json
-User-Agent: insomnia/8.2.0`}
+              defaultValue={binHeaders}
+              onChange={setBinHeaders}
             />
           </label>
         </div>
@@ -244,12 +254,11 @@ User-Agent: insomnia/8.2.0`}
           <label>
             Body
             <CodeEditor
+              ref={bodyEditorRef}
               id="example-body-editor"
               className='min-h-[100px]'
-              onChange={() => { }}
-              defaultValue={`{
-"a": "b"
-}`}
+              defaultValue={binBody}
+              onChange={setBinBody}
             />
           </label>
         </div>
