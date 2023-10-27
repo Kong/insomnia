@@ -58,7 +58,7 @@ export const EditableInput = ({
             ${defaultPaddingClass}
           `
         }
-        onPress={e => {
+        onPress={() => {
           setIsEditable(true);
         }}
         name={name}
