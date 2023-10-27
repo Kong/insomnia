@@ -1,16 +1,18 @@
 import React, { FormEvent } from 'react';
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
-import { useParams } from 'react-router-dom';
+import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { RequestBin } from '../../../models/request-bin';
+import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { CodeEditor } from '../codemirror/code-editor';
 import { showPrompt } from '../modals';
 
 export const BinEditor = () => {
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
+  const { activeRequest, requestBins } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
 
   // const mockResponse = async () => {
   //   if (!activeResponse) {
@@ -164,21 +166,16 @@ export const BinEditor = () => {
           <DropdownSection
             aria-label="Saved"
             title="Saved"
-          >
-            <DropdownItem aria-label='New Bin #1'>
+          >{requestBins.map(bin => (
+            <DropdownItem key={bin._id} aria-label={bin.name}>
               <ItemContent
-                label="New Bin #1"
+                label={bin.name}
                 onClick={() => {
 
                 }}
               />
             </DropdownItem>
-            <DropdownItem aria-label='New Bin #2'>
-              <ItemContent
-                label="New Bin #2"
-                onClick={() => { }}
-              />
-            </DropdownItem>
+          ))}
           </DropdownSection>
           <DropdownSection
             aria-label="From Spec"
@@ -252,8 +249,6 @@ User-Agent: insomnia/8.2.0`}
             />
           </label>
         </div>
-        <button type="submit" name="save">Save</button>
-        <button type="submit" name="send">send</button>
       </form>
     </div>
   );

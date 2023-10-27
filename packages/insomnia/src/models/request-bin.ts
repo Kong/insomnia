@@ -16,6 +16,7 @@ export interface BaseRequestBin {
   headers: string;
   body: string;
   url: string;
+  name: string;
 }
 
 export type RequestBin = BaseModel & BaseRequestBin;
@@ -30,6 +31,7 @@ export function init(): BaseRequestBin {
     headers: '',
     body: '',
     url: '',
+    name: '',
   };
 }
 
