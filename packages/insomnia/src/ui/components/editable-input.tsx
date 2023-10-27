@@ -12,7 +12,7 @@ export const EditableInput = ({
   value: string;
   ariaLabel?: string;
   name?: string;
-    paddingClass?: string;
+  paddingClass?: string;
   onChange: (value: string) => void;
 }) => {
   const [isEditable, setIsEditable] = useState(false);
