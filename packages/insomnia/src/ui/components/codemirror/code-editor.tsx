@@ -536,6 +536,7 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       >
         <textarea
           id={id}
+          name={id}
           ref={textAreaRef}
           style={{ display: 'none' }}
           readOnly={readOnly}
