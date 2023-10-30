@@ -33,7 +33,7 @@ interface MockbinInput {
 };
 export const BinEditor = () => {
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
-  const { activeRequest, requestBins } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const { activeRequest, requestBins, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const [binStatus, setBinStatus] = useState('202');
   const [binHeaders, setBinHeaders] = useState('');
   const [binBody, setBinBody] = useState('');
@@ -232,24 +232,38 @@ export const BinEditor = () => {
           ))}
           </DropdownSection>
           <DropdownSection
+            aria-label="From Recent"
+            title="From Recent"
+          >
+            <DropdownItem aria-label='Latest'>
+              <ItemContent
+                label="Latest"
+                onClick={async () => {
+                  if (!activeResponse) {
+                    return;
+                  }
+                  let headersString = '';
+                  for (const header of activeResponse.headers) {
+                    if (header.name && header.value) {
+                      headersString += `${header.name}: ${header.value}\n`;
+                    }
+                  }
+                  const body = await readFile(activeResponse.bodyPath, 'utf8');
+
+                  setBinStatus(activeResponse.statusCode + '');
+                  headerEditorRef.current?.setValue(headersString);
+                  bodyEditorRef.current?.setValue(body);
+                }}
+              />
+            </DropdownItem>
+          </DropdownSection>
+          <DropdownSection
             aria-label="From Spec"
             title="From Spec"
           >
             <DropdownItem aria-label='/user/create'>
               <ItemContent
                 label="/user/create"
-                onClick={() => { }}
-              />
-            </DropdownItem>
-            <DropdownItem aria-label='/user/update'>
-              <ItemContent
-                label="/user/update"
-                onClick={() => { }}
-              />
-            </DropdownItem>
-            <DropdownItem aria-label='/user/delete'>
-              <ItemContent
-                label="/user/delete"
                 onClick={() => { }}
               />
             </DropdownItem>
