@@ -19,7 +19,7 @@ import { isCollection, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
-import { getVCS } from '../../sync/vcs/vcs';
+import vcs from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 
@@ -299,7 +299,6 @@ export const createNewWorkspaceAction: ActionFunction = async ({
 
   await database.flushChanges(flushId);
   if (session.isLoggedIn() && !workspaceMeta.gitRepositoryId) {
-    const vcs = getVCS();
     if (vcs) {
       await initializeLocalBackendProjectAndMarkForSync({
         vcs,
@@ -342,13 +341,10 @@ export const deleteWorkspaceAction: ActionFunction = async ({
   await models.workspace.remove(workspace);
 
   try {
-    const vcs = getVCS();
-    if (vcs) {
       const backendProject = await vcs._getBackendProjectByRootDocument(workspace._id);
       await vcs._removeProject(backendProject);
 
-      console.log({ projectsLOCAL: await vcs.localBackendProjects() });
-    }
+    console.log({ projectsLOCAL: await vcs.localBackendProjects() });
   } catch (err) {
     console.warn('Failed to remove project from VCS', err);
   }
@@ -400,8 +396,7 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
 
   try {
     // Mark for sync if logged in and in the expected project
-    const vcs = getVCS();
-    if (session.isLoggedIn() && vcs) {
+    if (session.isLoggedIn()) {
       await initializeLocalBackendProjectAndMarkForSync({
         vcs: vcs.newInstance(),
         workspace: newWorkspace,

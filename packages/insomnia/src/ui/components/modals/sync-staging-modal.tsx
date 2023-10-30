@@ -1,199 +1,55 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 
-import { strings } from '../../../common/strings';
-import * as models from '../../../models';
-import { BaseModel } from '../../../models';
-import type { DocumentKey, Stage, StageEntry, Status } from '../../../sync/types';
-import { describeChanges } from '../../../sync/vcs/util';
+import type { Status, StatusCandidate } from '../../../sync/types';
 import { VCS } from '../../../sync/vcs/vcs';
-import { WorkspaceLoaderData } from '../../routes/workspace';
 import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import { Tooltip } from '../tooltip';
 
 type Props = ModalProps & {
   vcs: VCS;
   branch: string;
-  onSnapshot: () => Promise<void>;
-  handlePush: () => Promise<void>;
+  status: Status;
+  syncItems: StatusCandidate[];
 };
 
-interface State {
-  status: Status;
-  message: string;
-  error: string;
-  lookupMap: LookupMap;
-}
+export const SyncStagingModal = ({ branch, onHide, status, syncItems }: Props) => {
+  const { projectId, workspaceId, organizationId } = useParams() as {
+    projectId: string;
+    workspaceId: string;
+    organizationId: string;
+  };
 
-type LookupMap = Record<string, {
-  entry: StageEntry;
-  changes: null | string[];
-  type: string;
-  checked: boolean;
-}>;
-
-export const SyncStagingModal = ({ vcs, branch, onSnapshot, handlePush, onHide }: Props) => {
   const modalRef = useRef<ModalHandle>(null);
-  const {
-    syncItems,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const [state, setState] = useState<State>({
-    status: {
-      stage: {},
-      unstaged: {},
-      key: '',
-    },
-    error: '',
-    message: '',
-    lookupMap: {},
-  });
-
-  const refreshVCS = useCallback(async (newStage: Stage = {}) => {
-    const status = await vcs.status(syncItems, newStage);
-    const lookupMap: LookupMap = {};
-    const allKeys = [...Object.keys(status.stage), ...Object.keys(status.unstaged)];
-    for (const key of allKeys) {
-      const lastSnapshot: BaseModel | null = await vcs.blobFromLastSnapshot(key);
-      const document = syncItems.find(si => si.key === key)?.document;
-      const docOrLastSnapshot = document || lastSnapshot;
-      const entry = status.stage[key] || status.unstaged[key];
-      const hasStagingChangeAndDoc = entry && docOrLastSnapshot;
-      const hasDocAndLastSnapshot = document && lastSnapshot;
-      if (hasStagingChangeAndDoc) {
-        lookupMap[key] = {
-          changes: hasDocAndLastSnapshot ? describeChanges(document, lastSnapshot) : null,
-          entry: entry,
-          type: models.getModel(docOrLastSnapshot.type)?.name || 'Unknown',
-          checked: !!status.stage[key],
-        };
-      }
-    }
-    setState(state => ({
-      ...state,
-      status,
-      branch,
-      lookupMap,
-      error: '',
-    }));
-  }, [branch, syncItems, vcs]);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     modalRef.current?.show();
-    const fn = async () => {
-      setState({
-        status: {
-          stage: {},
-          unstaged: {},
-          key: '',
-        },
-        error: '',
-        message: '',
-        lookupMap: {},
-      });
-      // Add everything to stage by default except new items
-      const status: Status = await vcs.status(syncItems, {});
-      const toStage: StageEntry[] = [];
-      for (const key of Object.keys(status.unstaged)) {
-        if ('added' in status.unstaged[key]) {
-          // Don't automatically stage added resources
-          continue;
-        }
-        toStage.push(status.unstaged[key]);
-      }
-      const stage = await vcs.stage(status.stage, toStage);
-      await refreshVCS(stage);
-    };
-    fn();
-  }, [refreshVCS, syncItems, vcs]);
+  }, []);
+  const [checkAllModified, setCheckAllModified] = useState(false);
+  const [checkAllUnversioned, setCheckAllUnversioned] = useState(false);
+  const modifiedChanges = Object.entries(status.stage).map(([key, entry]) => ({
+    ...entry,
+    document: syncItems.find(item => item.key === key)?.document,
+  }));
 
-  const handleStageToggle = async (event: React.SyntheticEvent<HTMLInputElement>) => {
-    const { status } = state;
-    const id = event.currentTarget.name;
-    const isStaged = !!status.stage[id];
-    const newStage = isStaged
-      ? await vcs.unstage(status.stage, [status.stage[id]])
-      : await vcs.stage(status.stage, [status.unstaged[id]]);
-    await refreshVCS(newStage);
-  };
+  const unversionedChanges = Object.entries(status.unstaged).map(([key, entry]) => ({
+    ...entry,
+    document: syncItems.find(item => item.key === key)?.document,
+  }));
 
-  const handleAllToggle = async (keys: DocumentKey[], doStage: boolean) => {
-    const { status } = state;
-    let stage;
-    if (doStage) {
-      const entries: StageEntry[] = [];
-      for (const k of Object.keys(status.unstaged)) {
-        if (keys.includes(k)) {
-          entries.push(status.unstaged[k]);
-        }
-      }
-      stage = await vcs.stage(status.stage, entries);
-    } else {
-      const entries: StageEntry[] = [];
-      for (const k of Object.keys(status.stage)) {
-        if (keys.includes(k)) {
-          entries.push(status.stage[k]);
-        }
-      }
-      stage = await vcs.unstage(status.stage, entries);
-    }
-    await refreshVCS(stage);
-  };
-
-  const handleTakeSnapshotAndPush = async () => {
-    const success = await handleTakeSnapshot();
-    if (success) {
-      handlePush?.();
-    }
-  };
-
-  const handleTakeSnapshot = async () => {
-    const {
-      message,
-      status: { stage },
-    } = state;
-    try {
-      await vcs.takeSnapshot(stage, message);
-    } catch (err) {
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
-      return false;
-    }
-    onSnapshot?.();
-    await refreshVCS();
-    setState(state => ({ ...state, message: '', error: '' }));
-    modalRef.current?.hide();
-    return true;
-  };
-
-  const { status, message, error } = state;
-  const allMap = { ...status.stage, ...status.unstaged };
-  const addedKeys: string[] = Object.entries(allMap)
-    .filter(([, value]) => 'added' in value)
-    .map(([key]) => key);
-  const nonAddedKeys: string[] = Object.entries(allMap)
-    .filter(([, value]) => !('added' in value))
-    .map(([key]) => key);
+  const { Form } = useFetcher();
 
   return (
-    <OverlayContainer onClick={e => e.stopPropagation()}>
+    <OverlayContainer>
       <Modal ref={modalRef} onHide={onHide}>
-        <ModalHeader>Create Snapshot</ModalHeader>
-        <ModalBody className="wide pad">
-          {error && (
-            <p className="notice error margin-bottom-sm no-margin-top">
-              <button className="pull-right icon" onClick={() => setState(state => ({ ...state, error: '' }))}>
-                <i className="fa fa-times" />
-              </button>
-              {error}
-            </p>
-          )}
+        <Form method='POST' ref={formRef}>
+          <ModalHeader>Create Snapshot</ModalHeader>
+          <ModalBody className="wide pad">
           <div className="form-group">
             <div className="form-control form-control--outlined">
               <label>
@@ -201,166 +57,175 @@ export const SyncStagingModal = ({ vcs, branch, onSnapshot, handlePush, onHide }
                 <textarea
                   cols={30}
                   rows={3}
-                  onChange={event => setState(state => ({ ...state, message: event.target.value }))}
-                  value={message}
+                    name="message"
                   placeholder="This is a helpful message that describe the changes made in this snapshot"
                   required
                 />
               </label>
             </div>
           </div>
-          <ChangesTable
-            keys={nonAddedKeys}
-            title='Modified Objects'
-            status={status}
-            lookupMap={state.lookupMap}
-            toggleAll={handleAllToggle}
-            toggleOne={handleStageToggle}
-          />
-          <ChangesTable
-            keys={addedKeys}
-            title='Unversioned Objects'
-            status={status}
-            lookupMap={state.lookupMap}
-            toggleAll={handleAllToggle}
-            toggleOne={handleStageToggle}
-          />
-        </ModalBody>
-        <ModalFooter>
-          <div className="margin-left italic txt-sm">
-            <i className="fa fa-code-fork" /> {branch}
-          </div>
-          <div>
-            <button className="btn" onClick={handleTakeSnapshot}>
-              Create
-            </button>
-            <button className="btn" onClick={handleTakeSnapshotAndPush}>
-              Create and Push
-            </button>
-          </div>
-        </ModalFooter>
+            {modifiedChanges.length > 0 && (
+              <div className="pad-top">
+                <strong>Modified Objects</strong>
+                <table className="table--fancy table--outlined margin-top-sm">
+                  <thead>
+                    <tr className="table--no-outline-row">
+                      <th>
+                        <label className="wide no-pad">
+                          <span className="txt-md">
+                            <IndeterminateCheckbox
+                              className="space-right"
+                              // @ts-expect-error -- TSCONVERSION
+                              type="checkbox"
+                              checked={checkAllModified}
+                              name="allModified"
+                              onChange={() =>
+                                setCheckAllModified(!checkAllModified)
+                              }
+                              indeterminate={!checkAllModified}
+                            />
+                          </span>{' '}
+                          name
+                        </label>
+                      </th>
+                      <th className="text-right">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {modifiedChanges.map(item => (
+                      <tr key={item.key} className="table--no-outline-row">
+                        <td>
+                          <label className="no-pad wide">
+                            <input
+                              disabled={checkAllModified}
+                              className="space-right"
+                              type="checkbox"
+                              {...(checkAllModified
+                                ? { checked: true }
+                                : {})}
+                              value={item.key}
+                              name="keys"
+                            />{' '}
+                            {item.name || 'n/a'}
+                          </label>
+                        </td>
+                        <td className="text-right">
+                          {/* <Tooltip
+                            message={item.added ? 'Delete' : 'Rollback'}
+                          >
+                            <button
+                              className="btn btn--micro space-right"
+                              onClick={e => {
+                                e.preventDefault();
+                                if (formRef.current) {
+                                  const data = new FormData(
+                                    formRef.current
+                                  );
+                                  data.append('changeType', 'modified');
+                                  data.delete('paths');
+                                  data.append('paths', item.path);
+
+                                  rollbackFetcher.submit(data, {
+                                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/rollback`,
+                                    method: 'post',
+                                  });
+                                }
+                              }}
+                            >
+                              <i
+                                className={classnames(
+                                  'fa',
+                                  item.added ? 'fa-trash' : 'fa-undo'
+                                )}
+                              />
+                            </button>
+                          </Tooltip> */}
+                          {/* <OperationTooltip item={item} /> */}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {unversionedChanges.length > 0 && (
+              <div className="pad-top">
+                <strong>Unversioned Objects</strong>
+                <table className="table--fancy table--outlined margin-top-sm">
+                  <thead>
+                    <tr className="table--no-outline-row">
+                      <th>
+                        <label className="wide no-pad">
+                          <span className="txt-md">
+                            <IndeterminateCheckbox
+                              className="space-right"
+                              // @ts-expect-error -- TSCONVERSION
+                              type="checkbox"
+                              checked={checkAllUnversioned}
+                              name="allModified"
+                              onChange={() =>
+                                setCheckAllUnversioned(!checkAllUnversioned)
+                              }
+                              indeterminate={!checkAllUnversioned}
+                            />
+                          </span>{' '}
+                          name
+                        </label>
+                      </th>
+                      <th className="text-right">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {unversionedChanges.map(item => (
+                      <tr key={item.key} className="table--no-outline-row">
+                        <td>
+                          <label className="no-pad wide">
+                            <input
+                              disabled={checkAllUnversioned}
+                              className="space-right"
+                              type="checkbox"
+                              {...(checkAllModified
+                                ? { checked: true }
+                                : {})}
+                              value={item.key}
+                              name="keys"
+                            />{' '}
+                            {item.name || 'n/a'}
+                          </label>
+                        </td>
+                        <td className="text-right">
+                          {item.document?.type}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <div className="margin-left italic txt-sm">
+              <i className="fa fa-code-fork" /> {branch}
+            </div>
+            <div>
+              <button
+                className="btn"
+                type='submit'
+                formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot`}
+              >
+                Create
+              </button>
+              <button
+                className="btn"
+                type='submit'
+                formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot-and-push`}
+              >
+                Create and Push
+              </button>
+            </div>
+          </ModalFooter>
+        </Form>
       </Modal>
     </OverlayContainer>
-  );
-};
-
-interface OperationTooltipProps {
-  entry: StageEntry;
-  type: string;
-  changes: string[];
-}
-const OperationTooltip = ({ entry, type, changes }: OperationTooltipProps) => {
-  const operationType = type === models.workspace.type ? type = strings.collection.singular : type;
-  if ('added' in entry) {
-    return (
-      <Tooltip message="Added">
-        <i className="fa fa-plus-circle success" /> {operationType}
-      </Tooltip>
-    );
-  }
-  if ('modified' in entry) {
-    return (
-      <Tooltip message={`Modified (${changes.join(', ')})`}>
-        <i className="fa fa-circle faded" /> {operationType}
-      </Tooltip>
-    );
-  }
-  if ('deleted' in entry) {
-    return (
-      <Tooltip message="Deleted">
-        <i className="fa fa-minus-circle danger" /> {operationType}
-      </Tooltip>
-    );
-  }
-  return (
-    <Tooltip message="Unknown">
-      <i className="fa fa-question-circle info" /> {operationType}
-    </Tooltip>
-  );
-};
-interface ChangesTableProps {
-  keys: DocumentKey[];
-  title: string;
-  status: Status;
-  lookupMap: LookupMap;
-  toggleAll: (keys: DocumentKey[], doStage: boolean) => void;
-  toggleOne: (event: React.SyntheticEvent<HTMLInputElement>) => void;
-}
-const ChangesTable = ({
-  keys,
-  title,
-  status,
-  lookupMap,
-  toggleAll,
-  toggleOne,
-}: ChangesTableProps) => {
-  if (keys.length === 0) {
-    return null;
-  }
-  let allUnChecked = true;
-  let allChecked = true;
-  for (const key of keys.sort()) {
-    if (!status.stage[key]) {
-      allChecked = false;
-    }
-    if (!status.unstaged[key]) {
-      allUnChecked = false;
-    }
-  }
-  const indeterminate = !allChecked && !allUnChecked;
-  return (
-    <div className="pad-top">
-      <strong>{title}</strong>
-      <table className="table--fancy table--outlined margin-top-sm">
-        <thead>
-          <tr>
-            <th>
-              <label className="wide no-pad">
-                <span className="txt-md">
-                  <IndeterminateCheckbox
-                    className="space-right"
-                    checked={allChecked}
-                    onChange={() => toggleAll(keys, allUnChecked)}
-                    indeterminate={indeterminate}
-                  />
-                </span>{' '}
-                name
-              </label>
-            </th>
-            <th className="text-right ">Changes</th>
-            <th className="text-right">Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {keys.filter(key => lookupMap[key]).map(key => {
-            const { entry, type, checked, changes } = lookupMap[key];
-            return (
-              <tr key={key} className="table--no-outline-row">
-                <td>
-                  <label className="no-pad wide">
-                    <input
-                      className="space-right"
-                      type="checkbox"
-                      checked={checked}
-                      name={key}
-                      onChange={toggleOne}
-                    />{' '}
-                    {entry.name}
-                  </label>
-                </td>
-                <td className="text-right">{changes ? changes.join(', ') : '--'}</td>
-                <td className="text-right">
-                  <OperationTooltip
-                    entry={entry}
-                    type={type}
-                    changes={changes || []}
-                  />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
   );
 };

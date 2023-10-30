@@ -36,10 +36,8 @@ import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
 import { Project } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
-import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import { MergeConflict } from '../../sync/types';
+import vcs from '../../sync/vcs/insomnia-sync';
 import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
-import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
@@ -48,9 +46,8 @@ import { GitHubStarsButton } from '../components/github-stars-button';
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
 import { InsomniaAILogo } from '../components/insomnia-icon';
-import { showAlert, showModal } from '../components/modals';
+import { showAlert } from '../components/modals';
 import { showSettingsModal } from '../components/modals/settings-modal';
-import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { OrganizationAvatar } from '../components/organization-avatar';
 import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
@@ -139,24 +136,6 @@ export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
     try {
-      let vcs = getVCS();
-      if (!vcs) {
-        const driver = FileSystemDriver.create(
-          process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-        );
-
-        console.log('Initializing VCS');
-        vcs = await initVCS(driver, async conflicts => {
-          return new Promise(resolve => {
-            showModal(SyncMergeModal, {
-              conflicts,
-              handleDone: (conflicts?: MergeConflict[]) =>
-                resolve(conflicts || []),
-            });
-          });
-        });
-      }
-
       const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
         method: 'GET',
         path: '/v1/organizations',

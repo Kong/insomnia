@@ -1,12 +1,9 @@
 import classnames from 'classnames';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams } from 'react-router-dom';
 
-import { database as db, Operation } from '../../../common/database';
-import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import { WorkspaceLoaderData } from '../../routes/workspace';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
@@ -15,14 +12,11 @@ import { SyncPullButton } from '../sync-pull-button';
 
 type Props = ModalProps & {
   vcs: VCS;
-};
-
-interface State {
-  error?: string;
-  currentBranch: string;
   branches: string[];
   remoteBranches: string[];
-}
+  currentBranch: string;
+};
+
 export interface SyncBranchesModalOptions {
   onHide?: () => void;
 }
@@ -30,152 +24,45 @@ export interface SyncBranchesModalHandle {
   show: (options: SyncBranchesModalOptions) => void;
   hide: () => void;
 }
-export const SyncBranchesModal = ({ vcs, onHide }: Props) => {
+export const SyncBranchesModal = ({ vcs, onHide, branches, remoteBranches, currentBranch }: Props) => {
   const modalRef = useRef<ModalHandle>(null);
-  const [state, setState] = useState<State>({
-    error: '',
-    branches: [],
-    remoteBranches: [],
-    currentBranch: '',
-  });
 
-  const refreshState = useCallback(async () => {
-    try {
-      const currentBranch = await vcs.getBranch();
-      const branches = (await vcs.getBranches()).sort();
-      setState(state => ({
-        ...state,
-        branches,
-        currentBranch,
-        error: '',
-      }));
-
-      const remoteBranches = await interceptAccessError({
-        callback: async () => (await vcs.getRemoteBranches()).filter(b => !branches.includes(b)).sort(),
-        action: 'get',
-        resourceName: 'remote',
-        resourceType: 'branches',
-      });
-      setState(state => ({
-        ...state,
-        remoteBranches,
-      }));
-    } catch (err) {
-      console.log('Failed to refresh', err.stack);
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
-    }
-  }, [vcs]);
   useEffect(() => {
     modalRef.current?.show();
-    refreshState();
-  }, [refreshState]);
+  }, []);
 
-  const {
-    syncItems,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  async function handleCheckout(branch: string) {
-    try {
-      const delta = await vcs.checkout(syncItems, branch);
-      await db.batchModifyDocs(delta as Operation);
-      await refreshState();
-    } catch (err) {
-      console.log('Failed to checkout', err.stack);
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
-    }
-  }
-  const handleMerge = async (branch: string) => {
-    const delta = await vcs.merge(syncItems, branch);
-    try {
-      await db.batchModifyDocs(delta as Operation);
-      await refreshState();
-    } catch (err) {
-      console.log('Failed to merge', err.stack);
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
-    }
+  const { organizationId, projectId, workspaceId } = useParams() as {
+    organizationId: string;
+    projectId: string;
+    workspaceId: string;
   };
 
-  const handleRemoteDelete = async (branch: string) => {
-    try {
-      await vcs.removeRemoteBranch(branch);
-      await refreshState();
-    } catch (err) {
-      console.log('Failed to remote delete', err.stack);
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
-    }
-  };
-
-  const handleDelete = async (branch: string) => {
-    try {
-      await vcs.removeBranch(branch);
-      await refreshState();
-    } catch (err) {
-      console.log('Failed to delete', err.stack);
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
-    }
-  };
-
-  const handleCreate = async (event: React.SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    try {
-      // Create new branch
-      const formData = new FormData(event.currentTarget);
-      const newBranchName = formData.get('newName') as string;
-      if (!newBranchName) {
-        return;
-      }
-      await vcs.fork(newBranchName);
-      // Checkout new branch
-      const delta = await vcs.checkout(syncItems, newBranchName);
-      await db.batchModifyDocs(delta as Operation);
-      // Clear branch name and refresh things
-      await refreshState();
-
-    } catch (err) {
-      console.log('Failed to create', err.stack);
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
-    }
-  };
-  const { branches, remoteBranches, currentBranch, error } = state;
+  const checkoutBranchFetcher = useFetcher();
+  const mergeBranchFetcher = useFetcher();
+  const deleteBranchFetcher = useFetcher();
+  const createBranchFetcher = useFetcher();
 
   return (
     <OverlayContainer>
       <Modal ref={modalRef} onHide={onHide}>
         <ModalHeader>Branches</ModalHeader>
         <ModalBody className="wide pad">
-          {error && (
-            <p className="notice error margin-bottom-sm no-margin-top">
-              <button className="pull-right icon" onClick={() => setState(state => ({ ...state, error: '' }))}>
-                <i className="fa fa-times" />
-              </button>
-              {error}
-            </p>
-          )}
-          <form onSubmit={handleCreate}>
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              createBranchFetcher.submit(e.currentTarget, {
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create`,
+                method: 'POST',
+              });
+            }}
+          >
             <div className="form-row">
               <div className="form-control form-control--outlined">
                 <label>
                   New Branch Name
                   <input
                     type="text"
-                    name="newName"
+                    name="branchName"
                     placeholder="testing-branch"
                   />
                 </label>
@@ -217,7 +104,12 @@ export const SyncBranchesModal = ({ vcs, onHide }: Props) => {
                         className="btn btn--micro btn--outlined space-left"
                         doneMessage="Merged"
                         disabled={name === currentBranch}
-                        onClick={() => handleMerge(name)}
+                        onClick={() => mergeBranchFetcher.submit({
+                          branch: name,
+                        }, {
+                          method: 'POST',
+                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/merge`,
+                        })}
                       >
                         Merge
                       </PromptButton>
@@ -225,14 +117,27 @@ export const SyncBranchesModal = ({ vcs, onHide }: Props) => {
                         className="btn btn--micro btn--outlined space-left"
                         doneMessage="Deleted"
                         disabled={name === currentBranch || name === 'master'}
-                        onClick={() => handleDelete(name)}
+                        onClick={() => deleteBranchFetcher.submit(
+                          {
+                            branch: name,
+                          },
+                          {
+                            method: 'POST',
+                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/delete`,
+                          },
+                        )}
                       >
                         Delete
                       </PromptButton>
                       <button
                         className="btn btn--micro btn--outlined space-left"
                         disabled={name === currentBranch}
-                        onClick={() => handleCheckout(name)}
+                        onClick={() => checkoutBranchFetcher.submit({
+                          branch: name,
+                        }, {
+                          method: 'POST',
+                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/checkout`,
+                        })}
                       >
                         Checkout
                       </button>
@@ -265,7 +170,15 @@ export const SyncBranchesModal = ({ vcs, onHide }: Props) => {
                             className="btn btn--micro btn--outlined space-left"
                             doneMessage="Deleted"
                             disabled={name === currentBranch}
-                            onClick={() => handleRemoteDelete(name)}
+                            onClick={() => deleteBranchFetcher.submit(
+                              {
+                                branch: name,
+                              },
+                              {
+                                method: 'POST',
+                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/delete`,
+                              },
+                            )}
                           >
                             Delete
                           </PromptButton>
@@ -273,7 +186,7 @@ export const SyncBranchesModal = ({ vcs, onHide }: Props) => {
                         <SyncPullButton
                           className="btn btn--micro btn--outlined space-left"
                           branch={name}
-                          onPull={refreshState}
+                          onPull={console.log}
                           disabled={name === currentBranch}
                           vcs={vcs}
                         >

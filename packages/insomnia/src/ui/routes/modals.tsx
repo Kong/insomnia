@@ -1,7 +1,7 @@
 import React, { FC, Fragment } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { useVCS } from '../components/dropdowns/workspace-sync-dropdown';
+import vcs from '../../sync/vcs/insomnia-sync';
 import { ErrorBoundary } from '../components/error-boundary';
 import { registerModal } from '../components/modals';
 import { AddKeyCombinationModal } from '../components/modals/add-key-combination-modal';
@@ -26,9 +26,6 @@ import { WorkspaceLoaderData } from './workspace';
 const Modals: FC = () => {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const { activeWorkspace, activeEnvironment } = workspaceData || {};
-  const vcs = useVCS({
-    workspaceId: activeWorkspace?._id,
-  });
 
   return (
     <div key="modals" className="modals">

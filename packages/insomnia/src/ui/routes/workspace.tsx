@@ -1,6 +1,7 @@
 import React from 'react';
 import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
 
+import { isLoggedIn } from '../../account/session';
 import { SortOrder } from '../../common/constants';
 import { database } from '../../common/database';
 import { fuzzyMatchAll } from '../../common/misc';
@@ -27,6 +28,8 @@ import {
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { StatusCandidate } from '../../sync/types';
+import { pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
+import vcs from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
 
 type Collection = Child[];
@@ -247,6 +250,13 @@ export const workspaceLoader: LoaderFunction = async ({
     tree.forEach(node => build(node));
 
     return collection;
+  }
+
+  if (isLoggedIn() && !gitRepository) {
+    await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
+    if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
+      await pushSnapshotOnInitialize({ vcs, workspace: activeWorkspace, project: activeProject });
+    }
   }
 
   return {
