@@ -12,6 +12,8 @@ import { RequestLoaderData } from '../../routes/request';
 import { Dropdown, DropdownButton, DropdownItem, DropdownSection, ItemContent } from '../base/dropdown';
 import { CodeEditor, CodeEditorHandle } from '../codemirror/code-editor';
 import { showPrompt } from '../modals';
+
+const mockbinUrl = 'http://localhost:8080';
 interface MockbinInput {
   status: string;
   statusText: string;
@@ -34,7 +36,7 @@ interface MockbinInput {
 export const BinEditor = () => {
   const { workspaceId, requestId } = useParams() as { workspaceId: string; requestId: string };
   const { activeRequest, requestBins, activeResponse } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
-  const [binStatus, setBinStatus] = useState('202');
+  const [binStatus, setBinStatus] = useState('');
   const [binHeaders, setBinHeaders] = useState('');
   const [binBody, setBinBody] = useState('');
   const headerEditorRef = useRef<CodeEditorHandle>(null);
@@ -79,17 +81,21 @@ export const BinEditor = () => {
 
   const createBinOnRemoteFromResponse = async (mockbinInput: MockbinInput): Promise<string> => {
     console.log({ mockbinInput });
-    const bin = await window.main.axiosRequest({
-      url: 'http://mockbin.org/bin/create',
-      method: 'post',
-      data: mockbinInput,
-    });
-    // todo: show bin logs
-    // todo: handle error better
-    // todo create/update current bin url
+    try {
+      const bin = await window.main.axiosRequest({
+        url: mockbinUrl + '/bin/create',
+        method: 'post',
+        data: mockbinInput,
+      });
+      // todo: show bin logs
+      // todo: handle error better
+      // todo create/update current bin url
 
-    if (bin?.data) {
-      return bin.data;
+      if (bin?.data) {
+        return bin.data;
+      }
+    } catch (e) {
+      console.log(e);
     }
     console.log('Error: creating bin on remote');
     return '';
@@ -115,7 +121,7 @@ export const BinEditor = () => {
               body: binBody,
             });
             const id = await createBinOnRemoteFromResponse(bin);
-            const url = 'https://mockbin.org/bin/' + id;
+            const url = mockbinUrl + '/bin/' + id;
           }
           if (submitType === 'save') {
             console.log('save bin to local db and show in dropdown');
@@ -144,7 +150,7 @@ export const BinEditor = () => {
               body: binBody,
             });
             const id = await createBinOnRemoteFromResponse(bin);
-            const url = 'https://mockbin.org/bin/' + id;
+            const url = mockbinUrl + '/bin/' + id;
             console.log('Copied to clipboard:', url);
             window.clipboard.writeText(url);
           }
@@ -232,8 +238,8 @@ export const BinEditor = () => {
           ))}
           </DropdownSection>
           <DropdownSection
-            aria-label="From Recent"
-            title="From Recent"
+            aria-label="From Recent Responses"
+            title="From Recent Responses"
           >
             <DropdownItem aria-label='Latest'>
               <ItemContent
@@ -263,7 +269,7 @@ export const BinEditor = () => {
           >
             <DropdownItem aria-label='/user/create'>
               <ItemContent
-                label="/user/create"
+                label="TODO"
                 onClick={() => { }}
               />
             </DropdownItem>
