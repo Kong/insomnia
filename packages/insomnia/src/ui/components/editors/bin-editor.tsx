@@ -39,7 +39,7 @@ export const BinEditor = () => {
   const [binBody, setBinBody] = useState('');
   const headerEditorRef = useRef<CodeEditorHandle>(null);
   const bodyEditorRef = useRef<CodeEditorHandle>(null);
-  const responseToMockBin = async (res: Response) => {
+  const responseToMockBin = async (res: Response): Promise<MockbinInput> => {
     const { statusCode, statusMessage, headers, httpVersion, bytesContent, contentType } = res;
     const body = await readFile(res.bodyPath, 'utf8');
     return {
@@ -78,6 +78,7 @@ export const BinEditor = () => {
   };
 
   const createBinOnRemoteFromResponse = async (mockbinInput: MockbinInput): Promise<string> => {
+    console.log({ mockbinInput });
     const bin = await window.main.axiosRequest({
       url: 'http://mockbin.org/bin/create',
       method: 'post',
@@ -144,6 +145,7 @@ export const BinEditor = () => {
             });
             const id = await createBinOnRemoteFromResponse(bin);
             const url = 'https://mockbin.org/bin/' + id;
+            console.log('Copied to clipboard:', url);
             window.clipboard.writeText(url);
           }
         }
