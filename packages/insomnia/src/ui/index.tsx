@@ -899,13 +899,6 @@ const router = createMemoryRouter(
                                           await import('./routes/remote-collections')
                                         ).rollbackChangesAction(...args),
                                     },
-                                    {
-                                      path: 'status',
-                                      action: async (...args) =>
-                                        (
-                                          await import('./routes/remote-collections')
-                                        ).statusAction(...args),
-                                    },
                                   ],
                                 },
                               ],

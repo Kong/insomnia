@@ -162,17 +162,22 @@ export const SyncDropdown: FC<Props> = ({ vcs }) => {
       },
     ];
 
+  const isSyncing = checkoutFetcher.state !== 'idle' || pullFetcher.state !== 'idle' || pushFetcher.state !== 'idle' || rollbackFetcher.state !== 'idle';
+
   return (
     <Fragment>
       <MenuTrigger>
-        <Button
-          aria-label="Insomnia Sync"
-          className="flex items-center h-9 gap-4 px-[--padding-md] w-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-        >
-          <div className="truncate">
-            <Icon icon="cloud" />{' '}
-            {currentBranch}
-          </div>
+        <div className="flex items-center h-9 gap-4 px-[--padding-md] w-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+          <Button
+            aria-label="Insomnia Sync"
+            className="flex-1 flex items-center gap-2 truncate"
+          >
+            <Icon
+              icon={isSyncing ? 'refresh' : 'cloud'}
+              className={`w-5 ${isSyncing ? 'animate-spin' : ''}`}
+            />
+            <span>{currentBranch}</span>
+          </Button>
           <div className="flex items-center gap-2">
             <TooltipTrigger>
               <Button>
@@ -184,7 +189,7 @@ export const SyncDropdown: FC<Props> = ({ vcs }) => {
                 className="border select-none text-sm max-w-xs border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] text-[--color-font] px-4 py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
               >
                 {snapshotToolTipMsg}
-                  </Tooltip>
+              </Tooltip>
             </TooltipTrigger>
             <TooltipTrigger>
               <Button>
@@ -212,17 +217,15 @@ export const SyncDropdown: FC<Props> = ({ vcs }) => {
               </Tooltip>
             </TooltipTrigger>
           </div>
-        </Button>
-        <Popover className="min-w-max">
+        </div>
+        <Popover className="min-w-max" placement='top end' offset={8}>
           <Menu
             aria-label="Insomnia Sync Menu"
             selectionMode="single"
             disabledKeys={syncMenuActionList.filter(item => item.isDisabled).map(item => item.id)}
             onAction={key => {
               const item = syncMenuActionList.find(item => item.id === key);
-              if (item) {
-                item.action();
-              }
+              item?.action();
             }}
             items={syncMenuActionList}
             className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"

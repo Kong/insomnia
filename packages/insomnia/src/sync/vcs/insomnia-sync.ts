@@ -9,7 +9,7 @@ const driver = FileSystemDriver.create(
 );
 
 console.log('Initializing VCS');
-const vcs = await new VCS(driver, async conflicts => {
+const vcs = new VCS(driver, async conflicts => {
   return new Promise(resolve => {
     showModal(SyncMergeModal, {
       conflicts,
