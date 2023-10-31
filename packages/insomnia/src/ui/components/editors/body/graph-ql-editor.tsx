@@ -201,7 +201,7 @@ export const GraphQLEditor: FC<Props> = ({
   } catch (error) {
     documentAST = null;
   }
-  const operations = documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '') || [];
+  const operations = documentAST?.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '').filter(Boolean) || [];
   const operationName = requestBody.operationName || operations[0] || '';
   const [state, setState] = useState<State>({
     body: {
@@ -297,7 +297,7 @@ export const GraphQLEditor: FC<Props> = ({
   const changeQuery = (query: string) => {
     try {
       const documentAST = parse(query);
-      const operations = documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '');
+      const operations = documentAST.definitions.filter(isOperationDefinition)?.map(def => def.name?.value || '').filter(Boolean) || [];
       // default to first operation when none selected
       let operationName = state.body.operationName || operations[0] || '';
       if (operations.length && state.body.operationName) {
