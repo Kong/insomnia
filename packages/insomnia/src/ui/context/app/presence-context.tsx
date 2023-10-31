@@ -3,7 +3,7 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
 import { getCurrentSessionId } from '../../../account/session';
-import { ProjectsLoaderData } from '../../routes/project';
+import { ProjectLoaderData } from '../../routes/project';
 
 const PresenceContext = createContext<{
   presence: UserPresence[];
@@ -37,10 +37,10 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
     workspaceId,
   } = useParams() as {
     organizationId: string;
-    workspaceId: string;
+      workspaceId: string;
   };
 
-  const projectData = useRouteLoaderData('/project') as ProjectsLoaderData | null;
+  const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
   const remoteId = projectData?.activeProject.remoteId;
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const syncOrganizationsFetcher = useFetcher();

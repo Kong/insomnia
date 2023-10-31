@@ -30,14 +30,18 @@ import {
   getCurrentSessionId,
 } from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
+import { database } from '../../common/database';
 import { exportAllData } from '../../common/export-all-data';
+import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
+import { Project } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
-import { shouldRunMigration } from '../../sync/vcs/migrate-to-cloud-projects';
+import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
+import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
 import { GitHubStarsButton } from '../components/github-stars-button';
@@ -54,7 +58,7 @@ import { PresenceProvider } from '../context/app/presence-context';
 import { useRootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 
-interface OrganizationsResponse {
+export interface OrganizationsResponse {
   start: number;
   limit: number;
   length: number;
@@ -78,6 +82,22 @@ interface UserProfileResponse {
 }
 
 type PersonalPlanType = 'free' | 'individual' | 'team' | 'enterprise' | 'enterprise-member';
+const formatCurrentPlanType = (type: PersonalPlanType) => {
+  switch (type) {
+    case 'free':
+      return 'Free';
+    case 'individual':
+      return 'Individual';
+    case 'team':
+      return 'Team';
+    case 'enterprise':
+      return 'Enterprise';
+    case 'enterprise-member':
+      return 'Enterprise Member';
+    default:
+      return 'Free';
+  }
+};
 type PaymentSchedules = 'month' | 'year';
 
 interface CurrentPlan {
@@ -89,7 +109,7 @@ interface CurrentPlan {
   type: PersonalPlanType;
 };
 
-const organizationsData: OrganizationLoaderData = {
+export const organizationsData: OrganizationLoaderData = {
   organizations: [],
   user: undefined,
   currentPlan: undefined,
@@ -118,13 +138,6 @@ function sortOrganizations(accountId: string, organizations: Organization[]): Or
 export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
-    // Check if there are any migrations to run before loading organizations.
-    // If there are migrations, we need to log the user out and redirect them to the login page
-    if (await shouldRunMigration()) {
-      await session.logout();
-      return redirect('/auth/login');
-    }
-
     try {
       let vcs = getVCS();
       if (!vcs) {
@@ -173,14 +186,36 @@ export const indexLoader: LoaderFunction = async () => {
       organizationsData.organizations = sortOrganizations(accountId, organizations);
       organizationsData.user = user;
       organizationsData.currentPlan = currentPlan;
-
-      const personalOrganization = organizations.filter(isPersonalOrganization).find(organization => {
-        const accountId = getAccountId();
-        return accountId && isOwnerOfOrganization({
-          organization,
-          accountId,
+      const personalOrganization = organizations.filter(isPersonalOrganization)
+        .find(organization =>
+          isOwnerOfOrganization({
+            organization,
+            accountId,
+          }));
+      invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
+      if (await shouldMigrateProjectUnderOrganization()) {
+        await migrateProjectsIntoOrganization({
+          personalOrganization,
         });
-      });
+
+        const preferredProjectType = localStorage.getItem('prefers-project-type');
+        if (preferredProjectType === 'remote') {
+          const localProjects = await database.find<Project>('Project', {
+            parentId: personalOrganization.id,
+            remoteId: null,
+          });
+
+          // If any of those fail projects will still be under the organization as local projects
+          for (const project of localProjects) {
+            updateLocalProjectToRemote({
+              project,
+              organizationId: personalOrganization.id,
+              sessionId,
+              vcs,
+            });
+          }
+        }
+      }
 
       if (personalOrganization) {
         return redirect(`/organization/${personalOrganization.id}`);
@@ -308,45 +343,49 @@ export const shouldOrganizationsRevalidate: ShouldRevalidateFunction = ({
   return isSwitchingBetweenOrganizations;
 };
 
-const UpgradeButton = () => {
-  const { currentPlan } = useOrganizationLoaderData();
+const UpgradeButton = ({
+  currentPlan,
+}: {
+  currentPlan: CurrentPlan;
+}) => {
+
+  // For the enterprise-member plan we don't show the upgrade button.
+  if (currentPlan?.type === 'enterprise-member') {
+    return null;
+  }
 
   // If user has a team or enterprise plan we navigate them to the Enterprise contact page.
   if (['team', 'enterprise'].includes(currentPlan?.type || '')) {
     return (
-      <Button
-        className="px-4 bg-[--color-surprise] text-[--color-font-surprise] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-        onPress={() => {
-          window.main.openInBrowser('https://insomnia.rest/pricing/contact');
-        }}
+      <a
+        className="px-4 text-[--color-font] hover:bg-[--hl-xs] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+        href={'https://insomnia.rest/pricing/contact'}
       >
         {currentPlan?.type === 'enterprise' ? '+ Add more seats' : 'Upgrade'}
-      </Button>
+      </a>
     );
   }
 
-  let to = '/app/subscription/update?plan=individual&payment_schedule=year';
+  let to = '/app/subscription/update?plan=individual&pay_schedule=year';
 
   if (currentPlan?.type === 'individual') {
-    to = `/app/subscription/update?plan=team&payment_schedule=${currentPlan?.period}`;
+    to = `/app/subscription/update?plan=team&pay_schedule=${currentPlan?.period}`;
   }
 
   return (
-    <Button
-      onPress={() => {
-        window.main.openInBrowser(getAppWebsiteBaseURL() + to);
-      }}
-      className="px-4 bg-[--color-surprise] text-[--color-font-surprise] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+    <a
+      href={getAppWebsiteBaseURL() + to}
+      className="px-4 text-[--color-font] hover:bg-[--hl-xs] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
     >
       Upgrade
-    </Button>
+    </a>
   );
 };
 
 const OrganizationRoute = () => {
   const { settings, workspaceCount } = useRootLoaderData();
 
-  const { organizations, user } =
+  const { organizations, user, currentPlan } =
     useLoaderData() as OrganizationLoaderData;
   const workspaceData = useRouteLoaderData(
     ':workspaceId',
@@ -364,7 +403,6 @@ const OrganizationRoute = () => {
     projectId?: string;
     workspaceId?: string;
   };
-
   const [status, setStatus] = useState<'online' | 'offline'>('online');
 
   useEffect(() => {
@@ -418,18 +456,38 @@ const OrganizationRoute = () => {
               {user ? (
                 <Fragment>
                   <PresentUsers />
+                  <Button
+                    aria-label="Invite collaborators"
+                    className="px-4 text-[--color-font] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    onPress={() => {
+                      window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
+                    }}
+                  >
+                    <Icon icon="user-plus" />
+                    <span className="truncate">
+                      Share
+                    </span>
+                  </Button>
                   <MenuTrigger>
-                    <Button className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    <Button className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                       <Avatar
                         src={user.picture}
                         alt={user.name}
                       />
-                      <span className="pr-2">
+                      <span className="truncate">
                         {user.name}
                       </span>
+                      <Icon className='w-4 pr-2' icon="caret-down" />
                     </Button>
-                    <Popover className="min-w-max">
+                    <Popover className="min-w-max border select-none text-sm border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none">
+                      {currentPlan && Boolean(currentPlan.type) && (
+                        <div className='flex gap-2 justify-between items-center pb-2 px-[--padding-md] border-b border-solid border-[--hl-sm] text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap'>
+                          <span>{formatCurrentPlanType(currentPlan.type)} Plan</span>
+                          <UpgradeButton currentPlan={currentPlan} />
+                        </div>
+                      )}
                       <Menu
+                        className='focus:outline-none'
                         onAction={action => {
                           if (action === 'logout') {
                             logoutFetcher.submit(
@@ -446,9 +504,22 @@ const OrganizationRoute = () => {
                               `${getAppWebsiteBaseURL()}/app/settings/account`,
                             );
                           }
+
+                          if (action === 'manage-organizations') {
+                            window.main.openInBrowser(
+                              `${getAppWebsiteBaseURL()}/app/dashboard/organizations`
+                            );
+                          }
                         }}
-                        className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                       >
+                        <Item
+                          id="manage-organizations"
+                          className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                          aria-label="Manage organizations"
+                        >
+                          <Icon icon="users" />
+                          <span>Manage Organizations</span>
+                        </Item>
                         <Item
                           id="account-settings"
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -463,12 +534,11 @@ const OrganizationRoute = () => {
                           aria-label="logout"
                         >
                           <Icon icon="sign-out" />
-                          <span>Logout</span>
+                          <span>Log out</span>
                         </Item>
                       </Menu>
                     </Popover>
                   </MenuTrigger>
-                  <UpgradeButton />
                 </Fragment>
               ) : (
                 <Fragment>
@@ -568,9 +638,16 @@ const OrganizationRoute = () => {
                       }
 
                       if (action === 'new-organization') {
-                        window.main.openInBrowser(
-                          `${getAppWebsiteBaseURL()}/app/organization/create`,
-                        );
+                        if (currentPlan?.type !== 'enterprise-member') {
+                          window.main.openInBrowser(
+                            `${getAppWebsiteBaseURL()}/app/organization/create`,
+                          );
+                        } else {
+                          showAlert({
+                            title: 'Could not create new organization.',
+                            message: 'Your Insomnia account is tied to the enterprise corporate account. Please ask the owner of the enterprise billing to create one for you.',
+                          });
+                        }
                       }
                     }}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
@@ -639,7 +716,7 @@ const OrganizationRoute = () => {
                   />{' '}
                   {user
                     ? status.charAt(0).toUpperCase() + status.slice(1)
-                    : `Log in to sync your data (${workspaceCount} files)`}
+                    : 'Log in to see your projects'}
                 </Button>
                 <Tooltip
                   placement="top"
@@ -648,7 +725,7 @@ const OrganizationRoute = () => {
                 >
                   {user
                     ? `You are ${status === 'online'
-                      ? 'securely connected to Insomnia Cloud'
+                      ? 'securely connected to Insomnia Cloud.'
                       : 'offline. Connect to sync your data.'
                     }`
                     : 'Log in to Insomnia to sync your data.'}
@@ -686,12 +763,15 @@ const OrganizationRoute = () => {
                       title: 'Export Complete',
                       message: 'All your data have been successfully exported',
                     });
+                    window.main.trackSegmentEvent({
+                      event: SegmentEvent.exportAllCollections,
+                    });
                   }}
                 >
                   <Icon
                     icon="file-export"
                   />
-                  Export your data
+                  Export your data {`(${workspaceCount} files)`}
                 </Button>
               ) : null}
             </div>
