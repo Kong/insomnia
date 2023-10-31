@@ -1,4 +1,4 @@
-import { IconName } from '@fortawesome/fontawesome-svg-core';
+import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import { Button, Item, Menu, MenuTrigger, Popover, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
@@ -19,11 +19,11 @@ interface Props {
   workspace: Workspace;
   project: Project;
   vcs: VCS;
+  gitSyncEnabled: boolean;
 }
 
-export const SyncDropdown: FC<Props> = ({ vcs }) => {
+export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
-
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
   const [isSyncDeleteModalOpen, setIsSyncDeleteModalOpen] = useState(false);
   const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
@@ -79,7 +79,7 @@ export const SyncDropdown: FC<Props> = ({ vcs }) => {
   const localBranchesActionList: {
     id: string;
     name: string;
-    icon: IconName;
+    icon: IconProp;
     isDisabled?: boolean;
     action: () => void;
   }[] = localBranches.map(branch => ({
@@ -96,13 +96,29 @@ export const SyncDropdown: FC<Props> = ({ vcs }) => {
     },
   }));
 
-  const syncMenuActionList: {
+  const switchToGitRepoActionList: {
     id: string;
     name: string;
-    icon: IconName;
+    icon: IconProp;
     isDisabled?: boolean;
     action: () => void;
   }[] = [
+      {
+        id: 'switch-to-git-repo',
+        name: 'Switch to Git Repository',
+        icon: ['fab', 'git-alt'],
+        action: () => setIsGitRepoSettingsModalOpen(true),
+      },
+    ];
+
+  const syncMenuActionList: {
+    id: string;
+    name: string;
+    icon: IconProp;
+    isDisabled?: boolean;
+    action: () => void;
+  }[] = [
+      ...gitSyncEnabled ? switchToGitRepoActionList : [],
       {
         id: 'branches',
         name: 'Branches',
@@ -232,7 +248,7 @@ export const SyncDropdown: FC<Props> = ({ vcs }) => {
           >
             {item => (
               <Item
-                className="aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                className={item.id === 'switch-to-git-repo' ? 'p-[--padding-md] border-solid outline-none border-b border-[--hl-md] flex gap-2 items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors' : 'aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors'}
                 aria-label={item.name}
               >
                 <Icon icon={item.icon} />
