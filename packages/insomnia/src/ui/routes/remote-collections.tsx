@@ -168,7 +168,7 @@ export const remoteLoader: LoaderFunction = async ({ params }): Promise<RemoteCo
   };
 };
 
-export interface SyncDataLoaderData {
+interface SyncData {
   localBranches: string[];
   remoteBranches: string[];
   currentBranch: string;
@@ -183,39 +183,50 @@ export interface SyncDataLoaderData {
   remoteBackendProjects: BackendProject[];
 }
 
+export type SyncDataLoaderData = SyncData | {
+  error: string;
+};
+
 export const syncDataLoader: LoaderFunction = async ({ params }): Promise<SyncDataLoaderData> => {
-  const { projectId, workspaceId } = params;
-  invariant(typeof projectId === 'string', 'Project Id is required');
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  try {
+    const { projectId, workspaceId } = params;
+    invariant(typeof projectId === 'string', 'Project Id is required');
+    invariant(typeof workspaceId === 'string', 'Workspace Id is required');
 
-  const project = await models.project.getById(projectId);
-  invariant(project, 'Project not found');
-  invariant(project.remoteId, 'Project is not remote');
+    const project = await models.project.getById(projectId);
+    invariant(project, 'Project not found');
+    invariant(project.remoteId, 'Project is not remote');
 
-  const { syncItems } = await getSyncItems({ workspaceId });
-  const localBranches = (await vcs.getBranches()).sort();
-  const remoteBranches = (await vcs.getRemoteBranches()).sort();
-  const currentBranch = await vcs.getBranch();
-  const history = (await vcs.getHistory()).sort((a, b) => b.created > a.created ? 1 : -1);
-  const historyCount = await vcs.getHistoryCount();
-  const status = await vcs.status(syncItems, {});
-  const compare = await vcs.compareRemoteBranch();
-  const remoteBackendProjects = await vcs.remoteBackendProjects({
-    teamId: project.parentId,
-    teamProjectId: project.remoteId,
-  });
+    const { syncItems } = await getSyncItems({ workspaceId });
+    const localBranches = (await vcs.getBranches()).sort();
+    const remoteBranches = (await vcs.getRemoteBranches()).sort();
+    const currentBranch = await vcs.getBranch();
+    const history = (await vcs.getHistory()).sort((a, b) => b.created > a.created ? 1 : -1);
+    const historyCount = await vcs.getHistoryCount();
+    const status = await vcs.status(syncItems, {});
+    const compare = await vcs.compareRemoteBranch();
+    const remoteBackendProjects = await vcs.remoteBackendProjects({
+      teamId: project.parentId,
+      teamProjectId: project.remoteId,
+    });
 
-  return {
-    syncItems,
-    localBranches,
-    remoteBranches,
-    currentBranch,
-    history,
-    historyCount,
-    status,
-    compare,
-    remoteBackendProjects,
-  };
+    return {
+      syncItems,
+      localBranches,
+      remoteBranches,
+      currentBranch,
+      history,
+      historyCount,
+      status,
+      compare,
+      remoteBackendProjects,
+    };
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Unknown error while loading sync data.';
+    return {
+      error: errorMessage,
+    };
+  }
 };
 
 export const checkoutBranchAction: ActionFunction = async ({ request, params }) => {

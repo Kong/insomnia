@@ -50,7 +50,7 @@ export const SyncDropdown: FC<Props> = ({ vcs }) => {
     );
   }
 
-  if (!session.isLoggedIn() || !syncDataFetcher.data) {
+  if (!session.isLoggedIn() || !syncDataFetcher.data || 'error' in syncDataFetcher.data) {
     return null;
   }
 
