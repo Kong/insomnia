@@ -1,6 +1,7 @@
 import classnames from 'classnames';
 import React, { useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
+import { Button } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { VCS } from '../../../sync/vcs/vcs';
@@ -8,6 +9,7 @@ import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
+import { Icon } from '../icon';
 import { SyncPullButton } from '../sync-pull-button';
 
 type Props = ModalProps & {
@@ -59,7 +61,7 @@ export const SyncBranchesModal = ({ vcs, onHide, branches, remoteBranches, curre
             <div className="form-row">
               <div className="form-control form-control--outlined">
                 <label>
-                  New Branch Name
+                  New branch name
                   <input
                     type="text"
                     name="branchName"
@@ -68,9 +70,9 @@ export const SyncBranchesModal = ({ vcs, onHide, branches, remoteBranches, curre
                 </label>
               </div>
               <div className="form-control form-control--no-label width-auto">
-                <button type="submit" className="btn btn--clicky">
-                  Create
-                </button>
+                <Button className={'btn btn--clicky flex gap-2 items-center aria-disabled:opacity-50 aria-disabled:cursor-not-allowed'} isDisabled={createBranchFetcher.state !== 'idle'} type="submit">
+                  <Icon className={`w-5 ${createBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`} icon={createBranchFetcher.state !== 'idle' ? 'spinner' : 'plus'} /> Create
+                </Button>
               </div>
             </div>
           </form>
