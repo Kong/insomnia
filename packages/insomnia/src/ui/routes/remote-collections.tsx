@@ -409,6 +409,7 @@ export const createSnapshotAndPushAction: ActionFunction = async ({ request, par
   invariant(typeof message === 'string', 'Message is required');
   const { syncItems } = await getSyncItems({ workspaceId });
   const status = await vcs.status(syncItems, {});
+
   // Staging needs to happen since it creates blobs for the files
   const itemsToStage = keys.map(key => {
     if (typeof key === 'string') {

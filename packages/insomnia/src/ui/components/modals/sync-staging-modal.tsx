@@ -1,36 +1,35 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { OverlayContainer } from 'react-aria';
+import React, { useEffect, useState } from 'react';
+import { Button, Dialog, Heading, Label, Modal, ModalOverlay, TextArea, TextField } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
+import { all } from '../../../models';
 import type { Status, StatusCandidate } from '../../../sync/types';
 import { VCS } from '../../../sync/vcs/vcs';
-import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
-import { Modal, type ModalHandle, ModalProps } from '../base/modal';
-import { ModalBody } from '../base/modal-body';
-import { ModalFooter } from '../base/modal-footer';
-import { ModalHeader } from '../base/modal-header';
+import { Icon } from '../icon';
 
-type Props = ModalProps & {
+interface Props {
   vcs: VCS;
   branch: string;
   status: Status;
   syncItems: StatusCandidate[];
-};
+  onClose: () => void;
+}
 
-export const SyncStagingModal = ({ branch, onHide, status, syncItems }: Props) => {
+function getModelTypeById(id: string) {
+  const idPrefix = id.split('_')[0];
+  const model = all().find(model => model.prefix === idPrefix);
+
+  return model?.name || 'Unknown';
+}
+
+export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
   const { projectId, workspaceId, organizationId } = useParams() as {
     projectId: string;
     workspaceId: string;
     organizationId: string;
   };
 
-  const modalRef = useRef<ModalHandle>(null);
-  const formRef = useRef<HTMLFormElement>(null);
-
-  useEffect(() => {
-    modalRef.current?.show();
-  }, []);
-  const [checkAllModified, setCheckAllModified] = useState(false);
+  const [checkAllModified, setCheckAllModified] = useState(true);
   const [checkAllUnversioned, setCheckAllUnversioned] = useState(false);
 
   const stagedChanges = Object.entries(status.stage);
@@ -38,196 +37,202 @@ export const SyncStagingModal = ({ branch, onHide, status, syncItems }: Props) =
 
   const allChanges = [...stagedChanges, ...unstagedChanges].map(([key, entry]) => ({
     ...entry,
-    document: syncItems.find(item => item.key === key)?.document,
+    document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
   }));
 
   const unversionedChanges = allChanges.filter(change => 'added' in change);
   const modifiedChanges = allChanges.filter(change => !('added' in change));
 
-  const { Form } = useFetcher();
+  const { Form, formAction, state, data } = useFetcher();
+
+  const isPushing = state !== 'idle' && formAction?.endsWith('create-snapshot-and-push');
+  const isCreatingSnapshot = state !== 'idle' && formAction?.endsWith('create-snapshot');
+
+  useEffect(() => {
+    if (allChanges.length === 0) {
+      onClose();
+    }
+  }, [allChanges, onClose]);
 
   return (
-    <OverlayContainer>
-      <Modal ref={modalRef} onHide={onHide}>
-        <Form method='POST' ref={formRef}>
-          <ModalHeader>Create Snapshot</ModalHeader>
-          <ModalBody className="wide pad">
-          <div className="form-group">
-            <div className="form-control form-control--outlined">
-              <label>
-                Snapshot Message
-                <textarea
-                  cols={30}
-                  rows={3}
-                  name="message"
-                  placeholder="This is a helpful message that describe the changes made in this snapshot"
-                  required
-                />
-              </label>
-            </div>
-          </div>
-            {modifiedChanges.length > 0 && (
-              <div className="pad-top">
-                <strong>Modified Objects</strong>
-                <table className="table--fancy table--outlined margin-top-sm">
-                  <thead>
-                    <tr className="table--no-outline-row">
-                      <th>
-                        <label className="wide no-pad">
-                          <span className="txt-md">
-                            <IndeterminateCheckbox
-                              className="space-right"
-                              // @ts-expect-error -- TSCONVERSION
-                              type="checkbox"
-                              checked={checkAllModified}
-                              name="allModified"
-                              onChange={() =>
-                                setCheckAllModified(!checkAllModified)
-                              }
-                              indeterminate={!checkAllModified}
-                            />
-                          </span>{' '}
-                          name
-                        </label>
-                      </th>
-                      <th className="text-right">Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {modifiedChanges.map(item => (
-                      <tr key={item.key} className="table--no-outline-row">
-                        <td>
-                          <label className="no-pad wide">
-                            <input
-                              disabled={checkAllModified}
-                              className="space-right"
-                              type="checkbox"
-                              {...(checkAllModified
-                                ? { checked: true }
-                                : {})}
-                              value={item.key}
-                              name="keys"
-                            />{' '}
-                            {item.name || 'n/a'}
-                          </label>
-                        </td>
-                        <td className="text-right">
-                          {/* <Tooltip
-                            message={item.added ? 'Delete' : 'Rollback'}
-                          >
-                            <button
-                              className="btn btn--micro space-right"
-                              onClick={e => {
-                                e.preventDefault();
-                                if (formRef.current) {
-                                  const data = new FormData(
-                                    formRef.current
-                                  );
-                                  data.append('changeType', 'modified');
-                                  data.delete('paths');
-                                  data.append('paths', item.path);
-
-                                  rollbackFetcher.submit(data, {
-                                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/git/rollback`,
-                                    method: 'post',
-                                  });
-                                }
-                              }}
-                            >
-                              <i
-                                className={classnames(
-                                  'fa',
-                                  item.added ? 'fa-trash' : 'fa-undo'
-                                )}
-                              />
-                            </button>
-                          </Tooltip> */}
-                          {/* <OperationTooltip item={item} /> */}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+    <ModalOverlay
+      isOpen
+      onOpenChange={isOpen => {
+        !isOpen && onClose();
+      }}
+      isDismissable
+      className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
+    >
+      <Modal className="max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
+        <Dialog
+          onClose={onClose}
+          className="outline-none"
+        >
+          {({ close }) => (
+            <div className='flex flex-col gap-4'>
+              <div className='flex gap-2 items-center justify-between'>
+                <Heading className='text-2xl'>Create snapshot</Heading>
+                <Button
+                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  onPress={close}
+                >
+                  <Icon icon="x" />
+                </Button>
               </div>
-            )}
-            {unversionedChanges.length > 0 && (
-              <div className="pad-top">
-                <strong>Unversioned Objects</strong>
-                <table className="table--fancy table--outlined margin-top-sm">
-                  <thead>
-                    <tr className="table--no-outline-row">
-                      <th>
-                        <label className="wide no-pad">
-                          <span className="txt-md">
-                            <IndeterminateCheckbox
-                              className="space-right"
-                              // @ts-expect-error -- TSCONVERSION
-                              type="checkbox"
-                              checked={checkAllUnversioned}
-                              name="allModified"
-                              onChange={() =>
-                                setCheckAllUnversioned(!checkAllUnversioned)
-                              }
-                              indeterminate={!checkAllUnversioned}
-                            />
-                          </span>{' '}
-                          name
-                        </label>
-                      </th>
-                      <th className="text-right">Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {unversionedChanges.map(item => (
-                      <tr key={item.key} className="table--no-outline-row">
-                        <td>
-                          <label className="no-pad wide">
-                            <input
-                              disabled={checkAllUnversioned}
-                              className="space-right"
-                              type="checkbox"
-                              {...(checkAllModified
-                                ? { checked: true }
-                                : {})}
-                              value={item.key}
-                              name="keys"
-                            />{' '}
-                            {item.name || 'n/a'}
-                          </label>
-                        </td>
-                        <td className="text-right">
-                          {item.document?.type}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </ModalBody>
-          <ModalFooter>
-            <div className="margin-left italic txt-sm">
-              <i className="fa fa-code-fork" /> {branch}
-            </div>
-            <div>
-              <button
-                className="btn"
-                type='submit'
-                formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot`}
+              <Form
+                method="POST"
+                className='flex flex-col gap-2'
               >
-                Create
-              </button>
-              <button
-                className="btn"
-                type='submit'
-                formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot-and-push`}
-              >
-                Create and Push
-              </button>
+                <TextField className="flex flex-col gap-2">
+                  <Label className='font-bold'>
+                    Snapshot message
+                  </Label>
+                  <TextArea
+                    rows={3}
+                    name="message"
+                    className="border border-solid border-[--hl-sm] rounded-sm p-2 resize-none"
+                    placeholder="This is a helpful message that describes the changes made in this snapshot"
+                    required
+                  />
+                </TextField>
+                {modifiedChanges.length > 0 && (
+                  <div className="pad-top">
+                    <strong>Modified objects</strong>
+                    <table className="table--fancy table--outlined margin-top-sm">
+                      <thead>
+                        <tr className="table--no-outline-row">
+                          <th>
+                            <label className="wide no-pad">
+                              <span className="txt-md">
+                                <input
+                                  className="space-right"
+                                  type="checkbox"
+                                  checked={checkAllModified}
+                                  name="allModified"
+                                  onChange={() =>
+                                    setCheckAllModified(!checkAllModified)
+                                  }
+                                />
+                              </span>{' '}
+                              name
+                            </label>
+                          </th>
+                          <th className="text-right">Description</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {modifiedChanges.map(item => (
+                          <tr key={item.key} className="table--no-outline-row">
+                            <td>
+                              <label className="no-pad wide">
+                                <input
+                                  className="space-right"
+                                  type="checkbox"
+                                  {...(checkAllModified
+                                    ? { checked: true }
+                                    : {})}
+                                  value={item.key}
+                                  name="keys"
+                                />{' '}
+                                {item.name || 'n/a'}
+                              </label>
+                            </td>
+                            <td className="text-right">
+                              <div className='flex items-center gap-2 justify-end'>
+                                <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'file-edit'} />
+                                {item.document?.type}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {unversionedChanges.length > 0 && (
+                  <div className="pad-top">
+                    <strong>Unversioned objects</strong>
+                    <table className="table--fancy table--outlined margin-top-sm">
+                      <thead>
+                        <tr className="table--no-outline-row">
+                          <th>
+                            <label className="wide no-pad">
+                              <span className="txt-md">
+                                <input
+                                  className="space-right"
+                                  type="checkbox"
+                                  checked={checkAllUnversioned}
+                                  name="allModified"
+                                  onChange={() =>
+                                    setCheckAllUnversioned(!checkAllUnversioned)
+                                  }
+                                />
+                              </span>{' '}
+                              name
+                            </label>
+                          </th>
+                          <th className="text-right">Description</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {unversionedChanges.map(item => (
+                          <tr key={item.key} className="table--no-outline-row">
+                            <td>
+                              <label className="no-pad wide">
+                                <input
+                                  className="space-right"
+                                  type="checkbox"
+                                  {...(checkAllUnversioned
+                                    ? { checked: true }
+                                    : {})}
+                                  value={item.key}
+                                  name="keys"
+                                />{' '}
+                                {item.name || 'n/a'}
+                              </label>
+                            </td>
+                            <td className="text-right">
+                              <div className='flex items-center gap-2 justify-end'>
+                                <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'file-edit'} />
+                                {item.document?.type}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {data?.error && (
+                  <div>
+                    <p className="notice error margin-top-sm">
+                      {data.error}
+                    </p>
+                  </div>
+                )}
+                <div className="flex justify-end gap-2 items-center">
+                  <Button
+                    type='submit'
+                    isDisabled={state !== 'idle'}
+                    formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot`}
+                    className="hover:no-underline flex items-center gap-2 hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                  >
+                    <Icon icon={isCreatingSnapshot ? 'spinner' : 'plus'} className={`w-5 ${isCreatingSnapshot ? 'animate-spin' : ''}`} /> Create
+                  </Button>
+                  <Button
+                    type="submit"
+                    isDisabled={state !== 'idle'}
+                    formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot-and-push`}
+                    className="hover:no-underline flex items-center gap-2 bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                  >
+                    <Icon icon={isPushing ? 'spinner' : 'cloud-arrow-up'} className={`w-5 ${isPushing ? 'animate-spin' : ''}`} /> Create and push
+                  </Button>
+                </div>
+              </Form>
             </div>
-          </ModalFooter>
-        </Form>
+          )}
+        </Dialog>
       </Modal>
-    </OverlayContainer>
+    </ModalOverlay>
   );
 };

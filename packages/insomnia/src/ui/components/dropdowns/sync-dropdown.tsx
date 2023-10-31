@@ -272,7 +272,7 @@ export const SyncDropdown: FC<Props> = ({ vcs }) => {
           branch={currentBranch}
           status={status}
           syncItems={syncItems}
-          onHide={() => setIsSyncStagingModalOpen(false)}
+          onClose={() => setIsSyncStagingModalOpen(false)}
         />
       )}
       {isSyncHistoryModalOpen && (
