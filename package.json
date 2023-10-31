@@ -4,14 +4,14 @@
   "version": "1.0.0",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia is a cross-platform REST client, built on top of Electron.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": "https://github.com/kong/insomnia",
   "bugs": {
     "url": "https://github.com/kong/insomnia/issues"
   },
   "homepage": "https://github.com/kong/insomnia#readme",
   "engines": {
-    "node": ">=18.15 <20",
+    "node": ">=18.16.1 <20",
     "npm": ">=8.19.0"
   },
   "workspaces": [

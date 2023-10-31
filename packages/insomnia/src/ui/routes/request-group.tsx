@@ -61,6 +61,6 @@ export const updateRequestGroupMetaAction: ActionFunction = async ({ request, pa
     await models.requestGroupMeta.update(requestGroupMeta, patch);
     return null;
   }
-  await models.requestGroupMeta.create({ parentId: requestGroupId, collapsed: false });
+  await models.requestGroupMeta.create({ parentId: requestGroupId, collapsed: Boolean(patch?.collapsed) });
   return null;
 };

@@ -317,14 +317,15 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
                     </PromptButton>
                   </div>
                 </PanelContainer>,
-              }, {
-                  title: 'Client Certificates',
+              },
+                {
+                  title: 'Certificates',
                   children: <PanelContainer className="pad">
                     <div className="form-control form-control--outlined">
                       <label>
                         CA Certificate
                         <HelpTooltip position="right" className="space-left">
-                          One or more PEM format certificates to trust when making requests.
+                          One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate.
                         </HelpTooltip>
                       </label>
                       <div className="row-spaced">
@@ -362,6 +363,11 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
                         </div>
                       </div>
                     </div>
+                  </PanelContainer>,
+                },
+                {
+                  title: 'Client Certificates',
+                  children: <PanelContainer className="pad">
                     {!showAddCertificateForm ? (
                       <div>
                         {clientCertificates.length === 0 ? (
@@ -399,7 +405,7 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
                             className="btn btn--clicky auto"
                             onClick={_handleToggleCertificateForm}
                           >
-                            New Certificate
+                            New Client Certificate
                           </button>
                         </div>
                       </div>

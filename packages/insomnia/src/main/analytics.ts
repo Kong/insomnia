@@ -1,8 +1,7 @@
 import { Analytics } from '@segment/analytics-node';
+import { BrowserWindow } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
-import * as session from '../account/session';
-import { getAccountId } from '../account/session';
 import {
   getAppPlatform,
   getAppVersion,
@@ -43,17 +42,33 @@ export enum SegmentEvent {
   vcsAction = 'VCS Action Executed',
   buttonClick = 'Button Clicked',
 }
-
+// TODO: migrating session state to main would be more suitable than doing this.
+const getAccountIdFromRenderer = async () => {
+  let sessionId = '';
+  let accountId = '';
+  try {
+    const windows = BrowserWindow.getAllWindows();
+    const mainWindow = windows[0];
+    sessionId = await mainWindow.webContents.executeJavaScript('localStorage.getItem("currentSessionId");');
+    const sessionJSON = await mainWindow.webContents.executeJavaScript(`localStorage.getItem("session__${(sessionId).slice(0, 10)}");`);
+    const sessionData = JSON.parse(sessionJSON);
+    accountId = sessionData?.accountId ?? '';
+  } catch (e) {
+    return { sessionId, accountId };
+  }
+  return { sessionId, accountId };
+};
 export async function trackSegmentEvent(
   event: SegmentEvent,
   properties?: Record<string, any>,
 ) {
   const settings = await models.settings.get();
-  const allowAnalytics = settings.enableAnalytics || session.isLoggedIn();
+  const { accountId } = await getAccountIdFromRenderer();
+
+  const allowAnalytics = settings.enableAnalytics || accountId;
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
-      const userId = getAccountId();
       const context = {
         app: { name: getProductName(), version: getAppVersion() },
         os: { name: _getOsName(), version: process.getSystemVersion() },
@@ -63,7 +78,7 @@ export async function trackSegmentEvent(
         properties,
         context,
         anonymousId,
-        userId,
+        userId: accountId,
       }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);
@@ -77,36 +92,33 @@ export async function trackSegmentEvent(
 
 export async function trackPageView(name: string) {
   const settings = await models.settings.get();
-  const allowAnalytics = settings.enableAnalytics || session.isLoggedIn();
+  const { sessionId, accountId } = await getAccountIdFromRenderer();
+  const allowAnalytics = settings.enableAnalytics || accountId;
   if (allowAnalytics) {
     try {
       const anonymousId = await getDeviceId() ?? '';
-      const userId = getAccountId();
       const context = {
         app: { name: getProductName(), version: getAppVersion() },
         os: { name: _getOsName(), version: process.getSystemVersion() },
       };
-      analytics.page({ name, context, anonymousId, userId }, error => {
+      analytics.page({ name, context, anonymousId, userId: accountId }, error => {
         if (error) {
           console.warn('[analytics] Error sending segment event', error);
         }
       });
-      sendTelemetry();
+
+      if (sessionId) {
+        insomniaFetch({
+          method: 'POST',
+          path: '/v1/telemetry/',
+          sessionId,
+        }).catch((error: unknown) => {
+          console.warn('[analytics] Unexpected error while sending telemetry', error);
+        });
+      }
     } catch (error: unknown) {
       console.warn('[analytics] Unexpected error while sending segment event', error);
     }
-  }
-}
-
-export async function sendTelemetry() {
-  if (session.isLoggedIn()) {
-    insomniaFetch({
-      method: 'POST',
-      path: '/v1/telemetry/',
-      sessionId: session.getCurrentSessionId(),
-    }).catch((error: unknown) => {
-      console.warn('[analytics] Unexpected error while sending telemetry', error);
-    });
   }
 }
 

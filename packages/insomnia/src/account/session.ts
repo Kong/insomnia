@@ -154,7 +154,6 @@ export function getCurrentSessionId() {
     try {
       const { sessionExpiry } = JSON.parse(window.localStorage.getItem(_getSessionKey(sessionId)) || '{}');
       if (typeof sessionExpiry !== 'string' || !sessionExpiry) {
-        console.log('No session expiry found', sessionExpiry);
         return '';
       }
 
@@ -257,13 +256,16 @@ function _getSymmetricKey() {
 }
 
 async function _whoami(sessionId: string | null = null): Promise<WhoamiResponse> {
-  const response = await window.main.insomniaFetch<WhoamiResponse>({
+  const response = await window.main.insomniaFetch<WhoamiResponse | string>({
     method: 'GET',
     path: '/auth/whoami',
     sessionId: sessionId || getCurrentSessionId(),
   });
   if (typeof response === 'string') {
-    throw new Error('Unexpected plaintext response');
+    throw new Error('Unexpected plaintext response: ' + response);
+  }
+  if (response && !response?.encSymmetricKey) {
+    throw new Error('Unexpected response: ' + JSON.stringify(response));
   }
   return response;
 }
