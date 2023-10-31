@@ -13,7 +13,7 @@ import { useLocalStorage } from 'react-use';
 import { CONTENT_TYPE_JSON } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
-import { RENDER_PURPOSE_SEND } from '../../../../common/render';
+import { getRenderedGraphQLVariables, RENDER_PURPOSE_SEND } from '../../../../common/render';
 import type { ResponsePatch } from '../../../../main/network/libcurl-promise';
 import * as models from '../../../../models';
 import type { Request } from '../../../../models/request';
@@ -279,9 +279,18 @@ export const GraphQLEditor: FC<Props> = ({
     onChange(content);
     setState(prevState => ({ ...prevState, body: { ...prevState.body, operationName } }));
   };
-  const changeVariables = (variablesInput: string) => {
+  const changeVariables = async (variablesInput: string) => {
     try {
-      const variables = JSON.parse(variablesInput || '{}');
+      const rawVars = {
+        input: variablesInput,
+      };
+      const renderedVars = await getRenderedGraphQLVariables({
+        environmentId,
+        graphqlRequest: request,
+        rawVars,
+      });
+
+      const variables = JSON.parse(renderedVars.input || '{}');
 
       const content = getGraphQLContent(state.body, undefined, operationName, variables);
       onChange(content);
