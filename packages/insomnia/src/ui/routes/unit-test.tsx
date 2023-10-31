@@ -36,6 +36,7 @@ import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dr
 import { EditableInput } from '../components/editable-input';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
+import { showPrompt } from '../components/modals';
 import { CookiesModal } from '../components/modals/cookies-modal';
 import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
 import { SidebarLayout } from '../components/sidebar-layout';
@@ -81,10 +82,10 @@ const TestRoute: FC = () => {
     baseEnvironment,
   } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
   const setActiveEnvironmentFetcher = useFetcher();
-  const environmentsList = [baseEnvironment, ...subEnvironments].map(e => ({
-    id: e._id,
-    name: e.name,
-    color: e.color,
+
+  const environmentsList = [baseEnvironment, ...subEnvironments].map(environment => ({
+    id: environment._id,
+    ...environment,
   }));
 
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
@@ -125,6 +126,27 @@ const TestRoute: FC = () => {
       },
     },
     {
+        id: 'rename',
+        name: 'Rename',
+        icon: 'edit',
+        action: suiteId => {
+          showPrompt({
+            title: 'Rename test suite',
+            defaultValue: unitTestSuites.find(s => s._id === suiteId)?.name,
+            submitName: 'Rename',
+            onComplete: name => {
+              name && renameTestSuiteFetcher.submit(
+                { name },
+                {
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/rename`,
+                  method: 'POST',
+                }
+              );
+            },
+          });
+        },
+      },
+      {
       id: 'delete-suite',
       name: 'Delete suite',
       icon: 'trash',
@@ -190,20 +212,33 @@ const TestRoute: FC = () => {
                       ) {
                         return (
                           <Fragment>
-                            <Icon icon="cancel" />
-                            No Environment
+                            <span
+                              style={{
+                                borderColor: 'var(--color-font)',
+                              }}
+                            >
+                              <Icon className='text-xs w-5' icon="refresh" />
+                            </span>
+                            {baseEnvironment.name}
                           </Fragment>
                         );
                       }
 
                       return (
                         <Fragment>
+                          <span
+                            style={{
+                              borderColor: selectedItem.color ?? 'var(--color-font)',
+                            }}
+                          >
                           <Icon
-                            icon="circle"
+                            icon={selectedItem.isPrivate ? 'lock' : 'refresh'}
                             style={{
                               color: selectedItem.color ?? 'var(--color-font)',
                             }}
+                            className='text-xs w-5'
                           />
+                          </span>
                           {selectedItem.name}
                         </Fragment>
                       );
@@ -220,27 +255,31 @@ const TestRoute: FC = () => {
                       <Item
                         id={item._id}
                         key={item._id}
-                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                        className={
+                          `flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item._id === baseEnvironment._id ? '' : 'pl-8'}`
+                        }
                         aria-label={item.name}
                         textValue={item.name}
                         value={item}
                       >
                         {({ isSelected }) => (
                           <Fragment>
-                            <Icon
-                              icon={
-                                item._id === baseEnvironment._id
-                                  ? 'cancel'
-                                  : 'circle'
-                              }
+                            <span
+                              // className='p-1 border-solid border w-5 h-5 rounded bg-[--hl-sm] flex-shrink-0 flex items-center justify-center'
                               style={{
-                                color: item.color ?? 'var(--color-font)',
+                                borderColor: item.color ?? 'var(--color-font)',
                               }}
-                            />
-                            <span>
-                              {item._id === baseEnvironment._id
-                                ? 'No Environment'
-                                : item.name}
+                            >
+                              <Icon
+                                icon={item.isPrivate ? 'lock' : 'refresh'}
+                                className='text-xs'
+                                style={{
+                                  color: item.color ?? 'var(--color-font)',
+                                }}
+                              />
+                            </span>
+                            <span className='flex-1 truncate'>
+                              {item.name}
                             </span>
                             {isSelected && (
                               <Icon
@@ -267,7 +306,7 @@ const TestRoute: FC = () => {
               onPress={() => setIsCookieModalOpen(true)}
               className="px-4 py-1 flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
-              <Icon icon="cookie-bite" />
+              <Icon icon="cookie-bite" className='w-5' />
               {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies
             </Button>
           </div>
@@ -291,7 +330,7 @@ const TestRoute: FC = () => {
               </Button>
             </div>
             <GridList
-              aria-label="Projects"
+              aria-label="Tets Suites"
               items={unitTestSuites.map(suite => ({
                 id: suite._id,
                 key: suite._id,
@@ -325,7 +364,7 @@ const TestRoute: FC = () => {
                         name="name"
                         ariaLabel="Test suite name"
                         onChange={name => {
-                          renameTestSuiteFetcher.submit(
+                          name && renameTestSuiteFetcher.submit(
                             { name },
                             {
                               action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}/rename`,

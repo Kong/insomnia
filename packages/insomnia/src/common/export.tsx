@@ -364,7 +364,7 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
   fs.writeFile(filename, jsonData, {}, onDone);
 };
 
-export const exportAllToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
+export const exportProjectToFile = (activeProjectName: string, workspacesForActiveProject: Workspace[]) => {
   if (!workspacesForActiveProject.length) {
     showAlert({
       title: 'Cannot export',

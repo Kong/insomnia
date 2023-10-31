@@ -89,7 +89,7 @@ export const ExportRequestsModal = ({ workspace, onHide }: { workspace: Workspac
   };
 
   const setItemSelected = (node: Node, isSelected: boolean, id?: string) => {
-    if (id === null || node.doc._id === id) {
+    if (id == null || node.doc._id === id) {
       // Switch the flags of all children in this subtree.
       node.children.forEach(child => setItemSelected(child, isSelected));
       node.selectedRequests = isSelected ? node.totalRequests : 0;
