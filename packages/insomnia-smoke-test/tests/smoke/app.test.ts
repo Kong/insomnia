@@ -30,7 +30,7 @@ test('can send requests', async ({ app, page }) => {
 
   await page.getByLabel('Create in collection').click();
   await page.getByRole('menuitemradio', { name: 'From Curl' }).click();
-  const curl = 'curl --request POST --url http://mockbin.org/status/200';
+  const curl = 'curl --request POST --url https://httpbin.org/status/200';
   await page.locator('.CodeMirror textarea').fill(curl);
   await page.getByRole('dialog').getByRole('button', { name: 'Import' }).click();
 
