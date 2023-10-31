@@ -360,15 +360,6 @@ export const rollbackChangesAction: ActionFunction = async ({ params }) => {
   return null;
 };
 
-export const statusAction: ActionFunction = async ({ params }) => {
-  const { workspaceId } = params;
-  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
-  const { syncItems } = await getSyncItems({ workspaceId });
-  const status = await vcs.status(syncItems, {});
-
-  return status;
-};
-
 export const createSnapshotAction: ActionFunction = async ({ request, params }) => {
   const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
@@ -379,12 +370,17 @@ export const createSnapshotAction: ActionFunction = async ({ request, params }) 
   invariant(Array.isArray(keys), 'Keys is required');
   const { syncItems } = await getSyncItems({ workspaceId });
   const status = await vcs.status(syncItems, {});
+  // Staging needs to happen since it creates blobs for the files
+  const itemsToStage = keys.map(key => {
+    if (typeof key === 'string') {
+      const item = status.unstaged[key];
+      return item;
+    }
 
-  const snapshotStage = keys.reduce((acc, key) => {
-    invariant(typeof key === 'string', 'Key is required');
-    acc[key] = status.stage[key] || status.unstaged[key];
-    return acc;
-  }, {});
+    return null;
+  }).filter(isNotNullOrUndefined);
+
+  const snapshotStage = await vcs.stage(status.stage, itemsToStage);
 
   try {
     await vcs.takeSnapshot(snapshotStage, message);
@@ -413,11 +409,17 @@ export const createSnapshotAndPushAction: ActionFunction = async ({ request, par
   invariant(typeof message === 'string', 'Message is required');
   const { syncItems } = await getSyncItems({ workspaceId });
   const status = await vcs.status(syncItems, {});
-  const snapshotStage = keys.reduce((acc, key) => {
-    invariant(typeof key === 'string', 'Key is required');
-    acc[key] = status.stage[key] || status.unstaged[key];
-    return acc;
-  }, {});
+  // Staging needs to happen since it creates blobs for the files
+  const itemsToStage = keys.map(key => {
+    if (typeof key === 'string') {
+      const item = status.unstaged[key];
+      return item;
+    }
+
+    return null;
+  }).filter(isNotNullOrUndefined);
+
+  const snapshotStage = await vcs.stage(status.stage, itemsToStage);
   try {
     await vcs.takeSnapshot(snapshotStage, message);
     await vcs.push({ teamId: project.parentId, teamProjectId: project.remoteId });

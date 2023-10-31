@@ -32,15 +32,17 @@ export const SyncStagingModal = ({ branch, onHide, status, syncItems }: Props) =
   }, []);
   const [checkAllModified, setCheckAllModified] = useState(false);
   const [checkAllUnversioned, setCheckAllUnversioned] = useState(false);
-  const modifiedChanges = Object.entries(status.stage).map(([key, entry]) => ({
+
+  const stagedChanges = Object.entries(status.stage);
+  const unstagedChanges = Object.entries(status.unstaged);
+
+  const allChanges = [...stagedChanges, ...unstagedChanges].map(([key, entry]) => ({
     ...entry,
     document: syncItems.find(item => item.key === key)?.document,
   }));
 
-  const unversionedChanges = Object.entries(status.unstaged).map(([key, entry]) => ({
-    ...entry,
-    document: syncItems.find(item => item.key === key)?.document,
-  }));
+  const unversionedChanges = allChanges.filter(change => 'added' in change);
+  const modifiedChanges = allChanges.filter(change => !('added' in change));
 
   const { Form } = useFetcher();
 
@@ -57,7 +59,7 @@ export const SyncStagingModal = ({ branch, onHide, status, syncItems }: Props) =
                 <textarea
                   cols={30}
                   rows={3}
-                    name="message"
+                  name="message"
                   placeholder="This is a helpful message that describe the changes made in this snapshot"
                   required
                 />
