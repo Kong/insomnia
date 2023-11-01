@@ -10,6 +10,7 @@ interface FetchConfig {
   data?: unknown;
   retries?: number;
   origin?: string;
+  requestId?: string;
 }
 // internal request (insomniaFetch)
 // should validate ssl certs on our server
@@ -41,13 +42,14 @@ const exponentialBackOff = async (url: string, init: RequestInit, retries = 0): 
   }
 };
 
-export async function insomniaFetch<T = void>({ method, path, data, sessionId, origin }: FetchConfig): Promise<T> {
+export async function insomniaFetch<T = void>({ method, path, data, sessionId, origin, requestId }: FetchConfig): Promise<T> {
   const config: RequestInit = {
     method,
     headers: {
       'X-Insomnia-Client': getClientString(),
       ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
       ...(data ? { 'Content-Type': 'application/json' } : {}),
+      ...(requestId ? { 'insomnia-request-id': requestId } : {}),
     },
     ...(data ? { body: JSON.stringify(data) } : {}),
   };
