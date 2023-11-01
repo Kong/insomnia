@@ -56,7 +56,6 @@ export async function updateLocalProjectToRemote({
     parentId: updatedProject._id,
   }));
 
-  console.log({ projectWorkspaces });
   for (const workspace of projectWorkspaces) {
     const workspaceMeta = await getOrCreateWorkspaceMeta(workspace._id);
 
