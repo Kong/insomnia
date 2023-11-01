@@ -126,10 +126,11 @@ export class MigrationService {
     private _transformRemoteFileSnapshotToMaps(snapshot: RemoteFileSnapshot): void {
         this._logger.info(`[migration][${this._status}] mapping remote file snapshot to comparison maps`);
         const remoteOrgIds = Object.keys(snapshot);
-        remoteOrgIds.forEach(remoteOrgId => {
+        for (const remoteOrgId of remoteOrgIds) {
             const orgSnapshot = snapshot[remoteOrgId];
             const orgFileIdMap = Object.entries(orgSnapshot.fileIdMap);
-            orgFileIdMap.forEach(([remoteFileId, remoteProjectId]) => {
+
+            for (const [remoteFileId, remoteProjectId] of orgFileIdMap) {
                 if (this._byRemoteFileId.has(remoteFileId)) {
                     this._logger.warn(`[migration][${this._status}] conflicting remote file resource `, remoteFileId);
                     // const conflictedResource = this._byRemoteFileId.get(remoteFileId);
@@ -148,8 +149,8 @@ export class MigrationService {
                 }
                 this._logger.info(`[migration][${this._status}] remote file mapped `, { remoteProjectId, remoteOrgId });
                 this._byRemoteProjectId.set(remoteProjectId, remoteOrgId);
-            });
-        });
+            }
+        }
     }
 
     private async _handleUntrackedFilesLocally(): Promise<void> {
