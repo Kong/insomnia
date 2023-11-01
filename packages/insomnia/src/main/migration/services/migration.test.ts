@@ -7,4 +7,5 @@ describe('MigrationService', async () => {
     it('should fail when migration did not complete fully for projects', async () => { });
     it('should log activities', async () => { });
     it('should publish status updates', async () => { });
+    it('should clean up database records for old projects', async () => { });
 });

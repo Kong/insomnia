@@ -6,6 +6,8 @@ interface CommunicationMessage {
     channel: string;
     data: unknown;
 }
+
+const DELAY_TIME = 500;
 // TODO: if this is used else where, should be singleton
 export class CommunicationService {
     private _receiver: BrowserWindow;
@@ -19,7 +21,7 @@ export class CommunicationService {
     public broadcast(): void {
         this._queueOperation = this._onMessage$
             // setting a timer for each message queue
-            .pipe(delayWhen((_, index) => interval(index * 500)))
+            .pipe(delayWhen((_, index) => interval(index * DELAY_TIME)))
             .subscribe(message => {
                 this._receiver.webContents.send(message.channel, message.data);
             });
