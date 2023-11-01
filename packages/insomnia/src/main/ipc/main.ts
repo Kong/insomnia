@@ -7,7 +7,7 @@ import { oas } from '@stoplight/spectral-rulesets';
 import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
-import { MigrationServiceAPI } from '../../preload';
+import { MigrationBridgeAPI } from '../../preload';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
@@ -38,7 +38,7 @@ export interface MainBridgeAPI {
   webSocket: WebSocketBridgeAPI;
   grpc: gRPCBridgeAPI;
   curl: CurlBridgeAPI;
-  migration: MigrationServiceAPI;
+  migration: MigrationBridgeAPI;
   trackSegmentEvent: (options: { event: string; properties?: Record<string, unknown> }) => void;
   trackPageView: (options: { name: string }) => void;
   axiosRequest: typeof axiosRequest;

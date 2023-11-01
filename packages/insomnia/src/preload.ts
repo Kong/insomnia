@@ -38,10 +38,10 @@ const grpc: gRPCBridgeAPI = {
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
 };
 
-export interface MigrationServiceAPI {
+export interface MigrationBridgeAPI {
   start: (options: { sessionId: string; prefersProjectType: string }) => Promise<void>;
 };
-const migration: MigrationServiceAPI = {
+const migration: MigrationBridgeAPI = {
   start: options => ipcRenderer.invoke('migration.start', options),
 };
 
