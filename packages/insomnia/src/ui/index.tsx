@@ -123,14 +123,11 @@ const router = createMemoryRouter(
         },
         {
           path: 'onboarding/migrate',
-          // loader: async (...args) => (await import('./routes/onboarding.migrate')).loader(...args),
           action: async (...args) => (await import('./routes/onboarding.migrate')).action(...args),
           element: <Migrate />,
         },
         {
           path: 'data-migration',
-          // loader: async (...args) => (await import('./routes/onboarding.migrate')).loader(...args),
-          // action: async (...args) => (await import('./routes/onboarding.migrate')).action(...args),
           element: <DataMigration />,
         },
         {
