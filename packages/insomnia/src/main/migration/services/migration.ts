@@ -258,8 +258,7 @@ export class MigrationService {
     }
 
     private _updateCommunication(message: string, progress?: MigrationProgress): void {
-        const messageStr = `[migration][${this._status}] ${message}`;
-        const update: MigrationUpdate = { status: this._status, message: messageStr };
+        const update: MigrationUpdate = { status: this._status, message };
         if (progress) {
             update.progress = progress;
         }
