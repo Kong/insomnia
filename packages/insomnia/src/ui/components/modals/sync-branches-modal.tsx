@@ -1,209 +1,253 @@
-import classnames from 'classnames';
-import React, { useEffect, useRef } from 'react';
-import { OverlayContainer } from 'react-aria';
-import { Button } from 'react-aria-components';
+import React from 'react';
+import { Button, Dialog, GridList, Heading, Input, Item, Label, Modal, ModalOverlay, TextField } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { VCS } from '../../../sync/vcs/vcs';
-import { Modal, type ModalHandle, ModalProps } from '../base/modal';
-import { ModalBody } from '../base/modal-body';
-import { ModalHeader } from '../base/modal-header';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 import { SyncPullButton } from '../sync-pull-button';
 
-type Props = ModalProps & {
+const LocalBranchItem = ({
+  branch,
+  isCurrent,
+  organizationId,
+  projectId,
+  workspaceId,
+}: {
+  branch: string;
+  isCurrent: boolean;
+  organizationId: string;
+  projectId: string;
+  workspaceId: string;
+}) => {
+  const checkoutBranchFetcher = useFetcher();
+  const mergeBranchFetcher = useFetcher();
+  const deleteBranchFetcher = useFetcher();
+  return (
+    <div className="flex items-center w-full">
+      <span className='flex-1'>{branch}</span>
+      <div className='flex items-center gap-2'>
+        {branch !== 'master' && (
+          <PromptButton
+            confirmMessage='Confirm'
+            className="px-4 min-w-[12ch] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            doneMessage="Deleted"
+            disabled={isCurrent || branch === 'master'}
+            onClick={() => deleteBranchFetcher.submit(
+              {
+                branch,
+              },
+              {
+                method: 'POST',
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/delete`,
+              },
+            )}
+          >
+            <Icon icon={deleteBranchFetcher.state !== 'idle' ? 'spinner' : 'trash'} className={`text-[--color-danger] w-5 ${deleteBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`} />
+            Delete
+          </PromptButton>
+        )}
+        <Button
+          className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          isDisabled={isCurrent}
+          onPress={() => checkoutBranchFetcher.submit({
+            branch,
+          }, {
+            method: 'POST',
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/checkout`,
+          })}
+        >
+          <Icon icon={checkoutBranchFetcher.state !== 'idle' ? 'spinner' : 'turn-up'} className={`w-5 ${checkoutBranchFetcher.state !== 'idle' ? 'animate-spin' : 'rotate-90'}`} />
+          Checkout
+        </Button>
+        <PromptButton
+          className="px-4 py-1 min-w-[12ch] font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          doneMessage="Merged"
+          confirmMessage='Confirm'
+          disabled={isCurrent}
+          onClick={() => mergeBranchFetcher.submit({
+            branch,
+          }, {
+            method: 'POST',
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/merge`,
+          })}
+        >
+          <Icon icon={mergeBranchFetcher.state !== 'idle' ? 'spinner' : 'code-merge'} className={`w-5 ${mergeBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`} />
+          Merge
+        </PromptButton>
+      </div>
+    </div>
+  );
+};
+
+interface Props {
   vcs: VCS;
   branches: string[];
   remoteBranches: string[];
   currentBranch: string;
-};
-
-export interface SyncBranchesModalOptions {
-  onHide?: () => void;
+  onClose: () => void;
 }
-export interface SyncBranchesModalHandle {
-  show: (options: SyncBranchesModalOptions) => void;
-  hide: () => void;
-}
-export const SyncBranchesModal = ({ vcs, onHide, branches, remoteBranches, currentBranch }: Props) => {
-  const modalRef = useRef<ModalHandle>(null);
 
-  useEffect(() => {
-    modalRef.current?.show();
-  }, []);
-
+export const SyncBranchesModal = ({ vcs, onClose, branches, remoteBranches, currentBranch }: Props) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
   };
 
-  const checkoutBranchFetcher = useFetcher();
-  const mergeBranchFetcher = useFetcher();
   const deleteBranchFetcher = useFetcher();
   const createBranchFetcher = useFetcher();
 
+  function sortBranches(branchA: string, branchB: string) {
+    if (branchA === 'master') {
+      return -1;
+    } else if (branchB === 'master') {
+      return 1;
+    } else {
+      return branchA.localeCompare(branchB);
+    }
+  }
+
+  const localBranches = branches.sort(sortBranches).map(branch => ({
+    id: branch,
+    key: branch,
+    name: branch,
+    isCurrent: branch === currentBranch,
+  }));
+
   return (
-    <OverlayContainer>
-      <Modal ref={modalRef} onHide={onHide}>
-        <ModalHeader>Branches</ModalHeader>
-        <ModalBody className="wide pad">
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              createBranchFetcher.submit(e.currentTarget, {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create`,
-                method: 'POST',
-              });
-            }}
-          >
-            <div className="form-row">
-              <div className="form-control form-control--outlined">
-                <label>
-                  New branch name
-                  <input
-                    type="text"
-                    name="branchName"
-                    placeholder="testing-branch"
-                  />
-                </label>
-              </div>
-              <div className="form-control form-control--no-label width-auto">
-                <Button className={'btn btn--clicky flex gap-2 items-center aria-disabled:opacity-50 aria-disabled:cursor-not-allowed'} isDisabled={createBranchFetcher.state !== 'idle'} type="submit">
-                  <Icon className={`w-5 ${createBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`} icon={createBranchFetcher.state !== 'idle' ? 'spinner' : 'plus'} /> Create
+    <ModalOverlay
+      isOpen
+      onOpenChange={isOpen => {
+        !isOpen && onClose();
+      }}
+      isDismissable
+      className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
+    >
+      <Modal className="max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
+        <Dialog
+          onClose={onClose}
+          className="outline-none"
+        >
+          {({ close }) => (
+            <div className='flex flex-col gap-4'>
+              <div className='flex gap-2 items-center justify-between'>
+                <Heading className='text-2xl'>Branches</Heading>
+                <Button
+                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  onPress={close}
+                >
+                  <Icon icon="x" />
                 </Button>
               </div>
-            </div>
-          </form>
+              <createBranchFetcher.Form
+                action={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create`}
+                method='POST'
+              >
+                <TextField className="flex flex-col gap-2">
+                  <Label className='col-span-4'>
+                    New branch name:
+                  </Label>
+                  <div className='flex items-center gap-2'>
+                    <Input
+                      required
+                      className='py-1 h-8 w-full pl-2 pr-7 rounded-sm border border-solid border-[--hl-sm] bg-[--color-bg] text-[--color-font] focus:outline-none focus:ring-1 focus:ring-[--hl-md] transition-colors flex-1 placeholder:italic placeholder:opacity-60 col-span-3'
+                      type="text"
+                      name="branchName"
+                      placeholder="Branch name"
+                    />
+                    <Button className="px-4 h-8 min-w-[12ch] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm" isDisabled={createBranchFetcher.state !== 'idle'} type="submit">
+                      <Icon className={`w-5 ${createBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`} icon={createBranchFetcher.state !== 'idle' ? 'spinner' : 'plus'} /> Create
+                    </Button>
+                  </div>
+                </TextField>
+              </createBranchFetcher.Form>
 
-          <div className="pad-top">
-            <table className="table--fancy table--outlined">
-              <thead>
-                <tr>
-                  <th className="text-left">Branches</th>
-                  <th className="text-right">&nbsp;</th>
-                </tr>
-              </thead>
-              <tbody>
-                {branches.map(name => (
-                  <tr key={name} className="table--no-outline-row">
-                    <td>
-                      <span
-                        className={classnames({
-                          bold: name === currentBranch,
-                        })}
-                      >
-                        {name}
-                      </span>
-                      {name === currentBranch ? (
-                        <span className="txt-sm space-left">(current)</span>
-                      ) : null}
-                      {name === 'master' && <i className="fa fa-lock space-left faint" />}
-                    </td>
-                    <td className="text-right">
-                      <PromptButton
-                        className="btn btn--micro btn--outlined space-left"
-                        doneMessage="Merged"
-                        disabled={name === currentBranch}
-                        onClick={() => mergeBranchFetcher.submit({
-                          branch: name,
-                        }, {
-                          method: 'POST',
-                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/merge`,
-                        })}
-                      >
-                        Merge
-                      </PromptButton>
-                      <PromptButton
-                        className="btn btn--micro btn--outlined space-left"
-                        doneMessage="Deleted"
-                        disabled={name === currentBranch || name === 'master'}
-                        onClick={() => deleteBranchFetcher.submit(
-                          {
-                            branch: name,
-                          },
-                          {
-                            method: 'POST',
-                            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/delete`,
-                          },
-                        )}
-                      >
-                        Delete
-                      </PromptButton>
-                      <button
-                        className="btn btn--micro btn--outlined space-left"
-                        disabled={name === currentBranch}
-                        onClick={() => checkoutBranchFetcher.submit({
-                          branch: name,
-                        }, {
-                          method: 'POST',
-                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/checkout`,
-                        })}
-                      >
-                        Checkout
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              <div className='select-none border border-solid rounded border-[--hl-sm] divide-y divide-solid divide-[--hl-sm]'>
+                <Heading className='font-semibold uppercase text-[--hl] text-sm p-2'>Local Branches</Heading>
+                <GridList
+                  aria-label='Branches list'
+                  selectionMode='none'
+                  items={localBranches}
+                  className="divide-y divide-solid divide-[--hl-sm] flex flex-col focus:outline-none overflow-y-auto flex-1 data-[empty]:py-0"
+                >
+                  {item => (
+                    <Item
+                      id={item.id}
+                      key={item.key}
+                      textValue={item.name}
+                      className="p-2 w-full focus:outline-none focus:bg-[--hl-sm] transition-colors"
+                    >
+                      <LocalBranchItem branch={item.name} isCurrent={item.isCurrent} organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
+                    </Item>
+                  )}
+                </GridList>
+              </div>
 
-          {remoteBranches.length > 0 && (
-            <div className="pad-top">
-              <table className="table--fancy table--outlined">
-                <thead>
-                  <tr>
-                    <th className="text-left">Remote Branches</th>
-                    <th className="text-right">&nbsp;</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {remoteBranches.map(name => (
-                    <tr key={name} className="table--no-outline-row">
-                      <td>
-                        {name}
-                        {name === 'master' && <i className="fa fa-lock space-left faint" />}
-                      </td>
-                      <td className="text-right">
-                        {name !== 'master' && (
-                          <PromptButton
-                            className="btn btn--micro btn--outlined space-left"
-                            doneMessage="Deleted"
-                            disabled={name === currentBranch}
-                            onClick={() => deleteBranchFetcher.submit(
-                              {
-                                branch: name,
-                              },
-                              {
-                                method: 'POST',
-                                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/delete`,
-                              },
+              {remoteBranches.length > 0 && (
+                <div className='select-none border border-solid rounded border-[--hl-sm] divide-y divide-solid divide-[--hl-sm]'>
+                  <Heading className='font-semibold uppercase text-[--hl] text-sm p-2'>Remote Branches</Heading>
+                  <GridList
+                    aria-label='Remote Branches list'
+                    selectionMode='none'
+                    items={remoteBranches.sort(sortBranches).map(branch => ({
+                      id: branch,
+                      key: branch,
+                      name: branch,
+                    }))}
+                    className="divide-y divide-solid divide-[--hl-sm] flex flex-col focus:outline-none overflow-y-auto flex-1 data-[empty]:py-0"
+                  >
+                    {item => (
+                      <Item
+                        id={item.id}
+                        key={item.key}
+                        textValue={item.name}
+                        className="p-2 w-full focus:outline-none focus:bg-[--hl-sm] transition-colors"
+                      >
+                        <div className="flex items-center w-full">
+                          <span className='flex-1'>{item.name}</span>
+                          <div className='flex items-center gap-2'>
+                            {item.name !== 'master' && (
+                              <PromptButton
+                                confirmMessage='Confirm'
+                                className="px-4 min-w-[12ch] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                                doneMessage="Deleted"
+                                disabled={item.name === currentBranch || item.name === 'master'}
+                                onClick={() => deleteBranchFetcher.submit(
+                                  {
+                                    branch: item.name,
+                                  },
+                                  {
+                                    method: 'POST',
+                                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/delete`,
+                                  },
+                                )}
+                              >
+                                <Icon icon="trash" className='text-[--color-danger]' />
+                                Delete
+                              </PromptButton>
                             )}
-                          >
-                            Delete
-                          </PromptButton>
-                        )}
-                        <SyncPullButton
-                          className="btn btn--micro btn--outlined space-left"
-                          branch={name}
-                          onPull={console.log}
-                          disabled={name === currentBranch}
-                          vcs={vcs}
-                        >
-                          Fetch
-                        </SyncPullButton>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                            <SyncPullButton
+                              className="px-4 py-1 min-w-[12ch] font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                              branch={item.name}
+                              onPull={console.log}
+                              disabled={item.name === currentBranch}
+                              vcs={vcs}
+                            >
+                              <Icon icon="download" />
+                              Fetch
+                            </SyncPullButton>
+                          </div>
+                        </div>
+                      </Item>
+                    )}
+                  </GridList>
+                </div>
+              )}
             </div>
           )}
-        </ModalBody>
+        </Dialog>
       </Modal>
-    </OverlayContainer>
+    </ModalOverlay>
   );
 };
-SyncBranchesModal.displayName = 'SyncBranchesModal';
