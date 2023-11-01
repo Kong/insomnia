@@ -42,24 +42,25 @@ export class MigrationService {
     /**
      * Queue maps for bookeeping migration activities
      */
-    private _projectQueue: Set<string> = new Set();
-    private _fileQueue: Set<string> = new Set();
-
     private _queueLocalProjects: Set<string> = new Set();
     private _queueLocalFiles: Set<string> = new Set();
 
+    /**
+     * Maps to track updated entity ids
+     */
     private _updateProjects: Map<string, string> = new Map();
     private _updatedFiles: Set<string> = new Set();
 
     private _status: MigrationStatus = 'idle';
 
+    /**
+     * Maps to compare against the remote state
+     */
     private _byRemoteProjectId: Map<RemoteProjectId, RemoteOrganizationId> = new Map();
-
     private _byRemoteFileId: Map<RemoteFileId, {
         remoteOrgId: RemoteOrganizationId;
         remoteProjectId: RemoteProjectId;
     }> = new Map();
-
     private _byRemoteOrgId: RemoteFileSnapshot | null = null;
 
     // TODO: handle conflict situation
@@ -219,22 +220,22 @@ export class MigrationService {
             for (const file of files) {
                 await this._dataStore.docUpdate<Workspace>(file, { parentId: newProject._id });
                 this._updatedFiles.add(file._id);
-                this._updateCommunication(`Upgraded File - ${file.name} out of Project - ${newProject.name}`, { completed: this._updatedFiles.size, total: this._fileQueue.size });
+                this._updateCommunication(`Upgraded File - ${file.name} out of Project - ${newProject.name}`, { completed: this._updatedFiles.size, total: this._queueLocalFiles.size });
             }
         }
     }
 
     private _validateMigrationResult(): void {
-        if (this._fileQueue.size > this._updatedFiles.size) {
+        if (this._queueLocalFiles.size > this._updatedFiles.size) {
             this._status = 'incomplete';
-            const failedFileCount = this._fileQueue.size - this._updatedFiles.size;
-            this._updateCommunication(`Failed to upgrade ${failedFileCount} out of ${this._fileQueue.size} files`, undefined);
+            const failedFileCount = this._queueLocalFiles.size - this._updatedFiles.size;
+            this._updateCommunication(`Failed to upgrade ${failedFileCount} out of ${this._queueLocalFiles.size} files`, undefined);
             return;
         }
 
-        if (this._projectQueue.size > this._updateProjects.size) {
+        if (this._queueLocalProjects.size > this._updateProjects.size) {
             this._status = 'incomplete';
-            const failedProjectCount = this._projectQueue.size - this._updateProjects.size;
+            const failedProjectCount = this._queueLocalProjects.size - this._updateProjects.size;
             this._updateCommunication(`Failed to upgrade ${failedProjectCount} out of ${this._updateProjects.size} projects`, undefined);
             return;
         }
@@ -248,7 +249,7 @@ export class MigrationService {
                 return;
             }
             await this._dataStore.unsafeRemove<Project>(oldProject);
-            this._projectQueue.delete(oldId);
+            this._queueLocalProjects.delete(oldId);
         }
 
         this._status = 'complete';
