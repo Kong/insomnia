@@ -1,45 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { AriaProgressBarProps, useProgressBar } from 'react-aria';
 
-import { getAccountId, getCurrentSessionId } from '../../account/session';
+import { getCurrentSessionId } from '../../account/session';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
-//
+
 const ProgressBar = (props: AriaProgressBarProps) => {
   const {
-    label,
     value,
     minValue = 0,
     maxValue = 100,
   } = props;
   const {
     progressBarProps,
-    labelProps,
   } = useProgressBar(props);
 
-  // Calculate the width of the progress bar as a percentage
   const percentage = value ? (value - minValue) / (maxValue - minValue) : 0;
   const barWidth = `${Math.round(percentage * 100)}%`;
 
   return (
-    <div {...progressBarProps} style={{ width: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        {label &&
-          (
-            <span {...labelProps}>
-              {label}
-            </span>
-          )}
-        {!!label &&
-          (
-            <span>
-              {progressBarProps['aria-valuetext']}
-            </span>
-          )}
+    <div>
+      <div {...progressBarProps} style={{ width: '100%' }}>
+        <div style={{ height: 10, background: 'lightgray', borderRadius: '2px', overflow: 'hidden' }}>
+          <div style={{ width: barWidth, height: 10 }} className='bg-[--color-surprise]' />
+        </div>
       </div>
-      <div style={{ height: 10, background: 'lightgray', borderRadius: '2px', overflow: 'hidden' }}>
-        <div style={{ width: barWidth, height: 10 }} className='bg-[--color-surprise]' />
-      </div>
+      <div>{barWidth}</div>
     </div>
   );
 };
@@ -52,34 +38,46 @@ interface MigrationStatus {
     total: number;
   };
 }
+interface DisplayCopy {
+  title: string;
+  subtitle: string;
+}
 export const DataMigration = () => {
-  const accountId = getAccountId();
   const sessionId = getCurrentSessionId();
-
-  const [status, setStatus] = useState<MigrationStatus | null>(null);
+  const [copy, setCopy] = useState<DisplayCopy>({ title: 'Preparing', subtitle: 'Preparing for the upgrade' });
+  const [update, setUpdate] = useState<MigrationStatus | null>(null);
 
   useEffect(() => {
-    if (!accountId || !sessionId) {
+    if (!sessionId) {
       return;
     }
 
     // default to local
     const prefersProjectType = localStorage.getItem('prefers-project-type') ?? 'local';
+    const title = prefersProjectType === 'local' ? 'Bringing your local data up to date' : 'Securely synchronizing your data';
+    const subtitle = prefersProjectType === 'local' ? 'We are locally upgrading the data format for this new version of Insomnia' : 'We are enabling Cloud Sync for your account, please wait';
+    setCopy({ title, subtitle });
 
     window.main.migration.start({ sessionId, prefersProjectType });
-  }, [accountId, sessionId]);
+  }, [sessionId]);
 
   useEffect(() => {
     const unsubscribe = window.main.on('migration:status',
       (_, message: MigrationStatus) => {
-        console.log(message);
-        setStatus(message);
+        setUpdate(message);
+
+        if (message.status === 'complete') {
+          // redrirect the user to organizatino page
+        }
       });
     return () => {
       unsubscribe();
     };
   }, []);
 
+  const status = update?.status;
+  const message = update?.message;
+  const progress = update?.progress;
   return (
     <div className='relative h-full w-full text-left text-base flex bg-[--color-bg]'>
       <TrailLinesContainer>
@@ -96,17 +94,11 @@ export const DataMigration = () => {
               className='flex justify-center items-center flex-col h-full pt-2'
             >
               <div className='text-[--color-font] flex flex-col gap-4'>
-                <h1 className='text-xl font-bold text-center'>Data Migration</h1>
+                <h1 className='text-xl font-bold text-center'>{copy.title}</h1>
                 <div className='flex flex-col gap-4'>
-                  <p>
-                    We've detected untracked files that may need migration.
-                  </p>
-                  <p>
-                    {status?.message}
-                  </p>
-                  {/* @ts-ignore */}
-                  {Boolean(status?.progress) && <ProgressBar label={status?.status} value={(status?.progress?.completed / status?.progress?.total) * 100} />}
-                  <ProgressBar label={status?.status} value={80} />
+                  <p>{copy.subtitle}</p>
+                  <p>{message}</p>
+                  {progress && <ProgressBar label={status?.toUpperCase()} value={(progress.completed / progress.total) * 100} />}
                 </div>
               </div>
             </div>
