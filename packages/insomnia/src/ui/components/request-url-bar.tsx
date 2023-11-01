@@ -22,6 +22,7 @@ import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSe
 import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
 import { createConstrainedKeyBindingsHandler, createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
+import { ConstrainedEmitter } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
 
@@ -41,7 +42,7 @@ interface Props {
   uniquenessKey: string;
   setLoading: (l: boolean) => void;
   onPaste: (text: string) => void;
-  eventEmitter: { emitter: React.RefObject<HTMLElement>; shouldTrigger: (event: KeyboardEvent | null) => boolean };
+  eventEmitter: ConstrainedEmitter;
 }
 
 export interface RequestUrlBarHandle {

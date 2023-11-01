@@ -37,6 +37,7 @@ const HeaderContainer = styled.div({
   height: '100%',
   overflowY: 'auto',
 });
+import { ConstrainedEmitter } from '../keydown-binder';
 
 export const TabPanelFooter = styled.div({
   boxSizing: 'content-box',
@@ -62,7 +63,7 @@ interface Props {
   settings: Settings;
   setLoading: (l: boolean) => void;
   onPaste: (text: string) => void;
-  eventEmitter:  {emitter: React.RefObject<HTMLElement>, shouldTrigger: (event: KeyboardEvent | null) => boolean};
+  eventEmitter: ConstrainedEmitter;
 }
 
 export const RequestPane: FC<Props> = ({

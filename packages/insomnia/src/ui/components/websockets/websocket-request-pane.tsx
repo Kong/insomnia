@@ -22,6 +22,7 @@ import { QueryEditorContainer, QueryEditorPreview } from '../editors/query-edito
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
+import { ConstrainedEmitter } from '../keydown-binder';
 import { MarkdownPreview } from '../markdown-preview';
 import { showAlert, showModal } from '../modals';
 import { RequestRenderErrorModal } from '../modals/request-render-error-modal';
@@ -199,13 +200,14 @@ const WebSocketRequestForm: FC<FormProps> = ({
 
 interface Props {
   environment: Environment | null;
+  eventEmitter: ConstrainedEmitter;
 }
 
 // requestId is something we can read from the router params in the future.
 // essentially we can lift up the states and merge request pane and response pane into a single page and divide the UI there.
 // currently this is blocked by the way page layout divide the panes with dragging functionality
 // TODO: @gatzjames discuss above assertion in light of request and settings drills
-export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
+export const WebSocketRequestPane: FC<Props> = ({ environment, eventEmitter }) => {
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as WebSocketRequestLoaderData;
 
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
@@ -269,6 +271,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
           defaultValue={activeRequest.url}
           readyState={readyState}
           onChange={url => patchRequest(requestId, { url })}
+          eventEmitter={eventEmitter}
         />
       </PaneHeader>
       <Tabs aria-label="Websocket request pane tabs">

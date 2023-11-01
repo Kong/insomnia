@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useRef, useState } from 'react';
+import React, { FunctionComponent, useEffect, useRef, useState } from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 import { useMount } from 'react-use';
 import styled from 'styled-components';
@@ -16,6 +16,7 @@ import { useRequestPatcher } from '../../hooks/use-request';
 import { useActiveRequestSyncVCSVersion, useGitVCSVersion } from '../../hooks/use-vcs-version';
 import { GrpcRequestState } from '../../routes/debug';
 import { GrpcRequestLoaderData } from '../../routes/request';
+import { useRootLoaderData } from '../../routes/root';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 import { PanelContainer, TabItem, Tabs } from '../base/tabs';
 import { GrpcSendButton } from '../buttons/grpc-send-button';
@@ -24,7 +25,7 @@ import { OneLineEditor } from '../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
 import { ErrorBoundary } from '../error-boundary';
 import { KeyValueEditor } from '../key-value-editor/key-value-editor';
-import { useDocBodyKeyboardShortcuts } from '../keydown-binder';
+import { ConstrainedEmitter, createConstrainedKeyBindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
 import { showAlert, showModal } from '../modals';
 import { ErrorModal } from '../modals/error-modal';
 import { ProtoFilesModal } from '../modals/proto-files-modal';
@@ -34,10 +35,12 @@ import { Button } from '../themed-button';
 import { Tooltip } from '../tooltip';
 import { EmptyStatePane } from './empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from './pane';
+
 interface Props {
   grpcState: GrpcRequestState;
   setGrpcState: (states: GrpcRequestState) => void;
   reloadRequests: (requestIds: string[]) => void;
+  eventEmitter: ConstrainedEmitter;
 }
 
 const StyledUrlBar = styled.div`
@@ -73,7 +76,12 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   grpcState,
   setGrpcState,
   reloadRequests,
+  eventEmitter,
 }) => {
+  const {
+    settings,
+  } = useRootLoaderData();
+  const { hotKeyRegistry } = settings;
   const { activeRequest } = useRouteLoaderData('request/:requestId') as GrpcRequestLoaderData;
 
   const [isProtoModalOpen, setIsProtoModalOpen] = useState(false);
@@ -143,6 +151,18 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
   useDocBodyKeyboardShortcuts({
     request_send: handleRequestSend,
   });
+
+  const keyboardEventHandler = createConstrainedKeyBindingsHandler(hotKeyRegistry, 'request_send', handleRequestSend, eventEmitter.shouldTrigger);
+  useEffect(() => {
+    if (!eventEmitter || !eventEmitter.emitter.current) {
+      return;
+    }
+
+    eventEmitter.emitter.current.addEventListener('keydown', keyboardEventHandler, { capture: true });
+    return () => {
+      window.removeEventListener('keydown', keyboardEventHandler, { capture: true });
+    };
+  }, [eventEmitter, keyboardEventHandler]);
 
   return (
     <>

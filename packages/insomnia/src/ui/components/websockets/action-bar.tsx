@@ -1,4 +1,4 @@
-import React, { FC, useLayoutEffect, useRef } from 'react';
+import React, { FC, useEffect, useLayoutEffect, useRef } from 'react';
 import { useFetcher, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -7,8 +7,10 @@ import { WebSocketRequest } from '../../../models/websocket-request';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../../utils/url/querystring';
 import { ConnectActionParams } from '../../routes/request';
+import { useRootLoaderData } from '../../routes/root';
 import { OneLineEditor, OneLineEditorHandle } from '../codemirror/one-line-editor';
 import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from '../keydown-binder';
+import { ConstrainedEmitter, createConstrainedKeyBindingsHandler } from '../keydown-binder';
 import { DisconnectButton } from './disconnect-button';
 
 const Button = styled.button<{ warning?: boolean }>(({ warning }) => ({
@@ -29,6 +31,7 @@ interface ActionBarProps {
   defaultValue: string;
   readyState: boolean;
   onChange: (value: string) => void;
+  eventEmitter: ConstrainedEmitter;
 }
 
 const Form = styled.form({
@@ -65,7 +68,12 @@ export const ConnectionCircle = styled.span({
   borderRadius: '50%',
 });
 
-export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId, defaultValue, onChange, readyState }) => {
+export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId, defaultValue, onChange, readyState, eventEmitter }) => {
+  const {
+    settings,
+  } = useRootLoaderData();
+  const { hotKeyRegistry } = settings;
+
   const isOpen = readyState;
   const oneLineEditorRef = useRef<OneLineEditorHandle>(null);
   useLayoutEffect(() => {
@@ -117,6 +125,18 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
       oneLineEditorRef.current?.selectAll();
     },
   });
+
+  const keyboardEventHandler = createConstrainedKeyBindingsHandler(hotKeyRegistry, 'request_send', handleSubmit, eventEmitter.shouldTrigger);
+  useEffect(() => {
+    if (!eventEmitter || !eventEmitter.emitter.current) {
+      return;
+    }
+
+    eventEmitter.emitter.current.addEventListener('keydown', keyboardEventHandler, { capture: true });
+    return () => {
+      window.removeEventListener('keydown', keyboardEventHandler, { capture: true });
+    };
+  }, [eventEmitter, keyboardEventHandler]);
 
   const isConnectingOrClosed = !readyState;
   return (

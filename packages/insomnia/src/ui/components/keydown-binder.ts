@@ -43,6 +43,11 @@ export function useDocBodyKeyboardShortcuts(listeners: { [key in KeyboardShortcu
   useKeyboardShortcuts(() => document.body, listeners);
 }
 
+export interface ConstrainedEmitter {
+  emitter: React.RefObject<HTMLElement>;
+  shouldTrigger: (event: KeyboardEvent | null) => boolean;
+}
+
 export function createConstrainedKeyBindingsHandler(
   hotKeyRegistry: HotKeyRegistry,
   shortcut: KeyboardShortcut,
