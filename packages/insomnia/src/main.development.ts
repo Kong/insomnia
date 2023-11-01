@@ -14,8 +14,8 @@ import { backupIfNewerVersionAvailable } from './main/backup';
 import { registerElectronHandlers } from './main/ipc/electron';
 import { registergRPCHandlers } from './main/ipc/grpc';
 import { registerMainHandlers } from './main/ipc/main';
+import { registerMigrationHandlers } from './main/migration/register';
 import { registerCurlHandlers } from './main/network/curl';
-import { registerMigrationHandlers } from './main/network/migration';
 import { registerWebSocketHandlers } from './main/network/websocket';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
@@ -96,8 +96,9 @@ app.on('ready', async () => {
   await _createModelInstances();
   sentryWatchAnalyticsEnabled();
   windowUtils.init();
-  registerMigrationHandlers();
-  await _launchApp();
+
+  const window = await _launchApp();
+  registerMigrationHandlers(window);
 
   // Init the rest
   await updates.init();
@@ -148,7 +149,7 @@ app.on('activate', (_error, hasVisibleWindows) => {
   }
 });
 
-const _launchApp = async () => {
+const _launchApp = async (): Promise<BrowserWindow> => {
   await _trackStats();
   let window: BrowserWindow;
   // Handle URLs sent via command line args
@@ -210,6 +211,9 @@ const _launchApp = async () => {
       requestHeaders: details.requestHeaders,
     });
   });
+
+  window = windowUtils.getOrCreateWindow();
+  return window;
 };
 
 /*

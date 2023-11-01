@@ -1,64 +1,11 @@
 import React from 'react';
 import { Button, Heading, Radio, RadioGroup } from 'react-aria-components';
-import { ActionFunction, LoaderFunction, redirect, useFetcher } from 'react-router-dom';
+import { ActionFunction, redirect, useFetcher } from 'react-router-dom';
 
-import { getCurrentSessionId } from '../../account/session';
-import { getUnclaimedFiles } from '../../sync/vcs/migrate-projects-into-organization';
-import { getVCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
 import { Icon } from '../components/icon';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
-
-export const loader: LoaderFunction = async () => {
-  const sessionId = getCurrentSessionId();
-  try {
-    const vcs = getVCS();
-    console.log(vcs);
-    // if (!vcs) {
-    //   const driver = FileSystemDriver.create(
-    //     process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-    //   );
-
-    //   console.log('Initializing VCS');
-    //   vcs = await initVCS(driver, async conflicts => {
-    //     return new Promise(resolve => {
-    //       showModal(SyncMergeModal, {
-    //         conflicts,
-    //         handleDone: (conflicts?: MergeConflict[]) =>
-    //           resolve(conflicts || []),
-    //       });
-    //     });
-    //   });
-    // }
-
-    const unclaimedFiles = await getUnclaimedFiles();
-    const hasUnclaimedFiles = unclaimedFiles?.length > 0;
-    if (!hasUnclaimedFiles) {
-      // has no unclaimed files => should go
-      return redirect('/organization');
-    }
-
-    const personalFiles = await window.main.insomniaFetch<{ fileIds: string[] } | void>({
-      method: 'GET',
-      path: '/v1/user/files',
-      sessionId,
-    });
-
-    const hasNoCloudFilesYet = !personalFiles?.fileIds || personalFiles?.fileIds?.length === 0;
-    if (hasNoCloudFilesYet && hasUnclaimedFiles) {
-      return {
-        shouldMigrate: true,
-      };
-    }
-
-    return redirect('/organization');
-  } catch {
-
-  }
-
-  return null;
-};
 
 interface MigrationActionData {
   error?: string;
@@ -71,7 +18,7 @@ export const action: ActionFunction = async ({ request }) => {
 
   localStorage.setItem('prefers-project-type', type);
 
-  return redirect('/organization');
+  return redirect('/data-migration');
 };
 
 export const Migrate = () => {

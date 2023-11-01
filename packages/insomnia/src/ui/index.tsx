@@ -29,6 +29,7 @@ import { AppLoadingIndicator } from './components/app-loading-indicator';
 import Auth from './routes/auth';
 import Authorize from './routes/auth.authorize';
 import Login from './routes/auth.login';
+import { DataMigration } from './routes/data-migration';
 import { ErrorRoute } from './routes/error';
 import Onboarding from './routes/onboarding';
 import { Migrate } from './routes/onboarding.migrate';
@@ -122,9 +123,15 @@ const router = createMemoryRouter(
         },
         {
           path: 'onboarding/migrate',
-          loader: async (...args) => (await import('./routes/onboarding.migrate')).loader(...args),
+          // loader: async (...args) => (await import('./routes/onboarding.migrate')).loader(...args),
           action: async (...args) => (await import('./routes/onboarding.migrate')).action(...args),
           element: <Migrate />,
+        },
+        {
+          path: 'data-migration',
+          // loader: async (...args) => (await import('./routes/onboarding.migrate')).loader(...args),
+          // action: async (...args) => (await import('./routes/onboarding.migrate')).action(...args),
+          element: <DataMigration />,
         },
         {
           path: 'import',

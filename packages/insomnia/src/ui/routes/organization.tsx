@@ -30,11 +30,8 @@ import {
   getCurrentSessionId,
 } from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import { database } from '../../common/database';
 import { exportAllData } from '../../common/export-all-data';
-import * as models from '../../models';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
-import { Project, RemoteProject } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { MergeConflict } from '../../sync/types';
@@ -179,9 +176,6 @@ export const indexLoader: LoaderFunction = async () => {
       invariant(currentPlan, 'Failed to load current plan');
 
       const { organizations } = organizationsResult;
-      console.log({ sessionId });
-      console.log({ organizations });
-
       const accountId = getAccountId();
       invariant(accountId, 'Account ID is not defined');
       organizationsData.organizations = sortOrganizations(accountId, organizations);
@@ -195,21 +189,6 @@ export const indexLoader: LoaderFunction = async () => {
             accountId,
           }));
       invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
-
-      const legacyRemoteProjects = await database.find<RemoteProject>(models.project.type, {
-        remoteId: { $ne: null },
-        parentId: null,
-      });
-
-      console.log({ legacyRemoteProjects });
-
-      const localProjects = await database.find<Project>(models.project.type, {
-        remoteId: null,
-        parentId: null,
-        _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
-      });
-
-      console.log({ localProjects });
 
       if (personalOrganization) {
         return redirect(`/organization/${personalOrganization.id}`);
@@ -399,10 +378,6 @@ const OrganizationRoute = () => {
     workspaceId?: string;
   };
   const [status, setStatus] = useState<'online' | 'offline'>('online');
-
-  useEffect(() => {
-    window.main.migration.prepare();
-  }, []);
 
   useEffect(() => {
     const handleOnline = () => setStatus('online');

@@ -2,7 +2,6 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 import { gRPCBridgeAPI } from './main/ipc/grpc';
 import { CurlBridgeAPI } from './main/network/curl';
-import type { MigrationServiceImpl } from './main/network/migration';
 import type { WebSocketBridgeAPI } from './main/network/websocket';
 
 const webSocket: WebSocketBridgeAPI = {
@@ -39,12 +38,11 @@ const grpc: gRPCBridgeAPI = {
   loadMethodsFromReflection: options => ipcRenderer.invoke('grpc.loadMethodsFromReflection', options),
 };
 
-const migration: MigrationServiceImpl = {
-  prepare: () => ipcRenderer.invoke('migration.prepare'),
-  pause: () => ipcRenderer.invoke('migration.prepare'),
-  start: () => ipcRenderer.invoke('migration.prepare'),
-  end: () => ipcRenderer.invoke('migration.prepare'),
-  resume: () => ipcRenderer.invoke('migration.prepare'),
+export interface MigrationServiceAPI {
+  start: (options: { sessionId: string; prefersProjectType: string }) => Promise<void>;
+};
+const migration: MigrationServiceAPI = {
+  start: options => ipcRenderer.invoke('migration.start', options),
 };
 
 const main: Window['main'] = {
