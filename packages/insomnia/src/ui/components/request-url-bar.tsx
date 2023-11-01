@@ -21,7 +21,7 @@ import { WorkspaceLoaderData } from '../routes/workspace';
 import { Dropdown, DropdownButton, type DropdownHandle, DropdownItem, DropdownSection, ItemContent } from './base/dropdown';
 import { OneLineEditor, OneLineEditorHandle } from './codemirror/one-line-editor';
 import { MethodDropdown } from './dropdowns/method-dropdown';
-import { createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
+import { createConstrainedKeyBindingsHandler, createKeybindingsHandler, useDocBodyKeyboardShortcuts } from './keydown-binder';
 import { GenerateCodeModal } from './modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from './modals/index';
 
@@ -41,6 +41,7 @@ interface Props {
   uniquenessKey: string;
   setLoading: (l: boolean) => void;
   onPaste: (text: string) => void;
+  eventEmitter: { emitter: React.RefObject<HTMLElement>; shouldTrigger: (event: KeyboardEvent | null) => boolean };
 }
 
 export interface RequestUrlBarHandle {
@@ -52,6 +53,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   uniquenessKey,
   setLoading,
   onPaste,
+  eventEmitter,
 }, ref) => {
   const {
     activeWorkspace,
@@ -192,6 +194,24 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
       dropdownRef.current?.toggle(true);
     },
   });
+
+  const sendOrConnectHandler = () => {
+    if (activeRequest.url) {
+      sendOrConnect();
+    }
+  };
+
+  const keyboardEventHandler = createConstrainedKeyBindingsHandler(hotKeyRegistry, 'request_send', sendOrConnectHandler, eventEmitter.shouldTrigger);
+  useEffect(() => {
+    if (!eventEmitter || !eventEmitter.emitter.current) {
+      return;
+    }
+
+    eventEmitter.emitter.current.addEventListener('keydown', keyboardEventHandler, { capture: true });
+    return () => {
+      window.removeEventListener('keydown', keyboardEventHandler, { capture: true });
+    };
+  }, [eventEmitter, keyboardEventHandler]);
 
   const handleSendDropdownHide = useCallback(() => {
     buttonRef.current?.blur();

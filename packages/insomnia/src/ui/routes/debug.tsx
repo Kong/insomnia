@@ -1,7 +1,7 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { FC, Fragment, useEffect, useRef, useState } from 'react';
+import React, { FC, Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Breadcrumbs,
   Button,
@@ -57,7 +57,6 @@ import { RequestActionsDropdown } from '../components/dropdowns/request-actions-
 import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
-import { EditableInput } from '../components/editable-input';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
@@ -83,9 +82,7 @@ import { useReadyState } from '../hooks/use-ready-state';
 import {
   CreateRequestType,
   useRequestGroupMetaPatcher,
-  useRequestGroupPatcher,
   useRequestMetaPatcher,
-  useRequestPatcher,
 } from '../hooks/use-request';
 import {
   GrpcRequestLoaderData,
@@ -191,8 +188,6 @@ export const Debug: FC = () => {
     useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
 
-  const patchRequest = useRequestPatcher();
-  const patchGroup = useRequestGroupPatcher();
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
@@ -629,6 +624,20 @@ export const Debug: FC = () => {
     getItemKey: index => visibleCollection[index].doc._id,
   });
 
+  const requestPaneRef = useRef(null);
+  const shouldTrigger = useCallback((event: KeyboardEvent | null) => {
+    if (!event || !event.target || !requestPaneRef || !requestPaneRef.current) {
+      return false;
+    }
+    // TODO: check if there is any active modal
+    return event.composedPath().includes(requestPaneRef.current);
+  }, [requestPaneRef]);
+
+  const eventEmitter: {emitter: React.RefObject<HTMLElement>, shouldTrigger: (event: KeyboardEvent | null) => boolean} = {
+    emitter: requestPaneRef,
+    shouldTrigger,
+  };
+
   return (
     <SidebarLayout
       className="new-sidebar"
@@ -697,13 +706,13 @@ export const Debug: FC = () => {
                               borderColor: selectedItem.color ?? 'var(--color-font)',
                             }}
                           >
-                          <Icon
-                            icon={selectedItem.isPrivate ? 'lock' : 'refresh'}
-                            style={{
-                              color: selectedItem.color ?? 'var(--color-font)',
-                            }}
-                            className='text-xs w-5'
-                          />
+                            <Icon
+                              icon={selectedItem.isPrivate ? 'lock' : 'refresh'}
+                              style={{
+                                color: selectedItem.color ?? 'var(--color-font)',
+                              }}
+                              className='text-xs w-5'
+                            />
                           </span>
                           {selectedItem.name}
                         </Fragment>
@@ -887,148 +896,40 @@ export const Debug: FC = () => {
               </MenuTrigger>
             </div>
 
-            <GridList
-              className="overflow-y-auto border-b border-t data-[empty]:py-0 py-[--padding-sm] data-[empty]:border-none border-solid border-[--hl-sm]"
-              items={collection.filter(item => !item.hidden && item.pinned)}
-              aria-label="Pinned Requests"
-              disallowEmptySelection
-              selectedKeys={[requestId]}
-              selectionMode="single"
-              onSelectionChange={keys => {
-                if (keys !== 'all') {
-                  const value = keys.values().next().value;
-                  navigate(
-                    `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`
-                  );
-                }
-              }}
-            >
-              {item => {
-
-                return (
-                  <Item
-                    key={item.doc._id}
-                    id={item.doc._id}
-                    className="group outline-none select-none"
-                    textValue={item.doc.name}
-                    data-testid={item.doc.name}
-                  >
-                    <div
-                      className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                    >
-                      <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
-                      {isRequest(item.doc) && (
-                        <span
-                          className={
-                            `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
-                            ${{
-                              'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
-                              'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
-                              'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
-                              'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
-                              'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
-                              'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
-                              'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
-                            }[item.doc.method] || 'text-[--color-font] bg-[--hl-md]'}`
-                          }
-                        >
-                          {getMethodShortHand(item.doc)}
-                        </span>
-                      )}
-                      {isWebSocketRequest(item.doc) && (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
-                          WS
-                        </span>
-                      )}
-                      {isGrpcRequest(item.doc) && (
-                        <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
-                          gRPC
-                        </span>
-                      )}
-                      <EditableInput
-                        value={getRequestNameOrFallback(item.doc)}
-                        name="request name"
-                        ariaLabel="request name"
-                        paddingClass="px-0"
-                        onChange={name => {
-                          if (isRequestGroup(item.doc)) {
-                            patchGroup(item.doc._id, { name });
-                          } else {
-                            patchRequest(item.doc._id, { name });
-                          }
-                        }}
-                      />
-                      <span className="flex-1" />
-                      {item.pinned && (
-                        <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
-                      )}
-                      {!isRequestGroup(item.doc) && (
-                        <RequestActionsDropdown
-                          activeEnvironment={activeEnvironment}
-                          activeProject={activeProject}
-                          request={item.doc}
-                          isPinned={item.pinned}
-                        />
-                      )}
-                    </div>
-                  </Item>
-                );
-              }}
-            </GridList>
-
-            <div className='flex-1 overflow-y-auto' ref={parentRef} >
+            <div className='flex-1 overflow-y-auto' ref={requestPaneRef}>
               <GridList
-                style={{ height: virtualizer.getTotalSize() }}
-                items={virtualizer.getVirtualItems()}
-                className="relative"
-                aria-label="Request Collection"
+                className="overflow-y-auto border-b border-t data-[empty]:py-0 py-[--padding-sm] data-[empty]:border-none border-solid border-[--hl-sm]"
+                items={collection.filter(item => !item.hidden && item.pinned)}
+                aria-label="Pinned Requests"
                 disallowEmptySelection
-                key={sortOrder}
-                dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
                 selectedKeys={[requestId]}
                 selectionMode="single"
                 onSelectionChange={keys => {
                   if (keys !== 'all') {
                     const value = keys.values().next().value;
-
-                    const item = collection.find(
-                      item => item.doc._id === value
+                    navigate(
+                      `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`
                     );
-                    if (item && isRequestGroup(item.doc)) {
-                      groupMetaPatcher(value, { collapsed: !item.collapsed });
-                    } else {
-                      navigate(
-                        `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`
-                      );
-                    }
                   }
                 }}
               >
-                {virtualItem => {
-                  const item = visibleCollection[virtualItem.index];
+                {item => {
+
                   return (
                     <Item
-                      className="group outline-none absolute top-0 left-0 select-none w-full"
-                      textValue={item.doc.name}
-                      data-testid={item.doc.name}
-                      style={{
-                        height: `${virtualItem.size}`,
-                        transform: `translateY(${virtualItem.start}px)`,
-                      }}
+                      key={item.doc._id}
+                      id={item.doc._id}
+                      className="group outline-none select-none"
                     >
                       <div
                         className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                        style={{
-                          paddingLeft: `${item.level + 1}rem`,
-                        }}
                       >
                         <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
-                        <Button slot="drag" className="hidden" />
                         {isRequest(item.doc) && (
                           <span
                             className={
                               `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
-                              ${{
+                            ${{
                                 'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
                                 'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
                                 'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
@@ -1043,7 +944,7 @@ export const Debug: FC = () => {
                           </span>
                         )}
                         {isWebSocketRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center info justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
                             WS
                           </span>
                         )}
@@ -1052,36 +953,12 @@ export const Debug: FC = () => {
                             gRPC
                           </span>
                         )}
-                        {isRequestGroup(item.doc) && (
-                          <Icon
-                            className="w-6 flex-shrink-0"
-                            icon={item.collapsed ? 'folder' : 'folder-open'}
-                          />
-                        )}
-                        <EditableInput
-                          value={getRequestNameOrFallback(item.doc)}
-                          name="request name"
-                          ariaLabel="request name"
-                          paddingClass="px-0"
-                          onChange={name => {
-                            if (isRequestGroup(item.doc)) {
-                              patchGroup(item.doc._id, { name });
-                            } else {
-                              patchRequest(item.doc._id, { name });
-                            }
-                          }}
-                        />
+                        <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
                         <span className="flex-1" />
-                        {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
-                        {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
                         {item.pinned && (
                           <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
                         )}
-                        {isRequestGroup(item.doc) ? (
-                          <RequestGroupActionsDropdown
-                            requestGroup={item.doc}
-                          />
-                        ) : (
+                        {!isRequestGroup(item.doc) && (
                           <RequestActionsDropdown
                             activeEnvironment={activeEnvironment}
                             activeProject={activeProject}
@@ -1094,6 +971,113 @@ export const Debug: FC = () => {
                   );
                 }}
               </GridList>
+
+              <div className='flex-1 overflow-y-auto' ref={parentRef}>
+                <GridList
+                  style={{ height: virtualizer.getTotalSize() }}
+                  items={virtualizer.getVirtualItems()}
+                  className="relative"
+                  aria-label="Request Collection"
+                  disallowEmptySelection
+                  key={sortOrder}
+                  dragAndDropHooks={sortOrder === 'type-manual' ? collectionDragAndDrop.dragAndDropHooks : undefined}
+                  selectedKeys={[requestId]}
+                  selectionMode="single"
+                  onSelectionChange={keys => {
+                    if (keys !== 'all') {
+                      const value = keys.values().next().value;
+
+                      const item = collection.find(
+                        item => item.doc._id === value
+                      );
+                      if (item && isRequestGroup(item.doc)) {
+                        groupMetaPatcher(value, { collapsed: !item.collapsed });
+                      } else {
+                        navigate(
+                          `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${value}?${searchParams.toString()}`
+                        );
+                      }
+                    }
+                  }}
+                >
+                  {virtualItem => {
+                    const item = visibleCollection[virtualItem.index];
+                    return (
+                      <Item
+                        className="group outline-none absolute top-0 left-0 select-none w-full"
+                        textValue={item.doc.name}
+                        style={{
+                          height: `${virtualItem.size}`,
+                          transform: `translateY(${virtualItem.start}px)`,
+                        }}
+                      >
+                        <div
+                          className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
+                          style={{
+                            paddingLeft: `${item.level + 1}rem`,
+                          }}
+                        >
+                          <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                          <Button slot="drag" className="hidden" />
+                          {isRequest(item.doc) && (
+                            <span
+                              className={
+                                `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
+                              ${{
+                                  'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+                                  'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+                                  'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                                  'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                                  'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+                                  'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+                                  'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+                                }[item.doc.method] || 'text-[--color-font] bg-[--hl-md]'}`
+                              }
+                            >
+                              {getMethodShortHand(item.doc)}
+                            </span>
+                          )}
+                          {isWebSocketRequest(item.doc) && (
+                            <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center info justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+                              WS
+                            </span>
+                          )}
+                          {isGrpcRequest(item.doc) && (
+                            <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]">
+                              gRPC
+                            </span>
+                          )}
+                          {isRequestGroup(item.doc) && (
+                            <Icon
+                              className="w-6 flex-shrink-0"
+                              icon={item.collapsed ? 'folder' : 'folder-open'}
+                            />
+                          )}
+                          <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
+                          <span className="flex-1" />
+                          {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
+                          {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
+                          {item.pinned && (
+                            <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
+                          )}
+                          {isRequestGroup(item.doc) ? (
+                            <RequestGroupActionsDropdown
+                              requestGroup={item.doc}
+                            />
+                          ) : (
+                            <RequestActionsDropdown
+                              activeEnvironment={activeEnvironment}
+                              activeProject={activeProject}
+                              request={item.doc}
+                              isPinned={item.pinned}
+                            />
+                          )}
+                        </div>
+                      </Item>
+                    );
+                  }}
+                </GridList>
+              </div>
             </div>
           </div>
 
@@ -1144,6 +1128,7 @@ export const Debug: FC = () => {
                   setPastedCurl(text);
                   setPasteCurlModalOpen(true);
                 }}
+                eventEmitter={eventEmitter}
               />
             )}
             {!requestId && <PlaceholderRequestPane />}

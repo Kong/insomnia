@@ -4,7 +4,7 @@ import tinykeys, { createKeybindingsHandler as _createKeybindingsHandler, KeyBin
 
 import { getPlatformKeyCombinations } from '../../common/hotkeys';
 import { keyboardKeys } from '../../common/keyboard-keys';
-import { KeyboardShortcut, KeyCombination } from '../../common/settings';
+import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '../../common/settings';
 import { RootLoaderData } from '../routes/root';
 
 const keyCombinationToTinyKeyString = ({ ctrl, alt, shift, meta, keyCode }: KeyCombination): string =>
@@ -41,6 +41,24 @@ export function useKeyboardShortcuts(getTarget: () => HTMLElement, listeners: { 
 
 export function useDocBodyKeyboardShortcuts(listeners: { [key in KeyboardShortcut]?: (event: KeyboardEvent) => any }) {
   useKeyboardShortcuts(() => document.body, listeners);
+}
+
+export function createConstrainedKeyBindingsHandler(
+  hotKeyRegistry: HotKeyRegistry,
+  shortcut: KeyboardShortcut,
+  handler: (event: KeyboardEvent) => void,
+  canTrigger: (event: KeyboardEvent | null) => boolean,
+) {
+  const keyCombos = getPlatformKeyCombinations(hotKeyRegistry[shortcut]);
+  const tinykeysCombo = keyCombinationToTinyKeyString(keyCombos[0]);
+  return createKeybindingsHandler({
+    [tinykeysCombo]: (event: KeyboardEvent) => {
+      if (canTrigger(event)) { // event is checked before handeling
+        handler(event);
+        event.stopPropagation();
+      }
+    },
+  });
 }
 
 export function createKeybindingsHandler(

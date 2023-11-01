@@ -62,6 +62,7 @@ interface Props {
   settings: Settings;
   setLoading: (l: boolean) => void;
   onPaste: (text: string) => void;
+  eventEmitter:  {emitter: React.RefObject<HTMLElement>, shouldTrigger: (event: KeyboardEvent | null) => boolean};
 }
 
 export const RequestPane: FC<Props> = ({
@@ -69,6 +70,7 @@ export const RequestPane: FC<Props> = ({
   settings,
   setLoading,
   onPaste,
+  eventEmitter,
 }) => {
   const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
@@ -132,6 +134,7 @@ export const RequestPane: FC<Props> = ({
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             setLoading={setLoading}
             onPaste={onPaste}
+            eventEmitter={eventEmitter}
           />
         </ErrorBoundary>
       </PaneHeader>
