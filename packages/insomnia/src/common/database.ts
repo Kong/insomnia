@@ -120,7 +120,6 @@ export const database = {
       },
       ...patches,
     );
-    console.log({ doc });
     return database.update<T>(doc);
   },
 
