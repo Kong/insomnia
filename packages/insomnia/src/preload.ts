@@ -40,9 +40,11 @@ const grpc: gRPCBridgeAPI = {
 
 export interface MigrationBridgeAPI {
   start: (options: { sessionId: string; prefersProjectType: string }) => Promise<void>;
+  stop: () => Promise<void>;
 };
 const migration: MigrationBridgeAPI = {
   start: options => ipcRenderer.invoke('migration.start', options),
+  stop: () => ipcRenderer.invoke('migration.stop'),
 };
 
 const main: Window['main'] = {

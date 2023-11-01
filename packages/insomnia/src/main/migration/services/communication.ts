@@ -1,4 +1,5 @@
 import { BrowserWindow } from 'electron';
+import { LogFunctions } from 'electron-log';
 import type { Subscription } from 'rxjs';
 import { delayWhen, interval, Subject } from 'rxjs';
 
@@ -7,21 +8,30 @@ interface CommunicationMessage {
     data: unknown;
 }
 
-const DELAY_TIME = 500;
+const DELAY_INTERVAL = 500;
 // TODO: if this is used else where, should be singleton
 export class CommunicationService {
     private _receiver: BrowserWindow;
-    private _queueOperation: Subscription | null = null;
+    private _logger: LogFunctions;
+
+    /**
+     * This is the execution of observable in queue.
+     * In this context, we are getting message from observable, and its execution (subscription) is
+     * delayed by the DELAY_INTERVAL value
+     * */
+    private _queueMessage: Subscription | null = null;
     private _onMessage$ = new Subject<CommunicationMessage>();
 
-    constructor(receiver: BrowserWindow) {
+    constructor(logger: LogFunctions, receiver: BrowserWindow) {
+        this._logger = logger;
         this._receiver = receiver;
     }
 
     public broadcast(): void {
-        this._queueOperation = this._onMessage$
+        this._logger.info('[migration][communication] broadcasting started');
+        this._queueMessage = this._onMessage$
             // setting a timer for each message queue
-            .pipe(delayWhen((_, index) => interval(index * DELAY_TIME)))
+            .pipe(delayWhen((_, index) => interval(index * DELAY_INTERVAL)))
             .subscribe(message => {
                 this._receiver.webContents.send(message.channel, message.data);
             });
@@ -31,7 +41,9 @@ export class CommunicationService {
         this._onMessage$.next({ channel, data });
     }
 
-    public unsubscribe(): void {
-        this._queueOperation?.unsubscribe();
+    public stop(): void {
+        this._logger.info('[migration][communication] broadcasting stopping');
+        this._queueMessage?.unsubscribe();
+        this._logger.info('[migration][communication] broadcasting stopped');
     }
 }

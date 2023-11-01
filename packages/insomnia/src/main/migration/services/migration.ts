@@ -81,7 +81,7 @@ export class MigrationService {
         this._dataStore = dataStore;
     }
 
-    public async prepare(local: boolean): Promise<void> {
+    public async start(local: boolean): Promise<void> {
         // regardless of local or remote migration, we still need to get personal workspace records to prevent conflict
         this._logger.info(`[migration][${this._status}] initializing`);
         this._status = 'preparing';
@@ -109,6 +109,18 @@ export class MigrationService {
 
         this._logger.info(`[migration][${this._status}] continuing to migrate remotely`);
         this._handleUntrackedFilesRemotely();
+    }
+
+    public stop(): void {
+        this._logger.info(`[migration][${this._status}] migration stopped`);
+        if (this._status === 'complete') {
+            this._queueLocalProjects.clear();
+            this._queueLocalFiles.clear();
+            this._byRemoteFileId.clear();
+            this._byRemoteProjectId.clear();
+            this._byRemoteOrgId = null;
+        }
+        this._comm.stop();
     }
 
     private _transformRemoteFileSnapshotToMaps(snapshot: RemoteFileSnapshot): void {
@@ -248,6 +260,7 @@ export class MigrationService {
             if (!oldProject) {
                 return;
             }
+            // this method is "unsafeRemove" because it does not delete its children => used here to make sure we don't delete the children files as we are not creating new files other than the project
             await this._dataStore.unsafeRemove<Project>(oldProject);
             this._queueLocalProjects.delete(oldId);
         }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AriaProgressBarProps, useProgressBar } from 'react-aria';
 
-import { getCurrentSessionId } from '../../account/session';
+import { getAccountId, getCurrentSessionId } from '../../account/session';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 
@@ -44,11 +44,12 @@ interface DisplayCopy {
 }
 export const DataMigration = () => {
   const sessionId = getCurrentSessionId();
+  const accountId = getAccountId();
   const [copy, setCopy] = useState<DisplayCopy>({ title: 'Preparing', subtitle: 'Preparing for the upgrade' });
   const [update, setUpdate] = useState<MigrationStatus | null>(null);
 
   useEffect(() => {
-    if (!sessionId) {
+    if (!sessionId || !accountId) {
       return;
     }
 
@@ -59,7 +60,7 @@ export const DataMigration = () => {
     setCopy({ title, subtitle });
 
     window.main.migration.start({ sessionId, prefersProjectType });
-  }, [sessionId]);
+  }, [sessionId, accountId]);
 
   useEffect(() => {
     const unsubscribe = window.main.on('migration:status',
@@ -67,6 +68,7 @@ export const DataMigration = () => {
         setUpdate(message);
 
         if (message.status === 'complete') {
+          window.main.migration.stop();
           // redrirect the user to organizatino page
         }
       });

@@ -1,21 +1,19 @@
 import type { LogFunctions } from 'electron-log';
 
 import { insomniaFetch } from '../../insomniaFetch';
+import type { IdentityService } from './identity';
 
 interface ErrorResponse {
     error: string;
     message: string;
 }
 export class HttpClient {
-    private _sessionId: string | null = null;
     private _logger: LogFunctions;
-    constructor(logger: LogFunctions) {
-        this._logger = logger;
-    }
+    private _identity: IdentityService;
 
-    public setAuthentication(sessionId: string): void {
-        this._logger.info('[migration] setting authentication for http client');
-        this._sessionId = sessionId;
+    constructor(logger: LogFunctions, identity: IdentityService) {
+        this._logger = logger;
+        this._identity = identity;
     }
 
     public get<T>(path: string): Promise<T | ErrorResponse> {
@@ -23,7 +21,7 @@ export class HttpClient {
         return insomniaFetch<T>({
             method: 'GET',
             path,
-            sessionId: this._sessionId,
+            sessionId: this._identity.sessionId,
         });
     }
 
@@ -33,7 +31,7 @@ export class HttpClient {
             method: 'POST',
             path,
             data,
-            sessionId: this._sessionId,
+            sessionId: this._identity.sessionId,
         });
     }
 
@@ -42,7 +40,7 @@ export class HttpClient {
         return insomniaFetch<T>({
             method: 'DELETE',
             path,
-            sessionId: this._sessionId,
+            sessionId: this._identity.sessionId,
         });
     }
 
@@ -52,7 +50,7 @@ export class HttpClient {
             method: 'DELETE',
             path,
             data,
-            sessionId: this._sessionId,
+            sessionId: this._identity.sessionId,
         });
     }
 
@@ -62,7 +60,7 @@ export class HttpClient {
             method: 'PUT',
             path,
             data,
-            sessionId: this._sessionId,
+            sessionId: this._identity.sessionId,
         });
     }
 }

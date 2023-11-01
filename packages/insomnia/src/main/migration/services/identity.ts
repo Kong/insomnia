@@ -1,9 +1,9 @@
-import type { HttpClient } from './http';
+import { LogFunctions } from 'electron-log';
 
 export class IdentityService {
+    private _logger: LogFunctions;
     private _currentSessionId: string | null = null;
     private _currentAccountId: string | null = null;
-    private _http: HttpClient;
 
     public get accountId() {
         return this._currentAccountId;
@@ -13,13 +13,13 @@ export class IdentityService {
         return this._currentSessionId;
     }
 
-    constructor(http: HttpClient) {
-        this._http = http;
+    constructor(logger: LogFunctions) {
+        this._logger = logger;
     }
 
     public setIdentity(sessionId: string, accountId: string): void {
         this._currentSessionId = sessionId;
         this._currentAccountId = accountId;
-        this._http.setAuthentication(sessionId);
+        this._logger.info('[migration][identity] setting the identity for user', accountId);
     }
 }
