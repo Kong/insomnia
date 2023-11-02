@@ -1043,7 +1043,7 @@ export const Debug: FC = () => {
                           </span>
                         )}
                         {isWebSocketRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center info justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
                             WS
                           </span>
                         )}
