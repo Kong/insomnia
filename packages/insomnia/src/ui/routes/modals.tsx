@@ -1,7 +1,6 @@
 import React, { FC, Fragment } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import vcs from '../../sync/vcs/insomnia-sync';
 import { ErrorBoundary } from '../components/error-boundary';
 import { registerModal } from '../components/modals';
 import { AddKeyCombinationModal } from '../components/modals/add-key-combination-modal';
@@ -81,7 +80,7 @@ const Modals: FC = () => {
           ref={instance => registerModal(instance, 'EnvironmentEditModal')}
         />
 
-        {activeWorkspace && vcs ? (
+        {activeWorkspace ? (
           <Fragment>
             <SyncMergeModal
               ref={instance => registerModal(instance, 'SyncMergeModal')}
