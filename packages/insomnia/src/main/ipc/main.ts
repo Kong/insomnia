@@ -7,12 +7,12 @@ import { oas } from '@stoplight/spectral-rulesets';
 import { app, BrowserWindow, ipcMain, IpcRendererEvent, shell } from 'electron';
 import fs from 'fs';
 
-import { MigrationBridgeAPI } from '../../preload';
 import { SegmentEvent, trackPageView, trackSegmentEvent } from '../analytics';
 import { authorizeUserInWindow } from '../authorizeUserInWindow';
 import { backup, restoreBackup } from '../backup';
 import { insomniaFetch } from '../insomniaFetch';
 import installPlugin from '../install-plugin';
+import { MigrationBridgeAPI } from '../migration/register';
 import { axiosRequest } from '../network/axios-request';
 import { CurlBridgeAPI } from '../network/curl';
 import { cancelCurlRequest, curlRequest } from '../network/libcurl-promise';

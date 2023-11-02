@@ -54,12 +54,13 @@ export const DataMigration = () => {
     }
 
     // default to local
-    const prefersProjectType = localStorage.getItem('prefers-project-type') ?? 'local';
+    const prefersProjectType = (localStorage.getItem('prefers-project-type') ?? 'local') as 'remote' | 'local';
     const title = prefersProjectType === 'local' ? 'Bringing your local data up to date' : 'Securely synchronizing your data';
     const subtitle = prefersProjectType === 'local' ? 'We are locally upgrading the data format for this new version of Insomnia' : 'We are enabling Cloud Sync for your account, please wait';
     setCopy({ title, subtitle });
 
-    window.main.migration.start({ sessionId, prefersProjectType });
+    console.log('starting...?');
+    window.main.migration.start({ sessionId, accountId, prefersProjectType });
   }, [sessionId, accountId]);
 
   useEffect(() => {
@@ -68,7 +69,8 @@ export const DataMigration = () => {
         setUpdate(message);
 
         if (message.status === 'complete') {
-          window.main.migration.stop();
+          console.log({ migrationStatus: message.status });
+          // window.main.migration.stop();
           // redrirect the user to organizatino page
         }
       });

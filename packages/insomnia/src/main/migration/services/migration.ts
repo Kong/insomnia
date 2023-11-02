@@ -1,3 +1,4 @@
+import { format } from 'date-fns';
 import type { LogFunctions } from 'electron-log';
 
 import { database } from '../../../common/database';
@@ -27,6 +28,7 @@ interface OwernshipSnapshot {
     ownedByMe: boolean;
     isPersonal: boolean;
     fileIdMap: LocalWorkspaceToLocalProjectMap;
+    projectIds: RemoteProjectId[];
 }
 
 type RemoteFileSnapshot = Record<RemoteOrganizationId, OwernshipSnapshot>;
@@ -43,7 +45,8 @@ export class MigrationService {
      * Queue maps for bookeeping migration activities
      */
     private _queueLocalProjects: Set<string> = new Set();
-    private _queueLocalFiles: Set<string> = new Set();
+    private _queueLocalFilesByProject: Set<string> = new Set();
+    private _queueLocalFilesNoProject: Set<string> = new Set();
 
     /**
      * Maps to track updated entity ids
@@ -61,7 +64,9 @@ export class MigrationService {
         remoteOrgId: RemoteOrganizationId;
         remoteProjectId: RemoteProjectId;
     }> = new Map();
+
     private _byRemoteOrgId: RemoteFileSnapshot | null = null;
+    private _remoteFileSnapshot: RemoteFileSnapshot | null = null;
 
     // TODO: handle conflict situation
     // private _mapResourceConflicts: Map<string, {
@@ -81,46 +86,94 @@ export class MigrationService {
         this._dataStore = dataStore;
     }
 
+    public async scan(): Promise<void> {
+        // first clear the maps
+        this._clear();
+
+        await this._findUntrackedLegacyRemoteProjectsAndFiles();
+        await this._findUntrackedProjectsAndFiles();
+        await this._findUntrackedFiles();
+    }
+
     public async start(local: boolean): Promise<void> {
-        // regardless of local or remote migration, we still need to get personal workspace records to prevent conflict
-        this._logger.info(`[migration][${this._status}] initializing`);
-        this._status = 'preparing';
-        this._updateCommunication('Preparing for bringing your data up to date');
+        try {
+            // regardless of local or remote migration, we still need to get personal workspace records to prevent conflict
+            this._logger.info(`[migration][${this._status}] initializing`);
+            this._status = 'preparing';
+            this._updateCommunication('Preparing for bringing your data up to date');
 
-        this._logger.info(`[migration][${this._status}] fetching the remote file snapshot`);
-        const response = await this._http.get<RemoteFileSnapshot>('/v1/user/files');
-        if ('error' in response) {
-            this._status = 'incomplete';
-            this._logger.error(`[migration][${this._status}] failed to fetch the remote file snapshot`, response);
-            this._updateCommunication('Failed to fetch the remote file snapshot');
-            return;
+            await this.scan();
+
+            if (!this._canContinue()) {
+                this._status = 'invalid';
+                this._logger.info(`[migration][${this._status}] nothing untracked`);
+                this._updateCommunication('Nothing is untracked');
+                return;
+            }
+
+            const remoteFileSnapshot = await this._getRemoteFileSnapshot();
+            if (!remoteFileSnapshot) {
+                return;
+            }
+
+            this._remoteFileSnapshot = remoteFileSnapshot;
+            this._byRemoteOrgId = remoteFileSnapshot;// TODO: remove
+            this._transformRemoteFileSnapshotToMaps(this._remoteFileSnapshot);
+
+            const myWorkspaceId = this._findMyWorkspaceId();
+            if (!myWorkspaceId) {
+                this._status = 'incomplete';
+                this._logger.warn(`[migration]  [status:${this._status}] Could not continue due to missing the personal workspace`);
+                this._updateCommunication('Could not continue due to missing the personal workspace');
+                // TODO: we could possibly create personal workspace automatically here
+                return;
+            }
+
+            if (local) {
+                await this._handleUntrackedFilesLocally(myWorkspaceId);
+                return;
+            }
+
+            await this._handleUntrackedFilesRemotely(myWorkspaceId);
+        } catch (error) {
+            this._logger.error(`[migration][${this._status}] error was thrown`, error);
         }
-
-        this._byRemoteOrgId = response;
-        this._transformRemoteFileSnapshotToMaps(response);
-        this._findUntrackedLegacyRemoteProjectsAndFiles();
-        this._findUntrackedProjectsAndFiles();
-
-        if (local) {
-            this._logger.info(`[migration][${this._status}] continuing to migrate locally`);
-            this._handleUntrackedFilesLocally();
-            return;
-        }
-
-        this._logger.info(`[migration][${this._status}] continuing to migrate remotely`);
-        this._handleUntrackedFilesRemotely();
     }
 
     public stop(): void {
         this._logger.info(`[migration][${this._status}] migration stopped`);
         if (this._status === 'complete') {
             this._queueLocalProjects.clear();
-            this._queueLocalFiles.clear();
+            this._queueLocalFilesByProject.clear();
             this._byRemoteFileId.clear();
             this._byRemoteProjectId.clear();
             this._byRemoteOrgId = null;
         }
         this._comm.stop();
+    }
+
+    private async _getRemoteFileSnapshot(): Promise<RemoteFileSnapshot | null> {
+        const response = await this._http.get<RemoteFileSnapshot>('/v1/user/file-snapshot');
+        if ('error' in response) {
+            this._status = 'incomplete';
+            this._logger.error(`[migration][${this._status}] failed to fetch the remote file snapshot`, response);
+            this._updateCommunication('Failed to fetch the remote file snapshot');
+            return null;
+        }
+
+        return response;
+    }
+
+    private _canContinue(): boolean {
+        return this._queueLocalProjects.size > 0 || this._queueLocalFilesByProject.size > 0 || this._queueLocalFilesNoProject.size > 0;
+    }
+
+    private _clear(): void {
+        this._queueLocalProjects.clear();
+        this._queueLocalFilesByProject.clear();
+        this._byRemoteFileId.clear();
+        this._byRemoteProjectId.clear();
+        this._remoteFileSnapshot = null;
     }
 
     private _transformRemoteFileSnapshotToMaps(snapshot: RemoteFileSnapshot): void {
@@ -153,23 +206,23 @@ export class MigrationService {
         }
     }
 
-    private async _handleUntrackedFilesLocally(): Promise<void> {
-        const myWorkspaceId = this._findMyWorkspaceId();
-        if (!myWorkspaceId) {
-            // TODO: we could possibly create personal workspace automatically here
-            return;
-        }
-
+    private async _handleUntrackedFilesLocally(myWorkspaceId: string): Promise<void> {
+        const total = this._queueLocalFilesByProject.size + this._queueLocalFilesNoProject.size;
         this._status = 'inProgress';
         // TODO: check the size of queue for projects and files both before this function gets called
-        this._updateCommunication('Starting to bringing your data up to date', { completed: 0, total: this._queueLocalFiles.size });
-        this._migrateLocalProjects(myWorkspaceId);
+        this._updateCommunication('Starting to bringing your data up to date', { completed: 0, total });
+        await this._migrateToLocalVault(myWorkspaceId);
         this._validateMigrationResult();
-        this._cleanUpOldProjects();
+        await this._cleanUpOldProjects();
     }
 
-    private async _handleUntrackedFilesRemotely(): Promise<void> {
-        return;
+    private async _handleUntrackedFilesRemotely(myWorkspaceId: string): Promise<void> {
+        const total = this._queueLocalFilesByProject.size + this._queueLocalFilesNoProject.size;
+        this._status = 'inProgress';
+        this._updateCommunication('Starting to bringing your data up to date', { completed: 0, total });
+        await this._migrateToCloud(myWorkspaceId);
+        this._validateMigrationResult();
+        await this._cleanUpOldProjects();
     }
 
     private _findMyWorkspaceId(): string | undefined {
@@ -196,7 +249,9 @@ export class MigrationService {
             this._queueLocalProjects.add(project._id);
 
             const files = await this._dataStore.find<Workspace>(workspace.type, { parentId: project._id });
-            files.forEach(fileItem => this._queueLocalFiles.add(fileItem._id));
+            for (const file of files) {
+                this._queueLocalFilesByProject.add(file._id);
+            }
         }
     }
 
@@ -211,19 +266,33 @@ export class MigrationService {
             this._queueLocalProjects.add(project._id);
 
             const files = await this._dataStore.find<Workspace>(workspace.type, { parentId: project._id });
-            files.forEach(fileItem => this._queueLocalFiles.add(fileItem._id));
+            for (const file of files) {
+                this._queueLocalFilesByProject.add(file._id);
+            }
         }
         this._logger.info(`[migration][${this._status}] query completed for untracked local projects: `, localProjects);
     }
 
-    private async _migrateLocalProjects(myWorkspaceId: string): Promise<void> {
-        for (const localProjectId of this._queueLocalProjects) {
+    private async _findUntrackedFiles(): Promise<void> {
+        // Local projects without organizations except scratchpad
+        const untrackedFiles = await this._dataStore.find<Workspace>(workspace.type, {
+            parentId: null,
+        });
+        for (const file of untrackedFiles) {
+            this._queueLocalFilesNoProject.add(file._id);
+        }
+        this._logger.info(`[migration][${this._status}] query completed for untracked files: `, untrackedFiles);
+    }
+
+    private async _migrateToLocalVault(myWorkspaceId: string): Promise<void> {
+        // migrate projects and files by projects
+        for (const localProjectId of this._queueLocalProjects.keys()) {
             const docs = await this._dataStore.find<Project>(project.type, { _id: localProjectId });
-            const localProject = docs[0];
-            if (!localProject) {
+            if (!docs.length) {
                 return;
             }
 
+            const localProject = docs[0];
             const { _id, remoteId, parentId, ...props } = localProject;
 
             const newProject = await this._dataStore.docCreate<Project>(project.type, { ...props, parentId: myWorkspaceId, remoteId: null });
@@ -233,16 +302,35 @@ export class MigrationService {
             for (const file of files) {
                 await this._dataStore.docUpdate<Workspace>(file, { parentId: newProject._id });
                 this._updatedFiles.add(file._id);
-                this._updateCommunication(`Upgraded File - ${file.name} out of Project - ${newProject.name}`, { completed: this._updatedFiles.size, total: this._queueLocalFiles.size });
+                this._updateCommunication(`Upgraded File - ${file.name} out of Project - ${newProject.name}`, { completed: this._updatedFiles.size, total: this._queueLocalFilesByProject.size });
             }
+        }
+
+        if (!this._queueLocalFilesNoProject.size) {
+            return;
+        }
+
+        const timestamp = format(Date.now(), 'MM-dd');
+        const vaultName = `Local Vault ${timestamp}`;
+        const newLocalVault = await this._dataStore.docCreate<Project>(project.type, { name: vaultName, parentId: myWorkspaceId, remoteId: null });
+        for (const fileId of this._queueLocalFilesNoProject.keys()) {
+            const docs = await this._dataStore.find<Workspace>(workspace.type, { _id: fileId });
+            if (!docs.length) {
+                return;
+            }
+
+            const file = docs[0];
+            await this._dataStore.docUpdate<Workspace>(file, { parentId: newLocalVault._id });
+            this._updatedFiles.add(file._id);
+            // this._updateCommunication(`Upgraded File - ${file.name} out of Project - ${newProject.name}`, { completed: this._updatedFiles.size, total: this._queueLocalFilesByProject.size });
         }
     }
 
     private _validateMigrationResult(): void {
-        if (this._queueLocalFiles.size > this._updatedFiles.size) {
+        if (this._queueLocalFilesByProject.size + this._queueLocalFilesNoProject.size > this._updatedFiles.size) {
             this._status = 'incomplete';
-            const failedFileCount = this._queueLocalFiles.size - this._updatedFiles.size;
-            this._updateCommunication(`Failed to upgrade ${failedFileCount} out of ${this._queueLocalFiles.size} files`, undefined);
+            const failedFileCount = this._queueLocalFilesByProject.size - this._updatedFiles.size;
+            this._updateCommunication(`Failed to upgrade ${failedFileCount} out of ${this._queueLocalFilesByProject.size} files`, undefined);
             return;
         }
 
@@ -255,14 +343,17 @@ export class MigrationService {
     }
 
     private async _cleanUpOldProjects(): Promise<void> {
-        for (const [, oldId] of this._updateProjects) {
+        for (const [, oldId] of this._updateProjects.entries()) {
             const docs = await this._dataStore.find<Project>(project.type, { _id: oldId });
+            console.log({ docs });
             const oldProject = docs[0];
+            console.log({ oldProject });
             if (!oldProject) {
+                console.log('old project does not exist...?!?!??');
                 return;
             }
             // this method is "unsafeRemove" because it does not delete its children => used here to make sure we don't delete the children files as we are not creating new files other than the project
-            await this._dataStore.unsafeRemove<Project>(oldProject);
+            await this._dataStore.removeWhere<Project>(project.type, { _id: oldId });
             this._queueLocalProjects.delete(oldId);
         }
 
@@ -278,5 +369,51 @@ export class MigrationService {
         }
 
         this._comm.publish<MigrationUpdate>(MIGRATION_MSG_LABEL, update);
+    }
+
+    // due to the restriction on the count of cloud project on collaboration on free plan, we will default to one project
+    private async _migrateToCloud(myWorkspaceId: string): Promise<void> {
+        const myWorkspaceSnapshot = this._remoteFileSnapshot?.[myWorkspaceId];
+        if (!myWorkspaceSnapshot) {
+            return;
+        }
+
+        if (!myWorkspaceSnapshot.projectIds.length) {
+            return;
+        }
+
+        const remoteId = myWorkspaceSnapshot.projectIds[0];
+        let defaultProject;
+        const docs = await this._dataStore.find<Project>(project.type, { remoteId });
+        if (!docs.length) {
+            const timestamp = format(Date.now(), 'MM-dd');
+            const name = `Cloud Sync ${timestamp}`;
+            defaultProject = await this._dataStore.docCreate<Project>(project.type, { name, parentId: myWorkspaceId, remoteId });
+        } else {
+            defaultProject = docs[0];
+        }
+
+        for (const fileId of this._queueLocalFilesByProject.keys()) {
+            const docs = await this._dataStore.find<Workspace>(workspace.type, { _id: fileId });
+            if (!docs.length) {
+                return;
+            }
+
+            const file = docs[0];
+            await this._dataStore.docUpdate<Workspace>(file, { parentId: defaultProject._id });
+            this._updatedFiles.add(file._id);
+        }
+
+        for (const fileId of this._queueLocalFilesNoProject.keys()) {
+            const docs = await this._dataStore.find<Workspace>(workspace.type, { _id: fileId });
+            if (!docs.length) {
+                return;
+            }
+
+            const file = docs[0];
+            await this._dataStore.docUpdate<Workspace>(file, { parentId: defaultProject._id });
+            this._updatedFiles.add(file._id);
+            // this._updateCommunication(`Upgraded File - ${file.name} out of Project - ${newProject.name}`, { completed: this._updatedFiles.size, total: this._queueLocalFilesByProject.size });
+        }
     }
 }

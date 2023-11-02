@@ -23,7 +23,7 @@ export const registerMigrationHandlers = (receiver: BrowserWindow) => {
     const identity = new IdentityService(logger);
     const httpClient = new HttpClient(logger, identity);
     const communication = new CommunicationService(logger, receiver);
-    const service = Object.freeze(new MigrationService(logger, httpClient, communication, database));
+    const service = new MigrationService(logger, httpClient, communication, database);
 
     ipcMain.handle('migration.start', (_, options: MigrationStartHandleOptions) => {
         try {
@@ -44,10 +44,25 @@ export const registerMigrationHandlers = (receiver: BrowserWindow) => {
 
     ipcMain.handle('migration.stop', () => {
         try {
-            logger.info('[migration][ipcMain:migration.stop] stopping the mgiration');
+            logger.info('[migration][ipcMain:migration.stop] stopping the migiration');
             service.stop();
         } catch (error) {
             logger.error('[migration][ipcMain:migration.stop] failed to stop the migration', error);
         }
     });
+
+    ipcMain.handle('migration.scan', () => {
+        try {
+            logger.info('[migration][ipcMain:migration.scan] scanning untracked files for migration');
+            service.scan();
+        } catch (error) {
+            logger.error('[migration][ipcMain:migration.scan] failed to stop the migration', error);
+        }
+    });
+};
+
+export interface MigrationBridgeAPI {
+    start: (options: MigrationStartHandleOptions) => Promise<void>;
+    stop: () => Promise<void>;
+    scan: () => Promise<void>;
 };
