@@ -39,6 +39,9 @@ const CertificateField: FC<{
   privateText,
   optional,
 }) => {
+  if (!value) {
+    return null;
+  }
   if (optional && value === null) {
     return null;
   }
@@ -47,7 +50,8 @@ const CertificateField: FC<{
   if (privateText) {
     display = <PasswordViewer text={value} />;
   } else {
-    display = <span className="monospace selectable">{value}</span>;
+    const filename = value.split('/').pop();
+    display = <span className="monospace selectable" title={value}>{filename}</span>;
   }
 
     return (
