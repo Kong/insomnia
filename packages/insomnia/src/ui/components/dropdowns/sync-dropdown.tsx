@@ -1,14 +1,20 @@
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { FC, Fragment, useEffect, useState } from 'react';
-import { Button, Item, Menu, MenuTrigger, Popover, Tooltip, TooltipTrigger } from 'react-aria-components';
+import { Button, Collection, Item, Menu, MenuTrigger, Popover, Section, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import * as session from '../../../account/session';
+import { getAppWebsiteBaseURL } from '../../../common/constants';
+import { isOwnerOfOrganization } from '../../../models/organization';
 import { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { VCS } from '../../../sync/vcs/vcs';
+import { useOrganizationLoaderData } from '../../routes/organization';
 import { SyncDataLoaderData } from '../../routes/remote-collections';
 import { Icon } from '../icon';
+import { showError, showModal } from '../modals';
+import { AlertModal } from '../modals/alert-modal';
+import { AskModal } from '../modals/ask-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
 import { SyncDeleteModal } from '../modals/sync-delete-modal';
@@ -24,6 +30,8 @@ interface Props {
 
 export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
+  const { organizations } = useOrganizationLoaderData();
+  const currentOrg = organizations.find(organization => (organization.id === organizationId));
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
   const [isSyncDeleteModalOpen, setIsSyncDeleteModalOpen] = useState(false);
   const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
@@ -41,6 +49,17 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
       syncDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`);
     }
   }, [organizationId, projectId, syncDataFetcher, workspaceId]);
+
+  const error = checkoutFetcher.data?.error || pullFetcher.data?.error || pushFetcher.data?.error || rollbackFetcher.data?.error;
+
+  useEffect(() => {
+    if (error) {
+      showError({
+        title: 'Sync Error',
+        message: error,
+      });
+    }
+  }, [error]);
 
   if (syncDataFetcher.state !== 'idle' && !syncDataFetcher.data) {
     return (
@@ -81,11 +100,13 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
     name: string;
     icon: IconProp;
     isDisabled?: boolean;
+    isActive?: boolean;
     action: () => void;
   }[] = localBranches.map(branch => ({
     id: `checkout-${branch}`,
     name: branch,
     icon: 'code-branch',
+    isActive: branch === currentBranch,
     action: () => {
       checkoutFetcher.submit({
         branch,
@@ -95,6 +116,33 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
       });
     },
   }));
+
+  const showUpgradePlanModal = () => {
+    const accountId = session.getAccountId();
+    if (!currentOrg || !accountId) {
+      return;
+    }
+    const isOwner = isOwnerOfOrganization({
+      organization: currentOrg,
+      accountId,
+    });
+
+    isOwner ?
+      showModal(AskModal, {
+        title: 'Upgrade Plan',
+        message: 'Git Sync is only enabled for Team plan or above, please upgrade your plan.',
+        yesText: 'Upgrade',
+        noText: 'Cancel',
+        onDone: async (isYes: boolean) => {
+          if (isYes) {
+            window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscription/update?plan=team`);
+          }
+        },
+      }) : showModal(AlertModal, {
+        title: 'Upgrade Plan',
+        message: 'Git Sync is only enabled for Team plan or above, please ask the organization owner to upgrade.',
+      });
+  };
 
   const switchToGitRepoActionList: {
     id: string;
@@ -107,7 +155,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
         id: 'switch-to-git-repo',
         name: 'Switch to Git Repository',
         icon: ['fab', 'git-alt'],
-        action: () => setIsGitRepoSettingsModalOpen(true),
+        action: () => gitSyncEnabled ? setIsGitRepoSettingsModalOpen(true) : showUpgradePlanModal(),
       },
     ];
 
@@ -118,14 +166,12 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
     isDisabled?: boolean;
     action: () => void;
   }[] = [
-      ...gitSyncEnabled ? switchToGitRepoActionList : [],
       {
         id: 'branches',
         name: 'Branches',
         icon: 'code-fork',
         action: () => setIsSyncBranchesModalOpen(true),
       },
-      ...localBranchesActionList,
       {
         id: 'history',
         name: 'History',
@@ -179,6 +225,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
     ];
 
   const isSyncing = checkoutFetcher.state !== 'idle' || pullFetcher.state !== 'idle' || pushFetcher.state !== 'idle' || rollbackFetcher.state !== 'idle';
+
+  const allSyncMenuActionList = [...switchToGitRepoActionList, ...localBranchesActionList, ...syncMenuActionList];
 
   return (
     <Fragment>
@@ -238,23 +286,54 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
           <Menu
             aria-label="Insomnia Sync Menu"
             selectionMode="single"
-            disabledKeys={syncMenuActionList.filter(item => item.isDisabled).map(item => item.id)}
+            disabledKeys={allSyncMenuActionList.filter(item => item.isDisabled).map(item => item.id)}
             onAction={key => {
-              const item = syncMenuActionList.find(item => item.id === key);
+              const item = allSyncMenuActionList.find(item => item.id === key);
               item?.action();
             }}
-            items={syncMenuActionList}
             className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
           >
-            {item => (
-              <Item
-                className={item.id === 'switch-to-git-repo' ? 'p-[--padding-md] border-solid outline-none border-b border-[--hl-md] flex gap-2 items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors' : 'aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors'}
-                aria-label={item.name}
-              >
-                <Icon icon={item.icon} />
-                <span>{item.name}</span>
-              </Item>
-            )}
+            <Section className='border-b border-solid border-[--hl-sm] pb-2'>
+              <Collection items={switchToGitRepoActionList}>
+                {item => (
+                  <Item
+                    className={'group aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors'}
+                    aria-label={item.name}
+                  >
+                    <div className="px-4 text-[--color-font] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 group-pressed:opacity-80 group-hover:bg-opacity-80 group-focus:bg-opacity-80 group-focus:ring-inset group-hover:ring-inset focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                      <Icon icon={item.icon} />
+                      <span>{item.name}</span>
+                    </div>
+                  </Item>
+                )}
+              </Collection>
+            </Section>
+            <Section className='border-b border-solid border-[--hl-sm]'>
+              <Collection items={localBranchesActionList}>
+                {item => (
+                  <Item
+                    className={`aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item.isActive ? 'font-bold' : ''}`}
+                    aria-label={item.name}
+                  >
+                    <Icon icon={item.icon} className={item.isActive ? 'text-[--color-success]' : ''} />
+                    <span>{item.name}</span>
+                  </Item>
+                )}
+              </Collection>
+            </Section>
+            <Section>
+              <Collection items={syncMenuActionList}>
+                {item => (
+                  <Item
+                    className={'aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors'}
+                    aria-label={item.name}
+                  >
+                    <Icon icon={item.icon} />
+                    <span>{item.name}</span>
+                  </Item>
+                )}
+              </Collection>
+            </Section>
           </Menu>
         </Popover>
       </MenuTrigger>
