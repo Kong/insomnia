@@ -7,17 +7,16 @@ import { getAccountId, getCurrentSessionId } from '../../account/session';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 
-const COUNTDOWN_SECONDS = 5;
 const Redirect = () => {
   const navigate = useNavigate();
-  const [second, setSecond] = useState(COUNTDOWN_SECONDS);
+  const [second, setSecond] = useState(5);
   useEffect(() => {
     const countdown = timer(0, 1000).pipe(
-      map(n => (COUNTDOWN_SECONDS - n)),
-      takeWhile(n => n >= 0),
-    ).subscribe(n => {
-      setSecond(n);
-      if (n === 0) {
+      map(counting => (5 - counting)),
+      takeWhile(remaining => remaining >= 0),
+    ).subscribe(remaining => {
+      setSecond(remaining);
+      if (remaining === 0) {
         navigate('/organization');
       }
     });
