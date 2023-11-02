@@ -277,7 +277,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
           branches={localBranches}
           currentBranch={currentBranch}
           remoteBranches={remoteBranches.filter(remoteBranch => !localBranches.includes(remoteBranch))}
-          onHide={() => {
+          onClose={() => {
             setIsSyncBranchesModalOpen(false);
           }}
         />
