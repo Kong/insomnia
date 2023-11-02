@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Dialog, Heading, Label, Modal, ModalOverlay, TextArea, TextField } from 'react-aria-components';
+import React, { useEffect } from 'react';
+import { Button, Cell, Checkbox, Column, Dialog, Heading, Label, Modal, ModalOverlay, Row, Table, TableBody, TableHeader, TextArea, TextField } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
 import { all } from '../../../models';
@@ -28,9 +28,6 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
     workspaceId: string;
     organizationId: string;
   };
-
-  const [checkAllModified, setCheckAllModified] = useState(true);
-  const [checkAllUnversioned, setCheckAllUnversioned] = useState(false);
 
   const stagedChanges = Object.entries(status.stage);
   const unstagedChanges = Object.entries(status.unstaged);
@@ -71,7 +68,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
           {({ close }) => (
             <div className='flex flex-col gap-4'>
               <div className='flex gap-2 items-center justify-between'>
-                <Heading className='text-2xl'>Create snapshot</Heading>
+                <Heading className='text-2xl'>Create commit</Heading>
                 <Button
                   className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                   onPress={close}
@@ -81,11 +78,11 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
               </div>
               <Form
                 method="POST"
-                className='flex flex-col gap-2'
+                className='flex flex-col gap-4'
               >
                 <TextField className="flex flex-col gap-2">
                   <Label className='font-bold'>
-                    Snapshot message
+                    Commit message
                   </Label>
                   <TextArea
                     rows={3}
@@ -95,120 +92,139 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                     required
                   />
                 </TextField>
+
                 {modifiedChanges.length > 0 && (
-                  <div className="pad-top">
-                    <strong>Modified objects</strong>
-                    <table className="table--fancy table--outlined margin-top-sm">
-                      <thead>
-                        <tr className="table--no-outline-row">
-                          <th>
-                            <label className="wide no-pad">
-                              <span className="txt-md">
-                                <input
-                                  className="space-right"
-                                  type="checkbox"
-                                  checked={checkAllModified}
-                                  name="allModified"
-                                  onChange={() =>
-                                    setCheckAllModified(!checkAllModified)
-                                  }
-                                />
-                              </span>{' '}
-                              name
-                            </label>
-                          </th>
-                          <th className="text-right">Description</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {modifiedChanges.map(item => (
-                          <tr key={item.key} className="table--no-outline-row">
-                            <td>
-                              <label className="no-pad wide">
-                                <input
-                                  className="space-right"
-                                  type="checkbox"
-                                  {...(checkAllModified
-                                    ? { checked: true }
-                                    : {})}
-                                  value={item.key}
-                                  name="keys"
-                                />{' '}
-                                {item.name || 'n/a'}
-                              </label>
-                            </td>
-                            <td className="text-right">
-                              <div className='flex items-center gap-2 justify-end'>
-                                <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'file-edit'} />
-                                {item.document?.type}
+                  <div className='flex flex-col gap-2'>
+                    <Heading className='font-semibold'>Modified Objects</Heading>
+                    <div className='rounded w-full border border-solid border-[--hl-sm] select-none'>
+                      <Table
+                        selectionMode='multiple'
+                        defaultSelectedKeys="all"
+                        aria-label='Modified objects'
+                        className="border-separate border-spacing-0 w-full"
+                      >
+                        <TableHeader>
+                          <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                            <Checkbox slot="selection" className="group p-0 flex items-center h-full">
+                              <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
+                                <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
                               </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </Checkbox>
+                          </Column>
+                          <Column isRowHeader className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                            Name
+                          </Column>
+                          <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-right text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                            Description
+                          </Column>
+                        </TableHeader>
+                        <TableBody
+                          className="divide divide-[--hl-sm] divide-solid"
+                          items={
+                            modifiedChanges.map(item => ({
+                              ...item,
+                              id: item.key,
+                            }))
+                          }
+                        >
+                          {item => (
+                            <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">
+                              <Cell className="relative whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                <div className='p-2'>
+                                  <Checkbox slot="selection" name="keys" value={item.key} className="group p-0 flex items-center h-full">
+                                    <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
+                                      <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
+                                    </div>
+                                  </Checkbox>
+                                </div>
+                              </Cell>
+                              <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                <div className='p-2'>
+                                  {item.name}
+                                </div>
+                              </Cell>
+                              <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                <div className='flex items-center gap-2 justify-end p-2'>
+                                  <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'circle'} />
+                                  {item.document?.type}
+                                </div>
+                              </Cell>
+                            </Row>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 )}
+
                 {unversionedChanges.length > 0 && (
-                  <div className="pad-top">
-                    <strong>Unversioned objects</strong>
-                    <table className="table--fancy table--outlined margin-top-sm">
-                      <thead>
-                        <tr className="table--no-outline-row">
-                          <th>
-                            <label className="wide no-pad">
-                              <span className="txt-md">
-                                <input
-                                  className="space-right"
-                                  type="checkbox"
-                                  checked={checkAllUnversioned}
-                                  name="allModified"
-                                  onChange={() =>
-                                    setCheckAllUnversioned(!checkAllUnversioned)
-                                  }
-                                />
-                              </span>{' '}
-                              name
-                            </label>
-                          </th>
-                          <th className="text-right">Description</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {unversionedChanges.map(item => (
-                          <tr key={item.key} className="table--no-outline-row">
-                            <td>
-                              <label className="no-pad wide">
-                                <input
-                                  className="space-right"
-                                  type="checkbox"
-                                  {...(checkAllUnversioned
-                                    ? { checked: true }
-                                    : {})}
-                                  value={item.key}
-                                  name="keys"
-                                />{' '}
-                                {item.name || 'n/a'}
-                              </label>
-                            </td>
-                            <td className="text-right">
-                              <div className='flex items-center gap-2 justify-end'>
-                                <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'file-edit'} />
-                                {item.document?.type}
+                  <div className='flex flex-col gap-2'>
+                    <Heading className='font-semibold'>Unversioned Objects</Heading>
+                    <div className='rounded w-full border border-solid border-[--hl-sm] select-none'>
+                      <Table
+                        selectionMode='multiple'
+                        aria-label='Unversioned objects'
+                        className="border-separate border-spacing-0 w-full"
+                      >
+                        <TableHeader>
+                          <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                            <Checkbox slot="selection" className="group p-0 flex items-center h-full">
+                              <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
+                                <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
                               </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </Checkbox>
+                          </Column>
+                          <Column isRowHeader className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                            Name
+                          </Column>
+                          <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-right text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                            Description
+                          </Column>
+                        </TableHeader>
+                        <TableBody
+                          className="divide divide-[--hl-sm] divide-solid"
+                          items={
+                            unversionedChanges.map(item => ({
+                              ...item,
+                              name: item.name || 'n/a',
+                              id: item.key,
+                            }))
+                          }
+                        >
+                          {item => (
+                            <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">
+                              <Cell className="relative whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                <div className='p-2'>
+                                  <Checkbox slot="selection" name="keys" value={item.key} className="group p-0 flex items-center h-full">
+                                    <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
+                                      <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
+                                    </div>
+                                  </Checkbox>
+                                </div>
+                              </Cell>
+                              <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                <div className='p-2'>
+                                  {item.name}
+                                </div>
+                              </Cell>
+                              <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                <div className='flex items-center gap-2 justify-end p-2'>
+                                  <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'circle'} />
+                                  {item.document?.type}
+                                </div>
+                              </Cell>
+                            </Row>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 )}
+
                 {data?.error && (
-                  <div>
-                    <p className="notice error margin-top-sm">
-                      {data.error}
-                    </p>
-                  </div>
+                  <p className="notice error margin-top-sm">
+                    {data.error}
+                  </p>
                 )}
                 <div className="flex justify-end gap-2 items-center">
                   <Button
