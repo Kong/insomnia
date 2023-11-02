@@ -7,7 +7,6 @@ import { database } from '../../common/database';
 import { fuzzyMatchAll } from '../../common/misc';
 import { sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
-import { canSync } from '../../models';
 import { ApiSpec } from '../../models/api-spec';
 import { CaCertificate } from '../../models/ca-certificate';
 import { ClientCertificate } from '../../models/client-certificate';
@@ -27,7 +26,6 @@ import {
 } from '../../models/websocket-request';
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
-import { StatusCandidate } from '../../sync/types';
 import { pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
 import vcs from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
@@ -49,7 +47,6 @@ export interface WorkspaceLoaderData {
   projects: Project[];
   requestTree: Child[];
   grpcRequests: GrpcRequest[];
-  syncItems: StatusCandidate[];
   collection: Collection;
 }
 export interface Child {
@@ -117,15 +114,6 @@ export const workspaceLoader: LoaderFunction = async ({
   }) || [];
 
   const projects = sortProjects(organizationProjects);
-  const syncItemsList: (
-    | Workspace
-    | Environment
-    | ApiSpec
-    | Request
-    | WebSocketRequest
-    | GrpcRequest
-    | RequestGroup
-  )[] = [];
 
   const searchParams = new URL(request.url).searchParams;
   const filter = searchParams.get('filter');
@@ -153,16 +141,6 @@ export const workspaceLoader: LoaderFunction = async ({
   const grpcRequestMetas = await database.find(models.grpcRequestMeta.type, { parentId: { $in: grpcReqs.map(r => r._id) } });
   const grpcAndRequestMetas = [...requestMetas, ...grpcRequestMetas] as (RequestMeta | GrpcRequestMeta)[];
   const requestGroupMetas = await database.find(models.requestGroupMeta.type, { parentId: { $in: listOfParentIds } }) as RequestGroupMeta[];
-
-  // team sync needs an up to date list of eveything in the workspace to detect changes
-  // TODO: move this to somewhere more approriate
-  allRequests.map(r => syncItemsList.push(r));
-  syncItemsList.push(activeWorkspace);
-  syncItemsList.push(baseEnvironment);
-  subEnvironments.forEach(e => syncItemsList.push(e));
-  if (activeApiSpec) {
-    syncItemsList.push(activeApiSpec);
-  }
 
   // second recursion to build the tree
   const getCollectionTree = async ({
@@ -227,13 +205,6 @@ export const workspaceLoader: LoaderFunction = async ({
     parentIsCollapsed: false,
     ancestors: [],
   });
-  const syncItems: StatusCandidate[] = syncItemsList
-    .filter(canSync)
-    .map(i => ({
-      key: i._id,
-      name: i.name || '',
-      document: i,
-    }));
 
   function flattenTree() {
     const collection: Collection = [];
@@ -275,7 +246,6 @@ export const workspaceLoader: LoaderFunction = async ({
     requestTree,
     // TODO: remove this state hack when the grpc responses go somewhere else
     grpcRequests: grpcReqs,
-    syncItems,
     collection: flattenTree(),
   };
 };
