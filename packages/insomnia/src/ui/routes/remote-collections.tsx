@@ -14,7 +14,7 @@ import { UnitTestSuite } from '../../models/unit-test-suite';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { Workspace } from '../../models/workspace';
 import { BackendProject, Snapshot, Status, StatusCandidate } from '../../sync/types';
-import vcs from '../../sync/vcs/insomnia-sync';
+import VCSInstance from '../../sync/vcs/insomnia-sync';
 import { pullBackendProject } from '../../sync/vcs/pull-backend-project';
 import { invariant } from '../../utils/invariant';
 
@@ -96,6 +96,7 @@ export const pullRemoteCollectionAction: ActionFunction = async ({ request, para
   const remoteId = formData.get('remoteId');
   invariant(typeof remoteId === 'string', 'Remote Id is required');
 
+  const vcs = VCSInstance();
   const remoteBackendProjects = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
 
   const backendProject = remoteBackendProjects.find(p => p.id === backendProjectId);
@@ -131,7 +132,7 @@ export const remoteLoader: LoaderFunction = async ({ params }): Promise<RemoteCo
 
     const remoteId = project.remoteId;
     invariant(remoteId, 'Project is not a remote project');
-
+    const vcs = VCSInstance();
     const allVCSBackendProjects = await vcs.localBackendProjects();
     // Filter out backend projects that are not connected to a workspace because the workspace was deleted
     const getWorkspacesByLocalProjects = allVCSBackendProjects.map(async backendProject => {
@@ -196,7 +197,7 @@ export const syncDataLoader: LoaderFunction = async ({ params }): Promise<SyncDa
     const project = await models.project.getById(projectId);
     invariant(project, 'Project not found');
     invariant(project.remoteId, 'Project is not remote');
-
+    const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
     const localBranches = (await vcs.getBranches()).sort();
     const remoteBranches = (await vcs.getRemoteBranches()).sort();
@@ -235,7 +236,7 @@ export const checkoutBranchAction: ActionFunction = async ({ request, params }) 
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
-
+  const vcs = VCSInstance();
   const { syncItems } = await getSyncItems({ workspaceId });
   try {
     const delta = await vcs.checkout(syncItems, branch);
@@ -256,7 +257,7 @@ export const mergeBranchAction: ActionFunction = async ({ request, params }) => 
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
-
+  const vcs = VCSInstance();
   const { syncItems } = await getSyncItems({ workspaceId });
   const delta = await vcs.merge(syncItems, branch);
   try {
@@ -279,6 +280,7 @@ export const createBranchAction: ActionFunction = async ({ request, params }) =>
   invariant(typeof branchName === 'string', 'Branch is required');
   const { syncItems } = await getSyncItems({ workspaceId });
   try {
+    const vcs = VCSInstance();
     await vcs.fork(branchName);
     // Checkout new branch
     const delta = await vcs.checkout(syncItems, branchName);
@@ -299,6 +301,7 @@ export const deleteBranchAction: ActionFunction = async ({ request }) => {
   invariant(typeof branch === 'string', 'Branch is required');
 
   try {
+    const vcs = VCSInstance();
     // @TODO What is going on here?
     await vcs.removeRemoteBranch(branch);
     // @TODO What is going on here?
@@ -322,6 +325,7 @@ export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
   const { syncItems } = await getSyncItems({ workspaceId });
   try {
     invariant(project.remoteId, 'Project is not remote');
+    const vcs = VCSInstance();
     const delta = await vcs.pull({ candidates: syncItems, teamId: project.parentId, teamProjectId: project.remoteId });
 
     await database.batchModifyDocs(delta as unknown as Operation);
@@ -345,7 +349,7 @@ export const fetchRemoteBranchAction: ActionFunction = async ({ request, params 
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
-
+  const vcs = VCSInstance();
   const currentBranch = await vcs.getBranch();
 
   try {
@@ -373,6 +377,7 @@ export const pushToRemoteAction: ActionFunction = async ({ params }) => {
   invariant(project.remoteId, 'Project is not remote');
 
   try {
+    const vcs = VCSInstance();
     await vcs.push({ teamId: project.parentId, teamProjectId: project.remoteId });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pushing to remote.';
@@ -388,6 +393,7 @@ export const rollbackChangesAction: ActionFunction = async ({ params }) => {
   const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
   try {
+    const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
     const delta = await vcs.rollbackToLatest(syncItems);
     await database.batchModifyDocs(delta as unknown as Operation);
@@ -408,6 +414,7 @@ export const restoreChangesAction: ActionFunction = async ({ request, params }) 
   const id = formData.get('id');
   invariant(typeof id === 'string', 'Id is required');
   try {
+    const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
     const delta = await vcs.rollback(id, syncItems);
     await database.batchModifyDocs(delta as unknown as Operation);
@@ -430,6 +437,7 @@ export const createSnapshotAction: ActionFunction = async ({ request, params }) 
   const keys = formData.getAll('keys');
   invariant(Array.isArray(keys), 'Keys is required');
   const { syncItems } = await getSyncItems({ workspaceId });
+  const vcs = VCSInstance();
   const status = await vcs.status(syncItems, {});
   // Staging needs to happen since it creates blobs for the files
   const itemsToStage = keys.map(key => {
@@ -469,6 +477,7 @@ export const createSnapshotAndPushAction: ActionFunction = async ({ request, par
   const message = formData.get('message');
   invariant(typeof message === 'string', 'Message is required');
   const { syncItems } = await getSyncItems({ workspaceId });
+  const vcs = VCSInstance();
   const status = await vcs.status(syncItems, {});
 
   // Staging needs to happen since it creates blobs for the files

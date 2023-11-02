@@ -27,7 +27,7 @@ import {
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
-import vcs from '../../sync/vcs/insomnia-sync';
+import VCSInstance from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
 
 type Collection = Child[];
@@ -224,6 +224,7 @@ export const workspaceLoader: LoaderFunction = async ({
   }
 
   if (isLoggedIn() && !gitRepository) {
+    const vcs = VCSInstance();
     await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
     if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
       await pushSnapshotOnInitialize({ vcs, workspace: activeWorkspace, project: activeProject });

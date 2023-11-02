@@ -4,18 +4,26 @@ import FileSystemDriver from '../store/drivers/file-system-driver';
 import { MergeConflict } from '../types';
 import { VCS } from './vcs';
 
-const driver = FileSystemDriver.create(
-  process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-);
+let vcs: VCS | null = null;
 
-const vcs = new VCS(driver, async conflicts => {
-  return new Promise(resolve => {
-    showModal(SyncMergeModal, {
-      conflicts,
-      handleDone: (conflicts?: MergeConflict[]) =>
-        resolve(conflicts || []),
+const VCSInstance = () => {
+  if (vcs) {
+    return vcs;
+  }
+  const driver = FileSystemDriver.create(
+    process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
+  );
+  vcs = new VCS(driver, async conflicts => {
+    return new Promise(resolve => {
+      showModal(SyncMergeModal, {
+        conflicts,
+        handleDone: (conflicts?: MergeConflict[]) =>
+          resolve(conflicts || []),
+      });
     });
   });
-});
 
-export default vcs;
+  return vcs;
+};
+
+export default VCSInstance;
