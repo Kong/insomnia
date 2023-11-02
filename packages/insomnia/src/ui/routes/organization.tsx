@@ -445,6 +445,7 @@ const OrganizationRoute = () => {
                           : ''
                         } ${isPending ? 'animate-pulse' : ''} no-underline transition-colors text-center outline-none min-w-[4rem] uppercase text-[--color-font] text-xs px-[--padding-xs] py-[--padding-xxs] rounded-full`
                       }
+                      data-testid={`workspace-${item.id}`}
                     >
                       {item.name}
                     </NavLink>

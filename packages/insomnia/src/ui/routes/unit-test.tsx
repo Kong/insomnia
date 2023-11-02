@@ -30,6 +30,8 @@ import {
 import * as models from '../../models';
 import { Environment } from '../../models/environment';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
+import { showModal } from '../../ui/components/modals';
+import { AskModal } from '../../ui/components/modals/ask-modal';
 import { invariant } from '../../utils/invariant';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
@@ -109,7 +111,7 @@ const TestRoute: FC = () => {
     id: string;
     name: string;
     icon: IconName;
-    action: (suiteId: string) => void;
+    action: (suiteId: string, suiteName: string) => void;
   }[] = [
     {
       id: 'run-tests',
@@ -150,14 +152,24 @@ const TestRoute: FC = () => {
       id: 'delete-suite',
       name: 'Delete suite',
       icon: 'trash',
-      action: suiteId => {
-        deleteUnitTestSuiteFetcher.submit(
-          {},
-          {
-            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/delete`,
-            method: 'POST',
-          }
-        );
+        action: (suiteId, suiteName) => {
+          showModal(AskModal, {
+            title: 'Delete suite',
+            message: `Do you really want to delete "${suiteName}"?`,
+            yesText: 'Delete',
+            noText: 'Cancel',
+            onDone: async (isYes: boolean) => {
+              if (isYes) {
+                deleteUnitTestSuiteFetcher.submit(
+                  {},
+                  {
+                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${suiteId}/delete`,
+                    method: 'POST',
+                  }
+                );
+              }
+            },
+          });
       },
     },
   ];
@@ -330,7 +342,7 @@ const TestRoute: FC = () => {
               </Button>
             </div>
             <GridList
-              aria-label="Tets Suites"
+              aria-label="Test Suites"
               items={unitTestSuites.map(suite => ({
                 id: suite._id,
                 key: suite._id,
@@ -388,7 +400,7 @@ const TestRoute: FC = () => {
                             onAction={key => {
                               testSuiteActionList
                                 .find(({ id }) => key === id)
-                                ?.action(item._id);
+                                ?.action(item._id, item.name);
                             }}
                             items={testSuiteActionList}
                             className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
