@@ -88,10 +88,10 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
   const canPush = ahead > 0;
   const canPull = behind > 0;
   const pullToolTipMsg = canPull
-    ? `There ${behind === 1 ? 'is' : 'are'} ${behind} snapshot${behind === 1 ? '' : 's'} to pull`
+    ? `There ${behind === 1 ? 'is' : 'are'} ${behind} commit${behind === 1 ? '' : 's'} to pull`
     : 'No changes to pull';
   const pushToolTipMsg = canPush
-    ? `There ${ahead === 1 ? 'is' : 'are'} ${ahead} snapshot${ahead === 1 ? '' : 's'} to push`
+    ? `There ${ahead === 1 ? 'is' : 'are'} ${ahead} commit${ahead === 1 ? '' : 's'} to push`
     : 'No changes to push';
   const snapshotToolTipMsg = canCreateSnapshot ? 'Local changes made' : 'No local changes made';
 
@@ -192,15 +192,15 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
         },
       },
       {
-        id: 'create',
-        name: 'Create Snapshot',
+        id: 'commit',
+        name: 'Commit',
         icon: 'cube',
         isDisabled: !canCreateSnapshot || rollbackFetcher.state !== 'idle',
         action: () => setIsSyncStagingModalOpen(true),
       },
       {
         id: 'pull',
-        name: pullFetcher.state !== 'idle' ? 'Pulling Snapshots...' : `Pull ${behind || ''} Snapshot${behind === 1 ? '' : 's'}`,
+        name: pullFetcher.state !== 'idle' ? 'Pulling...' : behind > 0 ? `Pull ${behind || ''} Commit${behind === 1 ? '' : 's'}` : 'Pull',
         icon: pullFetcher.state !== 'idle' ? 'refresh' : 'cloud-download',
         isDisabled: behind === 0 || pullFetcher.state !== 'idle',
         action: () => {
@@ -212,7 +212,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
       },
       {
         id: 'push',
-        name: pushFetcher.state !== 'idle' ? 'Pushing Snapshots...' : `Push ${ahead || ''} Snapshot${ahead === 1 ? '' : 's'}`,
+        name: pushFetcher.state !== 'idle' ? 'Pushing...' : ahead > 0 ? `Push ${ahead || ''} Commit${ahead === 1 ? '' : 's'}` : 'Push',
         icon: pushFetcher.state !== 'idle' ? 'refresh' : 'cloud-upload',
         isDisabled: ahead === 0 || pushFetcher.state !== 'idle',
         action: () => {
@@ -245,7 +245,7 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
           <div className="flex items-center gap-2">
             <TooltipTrigger>
               <Button>
-                <Icon icon="cube" className={`transition-colors ${canCreateSnapshot ? '' : 'opacity-50'}`} />
+                <Icon icon="cube" className={`transition-colors ${canCreateSnapshot ? 'text-[--color-warning]' : 'opacity-50'}`} />
               </Button>
               <Tooltip
                 placement="top end"
@@ -373,9 +373,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
       {isSyncHistoryModalOpen && (
         <SyncHistoryModal
           vcs={vcs}
-          branch={currentBranch}
           history={history}
-          onHide={() => setIsSyncHistoryModalOpen(false)}
+          onClose={() => setIsSyncHistoryModalOpen(false)}
         />
       )}
     </Fragment>

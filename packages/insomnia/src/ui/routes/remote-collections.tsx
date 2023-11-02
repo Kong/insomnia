@@ -401,6 +401,26 @@ export const rollbackChangesAction: ActionFunction = async ({ params }) => {
   return null;
 };
 
+export const restoreChangesAction: ActionFunction = async ({ request, params }) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  const formData = await request.formData();
+  const id = formData.get('id');
+  invariant(typeof id === 'string', 'Id is required');
+  try {
+    const { syncItems } = await getSyncItems({ workspaceId });
+    const delta = await vcs.rollback(id, syncItems);
+    await database.batchModifyDocs(delta as unknown as Operation);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error while restoring changes.';
+    return {
+      error: errorMessage,
+    };
+  }
+
+  return null;
+};
+
 export const createSnapshotAction: ActionFunction = async ({ request, params }) => {
   const { workspaceId } = params;
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
