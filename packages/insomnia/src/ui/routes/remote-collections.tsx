@@ -335,6 +335,36 @@ export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
   return null;
 };
 
+export const fetchRemoteBranchAction: ActionFunction = async ({ request, params }) => {
+  const { projectId, workspaceId } = params;
+  invariant(typeof projectId === 'string', 'Project Id is required');
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+  const project = await models.project.getById(projectId);
+  invariant(project, 'Project not found');
+
+  const formData = await request.formData();
+  const branch = formData.get('branch');
+  invariant(typeof branch === 'string', 'Branch is required');
+
+  const currentBranch = await vcs.getBranch();
+
+  try {
+    invariant(project.remoteId, 'Project is not remote');
+    await vcs.checkout([], branch);
+    const delta = await vcs.pull({ candidates: [], teamId: project.parentId, teamProjectId: project.remoteId });
+
+    await database.batchModifyDocs(delta as unknown as Operation);
+  } catch (err) {
+    await vcs.checkout([], currentBranch);
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error while fetching remote branch.';
+    return {
+      error: errorMessage,
+    };
+  }
+
+  return null;
+};
+
 export const pushToRemoteAction: ActionFunction = async ({ params }) => {
   const { projectId } = params;
   invariant(typeof projectId === 'string', 'Project Id is required');

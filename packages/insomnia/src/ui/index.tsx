@@ -858,6 +858,13 @@ const router = createMemoryRouter(
                                         ).createBranchAction(...args),
                                     },
                                     {
+                                      path: 'fetch',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/remote-collections')
+                                        ).fetchRemoteBranchAction(...args),
+                                    },
+                                    {
                                       path: 'delete',
                                       action: async (...args) =>
                                         (

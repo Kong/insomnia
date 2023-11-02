@@ -5,7 +5,6 @@ import { useFetcher, useParams } from 'react-router-dom';
 import { VCS } from '../../../sync/vcs/vcs';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
-import { SyncPullButton } from '../sync-pull-button';
 
 const LocalBranchItem = ({
   branch,
@@ -80,6 +79,62 @@ const LocalBranchItem = ({
   );
 };
 
+const RemoteBranchItem = ({
+  branch,
+  isCurrent,
+  organizationId,
+  projectId,
+  workspaceId,
+}: {
+  branch: string;
+  isCurrent: boolean;
+  organizationId: string;
+  projectId: string;
+  workspaceId: string;
+}) => {
+  const deleteBranchFetcher = useFetcher();
+  const pullBranchFetcher = useFetcher();
+
+  return (
+    <div className="flex items-center w-full">
+      <span className='flex-1'>{branch}</span>
+      <div className='flex items-center gap-2'>
+        {branch !== 'master' && (
+          <PromptButton
+            confirmMessage='Confirm'
+            className="px-4 min-w-[12ch] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+            doneMessage="Deleted"
+            disabled={isCurrent || branch === 'master'}
+            onClick={() => deleteBranchFetcher.submit(
+              {
+                branch,
+              },
+              {
+                method: 'POST',
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/delete`,
+              },
+            )}
+          >
+            <Icon icon={deleteBranchFetcher.state !== 'idle' ? 'spinner' : 'trash'} className={`text-[--color-danger] w-5 ${deleteBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`} />
+            Delete
+          </PromptButton>
+        )}
+        <Button
+          className="px-4 py-1 min-w-[12ch] font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+          onPress={() => pullBranchFetcher.submit({
+            branch,
+          }, {
+            method: 'POST',
+            action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/fetch`,
+          })}
+        >
+          <Icon icon={pullBranchFetcher.state !== 'idle' ? 'spinner' : 'cloud-arrow-down'} className={`w-5 ${pullBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`} />
+          Fetch
+        </Button>
+      </div>
+    </div>
+  );
+};
 interface Props {
   vcs: VCS;
   branches: string[];
@@ -88,14 +143,13 @@ interface Props {
   onClose: () => void;
 }
 
-export const SyncBranchesModal = ({ vcs, onClose, branches, remoteBranches, currentBranch }: Props) => {
+export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBranch }: Props) => {
   const { organizationId, projectId, workspaceId } = useParams() as {
     organizationId: string;
     projectId: string;
     workspaceId: string;
   };
 
-  const deleteBranchFetcher = useFetcher();
   const createBranchFetcher = useFetcher();
 
   function sortBranches(branchA: string, branchB: string) {
@@ -107,13 +161,6 @@ export const SyncBranchesModal = ({ vcs, onClose, branches, remoteBranches, curr
       return branchA.localeCompare(branchB);
     }
   }
-
-  const localBranches = branches.sort(sortBranches).map(branch => ({
-    id: branch,
-    key: branch,
-    name: branch,
-    isCurrent: branch === currentBranch,
-  }));
 
   return (
     <ModalOverlay
@@ -168,7 +215,12 @@ export const SyncBranchesModal = ({ vcs, onClose, branches, remoteBranches, curr
                 <GridList
                   aria-label='Branches list'
                   selectionMode='none'
-                  items={localBranches}
+                  items={branches.sort(sortBranches).map(branch => ({
+                    id: branch,
+                    key: branch,
+                    name: branch,
+                    isCurrent: branch === currentBranch,
+                  }))}
                   className="divide-y divide-solid divide-[--hl-sm] flex flex-col focus:outline-none overflow-y-auto flex-1 data-[empty]:py-0"
                 >
                   {item => (
@@ -194,6 +246,7 @@ export const SyncBranchesModal = ({ vcs, onClose, branches, remoteBranches, curr
                       id: branch,
                       key: branch,
                       name: branch,
+                      isCurrent: branch === currentBranch,
                     }))}
                     className="divide-y divide-solid divide-[--hl-sm] flex flex-col focus:outline-none overflow-y-auto flex-1 data-[empty]:py-0"
                   >
@@ -204,41 +257,7 @@ export const SyncBranchesModal = ({ vcs, onClose, branches, remoteBranches, curr
                         textValue={item.name}
                         className="p-2 w-full focus:outline-none focus:bg-[--hl-sm] transition-colors"
                       >
-                        <div className="flex items-center w-full">
-                          <span className='flex-1'>{item.name}</span>
-                          <div className='flex items-center gap-2'>
-                            {item.name !== 'master' && (
-                              <PromptButton
-                                confirmMessage='Confirm'
-                                className="px-4 min-w-[12ch] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                                doneMessage="Deleted"
-                                disabled={item.name === currentBranch || item.name === 'master'}
-                                onClick={() => deleteBranchFetcher.submit(
-                                  {
-                                    branch: item.name,
-                                  },
-                                  {
-                                    method: 'POST',
-                                    action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/delete`,
-                                  },
-                                )}
-                              >
-                                <Icon icon="trash" className='text-[--color-danger]' />
-                                Delete
-                              </PromptButton>
-                            )}
-                            <SyncPullButton
-                              className="px-4 py-1 min-w-[12ch] font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
-                              branch={item.name}
-                              onPull={console.log}
-                              disabled={item.name === currentBranch}
-                              vcs={vcs}
-                            >
-                              <Icon icon="download" />
-                              Fetch
-                            </SyncPullButton>
-                          </div>
-                        </div>
+                        <RemoteBranchItem branch={item.name} isCurrent={item.isCurrent} organizationId={organizationId} projectId={projectId} workspaceId={workspaceId} />
                       </Item>
                     )}
                   </GridList>
