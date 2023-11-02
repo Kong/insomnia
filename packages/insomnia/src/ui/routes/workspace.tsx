@@ -224,10 +224,14 @@ export const workspaceLoader: LoaderFunction = async ({
   }
 
   if (isLoggedIn() && !gitRepository) {
-    const vcs = VCSInstance();
-    await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
-    if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
-      await pushSnapshotOnInitialize({ vcs, workspace: activeWorkspace, project: activeProject });
+    try {
+      const vcs = VCSInstance();
+      await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, activeWorkspace.name);
+      if (activeWorkspaceMeta.pushSnapshotOnInitialize) {
+        await pushSnapshotOnInitialize({ vcs, workspace: activeWorkspace, project: activeProject });
+      }
+    } catch (err) {
+      console.warn('Failed to initialize VCS', err);
     }
   }
 

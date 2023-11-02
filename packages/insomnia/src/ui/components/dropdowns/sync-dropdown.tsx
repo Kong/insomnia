@@ -65,8 +65,24 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
     );
   }
 
-  if (!session.isLoggedIn() || !syncDataFetcher.data || 'error' in syncDataFetcher.data) {
-    return null;
+  let syncData: Extract<SyncDataLoaderData, { historyCount: number }> = {
+    status: {
+      stage: {},
+      unstaged: {},
+      key: '',
+    },
+    localBranches: [],
+    remoteBranches: [],
+    currentBranch: '',
+    historyCount: 0,
+    history: [],
+    syncItems: [],
+    remoteBackendProjects: [],
+    compare: { ahead: 0, behind: 0 },
+  };
+
+  if (syncDataFetcher.data && !('error' in syncDataFetcher.data)) {
+    syncData = syncDataFetcher.data;
   }
 
   const {
@@ -78,7 +94,8 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
     history,
     syncItems,
     compare: { ahead, behind },
-  } = syncDataFetcher.data;
+  } = syncData;
+
   const canCreateSnapshot = Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
 
   const canPush = ahead > 0;
@@ -293,6 +310,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
               <Collection items={switchToGitRepoActionList}>
                 {item => (
                   <Item
+                    textValue={item.name}
                     className={'group aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors'}
                     aria-label={item.name}
                   >
