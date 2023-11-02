@@ -305,7 +305,7 @@ export class MigrationService {
 
             const files = await this._dataStore.find<Workspace>(workspace.type, { parentId: localProjectId });
             for (const file of files) {
-                await this._dataStore.docUpdate<Workspace>(file, { parentId: newProject._id });
+                await this._dataStore.duplicate<Workspace>(file, { parentId: newProject._id });
                 this._updatedFiles.add(file._id);
                 this._updateCommunication(`Upgraded File - ${file.name} out of Project - ${newProject.name}`, { completed: this._updatedFiles.size, total });
             }
@@ -325,7 +325,7 @@ export class MigrationService {
             }
 
             const file = docs[0];
-            await this._dataStore.docUpdate<Workspace>(file, { parentId: newLocalVault._id });
+            await this._dataStore.duplicate<Workspace>(file, { parentId: newLocalVault._id });
             this._updatedFiles.add(file._id);
             this._updateCommunication(`Upgraded File - ${file.name} (hidden)`, { completed: this._updatedFiles.size, total });
         }
@@ -354,8 +354,25 @@ export class MigrationService {
     }
 
     private async _cleanUpOldProjects(): Promise<void> {
-        // this._updateProjects.size;
-        this._logger.info('Check size!', this._updateProjects.size);
+
+        for (const fileId of this._updatedFiles.keys()) {
+            const docs = await this._dataStore.find<Workspace>(workspace.type, { _id: fileId });
+            const oldFile = docs[0];
+            if (!oldFile) {
+                this._logger.info(`DELETING!!!! couldn't find the old file id ${fileId}`);
+                // TODO: log this
+                // TODO: handle the error communication to the UI
+                return;
+            }
+
+            await this._dataStore.removeWhere<Workspace>(workspace.type, { _id: fileId });
+            if (oldFile.parentId) {
+                this._queueLocalFilesByProject.delete(fileId);
+            } else {
+                this._queueLocalFilesNoProject.delete(fileId);
+            }
+        }
+
         for (const [newId, oldId] of this._updateProjects.entries()) {
             this._logger.info(`DELETING!!!! new id ${newId}`, oldId);
             const docs = await this._dataStore.find<Project>(project.type, { _id: oldId });
@@ -422,7 +439,7 @@ export class MigrationService {
             }
 
             const file = docs[0];
-            await this._dataStore.docUpdate<Workspace>(file, { parentId: defaultProject._id });
+            await this._dataStore.duplicate<Workspace>(file, { parentId: defaultProject._id });
             this._updatedFiles.add(file._id);
             this._updateCommunication(`Upgraded File - ${file.name} (hidden)`, { completed: this._updatedFiles.size, total });
         }
@@ -440,7 +457,7 @@ export class MigrationService {
             }
 
             const file = docs[0];
-            await this._dataStore.docUpdate<Workspace>(file, { parentId: defaultProject._id });
+            await this._dataStore.duplicate<Workspace>(file, { parentId: defaultProject._id });
             this._updatedFiles.add(file._id);
             this._updateCommunication(`Upgraded File - ${file.name} (hidden)`, { completed: this._updatedFiles.size, total });
         }
