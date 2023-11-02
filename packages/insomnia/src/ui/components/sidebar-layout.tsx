@@ -169,7 +169,7 @@ const LayoutGrid = styled.div<{orientation: 'vertical' | 'horizontal'}>(props =>
     gridColumnEnd: 'span 1',
   },
 
-  '@media (max-width: 1200px)': {
+  '@media (max-width: 880px)': {
     ...verticalStyles,
   },
 
