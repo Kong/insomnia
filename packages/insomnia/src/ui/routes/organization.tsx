@@ -31,7 +31,6 @@ import {
 } from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
-import { exportAllData } from '../../common/export-all-data';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
 import { Project } from '../../models/project';
@@ -39,7 +38,6 @@ import { isDesign, isScratchpad } from '../../models/workspace';
 import vcs from '../../sync/vcs/insomnia-sync';
 import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { invariant } from '../../utils/invariant';
-import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
 import { GitHubStarsButton } from '../components/github-stars-button';
@@ -362,7 +360,7 @@ const UpgradeButton = ({
 };
 
 const OrganizationRoute = () => {
-  const { settings, workspaceCount } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
 
   const { organizations, user, currentPlan } =
     useLoaderData() as OrganizationLoaderData;
@@ -677,6 +675,8 @@ const OrganizationRoute = () => {
                   />
                 </Tooltip>
               </TooltipTrigger>
+            </div>
+            <div className='flex items-center gap-2 divide divide-y-[--hl-sm]'>
               <TooltipTrigger>
                 <Button
                   className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
@@ -711,60 +711,18 @@ const OrganizationRoute = () => {
                     : 'Log in to Insomnia to sync your data.'}
                 </Tooltip>
               </TooltipTrigger>
-              {isScratchpadOrganizationId(organizationId) ? (
-                <Button
-                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                  onPress={async () => {
-                    const { filePaths, canceled } = await window.dialog.showOpenDialog({
-                      properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
-                      buttonLabel: 'Select',
-                      title: 'Export All Insomnia Data',
-                    });
-
-                    if (canceled) {
-                      return;
-                    }
-
-                    const [dirPath] = filePaths;
-
-                    try {
-                      dirPath && await exportAllData({
-                        dirPath,
-                      });
-                    } catch (e) {
-                      showAlert({
-                        title: 'Export Failed',
-                        message: 'An error occurred while exporting data. Please try again.',
-                      });
-                      console.error(e);
-                    }
-
-                    showAlert({
-                      title: 'Export Complete',
-                      message: 'All your data have been successfully exported',
-                    });
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.exportAllCollections,
-                    });
-                  }}
-                >
-                  <Icon
-                    icon="file-export"
-                  />
-                  Export your data {`(${workspaceCount} files)`}
-                </Button>
-              ) : null}
-            </div>
+              <span className='w-[1px] h-full bg-[--hl-sm]' />
             <Link>
               <a
                 className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
                 href="https://konghq.com/"
               >
                 Made with
-                <Icon className="text-[--color-surprise]" icon="heart" /> by
+                  <Icon className="text-[--color-surprise-font]" icon="heart" /> by
                 Kong
               </a>
             </Link>
+            </div>
           </div>
         </div>
         <Toast />
