@@ -248,7 +248,7 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
         {workspace ?
           <ModalHeader key={`header::${workspace._id}`}>
             {getWorkspaceLabel(workspace).singular} Settings{' '}
-            <div className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
+            <div data-testid="workspace-id" className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
           </ModalHeader> : null}
         {workspace ?
           <ModalBody key={`body::${workspace._id}`} noScroll>

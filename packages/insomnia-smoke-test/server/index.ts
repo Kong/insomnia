@@ -17,7 +17,7 @@ import { startWebSocketServer } from './websocket';
 
 const app = express();
 const port = 4010;
-const httpsPort = 4011;
+const httpsPort = 443;
 const grpcPort = 50051;
 
 app.get('/pets/:id', (req, res) => {
