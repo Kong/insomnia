@@ -65,7 +65,6 @@ export class MigrationService {
         remoteProjectId: RemoteProjectId;
     }> = new Map();
 
-    private _byRemoteOrgId: RemoteFileSnapshot | null = null;
     private _remoteFileSnapshot: RemoteFileSnapshot | null = null;
 
     // TODO: handle conflict situation
@@ -117,7 +116,6 @@ export class MigrationService {
             }
 
             this._remoteFileSnapshot = remoteFileSnapshot;
-            this._byRemoteOrgId = remoteFileSnapshot;// TODO: remove
             this._transformRemoteFileSnapshotToMaps(this._remoteFileSnapshot);
 
             const myWorkspaceId = this._findMyWorkspaceId();
@@ -147,7 +145,7 @@ export class MigrationService {
             this._queueLocalFilesByProject.clear();
             this._byRemoteFileId.clear();
             this._byRemoteProjectId.clear();
-            this._byRemoteOrgId = null;
+            this._remoteFileSnapshot = null;
         }
         this._comm.stop();
     }
@@ -221,17 +219,21 @@ export class MigrationService {
         this._status = 'inProgress';
         this._updateCommunication('Starting to bringing your data up to date', { completed: 0, total });
         await this._migrateToCloud(myWorkspaceId);
-        this._validateMigrationResult();
+        this._validateMigrationResult(false);
         await this._cleanUpOldProjects();
     }
 
     private _findMyWorkspaceId(): string | undefined {
-        if (!this._byRemoteOrgId) {
+        if (!this._remoteFileSnapshot) {
+                // TODO: log this
+                // TODO: handle the error communication to the UI
             return;
         }
 
-        const remotePersonalWorkspaceId = Object.keys(this._byRemoteOrgId).find(remoteOrgId => this._byRemoteOrgId![remoteOrgId].isPersonal && this._byRemoteOrgId![remoteOrgId].ownedByMe);
+        const remotePersonalWorkspaceId = Object.keys(this._remoteFileSnapshot).find(remoteOrgId => this._remoteFileSnapshot![remoteOrgId].isPersonal && this._remoteFileSnapshot![remoteOrgId].ownedByMe);
         if (!remotePersonalWorkspaceId) {
+                // TODO: log this
+                // TODO: handle the error communication to the UI
             return;
         }
 
@@ -285,10 +287,13 @@ export class MigrationService {
     }
 
     private async _migrateToLocalVault(myWorkspaceId: string): Promise<void> {
+        const total = this._queueLocalFilesByProject.size + this._queueLocalFilesNoProject.size;
         // migrate projects and files by projects
         for (const localProjectId of this._queueLocalProjects.keys()) {
             const docs = await this._dataStore.find<Project>(project.type, { _id: localProjectId });
             if (!docs.length) {
+                // TODO: log this
+                // TODO: handle the error communication to the UI
                 return;
             }
 
@@ -302,7 +307,7 @@ export class MigrationService {
             for (const file of files) {
                 await this._dataStore.docUpdate<Workspace>(file, { parentId: newProject._id });
                 this._updatedFiles.add(file._id);
-                this._updateCommunication(`Upgraded File - ${file.name} out of Project - ${newProject.name}`, { completed: this._updatedFiles.size, total: this._queueLocalFilesByProject.size });
+                this._updateCommunication(`Upgraded File - ${file.name} out of Project - ${newProject.name}`, { completed: this._updatedFiles.size, total });
             }
         }
 
@@ -322,37 +327,46 @@ export class MigrationService {
             const file = docs[0];
             await this._dataStore.docUpdate<Workspace>(file, { parentId: newLocalVault._id });
             this._updatedFiles.add(file._id);
-            // this._updateCommunication(`Upgraded File - ${file.name} out of Project - ${newProject.name}`, { completed: this._updatedFiles.size, total: this._queueLocalFilesByProject.size });
+            this._updateCommunication(`Upgraded File - ${file.name} (hidden)`, { completed: this._updatedFiles.size, total });
         }
     }
 
-    private _validateMigrationResult(): void {
-        if (this._queueLocalFilesByProject.size + this._queueLocalFilesNoProject.size > this._updatedFiles.size) {
+    private _validateMigrationResult(local: boolean = true): void {
+        const total = this._queueLocalFilesByProject.size + this._queueLocalFilesNoProject.size;
+        if (total > this._updatedFiles.size) {
             this._status = 'incomplete';
-            const failedFileCount = this._queueLocalFilesByProject.size - this._updatedFiles.size;
-            this._updateCommunication(`Failed to upgrade ${failedFileCount} out of ${this._queueLocalFilesByProject.size} files`, undefined);
+            const failedFileCount = total - this._updatedFiles.size;
+            this._logger.error('FAILURE!!!! _queueLocalFilesByProject', this._queueLocalFilesByProject.size);
+            this._logger.error('FAILURE!!!! _queueLocalFilesNoProject', this._queueLocalFilesNoProject.size);
+            this._updateCommunication(`Failed to upgrade ${failedFileCount} out of ${total} files`, undefined);
             return;
         }
 
-        if (this._queueLocalProjects.size > this._updateProjects.size) {
+        // TODO: handle the cloud sync is selected, reflect the update project map correctly. It does not really impact the migration as it's in-memory clean up to compare the validation
+        if (local && this._queueLocalProjects.size > this._updateProjects.size) {
             this._status = 'incomplete';
             const failedProjectCount = this._queueLocalProjects.size - this._updateProjects.size;
-            this._updateCommunication(`Failed to upgrade ${failedProjectCount} out of ${this._updateProjects.size} projects`, undefined);
+            this._logger.error('FAILURE!!!! _queueLocalProjects', this._queueLocalProjects);
+            this._logger.error('FAILURE!!!! _updateProjects', this._updateProjects);
+            this._updateCommunication(`Failed to upgrade ${failedProjectCount} out of ${this._queueLocalProjects.size} projects`, undefined);
             return;
         }
     }
 
     private async _cleanUpOldProjects(): Promise<void> {
-        for (const [, oldId] of this._updateProjects.entries()) {
+        // this._updateProjects.size;
+        this._logger.info('Check size!', this._updateProjects.size);
+        for (const [newId, oldId] of this._updateProjects.entries()) {
+            this._logger.info(`DELETING!!!! new id ${newId}`, oldId);
             const docs = await this._dataStore.find<Project>(project.type, { _id: oldId });
-            console.log({ docs });
             const oldProject = docs[0];
-            console.log({ oldProject });
             if (!oldProject) {
-                console.log('old project does not exist...?!?!??');
+                this._logger.info(`DELETING!!!! couldn't find it new id ${newId}`, oldId);
+                // TODO: log this
+                // TODO: handle the error communication to the UI
                 return;
             }
-            // this method is "unsafeRemove" because it does not delete its children => used here to make sure we don't delete the children files as we are not creating new files other than the project
+
             await this._dataStore.removeWhere<Project>(project.type, { _id: oldId });
             this._queueLocalProjects.delete(oldId);
         }
@@ -373,12 +387,17 @@ export class MigrationService {
 
     // due to the restriction on the count of cloud project on collaboration on free plan, we will default to one project
     private async _migrateToCloud(myWorkspaceId: string): Promise<void> {
+        const total = this._queueLocalFilesByProject.size + this._queueLocalFilesNoProject.size;
         const myWorkspaceSnapshot = this._remoteFileSnapshot?.[myWorkspaceId];
         if (!myWorkspaceSnapshot) {
+            // TODO: log this
+            // TODO: handle the error communication to the UI
             return;
         }
 
         if (!myWorkspaceSnapshot.projectIds.length) {
+            // TODO: log this
+            // TODO: handle the error communication to the UI
             return;
         }
 
@@ -389,6 +408,7 @@ export class MigrationService {
             const timestamp = format(Date.now(), 'MM-dd');
             const name = `Cloud Sync ${timestamp}`;
             defaultProject = await this._dataStore.docCreate<Project>(project.type, { name, parentId: myWorkspaceId, remoteId });
+            // create remote team project here
         } else {
             defaultProject = docs[0];
         }
@@ -396,24 +416,33 @@ export class MigrationService {
         for (const fileId of this._queueLocalFilesByProject.keys()) {
             const docs = await this._dataStore.find<Workspace>(workspace.type, { _id: fileId });
             if (!docs.length) {
+                // TODO: log this
+                // TODO: handle the error communication to the UI
                 return;
             }
 
             const file = docs[0];
             await this._dataStore.docUpdate<Workspace>(file, { parentId: defaultProject._id });
             this._updatedFiles.add(file._id);
+            this._updateCommunication(`Upgraded File - ${file.name} (hidden)`, { completed: this._updatedFiles.size, total });
         }
+
+        // for (const projId of this._queueLocalProjects.keys()) {
+        //     this._updateProjects.set(projId, remoteId);
+        // }
 
         for (const fileId of this._queueLocalFilesNoProject.keys()) {
             const docs = await this._dataStore.find<Workspace>(workspace.type, { _id: fileId });
             if (!docs.length) {
+                // TODO: log this
+                // TODO: handle the error communication to the UI
                 return;
             }
 
             const file = docs[0];
             await this._dataStore.docUpdate<Workspace>(file, { parentId: defaultProject._id });
             this._updatedFiles.add(file._id);
-            // this._updateCommunication(`Upgraded File - ${file.name} out of Project - ${newProject.name}`, { completed: this._updatedFiles.size, total: this._queueLocalFilesByProject.size });
+            this._updateCommunication(`Upgraded File - ${file.name} (hidden)`, { completed: this._updatedFiles.size, total });
         }
     }
 }

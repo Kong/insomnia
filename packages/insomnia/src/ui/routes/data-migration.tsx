@@ -1,9 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { AriaProgressBarProps, useProgressBar } from 'react-aria';
+import { useNavigate } from 'react-router-dom';
+import { map, takeWhile, timer } from 'rxjs';
 
 import { getAccountId, getCurrentSessionId } from '../../account/session';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
+
+const COUNTDOWN_SECONDS = 5;
+const Redirect = () => {
+  const navigate = useNavigate();
+  const [second, setSecond] = useState(COUNTDOWN_SECONDS);
+  useEffect(() => {
+    const countdown = timer(0, 1000).pipe(
+      map(n => (COUNTDOWN_SECONDS - n)),
+      takeWhile(n => n >= 0),
+    ).subscribe(n => {
+      setSecond(n);
+      if (n === 0) {
+        navigate('/organization');
+      }
+    });
+
+    return () => {
+      countdown.unsubscribe();
+    };
+  }, [navigate]);
+  return <p>Redirecting in {second}s</p>;
+};
 
 const ProgressBar = (props: AriaProgressBarProps) => {
   const {
@@ -25,7 +49,7 @@ const ProgressBar = (props: AriaProgressBarProps) => {
           <div style={{ width: barWidth, height: 10 }} className='bg-[--color-surprise]' />
         </div>
       </div>
-      <div>{barWidth}</div>
+      <div>{barWidth}%</div>
     </div>
   );
 };
@@ -47,6 +71,8 @@ export const DataMigration = () => {
   const accountId = getAccountId();
   const [copy, setCopy] = useState<DisplayCopy>({ title: 'Preparing', subtitle: 'Preparing for the upgrade' });
   const [update, setUpdate] = useState<MigrationStatus | null>(null);
+  const [showRedirect, setShowRedirect] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!sessionId || !accountId) {
@@ -59,7 +85,6 @@ export const DataMigration = () => {
     const subtitle = prefersProjectType === 'local' ? 'We are locally upgrading the data format for this new version of Insomnia' : 'We are enabling Cloud Sync for your account, please wait';
     setCopy({ title, subtitle });
 
-    console.log('starting...?');
     window.main.migration.start({ sessionId, accountId, prefersProjectType });
   }, [sessionId, accountId]);
 
@@ -68,16 +93,15 @@ export const DataMigration = () => {
       (_, message: MigrationStatus) => {
         setUpdate(message);
 
-        if (message.status === 'complete') {
-          console.log({ migrationStatus: message.status });
-          // window.main.migration.stop();
-          // redrirect the user to organizatino page
+        if (message.status === 'complete' || message.status === 'invalid') {
+          window.main.migration.stop();
+          setShowRedirect(true);
         }
       });
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const status = update?.status;
   const message = update?.message;
@@ -102,6 +126,7 @@ export const DataMigration = () => {
                 <div className='flex flex-col gap-4'>
                   <p>{copy.subtitle}</p>
                   <p>{message}</p>
+                  {showRedirect && <Redirect />}
                   {progress && <ProgressBar label={status?.toUpperCase()} value={(progress.completed / progress.total) * 100} />}
                 </div>
               </div>
