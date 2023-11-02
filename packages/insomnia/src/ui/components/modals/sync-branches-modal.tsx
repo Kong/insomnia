@@ -2,7 +2,6 @@ import React from 'react';
 import { Button, Dialog, GridList, Heading, Input, Item, Label, Modal, ModalOverlay, TextField } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 
-import { VCS } from '../../../sync/vcs/vcs';
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
 
@@ -136,7 +135,6 @@ const RemoteBranchItem = ({
   );
 };
 interface Props {
-  vcs: VCS;
   branches: string[];
   remoteBranches: string[];
   currentBranch: string;

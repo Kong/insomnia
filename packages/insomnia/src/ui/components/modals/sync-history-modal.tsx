@@ -4,14 +4,12 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import * as session from '../../../account/session';
 import type { Snapshot } from '../../../sync/types';
-import { VCS } from '../../../sync/vcs/vcs';
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { TimeFromNow } from '../time-from-now';
 
 interface Props {
-  vcs: VCS;
   history: Snapshot[];
   onClose: () => void;
 }

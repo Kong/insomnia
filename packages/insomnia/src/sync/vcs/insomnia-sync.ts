@@ -5,10 +5,9 @@ import { MergeConflict } from '../types';
 import { VCS } from './vcs';
 
 const driver = FileSystemDriver.create(
-  process.env['INSOMNIA_DATA_PATH'] || typeof window !== 'undefined' ? window.app?.getPath('userData') : '',
+  process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
 );
 
-console.log('Initializing VCS');
 const vcs = new VCS(driver, async conflicts => {
   return new Promise(resolve => {
     showModal(SyncMergeModal, {

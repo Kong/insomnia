@@ -8,7 +8,6 @@ import { getAppWebsiteBaseURL } from '../../../common/constants';
 import { isOwnerOfOrganization } from '../../../models/organization';
 import { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
-import { VCS } from '../../../sync/vcs/vcs';
 import { useOrganizationLoaderData } from '../../routes/organization';
 import { SyncDataLoaderData } from '../../routes/remote-collections';
 import { Icon } from '../icon';
@@ -17,23 +16,20 @@ import { AlertModal } from '../modals/alert-modal';
 import { AskModal } from '../modals/ask-modal';
 import { GitRepositorySettingsModal } from '../modals/git-repository-settings-modal';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
-import { SyncDeleteModal } from '../modals/sync-delete-modal';
 import { SyncHistoryModal } from '../modals/sync-history-modal';
 import { SyncStagingModal } from '../modals/sync-staging-modal';
 
 interface Props {
   workspace: Workspace;
   project: Project;
-  vcs: VCS;
   gitSyncEnabled: boolean;
 }
 
-export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
+export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   const { organizations } = useOrganizationLoaderData();
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
   const [isGitRepoSettingsModalOpen, setIsGitRepoSettingsModalOpen] = useState(false);
-  const [isSyncDeleteModalOpen, setIsSyncDeleteModalOpen] = useState(false);
   const [isSyncHistoryModalOpen, setIsSyncHistoryModalOpen] = useState(false);
   const [isSyncStagingModalOpen, setIsSyncStagingModalOpen] = useState(false);
   const [isSyncBranchesModalOpen, setIsSyncBranchesModalOpen] = useState(false);
@@ -342,17 +338,8 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
           onHide={() => setIsGitRepoSettingsModalOpen(false)}
         />
       )}
-      {isSyncDeleteModalOpen && (
-        <SyncDeleteModal
-          vcs={vcs}
-          onHide={() => {
-            setIsSyncDeleteModalOpen(false);
-          }}
-        />
-      )}
       {isSyncBranchesModalOpen && (
         <SyncBranchesModal
-          vcs={vcs}
           branches={localBranches}
           currentBranch={currentBranch}
           remoteBranches={remoteBranches.filter(remoteBranch => !localBranches.includes(remoteBranch))}
@@ -363,7 +350,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
       )}
       {isSyncStagingModalOpen && (
         <SyncStagingModal
-          vcs={vcs}
           branch={currentBranch}
           status={status}
           syncItems={syncItems}
@@ -372,7 +358,6 @@ export const SyncDropdown: FC<Props> = ({ vcs, gitSyncEnabled }) => {
       )}
       {isSyncHistoryModalOpen && (
         <SyncHistoryModal
-          vcs={vcs}
           history={history}
           onClose={() => setIsSyncHistoryModalOpen(false)}
         />

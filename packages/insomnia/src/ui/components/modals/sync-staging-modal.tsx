@@ -4,11 +4,9 @@ import { useFetcher, useParams } from 'react-router-dom';
 
 import { all } from '../../../models';
 import type { Status, StatusCandidate } from '../../../sync/types';
-import { VCS } from '../../../sync/vcs/vcs';
 import { Icon } from '../icon';
 
 interface Props {
-  vcs: VCS;
   branch: string;
   status: Status;
   syncItems: StatusCandidate[];
