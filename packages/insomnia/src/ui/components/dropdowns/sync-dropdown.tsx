@@ -2,6 +2,7 @@ import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import React, { FC, Fragment, useEffect, useState } from 'react';
 import { Button, Collection, Item, Menu, MenuTrigger, Popover, Section, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
+import { useInterval } from 'react-use';
 
 import * as session from '../../../account/session';
 import { getAppWebsiteBaseURL } from '../../../common/constants';
@@ -25,6 +26,8 @@ interface Props {
   gitSyncEnabled: boolean;
 }
 
+const ONE_MINUTE_IN_MS = 1000 * 60;
+
 export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
   const { organizationId, projectId, workspaceId } = useParams<{ organizationId: string; projectId: string; workspaceId: string }>();
   const { organizations } = useOrganizationLoaderData();
@@ -45,6 +48,10 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
       syncDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`);
     }
   }, [organizationId, projectId, syncDataFetcher, workspaceId]);
+
+  useInterval(() => {
+    syncDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`);
+  }, ONE_MINUTE_IN_MS);
 
   const error = checkoutFetcher.data?.error || pullFetcher.data?.error || pushFetcher.data?.error || rollbackFetcher.data?.error;
 
