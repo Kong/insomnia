@@ -30,10 +30,9 @@ export class VersionClient {
 
     /**
      * This fucntion is huge intentionally as I am bring all the logic from vcs.ts file. I need to have better cognitive understanding of the file.
-     * There is just so much tech debt and this is crazy.
      * taken mostly from { initializeLocalBackendProjectAndMarkForSync } from initialize-backend-project.ts
-     * what the heck is the backend project? we have team-project, project in the database, and Project.db and Workspace.db
-     * This is insanity.
+     * what is the backend project?? we have team-project, project in the database, and Project.db and Workspace.db
+     * This is confusing.
      */
     public async versionLocalFile(localFileName: string, localFileId: string): Promise<void> {
         this._logger.info('versioning local file: ', localFileId);
@@ -66,7 +65,7 @@ export class VersionClient {
             .filter(canSync)
             .map(document => ({ key: document._id, name: document.name || '', document }));
 
-        // please help me understand WHY we are doing this if this is going to be an empty object?
+        // Inherited from the previous implementation. Please help me understand WHY we are doing this if this is going to be an empty object??
         const blankStage = {};
 
         // this comes from vcs.status function.
