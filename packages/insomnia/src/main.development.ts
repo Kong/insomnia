@@ -23,6 +23,7 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Stats } from './models/stats';
+import FileSystemDriver from './sync/store/drivers/file-system-driver';
 import type { ToastNotification } from './ui/components/toast';
 
 initializeSentry();
@@ -91,14 +92,17 @@ app.on('ready', async () => {
     }
   }
 
+  const fileSystemDriver = FileSystemDriver.create(
+    process.env['INSOMNIA_DATA_PATH'] || electron.app.getPath('userData'),
+  );
+
   // Init some important things first
   await database.init(models.types());
   await _createModelInstances();
   sentryWatchAnalyticsEnabled();
   windowUtils.init();
-
   const window = await _launchApp();
-  registerMigrationHandlers(window);
+  registerMigrationHandlers(window, fileSystemDriver);
 
   // Init the rest
   await updates.init();

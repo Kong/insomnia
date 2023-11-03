@@ -39,7 +39,7 @@ import {
   updateStateWithConflictResolutions,
 } from './util';
 
-const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
+export const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
 
 type ConflictHandler = (conflicts: MergeConflict[]) => Promise<MergeConflict[]>;
 
@@ -1332,7 +1332,6 @@ export class VCS {
     // First, try finding the project
     const backendProjects = await this._allBackendProjects();
     let matchedBackendProjects = backendProjects.filter(p => p.rootDocumentId === rootDocumentId);
-
     // If there is more than one project for root, try pruning unused ones by branch activity
     if (matchedBackendProjects.length > 1) {
       for (const p of matchedBackendProjects) {
@@ -1535,7 +1534,7 @@ export class VCS {
 }
 
 /** Generate snapshot ID from hashing parent, backendProject, and state together */
-function _generateSnapshotID(parentId: string, backendProjectId: string, state: SnapshotState) {
+export function _generateSnapshotID(parentId: string, backendProjectId: string, state: SnapshotState) {
   const hash = crypto.createHash('sha1').update(backendProjectId).update(parentId);
   const newState = [...state].sort((a, b) => (a.blob > b.blob ? 1 : -1));
 

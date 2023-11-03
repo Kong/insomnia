@@ -1,14 +1,14 @@
 import { format } from 'date-fns';
 import type { LogFunctions } from 'electron-log';
 
-import { database } from '../../../common/database';
+import type { NeDBStore } from '../../../common/database';
 import { project, workspace } from '../../../models';
 import { Project } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
 import type { CommunicationService } from './communication';
 import type { HttpClient } from './http';
+import type { VersionClient } from './version-client';
 
-type DataStore = typeof database;
 type MigrationStatus = 'invalid' | 'idle' | 'preparing' | 'ready' | 'inProgress' | 'incomplete' | 'complete';
 interface MigrationProgress {
     completed: number;
@@ -39,7 +39,8 @@ export class MigrationService {
     private _logger: LogFunctions;
     private _http: HttpClient;
     private _comm: CommunicationService;
-    private _dataStore: DataStore;
+    private _dataStore: NeDBStore;
+    private _versionClient: VersionClient;
 
     /**
      * Queue maps for bookeeping migration activities
@@ -77,12 +78,14 @@ export class MigrationService {
         logger: LogFunctions,
         http: HttpClient,
         comm: CommunicationService,
-        dataStore: DataStore,
+        dataStore: NeDBStore,
+        versionClient: VersionClient,
     ) {
         this._logger = logger;
         this._http = http;
         this._comm = comm;
         this._dataStore = dataStore;
+        this._versionClient = versionClient;
     }
 
     public async scan(): Promise<void> {
@@ -425,7 +428,6 @@ export class MigrationService {
             const timestamp = format(Date.now(), 'MM-dd');
             const name = `Cloud Sync ${timestamp}`;
             defaultProject = await this._dataStore.docCreate<Project>(project.type, { name, parentId: myWorkspaceId, remoteId });
-            // create remote team project here
         } else {
             defaultProject = docs[0];
         }
@@ -441,6 +443,7 @@ export class MigrationService {
             const file = docs[0];
             await this._dataStore.duplicate<Workspace>(file, { parentId: defaultProject._id });
             this._updatedFiles.add(file._id);
+            await this._versionClient.versionLocalFile(file.name, file._id);
             this._updateCommunication(`Upgraded File - ${file.name} (hidden)`, { completed: this._updatedFiles.size, total });
         }
 
@@ -459,7 +462,10 @@ export class MigrationService {
             const file = docs[0];
             await this._dataStore.duplicate<Workspace>(file, { parentId: defaultProject._id });
             this._updatedFiles.add(file._id);
+            await this._versionClient.versionLocalFile(file.name, file._id);
             this._updateCommunication(`Upgraded File - ${file.name} (hidden)`, { completed: this._updatedFiles.size, total });
         }
+
+        // await this._cloudStore.checkVsc();
     }
 }

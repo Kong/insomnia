@@ -3,10 +3,12 @@ import type { LogFunctions } from 'electron-log';
 import log from 'electron-log';
 
 import { database } from '../../common/database';
+import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { CommunicationService } from './services/communication';
 import { HttpClient } from './services/http';
 import { IdentityService } from './services/identity';
 import { MigrationService } from './services/migration';
+import { VersionClient } from './services/version-client';
 
 function initializeLoggerForMigration(): LogFunctions {
     const migrationLogger = log.create('migrationLogger');
@@ -19,11 +21,12 @@ export interface MigrationStartHandleOptions {
     accountId: string;
     prefersProjectType: 'local' | 'remote';
 }
-export const registerMigrationHandlers = (receiver: BrowserWindow) => {
+export const registerMigrationHandlers = (receiver: BrowserWindow, fileDriver: FileSystemDriver) => {
     const identity = new IdentityService(logger);
     const httpClient = new HttpClient(logger, identity);
     const communication = new CommunicationService(logger, receiver);
-    const service = new MigrationService(logger, httpClient, communication, database);
+    const versionClient = new VersionClient(logger, fileDriver, database);
+    const service = new MigrationService(logger, httpClient, communication, database, versionClient);
 
     ipcMain.handle('migration.start', (_, options: MigrationStartHandleOptions) => {
         try {

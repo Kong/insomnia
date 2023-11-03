@@ -38,7 +38,7 @@ export interface SpecificQuery {
   $nin?: string[];
   $ne?: string | null;
 }
-
+export type NeDBStore = typeof database;
 export type ModelQuery<T extends BaseModel> = Partial<Record<keyof T, SpecificQuery>>;
 export type ChangeType = 'insert' | 'update' | 'remove';
 export const database = {

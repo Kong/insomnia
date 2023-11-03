@@ -9,6 +9,12 @@ interface ErrorResponse {
     message: string;
 }
 
+// hate to do this. Why can't we use a tool with standard on graphql?
+interface GraphQLResult<T> {
+    // yes, we konw this is not even fully meeting graphql spec on errors prop
+    data: T; errors: [{ message: string }];
+}
+
 /**
  * This HttpClient class is a wrapper around insomniaFetch, created for the following purposes:
  *
@@ -42,6 +48,7 @@ export class HttpClient {
             method: 'POST',
             path,
             data,
+            requestId,
             sessionId: this._identity.sessionId,
         });
     }
@@ -52,6 +59,7 @@ export class HttpClient {
         return insomniaFetch<T>({
             method: 'DELETE',
             path,
+            requestId,
             sessionId: this._identity.sessionId,
         });
     }
@@ -63,6 +71,7 @@ export class HttpClient {
             method: 'PATCH',
             path,
             data,
+            requestId,
             sessionId: this._identity.sessionId,
         });
     }
@@ -74,7 +83,26 @@ export class HttpClient {
             method: 'PUT',
             path,
             data,
+            requestId,
             sessionId: this._identity.sessionId,
         });
+    }
+
+    // hate to do this, but gotta inherit all the tech debt
+    public async runGraphQL<D, V>(
+        query: string,
+        variables: V,
+        operationName: string,
+    ): Promise<GraphQLResult<D>> {
+        const requestId = randomUUID();
+        const result = await insomniaFetch<GraphQLResult<D>>({
+            method: 'POST',
+            path: '/graphql',
+            data: { query, variables, operationName },
+            requestId,
+            sessionId: this._identity.sessionId,
+        });
+
+        return result;
     }
 }
