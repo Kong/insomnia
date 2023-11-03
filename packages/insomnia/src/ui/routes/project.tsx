@@ -241,30 +241,6 @@ export const indexLoader: LoaderFunction = async ({ params }) => {
 
 };
 
-export interface ProjectsLoaderData {
-  activeProject: Project;
-}
-
-export const projectLoader: LoaderFunction = async ({ request }) => {
-  try {
-    const url = new URL(request.url);
-    const projectPath = matchPath('/organization/:organizationId/project/:projectId', url.pathname);
-
-    if (!projectPath || !projectPath.params.projectId) {
-      return null;
-    }
-
-    const activeProject = await models.project.getById(projectPath.params.projectId);
-    invariant(activeProject, `Project was not found ${projectPath.params.projectId}`);
-
-    return {
-      activeProject,
-    };
-  } catch (err) {
-    return null;
-  }
-};
-
 export interface ProjectLoaderData {
   workspaces: WorkspaceWithMetadata[];
   allFilesCount: number;
@@ -812,7 +788,7 @@ const ProjectRoute: FC = () => {
                                   <div className="flex gap-2">
                                     <Radio
                                       value="remote"
-                                      className="data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
                                       <Icon icon="globe" />
                                       <Heading className="text-lg font-bold">Secure Cloud</Heading>
@@ -822,7 +798,7 @@ const ProjectRoute: FC = () => {
                                     </Radio>
                                     <Radio
                                       value="local"
-                                      className="data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
+                                      className="flex-1 data-[selected]:border-[--color-surprise] data-[selected]:ring-2 data-[selected]:ring-[--color-surprise] hover:bg-[--hl-xs] focus:bg-[--hl-sm] border border-solid border-[--hl-md] rounded p-4 focus:outline-none transition-colors"
                                     >
                                       <Icon icon="laptop" />
                                       <Heading className="text-lg font-bold">Local Vault</Heading>

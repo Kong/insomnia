@@ -129,6 +129,13 @@ test.describe('Debug-Sidebar', async () => {
       await page.getByLabel('Request Collection').getByRole('row', { name: 'test folder1' }).click();
     });
 
+    test('Rename a request by clicking', async ({ page }) => {
+      await page.getByTestId('example http').getByLabel('request name').click();
+      await page.getByRole('textbox', { name: 'request name' }).fill('new name');
+      await page.getByLabel('Request Collection').click();
+      await expect(page.getByTestId('new name').getByLabel('request name')).toContainText('new name');
+    });
+
     test('Create a new HTTP request', async ({ page }) => {
       await page.getByLabel('Create in collection').click();
       await page.getByRole('menuitemradio', { name: 'Http Request' }).click();

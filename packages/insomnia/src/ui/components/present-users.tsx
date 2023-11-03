@@ -3,13 +3,13 @@ import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { getAccountId } from '../../account/session';
 import { usePresenceContext } from '../context/app/presence-context';
-import { ProjectsLoaderData } from '../routes/project';
+import { ProjectLoaderData } from '../routes/project';
 import { AvatarGroup } from './avatar';
 
 export const PresentUsers = () => {
   const { presence } = usePresenceContext();
   const { workspaceId } = useParams() as { workspaceId: string };
-  const projectData = useRouteLoaderData('/project') as ProjectsLoaderData | null;
+  const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
   const remoteId = projectData?.activeProject.remoteId;
 
   if (!presence || !remoteId) {

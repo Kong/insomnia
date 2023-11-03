@@ -54,7 +54,7 @@ export const General: FC = () => {
           <BooleanSetting
             label="Use vertical layout"
             setting="forceVerticalLayout"
-            help="If checked, stack request and response panels vertically."
+            help="If checked, stack request and response panels vertically. Otherwise they will be side-by-side above 1200px."
           />
           <BooleanSetting
             label={<RestartTooltip message="Show variable source and value" />}

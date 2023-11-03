@@ -57,6 +57,7 @@ import { RequestActionsDropdown } from '../components/dropdowns/request-actions-
 import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
+import { EditableInput } from '../components/editable-input';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
@@ -82,7 +83,9 @@ import { useReadyState } from '../hooks/use-ready-state';
 import {
   CreateRequestType,
   useRequestGroupMetaPatcher,
+  useRequestGroupPatcher,
   useRequestMetaPatcher,
+  useRequestPatcher,
 } from '../hooks/use-request';
 import {
   GrpcRequestLoaderData,
@@ -188,6 +191,8 @@ export const Debug: FC = () => {
     useState(false);
   const [isEnvironmentModalOpen, setEnvironmentModalOpen] = useState(false);
 
+  const patchRequest = useRequestPatcher();
+  const patchGroup = useRequestGroupPatcher();
   const patchRequestMeta = useRequestMetaPatcher();
   useEffect(() => {
     db.onChange(async (changes: ChangeBufferEvent[]) => {
@@ -608,10 +613,9 @@ export const Debug: FC = () => {
       },
     ];
 
-  const environmentsList = [baseEnvironment, ...subEnvironments].map(e => ({
-    id: e._id,
-    name: e.name,
-    color: e.color,
+  const environmentsList = [baseEnvironment, ...subEnvironments].map(environment => ({
+    id: environment._id,
+    ...environment,
   }));
 
   const visibleCollection = collection.filter(item => !item.hidden);
@@ -674,20 +678,33 @@ export const Debug: FC = () => {
                       ) {
                         return (
                           <Fragment>
-                            <Icon icon="cancel" />
-                            No Environment
+                            <span
+                              style={{
+                                borderColor: 'var(--color-font)',
+                              }}
+                            >
+                              <Icon className='text-xs w-5' icon="refresh" />
+                            </span>
+                            {baseEnvironment.name}
                           </Fragment>
                         );
                       }
 
                       return (
                         <Fragment>
+                          <span
+                            style={{
+                              borderColor: selectedItem.color ?? 'var(--color-font)',
+                            }}
+                          >
                           <Icon
-                            icon="circle"
+                            icon={selectedItem.isPrivate ? 'lock' : 'refresh'}
                             style={{
                               color: selectedItem.color ?? 'var(--color-font)',
                             }}
+                            className='text-xs w-5'
                           />
+                          </span>
                           {selectedItem.name}
                         </Fragment>
                       );
@@ -704,27 +721,31 @@ export const Debug: FC = () => {
                       <Item
                         id={item._id}
                         key={item._id}
-                        className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
+                        className={
+                          `flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors ${item._id === baseEnvironment._id ? '' : 'pl-8'}`
+                        }
                         aria-label={item.name}
                         textValue={item.name}
                         value={item}
                       >
                         {({ isSelected }) => (
                           <Fragment>
-                            <Icon
-                              icon={
-                                item._id === baseEnvironment._id
-                                  ? 'cancel'
-                                  : 'circle'
-                              }
+                            <span
+                              // className='p-1 border-solid border w-5 h-5 rounded bg-[--hl-sm] flex-shrink-0 flex items-center justify-center'
                               style={{
-                                color: item.color ?? 'var(--color-font)',
+                                borderColor: item.color ?? 'var(--color-font)',
                               }}
-                            />
-                            <span>
-                              {item._id === baseEnvironment._id
-                                ? 'No Environment'
-                                : item.name}
+                            >
+                              <Icon
+                                icon={item.isPrivate ? 'lock' : 'refresh'}
+                                className='text-xs'
+                                style={{
+                                  color: item.color ?? 'var(--color-font)',
+                                }}
+                              />
+                            </span>
+                            <span className='flex-1 truncate'>
+                              {item.name}
                             </span>
                             {isSelected && (
                               <Icon
@@ -751,7 +772,7 @@ export const Debug: FC = () => {
               onPress={() => setIsCookieModalOpen(true)}
               className="px-4 py-1 flex-1 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
             >
-              <Icon icon="cookie-bite" />
+              <Icon icon="cookie-bite" className='w-5' />
               {activeCookieJar.cookies.length === 0 ? 'Add' : 'Manage'} Cookies
             </Button>
           </div>
@@ -889,6 +910,8 @@ export const Debug: FC = () => {
                     key={item.doc._id}
                     id={item.doc._id}
                     className="group outline-none select-none"
+                    textValue={item.doc.name}
+                    data-testid={item.doc.name}
                   >
                     <div
                       className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
@@ -922,7 +945,19 @@ export const Debug: FC = () => {
                           gRPC
                         </span>
                       )}
-                      <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
+                      <EditableInput
+                        value={getRequestNameOrFallback(item.doc)}
+                        name="request name"
+                        ariaLabel="request name"
+                        paddingClass="px-0"
+                        onChange={name => {
+                          if (isRequestGroup(item.doc)) {
+                            patchGroup(item.doc._id, { name });
+                          } else {
+                            patchRequest(item.doc._id, { name });
+                          }
+                        }}
+                      />
                       <span className="flex-1" />
                       {item.pinned && (
                         <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
@@ -941,7 +976,7 @@ export const Debug: FC = () => {
               }}
             </GridList>
 
-            <div className='flex-1 overflow-y-auto' ref={parentRef}>
+            <div className='flex-1 overflow-y-auto' ref={parentRef} >
               <GridList
                 style={{ height: virtualizer.getTotalSize() }}
                 items={virtualizer.getVirtualItems()}
@@ -975,6 +1010,7 @@ export const Debug: FC = () => {
                     <Item
                       className="group outline-none absolute top-0 left-0 select-none w-full"
                       textValue={item.doc.name}
+                      data-testid={item.doc.name}
                       style={{
                         height: `${virtualItem.size}`,
                         transform: `translateY(${virtualItem.start}px)`,
@@ -1022,7 +1058,19 @@ export const Debug: FC = () => {
                             icon={item.collapsed ? 'folder' : 'folder-open'}
                           />
                         )}
-                        <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
+                        <EditableInput
+                          value={getRequestNameOrFallback(item.doc)}
+                          name="request name"
+                          ariaLabel="request name"
+                          paddingClass="px-0"
+                          onChange={name => {
+                            if (isRequestGroup(item.doc)) {
+                              patchGroup(item.doc._id, { name });
+                            } else {
+                              patchRequest(item.doc._id, { name });
+                            }
+                          }}
+                        />
                         <span className="flex-1" />
                         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
                         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}

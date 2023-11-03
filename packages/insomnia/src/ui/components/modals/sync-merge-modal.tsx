@@ -1,6 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 
 import type { MergeConflict } from '../../../sync/types';
+import { SegmentEvent } from '../../analytics';
 import { Modal, type ModalHandle, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -27,6 +28,9 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle, ModalProps>((_, r
         handleDone,
       });
       modalRef.current?.show();
+      window.main.trackSegmentEvent({
+        event: SegmentEvent.syncConflictResolutionStart,
+      });
     },
   }), []);
 
@@ -92,6 +96,18 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle, ModalProps>((_, r
           onClick={() => {
             handleDone?.(conflicts);
             modalRef.current?.hide();
+            // if at least one conflict.choose is theirsBlob, track conflict resolution complete as theirs
+            if (conflicts?.some(conflict => conflict.choose === conflict.theirsBlob)) {
+              window.main.trackSegmentEvent({
+                event: SegmentEvent.syncConflictResolutionCompleteTheirs,
+              });
+            }
+            // if at least one conflict.choose is mine, track conflict resolution complete as mine
+            if (conflicts?.some(conflict => conflict.choose === conflict.mineBlob)) {
+              window.main.trackSegmentEvent({
+                event: SegmentEvent.syncConflictResolutionCompleteMine,
+              });
+            }
           }}
         >
           Submit Resolutions
