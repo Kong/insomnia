@@ -249,6 +249,13 @@ export interface ProjectLoaderData {
   projectsCount: number;
   activeProject: Project;
   projects: Project[];
+  learningFeature: {
+    active: boolean;
+    title: string;
+    message: string;
+    cta: string;
+    url: string;
+  };
 }
 
 export const loader: LoaderFunction = async ({
@@ -389,8 +396,32 @@ export const loader: LoaderFunction = async ({
     p.name?.toLowerCase().includes(projectName.toLowerCase())
   );
 
+  let learningFeature = {
+    active: false,
+    title: '',
+    message: '',
+    cta: '',
+    url: '',
+  };
+
+  if (!window.localStorage.getItem('learningFeatureDismissed')) {
+    learningFeature = await window.main.insomniaFetch<{
+      active: boolean;
+      title: string;
+      message: string;
+      cta: string;
+      url: string;
+    }>({
+      method: 'GET',
+      path: '/insomnia-production-public-assets/inapp-learning.json',
+      origin: 'https://storage.googleapis.com',
+      sessionId: '',
+    });
+  }
+
   return {
     workspaces,
+    learningFeature,
     projects,
     projectsCount: organizationProjects.length,
     activeProject: project,
@@ -413,6 +444,7 @@ const ProjectRoute: FC = () => {
     collectionsCount,
     documentsCount,
     projectsCount,
+    learningFeature,
   } = useLoaderData() as ProjectLoaderData;
 
   const { organizationId, projectId } = useParams() as {
@@ -620,7 +652,6 @@ const ProjectRoute: FC = () => {
     id: string;
     label: string;
     icon: IconName;
-    level: number;
     action?: {
       icon: IconName;
       label: string;
@@ -630,13 +661,11 @@ const ProjectRoute: FC = () => {
     {
       id: 'all',
       label: `All files (${allFilesCount})`,
-      icon: 'folder',
-      level: 0,
+      icon: 'border-all',
     },
     {
       id: 'design',
       label: `Documents (${documentsCount})`,
-      level: 1,
       icon: 'file',
       action: {
         icon: 'plus',
@@ -647,7 +676,6 @@ const ProjectRoute: FC = () => {
     {
       id: 'collection',
       label: `Collections (${collectionsCount})`,
-      level: 1,
       icon: 'bars',
       action: {
         icon: 'plus',
@@ -892,12 +920,11 @@ const ProjectRoute: FC = () => {
                   return (
                     <Item textValue={item.label} className="group outline-none select-none">
                       <div
-                        className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                        style={{
-                          paddingLeft: `${item.level + 1}rem`,
-                        }}
+                        className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-12 w-full overflow-hidden text-[--hl]"
                       >
-                        <Icon icon={item.icon} />
+                        <span className='w-6 h-6 flex items-center justify-center'>
+                          <Icon icon={item.icon} className='w-6' />
+                        </span>
 
                         <span className="truncate capitalize">
                           {item.label}
@@ -917,21 +944,30 @@ const ProjectRoute: FC = () => {
                   );
                 }}
               </GridList>
-              <div className='flex flex-shrink-0 flex-col py-[--padding-sm]'>
-                <Button
-                  aria-label="Help and Feedback"
-                  className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                  onPress={() => {
-                    window.main.openInBrowser('https://insomnia.rest/support');
-                  }}
-                >
-                  <Icon icon="message" />
-
-                  <span className="truncate">
-                    Help and feedback
-                  </span>
-                </Button>
-              </div>
+              {learningFeature.active && (
+                <div className='flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]'>
+                  <div className='flex items-center justify-between gap-2'>
+                    <Heading className='text-sm'>
+                      <Icon icon="graduation-cap" />
+                      <span className="ml-2">{learningFeature.title}</span>
+                    </Heading>
+                    <Button
+                      onPress={() => {
+                        localStorage.setItem('learningFeatureDismissed', 'true');
+                      }}
+                    >
+                      <Icon icon="close" />
+                    </Button>
+                  </div>
+                  <p className='text-[--hl] text-xs'>
+                    {learningFeature.message}
+                  </p>
+                  <a href={learningFeature.url} className='flex items-center gap-2 underline text-xs'>
+                    {learningFeature.cta}
+                    <Icon icon="arrow-up-right-from-square" />
+                  </a>
+                </div>
+              )}
             </div>
           }
           renderPaneOne={
