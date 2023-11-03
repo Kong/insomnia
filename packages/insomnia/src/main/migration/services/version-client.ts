@@ -72,7 +72,7 @@ export class VersionClient {
         const initialStage = clone<Stage>(blankStage); // what? why?
 
         // 4. create a head
-        await this._fileStore.setItem(paths.head(versioningFile.id), { branch: 'main' }); // no more slavery
+        await this._fileStore.setItem(paths.head(versioningFile.id), { branch: 'main' });
         const head = await this._fileStore.getItem(paths.head(versioningFile.id));
 
         // 5. create a branch
