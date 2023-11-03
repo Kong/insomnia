@@ -1,7 +1,7 @@
 import { IconName } from '@fortawesome/fontawesome-svg-core';
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { FC, Fragment, useEffect, useRef, useState, useCallback } from 'react';
+import React, { FC, Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Breadcrumbs,
   Button,
@@ -61,6 +61,7 @@ import { EditableInput } from '../components/editable-input';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
+import { ConstrainedEmitter } from '../components/keydown-binder';
 import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { CookiesModal } from '../components/modals/cookies-modal';
@@ -94,7 +95,6 @@ import {
 } from './request';
 import { useRootLoaderData } from './root';
 import { Child, WorkspaceLoaderData } from './workspace';
-import { ConstrainedEmitter } from '../components/keydown-binder';
 
 export interface GrpcMessage {
   id: string;
