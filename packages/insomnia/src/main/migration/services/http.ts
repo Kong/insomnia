@@ -11,7 +11,6 @@ interface ErrorResponse {
 
 // hate to do this. Why can't we use a tool with standard on graphql?
 interface GraphQLResult<T> {
-    // yes, we konw this is not even fully meeting graphql spec on errors prop
     data: T; errors: [{ message: string }];
 }
 
