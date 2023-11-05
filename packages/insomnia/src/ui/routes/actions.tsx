@@ -12,13 +12,14 @@ import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { getById, update } from '../../models/helpers/request-operations';
+import { Project } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
 import { isCollection, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
-import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
+import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
@@ -134,7 +135,7 @@ export const updateProjectAction: ActionFunction = async ({
       return null;
     }
 
-    // convert from cloud to local
+    // convert from cloud to local => delete the remote project locally as well after duplicating the record with new ids (prevention of root_document_id conflict)
     if (type === 'local' && project.remoteId) {
       const response = await window.main.insomniaFetch<void | {
         error: string;
@@ -151,10 +152,13 @@ export const updateProjectAction: ActionFunction = async ({
         };
       }
 
-      await models.project.update(project, { name, remoteId: null });
-      return null;
+      const flushId = await database.bufferChanges();
+      const newLocalProject = await database.duplicate<Project>(project, { name, remoteId: null, parentId: organizationId });
+      await database.removeWhere(models.project.type, { _id: project._id });
+      await database.flushChanges(flushId);
+      return redirect(`/organization/${organizationId}/project/${newLocalProject._id}`);
     }
-    // convert from local to cloud
+    // convert from local to cloud => create new records for every file under this project to prevent root document id collison.
     if (type === 'remote' && !project.remoteId) {
       const newCloudProject = await window.main.insomniaFetch<{
         id: string;
@@ -182,8 +186,25 @@ export const updateProjectAction: ActionFunction = async ({
         };
       }
 
-      await models.project.update(project, { name, remoteId: newCloudProject.id });
-      return null;
+      const flushId = await database.bufferChanges();
+
+      const newRemoteProject = await database.duplicate(project, { remoteId: newCloudProject.id });
+      const vcs = VCSInstance();
+      if (vcs) {
+        const filesForSync = await database.find<Workspace>(models.workspace.type, { parentId: newRemoteProject._id });
+
+        for (const fileForSync of filesForSync) {
+          const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(fileForSync._id);
+          if (!workspaceMeta.gitRepositoryId) {
+            await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace: fileForSync });
+            await pushSnapshotOnInitialize({ vcs, workspace: fileForSync, project: newRemoteProject });
+          }
+        }
+      }
+
+      await database.removeWhere(project.type, { _id: project._id });
+      await database.flushChanges(flushId);
+      return redirect(`/organization/${organizationId}/project/${newRemoteProject._id}`);
     }
 
     // local project rename
