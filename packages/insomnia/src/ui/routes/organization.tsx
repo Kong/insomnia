@@ -30,13 +30,10 @@ import {
   getCurrentSessionId,
 } from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
-import { database } from '../../common/database';
-import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
-import { Project } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
-import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
+import { autoSyncForMigration, migrateIfNeeded } from '../../sync/vcs/migrate-projects-into-organization';
 import { invariant } from '../../utils/invariant';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
@@ -170,28 +167,12 @@ export const indexLoader: LoaderFunction = async () => {
             accountId,
           }));
       invariant(personalOrganization, 'Failed to find personal organization your account appears to be in an invalid state. Please contact support if this is a recurring issue.');
-      if (await shouldMigrateProjectUnderOrganization()) {
-        await migrateProjectsIntoOrganization({
-          personalOrganization,
-        });
 
-        const preferredProjectType = localStorage.getItem('prefers-project-type');
-        if (preferredProjectType === 'remote') {
-          const localProjects = await database.find<Project>('Project', {
-            parentId: personalOrganization.id,
-            remoteId: null,
-          });
-
-          // If any of those fail projects will still be under the organization as local projects
-          for (const project of localProjects) {
-            updateLocalProjectToRemote({
-              project,
-              organizationId: personalOrganization.id,
-              sessionId,
-              vcs: VCSInstance(),
-            });
-          }
-        }
+      const preferredProjectType = localStorage.getItem('prefers-project-type') ?? 'local';
+      const filesForSync = await migrateIfNeeded(sessionId, preferredProjectType === 'local');
+      if (filesForSync.length) {
+        const vcs = VCSInstance();
+        await autoSyncForMigration(filesForSync, vcs);
       }
 
       if (personalOrganization) {
