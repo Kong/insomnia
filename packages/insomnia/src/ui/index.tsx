@@ -29,6 +29,7 @@ import { AppLoadingIndicator } from './components/app-loading-indicator';
 import Auth from './routes/auth';
 import Authorize from './routes/auth.authorize';
 import Login from './routes/auth.login';
+import { DataRecoveryAfterReset } from './routes/data-recovery-after-reset';
 import { ErrorRoute } from './routes/error';
 import Onboarding from './routes/onboarding';
 import { Migrate } from './routes/onboarding.migrate';
@@ -127,8 +128,9 @@ const router = createMemoryRouter(
           element: <Migrate />,
         },
         {
-          path: 'after-resetpassphrase',
-          loader: async (...args) => (await import('./routes/after-resetpassphrase')).loader(...args),
+          path: 'data-recovery',
+          loader: async (...args) => (await import('./routes/data-recovery-after-reset')).loader(...args),
+          element: <DataRecoveryAfterReset />,
         },
         {
           path: 'import',

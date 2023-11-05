@@ -25,7 +25,8 @@ export const action: ActionFunction = async ({
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
   const hasResetPassphrase = window.sessionStorage.getItem('hasResetPassphrase');
   if (hasResetPassphrase) {
-    return redirect('/after-resetpassphrase');
+    // let's run data recovery with the local files for those who reset passphrase
+    return redirect('/data-recovery');
   }
 
   return redirect('/organization');
