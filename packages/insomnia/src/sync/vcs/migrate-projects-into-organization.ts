@@ -479,11 +479,11 @@ export const migrateIfNeeded = async (sessionId: string, local: boolean): Promis
   const records = await _migrateToCloudSync(queue, remoteBackground);
   const total = queue.filesByProject.size + queue.filesNoProject.size;
   if (total > records.files.size) {
-    console.log('[migration] FAILURE: ');
+    console.log(`[migration] INCOMPLETE: ${total - records.files.size} files are not migrated`);
   }
 
   if (queue.projects.size > records.projects.size) {
-    console.log('[migration] FAILURE: ');
+    console.log(`[migration] INCOMPLETE: ${queue.projects.size - records.projects.size} projects are not migrated`);
   }
 
   // clean up the duplicated records now
