@@ -23,6 +23,10 @@ export const action: ActionFunction = async ({
   }
   console.log('Login successful');
   window.localStorage.setItem('hasUserLoggedInBefore', 'true');
+  const hasResetPassphrase = window.sessionStorage.getItem('hasResetPassphrase');
+  if (hasResetPassphrase) {
+    return redirect('/after-resetpassphrase');
+  }
 
   return redirect('/organization');
 };

@@ -25,6 +25,7 @@ export interface WhoamiResponse {
   planId: string;
   canManageTeams: boolean;
   maxTeamMembers: number;
+  hasResetPassphrase: boolean;
 }
 
 export interface SessionData {
@@ -56,6 +57,7 @@ export async function absorbKey(sessionId: string, key: string) {
     accountId,
     firstName,
     lastName,
+    hasResetPassphrase,
   } = await _whoami(sessionId);
   const symmetricKeyStr = crypt.decryptAES(key, JSON.parse(encSymmetricKey));
 
@@ -73,6 +75,15 @@ export async function absorbKey(sessionId: string, key: string) {
     JSON.parse(publicKey),
     JSON.parse(encPrivateKey),
   );
+
+  if (hasResetPassphrase) {
+    // doesn't really matter what's saved here (it's true or false)
+    // session storage has this means the user reset the passphrase
+    // when resetting the passphrase, the session gets expired and requires re-login (mandatory due to encryption key update)
+    // therefore, it is 100% that the re-signing after reset in will get this value. => should clear it up after the cleanup screen
+    // TODO(@marckong): the whole session storing into localStorage probably needs redesign to be more robust. For now, we need to do this to ship reset passphrase
+    window.sessionStorage.setItem('hasResetPassphrase', 'true');
+  }
 
   window.main.loginStateChange();
 }

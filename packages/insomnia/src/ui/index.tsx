@@ -127,6 +127,10 @@ const router = createMemoryRouter(
           element: <Migrate />,
         },
         {
+          path: 'after-resetpassphrase',
+          loader: async (...args) => (await import('./routes/after-resetpassphrase')).loader(...args),
+        },
+        {
           path: 'import',
           children: [
             {
