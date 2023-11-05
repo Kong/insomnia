@@ -9,8 +9,8 @@ import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 
 export const loader: LoaderFunction = async () => {
-  const queue = await scanForMigration();
-  if (!shouldMigrate(queue)) {
+  const result = await scanForMigration();
+  if (!shouldMigrate(result)) {
     return redirect('/organization');
   }
   return null;
