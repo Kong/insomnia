@@ -42,6 +42,7 @@ const Workspace = lazy(() => import('./routes/workspace'));
 const UnitTest = lazy(() => import('./routes/unit-test'));
 const Debug = lazy(() => import('./routes/debug'));
 const Design = lazy(() => import('./routes/design'));
+const MockServer = lazy(() => import('./routes/mock-server'));
 
 initializeSentry();
 initializeLogging();
@@ -899,6 +900,38 @@ const router = createMemoryRouter(
                             (await import('./routes/actions')).updateWorkspaceMetaAction(
                               ...args
                             ),
+                        },
+                      ],
+                    },
+                    {
+                      path: ':projectId/mock-server',
+                      children: [
+                        {
+                          path: ':mockServerId',
+                          id: ':mockServerId',
+                          loader: async (...args) =>
+                            (
+                              await import('./routes/mock-server')
+                            ).mockServerLoader(...args),
+                          element: (
+                            <Suspense fallback={<AppLoadingIndicator />}>
+                              <MockServer />
+                            </Suspense>
+                          ),
+                        },
+                        {
+                          path: 'new',
+                          action: async (...args) =>
+                            (
+                              await import('./routes/actions')
+                            ).createMockServerAction(...args),
+                        },
+                        {
+                          path: 'delete',
+                          action: async (...args) =>
+                            (
+                              await import('./routes/actions')
+                            ).deleteMockServerAction(...args),
                         },
                       ],
                     },

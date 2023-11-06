@@ -1190,3 +1190,34 @@ export const reorderCollectionAction: ActionFunction = async ({ request, params 
 
   return null;
 };
+
+export const createMockServerAction: ActionFunction = async ({ request, params }) => {
+  const { projectId } = params;
+  invariant(projectId, 'projectId is required');
+  const formData = await request.formData();
+  const name = formData.get('name') || 'My mock server';
+  invariant(typeof name === 'string', 'Name is required');
+
+  await models.mockServer.create({
+    name,
+    parentId: projectId,
+  });
+  return null;
+};
+export const deleteMockServerAction: ActionFunction = async ({ request, params }) => {
+  const { projectId } = params;
+  invariant(projectId, 'projectId is required');
+
+  const project = await models.project.getById(projectId);
+  invariant(project, 'Project not found');
+
+  const formData = await request.formData();
+
+  const mockServerId = formData.get('mockServerId');
+  invariant(typeof mockServerId === 'string', 'Workspace ID is required');
+
+  const mockServer = await models.mockServer.getById(mockServerId);
+  invariant(mockServer, 'mockServer not found');
+
+  await models.mockServer.remove(mockServer);
+};

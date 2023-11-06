@@ -454,7 +454,7 @@ export const loader: LoaderFunction = async ({
     collectionsCount: workspacesWithMetaData.filter(
       w => w.workspace.scope === 'collection'
     ).length,
-    mockServersCount: 0,
+    mockServersCount: await database.count(models.mockServer.type, { parentId: projectId }),
   };
 };
 
