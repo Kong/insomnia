@@ -16,7 +16,7 @@ import { isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
-import { isCollection, Workspace } from '../../models/workspace';
+import { isCollection, scopeToActivity, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
@@ -279,7 +279,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   invariant(typeof name === 'string', 'Name is required');
 
   const scope = formData.get('scope');
-  invariant(scope === 'design' || scope === 'collection', 'Scope is required');
+  invariant(scope === 'design' || scope === 'collection' || scope === 'mock-server', 'Scope is required');
 
   const flushId = await database.bufferChanges();
 
@@ -288,6 +288,11 @@ export const createNewWorkspaceAction: ActionFunction = async ({
     scope,
     parentId: projectId,
   });
+
+  if (scope === 'mock-server') {
+    // return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
+    return null;
+  }
 
   if (scope === 'design') {
     await models.apiSpec.getOrCreateForParentId(workspace._id);
@@ -313,10 +318,7 @@ export const createNewWorkspaceAction: ActionFunction = async ({
       : SegmentEvent.documentCreate,
   });
 
-  return redirect(
-    `/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${workspace.scope === 'collection' ? ACTIVITY_DEBUG : ACTIVITY_SPEC
-    }`
-  );
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
 };
 
 export const deleteWorkspaceAction: ActionFunction = async ({
@@ -1198,9 +1200,14 @@ export const createMockServerAction: ActionFunction = async ({ request, params }
   const name = formData.get('name') || 'My mock server';
   invariant(typeof name === 'string', 'Name is required');
 
-  await models.mockServer.create({
+  // await models.mockServer.create({
+  //   name,
+  //   parentId: projectId,
+  // });
+  await models.workspace.create({
     name,
     parentId: projectId,
+    scope: 'mock-server',
   });
   return null;
 };
@@ -1216,7 +1223,8 @@ export const deleteMockServerAction: ActionFunction = async ({ request, params }
   const mockServerId = formData.get('mockServerId');
   invariant(typeof mockServerId === 'string', 'Workspace ID is required');
 
-  const mockServer = await models.mockServer.getById(mockServerId);
+  // const mockServer = await models.mockServer.getById(mockServerId);
+  const mockServer = await models.workspace.getById(mockServerId);
   invariant(mockServer, 'mockServer not found');
 
   await models.mockServer.remove(mockServer);

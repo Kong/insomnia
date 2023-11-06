@@ -454,7 +454,9 @@ export const loader: LoaderFunction = async ({
     collectionsCount: workspacesWithMetaData.filter(
       w => w.workspace.scope === 'collection'
     ).length,
-    mockServersCount: await database.count(models.mockServer.type, { parentId: projectId }),
+    mockServersCount: workspacesWithMetaData.filter(
+      w => w.workspace.scope === 'mock-server'
+    ).length,
   };
 };
 
@@ -584,9 +586,10 @@ const ProjectRoute: FC = () => {
         fetcher.submit(
           {
             name,
+            scope: 'mock-server',
           },
           {
-            action: `/organization/${organizationId}/project/${activeProject._id}/mock-server/new`,
+            action: `/organization/${organizationId}/project/${activeProject._id}/workspace/new`,
             method: 'post',
           }
         );
@@ -749,6 +752,16 @@ const ProjectRoute: FC = () => {
   const organization = organizations.find(o => o.id === organizationId);
   const isUserOwner = organization && accountId && isOwnerOfOrganization({ organization, accountId });
   const isPersonalOrg = organization && isPersonalOrganization(organization);
+  const scopeToIconMap: Record<string, IconName> = {
+    design: 'file',
+    collection: 'bars',
+    'mock-server': 'server',
+  };
+  const scopeToBgColorMap: Record<string, string> = {
+    design: 'info',
+    collection: 'surprise',
+    'mock-server': 'success',
+  };
 
   return (
     <ErrorBoundary>
@@ -1230,20 +1243,12 @@ const ProjectRoute: FC = () => {
                     >
                       <div className="flex gap-2 h-[20px]">
                         <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
-                          {isDesign(item.workspace) ? (
-                            <div className="px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm bg-[--color-info] text-[--color-font-info]">
-                              <Icon icon="file" />
-                            </div>
-                          ) : (
-                              <div className="px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm bg-[--color-surprise] text-[--color-font-surprise]">
-                                <Icon icon="bars" />
-                              </div>
-                            )}
-                            <span>
-                              {isDesign(item.workspace)
-                                ? 'Document'
-                                : 'Collection'}
-                            </span>
+                          <div className={`bg-[--color-${scopeToBgColorMap[item.workspace.scope]}] text-[--color-font-${scopeToBgColorMap[item.workspace.scope]}] px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm`}>
+                            <Icon icon={scopeToIconMap[item.workspace.scope]} />
+                          </div>
+                          <span>
+                            {item.workspace.scope}
+                          </span>
                           </div>
                           <span className="flex-1" />
                           {item.presence.length > 0 && (
