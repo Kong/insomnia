@@ -33,6 +33,7 @@ import {
   useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
+import { useLocalStorage } from 'react-use';
 
 import { getAccountId, getCurrentSessionId, isLoggedIn, logout } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
@@ -404,7 +405,7 @@ export const loader: LoaderFunction = async ({
     url: '',
   };
 
-  if (!window.localStorage.getItem('learningFeatureDismissed')) {
+  if (!window.localStorage.getItem('learning-feature-dismissed')) {
     learningFeature = await window.main.insomniaFetch<{
       active: boolean;
       title: string;
@@ -446,7 +447,7 @@ const ProjectRoute: FC = () => {
     projectsCount,
     learningFeature,
   } = useLoaderData() as ProjectLoaderData;
-
+  const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = useLocalStorage('learning-feature-dismissed', '');
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -944,7 +945,7 @@ const ProjectRoute: FC = () => {
                   );
                 }}
               </GridList>
-              {learningFeature.active && (
+              {!isLearningFeatureDismissed && learningFeature.active && (
                 <div className='flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]'>
                   <div className='flex items-center justify-between gap-2'>
                     <Heading className='text-base'>
@@ -953,7 +954,7 @@ const ProjectRoute: FC = () => {
                     </Heading>
                     <Button
                       onPress={() => {
-                        localStorage.setItem('learningFeatureDismissed', 'true');
+                        setIsLearningFeatureDismissed('true');
                       }}
                     >
                       <Icon icon="close" />
