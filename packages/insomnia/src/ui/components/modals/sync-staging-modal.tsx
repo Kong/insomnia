@@ -1,366 +1,252 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { OverlayContainer } from 'react-aria';
-import { useRouteLoaderData } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Button, Cell, Checkbox, Column, Dialog, Heading, Label, Modal, ModalOverlay, Row, Table, TableBody, TableHeader, TextArea, TextField } from 'react-aria-components';
+import { useFetcher, useParams } from 'react-router-dom';
 
-import { strings } from '../../../common/strings';
-import * as models from '../../../models';
-import { BaseModel } from '../../../models';
-import type { DocumentKey, Stage, StageEntry, Status } from '../../../sync/types';
-import { describeChanges } from '../../../sync/vcs/util';
-import { VCS } from '../../../sync/vcs/vcs';
-import { WorkspaceLoaderData } from '../../routes/workspace';
-import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
-import { Modal, type ModalHandle, ModalProps } from '../base/modal';
-import { ModalBody } from '../base/modal-body';
-import { ModalFooter } from '../base/modal-footer';
-import { ModalHeader } from '../base/modal-header';
-import { Tooltip } from '../tooltip';
+import { all } from '../../../models';
+import type { Status, StatusCandidate } from '../../../sync/types';
+import { Icon } from '../icon';
 
-type Props = ModalProps & {
-  vcs: VCS;
+interface Props {
   branch: string;
-  onSnapshot: () => Promise<void>;
-  handlePush: () => Promise<void>;
-};
-
-interface State {
   status: Status;
-  message: string;
-  error: string;
-  lookupMap: LookupMap;
+  syncItems: StatusCandidate[];
+  onClose: () => void;
 }
 
-type LookupMap = Record<string, {
-  entry: StageEntry;
-  changes: null | string[];
-  type: string;
-  checked: boolean;
-}>;
+function getModelTypeById(id: string) {
+  const idPrefix = id.split('_')[0];
+  const model = all().find(model => model.prefix === idPrefix);
 
-export const SyncStagingModal = ({ vcs, branch, onSnapshot, handlePush, onHide }: Props) => {
-  const modalRef = useRef<ModalHandle>(null);
-  const {
-    syncItems,
-  } = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData;
-  const [state, setState] = useState<State>({
-    status: {
-      stage: {},
-      unstaged: {},
-      key: '',
-    },
-    error: '',
-    message: '',
-    lookupMap: {},
-  });
+  return model?.name || 'Unknown';
+}
 
-  const refreshVCS = useCallback(async (newStage: Stage = {}) => {
-    const status = await vcs.status(syncItems, newStage);
-    const lookupMap: LookupMap = {};
-    const allKeys = [...Object.keys(status.stage), ...Object.keys(status.unstaged)];
-    for (const key of allKeys) {
-      const lastSnapshot: BaseModel | null = await vcs.blobFromLastSnapshot(key);
-      const document = syncItems.find(si => si.key === key)?.document;
-      const docOrLastSnapshot = document || lastSnapshot;
-      const entry = status.stage[key] || status.unstaged[key];
-      const hasStagingChangeAndDoc = entry && docOrLastSnapshot;
-      const hasDocAndLastSnapshot = document && lastSnapshot;
-      if (hasStagingChangeAndDoc) {
-        lookupMap[key] = {
-          changes: hasDocAndLastSnapshot ? describeChanges(document, lastSnapshot) : null,
-          entry: entry,
-          type: models.getModel(docOrLastSnapshot.type)?.name || 'Unknown',
-          checked: !!status.stage[key],
-        };
-      }
-    }
-    setState(state => ({
-      ...state,
-      status,
-      branch,
-      lookupMap,
-      error: '',
-    }));
-  }, [branch, syncItems, vcs]);
+export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
+  const { projectId, workspaceId, organizationId } = useParams() as {
+    projectId: string;
+    workspaceId: string;
+    organizationId: string;
+  };
+
+  const stagedChanges = Object.entries(status.stage);
+  const unstagedChanges = Object.entries(status.unstaged);
+
+  const allChanges = [...stagedChanges, ...unstagedChanges].map(([key, entry]) => ({
+    ...entry,
+    document: syncItems.find(item => item.key === key)?.document || 'deleted' in entry ? { type: getModelTypeById(key) } : undefined,
+  }));
+
+  const unversionedChanges = allChanges.filter(change => 'added' in change);
+  const modifiedChanges = allChanges.filter(change => !('added' in change));
+
+  const { Form, formAction, state, data } = useFetcher();
+
+  const isPushing = state !== 'idle' && formAction?.endsWith('create-snapshot-and-push');
+  const isCreatingSnapshot = state !== 'idle' && formAction?.endsWith('create-snapshot');
 
   useEffect(() => {
-    modalRef.current?.show();
-    const fn = async () => {
-      setState({
-        status: {
-          stage: {},
-          unstaged: {},
-          key: '',
-        },
-        error: '',
-        message: '',
-        lookupMap: {},
-      });
-      // Add everything to stage by default except new items
-      const status: Status = await vcs.status(syncItems, {});
-      const toStage: StageEntry[] = [];
-      for (const key of Object.keys(status.unstaged)) {
-        if ('added' in status.unstaged[key]) {
-          // Don't automatically stage added resources
-          continue;
-        }
-        toStage.push(status.unstaged[key]);
-      }
-      const stage = await vcs.stage(status.stage, toStage);
-      await refreshVCS(stage);
-    };
-    fn();
-  }, [refreshVCS, syncItems, vcs]);
-
-  const handleStageToggle = async (event: React.SyntheticEvent<HTMLInputElement>) => {
-    const { status } = state;
-    const id = event.currentTarget.name;
-    const isStaged = !!status.stage[id];
-    const newStage = isStaged
-      ? await vcs.unstage(status.stage, [status.stage[id]])
-      : await vcs.stage(status.stage, [status.unstaged[id]]);
-    await refreshVCS(newStage);
-  };
-
-  const handleAllToggle = async (keys: DocumentKey[], doStage: boolean) => {
-    const { status } = state;
-    let stage;
-    if (doStage) {
-      const entries: StageEntry[] = [];
-      for (const k of Object.keys(status.unstaged)) {
-        if (keys.includes(k)) {
-          entries.push(status.unstaged[k]);
-        }
-      }
-      stage = await vcs.stage(status.stage, entries);
-    } else {
-      const entries: StageEntry[] = [];
-      for (const k of Object.keys(status.stage)) {
-        if (keys.includes(k)) {
-          entries.push(status.stage[k]);
-        }
-      }
-      stage = await vcs.unstage(status.stage, entries);
+    if (allChanges.length === 0) {
+      onClose();
     }
-    await refreshVCS(stage);
-  };
-
-  const handleTakeSnapshotAndPush = async () => {
-    const success = await handleTakeSnapshot();
-    if (success) {
-      handlePush?.();
-    }
-  };
-
-  const handleTakeSnapshot = async () => {
-    const {
-      message,
-      status: { stage },
-    } = state;
-    try {
-      await vcs.takeSnapshot(stage, message);
-    } catch (err) {
-      setState(state => ({
-        ...state,
-        error: err.message,
-      }));
-      return false;
-    }
-    onSnapshot?.();
-    await refreshVCS();
-    setState(state => ({ ...state, message: '', error: '' }));
-    modalRef.current?.hide();
-    return true;
-  };
-
-  const { status, message, error } = state;
-  const allMap = { ...status.stage, ...status.unstaged };
-  const addedKeys: string[] = Object.entries(allMap)
-    .filter(([, value]) => 'added' in value)
-    .map(([key]) => key);
-  const nonAddedKeys: string[] = Object.entries(allMap)
-    .filter(([, value]) => !('added' in value))
-    .map(([key]) => key);
+  }, [allChanges, onClose]);
 
   return (
-    <OverlayContainer onClick={e => e.stopPropagation()}>
-      <Modal ref={modalRef} onHide={onHide}>
-        <ModalHeader>Create Snapshot</ModalHeader>
-        <ModalBody className="wide pad">
-          {error && (
-            <p className="notice error margin-bottom-sm no-margin-top">
-              <button className="pull-right icon" onClick={() => setState(state => ({ ...state, error: '' }))}>
-                <i className="fa fa-times" />
-              </button>
-              {error}
-            </p>
-          )}
-          <div className="form-group">
-            <div className="form-control form-control--outlined">
-              <label>
-                Snapshot Message
-                <textarea
-                  cols={30}
-                  rows={3}
-                  onChange={event => setState(state => ({ ...state, message: event.target.value }))}
-                  value={message}
-                  placeholder="This is a helpful message that describe the changes made in this snapshot"
-                  required
-                />
-              </label>
+    <ModalOverlay
+      isOpen
+      onOpenChange={isOpen => {
+        !isOpen && onClose();
+      }}
+      isDismissable
+      className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
+    >
+      <Modal className="max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
+        <Dialog
+          onClose={onClose}
+          className="outline-none"
+        >
+          {({ close }) => (
+            <div className='flex flex-col gap-4'>
+              <div className='flex gap-2 items-center justify-between'>
+                <Heading className='text-2xl'>Create commit</Heading>
+                <Button
+                  className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                  onPress={close}
+                >
+                  <Icon icon="x" />
+                </Button>
+              </div>
+              <Form
+                method="POST"
+                className='flex flex-col gap-4'
+              >
+                <TextField className="flex flex-col gap-2">
+                  <Label className='font-bold'>
+                    Commit message
+                  </Label>
+                  <TextArea
+                    rows={3}
+                    name="message"
+                    className="border border-solid border-[--hl-sm] rounded-sm p-2 resize-none"
+                    placeholder="This is a helpful message that describes the changes made in this snapshot"
+                    required
+                  />
+                </TextField>
+
+                {modifiedChanges.length > 0 && (
+                  <div className='flex flex-col gap-2'>
+                    <Heading className='font-semibold'>Modified Objects</Heading>
+                    <div className='rounded w-full border border-solid border-[--hl-sm] select-none'>
+                      <Table
+                        selectionMode='multiple'
+                        defaultSelectedKeys="all"
+                        aria-label='Modified objects'
+                        className="border-separate border-spacing-0 w-full"
+                      >
+                        <TableHeader>
+                          <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                            <Checkbox slot="selection" className="group p-0 flex items-center h-full">
+                              <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
+                                <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
+                              </div>
+                            </Checkbox>
+                          </Column>
+                          <Column isRowHeader className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                            Name
+                          </Column>
+                          <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-right text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                            Description
+                          </Column>
+                        </TableHeader>
+                        <TableBody
+                          className="divide divide-[--hl-sm] divide-solid"
+                          items={
+                            modifiedChanges.map(item => ({
+                              ...item,
+                              id: item.key,
+                            }))
+                          }
+                        >
+                          {item => (
+                            <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">
+                              <Cell className="relative whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                <div className='p-2'>
+                                  <Checkbox slot="selection" name="keys" value={item.key} className="group p-0 flex items-center h-full">
+                                    <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
+                                      <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
+                                    </div>
+                                  </Checkbox>
+                                </div>
+                              </Cell>
+                              <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                <div className='p-2'>
+                                  {item.name}
+                                </div>
+                              </Cell>
+                              <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                <div className='flex items-center gap-2 justify-end p-2'>
+                                  <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'circle'} />
+                                  {item.document?.type}
+                                </div>
+                              </Cell>
+                            </Row>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+
+                {unversionedChanges.length > 0 && (
+                  <div className='flex flex-col gap-2'>
+                    <Heading className='font-semibold'>Unversioned Objects</Heading>
+                    <div className='rounded w-full border border-solid border-[--hl-sm] select-none'>
+                      <Table
+                        selectionMode='multiple'
+                        aria-label='Unversioned objects'
+                        className="border-separate border-spacing-0 w-full"
+                      >
+                        <TableHeader>
+                          <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                            <Checkbox slot="selection" className="group p-0 flex items-center h-full">
+                              <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
+                                <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
+                              </div>
+                            </Checkbox>
+                          </Column>
+                          <Column isRowHeader className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                            Name
+                          </Column>
+                          <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-right text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                            Description
+                          </Column>
+                        </TableHeader>
+                        <TableBody
+                          className="divide divide-[--hl-sm] divide-solid"
+                          items={
+                            unversionedChanges.map(item => ({
+                              ...item,
+                              name: item.name || 'n/a',
+                              id: item.key,
+                            }))
+                          }
+                        >
+                          {item => (
+                            <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">
+                              <Cell className="relative whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                <div className='p-2'>
+                                  <Checkbox slot="selection" name="keys" value={item.key} className="group p-0 flex items-center h-full">
+                                    <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
+                                      <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
+                                    </div>
+                                  </Checkbox>
+                                </div>
+                              </Cell>
+                              <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                <div className='p-2'>
+                                  {item.name}
+                                </div>
+                              </Cell>
+                              <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                <div className='flex items-center gap-2 justify-end p-2'>
+                                  <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'circle'} />
+                                  {item.document?.type}
+                                </div>
+                              </Cell>
+                            </Row>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
+
+                {data?.error && (
+                  <p className="notice error margin-top-sm">
+                    {data.error}
+                  </p>
+                )}
+                <div className="flex justify-end gap-2 items-center">
+                  <Button
+                    type='submit'
+                    isDisabled={state !== 'idle'}
+                    formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot`}
+                    className="hover:no-underline flex items-center gap-2 hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                  >
+                    <Icon icon={isCreatingSnapshot ? 'spinner' : 'plus'} className={`w-5 ${isCreatingSnapshot ? 'animate-spin' : ''}`} /> Create
+                  </Button>
+                  <Button
+                    type="submit"
+                    isDisabled={state !== 'idle'}
+                    formAction={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create-snapshot-and-push`}
+                    className="hover:no-underline flex items-center gap-2 bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                  >
+                    <Icon icon={isPushing ? 'spinner' : 'cloud-arrow-up'} className={`w-5 ${isPushing ? 'animate-spin' : ''}`} /> Create and push
+                  </Button>
+                </div>
+              </Form>
             </div>
-          </div>
-          <ChangesTable
-            keys={nonAddedKeys}
-            title='Modified Objects'
-            status={status}
-            lookupMap={state.lookupMap}
-            toggleAll={handleAllToggle}
-            toggleOne={handleStageToggle}
-          />
-          <ChangesTable
-            keys={addedKeys}
-            title='Unversioned Objects'
-            status={status}
-            lookupMap={state.lookupMap}
-            toggleAll={handleAllToggle}
-            toggleOne={handleStageToggle}
-          />
-        </ModalBody>
-        <ModalFooter>
-          <div className="margin-left italic txt-sm">
-            <i className="fa fa-code-fork" /> {branch}
-          </div>
-          <div>
-            <button className="btn" onClick={handleTakeSnapshot}>
-              Create
-            </button>
-            <button className="btn" onClick={handleTakeSnapshotAndPush}>
-              Create and Push
-            </button>
-          </div>
-        </ModalFooter>
+          )}
+        </Dialog>
       </Modal>
-    </OverlayContainer>
-  );
-};
-
-interface OperationTooltipProps {
-  entry: StageEntry;
-  type: string;
-  changes: string[];
-}
-const OperationTooltip = ({ entry, type, changes }: OperationTooltipProps) => {
-  const operationType = type === models.workspace.type ? type = strings.collection.singular : type;
-  if ('added' in entry) {
-    return (
-      <Tooltip message="Added">
-        <i className="fa fa-plus-circle success" /> {operationType}
-      </Tooltip>
-    );
-  }
-  if ('modified' in entry) {
-    return (
-      <Tooltip message={`Modified (${changes.join(', ')})`}>
-        <i className="fa fa-circle faded" /> {operationType}
-      </Tooltip>
-    );
-  }
-  if ('deleted' in entry) {
-    return (
-      <Tooltip message="Deleted">
-        <i className="fa fa-minus-circle danger" /> {operationType}
-      </Tooltip>
-    );
-  }
-  return (
-    <Tooltip message="Unknown">
-      <i className="fa fa-question-circle info" /> {operationType}
-    </Tooltip>
-  );
-};
-interface ChangesTableProps {
-  keys: DocumentKey[];
-  title: string;
-  status: Status;
-  lookupMap: LookupMap;
-  toggleAll: (keys: DocumentKey[], doStage: boolean) => void;
-  toggleOne: (event: React.SyntheticEvent<HTMLInputElement>) => void;
-}
-const ChangesTable = ({
-  keys,
-  title,
-  status,
-  lookupMap,
-  toggleAll,
-  toggleOne,
-}: ChangesTableProps) => {
-  if (keys.length === 0) {
-    return null;
-  }
-  let allUnChecked = true;
-  let allChecked = true;
-  for (const key of keys.sort()) {
-    if (!status.stage[key]) {
-      allChecked = false;
-    }
-    if (!status.unstaged[key]) {
-      allUnChecked = false;
-    }
-  }
-  const indeterminate = !allChecked && !allUnChecked;
-  return (
-    <div className="pad-top">
-      <strong>{title}</strong>
-      <table className="table--fancy table--outlined margin-top-sm">
-        <thead>
-          <tr>
-            <th>
-              <label className="wide no-pad">
-                <span className="txt-md">
-                  <IndeterminateCheckbox
-                    className="space-right"
-                    checked={allChecked}
-                    onChange={() => toggleAll(keys, allUnChecked)}
-                    indeterminate={indeterminate}
-                  />
-                </span>{' '}
-                name
-              </label>
-            </th>
-            <th className="text-right ">Changes</th>
-            <th className="text-right">Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {keys.filter(key => lookupMap[key]).map(key => {
-            const { entry, type, checked, changes } = lookupMap[key];
-            return (
-              <tr key={key} className="table--no-outline-row">
-                <td>
-                  <label className="no-pad wide">
-                    <input
-                      className="space-right"
-                      type="checkbox"
-                      checked={checked}
-                      name={key}
-                      onChange={toggleOne}
-                    />{' '}
-                    {entry.name}
-                  </label>
-                </td>
-                <td className="text-right">{changes ? changes.join(', ') : '--'}</td>
-                <td className="text-right">
-                  <OperationTooltip
-                    entry={entry}
-                    type={type}
-                    changes={changes || []}
-                  />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    </ModalOverlay>
   );
 };

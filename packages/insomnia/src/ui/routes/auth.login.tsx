@@ -196,11 +196,28 @@ const Login = () => {
                       </Button>
                     </div>
                     <p className='text-sm text-[rgba(var(--color-font-rgb),0.8)]'>
-                      Insomnia never migrates your local data to the cloud if you don't first create an account and login. With an account, Insomnia encrypts your data (end-to-end-encryption, E2EE) and stores them in the cloud.
+                      With Insomnia you can choose where to store your projects: locally with Local Vault, in the cloud with Cloud Sync (with E2EE, end-to-end encryption) or in a Git repository (Git Sync). Even with an account, your data is stored based on your settings.
                     </p>
                     <p className='text-sm text-[rgba(var(--color-font-rgb),0.8)]'>
-                      You can use Insomnia without an account and without connecting to the cloud by using the local Scratch Pad.
+                      You can get started with an account which gives you access to the best Insomnia experience (recommended):
                     </p>
+                    <Button
+                      onPress={() => {
+                        window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscribe?plan=free`);
+                      }}
+                      aria-label='Get started for free'
+                      className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
+                    >
+                      <span>
+                        Get started for free
+                      </span>
+                      <Icon icon='arrow-right' />
+                    </Button>
+
+                    <p className='text-sm text-[rgba(var(--color-font-rgb),0.8)]'>
+                      You can use Insomnia without an account in a limited way (only 1 collection) with the local Scratch Pad:
+                    </p>
+
                     <Link
                       to="/organization/org_scratchpad/project/proj_scratchpad/workspace/wrk_scratchpad/debug"
                       aria-label='Go to Scratch Pad'
@@ -213,24 +230,8 @@ const Login = () => {
                     </Link>
 
                     <p className='text-sm text-[rgba(var(--color-font-rgb),0.8)]'>
-                      You can also use Insomnia with an account and Git Sync enabled, which stores the files in your Git repository.
-                    </p>
+                      Finally, you can export your local Insomnia data (projects, collections and other files) for portability:
 
-                    <Button
-                      onPress={() => {
-                        window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/subscribe?plan=team`);
-                      }}
-                      aria-label='Sign up to the Team Plan'
-                      className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base"
-                    >
-                      <span>
-                        Sign up to the Team Plan
-                      </span>
-                      <Icon icon='arrow-right' />
-                    </Button>
-
-                    <p className='text-sm text-[rgba(var(--color-font-rgb),0.8)]'>
-                      Finally, here you can export your local Insomnia data (projects, collections and other files) for portability.
                     </p>
 
                     <Button

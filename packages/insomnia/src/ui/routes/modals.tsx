@@ -1,7 +1,6 @@
-import React, { FC, Fragment } from 'react';
+import React, { FC } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
-import { useVCS } from '../components/dropdowns/workspace-sync-dropdown';
 import { ErrorBoundary } from '../components/error-boundary';
 import { registerModal } from '../components/modals';
 import { AddKeyCombinationModal } from '../components/modals/add-key-combination-modal';
@@ -26,9 +25,6 @@ import { WorkspaceLoaderData } from './workspace';
 const Modals: FC = () => {
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | undefined;
   const { activeWorkspace, activeEnvironment } = workspaceData || {};
-  const vcs = useVCS({
-    workspaceId: activeWorkspace?._id,
-  });
 
   return (
     <div key="modals" className="modals">
@@ -84,12 +80,10 @@ const Modals: FC = () => {
           ref={instance => registerModal(instance, 'EnvironmentEditModal')}
         />
 
-        {activeWorkspace && vcs ? (
-          <Fragment>
-            <SyncMergeModal
-              ref={instance => registerModal(instance, 'SyncMergeModal')}
-            />
-          </Fragment>
+        {activeWorkspace ? (
+          <SyncMergeModal
+            ref={instance => registerModal(instance, 'SyncMergeModal')}
+          />
         ) : null}
 
         <AddKeyCombinationModal
