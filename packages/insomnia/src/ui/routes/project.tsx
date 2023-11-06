@@ -839,7 +839,7 @@ const ProjectRoute: FC = () => {
                                 <div className="flex justify-end">
                                   <Button
                                     type="submit"
-                                    className="hover:no-underline bg-[#4000BF] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                                    className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                                   >
                                     Create
                                   </Button>
@@ -902,7 +902,7 @@ const ProjectRoute: FC = () => {
               <GridList
                 aria-label="Scope filter"
                 items={scopeActionList}
-                className="overflow-y-auto flex-shrink-0 data-[empty]:py-0 py-[--padding-sm]"
+                className="overflow-y-auto flex-shrink-0 flex-1 data-[empty]:py-0 py-[--padding-sm]"
                 disallowEmptySelection
                 selectedKeys={[searchParams.get('scope') || 'all']}
                 selectionMode="single"
@@ -947,7 +947,7 @@ const ProjectRoute: FC = () => {
               {learningFeature.active && (
                 <div className='flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]'>
                   <div className='flex items-center justify-between gap-2'>
-                    <Heading className='text-sm'>
+                    <Heading className='text-base'>
                       <Icon icon="graduation-cap" />
                       <span className="ml-2">{learningFeature.title}</span>
                     </Heading>
@@ -959,10 +959,10 @@ const ProjectRoute: FC = () => {
                       <Icon icon="close" />
                     </Button>
                   </div>
-                  <p className='text-[--hl] text-xs'>
+                  <p className='text-[--hl] text-sm'>
                     {learningFeature.message}
                   </p>
-                  <a href={learningFeature.url} className='flex items-center gap-2 underline text-xs'>
+                  <a href={learningFeature.url} className='flex items-center gap-2 underline text-sm'>
                     {learningFeature.cta}
                     <Icon icon="arrow-up-right-from-square" />
                   </a>
