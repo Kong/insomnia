@@ -27,7 +27,7 @@ import {
 import { Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
-import VCSInstance from '../../sync/vcs/insomnia-sync';
+import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
 
 type Collection = Child[];

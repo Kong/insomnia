@@ -35,7 +35,7 @@ import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
 import { Project } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
-import VCSInstance from '../../sync/vcs/insomnia-sync';
+import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
 import { invariant } from '../../utils/invariant';
 import { getLoginUrl } from '../auth-session-provider';

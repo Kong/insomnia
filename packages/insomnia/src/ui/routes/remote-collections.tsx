@@ -14,7 +14,7 @@ import { UnitTestSuite } from '../../models/unit-test-suite';
 import { WebSocketRequest } from '../../models/websocket-request';
 import { Workspace } from '../../models/workspace';
 import { BackendProject, Snapshot, Status, StatusCandidate } from '../../sync/types';
-import VCSInstance from '../../sync/vcs/insomnia-sync';
+import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { pullBackendProject } from '../../sync/vcs/pull-backend-project';
 import { invariant } from '../../utils/invariant';
 

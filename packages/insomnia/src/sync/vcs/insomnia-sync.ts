@@ -6,7 +6,7 @@ import { VCS } from './vcs';
 
 let vcs: VCS | null = null;
 
-const VCSInstance = () => {
+export const VCSInstance = () => {
   if (vcs) {
     return vcs;
   }
@@ -25,5 +25,3 @@ const VCSInstance = () => {
 
   return vcs;
 };
-
-export default VCSInstance;
