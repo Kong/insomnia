@@ -201,7 +201,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
       },
       {
         id: 'revert',
-        name: 'Revert Changes',
+        name: 'Revert to latest commit',
         icon: 'undo',
         isDisabled: historyCount === 0 || rollbackFetcher.state !== 'idle',
         action: () => {
@@ -321,7 +321,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
                     className={'group aria-disabled:opacity-30 aria-disabled:cursor-not-allowed flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent disabled:cursor-not-allowed focus:outline-none transition-colors'}
                     aria-label={item.name}
                   >
-                    <div className="px-4 text-[--color-font] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 group-pressed:opacity-80 group-hover:bg-opacity-80 group-focus:bg-opacity-80 group-focus:ring-inset group-hover:ring-inset focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    <div className="px-4 text-[--color-font-surprise] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 group-pressed:opacity-80 group-hover:bg-opacity-80 group-focus:bg-opacity-80 group-focus:ring-inset group-hover:ring-inset focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                       <Icon icon={item.icon} />
                       <span>{item.name}</span>
                     </div>
