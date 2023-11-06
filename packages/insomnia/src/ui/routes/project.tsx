@@ -263,6 +263,7 @@ export interface ProjectLoaderData {
   allFilesCount: number;
   documentsCount: number;
   collectionsCount: number;
+  mockServersCount: number;
   projectsCount: number;
   activeProject: Project;
   projects: Project[];
@@ -453,6 +454,7 @@ export const loader: LoaderFunction = async ({
     collectionsCount: workspacesWithMetaData.filter(
       w => w.workspace.scope === 'collection'
     ).length,
+    mockServersCount: 0,
   };
 };
 
@@ -463,6 +465,7 @@ const ProjectRoute: FC = () => {
     projects,
     allFilesCount,
     collectionsCount,
+    mockServersCount,
     documentsCount,
     projectsCount,
     learningFeature,
@@ -570,6 +573,27 @@ const ProjectRoute: FC = () => {
     });
   };
 
+  const createNewMockServer = () => {
+    showPrompt({
+      title: 'Create New Mock Server',
+      submitName: 'Create',
+      placeholder: 'My Mock Server',
+      defaultValue: 'My Mock Server',
+      selectText: true,
+      onComplete: async (name: string) => {
+        fetcher.submit(
+          {
+            name,
+          },
+          {
+            action: `/organization/${organizationId}/project/${activeProject._id}/mockserver/new`,
+            method: 'post',
+          }
+        );
+      },
+    });
+  };
+
   const createNewProjectFetcher = useFetcher();
 
   useEffect(() => {
@@ -654,6 +678,12 @@ const ProjectRoute: FC = () => {
       action: createNewDocument,
     },
     {
+        id: 'new-mock-server',
+        name: 'Mock Server',
+        icon: 'server',
+        action: createNewDocument,
+      },
+      {
       id: 'import',
       name: 'Import',
       icon: 'file-import',
@@ -704,6 +734,16 @@ const ProjectRoute: FC = () => {
         run: createNewCollection,
       },
     },
+      {
+        id: 'mock-server',
+        label: `Mock Servers (${mockServersCount})`,
+        icon: 'server',
+        action: {
+          icon: 'plus',
+          label: 'New Mock Server',
+          run: createNewMockServer,
+        },
+      },
   ];
 
   const organization = organizations.find(o => o.id === organizationId);
@@ -1169,31 +1209,32 @@ const ProjectRoute: FC = () => {
                       );
                     }
 
-                    return (
-                      <EmptyStatePane
-                        createRequestCollection={createNewCollection}
-                        createDesignDocument={createNewDocument}
-                        importFrom={() => setImportModalType('file')}
-                        cloneFromGit={importFromGit}
-                      />
-                    );
-                  }}
+                  return (
+                    <EmptyStatePane
+                      createRequestCollection={createNewCollection}
+                      createDesignDocument={createNewDocument}
+                      createMockServer={createNewMockServer}
+                      importFrom={() => setImportModalType('file')}
+                      cloneFromGit={importFromGit}
+                    />
+                  );
+                }}
                 >
-                  {item => {
-                    return (
-                      <GridListItem
-                        key={item._id}
-                        id={item._id}
-                        textValue={item.name}
-                        className="flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
-                      >
-                        <div className="flex gap-2 h-[20px]">
-                          <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
-                            {isDesign(item.workspace) ? (
-                              <div className="px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm bg-[--color-info] text-[--color-font-info]">
-                                <Icon icon="file" />
-                              </div>
-                            ) : (
+                {item => {
+                  return (
+                    <GridListItem
+                      key={item._id}
+                      id={item._id}
+                      textValue={item.name}
+                      className="flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
+                    >
+                      <div className="flex gap-2 h-[20px]">
+                        <div className="flex pr-2 h-full flex-shrink-0 items-center rounded-sm gap-2 bg-[--hl-xs] text-[--color-font] text-sm">
+                          {isDesign(item.workspace) ? (
+                            <div className="px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm bg-[--color-info] text-[--color-font-info]">
+                              <Icon icon="file" />
+                            </div>
+                          ) : (
                               <div className="px-2 flex justify-center items-center h-[20px] w-[20px] rounded-s-sm bg-[--color-surprise] text-[--color-font-surprise]">
                                 <Icon icon="bars" />
                               </div>

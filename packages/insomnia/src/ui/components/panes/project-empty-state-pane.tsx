@@ -73,11 +73,12 @@ const AlmostSquareButton = styled(Button)({
 interface Props {
   createRequestCollection: () => void;
   createDesignDocument: () => void;
+  createMockServer: () => void;
   importFrom: () => void;
   cloneFromGit: () => void;
 }
 
-export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, importFrom, cloneFromGit }) => {
+export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesignDocument, createMockServer, importFrom, cloneFromGit }) => {
   const { organizationId } = useParams<{ organizationId: string }>();
   const { organizations } = useOrganizationLoaderData();
   const currentOrg = organizations.find(organization => (organization.id === organizationId));
@@ -143,6 +144,16 @@ export const EmptyStatePane: FC<Props> = ({ createRequestCollection, createDesig
               fontSize: 'var(--font-size-xl)',
             }}
           /> New Document
+        </SquareButton>
+        <SquareButton
+          onClick={createMockServer}
+        >
+          <i
+            className='fa fa-server'
+            style={{
+              fontSize: 'var(--font-size-xl)',
+            }}
+          /> New Mock Server
         </SquareButton>
       </div>
       <Divider
