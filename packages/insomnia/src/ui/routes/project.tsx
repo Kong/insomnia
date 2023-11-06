@@ -586,7 +586,7 @@ const ProjectRoute: FC = () => {
             name,
           },
           {
-            action: `/organization/${organizationId}/project/${activeProject._id}/mockserver/new`,
+            action: `/organization/${organizationId}/project/${activeProject._id}/mock-server/new`,
             method: 'post',
           }
         );
@@ -681,7 +681,7 @@ const ProjectRoute: FC = () => {
         id: 'new-mock-server',
         name: 'Mock Server',
         icon: 'server',
-        action: createNewDocument,
+      action: createNewMockServer,
       },
       {
       id: 'import',
