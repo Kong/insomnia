@@ -182,6 +182,27 @@ export const importResourcesToWorkspace = async ({ workspaceId }: { workspaceId:
       !isEnvironment(resource)
   );
 
+  const isApiSpecYamlImport = ResourceCache?.type?.id && isApiSpecImport(ResourceCache.type);
+  const apiSpec = resources.find(r => r.type === 'ApiSpec' && r.parentId === existingWorkspace?._id);
+  const hasApiSpec = existingWorkspace.scope === 'design' && apiSpec && isApiSpec(apiSpec);
+  // if workspace is not in the resources, there will be no apiSpec, if resource type is set to api spec this could cause a bug
+  if (hasApiSpec) {
+    // TODO: will overwrite existing api spec, not needed after migrate hack is removed
+    await models.apiSpec.updateOrCreateForParentId(existingWorkspace._id, {
+      contents: apiSpec.contents,
+      contentType: apiSpec.contentType,
+      fileName: existingWorkspace?.name,
+    });
+  }
+
+  if (isApiSpecYamlImport) {
+    await models.apiSpec.updateOrCreateForParentId(existingWorkspace._id, {
+      contents: ResourceCache.content,
+      contentType: 'yaml',
+      fileName: existingWorkspace?.name,
+    });
+  }
+
   const baseEnvironment = await models.environment.getOrCreateForParentId(workspaceId);
   invariant(baseEnvironment, 'Could not create base environment');
 
@@ -252,30 +273,16 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
   invariant(ResourceCache, 'No resources to import');
   const resources = ResourceCache.resources;
   const ResourceIdMap = new Map();
-  // in order to support import from api spec yaml
-  if (ResourceCache?.type?.id && isApiSpecImport(ResourceCache.type)) {
-    const newWorkspace = await models.workspace.create({
-      name: workspaceToImport?.name,
-      scope: 'design',
-      parentId: projectId,
-    });
-    models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
-      contents: ResourceCache.content,
-      contentType: 'yaml',
-      fileName: workspaceToImport?.name,
-    });
-    return {
-      resources,
-      workspace: newWorkspace,
-    };
-  }
+
+  const isApiSpecYamlImport = ResourceCache?.type?.id && isApiSpecImport(ResourceCache.type);
+
   const newWorkspace = await models.workspace.create({
     name: workspaceToImport?.name || 'Imported Workspace',
-    scope: workspaceToImport?.scope || 'collection',
+    scope: isApiSpecYamlImport ? 'design' : workspaceToImport?.scope || 'collection',
     parentId: projectId,
   });
-  const apiSpec = resources.find(r => r.type === 'ApiSpec' && r.parentId === workspaceToImport?._id) as ApiSpec;
-  const hasApiSpec = newWorkspace.scope === 'design' && isApiSpec(apiSpec);
+  const apiSpec = resources.find(r => r.type === 'ApiSpec' && r.parentId === workspaceToImport?._id);
+  const hasApiSpec = newWorkspace.scope === 'design' && apiSpec && isApiSpec(apiSpec);
   // if workspace is not in the resources, there will be no apiSpec, if resource type is set to api spec this could cause a bug
   if (hasApiSpec) {
     // TODO: will overwrite existing api spec, not needed after migrate hack is removed
@@ -284,7 +291,14 @@ const importResourcesToNewWorkspace = async (projectId: string, workspaceToImpor
       contentType: apiSpec.contentType,
       fileName: workspaceToImport?.name,
     });
+  }
 
+  if (isApiSpecYamlImport) {
+    await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
+      contents: ResourceCache.content,
+      contentType: 'yaml',
+      fileName: workspaceToImport?.name,
+    });
   }
 
   // If we're importing into a new workspace
