@@ -1108,10 +1108,7 @@ export class VCS {
       autoLinked: boolean;
     }[];
   }> {
-    console.log('[sync] Fetching team member keys', {
-      teamId,
-      sessionId: session.getCurrentSessionId(),
-    });
+    console.log('[sync] Fetching team member keys');
 
     const { teamMemberKeys } = await this._runGraphQL(
       `

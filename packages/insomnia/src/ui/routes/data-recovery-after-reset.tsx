@@ -10,33 +10,8 @@ import { Workspace } from '../../models/workspace';
 import { getOrCreateByParentId } from '../../models/workspace-meta';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
-import { VCS } from '../../sync/vcs/vcs';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
-
-export const autoSyncForMigration = async (files: Workspace[], vcs: VCS) => {
-  for (const file of files) {
-    const docs = await database.find<Project>(models.project.type, { _id: file.parentId });
-    if (!docs.length) {
-      // at this point, this shouldn't happen but just in case.
-      console.log('[migration] you are one of the rare lucky user');
-      continue;
-    }
-
-    const project = docs[0];
-    const workspaceMeta = await getOrCreateByParentId(file._id);
-    // Initialize Sync on the workspace if it's not using Git sync
-    try {
-      if (!workspaceMeta.gitRepositoryId) {
-        console.log(`[migration] syncing a file - ${file._id}: ${file.name}`);
-        await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace: file });
-        await pushSnapshotOnInitialize({ vcs, project, workspace: file });
-      }
-    } catch (e) {
-      console.warn('Failed to initialize sync on workspace. This will be retried when the workspace is opened on the app.', e);
-    }
-  }
-};
 
 interface ErrorResponse {
   error: string;
