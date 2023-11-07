@@ -8,13 +8,10 @@ import * as models from '../../models'; // TODO: probably import separately?
 import { Project } from '../../models/project';
 import { Workspace } from '../../models/workspace';
 import { getOrCreateByParentId } from '../../models/workspace-meta';
-import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import { MergeConflict } from '../../sync/types';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
-import { getVCS, initVCS, VCS } from '../../sync/vcs/vcs';
+import { VCSInstance } from '../../sync/vcs/insomnia-sync';
+import { VCS } from '../../sync/vcs/vcs';
 import { InsomniaLogo } from '../components/insomnia-icon';
-import { showModal } from '../components/modals';
-import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 
 export const autoSyncForMigration = async (files: Workspace[], vcs: VCS) => {
@@ -100,23 +97,7 @@ export const loader: LoaderFunction = async () => {
   console.log('[reset-passphrase] data recovery after resetting the passphrase starting...');
   // initialize vcs
   // TODO(marckong): move this out of renderer process and initialize it as a singleton there
-  let vcs = getVCS();
-  if (!vcs) {
-    const driver = FileSystemDriver.create(
-      process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-    );
-
-    console.log('[reset-passphrase] Initializing VCS as not initialized it yet');
-    vcs = await initVCS(driver, async (conflicts: MergeConflict[]) => {
-      return new Promise(resolve => {
-        showModal(SyncMergeModal, {
-          conflicts,
-          handleDone: (conflicts?: MergeConflict[]) =>
-            resolve(conflicts || []),
-        });
-      });
-    });
-  }
+  const vcs = VCSInstance();
 
   console.log('[reset-passphrase] fetching remote file snapshot');
   // TODO(marckong): this way of waterfall on the network request is not great. Refactor this.
