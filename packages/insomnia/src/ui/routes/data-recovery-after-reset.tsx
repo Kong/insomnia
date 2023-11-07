@@ -107,7 +107,7 @@ export const loader: LoaderFunction = async () => {
     );
 
     console.log('[reset-passphrase] Initializing VCS as not initialized it yet');
-    vcs = await initVCS(driver, async conflicts => {
+    vcs = await initVCS(driver, async (conflicts: MergeConflict[]) => {
       return new Promise(resolve => {
         showModal(SyncMergeModal, {
           conflicts,
@@ -149,6 +149,7 @@ export const loader: LoaderFunction = async () => {
     return null;
   }
 
+  const flushId = await database.bufferChanges();
   const defaultProjectId = myWorkspaceSnapshot.projectIds[0]; // picked the first to reflect on the constraint for free tier users
   console.log('[reset-passphrase] finding the personal workspace id');
   let defaultProject: Project | null = null;
@@ -180,6 +181,7 @@ export const loader: LoaderFunction = async () => {
   }
 
   if (!filesForSync.length) {
+    await database.flushChanges(flushId);
     return null;
   }
 
@@ -199,6 +201,7 @@ export const loader: LoaderFunction = async () => {
       }
     } catch (e) {
       console.warn('[reset-passphrase] failed to sync the cloned file', e);
+      await database.flushChanges(flushId);
       continue;
     }
   }
@@ -208,6 +211,7 @@ export const loader: LoaderFunction = async () => {
   window.sessionStorage.removeItem('hasResetPassphrase');
   // not deleting the projects for now
   console.log('[reset-passphrase] redirecting to organization page');
+  await database.flushChanges(flushId);
   return redirect('/organization');
 };
 
