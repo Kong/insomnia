@@ -434,6 +434,11 @@ export const ImportModal: FC<ImportModalProps> = ({
                 method: 'post',
                 action: '/import/resources',
               });
+              const type = scanResourcesFetcher.data ? scanResourcesFetcher.data.type?.id || 'unknown' : 'unknown';
+              window.main.trackSegmentEvent({
+                event: SegmentEvent.dataImport,
+                properties: { 'data-import-type': type },
+              });
             }}
           />
         ) : (
@@ -808,14 +813,6 @@ const ImportResourcesForm = ({
           }}
           form={id}
           className="btn"
-          onClick={() => {
-            // track that data was imported and which type of data imported
-            const type = scanResult.type?.id || 'unknown';
-            window.main.trackSegmentEvent({
-              event: SegmentEvent.dataImport,
-              properties: { 'data-import-type': type },
-            });
-          }}
         >
           {loading ? (
             <div>
