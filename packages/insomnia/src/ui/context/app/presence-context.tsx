@@ -17,6 +17,46 @@ function sanitizeTeamId(teamId: string) {
   return teamId.replace('proj_', '');
 }
 
+interface TeamProjectChangedEvent {
+  topic: string;
+  type: 'TeamProjectChanged';
+  team: string;
+  project: string;
+};
+
+interface FileDeletedEvent {
+  'topic': string;
+  'type': 'FileDeleted';
+  'team': string;
+  'project': string;
+  'file': string;
+};
+
+interface BranchDeletedEvent {
+  'topic': string;
+  'type': 'BranchDeleted';
+  'team': string;
+  'project': string;
+  'file': string;
+  'branch': 'test';
+}
+
+interface FileChangedEvent {
+  'topic': string;
+  'type': 'FileChanged';
+  'team': string;
+  'project': string;
+  'file': string;
+  'branch': 'test';
+}
+
+interface TeamProjectChangedEvent {
+  topic: string;
+  type: 'TeamProjectChanged';
+  team: string;
+  project: string;
+};
+
 export interface UserPresence {
   acct: string;
   avatar: string;
