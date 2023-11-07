@@ -258,7 +258,6 @@ export interface OrganizationLoaderData {
 }
 
 export const loader: LoaderFunction = async () => {
-
   if (session.isLoggedIn()) {
     return organizationsData;
   } else {
