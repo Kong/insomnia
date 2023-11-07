@@ -61,7 +61,7 @@ import {
   Project,
   SCRATCHPAD_PROJECT_ID,
 } from '../../models/project';
-import { isDesign, Workspace } from '../../models/workspace';
+import { isDesign, scopeToActivity, Workspace, WorkspaceScope } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { showModal } from '../../ui/components/modals';
 import { AskModal } from '../../ui/components/modals/ask-modal';
@@ -1206,8 +1206,11 @@ const ProjectRoute: FC = () => {
                   aria-label="Workspaces"
                   items={workspacesWithPresence}
                   onAction={key => {
+                    // hack to workaround gridlist not have access to workspace scope
+                    const [scope, id] = key.toString().split('|');
+                    const activity = scopeToActivity(scope as WorkspaceScope);
                     navigate(
-                      `/organization/${organizationId}/project/${projectId}/workspace/${key}/debug`
+                      `/organization/${organizationId}/project/${projectId}/workspace/${id}/${activity}`
                     );
                   }}
                   className="data-[empty]:flex data-[empty]:justify-center grid [grid-template-columns:repeat(auto-fit,200px)] [grid-template-rows:repeat(auto-fit,200px)] gap-4 p-[--padding-md]"
@@ -1237,7 +1240,7 @@ const ProjectRoute: FC = () => {
                   return (
                     <GridListItem
                       key={item._id}
-                      id={item._id}
+                      id={item.workspace.scope + '|' + item._id}
                       textValue={item.name}
                       className="flex-1 overflow-hidden flex-col outline-none p-[--padding-md] flex select-none w-full rounded-sm hover:shadow-md aspect-square ring-1 ring-[--hl-md] hover:ring-[--hl-sm] focus:ring-[--hl-lg] hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-all"
                     >

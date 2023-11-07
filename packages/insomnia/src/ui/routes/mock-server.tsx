@@ -3,7 +3,7 @@ import { LoaderFunction } from 'react-router-dom';
 
 import { invariant } from '../../utils/invariant';
 
-export const mockServerLoader: LoaderFunction = async ({
+export const loader: LoaderFunction = async ({
   request,
   params,
 }): Promise<{}> => {

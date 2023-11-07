@@ -427,6 +427,18 @@ const router = createMemoryRouter(
                               ],
                             },
                             {
+                              path: 'mock-server',
+                              loader: async (...args) =>
+                                (await import('./routes/mock-server')).loader(
+                                  ...args,
+                                ),
+                              element: (
+                                <Suspense fallback={<AppLoadingIndicator />}>
+                                  <MockServer />
+                                </Suspense>
+                              ),
+                            },
+                            {
                               path: 'cacert',
                               children: [
                                 {
@@ -900,38 +912,6 @@ const router = createMemoryRouter(
                             (await import('./routes/actions')).updateWorkspaceMetaAction(
                               ...args
                             ),
-                        },
-                      ],
-                    },
-                    {
-                      path: ':projectId/mock-server',
-                      children: [
-                        {
-                          path: ':mockServerId',
-                          id: ':mockServerId',
-                          loader: async (...args) =>
-                            (
-                              await import('./routes/mock-server')
-                            ).mockServerLoader(...args),
-                          element: (
-                            <Suspense fallback={<AppLoadingIndicator />}>
-                              <MockServer />
-                            </Suspense>
-                          ),
-                        },
-                        {
-                          path: 'new',
-                          action: async (...args) =>
-                            (
-                              await import('./routes/actions')
-                            ).createMockServerAction(...args),
-                        },
-                        {
-                          path: 'delete',
-                          action: async (...args) =>
-                            (
-                              await import('./routes/actions')
-                            ).deleteMockServerAction(...args),
                         },
                       ],
                     },
