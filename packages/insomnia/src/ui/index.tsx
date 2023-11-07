@@ -437,6 +437,27 @@ const router = createMemoryRouter(
                                   <MockServer />
                                 </Suspense>
                               ),
+                              children: [
+                                {
+                                  path: 'request-bin',
+                                  children: [
+                                    {
+                                      path: 'new',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/actions')
+                                        ).createRequestBinAction(...args),
+                                    },
+                                    {
+                                      path: 'delete',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/actions')
+                                        ).deleteRequestBinAction(...args),
+                                    },
+                                  ],
+                                },
+                              ],
                             },
                             {
                               path: 'cacert',

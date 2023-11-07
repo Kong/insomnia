@@ -1193,7 +1193,7 @@ export const reorderCollectionAction: ActionFunction = async ({ request, params 
   return null;
 };
 
-export const createMockServerAction: ActionFunction = async ({ request, params }) => {
+export const createRequestBinAction: ActionFunction = async ({ request, params }) => {
   const { projectId } = params;
   invariant(projectId, 'projectId is required');
   const formData = await request.formData();
@@ -1204,14 +1204,14 @@ export const createMockServerAction: ActionFunction = async ({ request, params }
   //   name,
   //   parentId: projectId,
   // });
-  await models.workspace.create({
-    name,
-    parentId: projectId,
-    scope: 'mock-server',
-  });
+  // await models.workspace.create({
+  //   name,
+  //   parentId: projectId,
+  //   scope: 'mock-server',
+  // });
   return null;
 };
-export const deleteMockServerAction: ActionFunction = async ({ request, params }) => {
+export const deleteRequestBinAction: ActionFunction = async ({ request, params }) => {
   const { projectId } = params;
   invariant(projectId, 'projectId is required');
 
