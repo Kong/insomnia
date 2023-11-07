@@ -13,6 +13,7 @@ import { useFetcher } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { isScratchpadProject } from '../../../models/project';
+import { SegmentEvent } from '../../analytics';
 import {
   ImportResourcesActionResult,
   ScanForResourcesActionResult,
@@ -807,6 +808,14 @@ const ImportResourcesForm = ({
           }}
           form={id}
           className="btn"
+          onClick={() => {
+            // track that data was imported and which type of data imported
+            const type = scanResult.type?.id || 'unknown';
+            window.main.trackSegmentEvent({
+              event: SegmentEvent.dataImport,
+              properties: { 'data-import-type': type },
+            });
+          }}
         >
           {loading ? (
             <div>
