@@ -69,7 +69,7 @@ type RemoteFileSnapshot = Record<RemoteOrganizationId, OwernshipSnapshot>;
 // just means it is not valid data the system should carry on.
 // However, root_document_id (Workspace.db entity id) is used for versioning, so we must clean this up locally here
 interface BackupProjectResponse {
-  projects: BackupProjectInfo[];
+  backupProjects: BackupProjectInfo[];
 }
 export const loader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
@@ -87,11 +87,12 @@ export const loader: LoaderFunction = async () => {
   if ('error' in response) {
     // show nice error and give feedback to the user with action buttons
     // instead of throwing error
+    console.error('[reset-passphrase] network error - /v1/accounts/backup-projects:', response.message);
     return null;
   }
 
   // there is no records for this => means there was nothing in the cloud, so we can redirect to org page
-  if (!response.projects.length) {
+  if (!response.backupProjects.length) {
     return redirect('/organization');
   }
 
@@ -105,7 +106,7 @@ export const loader: LoaderFunction = async () => {
       process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
     );
 
-    console.log('Initializing VCS');
+    console.log('[reset-passphrase] Initializing VCS as not initialized it yet');
     vcs = await initVCS(driver, async conflicts => {
       return new Promise(resolve => {
         showModal(SyncMergeModal, {
@@ -126,14 +127,14 @@ export const loader: LoaderFunction = async () => {
   });
 
   if ('error' in remoteFileSnapshotResponse) {
-    console.error('[reset-passphrase] network error:', remoteFileSnapshotResponse.message);
+    console.error('[reset-passphrase] network error - /v1/user/file-snapshot:', remoteFileSnapshotResponse.message);
     // show nice error and give feedback to the user with action buttons
     // instead of throwing error
     return null;
   }
 
   console.log('[reset-passphrase] finding the personal workspace id');
-  const remotePersonalWorkspaceId = Object.keys(response).find(remoteOrgId => remoteFileSnapshotResponse![remoteOrgId].isPersonal && remoteFileSnapshotResponse![remoteOrgId].ownedByMe);
+  const remotePersonalWorkspaceId = Object.keys(remoteFileSnapshotResponse).find(remoteOrgId => remoteFileSnapshotResponse![remoteOrgId].isPersonal && remoteFileSnapshotResponse![remoteOrgId].ownedByMe);
   if (!remotePersonalWorkspaceId) {
     console.warn('[reset-passphrase] could not find the personal workspace id');
     // show nice error and give feedback to the user with action buttons
@@ -162,7 +163,8 @@ export const loader: LoaderFunction = async () => {
     // TODO: update the remote project name as well with 'Backup After Reset
   }
 
-  for (const backupInfo of response.projects) {
+  for (const backupInfo of response.backupProjects) {
+    // nullify the existing version controlled files to reset with the same root document id
     console.log('[reset-passphrase] recovering file: ', backupInfo.rootDocumentId);
     const docs = await database.find<Workspace>(models.workspace.type, { _id: backupInfo.rootDocumentId });
     if (!docs.length) {
@@ -170,18 +172,23 @@ export const loader: LoaderFunction = async () => {
     }
 
     const file = docs[0];
-    const newFile = await database.duplicate(file, {
+    const updated = await database.docUpdate(file, {
       parentId: defaultProject._id,
     });
-    filesForSync.push(newFile);
+
+    filesForSync.push(updated);
   }
 
-  if (filesForSync.length) {
-    return;
+  if (!filesForSync.length) {
+    return null;
   }
 
   // auto push
   for (const fileForSync of filesForSync) {
+    console.log('[reset-passphrase] syncing with the cloned file: ', fileForSync._id);
+    // nullify existing previous insomnia sync versions
+    await vcs.resetVersion(fileForSync._id);
+
     console.log('[reset-passphrase] syncing with the cloned file: ', fileForSync._id);
     const fileMeta = await getOrCreateByParentId(fileForSync._id);
     try {
@@ -194,26 +201,6 @@ export const loader: LoaderFunction = async () => {
       console.warn('[reset-passphrase] failed to sync the cloned file', e);
       continue;
     }
-  }
-
-  const fileIdsForCleanUp = response.projects.map(info => info.rootDocumentId);
-  for (const deleteId of fileIdsForCleanUp) {
-    console.log('[reset-passphrase] deleting the duplicate record of the original: ', deleteId);
-    await database.removeWhere(models.workspace.type, { _id: deleteId });
-  }
-
-  const deleteBackupProjectsResponse = await window.main.insomniaFetch<ErrorResponse>({
-    method: 'DELETE',
-    path: '/v1/account/backup-projects',
-    sessionId,
-  });
-
-  console.log('[reset-passphrase] cleaning up the backup records');
-  if ('error' in deleteBackupProjectsResponse) {
-    console.error('[reset-passphrase] network failed: ', deleteBackupProjectsResponse);
-    // show nice error and give feedback to the user with action buttons
-    // instead of throwing error
-    return null;
   }
 
   // successfully recovered all the data that existed in the cloud

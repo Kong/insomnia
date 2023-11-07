@@ -1534,6 +1534,16 @@ export class VCS {
     );
     console.log(`[sync] Archived remote project ${projectId}`);
   }
+
+  async resetVersion(rootDocumentId: string) {
+    const fileVersioning = await this._getBackendProjectByRootDocument(rootDocumentId);
+
+    if (!fileVersioning) {
+      return;
+    }
+
+    await this._removeProject(fileVersioning);
+  }
 }
 
 /** Generate snapshot ID from hashing parent, backendProject, and state together */
