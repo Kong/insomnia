@@ -9,7 +9,7 @@ import { version } from '../../../package.json';
 import { CONTENT_TYPE_EVENT_STREAM, CONTENT_TYPE_GRAPHQL, CONTENT_TYPE_JSON, METHOD_GET, METHOD_POST } from '../../common/constants';
 import { ChangeBufferEvent, database } from '../../common/database';
 import { getContentDispositionHeader } from '../../common/misc';
-import { RENDER_PURPOSE_SEND, RenderedRequest } from '../../common/render';
+import { RENDER_PURPOSE_SEND } from '../../common/render';
 import { ResponsePatch } from '../../main/network/libcurl-promise';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
@@ -23,7 +23,7 @@ import { RequestVersion } from '../../models/request-version';
 import { Response } from '../../models/response';
 import { isWebSocketRequestId, WebSocketRequest } from '../../models/websocket-request';
 import { WebSocketResponse } from '../../models/websocket-response';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../../network/network';
+import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 import { updateMimeType } from '../components/dropdowns/content-type-dropdown';
@@ -317,23 +317,27 @@ const writeToDownloadPath = (downloadPathAndName: string, responsePatch: Respons
 
 };
 export interface SendActionParams {
-  renderedRequest: RenderedRequest;
+  requestId: string;
   shouldPromptForPathAfterResponse?: boolean;
 }
 export const sendAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
+  invariant(workspaceId, 'Workspace ID is required');
+
   const req = await requestOperations.getById(requestId) as Request;
   invariant(req, 'Request not found');
-  invariant(workspaceId, 'Workspace ID is required');
+
   const {
     environment,
     settings,
     clientCertificates,
     caCert,
-    activeEnvironmentId } = await fetchRequestData(requestId);
-  const { renderedRequest, shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
-  const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
+    activeEnvironmentId,
+  } = await fetchRequestData(requestId);
+  const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
+  const renderedResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
+  const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
   const response = await sendCurlAndWriteTimeline(
     renderedRequest,
@@ -341,9 +345,10 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     caCert,
     settings,
   );
+
   const requestMeta = await models.requestMeta.getByParentId(requestId);
   invariant(requestMeta, 'RequestMeta not found');
-  const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderResult.context);
+  const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderedResult.context);
   const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
   const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
   if (!shouldWriteToFile) {
