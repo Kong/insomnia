@@ -709,6 +709,11 @@ type Patch<T> = Partial<T>;
 // Helpers //
 // ~~~~~~~ //
 async function _send<T>(fnName: string, ...args: any[]) {
+  if (['update', 'insert'].includes(fnName) && args[0] && !['Stats', 'Settings', 'PluginData', 'GitRepository'].includes(args[0].type) && !args[0].parentId) {
+    console.error(`[db] Attempted to ${fnName} a doc without a parentId`, args[0]);
+    throw new Error(`Attempted to ${fnName} a doc without a parentId`);
+  }
+
   return new Promise<T>((resolve, reject) => {
     const replyChannel = `db.fn.reply:${uuidv4()}`;
     electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);
