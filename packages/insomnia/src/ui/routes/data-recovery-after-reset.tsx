@@ -147,7 +147,7 @@ export const loader: LoaderFunction = async () => {
     const fileMeta = await getOrCreateByParentId(fileForSync._id);
     try {
       if (!fileMeta.gitRepositoryId) {
-        const alreadyVersioned = await vcs.checkIfAlreadyVersioned(fileForSync._id);
+        await vcs.resetVersion(fileForSync._id);
 
         let project;
         if (fileForSync.parentId === defaultProject._id) {
@@ -157,11 +157,8 @@ export const loader: LoaderFunction = async () => {
           project = docsPrj?.length ? docsPrj[0] : defaultProject;
         }
 
-        if (!alreadyVersioned) {
-          console.log(`[reset-passphrase] syncing a file - ${fileForSync._id}: ${fileForSync.name}`);
-          await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace: fileForSync });
-        }
-
+        console.log(`[reset-passphrase] syncing a file - ${fileForSync._id}: ${fileForSync.name}`);
+        await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace: fileForSync });
         await pushSnapshotOnInitialize({ vcs, project, workspace: fileForSync });
       }
     } catch (e) {
