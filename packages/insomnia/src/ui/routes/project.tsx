@@ -406,18 +406,22 @@ export const loader: LoaderFunction = async ({
   };
 
   if (!window.localStorage.getItem('learning-feature-dismissed')) {
-    learningFeature = await window.main.insomniaFetch<{
-      active: boolean;
-      title: string;
-      message: string;
-      cta: string;
-      url: string;
-    }>({
-      method: 'GET',
-      path: '/insomnia-production-public-assets/inapp-learning.json',
-      origin: 'https://storage.googleapis.com',
-      sessionId: '',
-    });
+    try {
+      learningFeature = await window.main.insomniaFetch<{
+        active: boolean;
+        title: string;
+        message: string;
+        cta: string;
+        url: string;
+      }>({
+        method: 'GET',
+        path: '/insomnia-production-public-assets/inapp-learning.json',
+        origin: 'https://storage.googleapis.com',
+        sessionId: '',
+      });
+    } catch (err) {
+      console.log('Could not fetch learning feature data.');
+    }
   }
 
   return {
