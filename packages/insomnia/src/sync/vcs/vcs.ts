@@ -1541,17 +1541,9 @@ export class VCS {
     return matchedBackendProjects;
   }
 
-  async resetVersion(rootDocumentId: string) {
+  async checkIfAlreadyVersioned(rootDocumentId: string): Promise<boolean> {
     const versionedFiles = await this._getAllBackendProjectsByRootDocument(rootDocumentId);
-
-    if (!versionedFiles?.length) {
-      return;
-    }
-
-    // remove all the versioned files locally
-    for (const file of versionedFiles) {
-      await this._removeProject(file);
-    }
+    return Boolean(versionedFiles?.length);
   }
 }
 
