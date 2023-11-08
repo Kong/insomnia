@@ -7,6 +7,7 @@ import { convert } from './curl';
 describe('curl', () => {
   describe('cURL --data flags', () => {
     it.each([
+      // -d
       { flag: '-d', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
       { flag: '-d', inputs: ['value'], expected: [{ name: '', value: 'value' }] },
       { flag: '-d', inputs: ['@filename'], expected: [{ name: '', fileName: 'filename', type: 'file' }] },
@@ -154,7 +155,6 @@ describe('curl', () => {
   });
   describe('cURL -H flags', () => {
     it.each([
-      // -d
       { flag: '-H', inputs: ['X-Host: example.com'], expected: [{ name: 'X-Host', value: 'example.com' }] },
       { flag: '-H', inputs: ['X-Host:example.com'], expected: [{ name: 'X-Host', value: 'example.com' }] },
       { flag: '-H', inputs: ['Content-Type:application/x-www-form-urlencoded'], expected: [{ name: 'Content-Type', value: 'application/x-www-form-urlencoded' }] },
