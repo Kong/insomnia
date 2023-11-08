@@ -131,11 +131,7 @@ export const loader: LoaderFunction = async () => {
     }
 
     const file = docs[0];
-    const updated = await database.docUpdate(file, {
-      parentId: backupInfo.teamProjectId,
-    });
-
-    filesForSync.push(updated);
+    filesForSync.push(file);
   }
 
   if (!filesForSync.length) {
@@ -145,10 +141,6 @@ export const loader: LoaderFunction = async () => {
 
   // auto push
   for (const fileForSync of filesForSync) {
-    console.log('[reset-passphrase] syncing with the cloned file: ', fileForSync._id);
-    // nullify existing previous insomnia sync versions
-
-
     console.log('[reset-passphrase] syncing with the cloned file: ', fileForSync._id);
     const fileMeta = await getOrCreateByParentId(fileForSync._id);
     try {
@@ -162,8 +154,7 @@ export const loader: LoaderFunction = async () => {
           const docsPrj = await database.find<Project>(models.project.type, { _id: fileForSync.parentId });
           project = docsPrj?.length ? docsPrj[0] : defaultProject;
         }
-        // const docsPrj = await database.find<Project>(models.project.type, { _id: fileForSync.parentId });
-        // const project = docsPrj?.le
+
         console.log(`[migration] syncing a file - ${fileForSync._id}: ${fileForSync.name}`);
         await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace: fileForSync });
         await pushSnapshotOnInitialize({ vcs, project, workspace: fileForSync });

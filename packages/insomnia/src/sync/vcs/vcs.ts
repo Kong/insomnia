@@ -1331,7 +1331,6 @@ export class VCS {
     // First, try finding the project
     const backendProjects = await this._allBackendProjects();
     let matchedBackendProjects = backendProjects.filter(p => p.rootDocumentId === rootDocumentId);
-
     // If there is more than one project for root, try pruning unused ones by branch activity
     if (matchedBackendProjects.length > 1) {
       for (const p of matchedBackendProjects) {
@@ -1532,14 +1531,27 @@ export class VCS {
     console.log(`[sync] Archived remote project ${projectId}`);
   }
 
-  async resetVersion(rootDocumentId: string) {
-    const fileVersioning = await this._getBackendProjectByRootDocument(rootDocumentId);
+  async _getAllBackendProjectsByRootDocument(rootDocumentId: string) {
+    if (!rootDocumentId) {
+      throw new Error('No root document ID supplied for backend project');
+    }
 
-    if (!fileVersioning) {
+    const backendProjects = await this._allBackendProjects();
+    const matchedBackendProjects = backendProjects.filter(p => p.rootDocumentId === rootDocumentId);
+    return matchedBackendProjects;
+  }
+
+  async resetVersion(rootDocumentId: string) {
+    const versionedFiles = await this._getAllBackendProjectsByRootDocument(rootDocumentId);
+
+    if (!versionedFiles?.length) {
       return;
     }
 
-    await this._removeProject(fileVersioning);
+    // remove all the versioned files locally
+    for (const file of versionedFiles) {
+      await this._removeProject(file);
+    }
   }
 }
 
