@@ -447,8 +447,8 @@ const router = createMemoryRouter(
                                       id: ':mockRouteId',
                                       loader: async (...args) =>
                                         (
-                                          await import('./routes/mock-server')
-                                        ).mockRouteloader(...args),
+                                          await import('./routes/mock-route')
+                                        ).loader(...args),
                                     },
                                     {
                                       path: 'new',

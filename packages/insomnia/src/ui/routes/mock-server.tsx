@@ -10,6 +10,7 @@ import { Icon } from '../components/icon';
 import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { SidebarLayout } from '../components/sidebar-layout';
+import { MockRouteRoute } from './mock-route';
 
 interface LoaderData {
   mockRoutes: {
@@ -36,17 +37,6 @@ export const loader: LoaderFunction = async ({
       },
     ],
   };
-};
-
-export const mockRouteloader: LoaderFunction = async ({
-  request,
-  params,
-}): Promise<{}> => {
-  const { organizationId, projectId, workspaceId } = params;
-  invariant(organizationId, 'Organization ID is required');
-  invariant(projectId, 'Project ID is required');
-  invariant(workspaceId, 'Workspace ID is required');
-  return {};
 };
 
 const MockServerRoute = () => {
@@ -242,7 +232,7 @@ const MockServerRoute = () => {
         path={'mock-route/:mockRouteId/*'}
         element={
           <Suspense>
-            <div />
+            <MockRouteRoute />
           </Suspense>
         }
       />
