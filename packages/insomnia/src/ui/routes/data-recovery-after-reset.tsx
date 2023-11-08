@@ -1,5 +1,6 @@
 import React from 'react';
-import { LoaderFunction, redirect, useLoaderData } from 'react-router-dom';
+import { Button } from 'react-aria-components';
+import { LoaderFunction, redirect, useLoaderData, useNavigate, useNavigation } from 'react-router-dom';
 
 import { getCurrentSessionId } from '../../account/session';
 import * as session from '../../account/session';
@@ -10,6 +11,7 @@ import { Workspace } from '../../models/workspace';
 import { getOrCreateByParentId } from '../../models/workspace-meta';
 import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../../sync/vcs/initialize-backend-project';
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
+import { Icon } from '../components/icon';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
 
@@ -75,7 +77,7 @@ export const loader: LoaderFunction = async () => {
     // show nice error and give feedback to the user with action buttons
     // instead of throwing error
     console.error('[reset-passphrase] network error - /v1/accounts/backup-projects:', response.message);
-    return null;
+    return { error: response.message };
   }
 
   // there is no records for this => means there was nothing in the cloud, so we can redirect to org page
@@ -136,7 +138,7 @@ export const loader: LoaderFunction = async () => {
 
   if (!filesForSync.length) {
     await database.flushChanges(flushId);
-    return { error: 'Failed to update the local database and query the results' };
+    return { error: 'It seems you may not have the local files available.' };
   }
 
   // auto push
@@ -155,7 +157,7 @@ export const loader: LoaderFunction = async () => {
           project = docsPrj?.length ? docsPrj[0] : defaultProject;
         }
 
-        console.log(`[migration] syncing a file - ${fileForSync._id}: ${fileForSync.name}`);
+        console.log(`[reset-passphrase] syncing a file - ${fileForSync._id}: ${fileForSync.name}`);
         await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace: fileForSync });
         await pushSnapshotOnInitialize({ vcs, project, workspace: fileForSync });
       }
@@ -177,6 +179,8 @@ export const loader: LoaderFunction = async () => {
 
 export const DataRecoveryAfterReset = () => {
   const data = useLoaderData() as { error: string };
+  const navigation = useNavigation();
+  const navigate = useNavigate();
   return (
     <div className='relative h-full w-full text-left text-base flex bg-[--color-bg]'>
       <TrailLinesContainer>
@@ -198,7 +202,14 @@ export const DataRecoveryAfterReset = () => {
                   <p>
                     You've resetted your passphrase. We are processing your local files to recover your data.
                   </p>
-                  {data?.error && <p>{data?.error}</p>}
+                  {data?.error && <>
+                    <p>{data?.error}</p>
+                    <p>You may still proceed or contact the support.</p>
+                    <Button className="px-4 py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-base" onPress={() => navigate('/organization')}>
+                      Continue, still
+                      <span>{navigation.state === 'loading' ? <Icon icon="spinner" className='animate-spin' /> : null}</span>
+                    </Button>
+                  </>}
                 </div>
               </div>
             </div>
