@@ -355,9 +355,15 @@ export const fetchRemoteBranchAction: ActionFunction = async ({ request, params 
   try {
     invariant(project.remoteId, 'Project is not remote');
     await vcs.checkout([], branch);
-    const delta = await vcs.pull({ candidates: [], teamId: project.parentId, teamProjectId: project.remoteId });
-
-    await database.batchModifyDocs(delta as unknown as Operation);
+    const delta = await vcs.pull({ candidates: [], teamId: project.parentId, teamProjectId: project.remoteId }) as unknown as Operation;
+    // vcs.pull sometimes results in a delta with parentId: null, causing workspaces to be orphaned, this is a hack to restore those parentIds until we have a chance to redesign vcs
+    await database.batchModifyDocs({
+      remove: delta.remove,
+      upsert: delta.upsert?.map(doc => ({
+        ...doc,
+        ...!doc.parentId && doc.type === models.workspace.type ? { parentId: projectId } : {},
+      })),
+    });
   } catch (err) {
     await vcs.checkout([], currentBranch);
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while fetching remote branch.';
