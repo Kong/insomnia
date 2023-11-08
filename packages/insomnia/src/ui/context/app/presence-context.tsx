@@ -1,5 +1,5 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react-router-dom';
 import { useInterval } from 'react-use';
 
 import { getCurrentSessionId } from '../../../account/session';
@@ -38,7 +38,7 @@ interface BranchDeletedEvent {
   'team': string;
   'project': string;
   'file': string;
-  'branch': 'test';
+  'branch': string;
 }
 
 interface FileChangedEvent {
@@ -47,15 +47,8 @@ interface FileChangedEvent {
   'team': string;
   'project': string;
   'file': string;
-  'branch': 'test';
+  'branch': string;
 }
-
-interface TeamProjectChangedEvent {
-  topic: string;
-  type: 'TeamProjectChanged';
-  team: string;
-  project: string;
-};
 
 export interface UserPresence {
   acct: string;
@@ -146,6 +139,8 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
     }
   }, 1000 * 60);
 
+  const { revalidate } = useRevalidator();
+
   useEffect(() => {
     const sessionId = getCurrentSessionId();
     if (sessionId && remoteId) {
@@ -154,7 +149,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
 
         source.addEventListener('message', e => {
           try {
-            const presenceEvent = JSON.parse(e.data) as UserPresenceEvent;
+            const presenceEvent = JSON.parse(e.data) as UserPresenceEvent | TeamProjectChangedEvent | FileDeletedEvent | BranchDeletedEvent | FileChangedEvent;
 
             if (presenceEvent.type === 'PresentUserLeave') {
               setPresence(prev => prev.filter(p => {
@@ -175,6 +170,8 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
                 action: '/organization/sync',
                 method: 'POST',
               });
+            } else {
+              revalidate();
             }
           } catch (e) {
             console.log('Error parsing response from SSE', e);
@@ -189,7 +186,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
       }
     }
     return;
-  }, [organizationId, remoteId, syncOrganizationsFetcher]);
+  }, [organizationId, remoteId, revalidate, syncOrganizationsFetcher]);
 
   return (
     <PresenceContext.Provider
