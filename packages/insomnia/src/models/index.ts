@@ -22,6 +22,7 @@ import * as _environment from './environment';
 import * as _gitRepository from './git-repository';
 import * as _grpcRequest from './grpc-request';
 import * as _grpcRequestMeta from './grpc-request-meta';
+import * as _mockRoute from './mock-route';
 import * as _mockServer from './mock-server';
 import * as _oAuth2Token from './o-auth-2-token';
 import * as _pluginData from './plugin-data';
@@ -66,6 +67,7 @@ export const cookieJar = _cookieJar;
 export const environment = _environment;
 export const gitRepository = _gitRepository;
 export const mockServer = _mockServer;
+export const mockRoute = _mockRoute;
 export const oAuth2Token = _oAuth2Token;
 export const pluginData = _pluginData;
 export const request = _request;
@@ -112,6 +114,7 @@ export function all() {
     requestMeta,
     response,
     mockServer,
+    mockRoute,
     oAuth2Token,
     caCertificate,
     clientCertificate,

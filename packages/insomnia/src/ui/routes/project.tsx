@@ -760,7 +760,7 @@ const ProjectRoute: FC = () => {
   const scopeToBgColorMap: Record<string, string> = {
     design: 'info',
     collection: 'surprise',
-    'mock-server': 'success',
+    'mock-server': 'notice',
   };
 
   return (

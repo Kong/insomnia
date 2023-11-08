@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Breadcrumbs, Button, GridList, Item, Link, Menu, MenuTrigger, Popover } from 'react-aria-components';
-import { LoaderFunction, NavLink, useFetcher, useNavigate, useParams } from 'react-router-dom';
+import { LoaderFunction, NavLink, Route, Routes, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { invariant } from '../../utils/invariant';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
@@ -9,17 +9,43 @@ import { EditableInput } from '../components/editable-input';
 import { Icon } from '../components/icon';
 import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
-import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
-import { SvgIcon } from '../components/svg-icon';
 
+interface LoaderData {
+  mockRoutes: {
+    _id: string;
+    name: string;
+  }[];
+}
 export const loader: LoaderFunction = async ({
   request,
   params,
-}): Promise<{}> => {
+}): Promise<LoaderData> => {
   const { organizationId, projectId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
+  return {
+    mockRoutes: [
+      {
+        _id: '1',
+        name: '/pets/1',
+      },
+      {
+        _id: '2',
+        name: '/pets/2',
+      },
+    ],
+  };
+};
+
+export const mockRouteloader: LoaderFunction = async ({
+  request,
+  params,
+}): Promise<{}> => {
+  const { organizationId, projectId, workspaceId } = params;
+  invariant(organizationId, 'Organization ID is required');
+  invariant(projectId, 'Project ID is required');
+  invariant(workspaceId, 'Workspace ID is required');
   return {};
 };
 
@@ -30,12 +56,10 @@ const MockServerRoute = () => {
     workspaceId: string;
     mockRouteId: string;
   };
+  const { mockRoutes } = useRouteLoaderData('mock-server') as LoaderData;
   const fetcher = useFetcher();
   const navigate = useNavigate();
-  const mockRoutes = [{
-    _id: '1',
-    name: 'Test',
-  }];
+
   const mockRouteActionList: {
     id: string;
     name: string;
@@ -213,11 +237,22 @@ const MockServerRoute = () => {
         </GridList>
       </div>}
 
-    renderPaneOne={<EmptyStatePane
-      icon={<SvgIcon icon="bug" />}
-      documentationLinks={[]}
-      title="Create a Mock Route"
-    />}
+    renderPaneOne={<Routes>
+      <Route
+        path={'mock-route/:mockRouteId/*'}
+        element={
+          <Suspense>
+            <div />
+          </Suspense>
+        }
+      />
+      <Route
+        path="*"
+        element={
+          <div className="p-[--padding-md]">No mock route selected</div>
+        }
+      />
+    </Routes>}
     renderPaneTwo={null}
   />;
 };

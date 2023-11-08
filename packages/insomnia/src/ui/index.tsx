@@ -428,6 +428,7 @@ const router = createMemoryRouter(
                             },
                             {
                               path: 'mock-server',
+                              id: 'mock-server',
                               loader: async (...args) =>
                                 (await import('./routes/mock-server')).loader(
                                   ...args,
@@ -441,6 +442,14 @@ const router = createMemoryRouter(
                                 {
                                   path: 'mock-route',
                                   children: [
+                                    {
+                                      path: ':mockRouteId',
+                                      id: ':mockRouteId',
+                                      loader: async (...args) =>
+                                        (
+                                          await import('./routes/mock-server')
+                                        ).mockRouteloader(...args),
+                                    },
                                     {
                                       path: 'new',
                                       action: async (...args) =>
