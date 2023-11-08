@@ -356,6 +356,7 @@ export const fetchRemoteBranchAction: ActionFunction = async ({ request, params 
     invariant(project.remoteId, 'Project is not remote');
     await vcs.checkout([], branch);
     const delta = await vcs.pull({ candidates: [], teamId: project.parentId, teamProjectId: project.remoteId }) as unknown as Operation;
+    // vcs.pull sometimes results in a delta with parentId: null, causing workspaces to be orphaned, this is a hack to restore those parentIds until we have a chance to redesign vcs
     await database.batchModifyDocs({
       remove: delta.remove,
       upsert: delta.upsert?.map(doc => ({
