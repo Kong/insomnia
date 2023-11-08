@@ -68,9 +68,11 @@ interface UserPresenceEvent extends UserPresence {
 export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
   const {
     organizationId,
+    projectId,
     workspaceId,
   } = useParams() as {
     organizationId: string;
+      projectId: string;
       workspaceId: string;
   };
 
@@ -81,6 +83,8 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const syncOrganizationsFetcher = useFetcher();
   const syncProjectsFetcher = useFetcher();
+  const syncDataFetcher = useFetcher();
+  const { revalidate } = useRevalidator();
 
   // Update presence when the user switches org, projects, workspaces
   useEffect(() => {
@@ -150,8 +154,6 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
     });
   }, 1000 * 60);
 
-  const { revalidate } = useRevalidator();
-
   useEffect(() => {
     const sessionId = getCurrentSessionId();
     if (sessionId && remoteId) {
@@ -186,7 +188,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
                 action: `/organization/${organizationId}/sync-projects`,
                 method: 'POST',
               });
-            } else {
+            } else if (['BranchDeleted', 'FileDeleted', 'FileChanged'].includes(presenceEvent.type) && presenceEvent.team === organizationId && presenceEvent.project === remoteId) {
               revalidate();
             }
           } catch (e) {
@@ -202,7 +204,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
       }
     }
     return;
-  }, [organizationId, remoteId, revalidate, syncOrganizationsFetcher, syncProjectsFetcher]);
+  }, [organizationId, projectId, remoteId, revalidate, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, workspaceId]);
 
   return (
     <PresenceContext.Provider
