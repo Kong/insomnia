@@ -1,5 +1,5 @@
 import React from 'react';
-import { LoaderFunction, redirect } from 'react-router-dom';
+import { LoaderFunction, redirect, useLoaderData } from 'react-router-dom';
 
 import { getCurrentSessionId } from '../../account/session';
 import * as session from '../../account/session';
@@ -12,6 +12,21 @@ import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize }
 import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { InsomniaLogo } from '../components/insomnia-icon';
 import { TrailLinesContainer } from '../components/trail-lines-container';
+
+const getOrCreateDefaultProject = async (defaultProjectId: string, orgId: string): Promise<Project> => {
+  console.log('[reset-passphrase] finding the personal workspace id');
+  let defaultProject: Project | null = null;
+  const projectDocs = await database.find<Project>(models.project.type, { remoteId: defaultProjectId });
+  if (!projectDocs.length) {
+    // create
+    console.log('[reset-passphrase] project matching remote project not found. creating one...');
+    defaultProject = await database.docCreate<Project>(models.project.type, { name: 'Default Cloud Project', parentId: orgId, remoteId: defaultProjectId });
+  } else {
+    console.log('[reset-passphrase] project matching remote project found');
+    defaultProject = projectDocs[0];
+  }
+  return defaultProject;
+};
 
 interface ErrorResponse {
   error: string;
@@ -84,41 +99,28 @@ export const loader: LoaderFunction = async () => {
 
   if ('error' in remoteFileSnapshotResponse) {
     console.error('[reset-passphrase] network error - /v1/user/file-snapshot:', remoteFileSnapshotResponse.message);
-    // show nice error and give feedback to the user with action buttons
-    // instead of throwing error
-    return null;
+    return { error: remoteFileSnapshotResponse.message };
   }
 
   console.log('[reset-passphrase] finding the personal workspace id');
   const remotePersonalWorkspaceId = Object.keys(remoteFileSnapshotResponse).find(remoteOrgId => remoteFileSnapshotResponse![remoteOrgId].isPersonal && remoteFileSnapshotResponse![remoteOrgId].ownedByMe);
   if (!remotePersonalWorkspaceId) {
     console.warn('[reset-passphrase] could not find the personal workspace id');
-    // show nice error and give feedback to the user with action buttons
-    // instead of throwing error
-    return null;
+    return { error: 'Personal Workspace does not exist. Please contact the support if it still persists after trying to reload.' };
   }
 
   const filesForSync: Workspace[] = [];
   const myWorkspaceSnapshot = remoteFileSnapshotResponse[remotePersonalWorkspaceId];
-  if (!myWorkspaceSnapshot.projectIds[0]) {
-    // TODO: create a remote project for the user here instead of returning null
-    return null;
+  if (!myWorkspaceSnapshot.projectIds?.length) {
+    return { error: 'Default team project does not exist. Please contact the support if it still persists after trying to reload.' };
   }
 
+  // starting here for the database buffer change holding
   const flushId = await database.bufferChanges();
+
   const defaultProjectId = myWorkspaceSnapshot.projectIds[0]; // picked the first to reflect on the constraint for free tier users
   console.log('[reset-passphrase] finding the personal workspace id');
-  let defaultProject: Project | null = null;
-  const projectDocs = await database.find<Project>(models.project.type, { remoteId: defaultProjectId });
-  if (!projectDocs.length) {
-    // create
-    console.log('[reset-passphrase] project matching remote project not found. creating one...');
-    defaultProject = await database.docCreate<Project>(models.project.type, { name: 'Backup After Reset', parentId: remotePersonalWorkspaceId, remoteId: defaultProjectId });
-  } else {
-    console.log('[reset-passphrase] project matching remote project found');
-    defaultProject = projectDocs[0];
-    // TODO: update the remote project name as well with 'Backup After Reset
-  }
+  const defaultProject = await getOrCreateDefaultProject(defaultProjectId, remotePersonalWorkspaceId);
 
   for (const backupInfo of response.backupProjects) {
     // nullify the existing version controlled files to reset with the same root document id
@@ -130,7 +132,7 @@ export const loader: LoaderFunction = async () => {
 
     const file = docs[0];
     const updated = await database.docUpdate(file, {
-      parentId: defaultProject._id,
+      parentId: backupInfo.teamProjectId,
     });
 
     filesForSync.push(updated);
@@ -138,22 +140,33 @@ export const loader: LoaderFunction = async () => {
 
   if (!filesForSync.length) {
     await database.flushChanges(flushId);
-    return null;
+    return { error: 'Failed to update the local database and query the results' };
   }
 
   // auto push
   for (const fileForSync of filesForSync) {
     console.log('[reset-passphrase] syncing with the cloned file: ', fileForSync._id);
     // nullify existing previous insomnia sync versions
-    await vcs.resetVersion(fileForSync._id);
+
 
     console.log('[reset-passphrase] syncing with the cloned file: ', fileForSync._id);
     const fileMeta = await getOrCreateByParentId(fileForSync._id);
     try {
       if (!fileMeta.gitRepositoryId) {
+        await vcs.resetVersion(fileForSync._id);
+
+        let project;
+        if (fileForSync.parentId === defaultProject._id) {
+          project = defaultProject;
+        } else {
+          const docsPrj = await database.find<Project>(models.project.type, { _id: fileForSync.parentId });
+          project = docsPrj?.length ? docsPrj[0] : defaultProject;
+        }
+        // const docsPrj = await database.find<Project>(models.project.type, { _id: fileForSync.parentId });
+        // const project = docsPrj?.le
         console.log(`[migration] syncing a file - ${fileForSync._id}: ${fileForSync.name}`);
         await initializeLocalBackendProjectAndMarkForSync({ vcs, workspace: fileForSync });
-        await pushSnapshotOnInitialize({ vcs, project: defaultProject, workspace: fileForSync });
+        await pushSnapshotOnInitialize({ vcs, project, workspace: fileForSync });
       }
     } catch (e) {
       console.warn('[reset-passphrase] failed to sync the cloned file', e);
@@ -172,6 +185,7 @@ export const loader: LoaderFunction = async () => {
 };
 
 export const DataRecoveryAfterReset = () => {
+  const data = useLoaderData() as { error: string };
   return (
     <div className='relative h-full w-full text-left text-base flex bg-[--color-bg]'>
       <TrailLinesContainer>
@@ -193,7 +207,7 @@ export const DataRecoveryAfterReset = () => {
                   <p>
                     You've resetted your passphrase. We are processing your local files to recover your data.
                   </p>
-
+                  {data?.error && <p>{data?.error}</p>}
                 </div>
               </div>
             </div>
