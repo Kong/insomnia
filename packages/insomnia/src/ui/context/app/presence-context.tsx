@@ -80,6 +80,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const syncOrganizationsFetcher = useFetcher();
+  const syncProjectsFetcher = useFetcher();
 
   // Update presence when the user switches org, projects, workspaces
   useEffect(() => {
@@ -137,6 +138,16 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
         console.log('Error parsing response', e);
       }
     }
+
+    syncOrganizationsFetcher.submit({}, {
+      action: '/organization/sync',
+      method: 'POST',
+    });
+
+    syncProjectsFetcher.submit({}, {
+      action: `/organization/${organizationId}/sync-projects`,
+      method: 'POST',
+    });
   }, 1000 * 60);
 
   const { revalidate } = useRevalidator();
@@ -170,6 +181,11 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
                 action: '/organization/sync',
                 method: 'POST',
               });
+            } else if (presenceEvent.type === 'TeamProjectChanged' && presenceEvent.team === organizationId) {
+              syncProjectsFetcher.submit({}, {
+                action: `/organization/${organizationId}/sync-projects`,
+                method: 'POST',
+              });
             } else {
               revalidate();
             }
@@ -186,7 +202,7 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
       }
     }
     return;
-  }, [organizationId, remoteId, revalidate, syncOrganizationsFetcher]);
+  }, [organizationId, remoteId, revalidate, syncOrganizationsFetcher, syncProjectsFetcher]);
 
   return (
     <PresenceContext.Provider

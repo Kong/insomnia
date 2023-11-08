@@ -23,6 +23,7 @@ import {
   TextField,
 } from 'react-aria-components';
 import {
+  ActionFunction,
   LoaderFunction,
   matchPath,
   redirect,
@@ -184,6 +185,19 @@ async function syncTeamProjects({
     });
   }));
 }
+
+export const syncProjectsAction: ActionFunction = async ({ params }) => {
+  const { organizationId } = params;
+  invariant(organizationId, 'Organization ID is required');
+
+  const teamProjects = await getAllTeamProjects(organizationId);
+  await syncTeamProjects({
+    organizationId,
+    teamProjects,
+  });
+
+  return null;
+};
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params;
