@@ -439,21 +439,21 @@ const router = createMemoryRouter(
                               ),
                               children: [
                                 {
-                                  path: 'request-bin',
+                                  path: 'mock-route',
                                   children: [
                                     {
                                       path: 'new',
                                       action: async (...args) =>
                                         (
                                           await import('./routes/actions')
-                                        ).createRequestBinAction(...args),
+                                        ).createMockRouteAction(...args),
                                     },
                                     {
                                       path: 'delete',
                                       action: async (...args) =>
                                         (
                                           await import('./routes/actions')
-                                        ).deleteRequestBinAction(...args),
+                                        ).deleteMockRouteAction(...args),
                                     },
                                   ],
                                 },

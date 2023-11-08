@@ -1193,7 +1193,7 @@ export const reorderCollectionAction: ActionFunction = async ({ request, params 
   return null;
 };
 
-export const createRequestBinAction: ActionFunction = async ({ request, params }) => {
+export const createMockRouteAction: ActionFunction = async ({ request, params }) => {
   const { projectId } = params;
   invariant(projectId, 'projectId is required');
   const formData = await request.formData();
@@ -1211,7 +1211,7 @@ export const createRequestBinAction: ActionFunction = async ({ request, params }
   // });
   return null;
 };
-export const deleteRequestBinAction: ActionFunction = async ({ request, params }) => {
+export const deleteMockRouteAction: ActionFunction = async ({ request, params }) => {
   const { projectId } = params;
   invariant(projectId, 'projectId is required');
 

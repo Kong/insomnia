@@ -5,7 +5,9 @@ import { LoaderFunction, NavLink, useFetcher, useParams } from 'react-router-dom
 import { invariant } from '../../utils/invariant';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { Icon } from '../components/icon';
+import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
+import { SvgIcon } from '../components/svg-icon';
 
 export const loader: LoaderFunction = async ({
   request,
@@ -53,23 +55,27 @@ const MockServerRoute = () => {
             onPress={() => {
               fetcher.submit(
                 {
-                  name: 'New Request Bin',
+                  name: 'New Mock Route',
                 },
                 {
                   method: 'post',
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/request-bin/new`,
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
                 }
               );
             }}
           >
             <Icon icon="plus" />
-            New request bin
+            New Mock Route
           </Button>
         </div>
       </div>}
 
-    renderPaneOne={<div>Mock Server</div>}
-    renderPaneTwo={<div>Mock Server</div>}
+    renderPaneOne={<EmptyStatePane
+      icon={<SvgIcon icon="bug" />}
+      documentationLinks={[]}
+      title="Create a Mock Route"
+    />}
+    renderPaneTwo={null}
   />;
 };
 
