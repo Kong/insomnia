@@ -7,7 +7,6 @@ import { convert } from './curl';
 describe('curl', () => {
   describe('cURL --data flags', () => {
     it.each([
-      // -d
       { flag: '-d', inputs: ['key=value'], expected: [{ name: 'key', value: 'value' }] },
       { flag: '-d', inputs: ['value'], expected: [{ name: '', value: 'value' }] },
       { flag: '-d', inputs: ['@filename'], expected: [{ name: '', fileName: 'filename', type: 'file' }] },
