@@ -305,7 +305,7 @@ export class VCS {
     const { conflicts, dirty } = preMergeCheck(latestStateCurrent, latestStateNext, candidates);
 
     if (conflicts.length) {
-      throw new Error('Please snapshot current changes before switching branches');
+      throw new Error('Please commit current changes before switching branches');
     }
 
     await this._storeHead({
@@ -346,7 +346,7 @@ export class VCS {
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
 
     if (!snapshot) {
-      throw new Error('Failed to get latest snapshot for all documents');
+      throw new Error('Failed to get latest commit for all documents');
     }
 
     return this._getBlobs(snapshot.state.map(s => s.blob));
@@ -357,7 +357,7 @@ export class VCS {
     const latestSnapshot = await this._getLatestSnapshot(branch.name);
 
     if (!latestSnapshot) {
-      throw new Error('No snapshots to rollback to');
+      throw new Error('No commits to rollback to');
     }
 
     return this.rollback(latestSnapshot.id, candidates);
@@ -367,7 +367,7 @@ export class VCS {
     const rollbackSnapshot: Snapshot | null = await this._getSnapshot(snapshotId);
 
     if (rollbackSnapshot === null) {
-      throw new Error(`Failed to find snapshot by id ${snapshotId}`);
+      throw new Error(`Failed to find commit by id ${snapshotId}`);
     }
 
     const currentState: SnapshotState = candidates.map(candidate => ({
@@ -415,7 +415,7 @@ export class VCS {
       const snapshot = await this._getSnapshot(id);
 
       if (snapshot === null) {
-        throw new Error(`Failed to get snapshot id=${id}`);
+        throw new Error(`Failed to get commit id=${id}`);
       }
 
       snapshots.push(snapshot);
@@ -454,12 +454,12 @@ export class VCS {
     const parent: Snapshot | null = await this._getLatestSnapshot(branch.name);
 
     if (!name) {
-      throw new Error('Snapshot must have a message');
+      throw new Error('Commit must have a message');
     }
 
     // Ensure there is something on the stage
     if (Object.keys(stage).length === 0) {
-      throw new Error('Snapshot does not have any changes');
+      throw new Error('Commit does not have any changes');
     }
 
     const newState: SnapshotState = [];
@@ -492,7 +492,7 @@ export class VCS {
     }
 
     const snapshot = await this._createSnapshotFromState(branch, newState, name);
-    console.log(`[sync] Created snapshot ${snapshot.id} (${name})`);
+    console.log(`[sync] Created commit ${snapshot.id} (${name})`);
   }
 
   async pull({ candidates, teamId, teamProjectId }: { candidates: StatusCandidate[]; teamId: string; teamProjectId: string }) {
@@ -647,7 +647,7 @@ export class VCS {
 
     if (preConflicts.length) {
       console.log('[sync] Merge failed', preConflicts);
-      throw new Error('Please snapshot current changes or revert them before merging');
+      throw new Error('Please commit current changes or revert them before merging');
     }
 
     const shouldDoNothing1 = latestSnapshotOther && latestSnapshotOther.id === rootSnapshotId;
@@ -722,7 +722,7 @@ export class VCS {
     branch.snapshots.push(snapshot.id);
     await this._storeBranch(branch);
     await this._storeSnapshot(snapshot);
-    console.log(`[sync] Created snapshot '${name}' on ${branch.name}`);
+    console.log(`[sync] Created commit '${name}' on ${branch.name}`);
     return snapshot;
   }
 
@@ -911,7 +911,7 @@ export class VCS {
       );
       // Store them in case something has changed
       await this._storeSnapshots(snapshotsCreate);
-      console.log('[sync] Pushed snapshots', snapshotsCreate.map((s: any) => s.id).join(', '));
+      console.log('[sync] Pushed commits', snapshotsCreate.map((s: any) => s.id).join(', '));
     }
   }
 
@@ -1404,7 +1404,7 @@ export class VCS {
     }
 
     if (!snapshot) {
-      throw new Error(`Failed to find snapshot id=${id}`);
+      throw new Error(`Failed to find commit id=${id}`);
     }
 
     return snapshot;
