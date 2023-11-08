@@ -709,7 +709,7 @@ type Patch<T> = Partial<T>;
 // Helpers //
 // ~~~~~~~ //
 async function _send<T>(fnName: string, ...args: any[]) {
-  if (['update', 'insert'].includes(fnName) && args[0] && args[0].type==='Workspace' && !args[0].parentId) {
+  if (['update', 'insert'].includes(fnName) && args[0] && args[0].type === 'Workspace' && !args[0].parentId) {
     console.error(`[db] Attempted to ${fnName} a doc without a parentId`, args[0]);
     throw new Error(`Attempted to ${fnName} a doc without a parentId`);
   }
