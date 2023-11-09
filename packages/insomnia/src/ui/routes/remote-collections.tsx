@@ -134,38 +134,30 @@ export const remoteLoader: LoaderFunction = async ({ params }): Promise<RemoteCo
     invariant(remoteId, 'Project is not a remote project');
     const vcs = VCSInstance();
 
-    const allVCSBackendProjects = await vcs.localBackendProjects();
-    // Filter out backend projects that are not connected to a workspace because the workspace was deleted
-    const getWorkspacesByLocalProjects = allVCSBackendProjects.map(async backendProject => {
-      const workspace = await models.workspace.getById(backendProject.rootDocumentId);
+    const allLocalVCSBackendProjects = await vcs.localBackendProjects();
+    const allRemoteVCSBackendProjects = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
 
-      if (!workspace) {
-        return null;
-      }
-
-      // If the workspace doesn't have a parent, set it to the current project
-      if (!workspace.parentId) {
-        await models.workspace.update(workspace, {
-          parentId: project._id,
-        });
-      }
-
-      return backendProject;
+    const connectedVCSWorkspaces = await database.find<Workspace>(models.workspace.type, {
+      _id: {
+        $in: [...allLocalVCSBackendProjects, ...allRemoteVCSBackendProjects].map(p => p.rootDocumentId),
+      },
     });
 
-    // Map the backend projects to ones with workspaces in parallel
-    const localBackendProjects = (await Promise.all(getWorkspacesByLocalProjects)).filter(isNotNullOrUndefined);
-
-    const allRemoteBackendProjects = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
-
-    const remoteBackendProjects = await Promise.all(allRemoteBackendProjects.filter(async ({ id, rootDocumentId }) => {
-      const localBackendProjectExists = localBackendProjects.find(p => p.id === id);
-      const workspaceExists = Boolean(await models.workspace.getById(rootDocumentId));
-      // Mark as missing if:
-      //   - the backend project doesn't yet exists locally
-      //   - the backend project exists locally but somehow the workspace doesn't anymore
-      return !(workspaceExists && localBackendProjectExists);
+    // Repair any connected workspaces that are missing a parent id
+    await Promise.all(connectedVCSWorkspaces.map(async workspace => {
+      if (!workspace.parentId) {
+        await models.workspace.update(workspace, {
+          parentId: projectId,
+        });
+      }
     }));
+
+    const localBackendProjects = allLocalVCSBackendProjects
+      .filter(p => connectedVCSWorkspaces.find(w => w._id === p.rootDocumentId));
+
+    const remoteBackendProjects = allRemoteVCSBackendProjects
+      .filter(p => !connectedVCSWorkspaces.find(w => w._id === p.rootDocumentId))
+      .filter(p => !localBackendProjects.find(l => l.id === p.id));
 
     return {
       remoteBackendProjects,
