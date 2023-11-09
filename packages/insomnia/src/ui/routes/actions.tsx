@@ -1213,12 +1213,16 @@ export const updateMockRouteAction: ActionFunction = async ({ request, params })
   await models.mockRoute.update(mockRoute, patch);
   return null;
 };
-export const deleteMockRouteAction: ActionFunction = async ({ params }) => {
-  const { mockRouteId } = params;
+export const deleteMockRouteAction: ActionFunction = async ({ request, params }) => {
+  const { organizationId, projectId, workspaceId, mockRouteId } = params;
   invariant(typeof mockRouteId === 'string', 'Mock route id is required');
   const mockRoute = await models.mockRoute.getById(mockRouteId);
   invariant(mockRoute, 'mockRoute not found');
+  const { isSelected } = await request.json();
 
   await models.mockRoute.remove(mockRoute);
+  if (isSelected) {
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server`);
+  }
   return null;
 };

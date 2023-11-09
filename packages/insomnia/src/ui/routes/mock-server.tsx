@@ -90,8 +90,11 @@ const MockServerRoute = () => {
             onDone: async (isYes: boolean) => {
               if (isYes) {
                 fetcher.submit(
-                  {},
                   {
+                    isSelected: mockRouteId === id,
+                  },
+                  {
+                    encType: 'application/json',
                     action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${id}/delete`,
                     method: 'POST',
                   }
