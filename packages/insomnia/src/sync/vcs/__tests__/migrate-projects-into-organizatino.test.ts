@@ -2,12 +2,9 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
-import { _migrateToCloudSync, _migrateToLocalVault, _validateProjectsWithRemote, scanForMigration, shouldMigrate } from '../migrate-projects-into-organization';
-import { fakeDatabase, mockRemoteBackgroundCheck, mockRemoteBackgroundCheckMessedUp, mocksHiddenWorkspaces, mocksNoProblem, mocksToBeRepaired, mocksWithoutParentIdProjects } from './database.mock';
+import { _migrateToCloudSync, _migrateToLocalVault, scanForMigration, shouldMigrate } from '../migrate-projects-into-organization';
+import { fakeDatabase, mockRemoteBackgroundCheck, mockRemoteBackgroundCheckMessedUp, mocksHiddenWorkspaces, mocksNoProblem, mocksToBeRepairedWithNoDupe, mocksToBeRepairedWithValidProjects, mocksWithoutParentIdProjects } from './database.mock';
 
-console.log({
-  _migrateToCloudSync, _migrateToLocalVault, _validateProjectsWithRemote,
-});
 describe('scanForMigration()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
@@ -16,7 +13,6 @@ describe('scanForMigration()', () => {
     await fakeDatabase(mocksWithoutParentIdProjects);
 
     const result = await scanForMigration();
-    console.log(result.filesByProject.size);
     expect(result.filesByProject.size).toBe(3);
 
     expect(result.filesByProject.has('wrk_2'));
@@ -90,13 +86,18 @@ describe('_migrateToCloudSync()', () => {
     await fakeDatabase(mocksWithoutParentIdProjects);
 
     const queue = await scanForMigration();
-    const records = await _migrateToCloudSync(queue, mockRemoteBackgroundCheckMessedUp);
+    expect(queue.projects.size).toBe(3); // before repair
 
-    expect(records.filesForSync.length).toBe(0);
-    expect(records.projects.size).toBe(3);
+    const records = await _migrateToCloudSync(queue, mockRemoteBackgroundCheckMessedUp);
     expect(records.projects.has('proj_1')).toBeTruthy();
     expect(records.projects.has('proj_2')).toBeTruthy();
     expect(records.projects.has('proj_3')).toBeTruthy();
+
+    // still in tact with the queue as all the records are duplicated with repair, and the original should be deleted
+    expect(queue.projects.has('proj_1')).toBeTruthy();
+    expect(queue.projects.has('proj_2')).toBeTruthy();
+    expect(queue.projects.has('proj_3')).toBeTruthy();
+
     const [proj1, proj2, proj3] = await Promise.all([
       models.project.getById(records.projects.get('proj_1')!),
       models.project.getById(records.projects.get('proj_2')!),
@@ -114,21 +115,23 @@ describe('_migrateToCloudSync()', () => {
     expect(records.files.has('wrk_2')).toBeTruthy(); // part of proj_3
     expect(records.files.has('wrk_3')).toBeTruthy(); // part of proj_3
     expect(records.files.has('wrk_4')).toBeTruthy(); // part of proj_3
+
+    // no cloud files as they were default to the local vault
+    expect(records.filesForSync.length).toBe(0);
   });
 
   it('should repair projects with valid remote ids with personal workspace id if not linked correctly', async () => {
-    await fakeDatabase(mocksToBeRepaired);
-
-    const beforeProj1 = await models.project.getById('proj_1');
-    expect(beforeProj1!.parentId).toBeNull();
-
-    const beforeProj2 = await models.project.getById('proj_2');
-    expect(beforeProj2!.parentId).toBeNull();
+    await fakeDatabase(mocksToBeRepairedWithValidProjects);
 
     const queue = await scanForMigration();
+    expect(queue.projects.size).toBe(3); // before repair
     const records = await _migrateToCloudSync(queue, mockRemoteBackgroundCheck);
 
     expect(records.projects.size).toBe(1);
+
+    // valid projects are repaired and removed from the queue. Therefore deletion won't happen
+    expect(queue.projects.has('proj_1')).not.toBeTruthy();
+    expect(queue.projects.has('proj_2')).not.toBeTruthy();
     expect(records.files.size).toBe(4); // => we've duplicated the files because they are not in correct linking between the local and remote
 
     const repairedProj1 = await models.project.getById('proj_1');
@@ -151,6 +154,42 @@ describe('_migrateToCloudSync()', () => {
 
     // these duplicated 4 files need to be synced now
     expect(records.filesForSync.length).toBe(4);
+  });
+
+  it('should remove the project file id if there was no duplication made to prevent file deletion', async () => {
+    await fakeDatabase(mocksToBeRepairedWithNoDupe);
+
+    const queue = await scanForMigration();
+    expect(queue.projects.size).toBe(3); // before repair
+    expect(queue.filesByProject.size).toBe(6); // before repair
+
+    const records = await _migrateToCloudSync(queue, mockRemoteBackgroundCheck);
+    expect(records.projects.has('proj_1')).not.toBeTruthy(); // this is good to go as repaired with only org id
+    expect(records.projects.has('proj_2')).not.toBeTruthy(); // same good with org id
+    expect(records.projects.has('proj_3')).toBeTruthy(); // stil bad because this is untracked
+
+    // the following should be removed from the book keeping records as they are tracked now as part of repairing their parents with org id
+    // therefore, the queue record should remove them in order to prevent deletion
+    expect(records.files.has('wrk_1')).not.toBeTruthy();
+    expect(queue.filesByProject.has('wrk_1')).not.toBeTruthy();
+    expect(records.files.has('wrk_2')).not.toBeTruthy();
+    expect(queue.filesByProject.has('wrk_2')).not.toBeTruthy();
+    expect(records.files.has('wrk_3')).not.toBeTruthy();
+    expect(queue.filesByProject.has('wrk_3')).not.toBeTruthy();
+    expect(records.files.has('wrk_4')).not.toBeTruthy();
+    expect(queue.filesByProject.has('wrk_4')).not.toBeTruthy();
+
+    // this needs to be synced as untracked. Therefore still needs deletion of the original after duplication
+    // still keep the queue for these file ids for deletion
+    expect(records.files.has('wrk_5')).toBeTruthy();
+    expect(queue.filesByProject.has('wrk_5')).toBeTruthy();
+    expect(records.files.has('wrk_6')).toBeTruthy();
+    expect(queue.filesByProject.has('wrk_6')).toBeTruthy();
+
+    // sync only those files that are duplicated
+    expect(records.filesForSync.length).toBe(2);
+    expect(records.filesForSync[0]._id).toBe(records.files.get('wrk_5'));
+    expect(records.filesForSync[1]._id).toBe(records.files.get('wrk_6'));
   });
 });
 

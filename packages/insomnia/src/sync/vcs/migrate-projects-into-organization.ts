@@ -49,8 +49,6 @@ export const scanForMigration = async (): Promise<QueueForMigration> => {
     parentId: null,
   });
 
-  console.log({ legacyRemoteProjects });
-
   for (const project of legacyRemoteProjects) {
     console.log('[migration] found legacy remote project', project);
     queueLocalProjects.add(project._id);
@@ -70,7 +68,6 @@ export const scanForMigration = async (): Promise<QueueForMigration> => {
     _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
   });
 
-  console.log({ localProjects });
   for (const project of localProjects) {
     console.log('[migration] found local project', project._id);
     queueLocalProjects.add(project._id);
@@ -87,8 +84,6 @@ export const scanForMigration = async (): Promise<QueueForMigration> => {
   const untrackedFiles = await database.find<Workspace>(models.workspace.type, {
     parentId: null,
   });
-
-  console.log({ untrackedFiles });
 
   for (const file of untrackedFiles) {
     console.log('[migration] found an untracked file with no parents', file._id);
@@ -246,7 +241,6 @@ export const _validateProjectsWithRemote = async (queue: QueueForMigration, remo
 
   const validProjectIds = new Set<string>();
   const validProjects = [];
-
   for (const remoteProjectId of myWorkspace.projectIds) {
     // scan all the project entities with the remote project id that belongs to my workspace
     const docs = await database.find<Project>(models.project.type, { remoteId: remoteProjectId });
@@ -338,7 +332,6 @@ export const _migrateToCloudSync = async (
   for (const validProject of validProjects) {
     if (validProject.parentId !== myWorkspaceId) {
       console.log('[migration] repairing team-project to organization linking for local database');
-      // TODO: update the array validProjects here
       await database.docUpdate<Project>(validProject, {
         parentId: myWorkspaceId,
       });

@@ -341,6 +341,194 @@ const mocksToBeRepaired: Record<string, MockModel[]> = {
     ],
 };
 
+const mocksToBeRepairedWithValidProjects: Record<string, MockModel[]> = {
+    [models.project.type]: [
+        {
+            _id: 'proj_1',
+            name: 'Proj 1',
+            parentId: null,
+            remoteId: 'team_1',
+        } as unknown as Project,
+        {
+            _id: 'proj_2',
+            name: 'Proj 2',
+            parentId: null,
+            remoteId: 'team_2',
+        } as unknown as Project,
+        {
+            _id: 'proj_3',
+            name: 'Proj 3',
+            parentId: null,
+            remoteId: null,
+        } as unknown as Project,
+    ],
+    [models.workspace.type]: [
+        {
+            _id: 'wrk_1',
+            name: 'Wrk 1',
+            parentId: null,
+        } as unknown as Workspace,
+        {
+            _id: 'wrk_2',
+            name: 'Wrk 2',
+            parentId: 'proj_3',
+        },
+        {
+            _id: 'wrk_3',
+            name: 'Wrk 3',
+            parentId: 'proj_3',
+        },
+        {
+            _id: 'wrk_4',
+            name: 'Wrk 4',
+            parentId: 'proj_3',
+        },
+    ],
+    [models.requestGroup.type]: [
+        {
+            _id: 'fld_1',
+            parentId: 'wrk_1',
+            name: 'Fld 1',
+        },
+        {
+            _id: 'fld_2',
+            parentId: 'wrk_1',
+            name: 'Fld 2',
+        },
+        {
+            _id: 'fld_3',
+            parentId: 'fld_1',
+            name: 'Fld 3',
+        },
+    ],
+    [models.request.type]: [
+        {
+            _id: 'req_1',
+            parentId: 'fld_1',
+            name: 'Req 1',
+        },
+        {
+            _id: 'req_2',
+            parentId: 'fld_1',
+            name: 'Req 2',
+        },
+        {
+            _id: 'req_3',
+            parentId: 'wrk_1',
+            name: 'Req 3',
+        },
+        {
+            _id: 'req_4',
+            parentId: 'fld_3',
+            name: 'Req 4',
+        },
+        {
+            _id: 'req_5',
+            parentId: 'wrk_1',
+            name: 'Req 5',
+        },
+    ],
+};
+
+const mocksToBeRepairedWithNoDupe: Record<string, MockModel[]> = {
+    [models.project.type]: [
+        {
+            _id: 'proj_1',
+            name: 'Proj 1',
+            parentId: null,
+            remoteId: 'team_1',
+        } as unknown as Project,
+        {
+            _id: 'proj_2',
+            name: 'Proj 2',
+            parentId: null,
+            remoteId: 'team_2',
+        } as unknown as Project,
+        {
+            _id: 'proj_3',
+            name: 'Proj 3',
+            parentId: null,
+            remoteId: null,
+        } as unknown as Project,
+    ],
+    [models.workspace.type]: [
+        {
+            _id: 'wrk_1',
+            name: 'Wrk 1',
+            parentId: 'proj_1',
+        },
+        {
+            _id: 'wrk_2',
+            name: 'Wrk 2',
+            parentId: 'proj_1',
+        },
+        {
+            _id: 'wrk_3',
+            name: 'Wrk 3',
+            parentId: 'proj_2',
+        },
+        {
+            _id: 'wrk_4',
+            name: 'Wrk 4',
+            parentId: 'proj_2',
+        },
+        {
+            _id: 'wrk_5',
+            name: 'Wrk 5',
+            parentId: 'proj_3',
+        },
+        {
+            _id: 'wrk_6',
+            name: 'Wrk 6',
+            parentId: 'proj_3',
+        },
+    ],
+    [models.requestGroup.type]: [
+        {
+            _id: 'fld_1',
+            parentId: 'wrk_1',
+            name: 'Fld 1',
+        },
+        {
+            _id: 'fld_2',
+            parentId: 'wrk_1',
+            name: 'Fld 2',
+        },
+        {
+            _id: 'fld_3',
+            parentId: 'fld_1',
+            name: 'Fld 3',
+        },
+    ],
+    [models.request.type]: [
+        {
+            _id: 'req_1',
+            parentId: 'fld_1',
+            name: 'Req 1',
+        },
+        {
+            _id: 'req_2',
+            parentId: 'fld_1',
+            name: 'Req 2',
+        },
+        {
+            _id: 'req_3',
+            parentId: 'wrk_1',
+            name: 'Req 3',
+        },
+        {
+            _id: 'req_4',
+            parentId: 'fld_3',
+            name: 'Req 4',
+        },
+        {
+            _id: 'req_5',
+            parentId: 'wrk_1',
+            name: 'Req 5',
+        },
+    ],
+};
+
 const mockRemoteBackgroundCheck = {
     myWorkspaceId: 'org_my',
     remoteFileSnapshot: {
@@ -410,11 +598,11 @@ const mockRemoteBackgroundCheckMessedUp = {
     byRemoteProjectId: new Map(),
     byRemoteFileId: new Map(),
 };
+
 export function fakeDatabase(data: Record<string, MockModel[]>) {
     const promises: Promise<models.BaseModel>[] = [];
     for (const type of Object.keys(data)) {
         for (const doc of data[type]) {
-            console.log(doc);
             // @ts-expect-error -- TSCONVERSION
             promises.push(db.insert<models.BaseModel>({ ...doc, type }));
         }
@@ -422,5 +610,5 @@ export function fakeDatabase(data: Record<string, MockModel[]>) {
     return Promise.all(promises);
 }
 
-export { mocksWithoutParentIdProjects, mocksHiddenWorkspaces, mocksNoProblem, mocksToBeRepaired };
+export { mocksWithoutParentIdProjects, mocksHiddenWorkspaces, mocksNoProblem, mocksToBeRepaired, mocksToBeRepairedWithValidProjects, mocksToBeRepairedWithNoDupe };
 export { mockRemoteBackgroundCheck, mockRemoteBackgroundCheckMessedUp };
