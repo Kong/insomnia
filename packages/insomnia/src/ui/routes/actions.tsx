@@ -12,6 +12,7 @@ import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { getById, update } from '../../models/helpers/request-operations';
+import { isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
@@ -335,18 +336,23 @@ export const deleteWorkspaceAction: ActionFunction = async ({
 
   const workspace = await models.workspace.getById(workspaceId);
   invariant(workspace, 'Workspace not found');
+  if (isRemoteProject(project)) {
+    try {
+      const vcs = VCSInstance();
+      await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, workspace.name);
+      const backendProject = await vcs._getBackendProjectByRootDocument(workspace._id);
+      await vcs._removeProject(backendProject);
+      await vcs.archiveProject();
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : `An unexpected error occurred while deleting the workspace. Please try again. ${err}`,
+      };
+    }
+  }
 
   await models.stats.incrementDeletedRequestsForDescendents(workspace);
   await models.workspace.remove(workspace);
 
-  try {
-    const vcs = VCSInstance();
-    const backendProject = await vcs._getBackendProjectByRootDocument(workspace._id);
-    await vcs._removeProject(backendProject);
-  } catch (err) {
-    console.warn('Failed to remove project from VCS', err);
-  }
-  console.log(`redirecting to /organization/${organizationId}/project/${projectId}`);
   return redirect(`/organization/${organizationId}/project/${projectId}`);
 };
 
