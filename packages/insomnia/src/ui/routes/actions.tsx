@@ -1193,7 +1193,7 @@ export const reorderCollectionAction: ActionFunction = async ({ request, params 
   return null;
 };
 
-export const createMockRouteAction: ActionFunction = async ({ request, params }) => {
+export const createMockRouteAction: ActionFunction = async ({ request }) => {
   const patch = await request.json();
   invariant(typeof patch.name === 'string', 'Name is required');
   invariant(typeof patch.parentId === 'string', 'parentId is required');
@@ -1213,7 +1213,7 @@ export const updateMockRouteAction: ActionFunction = async ({ request, params })
   await models.mockRoute.update(mockRoute, patch);
   return null;
 };
-export const deleteMockRouteAction: ActionFunction = async ({ request, params }) => {
+export const deleteMockRouteAction: ActionFunction = async ({ params }) => {
   const { mockRouteId } = params;
   invariant(typeof mockRouteId === 'string', 'Mock route id is required');
   const mockRoute = await models.mockRoute.getById(mockRouteId);

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
-import { LoaderFunction, useLoaderData, useRouteLoaderData } from 'react-router-dom';
+import { LoaderFunction, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { contentTypesMap, HTTP_METHODS } from '../../common/constants';
+import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
 import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
@@ -11,23 +12,24 @@ import { TabItem, Tabs } from '../components/base/tabs';
 import { CodeEditor } from '../components/codemirror/code-editor';
 import { OneLineEditor } from '../components/codemirror/one-line-editor';
 import { MockResponseHeadersEditor } from '../components/editors/mock-response-headers-editor';
+import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
-
+import { SvgIcon } from '../components/svg-icon';
 export interface MockRouteLoaderData {
   mockRoute: MockRoute;
 }
 
-export const loader: LoaderFunction = async ({
-  request,
-  params,
-}): Promise<MockRouteLoaderData> => {
+export const loader: LoaderFunction = async ({ params }): Promise<MockRouteLoaderData> => {
   const { organizationId, projectId, workspaceId, mockRouteId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
   invariant(workspaceId, 'Workspace ID is required');
-  console.log({ mockRouteId });
+  invariant(mockRouteId, 'Mock route ID is required');
+  const mockRoute = await models.mockRoute.getById(mockRouteId);
+  invariant(mockRoute, 'Mock route is required');
+
   return {
-    mockRoute: { headers: [] },
+    mockRoute,
   };
 };
 const StyledUrlBar = styled.div`
@@ -85,14 +87,14 @@ export const MockRouteRoute = () => {
             <OneLineEditor
               id="grpc-url"
               type="text"
-              defaultValue={mockUrl}
+              defaultValue={'https://mock.insomnia.rest/id/'}
               placeholder="something"
             // onChange={url => patchRequest(requestId, { url })}
             // getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)}
             />
           </StyledUrlEditor>
           <div className='flex p-1'>
-            <Button>Test</Button>
+            <Button className="urlbar__send-btn">Test</Button>
           </div>
         </StyledUrlBar>
       </PaneHeader>
@@ -120,16 +122,23 @@ export const MockRouteRoute = () => {
             </Dropdown>
             }
           >
-            <CodeEditor
-              id="raw-editor"
-              showPrettifyButton
-              // defaultValue={content}
-              // className={className}
-              enableNunjucks
-              // onChange={onChange}
-              mode={selectedContentType}
-              placeholder="..."
-            />
+            {selectedContentType ?
+              (<CodeEditor
+                id="raw-editor"
+                showPrettifyButton
+                defaultValue={mockRoute.body}
+                // className={className}
+                enableNunjucks
+                // onChange={onChange}
+                mode={selectedContentType}
+                placeholder="..."
+              />) :
+              (<EmptyStatePane
+                icon={<SvgIcon icon="bug" />}
+                documentationLinks={[]}
+                secondaryAction="Set up the mock body and headers you would like to return"
+                title="Choose a mock body to return as a response"
+              />)}
           </TabItem>
           <TabItem key="headers" title="Mock Headers">
             <MockResponseHeadersEditor

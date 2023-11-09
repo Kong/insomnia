@@ -12,15 +12,13 @@ import { Icon } from '../components/icon';
 import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { SidebarLayout } from '../components/sidebar-layout';
+import { formatMethodName } from '../components/tags/method-tag';
 import { MockRouteResponse, MockRouteRoute } from './mock-route';
 interface LoaderData {
   mockServerId: string;
   mockRoutes: MockRoute[];
 }
-export const loader: LoaderFunction = async ({
-  request,
-  params,
-}): Promise<LoaderData> => {
+export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
@@ -178,6 +176,22 @@ const MockServerRoute = () => {
               >
                 <div className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]">
                   <span className="group-aria-selected:bg-[--color-surprise] transition-colors top-0 left-0 absolute h-full w-[2px] bg-transparent" />
+                  <span
+                    className={
+                      `w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center
+                            ${{
+                        'GET': 'text-[--color-font-surprise] bg-[rgba(var(--color-surprise-rgb),0.5)]',
+                        'POST': 'text-[--color-font-success] bg-[rgba(var(--color-success-rgb),0.5)]',
+                        'HEAD': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                        'OPTIONS': 'text-[--color-font-info] bg-[rgba(var(--color-info-rgb),0.5)]',
+                        'DELETE': 'text-[--color-font-danger] bg-[rgba(var(--color-danger-rgb),0.5)]',
+                        'PUT': 'text-[--color-font-warning] bg-[rgba(var(--color-warning-rgb),0.5)]',
+                        'PATCH': 'text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]',
+                      }[item.method] || 'text-[--color-font] bg-[--hl-md]'}`
+                    }
+                  >
+                    {formatMethodName(item.method)}
+                  </span>
                   <EditableInput
                     value={item.name}
                     name="name"
