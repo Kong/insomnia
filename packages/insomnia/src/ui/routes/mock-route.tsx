@@ -11,7 +11,7 @@ import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../componen
 import { TabItem, Tabs } from '../components/base/tabs';
 import { CodeEditor } from '../components/codemirror/code-editor';
 import { OneLineEditor } from '../components/codemirror/one-line-editor';
-import { MockResponseHeadersEditor } from '../components/editors/mock-response-headers-editor';
+import { MockResponseHeadersEditor, useMockRoutePatcher } from '../components/editors/mock-response-headers-editor';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { SvgIcon } from '../components/svg-icon';
@@ -57,10 +57,10 @@ const mockContentTypes = [
 ];
 export const MockRouteRoute = () => {
   const mockUrl = 'url goes here?';
-  const method = 'GET';
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   console.log({ mockRoute });
   const [selectedContentType, setContentType] = useState('');
+  const patchMockRoute = useMockRoutePatcher();
   return (
     <Pane type="request">
       <PaneHeader>
@@ -69,7 +69,7 @@ export const MockRouteRoute = () => {
             className="method-dropdown"
             triggerButton={
               <StyledDropdownButton className={'pad-right pad-left vertically-center'}>
-                <span className={`http-method-${method}`}>{method}</span>{' '}
+                <span className={`http-method-${mockRoute.method}`}>{mockRoute.method}</span>{' '}
                 <i className="fa fa-caret-down space-left" />
               </StyledDropdownButton>
             }
@@ -78,7 +78,7 @@ export const MockRouteRoute = () => {
               <ItemContent
                 className={`http-method-${method}`}
                 label={method}
-              // onClick={() => onChange(method)}
+                onClick={() => patchMockRoute(mockRoute._id, { method })}
               />
             </DropdownItem>
           ))}

@@ -1206,7 +1206,6 @@ export const updateMockRouteAction: ActionFunction = async ({ request, params })
   const patch = await request.json();
   console.log({ mockRouteId, patch });
 
-  invariant(typeof patch.name === 'string', 'Name is required');
   const mockRoute = await models.mockRoute.getById(mockRouteId);
   invariant(mockRoute, 'Mock route is required');
 
