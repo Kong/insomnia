@@ -21,10 +21,11 @@ export const loader: LoaderFunction = async ({
   request,
   params,
 }): Promise<MockRouteLoaderData> => {
-  const { organizationId, projectId, workspaceId } = params;
+  const { organizationId, projectId, workspaceId, mockRouteId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
   invariant(workspaceId, 'Workspace ID is required');
+  console.log({ mockRouteId });
   return {
     mockRoute: { headers: [] },
   };
@@ -56,7 +57,6 @@ export const MockRouteRoute = () => {
   const mockUrl = 'url goes here?';
   const method = 'GET';
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
-  // const { mockRoute } = useLoaderData() as MockRouteLoaderData;
   console.log({ mockRoute });
   const [selectedContentType, setContentType] = useState('');
   return (

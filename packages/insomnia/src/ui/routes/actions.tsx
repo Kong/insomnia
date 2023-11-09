@@ -290,8 +290,8 @@ export const createNewWorkspaceAction: ActionFunction = async ({
   });
 
   if (scope === 'mock-server') {
-    // return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
-    return null;
+    await models.mockServer.getOrCreateForParentId(workspace._id);
+    return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspace._id}/${scopeToActivity(workspace.scope)}`);
   }
 
   if (scope === 'design') {
@@ -1194,21 +1194,17 @@ export const reorderCollectionAction: ActionFunction = async ({ request, params 
 };
 
 export const createMockRouteAction: ActionFunction = async ({ request, params }) => {
-  const { projectId } = params;
-  invariant(projectId, 'projectId is required');
-  const formData = await request.formData();
-  const name = formData.get('name') || 'My mock server';
-  invariant(typeof name === 'string', 'Name is required');
-
-  // await models.mockServer.create({
-  //   name,
-  //   parentId: projectId,
-  // });
-  // await models.workspace.create({
-  //   name,
-  //   parentId: projectId,
-  //   scope: 'mock-server',
-  // });
+  const patch = await request.json();
+  invariant(typeof patch.name === 'string', 'Name is required');
+  invariant(typeof patch.parentId === 'string', 'parentId is required');
+  await models.mockRoute.create(patch);
+  return null;
+};
+export const updateMockRouteAction: ActionFunction = async ({ request, params }) => {
+  const patch = await request.json();
+  invariant(typeof patch.name === 'string', 'Name is required');
+  invariant(typeof patch.parentId === 'string', 'parentId is required');
+  await models.mockRoute.update(patch._id, patch);
   return null;
 };
 export const deleteMockRouteAction: ActionFunction = async ({ request, params }) => {

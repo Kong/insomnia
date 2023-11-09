@@ -1,8 +1,10 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Suspense } from 'react';
 import { Breadcrumbs, Button, GridList, Item, Link, Menu, MenuTrigger, Popover } from 'react-aria-components';
-import { LoaderFunction, NavLink, Route, Routes, useFetcher, useLoaderData, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
+import { LoaderFunction, NavLink, Route, Routes, useFetcher, useLoaderData, useNavigate, useParams } from 'react-router-dom';
 
+import * as models from '../../models';
+import { MockRoute } from '../../models/mock-route';
 import { invariant } from '../../utils/invariant';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { EditableInput } from '../components/editable-input';
@@ -11,31 +13,30 @@ import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { MockRouteResponse, MockRouteRoute } from './mock-route';
-
 interface LoaderData {
-  mockRoutes: {
-    _id: string;
-    name: string;
-  }[];
+  mockServerId: string;
+  mockRoutes: MockRoute[];
 }
 export const loader: LoaderFunction = async ({
   request,
   params,
 }): Promise<LoaderData> => {
-  const { organizationId, projectId } = params;
+  const { organizationId, projectId, workspaceId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
+  invariant(workspaceId, 'Workspace ID is required');
+
+  const activeWorkspace = await models.workspace.getById(workspaceId);
+  invariant(activeWorkspace, 'Workspace not found');
+  const activeMockServer = await models.mockServer.findByParentId(workspaceId);
+  invariant(activeMockServer, 'Mock Server not found');
+
+  const mockRoutes = await models.mockRoute.findByParentId(activeMockServer._id);
+  console.log({ mockRoutes });
+
   return {
-    mockRoutes: [
-      {
-        _id: '1',
-        name: '/pets/1',
-      },
-      {
-        _id: '2',
-        name: '/pets/2',
-      },
-    ],
+    mockServerId: activeMockServer._id,
+    mockRoutes,
   };
 };
 
@@ -46,7 +47,7 @@ const MockServerRoute = () => {
     workspaceId: string;
     mockRouteId: string;
   };
-  const { mockRoutes } = useLoaderData() as LoaderData;
+  const { mockServerId, mockRoutes } = useLoaderData() as LoaderData;
   const fetcher = useFetcher();
   const navigate = useNavigate();
 
@@ -54,7 +55,7 @@ const MockServerRoute = () => {
     id: string;
     name: string;
     icon: IconName;
-    action: (suiteId: string, suiteName: string) => void;
+    action: (id: string, name: string) => void;
   }[] = [
       {
         id: 'rename',
@@ -101,7 +102,9 @@ const MockServerRoute = () => {
           });
         },
       },
+
     ];
+
   return <SidebarLayout
     className="new-sidebar"
     renderPageSidebar={
@@ -130,8 +133,10 @@ const MockServerRoute = () => {
               fetcher.submit(
                 {
                   name: 'New Mock Route',
+                  parentId: mockServerId,
                 },
                 {
+                  encType: 'application/json',
                   method: 'post',
                   action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/new`,
                 }

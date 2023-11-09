@@ -38,7 +38,20 @@ export function create(patch: Partial<MockServer> = {}) {
 
   return db.docCreate<MockServer>(type, patch);
 }
+export async function getOrCreateForParentId(
+  workspaceId: string,
+  patch: Partial<MockServer> = {},
+) {
+  const mockServer = await db.getWhere<MockServer>(type, {
+    parentId: workspaceId,
+  });
 
+  if (!mockServer) {
+    return db.docCreate<MockServer>(type, { ...patch, parentId: workspaceId });
+  }
+
+  return mockServer;
+}
 export function update(
   mockServer: MockServer,
   patch: Partial<MockServer> = {},

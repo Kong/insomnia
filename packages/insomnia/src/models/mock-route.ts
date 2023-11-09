@@ -62,7 +62,7 @@ export function getById(id: string) {
 }
 
 export function findByParentId(parentId: string) {
-  return db.getWhere<MockRoute>(type, { parentId });
+  return db.find<MockRoute>(type, { parentId });
 }
 
 export function removeWhere(parentId: string) {
