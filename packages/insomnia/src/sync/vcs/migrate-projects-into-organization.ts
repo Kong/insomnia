@@ -49,6 +49,8 @@ export const scanForMigration = async (): Promise<QueueForMigration> => {
     parentId: null,
   });
 
+  console.log({ legacyRemoteProjects });
+
   for (const project of legacyRemoteProjects) {
     console.log('[migration] found legacy remote project', project);
     queueLocalProjects.add(project._id);
@@ -68,6 +70,7 @@ export const scanForMigration = async (): Promise<QueueForMigration> => {
     _id: { $ne: models.project.SCRATCHPAD_PROJECT_ID },
   });
 
+  console.log({ localProjects });
   for (const project of localProjects) {
     console.log('[migration] found local project', project._id);
     queueLocalProjects.add(project._id);
@@ -84,6 +87,8 @@ export const scanForMigration = async (): Promise<QueueForMigration> => {
   const untrackedFiles = await database.find<Workspace>(models.workspace.type, {
     parentId: null,
   });
+
+  console.log({ untrackedFiles });
 
   for (const file of untrackedFiles) {
     console.log('[migration] found an untracked file with no parents', file._id);
@@ -107,7 +112,7 @@ interface RemoteBackground {
     remoteProjectId: RemoteProjectId;
   }>;
 }
-const remoteBackgroundCheck = async (sessionId: string): Promise<RemoteBackground | null> => {
+export const remoteBackgroundCheck = async (sessionId: string): Promise<RemoteBackground | null> => {
   const response = await window.main.insomniaFetch<RemoteFileSnapshot | { error: string; message: string }>({
     method: 'GET',
     path: '/v1/user/file-snapshot',
@@ -171,7 +176,8 @@ interface RecordsForMigration {
   projects: Map<string, string>;
   files: Map<string, string>;
 };
-const _migrateToLocalVault = async (queue: QueueForMigration, remoteBackground: RemoteBackground): Promise<RecordsForMigration> => {
+/** @private */
+export const _migrateToLocalVault = async (queue: QueueForMigration, remoteBackground: RemoteBackground): Promise<RecordsForMigration> => {
   const recordsForProjectMigration = new Map<string, string>();
   const recordsForFileMigration = new Map<string, string>();
 
@@ -232,7 +238,8 @@ const _migrateToLocalVault = async (queue: QueueForMigration, remoteBackground: 
   };
 };
 
-const _validateProjectsWithRemote = async (queue: QueueForMigration, remoteBackground: RemoteBackground) => {
+/** @private */
+export const _validateProjectsWithRemote = async (queue: QueueForMigration, remoteBackground: RemoteBackground) => {
   console.log('[migration] validating projects against the remote');
   const { myWorkspaceId } = remoteBackground;
   const myWorkspace = remoteBackground.remoteFileSnapshot[myWorkspaceId];
@@ -303,7 +310,8 @@ const _validateProjectsWithRemote = async (queue: QueueForMigration, remoteBackg
 type RecordsForCloudMigration = RecordsForMigration & {
   filesForSync: Workspace[];
 };
-const _migrateToCloudSync = async (
+/** @private */
+export const _migrateToCloudSync = async (
   queue: QueueForMigration,
   remoteBackground: RemoteBackground,
 ): Promise<RecordsForCloudMigration> => {
@@ -330,6 +338,7 @@ const _migrateToCloudSync = async (
   for (const validProject of validProjects) {
     if (validProject.parentId !== myWorkspaceId) {
       console.log('[migration] repairing team-project to organization linking for local database');
+      // TODO: update the array validProjects here
       await database.docUpdate<Project>(validProject, {
         parentId: myWorkspaceId,
       });
