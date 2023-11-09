@@ -28,6 +28,12 @@ interface BaseGrpcRequest {
   metadata: GrpcRequestHeader[];
   metaSortKey: number;
   isPrivate: boolean;
+  bufReflectionApi: {
+    enabled: boolean;
+    url: string;
+    apiKey: string;
+    module: string;
+  };
 }
 
 export type GrpcRequest = BaseModel & BaseGrpcRequest;
@@ -53,6 +59,12 @@ export function init(): BaseGrpcRequest {
     },
     metaSortKey: -1 * Date.now(),
     isPrivate: false,
+    bufReflectionApi: {
+      enabled: false,
+      url: 'https://buf.build',
+      apiKey: '',
+      module: '',
+    },
   };
 }
 
