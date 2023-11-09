@@ -133,6 +133,7 @@ export const remoteLoader: LoaderFunction = async ({ params }): Promise<RemoteCo
     const remoteId = project.remoteId;
     invariant(remoteId, 'Project is not a remote project');
     const vcs = VCSInstance();
+
     const allVCSBackendProjects = await vcs.localBackendProjects();
     // Filter out backend projects that are not connected to a workspace because the workspace was deleted
     const getWorkspacesByLocalProjects = allVCSBackendProjects.map(async backendProject => {
@@ -142,20 +143,29 @@ export const remoteLoader: LoaderFunction = async ({ params }): Promise<RemoteCo
         return null;
       }
 
+      // If the workspace doesn't have a parent, set it to the current project
+      if (!workspace.parentId) {
+        await models.workspace.update(workspace, {
+          parentId: project._id,
+        });
+      }
+
       return backendProject;
     });
 
     // Map the backend projects to ones with workspaces in parallel
     const localBackendProjects = (await Promise.all(getWorkspacesByLocalProjects)).filter(isNotNullOrUndefined);
 
-    const remoteBackendProjects = (await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: project.remoteId })).filter(({ id, rootDocumentId }) => {
+    const allRemoteBackendProjects = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
+
+    const remoteBackendProjects = await Promise.all(allRemoteBackendProjects.filter(async ({ id, rootDocumentId }) => {
       const localBackendProjectExists = localBackendProjects.find(p => p.id === id);
-      const workspaceExists = Boolean(models.workspace.getById(rootDocumentId));
+      const workspaceExists = Boolean(await models.workspace.getById(rootDocumentId));
       // Mark as missing if:
       //   - the backend project doesn't yet exists locally
       //   - the backend project exists locally but somehow the workspace doesn't anymore
       return !(workspaceExists && localBackendProjectExists);
-    });
+    }));
 
     return {
       remoteBackendProjects,
