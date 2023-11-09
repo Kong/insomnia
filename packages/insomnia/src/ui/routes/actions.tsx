@@ -335,8 +335,9 @@ export const deleteWorkspaceAction: ActionFunction = async ({
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   const workspace = await models.workspace.getById(workspaceId);
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   invariant(workspace, 'Workspace not found');
-  if (isRemoteProject(project)) {
+  if (isRemoteProject(project) && !workspaceMeta.gitRepositoryId) {
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, workspace.name);
