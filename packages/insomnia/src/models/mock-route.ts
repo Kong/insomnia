@@ -1,5 +1,6 @@
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
+import { RequestHeader } from './request';
 
 export const name = 'Mock Route';
 
@@ -13,7 +14,7 @@ export const canSync = true;
 
 interface BaseMockRoute {
   body: string;
-  headers: Record<string, string>;
+  headers: RequestHeader[];
   method: string;
   parentId: string;
   path: string;
@@ -25,7 +26,7 @@ export type MockRoute = BaseModel & BaseMockRoute;
 export function init(): BaseMockRoute {
   return {
     body: '',
-    headers: {},
+    headers: [],
     method: 'GET',
     parentId: '',
     path: '',

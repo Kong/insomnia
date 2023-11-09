@@ -1,25 +1,33 @@
-import React from 'react';
-import { Button, Tabs } from 'react-aria-components';
-import { LoaderFunction } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Button } from 'react-aria-components';
+import { LoaderFunction, useLoaderData, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
-import { HTTP_METHODS } from '../../common/constants';
+import { contentTypesMap, HTTP_METHODS } from '../../common/constants';
+import { MockRoute } from '../../models/mock-route';
 import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
-import { TabItem } from '../components/base/tabs';
+import { TabItem, Tabs } from '../components/base/tabs';
+import { CodeEditor } from '../components/codemirror/code-editor';
 import { OneLineEditor } from '../components/codemirror/one-line-editor';
-import { RequestHeadersEditor } from '../components/editors/request-headers-editor';
+import { MockResponseHeadersEditor } from '../components/editors/mock-response-headers-editor';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
+
+export interface MockRouteLoaderData {
+  mockRoute: MockRoute;
+}
 
 export const loader: LoaderFunction = async ({
   request,
   params,
-}): Promise<{}> => {
+}): Promise<MockRouteLoaderData> => {
   const { organizationId, projectId, workspaceId } = params;
   invariant(organizationId, 'Organization ID is required');
   invariant(projectId, 'Project ID is required');
   invariant(workspaceId, 'Workspace ID is required');
-  return {};
+  return {
+    mockRoute: { headers: [] },
+  };
 };
 const StyledUrlBar = styled.div`
   width: 100%;
@@ -40,9 +48,17 @@ const StyledDropdownButton = styled(DropdownButton)({
   },
 });
 
+const mockContentTypes = [
+  'application/json',
+  'application/xml',
+];
 export const MockRouteRoute = () => {
   const mockUrl = 'url goes here?';
   const method = 'GET';
+  const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
+  // const { mockRoute } = useLoaderData() as MockRouteLoaderData;
+  console.log({ mockRoute });
+  const [selectedContentType, setContentType] = useState('');
   return (
     <Pane type="request">
       <PaneHeader>
@@ -55,7 +71,7 @@ export const MockRouteRoute = () => {
                 <i className="fa fa-caret-down space-left" />
               </StyledDropdownButton>
             }
-          >      {HTTP_METHODS.map(method => (
+          >{HTTP_METHODS.map(method => (
             <DropdownItem key={method}>
               <ItemContent
                 className={`http-method-${method}`}
@@ -81,12 +97,42 @@ export const MockRouteRoute = () => {
         </StyledUrlBar>
       </PaneHeader>
       <PaneBody>
-        <Tabs aria-label="Websocket request pane tabs">
-          <TabItem key="mock-body" title="Mock Body">
-            <div>body</div>
+        <Tabs aria-label="Mock response config">
+          <TabItem
+            key="content-type"
+            title={<Dropdown
+              aria-label='Change Body Type'
+              triggerButton={
+                <DropdownButton>
+                  {selectedContentType ? contentTypesMap[selectedContentType]?.[0] : 'Mock Body'}
+                  <i className="fa fa-caret-down space-left" />
+                </DropdownButton>
+              }
+            >
+              {mockContentTypes.map(contentType => (
+                <DropdownItem key={contentType}>
+                  <ItemContent
+                    label={contentTypesMap[contentType]?.[1]}
+                    onClick={() => setContentType(contentType)}
+                  />
+                </DropdownItem>
+              ))}
+            </Dropdown>
+            }
+          >
+            <CodeEditor
+              id="raw-editor"
+              showPrettifyButton
+              // defaultValue={content}
+              // className={className}
+              enableNunjucks
+              // onChange={onChange}
+              mode={selectedContentType}
+              placeholder="..."
+            />
           </TabItem>
           <TabItem key="headers" title="Mock Headers">
-            <RequestHeadersEditor
+            <MockResponseHeadersEditor
               bulk={false}
             />
           </TabItem>
@@ -94,4 +140,25 @@ export const MockRouteRoute = () => {
       </PaneBody>
     </Pane>
   );
+};
+
+export const MockRouteResponse = () => {
+  return (<Pane type="response">
+    <PaneBody>
+      <Tabs aria-label="Mock response">
+        <TabItem key="history" title="History">
+          history
+        </TabItem>
+        <TabItem key="preview" title="Preview">
+          preview
+        </TabItem>
+        <TabItem key="headers" title="Headers">
+          headers
+        </TabItem>
+        <TabItem key="timeline" title="Timeline">
+          timeline
+        </TabItem>
+      </Tabs>
+    </PaneBody>
+  </Pane>);
 };

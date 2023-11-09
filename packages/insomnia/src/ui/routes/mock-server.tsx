@@ -1,7 +1,7 @@
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { Suspense } from 'react';
 import { Breadcrumbs, Button, GridList, Item, Link, Menu, MenuTrigger, Popover } from 'react-aria-components';
-import { LoaderFunction, NavLink, Route, Routes, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
+import { LoaderFunction, NavLink, Route, Routes, useFetcher, useLoaderData, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { invariant } from '../../utils/invariant';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
@@ -10,7 +10,7 @@ import { Icon } from '../components/icon';
 import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
 import { SidebarLayout } from '../components/sidebar-layout';
-import { MockRouteRoute } from './mock-route';
+import { MockRouteResponse, MockRouteRoute } from './mock-route';
 
 interface LoaderData {
   mockRoutes: {
@@ -46,7 +46,7 @@ const MockServerRoute = () => {
     workspaceId: string;
     mockRouteId: string;
   };
-  const { mockRoutes } = useRouteLoaderData('mock-server') as LoaderData;
+  const { mockRoutes } = useLoaderData() as LoaderData;
   const fetcher = useFetcher();
   const navigate = useNavigate();
 
@@ -243,7 +243,7 @@ const MockServerRoute = () => {
         }
       />
     </Routes>}
-    renderPaneTwo={null}
+    renderPaneTwo={<MockRouteResponse />}
   />;
 };
 

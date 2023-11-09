@@ -441,6 +441,7 @@ const router = createMemoryRouter(
                               children: [
                                 {
                                   path: 'mock-route',
+                                  id: 'mock-route',
                                   children: [
                                     {
                                       path: ':mockRouteId',
