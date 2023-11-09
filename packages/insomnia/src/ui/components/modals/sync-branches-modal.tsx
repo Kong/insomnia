@@ -208,6 +208,13 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                 </TextField>
               </createBranchFetcher.Form>
 
+              {createBranchFetcher.data?.error && (
+                <div className='flex items-center gap-2'>
+                  <Icon icon='triangle-exclamation' className='w-5 text-[--color-danger]' />
+                  <span className='text-[--color-danger] text-sm'>{createBranchFetcher.data.error}</span>
+                </div>
+              )}
+
               <div className='select-none border border-solid rounded border-[--hl-sm] divide-y divide-solid divide-[--hl-sm]'>
                 <Heading className='font-semibold uppercase text-[--hl] text-sm p-2'>Local Branches</Heading>
                 <GridList
