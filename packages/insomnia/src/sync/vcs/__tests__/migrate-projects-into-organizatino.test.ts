@@ -201,12 +201,12 @@ describe('_migrateToLocalVault()', () => {
 
     expect(wrk1).toMatchObject({});
     expect(wrk2).toBeTruthy();
-    expect(wrk2?.parentId).not.toBeNull();
+    expect(wrk2!.parentId).not.toBeNull();
 
     const { parentId: newVaultId } = wrk2!;
     expect(wrk3).toBeTruthy();
-    expect(wrk3?.parentId).toEqual(newVaultId);
+    expect(wrk3!.parentId).toEqual(newVaultId);
     expect(wrk4).toBeTruthy();
-    expect(wrk4?.parentId).toEqual(newVaultId);
+    expect(wrk4!.parentId).toEqual(newVaultId);
   });
 });
