@@ -134,28 +134,20 @@ export const remoteLoader: LoaderFunction = async ({ params }): Promise<RemoteCo
     invariant(remoteId, 'Project is not a remote project');
     const vcs = VCSInstance();
 
-    const allLocalVCSBackendProjects = await vcs.localBackendProjects();
-    const allRemoteVCSBackendProjects = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
+    const allLocalVCSBackendProjectsForRemoteId = (await vcs.localBackendProjects()).filter(p => p.id === remoteId);
+    const allRemoteVCSBackendProjectsForRemoteId = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
 
     const connectedVCSWorkspaces = await database.find<Workspace>(models.workspace.type, {
       _id: {
-        $in: [...allLocalVCSBackendProjects, ...allRemoteVCSBackendProjects].map(p => p.rootDocumentId),
+        $in: [...allLocalVCSBackendProjectsForRemoteId, ...allRemoteVCSBackendProjectsForRemoteId].map(p => p.rootDocumentId),
       },
+      parentId: project._id,
     });
 
-    // Repair any connected workspaces that are missing a parent id
-    await Promise.all(connectedVCSWorkspaces.map(async workspace => {
-      if (!workspace.parentId) {
-        await models.workspace.update(workspace, {
-          parentId: projectId,
-        });
-      }
-    }));
-
-    const localBackendProjects = allLocalVCSBackendProjects
+    const localBackendProjects = allLocalVCSBackendProjectsForRemoteId
       .filter(p => connectedVCSWorkspaces.find(w => w._id === p.rootDocumentId));
 
-    const remoteBackendProjects = allRemoteVCSBackendProjects
+    const remoteBackendProjects = allRemoteVCSBackendProjectsForRemoteId
       .filter(p => !connectedVCSWorkspaces.find(w => w._id === p.rootDocumentId))
       .filter(p => !localBackendProjects.find(l => l.id === p.id));
 
