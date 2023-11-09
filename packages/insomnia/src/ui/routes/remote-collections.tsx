@@ -118,7 +118,7 @@ export const pullRemoteCollectionAction: ActionFunction = async ({ request, para
 };
 
 export interface RemoteCollectionsLoaderData {
-  remoteBackendProjects: BackendProject[];
+  backendProjectsToPull: BackendProject[];
 }
 
 export const remoteLoader: LoaderFunction = async ({ params }): Promise<RemoteCollectionsLoaderData> => {
@@ -133,39 +133,32 @@ export const remoteLoader: LoaderFunction = async ({ params }): Promise<RemoteCo
     const remoteId = project.remoteId;
     invariant(remoteId, 'Project is not a remote project');
     const vcs = VCSInstance();
-    const allVCSBackendProjects = await vcs.localBackendProjects();
-    // Filter out backend projects that are not connected to a workspace because the workspace was deleted
-    const getWorkspacesByLocalProjects = allVCSBackendProjects.map(async backendProject => {
-      const workspace = await models.workspace.getById(backendProject.rootDocumentId);
 
-      if (!workspace) {
-        return null;
-      }
+    const allPulledBackendProjectsForRemoteId = (await vcs.localBackendProjects()).filter(p => p.id === remoteId);
+    // Remote backend projects are fetched from the backend since they are not stored locally
+    const allFetchedRemoteBackendProjectsForRemoteId = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
 
-      return backendProject;
+    // Get all workspaces that are connected to backend projects and under the current project
+    const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
+      _id: {
+        $in: [...allPulledBackendProjectsForRemoteId, ...allFetchedRemoteBackendProjectsForRemoteId].map(p => p.rootDocumentId),
+      },
+      parentId: project._id,
     });
 
-    // Map the backend projects to ones with workspaces in parallel
-    const localBackendProjects = (await Promise.all(getWorkspacesByLocalProjects)).filter(isNotNullOrUndefined);
-
-    const remoteBackendProjects = (await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: project.remoteId })).filter(({ id, rootDocumentId }) => {
-      const localBackendProjectExists = localBackendProjects.find(p => p.id === id);
-      const workspaceExists = Boolean(models.workspace.getById(rootDocumentId));
-      // Mark as missing if:
-      //   - the backend project doesn't yet exists locally
-      //   - the backend project exists locally but somehow the workspace doesn't anymore
-      return !(workspaceExists && localBackendProjectExists);
-    });
+    // Get the list of remote backend projects that we need to pull
+    const backendProjectsToPull = allFetchedRemoteBackendProjectsForRemoteId
+      .filter(p => !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId));
 
     return {
-      remoteBackendProjects,
+      backendProjectsToPull,
     };
   } catch (e) {
     console.warn('Failed to load backend projects', e);
   }
 
   return {
-    remoteBackendProjects: [],
+    backendProjectsToPull: [],
   };
 };
 

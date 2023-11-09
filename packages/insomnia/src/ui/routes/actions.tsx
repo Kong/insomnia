@@ -341,10 +341,8 @@ export const deleteWorkspaceAction: ActionFunction = async ({
 
   try {
     const vcs = VCSInstance();
-      const backendProject = await vcs._getBackendProjectByRootDocument(workspace._id);
-      await vcs._removeProject(backendProject);
-
-    console.log({ projectsLOCAL: await vcs.localBackendProjects() });
+    const backendProject = await vcs._getBackendProjectByRootDocument(workspace._id);
+    await vcs._removeProject(backendProject);
   } catch (err) {
     console.warn('Failed to remove project from VCS', err);
   }
