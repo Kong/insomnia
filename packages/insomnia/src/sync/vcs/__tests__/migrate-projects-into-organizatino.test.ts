@@ -238,7 +238,7 @@ describe('_migrateToLocalVault()', () => {
       models.workspace.getById(records.files.get('wrk_4')),
     ]);
 
-    expect(wrk1).toMatchObject({});
+    expect(wrk1!.parentId).toBe('proj_1');
     expect(wrk2).toBeTruthy();
     expect(wrk2!.parentId).not.toBeNull();
 
