@@ -48,7 +48,7 @@ export const AIProvider: FC<PropsWithChildren> = ({ children }) => {
     const organizationIdHasChanged = previousOrganizationIdRef.current !== organizationId;
     const fetcherHasNotRun = aiAccessFetcher.state === 'idle' && !aiAccessFetcher.data;
 
-    if (fetcherHasNotRun && organizationIdHasChanged) {
+    if (fetcherHasNotRun || organizationIdHasChanged) {
       previousOrganizationIdRef.current = organizationId;
       aiAccessFetcher.submit({}, {
         method: 'post',
