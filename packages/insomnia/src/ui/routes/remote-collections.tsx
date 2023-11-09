@@ -118,7 +118,7 @@ export const pullRemoteCollectionAction: ActionFunction = async ({ request, para
 };
 
 export interface RemoteCollectionsLoaderData {
-  remoteBackendProjects: BackendProject[];
+  backendProjectsToPull: BackendProject[];
 }
 
 export const remoteLoader: LoaderFunction = async ({ params }): Promise<RemoteCollectionsLoaderData> => {
@@ -134,32 +134,31 @@ export const remoteLoader: LoaderFunction = async ({ params }): Promise<RemoteCo
     invariant(remoteId, 'Project is not a remote project');
     const vcs = VCSInstance();
 
-    const allLocalVCSBackendProjectsForRemoteId = (await vcs.localBackendProjects()).filter(p => p.id === remoteId);
-    const allRemoteVCSBackendProjectsForRemoteId = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
+    const allPulledBackendProjectsForRemoteId = (await vcs.localBackendProjects()).filter(p => p.id === remoteId);
+    // Remote backend projects are fetched from the backend since they are not stored locally
+    const allFetchedRemoteBackendProjectsForRemoteId = await vcs.remoteBackendProjects({ teamId: organizationId, teamProjectId: remoteId });
 
-    const connectedVCSWorkspaces = await database.find<Workspace>(models.workspace.type, {
+    // Get all workspaces that are connected to backend projects and under the current project
+    const workspacesWithBackendProjects = await database.find<Workspace>(models.workspace.type, {
       _id: {
-        $in: [...allLocalVCSBackendProjectsForRemoteId, ...allRemoteVCSBackendProjectsForRemoteId].map(p => p.rootDocumentId),
+        $in: [...allPulledBackendProjectsForRemoteId, ...allFetchedRemoteBackendProjectsForRemoteId].map(p => p.rootDocumentId),
       },
       parentId: project._id,
     });
 
-    const localBackendProjects = allLocalVCSBackendProjectsForRemoteId
-      .filter(p => connectedVCSWorkspaces.find(w => w._id === p.rootDocumentId));
-
-    const remoteBackendProjects = allRemoteVCSBackendProjectsForRemoteId
-      .filter(p => !connectedVCSWorkspaces.find(w => w._id === p.rootDocumentId))
-      .filter(p => !localBackendProjects.find(l => l.id === p.id));
+    // Get the list of remote backend projects that we need to pull
+    const backendProjectsToPull = allFetchedRemoteBackendProjectsForRemoteId
+      .filter(p => !workspacesWithBackendProjects.find(w => w._id === p.rootDocumentId));
 
     return {
-      remoteBackendProjects,
+      backendProjectsToPull,
     };
   } catch (e) {
     console.warn('Failed to load backend projects', e);
   }
 
   return {
-    remoteBackendProjects: [],
+    backendProjectsToPull: [],
   };
 };
 

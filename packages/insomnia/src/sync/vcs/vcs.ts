@@ -1,3 +1,6 @@
+// @TODOs
+// - [ ] Rename things that run a fetch to fetchSomething...
+// - [ ] Make sure that pull handles updating the parentId to the current project._id
 import clone from 'clone';
 import crypto from 'crypto';
 import path from 'path';
