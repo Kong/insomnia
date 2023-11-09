@@ -226,6 +226,7 @@ export async function logout() {
   }
 
   _unsetSessionData();
+  window.sessionStorage.removeItem('hasResetPassphrase');
   window.main.loginStateChange();
 }
 
