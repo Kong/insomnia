@@ -70,7 +70,8 @@ const MockServerRoute = () => {
               name && fetcher.submit(
                 { name },
                 {
-                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${id}/rename`,
+                  encType: 'application/json',
+                  action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${id}/update`,
                   method: 'POST',
                 }
               );
@@ -84,7 +85,7 @@ const MockServerRoute = () => {
         icon: 'trash',
         action: (id, name) => {
           showModal(AskModal, {
-            title: 'Delete suite',
+            title: 'Delete route',
             message: `Do you really want to delete "${name}"?`,
             yesText: 'Delete',
             noText: 'Cancel',
@@ -180,12 +181,13 @@ const MockServerRoute = () => {
                   <EditableInput
                     value={item.name}
                     name="name"
-                    ariaLabel="Test suite name"
+                    ariaLabel="Mock route name"
                     onChange={name => {
                       name && fetcher.submit(
                         { name },
                         {
-                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${item._id}/rename`,
+                          encType: 'application/json',
+                          action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/mock-server/mock-route/${item._id}/update`,
                           method: 'POST',
                         }
                       );

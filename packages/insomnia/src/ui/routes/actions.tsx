@@ -1201,27 +1201,24 @@ export const createMockRouteAction: ActionFunction = async ({ request, params })
   return null;
 };
 export const updateMockRouteAction: ActionFunction = async ({ request, params }) => {
+  const { mockRouteId } = params;
+  invariant(typeof mockRouteId === 'string', 'Mock route id is required');
   const patch = await request.json();
+  console.log({ mockRouteId, patch });
+
   invariant(typeof patch.name === 'string', 'Name is required');
-  invariant(typeof patch.parentId === 'string', 'parentId is required');
-  await models.mockRoute.update(patch._id, patch);
+  const mockRoute = await models.mockRoute.getById(mockRouteId);
+  invariant(mockRoute, 'Mock route is required');
+
+  await models.mockRoute.update(mockRoute, patch);
   return null;
 };
 export const deleteMockRouteAction: ActionFunction = async ({ request, params }) => {
-  const { projectId } = params;
-  invariant(projectId, 'projectId is required');
+  const { mockRouteId } = params;
+  invariant(typeof mockRouteId === 'string', 'Mock route id is required');
+  const mockRoute = await models.mockRoute.getById(mockRouteId);
+  invariant(mockRoute, 'mockRoute not found');
 
-  const project = await models.project.getById(projectId);
-  invariant(project, 'Project not found');
-
-  const formData = await request.formData();
-
-  const mockServerId = formData.get('mockServerId');
-  invariant(typeof mockServerId === 'string', 'Workspace ID is required');
-
-  // const mockServer = await models.mockServer.getById(mockServerId);
-  const mockServer = await models.workspace.getById(mockServerId);
-  invariant(mockServer, 'mockServer not found');
-
-  await models.mockServer.remove(mockServer);
+  await models.mockRoute.remove(mockRoute);
+  return null;
 };

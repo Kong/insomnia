@@ -459,7 +459,14 @@ const router = createMemoryRouter(
                                         ).createMockRouteAction(...args),
                                     },
                                     {
-                                      path: 'delete',
+                                      path: ':mockRouteId/update',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/actions')
+                                        ).updateMockRouteAction(...args),
+                                    },
+                                    {
+                                      path: ':mockRouteId/delete',
                                       action: async (...args) =>
                                         (
                                           await import('./routes/actions')

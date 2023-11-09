@@ -19,6 +19,7 @@ interface BaseMockRoute {
   parentId: string;
   path: string;
   statusCode: number;
+  name: string;
 }
 
 export type MockRoute = BaseModel & BaseMockRoute;
@@ -31,6 +32,7 @@ export function init(): BaseMockRoute {
     parentId: '',
     path: '',
     statusCode: 200,
+    name: '',
   };
 }
 
