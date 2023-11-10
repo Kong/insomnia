@@ -22,6 +22,7 @@ import { BodyEditor } from '../editors/body/body-editor';
 import { RequestHeadersEditor } from '../editors/request-headers-editor';
 import { RequestParametersEditor } from '../editors/request-parameters-editor';
 import { ErrorBoundary } from '../error-boundary';
+import { HelpTooltip } from '../help-tooltip';
 import { Icon } from '../icon';
 import { MarkdownPreview } from '../markdown-preview';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
@@ -280,6 +281,84 @@ export const RequestPane: FC<Props> = ({
               </button>
             </TabPanelFooter>
           </HeaderContainer>
+        </TabItem>
+        <TabItem key="mock-response" title="Mock Response">
+          <div className="px-32 h-full flex flex-col justify-center">
+            <div className="flex place-content-center text-9xl pb-2">
+              <Icon icon="cube" />
+            </div>
+            <div className="flex place-content-center pb-2">
+              Choose an existing Mock file and route, or create a new one.
+            </div>
+            <form>
+              <div className="form-row">
+                <div className="form-control form-control--outlined">
+                  <label>
+                    Choose Mock Server
+                    <HelpTooltip position="top" className="space-left">
+                      Select from created mock servers to send this request to
+                    </HelpTooltip>
+                    <select
+                      value={'My Sample Mock'}
+                    // onChange={event => {
+                    //   const activeWorkspaceIdToCopyTo = event.currentTarget.value;
+                    //   setState(state => ({
+                    //     ...state,
+                    //     activeWorkspaceIdToCopyTo,
+                    //   }));
+                    // }}
+                    >
+                      <option value="">-- Select... --</option>
+                      {[{ name: 'Mock Server 1 ', _id: '1234' }]
+                        .map(w => (
+                          <option key={w._id} value={w._id}>
+                            {w.name}
+                          </option>
+                        ))
+                      }
+                    </select>
+                  </label>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-control form-control--outlined">
+                  <label>
+                    Choose Mock Route
+                    <HelpTooltip position="top" className="space-left">
+                      Select from created mock routes to send this request to
+                    </HelpTooltip>
+                    <select
+                      value={''}
+                    // onChange={event => {
+                    //   const activeWorkspaceIdToCopyTo = event.currentTarget.value;
+                    //   setState(state => ({
+                    //     ...state,
+                    //     activeWorkspaceIdToCopyTo,
+                    //   }));
+                    // }}
+                    >
+                      <option value="">-- Select... --</option>
+                      {[{ name: 'Mock 1 (/hello/world)', _id: '1234' }]
+                        .map(w => (
+                          <option key={w._id} value={w._id}>
+                            {w.name}
+                          </option>
+                        ))
+                      }
+                    </select>
+                  </label>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                >
+                  Send
+                </Button>
+              </div>
+            </form>
+          </div>
         </TabItem>
         <TabItem
           key="docs"
