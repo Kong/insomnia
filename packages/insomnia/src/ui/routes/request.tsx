@@ -17,6 +17,7 @@ import { CookieJar } from '../../models/cookie-jar';
 import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
+import { MockServer } from '../../models/mock-server';
 import { getPathParametersFromUrl, isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { isRequestMeta, RequestMeta } from '../../models/request-meta';
 import { RequestVersion } from '../../models/request-version';
@@ -49,12 +50,14 @@ export interface RequestLoaderData {
   activeResponse: Response | null;
   responses: Response[];
   requestVersions: RequestVersion[];
+  mockServers: MockServer[];
 }
 
 export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData | WebSocketRequestLoaderData | GrpcRequestLoaderData> => {
   const { organizationId, projectId, requestId, workspaceId } = params;
   invariant(requestId, 'Request ID is required');
   invariant(workspaceId, 'Workspace ID is required');
+  invariant(projectId, 'Project ID is required');
   const activeRequest = await requestOperations.getById(requestId);
   if (!activeRequest) {
     throw redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
@@ -85,12 +88,16 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     .filter((r: Response | WebSocketResponse) => r.environmentId === activeWorkspaceMeta.activeEnvironmentId);
   const responses = (filterResponsesByEnv ? filteredResponses : allResponses)
     .sort((a: BaseModel, b: BaseModel) => (a.created > b.created ? -1 : 1));
+  const mockServers = await models.mockServer.findByProjectId(projectId);
+
   return {
     activeRequest,
     activeRequestMeta,
     activeResponse,
     responses,
     requestVersions: await models.requestVersion.findByParentId(requestId),
+    // Q: load mock servers here or somewhere else?
+    mockServers,
   } as RequestLoaderData | WebSocketRequestLoaderData;
 };
 

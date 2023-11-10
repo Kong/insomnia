@@ -70,7 +70,7 @@ export const RequestPane: FC<Props> = ({
   setLoading,
   onPaste,
 }) => {
-  const { activeRequest, activeRequestMeta } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const { activeRequest, activeRequestMeta, mockServers } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchSettings = useSettingsPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
@@ -299,7 +299,7 @@ export const RequestPane: FC<Props> = ({
                       Select from created mock servers to send this request to
                     </HelpTooltip>
                     <select
-                      value={'My Sample Mock'}
+                      value={mockServers?.[0]?.name || ''}
                     // onChange={event => {
                     //   const activeWorkspaceIdToCopyTo = event.currentTarget.value;
                     //   setState(state => ({
@@ -309,7 +309,7 @@ export const RequestPane: FC<Props> = ({
                     // }}
                     >
                       <option value="">-- Select... --</option>
-                      {[{ name: 'Mock Server 1 ', _id: '1234' }]
+                      {mockServers
                         .map(w => (
                           <option key={w._id} value={w._id}>
                             {w.name}

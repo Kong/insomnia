@@ -1,5 +1,5 @@
 import { database as db } from '../common/database';
-import type { BaseModel } from './index';
+import { type BaseModel, workspace } from './index';
 
 export const name = 'Mock Server';
 
@@ -13,6 +13,7 @@ export const canSync = true;
 
 interface BaseMockServer {
   parentId: string;
+  name: string;
 }
 
 export type MockServer = BaseModel & BaseMockServer;
@@ -20,6 +21,7 @@ export type MockServer = BaseModel & BaseMockServer;
 export function init(): BaseMockServer {
   return {
     parentId: '',
+    name: 'New Mock Server',
   };
 }
 
@@ -65,6 +67,12 @@ export function getById(id: string) {
 
 export function findByParentId(parentId: string) {
   return db.getWhere<MockServer>(type, { parentId });
+}
+
+export async function findByProjectId(projectId: string) {
+  const workspaces = await workspace.findByParentId(projectId);
+  console.log('workspaces', workspaces);
+  return db.find<MockServer>(type, { parentId: { $in: workspaces.map(ws => ws._id) } });
 }
 
 export function removeWhere(parentId: string) {
