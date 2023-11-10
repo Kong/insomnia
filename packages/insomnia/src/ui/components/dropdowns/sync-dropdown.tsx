@@ -45,12 +45,18 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
 
   useEffect(() => {
     if (syncDataFetcher.state === 'idle' && !syncDataFetcher.data) {
-      syncDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`);
+      syncDataFetcher.submit({}, {
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
+        method: 'POST',
+      });
     }
   }, [organizationId, projectId, syncDataFetcher, workspaceId]);
 
   useInterval(() => {
-    syncDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`);
+    syncDataFetcher.submit({}, {
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
+      method: 'POST',
+    });
   }, ONE_MINUTE_IN_MS);
 
   const error = checkoutFetcher.data?.error || pullFetcher.data?.error || pushFetcher.data?.error || rollbackFetcher.data?.error;

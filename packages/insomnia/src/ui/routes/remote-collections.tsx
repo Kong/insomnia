@@ -181,7 +181,7 @@ export type SyncDataLoaderData = SyncData | {
   error: string;
 };
 
-export const syncDataLoader: LoaderFunction = async ({ params }): Promise<SyncDataLoaderData> => {
+export const syncDataAction: ActionFunction = async ({ params }): Promise<SyncDataLoaderData> => {
   try {
     const { projectId, workspaceId } = params;
     invariant(typeof projectId === 'string', 'Project Id is required');

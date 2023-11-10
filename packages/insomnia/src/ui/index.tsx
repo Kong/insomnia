@@ -842,10 +842,10 @@ const router = createMemoryRouter(
                                 },
                                 {
                                   path: 'sync-data',
-                                  loader: async (...args) =>
+                                  action: async (...args) =>
                                     (
                                       await import('./routes/remote-collections')
-                                    ).syncDataLoader(...args),
+                                    ).syncDataAction(...args),
                                 },
                                 {
                                   path: 'branch',
