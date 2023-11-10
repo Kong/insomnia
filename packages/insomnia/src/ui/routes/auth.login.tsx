@@ -71,7 +71,7 @@ const Login = () => {
         Welcome to Insomnia
       </p>
       <p className='text-[--color-font] text-sm'>
-        Remember to use the same email address when using SSO.
+        Discover Local, Cloud or Git storage for your projects.
       </p>
       <Button
         aria-label='Continue with Google'
