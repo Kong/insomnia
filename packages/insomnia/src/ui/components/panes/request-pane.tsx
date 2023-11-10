@@ -70,12 +70,14 @@ export const RequestPane: FC<Props> = ({
   setLoading,
   onPaste,
 }) => {
-  const { activeRequest, activeRequestMeta, mockServers } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
+  const { activeRequest, activeRequestMeta, mockServerAndRoutes } = useRouteLoaderData('request/:requestId') as RequestLoaderData;
   const { workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
   const patchSettings = useSettingsPatcher();
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
     useState(false);
   const patchRequest = useRequestPatcher();
+  const [selectedMockServer, setSelectedMockServer] = useState('');
+  const [selectedMockRoute, setSelectedMockRoute] = useState('');
 
   useState(false);
   const handleImportQueryFromUrl = () => {
@@ -299,17 +301,14 @@ export const RequestPane: FC<Props> = ({
                       Select from created mock servers to send this request to
                     </HelpTooltip>
                     <select
-                      value={mockServers?.[0]?.name || ''}
-                    // onChange={event => {
-                    //   const activeWorkspaceIdToCopyTo = event.currentTarget.value;
-                    //   setState(state => ({
-                    //     ...state,
-                    //     activeWorkspaceIdToCopyTo,
-                    //   }));
-                    // }}
+                      value={selectedMockServer}
+                      onChange={event => {
+                        const selected = event.currentTarget.value;
+                        setSelectedMockServer(selected);
+                      }}
                     >
                       <option value="">-- Select... --</option>
-                      {mockServers
+                      {mockServerAndRoutes
                         .map(w => (
                           <option key={w._id} value={w._id}>
                             {w.name}
@@ -328,17 +327,14 @@ export const RequestPane: FC<Props> = ({
                       Select from created mock routes to send this request to
                     </HelpTooltip>
                     <select
-                      value={''}
-                    // onChange={event => {
-                    //   const activeWorkspaceIdToCopyTo = event.currentTarget.value;
-                    //   setState(state => ({
-                    //     ...state,
-                    //     activeWorkspaceIdToCopyTo,
-                    //   }));
-                    // }}
+                      value={selectedMockRoute}
+                      onChange={event => {
+                        const selected = event.currentTarget.value;
+                        setSelectedMockRoute(selected);
+                      }}
                     >
                       <option value="">-- Select... --</option>
-                      {[{ name: 'Mock 1 (/hello/world)', _id: '1234' }]
+                      {mockServerAndRoutes.find(s => s._id === selectedMockServer)?.routes
                         .map(w => (
                           <option key={w._id} value={w._id}>
                             {w.name}

@@ -17,6 +17,7 @@ import { CookieJar } from '../../models/cookie-jar';
 import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
+import { MockRoute } from '../../models/mock-route';
 import { MockServer } from '../../models/mock-server';
 import { getPathParametersFromUrl, isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { isRequestMeta, RequestMeta } from '../../models/request-meta';
@@ -50,7 +51,7 @@ export interface RequestLoaderData {
   activeResponse: Response | null;
   responses: Response[];
   requestVersions: RequestVersion[];
-  mockServers: MockServer[];
+  mockServerAndRoutes: (MockServer & { routes: MockRoute[] })[];
 }
 
 export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderData | WebSocketRequestLoaderData | GrpcRequestLoaderData> => {
@@ -88,16 +89,21 @@ export const loader: LoaderFunction = async ({ params }): Promise<RequestLoaderD
     .filter((r: Response | WebSocketResponse) => r.environmentId === activeWorkspaceMeta.activeEnvironmentId);
   const responses = (filterResponsesByEnv ? filteredResponses : allResponses)
     .sort((a: BaseModel, b: BaseModel) => (a.created > b.created ? -1 : 1));
-  const mockServers = await models.mockServer.findByProjectId(projectId);
 
+  // Q(gatzjames): load mock servers here or somewhere else?
+  const mockServers = await models.mockServer.findByProjectId(projectId);
+  const mockRoutes = await database.find<MockRoute>(models.mockRoute.type, { parentId: { $in: mockServers.map(s => s._id) } });
+  const mockServerAndRoutes = mockServers.map(mockServer => ({
+    ...mockServer,
+    routes: mockRoutes.filter(route => route.parentId === mockServer._id),
+  }));
   return {
     activeRequest,
     activeRequestMeta,
     activeResponse,
     responses,
     requestVersions: await models.requestVersion.findByParentId(requestId),
-    // Q: load mock servers here or somewhere else?
-    mockServers,
+    mockServerAndRoutes,
   } as RequestLoaderData | WebSocketRequestLoaderData;
 };
 
