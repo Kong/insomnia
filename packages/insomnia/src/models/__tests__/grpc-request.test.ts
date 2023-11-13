@@ -18,6 +18,12 @@ describe('init()', () => {
       body: {
         text: '{}',
       },
+      bufReflectionApi: {
+        enabled: false,
+        apiKey: '',
+        module: '',
+        url: 'https://buf.build',
+      },
       metaSortKey: -1478795580200,
       isPrivate: false,
     });
@@ -46,6 +52,12 @@ describe('create()', () => {
       metadata: [],
       body: {
         text: '{}',
+      },
+      bufReflectionApi: {
+        enabled: false,
+        apiKey: '',
+        module: '',
+        url: 'https://buf.build',
       },
       metaSortKey: -1478795580200,
       isPrivate: false,
