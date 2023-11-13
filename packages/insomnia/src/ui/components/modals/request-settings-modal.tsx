@@ -287,7 +287,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                     </div>
                   </div>
                 </div>
-                <p className="faint italic">
+                <p className="faint italic pad-top">
                   Are there any gRPC settings you expect to see? Create a{' '}
                   <a href={'https://github.com/Kong/insomnia/issues/new/choose'}>feature request</a>!
                 </p>
