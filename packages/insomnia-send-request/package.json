@@ -13,7 +13,7 @@
     "@stoplight/spectral-formats": "^1.5.0",
     "@stoplight/spectral-rulesets": "^1.16.0",
     "aws4": "^1.12.0",
-    "axios": "^1.4.0",
+    "axios": "^1.6.0",
     "clone": "^2.1.2",
     "color": "^3.1.2",
     "fuzzysort": "^1.2.1",

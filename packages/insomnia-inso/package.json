@@ -53,7 +53,7 @@
     "@stoplight/spectral-ruleset-bundler": "^1.5.2",
     "@stoplight/spectral-rulesets": "^1.16.0",
     "@stoplight/types": "^13.15.0",
-    "axios": "^1.4.0",
+    "axios": "^1.6.0",
     "commander": "^5.1.0",
     "consola": "^2.15.0",
     "cosmiconfig": "^6.0.0",

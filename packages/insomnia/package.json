@@ -48,7 +48,7 @@
     "@stoplight/spectral-rulesets": "^1.16.0",
     "apiconnect-wsdl": "1.8.31",
     "aws4": "^1.12.0",
-    "axios": "^1.4.0",
+    "axios": "^1.6.0",
     "chai": "^4.3.4",
     "change-case": "^4.1.2",
     "clone": "^2.1.0",
