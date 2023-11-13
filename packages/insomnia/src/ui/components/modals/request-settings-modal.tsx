@@ -219,7 +219,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                 <div className="rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2">
                   <Heading className="text-lg font-bold flex items-center gap-2">Reflection </Heading>
                   <div className="form-control form-control--thin">
-                    <label className="inline">
+                    <label>
                       Use the Buf Reflection API
                       <a href="https://buf.build/docs/bsr/reflection/overview" className="pad-left-sm">
                         <Icon icon="external-link" size="sm"/>
