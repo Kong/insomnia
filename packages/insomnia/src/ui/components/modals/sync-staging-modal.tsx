@@ -58,14 +58,14 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
       isDismissable
       className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
     >
-      <Modal className="max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
+      <Modal className="flex flex-col max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
         <Dialog
           onClose={onClose}
-          className="outline-none"
+          className="outline-none flex-1 h-full flex flex-col overflow-hidden"
         >
           {({ close }) => (
-            <div className='flex flex-col gap-4'>
-              <div className='flex gap-2 items-center justify-between'>
+            <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
+              <div className='flex-shrink-0 flex gap-2 items-center justify-between'>
                 <Heading className='text-2xl'>Create commit</Heading>
                 <Button
                   className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
@@ -76,9 +76,9 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
               </div>
               <Form
                 method="POST"
-                className='flex flex-col gap-4'
+                className='flex-1 flex flex-col gap-4 overflow-hidden'
               >
-                <TextField className="flex flex-col gap-2">
+                <TextField className="flex flex-col gap-2 flex-shrink-0">
                   <Label className='font-bold'>
                     Commit message
                   </Label>
@@ -91,140 +91,142 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                   />
                 </TextField>
 
-                {modifiedChanges.length > 0 && (
-                  <div className='flex flex-col gap-2'>
-                    <Heading className='font-semibold'>Modified Objects</Heading>
-                    <div className='rounded w-full border border-solid border-[--hl-sm] select-none'>
-                      <Table
-                        selectionMode='multiple'
-                        defaultSelectedKeys="all"
-                        aria-label='Modified objects'
-                        className="border-separate border-spacing-0 w-full"
-                      >
-                        <TableHeader>
-                          <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                            <Checkbox slot="selection" className="group p-0 flex items-center h-full">
-                              <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
-                                <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
-                              </div>
-                            </Checkbox>
-                          </Column>
-                          <Column isRowHeader className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                            Name
-                          </Column>
-                          <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-right text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                            Description
-                          </Column>
-                        </TableHeader>
-                        <TableBody
-                          className="divide divide-[--hl-sm] divide-solid"
-                          items={
-                            modifiedChanges.map(item => ({
-                              ...item,
-                              id: item.key,
-                            }))
-                          }
+                <div className='grid auto-rows-auto gap-2 overflow-y-auto'>
+                  {modifiedChanges.length > 0 && (
+                    <div className='flex flex-col gap-2 overflow-hidden max-h-96'>
+                      <Heading className='font-semibold flex-shrink-0'>Modified Objects</Heading>
+                      <div className='flex-1 overflow-y-auto rounded w-full border border-solid border-[--hl-sm] select-none'>
+                        <Table
+                          selectionMode='multiple'
+                          defaultSelectedKeys="all"
+                          aria-label='Modified objects'
+                          className="border-separate border-spacing-0 w-full"
                         >
-                          {item => (
-                            <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">
-                              <Cell className="relative whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                <div className='p-2'>
-                                  <Checkbox slot="selection" name="keys" value={item.key} className="group p-0 flex items-center h-full">
-                                    <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
-                                      <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
-                                    </div>
-                                  </Checkbox>
+                          <TableHeader>
+                            <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                              <Checkbox slot="selection" className="group p-0 flex items-center h-full">
+                                <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
+                                  <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
                                 </div>
-                              </Cell>
-                              <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                <div className='p-2'>
-                                  {item.name}
-                                </div>
-                              </Cell>
-                              <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                <div className='flex items-center gap-2 justify-end p-2'>
-                                  <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'circle'} />
-                                  {item.document?.type}
-                                </div>
-                              </Cell>
-                            </Row>
-                          )}
-                        </TableBody>
-                      </Table>
+                              </Checkbox>
+                            </Column>
+                            <Column isRowHeader className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                              Name
+                            </Column>
+                            <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-right text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                              Description
+                            </Column>
+                          </TableHeader>
+                          <TableBody
+                            className="divide divide-[--hl-sm] divide-solid"
+                            items={
+                              modifiedChanges.map(item => ({
+                                ...item,
+                                id: item.key,
+                              }))
+                            }
+                          >
+                            {item => (
+                              <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">
+                                <Cell className="relative whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                  <div className='p-2'>
+                                    <Checkbox slot="selection" name="keys" value={item.key} className="group p-0 flex items-center h-full">
+                                      <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
+                                        <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
+                                      </div>
+                                    </Checkbox>
+                                  </div>
+                                </Cell>
+                                <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                  <div className='p-2'>
+                                    {item.name}
+                                  </div>
+                                </Cell>
+                                <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                  <div className='flex items-center gap-2 justify-end p-2'>
+                                    <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'circle'} />
+                                    {item.document?.type}
+                                  </div>
+                                </Cell>
+                              </Row>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {unversionedChanges.length > 0 && (
-                  <div className='flex flex-col gap-2'>
-                    <Heading className='font-semibold'>Unversioned Objects</Heading>
-                    <div className='rounded w-full border border-solid border-[--hl-sm] select-none'>
-                      <Table
-                        selectionMode='multiple'
-                        aria-label='Unversioned objects'
-                        className="border-separate border-spacing-0 w-full"
-                      >
-                        <TableHeader>
-                          <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                            <Checkbox slot="selection" className="group p-0 flex items-center h-full">
-                              <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
-                                <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
-                              </div>
-                            </Checkbox>
-                          </Column>
-                          <Column isRowHeader className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                            Name
-                          </Column>
-                          <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-right text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
-                            Description
-                          </Column>
-                        </TableHeader>
-                        <TableBody
-                          className="divide divide-[--hl-sm] divide-solid"
-                          items={
-                            unversionedChanges.map(item => ({
-                              ...item,
-                              name: item.name || 'n/a',
-                              id: item.key,
-                            }))
-                          }
+                  {unversionedChanges.length > 0 && (
+                    <div className='flex flex-col gap-2 overflow-hidden max-h-96'>
+                      <Heading className='font-semibold flex-shrink-0'>Unversioned Objects</Heading>
+                      <div className='flex-1 overflow-y-auto rounded w-full border border-solid border-[--hl-sm] select-none'>
+                        <Table
+                          selectionMode='multiple'
+                          aria-label='Unversioned objects'
+                          className="border-separate border-spacing-0 w-full"
                         >
-                          {item => (
-                            <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">
-                              <Cell className="relative whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                <div className='p-2'>
-                                  <Checkbox slot="selection" name="keys" value={item.key} className="group p-0 flex items-center h-full">
-                                    <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
-                                      <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
-                                    </div>
-                                  </Checkbox>
+                          <TableHeader>
+                            <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                              <Checkbox slot="selection" className="group p-0 flex items-center h-full">
+                                <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
+                                  <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
                                 </div>
-                              </Cell>
-                              <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                <div className='p-2'>
-                                  {item.name}
-                                </div>
-                              </Cell>
-                              <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
-                                <div className='flex items-center gap-2 justify-end p-2'>
-                                  <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'circle'} />
-                                  {item.document?.type}
-                                </div>
-                              </Cell>
-                            </Row>
-                          )}
-                        </TableBody>
-                      </Table>
+                              </Checkbox>
+                            </Column>
+                            <Column isRowHeader className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-left text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                              Name
+                            </Column>
+                            <Column className="sticky px-2 py-2 top-0 z-10 border-b border-[--hl-sm] bg-[--hl-xs] text-right text-xs font-semibold backdrop-blur backdrop-filter focus:outline-none">
+                              Description
+                            </Column>
+                          </TableHeader>
+                          <TableBody
+                            className="divide divide-[--hl-sm] divide-solid"
+                            items={
+                              unversionedChanges.map(item => ({
+                                ...item,
+                                name: item.name || 'n/a',
+                                id: item.key,
+                              }))
+                            }
+                          >
+                            {item => (
+                              <Row className="group focus:outline-none focus-within:bg-[--hl-xxs] transition-colors">
+                                <Cell className="relative whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                  <div className='p-2'>
+                                    <Checkbox slot="selection" name="keys" value={item.key} className="group p-0 flex items-center h-full">
+                                      <div className="w-4 h-4 rounded flex items-center justify-center transition-colors group-data-[selected]:bg-[--hl-xs] group-focus:ring-2 ring-1 ring-[--hl-sm]">
+                                        <Icon icon='check' className='opacity-0 group-data-[selected]:opacity-100 group-data-[selected]:text-[--color-success] w-3 h-3' />
+                                      </div>
+                                    </Checkbox>
+                                  </div>
+                                </Cell>
+                                <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                  <div className='p-2'>
+                                    {item.name}
+                                  </div>
+                                </Cell>
+                                <Cell className="whitespace-nowrap text-sm font-medium border-b border-solid border-[--hl-sm] group-last-of-type:border-none focus:outline-none">
+                                  <div className='flex items-center gap-2 justify-end p-2'>
+                                    <Icon className={'deleted' in item ? 'text-[--color-danger]' : 'added' in item ? 'text-[--color-success]' : ''} icon={'deleted' in item ? 'minus-circle' : 'added' in item ? 'plus-circle' : 'circle'} />
+                                    {item.document?.type}
+                                  </div>
+                                </Cell>
+                              </Row>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {data?.error && (
-                  <p className="notice error margin-top-sm">
+                  <p className="notice flex-shrink-0 error margin-top-sm">
                     {data.error}
                   </p>
                 )}
-                <div className="flex justify-end gap-2 items-center">
+                <div className="flex flex-shrink-0 flex-1 justify-end gap-2 items-center">
                   <Button
                     type='submit'
                     isDisabled={state !== 'idle'}
