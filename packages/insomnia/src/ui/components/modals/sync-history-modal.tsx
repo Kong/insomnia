@@ -64,13 +64,13 @@ export const SyncHistoryModal = ({ history, onClose }: Props) => {
       isDismissable
       className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
     >
-      <Modal className="max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
+      <Modal className="flex flex-col max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
         <Dialog
           onClose={onClose}
-          className="outline-none"
+          className="outline-none flex-1 h-full flex flex-col overflow-hidden"
         >
           {({ close }) => (
-            <div className='flex flex-col gap-4'>
+            <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
               <div className='flex gap-2 items-center justify-between'>
                 <Heading className='text-2xl'>History</Heading>
                 <Button
@@ -80,7 +80,7 @@ export const SyncHistoryModal = ({ history, onClose }: Props) => {
                   <Icon icon="x" />
                 </Button>
               </div>
-              <div className='rounded w-full border border-solid border-[--hl-sm] select-none'>
+              <div className='rounded w-full border border-solid border-[--hl-sm] select-none overflow-y-auto max-h-96'>
                 <Table
                   selectionMode='multiple'
                   defaultSelectedKeys="all"

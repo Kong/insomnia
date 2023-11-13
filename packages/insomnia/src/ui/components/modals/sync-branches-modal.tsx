@@ -169,14 +169,14 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
       isDismissable
       className="w-full h-[--visual-viewport-height] fixed z-10 top-0 left-0 flex items-center justify-center bg-black/30"
     >
-      <Modal className="max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
+      <Modal className="flex flex-col max-w-4xl w-full rounded-md border border-solid border-[--hl-sm] p-[--padding-lg] max-h-full bg-[--color-bg] text-[--color-font]">
         <Dialog
           onClose={onClose}
-          className="outline-none"
+          className="outline-none flex-1 h-full flex flex-col overflow-hidden"
         >
           {({ close }) => (
-            <div className='flex flex-col gap-4'>
-              <div className='flex gap-2 items-center justify-between'>
+            <div className='flex-1 flex flex-col gap-4 overflow-hidden'>
+              <div className='flex-shrink-0 flex gap-2 items-center justify-between'>
                 <Heading className='text-2xl'>Branches</Heading>
                 <Button
                   className="flex flex-shrink-0 items-center justify-center aspect-square h-6 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
@@ -188,6 +188,7 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
               <createBranchFetcher.Form
                 action={`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/branch/create`}
                 method='POST'
+                className='flex flex-col gap-2 flex-shrink-0'
               >
                 <TextField className="flex flex-col gap-2">
                   <Label className='col-span-4'>
@@ -209,13 +210,13 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
               </createBranchFetcher.Form>
 
               {createBranchFetcher.data?.error && (
-                <div className='flex items-center gap-2'>
+                <div className='flex items-center gap-2 flex-shrink-0'>
                   <Icon icon='triangle-exclamation' className='w-5 text-[--color-danger]' />
                   <span className='text-[--color-danger] text-sm'>{createBranchFetcher.data.error}</span>
                 </div>
               )}
 
-              <div className='select-none border border-solid rounded border-[--hl-sm] divide-y divide-solid divide-[--hl-sm]'>
+              <div className='flex-1 max-h-96 overflow-hidden flex flex-col select-none border border-solid rounded border-[--hl-sm] divide-y divide-solid divide-[--hl-sm]'>
                 <Heading className='font-semibold uppercase text-[--hl] text-sm p-2'>Local Branches</Heading>
                 <GridList
                   aria-label='Branches list'
