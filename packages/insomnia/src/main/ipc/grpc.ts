@@ -112,7 +112,6 @@ const getMethodsFromReflectionServer = async (bufReflectionApi: GrpcRequest['buf
       module,
       apiKey,
     } = bufReflectionApi;
-    console.log(bufReflectionApi);
     const GetFileDescriptorSetRequest = proto3.makeMessageType(
       'buf.reflect.v1beta1.GetFileDescriptorSetRequest',
       () => [
@@ -145,13 +144,12 @@ const getMethodsFromReflectionServer = async (bufReflectionApi: GrpcRequest['buf
       httpVersion: '1.1',
     });
     const client = createPromiseClient(FileDescriptorSetService, transport);
+    const headers: HeadersInit = apiKey === '' ? {} : { 'Authorization': `Bearer ${apiKey}` };
     try {
       const res = await client.getFileDescriptorSet({
         module,
       }, {
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-        },
+        headers,
       });
       const methodDefs: MethodDefs[] = [];
       if (res.fileDescriptorSet === undefined) {

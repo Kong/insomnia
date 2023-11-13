@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
+import { Heading } from 'react-aria-components';
 import { useFetcher, useNavigate, useParams } from 'react-router-dom';
 
 import * as models from '../../../models';
@@ -14,6 +15,7 @@ import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 import { CodeEditorHandle } from '../codemirror/code-editor';
 import { HelpTooltip } from '../help-tooltip';
+import { Icon } from '../icon';
 import { MarkdownEditor } from '../markdown-editor';
 
 export interface RequestSettingsModalOptions {
@@ -214,71 +216,75 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
               </>)}
             {request && isGrpcRequest(request) && (
               <>
-                <hr className="pad-top"/>
-                <h2>Reflection</h2>
-                <div className="form-control form-control--thin">
-                  <label className="inline-block">
-                    Use Buf reflection Api
-                    <HelpTooltip className="space-left">
-                      Buf Reflection Api uses the Buf Schema Registry to fetch the proto definitions instead of
-                      relying on servers enabling reflection or using raw proto files.
-                    </HelpTooltip>
-                    <input
-                      type="checkbox"
-                      name="bufReflectionApi"
-                      checked={request.bufReflectionApi.enabled}
-                      onChange={event => patchRequest(request._id, {
-                        bufReflectionApi: {
-                          ...request.bufReflectionApi,
-                          enabled: event.currentTarget.checked,
-                        },
-                      })}
-                    />̵
-                  </label>
-                </div>
-                <div className="form-row pad-top-sm">
-                  <div className="form-control form-control--outlined">
-                    <label>
-                      Reflection Server Url
-                      <HelpTooltip className="space-left">The BSR address for example https://buf.build</HelpTooltip>
+                <div className="rounded-md border border-solid border-[--hl-md] p-4 flex flex-col gap-2">
+                  <Heading className="text-lg font-bold flex items-center gap-2">Reflection </Heading>
+                  <div className="form-control form-control--thin">
+                    <label className="inline">
+                      Use the Buf Reflection API
+                      <a href="https://buf.build/docs/bsr/reflection/overview" className="pad-left-sm">
+                        <Icon icon="external-link" size="sm"/>
+                      </a>
                       <input
-                        type="text"
-                        name="url"
-                        placeholder="https://buf.build"
-                        value={request.bufReflectionApi.url}
-                        onChange={updateReflectonApi}
-                        disabled={!request.bufReflectionApi.enabled}
-                      />
+                        type="checkbox"
+                        name="bufReflectionApi"
+                        checked={request.bufReflectionApi.enabled}
+                        onChange={event => patchRequest(request._id, {
+                          bufReflectionApi: {
+                            ...request.bufReflectionApi,
+                            enabled: event.currentTarget.checked,
+                          },
+                        })}
+                      />̵
                     </label>
                   </div>
-                  <div className="form-control form-control--outlined">
-                    <label>
-                      Reflection Server Api Key
-                      <HelpTooltip className="space-left">The BSR Token. See
-                        https://buf.build/docs/bsr/authentication#create-an-api-token to create one</HelpTooltip>
-                      <input
-                        type="password"
-                        name="apiKey"
-                        value={request.bufReflectionApi.apiKey}
-                        onChange={updateReflectonApi}
-                        disabled={!request.bufReflectionApi.enabled}
-                      />
-                    </label>
-                  </div>
-                  <div className="form-control form-control--outlined">
-                    <label>
-                      Reflection Server Module
-                      <HelpTooltip className="space-left">The buf module. For example
-                        buf.build/connectrpc/eliza</HelpTooltip>
-                      <input
-                        type="text"
-                        name="module"
-                        placeholder="buf.build/connectrpc/eliza"
-                        value={request.bufReflectionApi.module}
-                        onChange={updateReflectonApi}
-                        disabled={!request.bufReflectionApi.enabled}
-                      />
-                    </label>
+                  <div className="form-row pad-top-sm">
+                    <div className="form-control form-control--outlined">
+                      <label>
+                        Reflection server URL
+                        <a href="https://buf.build/docs/bsr/api-access" className="pad-left-sm">
+                          <Icon icon="external-link" size="sm"/>
+                        </a>
+                        <input
+                          type="text"
+                          name="url"
+                          placeholder="https://buf.build"
+                          value={request.bufReflectionApi.url}
+                          onChange={updateReflectonApi}
+                          disabled={!request.bufReflectionApi.enabled}
+                        />
+                      </label>
+                    </div>
+                    <div className="form-control form-control--outlined">
+                      <label>
+                        Reflection server API key
+                        <a href="https://buf.build/docs/bsr/authentication#manage-tokens" className="pad-left-sm">
+                          <Icon icon="external-link" size="sm"/>
+                        </a>
+                        <input
+                          type="password"
+                          name="apiKey"
+                          value={request.bufReflectionApi.apiKey}
+                          onChange={updateReflectonApi}
+                          disabled={!request.bufReflectionApi.enabled}
+                        />
+                      </label>
+                    </div>
+                    <div className="form-control form-control--outlined">
+                      <label>
+                        BSR module
+                        <a href="https://buf.build/docs/bsr/module/manage" className="pad-left-sm">
+                          <Icon icon="external-link" size="sm"/>
+                        </a>
+                        <input
+                          type="text"
+                          name="module"
+                          placeholder="buf.build/connectrpc/eliza"
+                          value={request.bufReflectionApi.module}
+                          onChange={updateReflectonApi}
+                          disabled={!request.bufReflectionApi.enabled}
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
                 <p className="faint italic">
