@@ -4,6 +4,7 @@ import { useInterval } from 'react-use';
 
 import { getCurrentSessionId } from '../../../account/session';
 import { ProjectLoaderData } from '../../routes/project';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 
 const PresenceContext = createContext<{
   presence: UserPresence[];
@@ -41,7 +42,9 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
   };
 
   const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
-  const remoteId = projectData?.activeProject.remoteId;
+  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
+  const remoteId = projectData?.activeProject.remoteId || workspaceData?.activeProject.remoteId;
+
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const syncOrganizationsFetcher = useFetcher();
 
