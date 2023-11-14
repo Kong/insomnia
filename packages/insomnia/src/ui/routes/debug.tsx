@@ -32,7 +32,7 @@ import {
 
 import { SORT_ORDERS, SortOrder, sortOrderName } from '../../common/constants';
 import { ChangeBufferEvent, database as db } from '../../common/database';
-import { generateId } from '../../common/misc';
+import { generateId, toKebabCase } from '../../common/misc';
 import { PlatformKeyCombinations } from '../../common/settings';
 import type { GrpcMethodInfo } from '../../main/ipc/grpc';
 import * as models from '../../models';
@@ -57,7 +57,6 @@ import { RequestActionsDropdown } from '../components/dropdowns/request-actions-
 import { RequestGroupActionsDropdown } from '../components/dropdowns/request-group-actions-dropdown';
 import { WorkspaceDropdown } from '../components/dropdowns/workspace-dropdown';
 import { WorkspaceSyncDropdown } from '../components/dropdowns/workspace-sync-dropdown';
-import { EditableInput } from '../components/editable-input';
 import { ErrorBoundary } from '../components/error-boundary';
 import { Icon } from '../components/icon';
 import { useDocBodyKeyboardShortcuts } from '../components/keydown-binder';
@@ -945,19 +944,24 @@ export const Debug: FC = () => {
                           gRPC
                         </span>
                       )}
-                      <EditableInput
-                        value={getRequestNameOrFallback(item.doc)}
-                        name="request name"
-                        ariaLabel="request name"
-                        paddingClass="px-0"
-                        onChange={name => {
-                          if (isRequestGroup(item.doc)) {
-                            patchGroup(item.doc._id, { name });
-                          } else {
-                            patchRequest(item.doc._id, { name });
+                      <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
+                      <Button
+                        data-testid={`Rename-${toKebabCase(item.doc.name)}`}
+                        aria-label="Request Rename"
+                        className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                        onPress={() =>
+                          showPrompt({
+                            title: 'Rename',
+                            defaultValue: item.doc.name,
+                            submitName: 'Rename',
+                            selectText: true,
+                            label: 'Name',
+                            onComplete: name => isRequestGroup(item.doc) ? patchGroup(item.doc._id, { name }) : patchRequest(item.doc._id, { name }),
+                          })
                           }
-                        }}
-                      />
+                      >
+                        <Icon icon="edit" />
+                      </Button>
                       <span className="flex-1" />
                       {item.pinned && (
                         <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
@@ -1058,20 +1062,25 @@ export const Debug: FC = () => {
                             icon={item.collapsed ? 'folder' : 'folder-open'}
                           />
                         )}
-                        <EditableInput
-                          value={getRequestNameOrFallback(item.doc)}
-                          name="request name"
-                          ariaLabel="request name"
-                          paddingClass="px-0"
-                          onChange={name => {
-                            if (isRequestGroup(item.doc)) {
-                              patchGroup(item.doc._id, { name });
-                            } else {
-                              patchRequest(item.doc._id, { name });
-                            }
-                          }}
-                        />
+                        <span className="truncate">{getRequestNameOrFallback(item.doc)}</span>
                         <span className="flex-1" />
+                        <Button
+                          data-testid={`Rename-${toKebabCase(item.doc.name)}`}
+                          aria-label="Request Rename"
+                          className="opacity-0 items-center hover:opacity-100 focus:opacity-100 data-[pressed]:opacity-100 flex group-focus:opacity-100 group-hover:opacity-100 justify-center h-6 aspect-square aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                          onPress={() =>
+                            showPrompt({
+                              title: 'Rename',
+                              defaultValue: item.doc.name,
+                              submitName: 'Rename',
+                              selectText: true,
+                              label: 'Name',
+                              onComplete: name => isRequestGroup(item.doc) ? patchGroup(item.doc._id, { name }) : patchRequest(item.doc._id, { name }),
+                            })
+                          }
+                        >
+                          <Icon icon="edit" />
+                        </Button>
                         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
                         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
                         {item.pinned && (
