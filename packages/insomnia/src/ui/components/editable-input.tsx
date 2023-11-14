@@ -7,14 +7,14 @@ export const EditableInput = ({
   ariaLabel,
   name,
   className,
-  onChange,
+  onSubmit,
   onSingleClick,
 }: {
   value: string;
   ariaLabel?: string;
   name?: string;
     className?: string;
-  onChange: (value: string) => void;
+    onSubmit: (value: string) => void;
     onSingleClick?: () => void;
 }) => {
   const [isEditable, setIsEditable] = useState(false);
@@ -88,6 +88,10 @@ export const EditableInput = ({
     return () => { };
   }, [onSingleClick]);
 
+  console.log({
+    className,
+  });
+
   return (
     <>
       <Button
@@ -120,7 +124,7 @@ export const EditableInput = ({
               const value = e.currentTarget.value;
               if (e.key === 'Enter') {
                 e.stopPropagation();
-                onChange(value);
+                onSubmit(value);
                 setIsEditable(false);
               }
 
@@ -131,7 +135,7 @@ export const EditableInput = ({
             }}
             onBlur={e => {
               const value = e.currentTarget.value;
-              onChange(value);
+              onSubmit(value);
               setIsEditable(false);
             }}
           />

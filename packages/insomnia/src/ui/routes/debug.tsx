@@ -959,7 +959,7 @@ export const Debug: FC = () => {
                             );
                           }
                         }}
-                        onChange={name => {
+                        onSubmit={name => {
                           if (isRequestGroup(item.doc)) {
                             patchGroup(item.doc._id, { name });
                           } else {
@@ -1080,7 +1080,7 @@ export const Debug: FC = () => {
                               );
                             }
                           }}
-                          onChange={name => {
+                          onSubmit={name => {
                             if (isRequestGroup(item.doc)) {
                               patchGroup(item.doc._id, { name });
                             } else {
