@@ -88,10 +88,6 @@ export const EditableInput = ({
     return () => { };
   }, [onSingleClick]);
 
-  console.log({
-    className,
-  });
-
   return (
     <>
       <Button
