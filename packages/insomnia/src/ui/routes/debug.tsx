@@ -949,8 +949,17 @@ export const Debug: FC = () => {
                         value={getRequestNameOrFallback(item.doc)}
                         name="request name"
                         ariaLabel="request name"
-                        paddingClass="px-0"
-                        onChange={name => {
+                        className="px-1 flex-1"
+                        onSingleClick={() => {
+                          if (item && isRequestGroup(item.doc)) {
+                            groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                          } else {
+                            navigate(
+                              `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
+                            );
+                          }
+                        }}
+                        onSubmit={name => {
                           if (isRequestGroup(item.doc)) {
                             patchGroup(item.doc._id, { name });
                           } else {
@@ -958,7 +967,6 @@ export const Debug: FC = () => {
                           }
                         }}
                       />
-                      <span className="flex-1" />
                       {item.pinned && (
                         <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
                       )}
@@ -1062,8 +1070,17 @@ export const Debug: FC = () => {
                           value={getRequestNameOrFallback(item.doc)}
                           name="request name"
                           ariaLabel="request name"
-                          paddingClass="px-0"
-                          onChange={name => {
+                          className="px-1 flex-1"
+                          onSingleClick={() => {
+                            if (item && isRequestGroup(item.doc)) {
+                              groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                            } else {
+                              navigate(
+                                `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
+                              );
+                            }
+                          }}
+                          onSubmit={name => {
                             if (isRequestGroup(item.doc)) {
                               patchGroup(item.doc._id, { name });
                             } else {
@@ -1071,7 +1088,6 @@ export const Debug: FC = () => {
                             }
                           }}
                         />
-                        <span className="flex-1" />
                         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
                         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
                         {item.pinned && (
