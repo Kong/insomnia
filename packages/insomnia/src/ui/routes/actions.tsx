@@ -341,8 +341,6 @@ export const deleteWorkspaceAction: ActionFunction = async ({
     try {
       const vcs = VCSInstance();
       await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, workspace.name);
-      const backendProject = await vcs._getBackendProjectByRootDocument(workspace._id);
-      await vcs._removeProject(backendProject);
       await vcs.archiveProject();
     } catch (err) {
       return {
