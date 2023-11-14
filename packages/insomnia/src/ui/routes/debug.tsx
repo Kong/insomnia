@@ -1058,19 +1058,7 @@ export const Debug: FC = () => {
                             icon={item.collapsed ? 'folder' : 'folder-open'}
                           />
                         )}
-                        <EditableInput
-                          value={getRequestNameOrFallback(item.doc)}
-                          name="request name"
-                          ariaLabel="request name"
-                          paddingClass="px-0"
-                          onChange={name => {
-                            if (isRequestGroup(item.doc)) {
-                              patchGroup(item.doc._id, { name });
-                            } else {
-                              patchRequest(item.doc._id, { name });
-                            }
-                          }}
-                        />
+                        {getRequestNameOrFallback(item.doc)}
                         <span className="flex-1" />
                         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
                         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
