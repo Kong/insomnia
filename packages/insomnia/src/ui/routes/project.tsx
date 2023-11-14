@@ -77,7 +77,7 @@ import { ImportModal } from '../components/modals/import-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
-import { usePresenceContext } from '../context/app/presence-context';
+import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { type FeatureList, useOrganizationLoaderData } from './organization';
 
 interface TeamProject {
@@ -472,7 +472,7 @@ const ProjectRoute: FC = () => {
   };
 
   const { organizations } = useOrganizationLoaderData();
-  const { presence } = usePresenceContext();
+  const { presence } = useInsomniaEventStreamContext();
   const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
 
   const accountId = getAccountId();

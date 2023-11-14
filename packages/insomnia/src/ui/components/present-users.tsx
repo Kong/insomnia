@@ -2,13 +2,13 @@ import React from 'react';
 import { useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { getAccountId } from '../../account/session';
-import { usePresenceContext } from '../context/app/presence-context';
+import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { ProjectLoaderData } from '../routes/project';
 import { WorkspaceLoaderData } from '../routes/workspace';
 import { AvatarGroup } from './avatar';
 
 export const PresentUsers = () => {
-  const { presence } = usePresenceContext();
+  const { presence } = useInsomniaEventStreamContext();
   const { workspaceId } = useParams() as { workspaceId: string };
   const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
   const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;

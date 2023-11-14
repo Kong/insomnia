@@ -6,7 +6,7 @@ import { getCurrentSessionId } from '../../../account/session';
 import { ProjectLoaderData } from '../../routes/project';
 import { WorkspaceLoaderData } from '../../routes/workspace';
 
-const PresenceContext = createContext<{
+const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];
 }>({
   presence: [],
@@ -65,7 +65,7 @@ interface UserPresenceEvent extends UserPresence {
   type: 'PresentUserLeave' | 'PresentStateChanged' | 'OrganizationChanged';
 }
 
-export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
+export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children }) => {
   const {
     organizationId,
     projectId,
@@ -207,14 +207,14 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
   }, [organizationId, projectId, remoteId, revalidate, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, workspaceId]);
 
   return (
-    <PresenceContext.Provider
+    <InsomniaEventStreamContext.Provider
       value={{
         presence,
       }}
     >
       {children}
-    </PresenceContext.Provider>
+    </InsomniaEventStreamContext.Provider>
   );
 };
 
-export const usePresenceContext = () => useContext(PresenceContext);
+export const useInsomniaEventStreamContext = () => useContext(InsomniaEventStreamContext);
