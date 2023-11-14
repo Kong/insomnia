@@ -376,6 +376,11 @@ const TestRoute: FC = () => {
                         name="name"
                         ariaLabel="Test suite name"
                         className='flex-1 px-1'
+                        onSingleClick={() => {
+                          navigate({
+                            pathname: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}`,
+                          });
+                        }}
                         onSubmit={name => {
                           name && renameTestSuiteFetcher.submit(
                             { name },
