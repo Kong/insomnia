@@ -889,7 +889,7 @@ export const Debug: FC = () => {
 
             <GridList
               className="overflow-y-auto border-b border-t data-[empty]:py-0 py-[--padding-sm] data-[empty]:border-none border-solid border-[--hl-sm]"
-              items={collection.filter(item => !item.hidden && item.pinned)}
+              items={collection.filter(item => item.pinned)}
               aria-label="Pinned Requests"
               disallowEmptySelection
               selectedKeys={[requestId]}
