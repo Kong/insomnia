@@ -130,9 +130,9 @@ test.describe('Debug-Sidebar', async () => {
     });
 
     test('Rename a request by clicking', async ({ page }) => {
-      await page.getByTestId('example http').getByLabel('request name').click();
+      await page.getByTestId('example http').getByLabel('request name').dblclick();
       await page.getByRole('textbox', { name: 'request name' }).fill('new name');
-      await page.getByLabel('Request Collection').dblclick();
+      await page.getByLabel('Request Collection').click();
       await expect(page.getByTestId('new name').getByLabel('request name')).toContainText('new name');
     });
 
