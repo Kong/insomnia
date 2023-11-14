@@ -986,6 +986,7 @@ export const Debug: FC = () => {
 
             <div className='flex-1 overflow-y-auto' ref={parentRef} >
               <GridList
+                id="sidebar-request-gridlist"
                 style={{ height: virtualizer.getTotalSize() }}
                 items={virtualizer.getVirtualItems()}
                 className="relative"
