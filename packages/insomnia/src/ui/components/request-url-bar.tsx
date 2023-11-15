@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData, useSearchParams } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
@@ -50,6 +50,25 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   setLoading,
   onPaste,
 }, ref) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  if (searchParams.has('error')) {
+    showAlert({
+      title: 'Unexpected Request Failure',
+      message: (
+        <div>
+          <p>The request failed due to an unhandled error:</p>
+          <code className="wide selectable">
+            <pre>{searchParams.get('error')}</pre>
+          </code>
+        </div>
+      ),
+    });
+
+    // clean up params
+    searchParams.delete('error');
+    setSearchParams({});
+  }
+
   const {
     activeWorkspace,
     activeEnvironment,

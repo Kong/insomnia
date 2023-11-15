@@ -335,48 +335,54 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     caCert,
     activeEnvironmentId,
   } = await fetchRequestData(requestId);
-  const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
-  const renderedResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
-  const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
+  try {
+    const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
+    const renderedResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
+    const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
-  const response = await sendCurlAndWriteTimeline(
-    renderedRequest,
-    clientCertificates,
-    caCert,
-    settings,
-  );
+    const response = await sendCurlAndWriteTimeline(
+      renderedRequest,
+      clientCertificates,
+      caCert,
+      settings,
+    );
 
-  const requestMeta = await models.requestMeta.getByParentId(requestId);
-  invariant(requestMeta, 'RequestMeta not found');
-  const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderedResult.context);
-  const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
-  const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
-  if (!shouldWriteToFile) {
-    const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
-    await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
-    // setLoading(false);
-    return null;
-  }
-  if (requestMeta.downloadPath) {
-    const header = getContentDispositionHeader(responsePatch.headers || []);
-    const name = header
-      ? contentDisposition.parse(header.value).parameters.filename
-      : `${req.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
-    return writeToDownloadPath(path.join(requestMeta.downloadPath, name), responsePatch, requestMeta, settings.maxHistoryResponses);
-  } else {
-    const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
-    const { filePath } = await window.dialog.showSaveDialog({
-      title: 'Select Download Location',
-      buttonLabel: 'Save',
-      // NOTE: An error will be thrown if defaultPath is supplied but not a String
-      ...(defaultPath ? { defaultPath } : {}),
-    });
-    if (!filePath) {
+    const requestMeta = await models.requestMeta.getByParentId(requestId);
+    invariant(requestMeta, 'RequestMeta not found');
+    const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderedResult.context);
+    const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
+    const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
+    if (!shouldWriteToFile) {
+      const response = await models.response.create(responsePatch, settings.maxHistoryResponses);
+      await models.requestMeta.update(requestMeta, { activeResponseId: response._id });
       // setLoading(false);
       return null;
     }
-    window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
-    return writeToDownloadPath(filePath, responsePatch, requestMeta, settings.maxHistoryResponses);
+    if (requestMeta.downloadPath) {
+      const header = getContentDispositionHeader(responsePatch.headers || []);
+      const name = header
+        ? contentDisposition.parse(header.value).parameters.filename
+        : `${req.name.replace(/\s/g, '-').toLowerCase()}.${responsePatch.contentType && mimeExtension(responsePatch.contentType) || 'unknown'}`;
+      return writeToDownloadPath(path.join(requestMeta.downloadPath, name), responsePatch, requestMeta, settings.maxHistoryResponses);
+    } else {
+      const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
+      const { filePath } = await window.dialog.showSaveDialog({
+        title: 'Select Download Location',
+        buttonLabel: 'Save',
+        // NOTE: An error will be thrown if defaultPath is supplied but not a String
+        ...(defaultPath ? { defaultPath } : {}),
+      });
+      if (!filePath) {
+        // setLoading(false);
+        return null;
+      }
+      window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
+      return writeToDownloadPath(filePath, responsePatch, requestMeta, settings.maxHistoryResponses);
+    }
+  } catch (e) {
+    const url = new URL(request.url);
+    url.searchParams.set('error', e);
+    return redirect(`${url.pathname}?${url.searchParams}`);
   }
 };
 export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
