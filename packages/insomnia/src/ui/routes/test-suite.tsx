@@ -83,7 +83,8 @@ const UnitTestItemView = ({
         </Button>
         <Heading className="flex-1 truncate">
           <EditableInput
-            onChange={name => {
+            className='w-full px-1'
+            onSubmit={name => {
               if (name) {
                 updateUnitTestFetcher.submit(
                   {
@@ -404,7 +405,8 @@ const TestSuiteRoute = () => {
       <div className="flex flex-shrink-0 gap-2 p-[--padding-md]">
         <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full truncate flex-1">
           <EditableInput
-            onChange={name =>
+            className='w-full px-1'
+            onSubmit={name =>
               name &&
               renameTestSuiteFetcher.submit(
                 { name },

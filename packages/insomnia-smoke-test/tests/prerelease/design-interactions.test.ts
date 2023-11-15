@@ -29,6 +29,7 @@ test.describe('Design interactions', async () => {
     await page.click('text=New test suite');
 
     // Rename test suite
+    await page.getByLabel('Request Collection').getByText('New Suite');
     await page.getByRole('button', { name: 'New Suite' }).click();
     await page.getByRole('textbox').fill('New Suite 2');
     await page.getByRole('textbox').press('Enter');
