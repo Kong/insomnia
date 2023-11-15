@@ -145,13 +145,6 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
     });
     _handleToggleCertificateForm();
   };
-  const _handleRemoveWorkspace = async () => {
-    const workspaceId = workspace._id;
-    workspaceFetcher.submit({ workspaceId }, {
-      action: `/organization/${organizationId}/project/${projectId}/workspace/delete`,
-      method: 'post',
-    });
-  };
 
   const renderCertificate = (certificate: ClientCertificate) => {
     return (
@@ -301,14 +294,6 @@ export const WorkspaceSettingsModal = ({ workspace, clientCertificates, caCertif
                   </div>
                   <h2>Actions</h2>
                   <div className="form-control form-control--padded">
-                    {!isScratchpadWorkspace && (
-                      <PromptButton
-                        onClick={_handleRemoveWorkspace}
-                        className="width-auto btn btn--clicky inline-block"
-                      >
-                        <i className="fa fa-trash-o" /> Delete
-                      </PromptButton>
-                    )}
                     <PromptButton
                       onClick={_handleClearAllResponses}
                       className="width-auto btn btn--clicky inline-block space-left"

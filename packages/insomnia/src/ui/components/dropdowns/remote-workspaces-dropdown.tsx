@@ -30,7 +30,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
     }
   }, [data, load, organizationId, projectId, state]);
 
-  const remoteBackendProjects = data?.remoteBackendProjects ?? [];
+  const backendProjectsToPull = data?.backendProjectsToPull ?? [];
 
   // Show a disabled button if remote project but not logged in
   if (!isLoggedIn()) {
@@ -62,7 +62,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
     >
       <DropdownSection
         aria-label='Remote Workspaces Section'
-        items={remoteBackendProjects.length === 0 ? [{
+        items={backendProjectsToPull.length === 0 ? [{
           id: 1,
           isDisabled: true,
           label: 'Nothing to pull',
@@ -87,7 +87,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ project: { remoteId } }) =
 
       <DropdownSection
         aria-label='Remote Workspaces Section'
-        items={remoteBackendProjects.length ? remoteBackendProjects : []}
+        items={backendProjectsToPull.length ? backendProjectsToPull : []}
         title={
           <>
             Remote {strings.collection.plural}

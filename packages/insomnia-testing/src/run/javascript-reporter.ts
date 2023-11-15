@@ -62,6 +62,7 @@ const clean = (runnable: Runnable): TestResult => {
   }
 
   return {
+    id: runnable.id,
     title: runnable.title,
     fullTitle: runnable.fullTitle(),
     file: runnable.file,

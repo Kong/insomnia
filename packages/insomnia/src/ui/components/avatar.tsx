@@ -148,7 +148,7 @@ export const Avatar = ({ src, alt, size = 'medium', animate }: { src: string; al
   );
 };
 
-export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium', animate = false }: { items: {src: string; alt: string}[]; maxAvatars?: number; size: 'small' | 'medium'; animate?: boolean }) => {
+export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium', animate = false }: { items: { key: string; src: string; alt: string }[]; maxAvatars?: number; size: 'small' | 'medium'; animate?: boolean }) => {
   const avatars = items.slice(0, maxAvatars);
   const overflow = items.length - maxAvatars;
 
@@ -160,10 +160,10 @@ export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium', animate = 
           paddingLeft: size === 'small' ? '5px' : '6px',
         }}
       >
-        {avatars.map((avatar, index) => (
+        {avatars.map(avatar => (
           <Avatar
             size={size}
-            key={index}
+            key={avatar.key}
             animate={animate}
             src={avatar.src}
             alt={avatar.alt}
@@ -172,8 +172,8 @@ export const AvatarGroup = ({ items, maxAvatars = 3, size = 'medium', animate = 
         {overflow > 0 && (
           <Tooltip
             message={
-              items.slice(maxAvatars).map((avatar, index) => (
-                <div key={index}>{avatar.alt}</div>
+              items.slice(maxAvatars).map(avatar => (
+                <div key={avatar.key}>{avatar.alt}</div>
               ))
             }
           >
