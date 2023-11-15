@@ -281,15 +281,24 @@ export interface FeatureList {
 
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params as { organizationId: string };
+
+  const organization = organizationsData.organizations.find(o => o.id === organizationId);
+
+  if (!organization) {
+    return redirect('/organization');
+  }
+
   const fallbackFeatures = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
   };
+
   if (isScratchpadOrganizationId(organizationId)) {
     return {
       features: fallbackFeatures,
     };
   }
+
   try {
     const response = await window.main.insomniaFetch<{ features: FeatureList } | undefined>({
       method: 'GET',
