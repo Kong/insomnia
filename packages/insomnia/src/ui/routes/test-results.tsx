@@ -76,7 +76,7 @@ export const TestRunStatus: FC = () => {
         {tests.map((test, i) => {
           const errorMessage = 'message' in test.err ? test.err.message : '';
           return (
-            <div key={i} className="flex flex-col">
+            <div key={test.id || i} className="flex flex-col">
               <div className="flex gap-2 p-[--padding-sm] items-center">
                 <div className="flex flex-shrink-0">
                   <span

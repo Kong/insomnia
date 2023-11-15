@@ -12,6 +12,7 @@ import { importResourcesToWorkspace, scanResources } from '../../common/import';
 import { generateId } from '../../common/misc';
 import * as models from '../../models';
 import { getById, update } from '../../models/helpers/request-operations';
+import { isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, isRequestGroupId } from '../../models/request-group';
 import { UnitTest } from '../../models/unit-test';
@@ -19,7 +20,7 @@ import { isCollection, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { getSendRequestCallback } from '../../network/unit-test-feature';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
-import { getVCS } from '../../sync/vcs/vcs';
+import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { invariant } from '../../utils/invariant';
 import { SegmentEvent } from '../analytics';
 
@@ -299,13 +300,11 @@ export const createNewWorkspaceAction: ActionFunction = async ({
 
   await database.flushChanges(flushId);
   if (session.isLoggedIn() && !workspaceMeta.gitRepositoryId) {
-    const vcs = getVCS();
-    if (vcs) {
-      await initializeLocalBackendProjectAndMarkForSync({
-        vcs,
-        workspace,
-      });
-    }
+    const vcs = VCSInstance();
+    await initializeLocalBackendProjectAndMarkForSync({
+      vcs,
+      workspace,
+    });
   }
 
   window.main.trackSegmentEvent({
@@ -336,23 +335,23 @@ export const deleteWorkspaceAction: ActionFunction = async ({
   invariant(typeof workspaceId === 'string', 'Workspace ID is required');
 
   const workspace = await models.workspace.getById(workspaceId);
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
   invariant(workspace, 'Workspace not found');
+  if (isRemoteProject(project) && !workspaceMeta.gitRepositoryId) {
+    try {
+      const vcs = VCSInstance();
+      await vcs.switchAndCreateBackendProjectIfNotExist(workspaceId, workspace.name);
+      await vcs.archiveProject();
+    } catch (err) {
+      return {
+        error: err instanceof Error ? err.message : `An unexpected error occurred while deleting the workspace. Please try again. ${err}`,
+      };
+    }
+  }
 
   await models.stats.incrementDeletedRequestsForDescendents(workspace);
   await models.workspace.remove(workspace);
 
-  try {
-    const vcs = getVCS();
-    if (vcs) {
-      const backendProject = await vcs._getBackendProjectByRootDocument(workspace._id);
-      await vcs._removeProject(backendProject);
-
-      console.log({ projectsLOCAL: await vcs.localBackendProjects() });
-    }
-  } catch (err) {
-    console.warn('Failed to remove project from VCS', err);
-  }
-  console.log(`redirecting to /organization/${organizationId}/project/${projectId}`);
   return redirect(`/organization/${organizationId}/project/${projectId}`);
 };
 
@@ -400,8 +399,8 @@ export const duplicateWorkspaceAction: ActionFunction = async ({ request, params
 
   try {
     // Mark for sync if logged in and in the expected project
-    const vcs = getVCS();
-    if (session.isLoggedIn() && vcs) {
+    if (session.isLoggedIn()) {
+      const vcs = VCSInstance();
       await initializeLocalBackendProjectAndMarkForSync({
         vcs: vcs.newInstance(),
         workspace: newWorkspace,

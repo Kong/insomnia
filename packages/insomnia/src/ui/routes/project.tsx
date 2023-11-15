@@ -33,6 +33,7 @@ import {
   useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
+import { useLocalStorage } from 'react-use';
 
 import { getAccountId, getCurrentSessionId, isLoggedIn, logout } from '../../account/session';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
@@ -249,6 +250,13 @@ export interface ProjectLoaderData {
   projectsCount: number;
   activeProject: Project;
   projects: Project[];
+  learningFeature: {
+    active: boolean;
+    title: string;
+    message: string;
+    cta: string;
+    url: string;
+  };
 }
 
 export const loader: LoaderFunction = async ({
@@ -389,8 +397,36 @@ export const loader: LoaderFunction = async ({
     p.name?.toLowerCase().includes(projectName.toLowerCase())
   );
 
+  let learningFeature = {
+    active: false,
+    title: '',
+    message: '',
+    cta: '',
+    url: '',
+  };
+
+  if (!window.localStorage.getItem('learning-feature-dismissed')) {
+    try {
+      learningFeature = await window.main.insomniaFetch<{
+        active: boolean;
+        title: string;
+        message: string;
+        cta: string;
+        url: string;
+      }>({
+        method: 'GET',
+        path: '/insomnia-production-public-assets/inapp-learning.json',
+        origin: 'https://storage.googleapis.com',
+        sessionId: '',
+      });
+    } catch (err) {
+      console.log('Could not fetch learning feature data.');
+    }
+  }
+
   return {
     workspaces,
+    learningFeature,
     projects,
     projectsCount: organizationProjects.length,
     activeProject: project,
@@ -413,8 +449,9 @@ const ProjectRoute: FC = () => {
     collectionsCount,
     documentsCount,
     projectsCount,
+    learningFeature,
   } = useLoaderData() as ProjectLoaderData;
-
+  const [isLearningFeatureDismissed, setIsLearningFeatureDismissed] = useLocalStorage('learning-feature-dismissed', '');
   const { organizationId, projectId } = useParams() as {
     organizationId: string;
     projectId: string;
@@ -620,7 +657,6 @@ const ProjectRoute: FC = () => {
     id: string;
     label: string;
     icon: IconName;
-    level: number;
     action?: {
       icon: IconName;
       label: string;
@@ -630,13 +666,11 @@ const ProjectRoute: FC = () => {
     {
       id: 'all',
       label: `All files (${allFilesCount})`,
-      icon: 'folder',
-      level: 0,
+      icon: 'border-all',
     },
     {
       id: 'design',
       label: `Documents (${documentsCount})`,
-      level: 1,
       icon: 'file',
       action: {
         icon: 'plus',
@@ -647,7 +681,6 @@ const ProjectRoute: FC = () => {
     {
       id: 'collection',
       label: `Collections (${collectionsCount})`,
-      level: 1,
       icon: 'bars',
       action: {
         icon: 'plus',
@@ -811,7 +844,7 @@ const ProjectRoute: FC = () => {
                                 <div className="flex justify-end">
                                   <Button
                                     type="submit"
-                                    className="hover:no-underline bg-[#4000BF] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                                    className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
                                   >
                                     Create
                                   </Button>
@@ -874,7 +907,7 @@ const ProjectRoute: FC = () => {
               <GridList
                 aria-label="Scope filter"
                 items={scopeActionList}
-                className="overflow-y-auto flex-shrink-0 data-[empty]:py-0 py-[--padding-sm]"
+                className="overflow-y-auto flex-shrink-0 flex-1 data-[empty]:py-0 py-[--padding-sm]"
                 disallowEmptySelection
                 selectedKeys={[searchParams.get('scope') || 'all']}
                 selectionMode="single"
@@ -892,12 +925,11 @@ const ProjectRoute: FC = () => {
                   return (
                     <Item textValue={item.label} className="group outline-none select-none">
                       <div
-                        className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                        style={{
-                          paddingLeft: `${item.level + 1}rem`,
-                        }}
+                        className="flex select-none outline-none group-aria-selected:text-[--color-font] relative group-aria-selected:bg-[--hl-sm] group-hover:bg-[--hl-xs] group-focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-12 w-full overflow-hidden text-[--hl]"
                       >
-                        <Icon icon={item.icon} />
+                        <span className='w-6 h-6 flex items-center justify-center'>
+                          <Icon icon={item.icon} className='w-6' />
+                        </span>
 
                         <span className="truncate capitalize">
                           {item.label}
@@ -917,21 +949,30 @@ const ProjectRoute: FC = () => {
                   );
                 }}
               </GridList>
-              <div className='flex flex-shrink-0 flex-col py-[--padding-sm]'>
-                <Button
-                  aria-label="Help and Feedback"
-                  className="outline-none select-none flex hover:bg-[--hl-xs] focus:bg-[--hl-sm] transition-colors gap-2 px-4 items-center h-[--line-height-xs] w-full overflow-hidden text-[--hl]"
-                  onPress={() => {
-                    window.main.openInBrowser('https://insomnia.rest/support');
-                  }}
-                >
-                  <Icon icon="message" />
-
-                  <span className="truncate">
-                    Help and feedback
-                  </span>
-                </Button>
-              </div>
+              {!isLearningFeatureDismissed && learningFeature.active && (
+                <div className='flex flex-shrink-0 flex-col gap-2 p-[--padding-sm]'>
+                  <div className='flex items-center justify-between gap-2'>
+                    <Heading className='text-base'>
+                      <Icon icon="graduation-cap" />
+                      <span className="ml-2">{learningFeature.title}</span>
+                    </Heading>
+                    <Button
+                      onPress={() => {
+                        setIsLearningFeatureDismissed('true');
+                      }}
+                    >
+                      <Icon icon="close" />
+                    </Button>
+                  </div>
+                  <p className='text-[--hl] text-sm'>
+                    {learningFeature.message}
+                  </p>
+                  <a href={learningFeature.url} className='flex items-center gap-2 underline text-sm'>
+                    {learningFeature.cta}
+                    <Icon icon="arrow-up-right-from-square" />
+                  </a>
+                </div>
+              )}
             </div>
           }
           renderPaneOne={
