@@ -40,7 +40,7 @@ test.describe('gRPC interactions', () => {
   });
 
   test('can send bidirectional requests', async ({ page }) => {
-    await page.getByLabel('Request Collection').getByRole('row', { name: 'Bidirectional Stream' }).click();
+    await page.getByLabel('Request Collection').getByTestId('Bidirectional Stream').press('Enter');
     await page.locator('text=Bi-directional Streaming').click();
     await page.click('text=Start');
 
@@ -59,7 +59,7 @@ test.describe('gRPC interactions', () => {
   });
 
   test('can send client stream requests', async ({ page }) => {
-    await page.getByLabel('Request Collection').getByRole('row', { name: 'Client Stream' }).click();
+    await page.getByLabel('Request Collection').getByTestId('Client Stream').press('Enter');
     await page.click('text=Client Streaming');
     await page.click('text=Start');
 
@@ -77,7 +77,7 @@ test.describe('gRPC interactions', () => {
   });
 
   test('can send server stream requests', async ({ page }) => {
-    await page.getByLabel('Request Collection').getByRole('row', { name: 'Server Stream' }).click();
+    await page.getByLabel('Request Collection').getByTestId('Server Stream').press('Enter');
     await page.click('text=Server Streaming');
     await page.click('text=Start');
 

@@ -1197,7 +1197,7 @@ button {
 .surprise,
 .http-method-GQL,
 .http-method-GET {
-  color: var(--color-surprise) !important;
+  color: var(--color-surprise-font) !important;
 }
 .boring {
   color: var(--color-font) !important;

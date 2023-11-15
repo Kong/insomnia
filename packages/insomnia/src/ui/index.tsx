@@ -809,6 +809,107 @@ const router = createMemoryRouter(
                                 },
                               ],
                             },
+                            {
+                              path: 'insomnia-sync',
+                              children: [
+                                {
+                                  path: 'pull',
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/remote-collections')
+                                    ).pullFromRemoteAction(...args),
+                                },
+                                {
+                                  path: 'push',
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/remote-collections')
+                                    ).pushToRemoteAction(...args),
+                                },
+                                {
+                                  path: 'rollback',
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/remote-collections')
+                                    ).rollbackChangesAction(...args),
+                                },
+                                {
+                                  path: 'restore',
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/remote-collections')
+                                    ).restoreChangesAction(...args),
+                                },
+                                {
+                                  path: 'sync-data',
+                                  loader: async (...args) =>
+                                    (
+                                      await import('./routes/remote-collections')
+                                    ).syncDataLoader(...args),
+                                },
+                                {
+                                  path: 'branch',
+                                  children: [
+                                    {
+                                      path: 'checkout',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/remote-collections')
+                                        ).checkoutBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'create',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/remote-collections')
+                                        ).createBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'fetch',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/remote-collections')
+                                        ).fetchRemoteBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'delete',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/remote-collections')
+                                        ).deleteBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'merge',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/remote-collections')
+                                        ).mergeBranchAction(...args),
+                                    },
+                                    {
+                                      path: 'create-snapshot',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/remote-collections')
+                                        ).createSnapshotAction(...args),
+                                    },
+                                    {
+                                      path: 'create-snapshot-and-push',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/remote-collections')
+                                        ).createSnapshotAndPushAction(...args),
+                                    },
+                                    {
+                                      path: 'rollback',
+                                      action: async (...args) =>
+                                        (
+                                          await import('./routes/remote-collections')
+                                        ).rollbackChangesAction(...args),
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
                           ],
                         },
                         {
@@ -853,7 +954,7 @@ const router = createMemoryRouter(
                       loader: async (...args) =>
                         (
                           await import('./routes/remote-collections')
-                        ).remoteCollectionsLoader(...args),
+                        ).remoteLoader(...args),
                       children: [
                         {
                           path: 'pull',

@@ -40,7 +40,7 @@ test.describe('Cookie editor', async () => {
     await page.click('text=Done');
 
     // Send http request
-    await page.getByLabel('Request Collection').getByRole('row', { name: 'example http' }).click();
+    await page.getByLabel('Request Collection').getByTestId('example http').press('Enter');
     await page.click('[data-testid="request-pane"] button:has-text("Send")');
 
     // Check in the timeline that the cookie was sent
@@ -48,7 +48,7 @@ test.describe('Cookie editor', async () => {
     await page.click('text=foo2=bar2; foo=b123ar');
 
     // Send ws request
-    await page.getByLabel('Request Collection').getByRole('row', { name: 'example websocket' }).click();
+    await page.getByLabel('Request Collection').getByTestId('example websocket').press('Enter');
     await page.click('text=ws://localhost:4010');
     await page.click('[data-testid="request-pane"] >> text=Connect');
 

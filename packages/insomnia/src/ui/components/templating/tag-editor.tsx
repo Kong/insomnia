@@ -287,8 +287,8 @@ export const TagEditor: FC<Props> = props => {
             }}
             value={activeTagDefinition ? activeTagDefinition.name : ''}
           >
-            {state.tagDefinitions.map((tagDefinition, i) => (
-              <option key={`${i}::${tagDefinition.name}`} value={tagDefinition.name}>
+            {state.tagDefinitions.map(tagDefinition => (
+              <option key={tagDefinition.name} value={tagDefinition.name}>
                 {tagDefinition.displayName} – {tagDefinition.description}
               </option>
             ))}
@@ -421,8 +421,9 @@ export const TagEditor: FC<Props> = props => {
           'form-control--thin': argDefinition.type === 'boolean',
           'form-control--outlined': argDefinition.type !== 'boolean',
         });
+        const uniqueKey = `${activeTagData.name || activeTagData.displayName}-${argDefinition.displayName}`;
         return (
-          <div key={index} className="form-row">
+          <div key={uniqueKey} className="form-row">
             <div className={formControlClasses}>
               <label data-arg-index={index}>
                 {fnOrString(displayName, activeTagData.args)}
@@ -438,8 +439,8 @@ export const TagEditor: FC<Props> = props => {
                     <option key="n/a" value="NO_VARIABLE">
                       -- Select Variable --
                     </option>
-                    {state.variables.map((v, i) => (
-                      <option key={`${i}::${v.name}`} value={v.name}>
+                      {state.variables.map(v => (
+                        <option key={v.name} value={v.name}>
                         {v.name}
                       </option>
                     ))}

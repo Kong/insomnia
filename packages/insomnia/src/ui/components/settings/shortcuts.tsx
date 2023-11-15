@@ -7,6 +7,7 @@ import {
   keyboardShortcutDescriptions,
   newDefaultRegistry,
 } from '../../../common/hotkeys';
+import { generateId } from '../../../common/misc';
 import { HotKeyRegistry, KeyboardShortcut, KeyCombination } from '../../../common/settings';
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { useRootLoaderData } from '../../routes/root';
@@ -41,15 +42,17 @@ export const Shortcuts: FC = () => {
         <tbody>
           {Object.entries(hotKeyRegistry).map(([key, platformCombinations]) => {
             const keyboardShortcut = key as KeyboardShortcut;
-            const keyCombosForThisPlatform = getPlatformKeyCombinations(platformCombinations);
+            // smelly
+            const keyCombosForThisPlatform = getPlatformKeyCombinations(platformCombinations)
+              .map(k => ({ ...k, id: generateId('key') }));
 
             return (
               <tr key={keyboardShortcut}>
                 <td style={{ verticalAlign: 'middle' }}>{keyboardShortcutDescriptions[keyboardShortcut]}</td>
                 <td className="text-right">
-                  {keyCombosForThisPlatform.map((keyComb: KeyCombination, index: number) => {
+                  {keyCombosForThisPlatform.map(keyComb => {
                     return (
-                      <code key={index} className="margin-left-sm" style={{ lineHeight: '1.25em' }}>
+                      <code key={keyComb.id} className="margin-left-sm" style={{ lineHeight: '1.25em' }}>
                         <Hotkey keyCombination={keyComb} />
                       </code>
                     );

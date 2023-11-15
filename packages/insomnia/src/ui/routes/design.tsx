@@ -355,7 +355,7 @@ const Design: FC = () => {
     },
     {
       id: 'generate-request-collection',
-      name: 'Generate requests from spec',
+      name: 'Generate collection',
       icon: <Icon className='w-3' icon="file-code" />,
       isDisabled:
         !apiSpec.contents ||

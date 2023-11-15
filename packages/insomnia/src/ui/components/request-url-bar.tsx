@@ -88,24 +88,24 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
   }, [fetcher.state, setLoading]);
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const connect = (connectParams: ConnectActionParams) => {
+  const connect = useCallback((connectParams: ConnectActionParams) => {
     fetcher.submit(JSON.stringify(connectParams),
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
         method: 'post',
         encType: 'application/json',
       });
-  };
-  const send = (sendParams: SendActionParams) => {
+  }, [fetcher, organizationId, projectId, requestId, workspaceId]);
+  const send = useCallback((sendParams: SendActionParams) => {
     fetcher.submit(JSON.stringify(sendParams),
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/send`,
         method: 'post',
         encType: 'application/json',
       });
-  };
+  }, [fetcher, organizationId, projectId, requestId, workspaceId]);
 
-  const sendOrConnect = async (shouldPromptForPathAfterResponse?: boolean) => {
+  const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean) => {
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
       event: SegmentEvent.requestExecute,
@@ -170,7 +170,19 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         ),
       });
     }
-  };
+  }, [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, settings.preferredHttpVersion]);
+
+  useEffect(() => {
+    const sendOnMetaEnter = (event: KeyboardEvent) => {
+      if (event.metaKey && event.key === 'Enter') {
+        sendOrConnect();
+      }
+    };
+    document.getElementById('sidebar-request-gridlist')?.addEventListener('keydown', sendOnMetaEnter, { capture: true });
+    return () => {
+      document.getElementById('sidebar-request-gridlist')?.removeEventListener('keydown', sendOnMetaEnter, { capture: true });
+    };
+  }, [sendOrConnect]);
 
   useInterval(sendOrConnect, currentInterval ? currentInterval : null);
   useTimeoutWhen(sendOrConnect, currentTimeout, !!currentTimeout);

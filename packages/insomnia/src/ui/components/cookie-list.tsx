@@ -23,13 +23,12 @@ const MAX_TIME = 2147483647000;
 
 const CookieRow: FC<{
   cookie: Cookie;
-  index: number;
   deleteCookie: (cookie: Cookie) => void;
-}> = ({ cookie, index, deleteCookie }) => {
+}> = ({ cookie, deleteCookie }) => {
   const [isCookieModalOpen, setIsCookieModalOpen] = useState(false);
   const c = ToughCookie.fromJSON(cookie);
   const cookieString = c ? cookieToString(c) : '';
-  return <tr className="selectable" key={index}>
+  return <tr className="selectable" key={cookie.id}>
     <td>
       <RenderedText>{cookie.domain || ''}</RenderedText>
     </td>
@@ -137,11 +136,10 @@ export const CookieList: FC<CookieListProps> = ({
         </tr>
       </thead>
       <tbody key={cookies.length}>
-        {cookies.map((cookie, i) => (
+        {cookies.map(cookie => (
           <CookieRow
             cookie={cookie}
-            index={i}
-            key={i}
+            key={cookie.id}
             deleteCookie={handleCookieDelete}
           />
         ))}

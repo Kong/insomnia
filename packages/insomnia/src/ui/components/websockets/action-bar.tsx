@@ -1,4 +1,4 @@
-import React, { FC, useLayoutEffect, useRef } from 'react';
+import React, { FC, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useFetcher, useParams } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -74,16 +74,17 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
 
   const fetcher = useFetcher();
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const connect = (connectParams: ConnectActionParams) => {
+
+  const connect = useCallback((connectParams: ConnectActionParams) => {
     fetcher.submit(JSON.stringify(connectParams),
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
         method: 'post',
         encType: 'application/json',
       });
-  };
+  }, [fetcher, organizationId, projectId, requestId, workspaceId]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (isOpen) {
       window.main.webSocket.close({ requestId: request._id });
       return;
@@ -109,7 +110,19 @@ export const WebSocketActionBar: FC<ActionBarProps> = ({ request, environmentId,
       suppressUserAgent: rendered.suppressUserAgent,
     });
 
-  };
+  }, [connect, environmentId, isOpen, request, workspaceId]);
+
+  useEffect(() => {
+    const sendOnMetaEnter = (event: KeyboardEvent) => {
+      if (event.metaKey && event.key === 'Enter') {
+        handleSubmit();
+      }
+    };
+    document.getElementById('sidebar-request-gridlist')?.addEventListener('keydown', sendOnMetaEnter, { capture: true });
+    return () => {
+      document.getElementById('sidebar-request-gridlist')?.removeEventListener('keydown', sendOnMetaEnter, { capture: true });
+    };
+  }, [handleSubmit]);
 
   useDocBodyKeyboardShortcuts({
     request_send: () => handleSubmit(),
