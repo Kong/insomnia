@@ -514,6 +514,10 @@ export async function getRenderedRequestAndContext(
     renderedRequest.authentication = {};
   }
 
+  // handle additional fields
+  const gqlRequest = renderResult._request as GraphqlRequest;
+  const variables = gqlRequest.variables || '';
+
   // Default the proto if it doesn't exist
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
   return {
@@ -543,7 +547,7 @@ export async function getRenderedRequestAndContext(
       settingFollowRedirects: renderedRequest.settingFollowRedirects,
       type: renderedRequest.type,
       url: renderedRequest.url,
-      variables: renderedRequest.variables ? renderedRequest.variables : '',
+      variables: variables,
     },
   };
 }
