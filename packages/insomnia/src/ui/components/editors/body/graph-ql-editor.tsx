@@ -274,14 +274,17 @@ export const GraphQLEditor: FC<Props> = ({
   useDocBodyKeyboardShortcuts({
     beautifyRequestBody,
   });
+
   const changeOperationName = (operationName: string) => {
     const content = getGraphQLContent(state.body, undefined, operationName);
     onChange(content);
     setState(prevState => ({ ...prevState, body: { ...prevState.body, operationName } }));
   };
-  const changeVariables = (variablesInput: string) => {
+
+  const changeVariables = async (variablesInput: string) => {
     try {
-      const variables = JSON.parse(variablesInput || '{}');
+      const rendered = await tryToInterpolateRequest({ ...request, variables: variablesInput }, environmentId, RENDER_PURPOSE_SEND);
+      const variables = JSON.parse(rendered.request.variables || '{}');
 
       const content = getGraphQLContent(state.body, undefined, operationName, variables);
       onChange(content);
@@ -294,6 +297,7 @@ export const GraphQLEditor: FC<Props> = ({
       setState(state => ({ ...state, variablesSyntaxError: err.message }));
     }
   };
+
   const changeQuery = (query: string) => {
     try {
       const documentAST = parse(query);

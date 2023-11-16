@@ -4,6 +4,7 @@ import orderedJSON from 'json-order';
 import * as models from '../models';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
+import { GraphqlRequest } from '../models/graphql-request';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 import { isProject, Project } from '../models/project';
 import type { Request } from '../models/request';
@@ -37,6 +38,7 @@ export type RenderedRequest = Request & {
   }[];
   cookieJar: CookieJar;
   suppressUserAgent: boolean;
+  variables?: string;
 };
 
 export type RenderedGrpcRequest = GrpcRequest;
@@ -292,7 +294,7 @@ export async function render<T>(
   return next<T>(newObj, name, true);
 }
 
-interface RenderRequest<T extends Request | GrpcRequest | WebSocketRequest> {
+interface RenderRequest<T extends Request | GrpcRequest | WebSocketRequest | GraphqlRequest> {
   request: T;
 }
 
@@ -302,7 +304,7 @@ interface BaseRenderContextOptions {
   extraInfo?: ExtraRenderInfo;
 }
 
-interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest>> {
+interface RenderContextOptions extends BaseRenderContextOptions, Partial<RenderRequest<Request | GrpcRequest | WebSocketRequest | GraphqlRequest>> {
   ancestors?: RenderContextAncestor[];
 }
 export async function getRenderContext(
@@ -541,6 +543,7 @@ export async function getRenderedRequestAndContext(
       settingFollowRedirects: renderedRequest.settingFollowRedirects,
       type: renderedRequest.type,
       url: renderedRequest.url,
+      variables: renderedRequest.variables ? renderedRequest.variables : '',
     },
   };
 }
@@ -567,8 +570,8 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): st
   });
 }
 
-type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project;
-export async function getRenderContextAncestors(base?: Request | GrpcRequest | WebSocketRequest | Workspace): Promise<RenderContextAncestor[]> {
+type RenderContextAncestor = Request | GrpcRequest | WebSocketRequest | RequestGroup | Workspace | Project | GraphqlRequest;
+export async function getRenderContextAncestors(base?: Request | GrpcRequest | WebSocketRequest | Workspace | GraphqlRequest): Promise<RenderContextAncestor[]> {
   return await db.withAncestors<RenderContextAncestor>(base || null, [
     models.request.type,
     models.grpcRequest.type,
@@ -576,5 +579,6 @@ export async function getRenderContextAncestors(base?: Request | GrpcRequest | W
     models.requestGroup.type,
     models.workspace.type,
     models.project.type,
+    models.graphqlRequest.type,
   ]);
 }

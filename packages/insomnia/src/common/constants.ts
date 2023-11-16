@@ -582,3 +582,4 @@ export const EXPORT_TYPE_ENVIRONMENT = 'environment';
 export const EXPORT_TYPE_API_SPEC = 'api_spec';
 export const EXPORT_TYPE_PROTO_FILE = 'proto_file';
 export const EXPORT_TYPE_PROTO_DIRECTORY = 'proto_directory';
+export const EXPORT_TYPE_GRAPHQL_REQUEST = 'graphql_request';

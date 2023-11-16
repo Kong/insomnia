@@ -2,6 +2,7 @@ import {
   EXPORT_TYPE_API_SPEC,
   EXPORT_TYPE_COOKIE_JAR,
   EXPORT_TYPE_ENVIRONMENT,
+  EXPORT_TYPE_GRAPHQL_REQUEST,
   EXPORT_TYPE_GRPC_REQUEST,
   EXPORT_TYPE_PROTO_DIRECTORY,
   EXPORT_TYPE_PROTO_FILE,
@@ -20,6 +21,7 @@ import * as _clientCertificate from './client-certificate';
 import * as _cookieJar from './cookie-jar';
 import * as _environment from './environment';
 import * as _gitRepository from './git-repository';
+import * as _graphqlRequest from './graphql-request';
 import * as _grpcRequest from './grpc-request';
 import * as _grpcRequestMeta from './grpc-request-meta';
 import * as _oAuth2Token from './o-auth-2-token';
@@ -87,6 +89,7 @@ export const webSocketRequest = _webSocketRequest;
 export const webSocketResponse = _webSocketResponse;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
+export const graphqlRequest = _graphqlRequest;
 export * as organization from './organization';
 
 export function all() {
@@ -120,6 +123,7 @@ export function all() {
     protoDirectory,
     grpcRequest,
     grpcRequestMeta,
+    graphqlRequest,
     webSocketPayload,
     webSocketRequest,
     webSocketResponse,
@@ -213,6 +217,7 @@ export const MODELS_BY_EXPORT_TYPE: Record<string, any> = {
   [EXPORT_TYPE_WEBSOCKET_PAYLOAD]: webSocketPayload,
   [EXPORT_TYPE_WEBSOCKET_REQUEST]: webSocketRequest,
   [EXPORT_TYPE_GRPC_REQUEST]: grpcRequest,
+  [EXPORT_TYPE_GRAPHQL_REQUEST]: graphqlRequest,
   [EXPORT_TYPE_REQUEST_GROUP]: requestGroup,
   [EXPORT_TYPE_UNIT_TEST_SUITE]: unitTestSuite,
   [EXPORT_TYPE_UNIT_TEST]: unitTest,
