@@ -3,6 +3,7 @@ import { Button } from 'react-aria-components';
 import { LoaderFunction, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
+import { CONTENT_TYPE_PLAINTEXT, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { contentTypesMap, HTTP_METHODS } from '../../common/constants';
 import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
@@ -15,6 +16,27 @@ import { MockResponseHeadersEditor, useMockRoutePatcher } from '../components/ed
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { SvgIcon } from '../components/svg-icon';
+
+const mockbinUrl = 'http://localhost:8080';
+interface MockbinInput {
+  status: string;
+  statusText: string;
+  httpVersion: string;
+  headers: {
+    name: string;
+    value: string;
+  }[];
+  cookies: {
+    name: string;
+    value: string;
+  }[];
+  content: {
+    size: number;
+    // todo: test default here
+    mimeType: string;
+    text: string;
+  };
+};
 export interface MockRouteLoaderData {
   mockRoute: MockRoute;
 }
@@ -61,6 +83,50 @@ export const MockRouteRoute = () => {
   console.log({ mockRoute });
   const [selectedContentType, setContentType] = useState('');
   const patchMockRoute = useMockRoutePatcher();
+  const formToMockBin = async ({ statusCode, headers, body }: { statusCode: string; headers: string; body: string }) => {
+    const headersArray = headers.split(/\r?\n|\r/g).map(l => l.split(/:\s(.+)/))
+      .filter(([n]) => !!n)
+      .map(([name, value = '']) => ({ name, value }));
+    const contentType = headersArray.find(h => h.name.toLowerCase() === 'content-type')?.value || CONTENT_TYPE_PLAINTEXT;
+    console.log({ headers, headersArray });
+    return {
+      'status': +statusCode,
+      'statusText': RESPONSE_CODE_REASONS[+statusCode] || '',
+      'httpVersion': 'HTTP/1.1',
+      'headers': headersArray,
+      // NOTE: cookies are sent as headers by insomnia
+      'cookies': [],
+      'content': {
+        'size': Buffer.byteLength(body),
+        'mimeType': contentType,
+        'text': body,
+        'compression': 0,
+      },
+      'bodySize': 0,
+    };
+  };
+  const createBinOnRemoteFromResponse = async (mockbinInput: MockbinInput): Promise<string> => {
+    console.log({ mockbinInput });
+    try {
+      const bin = await window.main.axiosRequest({
+        url: mockbinUrl + '/bin/create',
+        method: 'post',
+        data: mockbinInput,
+      });
+      // todo: show bin logs
+      // todo: handle error better
+      // todo create/update current bin url
+      console.log({ bin });
+      if (bin?.data) {
+        return bin.data;
+      }
+    } catch (e) {
+      console.log(e);
+    }
+    console.log('Error: creating bin on remote');
+    return '';
+
+  };
   return (
     <Pane type="request">
       <PaneHeader>
@@ -87,7 +153,7 @@ export const MockRouteRoute = () => {
             <OneLineEditor
               id="grpc-url"
               type="text"
-              defaultValue={'https://mock.insomnia.rest/id/'}
+              defaultValue={mockRoute.path}
               placeholder="something"
             // onChange={url => patchRequest(requestId, { url })}
             // getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)}
@@ -96,7 +162,18 @@ export const MockRouteRoute = () => {
           <div className='flex p-1'>
             <Button
               className="urlbar__send-btn"
-              onPress={() => {
+              onPress={async () => {
+                console.log('test');
+                const bin = await formToMockBin({
+                  statusCode: '200',
+                  headers: '',
+                  body: 'test',
+                });
+                const id = await createBinOnRemoteFromResponse(bin);
+                const url = mockbinUrl + '/bin/' + id;
+                console.log('test', url);
+
+                patchMockRoute(mockRoute._id, { path: url });
                 // create bin
                 // send to bin
               }}
