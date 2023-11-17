@@ -94,7 +94,13 @@ export const MockRouteRoute = () => {
             />
           </StyledUrlEditor>
           <div className='flex p-1'>
-            <Button className="urlbar__send-btn">Test</Button>
+            <Button
+              className="urlbar__send-btn"
+              onPress={() => {
+                // create bin
+                // send to bin
+              }}
+            >Test</Button>
           </div>
         </StyledUrlBar>
       </PaneHeader>
