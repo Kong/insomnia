@@ -11,7 +11,25 @@ export const prefix = 'mock';
 export const canDuplicate = true;
 
 export const canSync = true;
-
+export interface MockbinInput {
+  status: number;
+  statusText: string;
+  httpVersion: string;
+  headers: {
+    name: string;
+    value: string;
+  }[];
+  cookies: {
+    name: string;
+    value: string;
+  }[];
+  content: {
+    size: number;
+    // todo: test default here
+    mimeType: string;
+    text: string;
+  };
+};
 interface BaseMockRoute {
   body: string;
   headers: RequestHeader[];
@@ -20,6 +38,8 @@ interface BaseMockRoute {
   path: string;
   statusCode: number;
   name: string;
+  mimeType: string | null;
+  bins: (MockbinInput & { binId: string })[];
 }
 
 export type MockRoute = BaseModel & BaseMockRoute;
@@ -33,6 +53,8 @@ export function init(): BaseMockRoute {
     path: '',
     statusCode: 200,
     name: '',
+    mimeType: null,
+    bins: [],
   };
 }
 

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { AxiosResponse } from 'axios';
+import React, { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import { LoaderFunction, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
@@ -6,7 +7,7 @@ import styled from 'styled-components';
 import { CONTENT_TYPE_PLAINTEXT, RESPONSE_CODE_REASONS } from '../../common/constants';
 import { contentTypesMap, HTTP_METHODS } from '../../common/constants';
 import * as models from '../../models';
-import { MockRoute } from '../../models/mock-route';
+import { MockbinInput, MockRoute } from '../../models/mock-route';
 import { RequestHeader } from '../../models/request';
 import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
@@ -19,25 +20,7 @@ import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { SvgIcon } from '../components/svg-icon';
 
 const mockbinUrl = 'http://localhost:8080';
-interface MockbinInput {
-  status: number;
-  statusText: string;
-  httpVersion: string;
-  headers: {
-    name: string;
-    value: string;
-  }[];
-  cookies: {
-    name: string;
-    value: string;
-  }[];
-  content: {
-    size: number;
-    // todo: test default here
-    mimeType: string;
-    text: string;
-  };
-};
+
 export interface MockRouteLoaderData {
   mockRoute: MockRoute;
 }
@@ -79,10 +62,9 @@ const mockContentTypes = [
   'application/xml',
 ];
 export const MockRouteRoute = () => {
-  const mockUrl = 'url goes here?';
+
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
-  console.log({ mockRoute });
-  const [selectedContentType, setContentType] = useState('');
+  console.log(mockRoute._id, { mockRoute });
   const patchMockRoute = useMockRoutePatcher();
   const formToMockBin = async ({ statusCode, headersArray, body }: { statusCode: number; headersArray: RequestHeader[]; body: string }) => {
   // const headersArray = headers.split(/\r?\n|\r/g).map(l => l.split(/:\s(.+)/))
@@ -150,7 +132,7 @@ export const MockRouteRoute = () => {
             </DropdownItem>
           ))}
           </Dropdown>
-          <StyledUrlEditor title={mockUrl}>
+          <StyledUrlEditor>
             <OneLineEditor
               id="grpc-url"
               type="text"
@@ -173,8 +155,8 @@ export const MockRouteRoute = () => {
                 const id = await createBinOnRemoteFromResponse(bin);
                 const url = mockbinUrl + '/bin/' + id;
                 console.log('test', url);
-
-                patchMockRoute(mockRoute._id, { path: url });
+                // inputRef.current?.setValue(url);
+                patchMockRoute(mockRoute._id, { path: url, bins: [...mockRoute.bins, { binId: id, ...bin }] });
                 // create bin
                 // send to bin
               }}
@@ -190,7 +172,7 @@ export const MockRouteRoute = () => {
               aria-label='Change Body Type'
               triggerButton={
                 <DropdownButton>
-                  {selectedContentType ? contentTypesMap[selectedContentType]?.[0] : 'Mock Body'}
+                  {mockRoute.mimeType ? contentTypesMap[mockRoute.mimeType]?.[0] : 'Mock Body'}
                   <i className="fa fa-caret-down space-left" />
                 </DropdownButton>
               }
@@ -199,22 +181,23 @@ export const MockRouteRoute = () => {
                 <DropdownItem key={contentType}>
                   <ItemContent
                     label={contentTypesMap[contentType]?.[1]}
-                    onClick={() => setContentType(contentType)}
+                    onClick={() => patchMockRoute(mockRoute._id, { mimeType: contentType })}
                   />
                 </DropdownItem>
               ))}
             </Dropdown>
             }
           >
-            {selectedContentType ?
+            {mockRoute.mimeType ?
               (<CodeEditor
                 id="raw-editor"
+                // todo fix route toggle
                 showPrettifyButton
                 defaultValue={mockRoute.body}
                 // className={className}
                 enableNunjucks
                 onChange={body => patchMockRoute(mockRoute._id, { body })}
-                mode={selectedContentType}
+                mode={mockRoute.mimeType}
                 placeholder="..."
               />) :
               (<EmptyStatePane
@@ -234,13 +217,87 @@ export const MockRouteRoute = () => {
     </Pane>
   );
 };
-
+interface MockbinLogOutput {
+  log: {
+    version: string;
+    creator: {
+      name: string;
+      version: string;
+    };
+    entries: [
+      {
+        startedDateTime: string;
+        clientIPAddress: string;
+        request: {
+          'method': string;
+          'url': string;
+          'httpVersion': string;
+          'cookies': { name: string; value: string }[];
+          'headers': { name: string; value: string }[];
+          'queryString': { name: string; value: string }[];
+          'postData': {
+            'mimeType': string;
+            'text': string;
+            'params': { name: string; value: string }[];
+          };
+          'headersSize': number;
+          'bodySize': number;
+        };
+      }
+    ];
+  };
+}
 export const MockRouteResponse = () => {
+  const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
+
+  const getLogById = async (id: string): Promise<MockbinLogOutput | null> => {
+    console.log({ id });
+    if (!id) {
+      return null;
+    };
+    try {
+      const res = await window.main.axiosRequest({
+        url: mockbinUrl + `/bin/${id}/log`,
+        method: 'get',
+      }) as unknown as AxiosResponse<MockbinLogOutput>;
+      // todo: show bin logs
+      // todo: handle error better
+      // todo create/update current bin url
+      console.log({ res });
+      if (res?.data?.log) {
+        return res.data;
+      }
+    } catch (e) {
+      console.log(e);
+    }
+    console.log('Error: creating fetching log on remote');
+    return null;
+
+  };
+  const [logs, setLogs] = useState<MockbinLogOutput | null>(null);
+  useEffect(() => {
+    const fn = async () => {
+      const logs = await getLogById(mockRoute.bins?.[0]?.binId);
+      console.log(logs?.log.entries);
+      setLogs(logs);
+    };
+    fn();
+  }, [mockRoute.bins]);
+
   return (<Pane type="response">
     <PaneBody>
       <Tabs aria-label="Mock response">
         <TabItem key="history" title="History">
-          history
+          test
+          {logs?.log.entries?.map((entry, i) => (
+            <div key={i}>
+              <div>{entry.request.url}</div>
+              <div>{entry.request.method}</div>
+              <div>{entry.request.httpVersion}</div>
+              <div>{entry.request.headers.map(h => `${h.name}: ${h.value}`).join('\n')}</div>
+              <div>{entry.request.postData?.text}</div>
+            </div>
+          ))}
         </TabItem>
         <TabItem key="preview" title="Preview">
           preview

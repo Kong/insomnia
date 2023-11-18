@@ -267,7 +267,22 @@ const MockServerRoute = () => {
         }
       />
     </Routes>}
-    renderPaneTwo={<MockRouteResponse />}
+    renderPaneTwo={<Routes>
+      <Route
+        path={'mock-route/:mockRouteId/*'}
+        element={
+          <Suspense>
+            <MockRouteResponse />
+          </Suspense>
+        }
+      />
+      <Route
+        path="*"
+        element={
+          <div className="p-[--padding-md]">No mock route selected</div>
+        }
+      />
+    </Routes>}
   />;
 };
 
