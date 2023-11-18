@@ -1,5 +1,5 @@
 import { AxiosResponse } from 'axios';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Button } from 'react-aria-components';
 import { LoaderFunction, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
@@ -13,8 +13,8 @@ import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
 import { TabItem, Tabs } from '../components/base/tabs';
 import { CodeEditor } from '../components/codemirror/code-editor';
-import { OneLineEditor } from '../components/codemirror/one-line-editor';
 import { MockResponseHeadersEditor, useMockRoutePatcher } from '../components/editors/mock-response-headers-editor';
+import { MockResponsePane } from '../components/mocks/mock-response-pane';
 import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { Pane, PaneBody, PaneHeader } from '../components/panes/pane';
 import { SvgIcon } from '../components/svg-icon';
@@ -45,10 +45,6 @@ const StyledUrlBar = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: stretch;
-`;
-
-const StyledUrlEditor = styled.div`
-  flex: 1;
 `;
 
 const StyledDropdownButton = styled(DropdownButton)({
@@ -132,16 +128,17 @@ export const MockRouteRoute = () => {
             </DropdownItem>
           ))}
           </Dropdown>
-          <StyledUrlEditor>
-            <OneLineEditor
+          <div className='flex p-1'>
+            {mockRoute.path}
+            {/* <OneLineEditor
               id="grpc-url"
               type="text"
               defaultValue={mockRoute.path}
               placeholder="something"
             // onChange={url => patchRequest(requestId, { url })}
             // getAutocompleteConstants={() => queryAllWorkspaceUrls(workspaceId, models.grpcRequest.type, requestId)}
-            />
-          </StyledUrlEditor>
+            /> */}
+          </div>
           <div className='flex p-1'>
             <Button
               className="urlbar__send-btn"
@@ -217,98 +214,9 @@ export const MockRouteRoute = () => {
     </Pane>
   );
 };
-interface MockbinLogOutput {
-  log: {
-    version: string;
-    creator: {
-      name: string;
-      version: string;
-    };
-    entries: [
-      {
-        startedDateTime: string;
-        clientIPAddress: string;
-        request: {
-          'method': string;
-          'url': string;
-          'httpVersion': string;
-          'cookies': { name: string; value: string }[];
-          'headers': { name: string; value: string }[];
-          'queryString': { name: string; value: string }[];
-          'postData': {
-            'mimeType': string;
-            'text': string;
-            'params': { name: string; value: string }[];
-          };
-          'headersSize': number;
-          'bodySize': number;
-        };
-      }
-    ];
-  };
-}
+
 export const MockRouteResponse = () => {
-  const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
-
-  const getLogById = async (id: string): Promise<MockbinLogOutput | null> => {
-    console.log({ id });
-    if (!id) {
-      return null;
-    };
-    try {
-      const res = await window.main.axiosRequest({
-        url: mockbinUrl + `/bin/${id}/log`,
-        method: 'get',
-      }) as unknown as AxiosResponse<MockbinLogOutput>;
-      // todo: show bin logs
-      // todo: handle error better
-      // todo create/update current bin url
-      console.log({ res });
-      if (res?.data?.log) {
-        return res.data;
-      }
-    } catch (e) {
-      console.log(e);
-    }
-    console.log('Error: creating fetching log on remote');
-    return null;
-
-  };
-  const [logs, setLogs] = useState<MockbinLogOutput | null>(null);
-  useEffect(() => {
-    const fn = async () => {
-      const logs = await getLogById(mockRoute.bins?.[0]?.binId);
-      console.log(logs?.log.entries);
-      setLogs(logs);
-    };
-    fn();
-  }, [mockRoute.bins]);
-
-  return (<Pane type="response">
-    <PaneBody>
-      <Tabs aria-label="Mock response">
-        <TabItem key="history" title="History">
-          test
-          {logs?.log.entries?.map((entry, i) => (
-            <div key={i}>
-              <div>{entry.request.url}</div>
-              <div>{entry.request.method}</div>
-              <div>{entry.request.httpVersion}</div>
-              <div>{entry.request.headers.map(h => `${h.name}: ${h.value}`).join('\n')}</div>
-              <div>{entry.request.postData?.text}</div>
-            </div>
-          ))}
-        </TabItem>
-        <TabItem key="preview" title="Preview">
-          preview
-        </TabItem>
-        <TabItem key="headers" title="Headers">
-          headers
-        </TabItem>
-        <TabItem key="timeline" title="Timeline">
-          timeline
-        </TabItem>
-      </Tabs>
-    </PaneBody>
-  </Pane>);
+  return (
+    <MockResponsePane />
+  );
 };
