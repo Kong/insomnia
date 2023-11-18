@@ -75,14 +75,24 @@ export const MockResponsePane = () => {
     <Tabs aria-label="Mock response">
       <TabItem key="history" title="History">
         <div className="flex">
-          {logs?.log.entries?.map((entry, i) => (
-            <div key={i}>
-              <div>{entry.request.url}</div>
-              <div>{entry.request.method}</div>
-              <div>{entry.request.httpVersion}</div>
-              <div>{entry.request.postData?.text}</div>
-            </div>
-          ))}
+          <table className="table--fancy table--striped table--compact selectable">
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Date</th>
+                <th>IP</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs?.log.entries?.map((row, i) => (
+                <tr key={i}>
+                  <td>{row.request.method}</td>
+                  <td>{row.startedDateTime}</td>
+                  <td>{row.clientIPAddress}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </TabItem>
       <TabItem key="preview" title="Preview">
