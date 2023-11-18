@@ -7,6 +7,7 @@ import { CONTENT_TYPE_PLAINTEXT, RESPONSE_CODE_REASONS } from '../../common/cons
 import { contentTypesMap, HTTP_METHODS } from '../../common/constants';
 import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
+import { RequestHeader } from '../../models/request';
 import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
 import { TabItem, Tabs } from '../components/base/tabs';
@@ -19,7 +20,7 @@ import { SvgIcon } from '../components/svg-icon';
 
 const mockbinUrl = 'http://localhost:8080';
 interface MockbinInput {
-  status: string;
+  status: number;
   statusText: string;
   httpVersion: string;
   headers: {
@@ -83,12 +84,12 @@ export const MockRouteRoute = () => {
   console.log({ mockRoute });
   const [selectedContentType, setContentType] = useState('');
   const patchMockRoute = useMockRoutePatcher();
-  const formToMockBin = async ({ statusCode, headers, body }: { statusCode: string; headers: string; body: string }) => {
-    const headersArray = headers.split(/\r?\n|\r/g).map(l => l.split(/:\s(.+)/))
-      .filter(([n]) => !!n)
-      .map(([name, value = '']) => ({ name, value }));
+  const formToMockBin = async ({ statusCode, headersArray, body }: { statusCode: number; headersArray: RequestHeader[]; body: string }) => {
+  // const headersArray = headers.split(/\r?\n|\r/g).map(l => l.split(/:\s(.+)/))
+  //   .filter(([n]) => !!n)
+  //   .map(([name, value = '']) => ({ name, value }));
     const contentType = headersArray.find(h => h.name.toLowerCase() === 'content-type')?.value || CONTENT_TYPE_PLAINTEXT;
-    console.log({ headers, headersArray });
+    console.log({ headersArray });
     return {
       'status': +statusCode,
       'statusText': RESPONSE_CODE_REASONS[+statusCode] || '',
@@ -163,11 +164,11 @@ export const MockRouteRoute = () => {
             <Button
               className="urlbar__send-btn"
               onPress={async () => {
-                console.log('test');
+                console.log('test', mockRoute);
                 const bin = await formToMockBin({
-                  statusCode: '200',
-                  headers: '',
-                  body: 'test',
+                  statusCode: 200,
+                  headersArray: mockRoute.headers,
+                  body: mockRoute.body,
                 });
                 const id = await createBinOnRemoteFromResponse(bin);
                 const url = mockbinUrl + '/bin/' + id;
@@ -212,7 +213,7 @@ export const MockRouteRoute = () => {
                 defaultValue={mockRoute.body}
                 // className={className}
                 enableNunjucks
-                // onChange={onChange}
+                onChange={body => patchMockRoute(mockRoute._id, { body })}
                 mode={selectedContentType}
                 placeholder="..."
               />) :
