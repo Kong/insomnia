@@ -4,6 +4,9 @@ import { useRouteLoaderData } from 'react-router-dom';
 
 import { MockRouteLoaderData } from '../../routes/mock-route';
 import { TabItem, Tabs } from '../base/tabs';
+import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
+import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
+import { ResponseViewer } from '../viewers/response-viewer';
 const mockbinUrl = 'http://localhost:8080';
 interface MockbinLogOutput {
   log: {
@@ -96,13 +99,34 @@ export const MockResponsePane = () => {
         </div>
       </TabItem>
       <TabItem key="preview" title="Preview">
-        preview
+        {/* <ResponseViewer
+          key={activeResponse._id}
+          bytes={Math.max(activeResponse.bytesContent, activeResponse.bytesRead)}
+          contentType={activeResponse.contentType || ''}
+          disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
+          disablePreviewLinks={settings.disableResponsePreviewLinks}
+          download={handleDownloadResponseBody}
+          editorFontSize={settings.editorFontSize}
+          error={activeResponse.error}
+          filter={filter}
+          filterHistory={filterHistory}
+          getBody={handleGetResponseBody}
+          previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
+          responseId={activeResponse._id}
+          updateFilter={activeResponse.error ? undefined : handleSetFilter}
+          url={activeResponse.url}
+        /> */}
       </TabItem>
       <TabItem key="headers" title="Headers">
-        headers
+        {/* // todo: use headers from mockbin */}
+        <ResponseHeadersViewer headers={mockRoute.headers} />
       </TabItem>
       <TabItem key="timeline" title="Timeline">
-        timeline
+        <ResponseTimelineViewer
+          // key={response._id}
+          timeline={[]}
+          pinToBottom={true}
+        />
       </TabItem>
     </Tabs>
   );

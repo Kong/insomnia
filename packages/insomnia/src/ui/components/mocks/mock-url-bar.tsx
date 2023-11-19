@@ -34,7 +34,7 @@ export const MockUrlBar = () => {
     //   .filter(([n]) => !!n)
     //   .map(([name, value = '']) => ({ name, value }));
     const contentType = headersArray.find(h => h.name.toLowerCase() === 'content-type')?.value || CONTENT_TYPE_PLAINTEXT;
-    console.log({ headersArray });
+    // console.log({ headersArray });
     return {
       'status': +statusCode,
       'statusText': RESPONSE_CODE_REASONS[+statusCode] || '',
@@ -59,7 +59,6 @@ export const MockUrlBar = () => {
         method: 'post',
         data: mockbinInput,
       });
-      // todo: show bin logs
       // todo: handle error better
       // todo create/update current bin url
       console.log({ bin });
@@ -72,6 +71,25 @@ export const MockUrlBar = () => {
     console.log('Error: creating bin on remote');
     return '';
 
+  };
+
+  const test = async () => {
+    console.log('test', mockRoute);
+    const bin = await formToMockBin({
+      statusCode: 200,
+      headersArray: mockRoute.headers,
+      body: mockRoute.body,
+    });
+    const id = await createBinOnRemoteFromResponse(bin);
+    const url = mockbinUrl + '/bin/' + id;
+    console.log('test', url);
+    patchMockRoute(mockRoute._id, { path: url, bins: [...mockRoute.bins, { binId: id, ...bin }] });
+    // send to bin
+    const response = await window.main.axiosRequest({
+      url: mockbinUrl + '/bin/' + id,
+      method: 'get',
+    });
+    console.log({ response });
   };
   return (<>
     <Dropdown
@@ -106,21 +124,7 @@ export const MockUrlBar = () => {
     <div className='flex p-1'>
       <Button
         className="urlbar__send-btn"
-        onPress={async () => {
-          console.log('test', mockRoute);
-          const bin = await formToMockBin({
-            statusCode: 200,
-            headersArray: mockRoute.headers,
-            body: mockRoute.body,
-          });
-          const id = await createBinOnRemoteFromResponse(bin);
-          const url = mockbinUrl + '/bin/' + id;
-          console.log('test', url);
-          // inputRef.current?.setValue(url);
-          patchMockRoute(mockRoute._id, { path: url, bins: [...mockRoute.bins, { binId: id, ...bin }] });
-          // create bin
-          // send to bin
-        }}
+        onPress={test}
       >Test</Button>
     </div>
   </>);

@@ -1,13 +1,9 @@
 import React from 'react';
-import { Button } from 'react-aria-components';
 import { LoaderFunction, useRouteLoaderData } from 'react-router-dom';
-import styled from 'styled-components';
 
-import { CONTENT_TYPE_PLAINTEXT, RESPONSE_CODE_REASONS } from '../../common/constants';
-import { contentTypesMap, HTTP_METHODS } from '../../common/constants';
+import { contentTypesMap } from '../../common/constants';
 import * as models from '../../models';
-import { MockbinInput, MockRoute } from '../../models/mock-route';
-import { RequestHeader } from '../../models/request';
+import { MockRoute } from '../../models/mock-route';
 import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
 import { TabItem, Tabs } from '../components/base/tabs';
@@ -44,7 +40,6 @@ const mockContentTypes = [
 export const MockRouteRoute = () => {
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   const patchMockRoute = useMockRoutePatcher();
-  console.log('AAA', mockRoute._id, mockRoute.body);
   return (
     <Pane type="request">
       <PaneHeader>
