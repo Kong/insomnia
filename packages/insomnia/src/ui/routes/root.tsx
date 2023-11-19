@@ -2,7 +2,7 @@ import '../css/styles.css';
 
 import { IpcRendererEvent } from 'electron';
 import React, { useEffect, useState } from 'react';
-import { LoaderFunction, Outlet, useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { LoaderFunction, Outlet, useFetcher, useNavigate, useParams, useRouteLoaderData } from 'react-router-dom';
 
 import { isDevelopment } from '../../common/constants';
 import * as models from '../../models';
@@ -53,6 +53,7 @@ const Root = () => {
 
   const [importUri, setImportUri] = useState('');
   const actionFetcher = useFetcher();
+  const navigate = useNavigate();
 
   useEffect(() => {
     return window.main.on(
@@ -201,13 +202,17 @@ const Root = () => {
             break;
           }
 
+          case 'insomnia://app/open/organization':
+            navigate(`/organization/${params.organizationId}`);
+            break;
+
           default: {
             console.log(`Unknown deep link: ${url}`);
           }
         }
       },
     );
-  }, [actionFetcher]);
+  }, [actionFetcher, navigate]);
 
   return (
     <AIProvider>

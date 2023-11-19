@@ -30,7 +30,7 @@ test.describe('Design interactions', async () => {
 
     // Rename test suite
     await page.getByLabel('Request Collection').getByText('New Suite');
-    await page.getByRole('button', { name: 'New Suite' }).click();
+    await page.getByRole('button', { name: 'New Suite' }).dblclick();
     await page.getByRole('textbox').fill('New Suite 2');
     await page.getByRole('textbox').press('Enter');
 
@@ -38,7 +38,7 @@ test.describe('Design interactions', async () => {
     await page.getByLabel('New test').click();
 
     // Rename test
-    await page.getByRole('button', { name: 'Returns 200' }).click();
+    await page.getByRole('button', { name: 'Returns 200' }).dblclick();
     await page.getByRole('textbox').fill('Returns 200 and works');
     await page.getByRole('textbox').press('Enter');
     await page.getByRole('heading', { name: 'Returns 200 and works' }).click();
