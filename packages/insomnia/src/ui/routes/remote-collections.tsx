@@ -177,6 +177,45 @@ interface SyncData {
   remoteBackendProjects: BackendProject[];
 }
 
+const remoteBranchesCache: Record<string, string[]> = {};
+const remoteCompareCache: Record<string, { ahead: number; behind: number }> = {};
+const remoteBackendProjectsCache: Record<string, BackendProject[]> = {};
+
+export const syncDataAction: ActionFunction = async ({ params }) => {
+  try {
+    const { projectId, workspaceId } = params;
+    invariant(typeof projectId === 'string', 'Project Id is required');
+    invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+
+    const project = await models.project.getById(projectId);
+    invariant(project, 'Project not found');
+    invariant(project.remoteId, 'Project is not remote');
+    const vcs = VCSInstance();
+    const remoteBranches = (await vcs.getRemoteBranches()).sort();
+    const compare = await vcs.compareRemoteBranch();
+    const remoteBackendProjects = await vcs.remoteBackendProjects({
+      teamId: project.parentId,
+      teamProjectId: project.remoteId,
+    });
+
+    // Cache remote branches
+    remoteBranchesCache[workspaceId] = remoteBranches;
+    remoteCompareCache[workspaceId] = compare;
+    remoteBackendProjectsCache[workspaceId] = remoteBackendProjects;
+
+    return {
+      remoteBranches,
+      compare,
+      remoteBackendProjects,
+    };
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Unknown error while syncing data.';
+    return {
+      error: errorMessage,
+    };
+  }
+};
+
 export type SyncDataLoaderData = SyncData | {
   error: string;
 };
@@ -193,16 +232,20 @@ export const syncDataLoader: LoaderFunction = async ({ params }): Promise<SyncDa
     const vcs = VCSInstance();
     const { syncItems } = await getSyncItems({ workspaceId });
     const localBranches = (await vcs.getBranches()).sort();
-    const remoteBranches = (await vcs.getRemoteBranches()).sort();
+    const remoteBranches = (remoteBranchesCache[workspaceId] || await vcs.getRemoteBranches()).sort();
     const currentBranch = await vcs.getBranch();
     const history = (await vcs.getHistory()).sort((a, b) => b.created > a.created ? 1 : -1);
     const historyCount = await vcs.getHistoryCount();
     const status = await vcs.status(syncItems, {});
-    const compare = await vcs.compareRemoteBranch();
-    const remoteBackendProjects = await vcs.remoteBackendProjects({
+    const compare = remoteCompareCache[workspaceId] || await vcs.compareRemoteBranch();
+    const remoteBackendProjects = remoteBackendProjectsCache[workspaceId] || await vcs.remoteBackendProjects({
       teamId: project.parentId,
       teamProjectId: project.remoteId,
     });
+
+    remoteBranchesCache[workspaceId] = remoteBranches;
+    remoteCompareCache[workspaceId] = compare;
+    remoteBackendProjectsCache[workspaceId] = remoteBackendProjects;
 
     return {
       syncItems,
