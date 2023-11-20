@@ -39,7 +39,7 @@ export const MockUrlBar = () => {
       'status': +statusCode,
       'statusText': RESPONSE_CODE_REASONS[+statusCode] || '',
       'httpVersion': 'HTTP/1.1',
-      'headers': headersArray,
+      'headers': headersArray.filter(({ name }) => !!name),
       // NOTE: cookies are sent as headers by insomnia
       'cookies': [],
       'content': {
@@ -80,7 +80,20 @@ export const MockUrlBar = () => {
       headersArray: mockRoute.headers,
       body: mockRoute.body,
     });
-    const id = await createBinOnRemoteFromResponse(bin);
+    // compare bin to mockRoute bins to see if it already exists
+    // if it does, use that id, heres a dumb way
+    const alreadyCreatedBin = mockRoute.bins.find(b => {
+      return b.content.text === bin.content.text
+        && b.content.mimeType === bin.content.mimeType
+        && b.status === bin.status
+        && b.statusText === bin.statusText
+        && b.headers.length === bin.headers.length
+        && b.headers.every(h => bin.headers.some(h2 => h.name === h2.name && h.value === h2.value));
+    });
+    let id = alreadyCreatedBin?.binId;
+    if (!alreadyCreatedBin) {
+      id = await createBinOnRemoteFromResponse(bin);
+    }
     const url = mockbinUrl + '/bin/' + id;
     console.log('test', url);
     patchMockRoute(mockRoute._id, { path: url, bins: [...mockRoute.bins, { binId: id, ...bin }] });
