@@ -1,4 +1,4 @@
-import { cp, mkdir, readdir, stat } from 'node:fs/promises';
+import { cp, mkdir, readdir, stat, writeFile } from 'node:fs/promises';
 
 import childProcess from 'child_process';
 import * as electron from 'electron';
@@ -160,6 +160,8 @@ async function _installPluginToTmpDir(lookupName: string) {
   return new Promise<{ tmpDir: string }>(async (resolve, reject) => {
     const tmpDir = path.join(electron.app.getPath('temp'), `${lookupName}-${Date.now()}`);
     await mkdir(tmpDir, { recursive: true });
+    // Write a dummy package.json so that yarn doesn't traverse up the directory tree
+    await writeFile(path.join(tmpDir, 'package.json'), JSON.stringify({license: 'ISC', workspaces: []}), 'utf-8');
 
     console.log(`[plugins] Installing plugin to ${tmpDir}`);
     childProcess.execFile(
@@ -176,6 +178,7 @@ async function _installPluginToTmpDir(lookupName: string) {
         '--no-lockfile',
         '--production',
         '--no-progress',
+        '--ignore-workspace-root-check',
       ],
       {
         timeout: 5 * 60 * 1000,
