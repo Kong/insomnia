@@ -1,13 +1,10 @@
-
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData, useSearchParams } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
-import { RENDER_PURPOSE_SEND } from '../../common/render';
 import * as models from '../../models';
 import { isEventStreamRequest } from '../../models/request';
-import { fetchRequestData, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
@@ -53,6 +50,25 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   setLoading,
   onPaste,
 }, ref) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  if (searchParams.has('error')) {
+    showAlert({
+      title: 'Unexpected Request Failure',
+      message: (
+        <div>
+          <p>The request failed due to an unhandled error:</p>
+          <code className="wide selectable">
+            <pre>{searchParams.get('error')}</pre>
+          </code>
+        </div>
+      ),
+    });
+
+    // clean up params
+    searchParams.delete('error');
+    setSearchParams({});
+  }
+
   const {
     activeWorkspace,
     activeEnvironment,
@@ -148,15 +164,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
 
     try {
-      const { request,
-        environment } = await fetchRequestData(requestId);
-
-      const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
-      const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-      renderedRequest && send({
-        renderedRequest,
-        shouldPromptForPathAfterResponse,
-      });
+      send({ requestId, shouldPromptForPathAfterResponse });
     } catch (err) {
       showAlert({
         title: 'Unexpected Request Failure',

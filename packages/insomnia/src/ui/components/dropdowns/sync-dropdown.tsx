@@ -41,16 +41,20 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
   const pullFetcher = useFetcher();
   const rollbackFetcher = useFetcher();
   const checkoutFetcher = useFetcher();
-  const syncDataFetcher = useFetcher<SyncDataLoaderData>();
+  const syncDataLoaderFetcher = useFetcher<SyncDataLoaderData>();
+  const syncDataActionFetcher = useFetcher();
 
   useEffect(() => {
-    if (syncDataFetcher.state === 'idle' && !syncDataFetcher.data) {
-      syncDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`);
+    if (syncDataLoaderFetcher.state === 'idle' && !syncDataLoaderFetcher.data) {
+      syncDataLoaderFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`);
     }
-  }, [organizationId, projectId, syncDataFetcher, workspaceId]);
+  }, [organizationId, projectId, syncDataLoaderFetcher, workspaceId]);
 
   useInterval(() => {
-    syncDataFetcher.load(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`);
+    syncDataActionFetcher.submit({}, {
+      method: 'POST',
+      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
+    });
   }, ONE_MINUTE_IN_MS);
 
   const error = checkoutFetcher.data?.error || pullFetcher.data?.error || pushFetcher.data?.error || rollbackFetcher.data?.error;
@@ -64,7 +68,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
     }
   }, [error]);
 
-  if (syncDataFetcher.state !== 'idle' && !syncDataFetcher.data) {
+  if (syncDataLoaderFetcher.state !== 'idle' && !syncDataLoaderFetcher.data) {
     return (
       <Button className="flex items-center h-9 gap-4 px-[--padding-md] w-full aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
         <Icon icon="refresh" className="animate-spin" /> Initializing
@@ -88,8 +92,8 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
     compare: { ahead: 0, behind: 0 },
   };
 
-  if (syncDataFetcher.data && !('error' in syncDataFetcher.data)) {
-    syncData = syncDataFetcher.data;
+  if (syncDataLoaderFetcher.data && !('error' in syncDataLoaderFetcher.data)) {
+    syncData = syncDataLoaderFetcher.data;
   }
 
   const {

@@ -23,6 +23,7 @@ import {
   TextField,
 } from 'react-aria-components';
 import {
+  ActionFunction,
   LoaderFunction,
   matchPath,
   redirect,
@@ -76,7 +77,7 @@ import { ImportModal } from '../components/modals/import-modal';
 import { EmptyStatePane } from '../components/panes/project-empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
 import { TimeFromNow } from '../components/time-from-now';
-import { usePresenceContext } from '../context/app/presence-context';
+import { useInsomniaEventStreamContext } from '../context/app/insomnia-event-stream-context';
 import { type FeatureList, useOrganizationLoaderData } from './organization';
 
 interface TeamProject {
@@ -184,6 +185,19 @@ async function syncTeamProjects({
     });
   }));
 }
+
+export const syncProjectsAction: ActionFunction = async ({ params }) => {
+  const { organizationId } = params;
+  invariant(organizationId, 'Organization ID is required');
+
+  const teamProjects = await getAllTeamProjects(organizationId);
+  await syncTeamProjects({
+    organizationId,
+    teamProjects,
+  });
+
+  return null;
+};
 
 export const indexLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params;
@@ -458,7 +472,7 @@ const ProjectRoute: FC = () => {
   };
 
   const { organizations } = useOrganizationLoaderData();
-  const { presence } = usePresenceContext();
+  const { presence } = useInsomniaEventStreamContext();
   const { features } = useRouteLoaderData(':organizationId') as { features: FeatureList };
 
   const accountId = getAccountId();
