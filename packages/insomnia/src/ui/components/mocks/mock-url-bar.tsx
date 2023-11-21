@@ -104,7 +104,7 @@ export const MockUrlBar = () => {
     });
     console.log({ response });
   };
-  return (<>
+  return (<div className='w-full flex justify-between urlbar'>
     <Dropdown
       className="method-dropdown"
       triggerButton={
@@ -123,7 +123,7 @@ export const MockUrlBar = () => {
       </DropdownItem>
     ))}
     </Dropdown>
-    <div className='flex p-1'>
+    <div className='flex p-1 truncate items-center opacity-50 cursor-not-allowed'>
       {mockRoute.path}
       {/* <OneLineEditor
               id="grpc-url"
@@ -136,9 +136,11 @@ export const MockUrlBar = () => {
     </div>
     <div className='flex p-1'>
       <Button
-        className="urlbar__send-btn"
+        className="urlbar__send-btn rounded-sm"
         onPress={test}
-      >Test</Button>
+      >
+        Test
+      </Button>
     </div>
-  </>);
+  </div>);
 };
