@@ -341,7 +341,12 @@ export const deleteBranchAction: ActionFunction = async ({ params, request }) =>
   try {
     const vcs = VCSInstance();
     await vcs.removeRemoteBranch(branch);
-    await vcs.removeBranch(branch);
+    try {
+      await vcs.removeBranch(branch);
+    } catch (err) {
+      // Branch doesn't exist locally, ignore
+    }
+
     const remoteBranches = (await vcs.getRemoteBranches()).sort();
     remoteBranchesCache[workspaceId] = remoteBranches;
   } catch (err) {
