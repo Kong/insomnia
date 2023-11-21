@@ -1,6 +1,5 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
 import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react-router-dom';
-import { useInterval } from 'react-use';
 
 import { getCurrentSessionId } from '../../../account/session';
 import { ProjectLoaderData } from '../../routes/project';
@@ -116,43 +115,6 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
 
     updatePresence();
   }, [organizationId, remoteId, workspaceId]);
-
-  // Update presence every minute
-  useInterval(async () => {
-    const sessionId = getCurrentSessionId();
-    if (sessionId && remoteId) {
-      try {
-        const response = await window.main.insomniaFetch<{
-          data?: UserPresence[];
-              }>({
-                path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
-                method: 'POST',
-                sessionId,
-                data: {
-                  project: remoteId,
-                  file: workspaceId,
-                },
-              });
-
-        const rows = response?.data || [];
-        if (rows.length > 0) {
-          setPresence(rows);
-        }
-      } catch (e) {
-        console.log('Error parsing response', e);
-      }
-    }
-
-    syncOrganizationsFetcher.submit({}, {
-      action: '/organization/sync',
-      method: 'POST',
-    });
-
-    syncProjectsFetcher.submit({}, {
-      action: `/organization/${organizationId}/sync-projects`,
-      method: 'POST',
-    });
-  }, 1000 * 60);
 
   useEffect(() => {
     const sessionId = getCurrentSessionId();
