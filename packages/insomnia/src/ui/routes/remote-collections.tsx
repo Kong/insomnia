@@ -331,17 +331,19 @@ export const createBranchAction: ActionFunction = async ({ request, params }) =>
   return null;
 };
 
-export const deleteBranchAction: ActionFunction = async ({ request }) => {
+export const deleteBranchAction: ActionFunction = async ({ params, request }) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
 
   try {
     const vcs = VCSInstance();
-    // @TODO What is going on here?
     await vcs.removeRemoteBranch(branch);
-    // @TODO What is going on here?
     await vcs.removeBranch(branch);
+    const remoteBranches = (await vcs.getRemoteBranches()).sort();
+    remoteBranchesCache[workspaceId] = remoteBranches;
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while merging branch.';
     return {
@@ -439,14 +441,13 @@ export const rollbackChangesAction: ActionFunction = async ({ params }) => {
     const { syncItems } = await getSyncItems({ workspaceId });
     const delta = await vcs.rollbackToLatest(syncItems);
     await database.batchModifyDocs(delta as unknown as Operation);
+    return {};
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while rolling back changes.';
     return {
       error: errorMessage,
     };
   }
-
-  return null;
 };
 
 export const restoreChangesAction: ActionFunction = async ({ request, params }) => {

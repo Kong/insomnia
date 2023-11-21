@@ -124,12 +124,12 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
 
         source.addEventListener('message', e => {
           try {
-            const presenceEvent = JSON.parse(e.data) as UserPresenceEvent | TeamProjectChangedEvent | FileDeletedEvent | BranchDeletedEvent | FileChangedEvent;
+            const event = JSON.parse(e.data) as UserPresenceEvent | TeamProjectChangedEvent | FileDeletedEvent | BranchDeletedEvent | FileChangedEvent;
 
-            if (presenceEvent.type === 'PresentUserLeave') {
+            if (event.type === 'PresentUserLeave') {
               setPresence(prev => prev.filter(p => {
-                const isSameUser = p.acct === presenceEvent.acct;
-                const isSameProjectFile = p.file === presenceEvent.file && p.project === presenceEvent.project;
+                const isSameUser = p.acct === event.acct;
+                const isSameProjectFile = p.file === event.file && p.project === event.project;
 
                 // Remove any presence events we have for the same user in this project/file
                 if (isSameUser && isSameProjectFile) {
@@ -138,20 +138,25 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
 
                 return true;
               }));
-            } else if (presenceEvent.type === 'PresentStateChanged') {
-              setPresence(prev => [...prev.filter(p => p.acct !== presenceEvent.acct), presenceEvent]);
-            } else if (presenceEvent.type === 'OrganizationChanged') {
+            } else if (event.type === 'PresentStateChanged') {
+              setPresence(prev => [...prev.filter(p => p.acct !== event.acct), event]);
+            } else if (event.type === 'OrganizationChanged') {
               syncOrganizationsFetcher.submit({}, {
                 action: '/organization/sync',
                 method: 'POST',
               });
-            } else if (presenceEvent.type === 'TeamProjectChanged' && presenceEvent.team === organizationId) {
+            } else if (event.type === 'TeamProjectChanged' && event.team === organizationId) {
               syncProjectsFetcher.submit({}, {
                 action: `/organization/${organizationId}/sync-projects`,
                 method: 'POST',
               });
-            } else if (['BranchDeleted', 'FileDeleted', 'FileChanged'].includes(presenceEvent.type) && presenceEvent.team === organizationId && presenceEvent.project === remoteId) {
+            } else if (event.type === 'FileDeleted' && event.team === organizationId && event.project === remoteId) {
               revalidate();
+            } else if (['BranchDeleted', 'FileChanged'].includes(event.type) && event.team === organizationId && event.project === remoteId) {
+              syncDataFetcher.submit({}, {
+                method: 'POST',
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
+              });
             }
           } catch (e) {
             console.log('Error parsing response from SSE', e);
