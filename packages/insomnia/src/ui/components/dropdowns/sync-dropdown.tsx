@@ -52,6 +52,7 @@ export const SyncDropdown: FC<Props> = ({ gitSyncEnabled }) => {
 
   useInterval(() => {
     syncDataActionFetcher.submit({}, {
+      method: 'POST',
       action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
     });
   }, ONE_MINUTE_IN_MS);
