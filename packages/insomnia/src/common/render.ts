@@ -596,5 +596,7 @@ export async function getRenderContextAncestors(base?: Request | GrpcRequest | W
     models.requestGroup.type,
     models.workspace.type,
     models.project.type,
+    models.mockRoute.type,
+    models.mockServer.type,
   ]);
 }

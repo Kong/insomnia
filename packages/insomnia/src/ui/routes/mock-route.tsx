@@ -2,8 +2,10 @@ import React from 'react';
 import { LoaderFunction, useRouteLoaderData } from 'react-router-dom';
 
 import { contentTypesMap } from '../../common/constants';
+import { database as db } from '../../common/database';
 import * as models from '../../models';
 import { MockRoute } from '../../models/mock-route';
+import { Response } from '../../models/response';
 import { invariant } from '../../utils/invariant';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../components/base/dropdown';
 import { TabItem, Tabs } from '../components/base/tabs';
@@ -17,6 +19,7 @@ import { SvgIcon } from '../components/svg-icon';
 
 export interface MockRouteLoaderData {
   mockRoute: MockRoute;
+  activeResponse: Response | null;
 }
 
 export const loader: LoaderFunction = async ({ params }): Promise<MockRouteLoaderData> => {
@@ -27,9 +30,13 @@ export const loader: LoaderFunction = async ({ params }): Promise<MockRouteLoade
   invariant(mockRouteId, 'Mock route ID is required');
   const mockRoute = await models.mockRoute.getById(mockRouteId);
   invariant(mockRoute, 'Mock route is required');
+  const reqIds = (await models.request.findByParentId(mockRouteId)).map(r => r._id);
 
+  const res = await db.find<Response>(models.response.type, { parentId: { $in: reqIds } });
+  console.log({ reqIds, res });
   return {
     mockRoute,
+    activeResponse: res[res.length - 1],
   };
 };
 

@@ -2,7 +2,9 @@ import { AxiosResponse } from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
+import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { MockRouteLoaderData } from '../../routes/mock-route';
+import { useRootLoaderData } from '../../routes/root';
 import { TabItem, Tabs } from '../base/tabs';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
@@ -39,8 +41,9 @@ interface MockbinLogOutput {
   };
 }
 export const MockResponsePane = () => {
-  const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
-
+  const { mockRoute, activeResponse } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
+  const { settings } = useRootLoaderData();
+  console.log({ activeResponse });
   const getLogById = async (id: string): Promise<MockbinLogOutput | null> => {
     console.log({ id });
     if (!id) {
@@ -53,7 +56,7 @@ export const MockResponsePane = () => {
       }) as unknown as AxiosResponse<MockbinLogOutput>;
       // todo: handle error better
       // todo create/update current bin url
-      console.log({ res });
+      // console.log({ res });
       if (res?.data?.log) {
         return res.data;
       }
@@ -99,23 +102,23 @@ export const MockResponsePane = () => {
         </div>
       </TabItem>
       <TabItem key="preview" title="Preview">
-        {/* <ResponseViewer
+        {activeResponse && <ResponseViewer
           key={activeResponse._id}
           bytes={Math.max(activeResponse.bytesContent, activeResponse.bytesRead)}
           contentType={activeResponse.contentType || ''}
           disableHtmlPreviewJs={settings.disableHtmlPreviewJs}
           disablePreviewLinks={settings.disableResponsePreviewLinks}
-          download={handleDownloadResponseBody}
+          download={() => { }}
           editorFontSize={settings.editorFontSize}
           error={activeResponse.error}
-          filter={filter}
-          filterHistory={filterHistory}
-          getBody={handleGetResponseBody}
-          previewMode={activeResponse.error ? PREVIEW_MODE_SOURCE : previewMode}
+          filter={''}
+          filterHistory={[]}
+          getBody={() => { }}
+          previewMode={PREVIEW_MODE_SOURCE}
           responseId={activeResponse._id}
-          updateFilter={activeResponse.error ? undefined : handleSetFilter}
+          updateFilter={activeResponse.error ? undefined : () => { }}
           url={activeResponse.url}
-        /> */}
+        />}
       </TabItem>
       <TabItem key="headers" title="Headers">
         {/* // todo: use headers from mockbin */}
