@@ -1,11 +1,11 @@
 import React, { createContext, FC, PropsWithChildren, useContext, useEffect, useState } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
-import { useInterval } from 'react-use';
+import { useFetcher, useParams, useRevalidator, useRouteLoaderData } from 'react-router-dom';
 
 import { getCurrentSessionId } from '../../../account/session';
 import { ProjectLoaderData } from '../../routes/project';
+import { WorkspaceLoaderData } from '../../routes/workspace';
 
-const PresenceContext = createContext<{
+const InsomniaEventStreamContext = createContext<{
   presence: UserPresence[];
 }>({
   presence: [],
@@ -14,6 +14,39 @@ const PresenceContext = createContext<{
 // This happens because the API accepts teamIds as team_xxx
 function sanitizeTeamId(teamId: string) {
   return teamId.replace('proj_', '');
+}
+
+interface TeamProjectChangedEvent {
+  topic: string;
+  type: 'TeamProjectChanged';
+  team: string;
+  project: string;
+};
+
+interface FileDeletedEvent {
+  'topic': string;
+  'type': 'FileDeleted';
+  'team': string;
+  'project': string;
+  'file': string;
+};
+
+interface BranchDeletedEvent {
+  'topic': string;
+  'type': 'BranchDeleted';
+  'team': string;
+  'project': string;
+  'file': string;
+  'branch': string;
+}
+
+interface FileChangedEvent {
+  'topic': string;
+  'type': 'FileChanged';
+  'team': string;
+  'project': string;
+  'file': string;
+  'branch': string;
 }
 
 export interface UserPresence {
@@ -31,19 +64,26 @@ interface UserPresenceEvent extends UserPresence {
   type: 'PresentUserLeave' | 'PresentStateChanged' | 'OrganizationChanged';
 }
 
-export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
+export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children }) => {
   const {
     organizationId,
+    projectId,
     workspaceId,
   } = useParams() as {
     organizationId: string;
+      projectId: string;
       workspaceId: string;
   };
 
   const projectData = useRouteLoaderData('/project/:projectId') as ProjectLoaderData | null;
-  const remoteId = projectData?.activeProject.remoteId;
+  const workspaceData = useRouteLoaderData(':workspaceId') as WorkspaceLoaderData | null;
+  const remoteId = projectData?.activeProject.remoteId || workspaceData?.activeProject.remoteId;
+
   const [presence, setPresence] = useState<UserPresence[]>([]);
   const syncOrganizationsFetcher = useFetcher();
+  const syncProjectsFetcher = useFetcher();
+  const syncDataFetcher = useFetcher();
+  const { revalidate } = useRevalidator();
 
   // Update presence when the user switches org, projects, workspaces
   useEffect(() => {
@@ -76,33 +116,6 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
     updatePresence();
   }, [organizationId, remoteId, workspaceId]);
 
-  // Update presence every minute
-  useInterval(async () => {
-    const sessionId = getCurrentSessionId();
-    if (sessionId && remoteId) {
-      try {
-        const response = await window.main.insomniaFetch<{
-          data?: UserPresence[];
-              }>({
-                path: `/v1/organizations/${sanitizeTeamId(organizationId)}/collaborators`,
-                method: 'POST',
-                sessionId,
-                data: {
-                  project: remoteId,
-                  file: workspaceId,
-                },
-              });
-
-        const rows = response?.data || [];
-        if (rows.length > 0) {
-          setPresence(rows);
-        }
-      } catch (e) {
-        console.log('Error parsing response', e);
-      }
-    }
-  }, 1000 * 60);
-
   useEffect(() => {
     const sessionId = getCurrentSessionId();
     if (sessionId && remoteId) {
@@ -111,12 +124,12 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
 
         source.addEventListener('message', e => {
           try {
-            const presenceEvent = JSON.parse(e.data) as UserPresenceEvent;
+            const event = JSON.parse(e.data) as UserPresenceEvent | TeamProjectChangedEvent | FileDeletedEvent | BranchDeletedEvent | FileChangedEvent;
 
-            if (presenceEvent.type === 'PresentUserLeave') {
+            if (event.type === 'PresentUserLeave') {
               setPresence(prev => prev.filter(p => {
-                const isSameUser = p.acct === presenceEvent.acct;
-                const isSameProjectFile = p.file === presenceEvent.file && p.project === presenceEvent.project;
+                const isSameUser = p.acct === event.acct;
+                const isSameProjectFile = p.file === event.file && p.project === event.project;
 
                 // Remove any presence events we have for the same user in this project/file
                 if (isSameUser && isSameProjectFile) {
@@ -125,12 +138,24 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
 
                 return true;
               }));
-            } else if (presenceEvent.type === 'PresentStateChanged') {
-              setPresence(prev => [...prev.filter(p => p.acct !== presenceEvent.acct), presenceEvent]);
-            } else if (presenceEvent.type === 'OrganizationChanged') {
+            } else if (event.type === 'PresentStateChanged') {
+              setPresence(prev => [...prev.filter(p => p.acct !== event.acct), event]);
+            } else if (event.type === 'OrganizationChanged') {
               syncOrganizationsFetcher.submit({}, {
                 action: '/organization/sync',
                 method: 'POST',
+              });
+            } else if (event.type === 'TeamProjectChanged' && event.team === organizationId) {
+              syncProjectsFetcher.submit({}, {
+                action: `/organization/${organizationId}/sync-projects`,
+                method: 'POST',
+              });
+            } else if (event.type === 'FileDeleted' && event.team === organizationId && event.project === remoteId) {
+              revalidate();
+            } else if (['BranchDeleted', 'FileChanged'].includes(event.type) && event.team === organizationId && event.project === remoteId) {
+              syncDataFetcher.submit({}, {
+                method: 'POST',
+                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/insomnia-sync/sync-data`,
               });
             }
           } catch (e) {
@@ -146,17 +171,17 @@ export const PresenceProvider: FC<PropsWithChildren> = ({ children }) => {
       }
     }
     return;
-  }, [organizationId, remoteId, syncOrganizationsFetcher]);
+  }, [organizationId, projectId, remoteId, revalidate, syncDataFetcher, syncOrganizationsFetcher, syncProjectsFetcher, workspaceId]);
 
   return (
-    <PresenceContext.Provider
+    <InsomniaEventStreamContext.Provider
       value={{
         presence,
       }}
     >
       {children}
-    </PresenceContext.Provider>
+    </InsomniaEventStreamContext.Provider>
   );
 };
 
-export const usePresenceContext = () => useContext(PresenceContext);
+export const useInsomniaEventStreamContext = () => useContext(InsomniaEventStreamContext);

@@ -31,6 +31,8 @@ import {
 } from '../components/codemirror/code-editor';
 import { EditableInput } from '../components/editable-input';
 import { Icon } from '../components/icon';
+import { showModal } from '../components/modals';
+import { AskModal } from '../components/modals/ask-modal';
 import { getMethodShortHand } from '../components/tags/method-tag';
 
 const UnitTestItemView = ({
@@ -222,17 +224,26 @@ const UnitTestItemView = ({
             </ListBox>
           </Popover>
         </Select>
-
         <Button
           className="flex flex-shrink-0 items-center justify-center aspect-square h-8 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => {
-            deleteUnitTestFetcher.submit(
-              {},
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/delete`,
-                method: 'POST',
-              }
-            );
+            showModal(AskModal, {
+              title: 'Delete Test',
+              message: `Do you really want to delete "${unitTest.name}"?`,
+              yesText: 'Delete',
+              noText: 'Cancel',
+              onDone: async (isYes: boolean) => {
+                if (isYes) {
+                  deleteUnitTestFetcher.submit(
+                    {},
+                    {
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/delete`,
+                      method: 'POST',
+                    }
+                  );
+                }
+              },
+            });
           }}
         >
           <Icon icon="trash" />
