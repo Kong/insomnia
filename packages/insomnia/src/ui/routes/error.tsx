@@ -11,7 +11,7 @@ import {
 
 import { Icon } from '../components/icon';
 
-export const ErrorRoute: FC = () => {
+export const ErrorRoute: FC<{ overrideMessage: string }> = ({ overrideMessage }) => {
   const error = useRouteError();
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
@@ -33,7 +33,7 @@ export const ErrorRoute: FC = () => {
 
   const navigate = useNavigate();
   const navigation = useNavigation();
-  const errorMessage = getErrorMessage(error);
+  const errorMessage = overrideMessage ?? getErrorMessage(error);
   const logoutFetcher = useFetcher();
 
   return (
