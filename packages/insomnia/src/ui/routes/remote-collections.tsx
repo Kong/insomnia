@@ -277,6 +277,7 @@ export const checkoutBranchAction: ActionFunction = async ({ request, params }) 
   try {
     const delta = await vcs.checkout(syncItems, branch);
     await database.batchModifyDocs(delta as Operation);
+    delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while checking out branch.';
     return {
@@ -284,7 +285,7 @@ export const checkoutBranchAction: ActionFunction = async ({ request, params }) 
     };
   }
 
-  return null;
+  return {};
 };
 
 export const mergeBranchAction: ActionFunction = async ({ request, params }) => {
@@ -298,6 +299,7 @@ export const mergeBranchAction: ActionFunction = async ({ request, params }) => 
   const delta = await vcs.merge(syncItems, branch);
   try {
     await database.batchModifyDocs(delta as Operation);
+    delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while merging branch.';
     return {
@@ -321,6 +323,7 @@ export const createBranchAction: ActionFunction = async ({ request, params }) =>
     // Checkout new branch
     const delta = await vcs.checkout(syncItems, branchName);
     await database.batchModifyDocs(delta as Operation);
+    delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while merging branch.';
     return {
@@ -331,17 +334,23 @@ export const createBranchAction: ActionFunction = async ({ request, params }) =>
   return null;
 };
 
-export const deleteBranchAction: ActionFunction = async ({ request }) => {
+export const deleteBranchAction: ActionFunction = async ({ params, request }) => {
+  const { workspaceId } = params;
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
   const formData = await request.formData();
   const branch = formData.get('branch');
   invariant(typeof branch === 'string', 'Branch is required');
 
   try {
     const vcs = VCSInstance();
-    // @TODO What is going on here?
     await vcs.removeRemoteBranch(branch);
-    // @TODO What is going on here?
-    await vcs.removeBranch(branch);
+    try {
+      await vcs.removeBranch(branch);
+    } catch (err) {
+      // Branch doesn't exist locally, ignore
+    }
+
+    delete remoteBranchesCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while merging branch.';
     return {
@@ -365,6 +374,7 @@ export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
     const delta = await vcs.pull({ candidates: syncItems, teamId: project.parentId, teamProjectId: project.remoteId });
 
     await database.batchModifyDocs(delta as unknown as Operation);
+    delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pulling from remote.';
     return {
@@ -412,8 +422,10 @@ export const fetchRemoteBranchAction: ActionFunction = async ({ request, params 
 };
 
 export const pushToRemoteAction: ActionFunction = async ({ params }) => {
-  const { projectId } = params;
+  const { projectId, workspaceId } = params;
   invariant(typeof projectId === 'string', 'Project Id is required');
+  invariant(typeof workspaceId === 'string', 'Workspace Id is required');
+
   const project = await models.project.getById(projectId);
   invariant(project, 'Project not found');
   invariant(project.remoteId, 'Project is not remote');
@@ -421,6 +433,7 @@ export const pushToRemoteAction: ActionFunction = async ({ params }) => {
   try {
     const vcs = VCSInstance();
     await vcs.push({ teamId: project.parentId, teamProjectId: project.remoteId });
+    delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pushing to remote.';
     return {
@@ -439,14 +452,14 @@ export const rollbackChangesAction: ActionFunction = async ({ params }) => {
     const { syncItems } = await getSyncItems({ workspaceId });
     const delta = await vcs.rollbackToLatest(syncItems);
     await database.batchModifyDocs(delta as unknown as Operation);
+    delete remoteCompareCache[workspaceId];
+    return {};
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while rolling back changes.';
     return {
       error: errorMessage,
     };
   }
-
-  return null;
 };
 
 export const restoreChangesAction: ActionFunction = async ({ request, params }) => {
@@ -460,6 +473,7 @@ export const restoreChangesAction: ActionFunction = async ({ request, params }) 
     const { syncItems } = await getSyncItems({ workspaceId });
     const delta = await vcs.rollback(id, syncItems);
     await database.batchModifyDocs(delta as unknown as Operation);
+    delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while restoring changes.';
     return {
@@ -495,6 +509,7 @@ export const createSnapshotAction: ActionFunction = async ({ request, params }) 
 
   try {
     await vcs.takeSnapshot(snapshotStage, message);
+    delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while creating snapshot.';
     return {
@@ -536,6 +551,7 @@ export const createSnapshotAndPushAction: ActionFunction = async ({ request, par
   try {
     await vcs.takeSnapshot(snapshotStage, message);
     await vcs.push({ teamId: project.parentId, teamProjectId: project.remoteId });
+    delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while creating snapshot.';
     return {

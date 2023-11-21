@@ -49,7 +49,7 @@ import { showSettingsModal } from '../components/modals/settings-modal';
 import { OrganizationAvatar } from '../components/organization-avatar';
 import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
-import { PresenceProvider } from '../context/app/presence-context';
+import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
 import { useRootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 
@@ -404,7 +404,7 @@ const OrganizationRoute = () => {
   }, []);
 
   return (
-    <PresenceProvider>
+    <InsomniaEventStreamProvider>
       <div className="w-full h-full">
         <div className={`w-full h-full divide-x divide-solid divide-y divide-[--hl-md] ${isScratchPadBannerVisible ? 'grid-template-app-layout-with-banner' : 'grid-template-app-layout'} grid relative bg-[--color-bg]`}>
           <header className="[grid-area:Header] grid grid-cols-3 items-center">
@@ -736,7 +736,7 @@ const OrganizationRoute = () => {
         </div>
         <Toast />
       </div>
-    </PresenceProvider>
+    </InsomniaEventStreamProvider>
   );
 };
 

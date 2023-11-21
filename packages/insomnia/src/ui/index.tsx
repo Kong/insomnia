@@ -183,6 +183,13 @@ const router = createMemoryRouter(
                     (await import('./routes/project')).indexLoader(...args),
                 },
                 {
+                  path: 'sync-projects',
+                  action: async (...args) =>
+                    (
+                      await import('./routes/project')
+                    ).syncProjectsAction(...args),
+                },
+                {
                   path: 'ai/access',
                   action: async (...args) =>
                     (
