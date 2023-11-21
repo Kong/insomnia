@@ -11,7 +11,7 @@ import {
 
 import { Icon } from '../components/icon';
 
-export const ErrorRoute: FC<{ overrideMessage: string }> = ({ overrideMessage }) => {
+export const ErrorRoute: FC<{ overrideMessage?: string }> = ({ overrideMessage }) => {
   const error = useRouteError();
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
