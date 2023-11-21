@@ -374,6 +374,7 @@ export const pullFromRemoteAction: ActionFunction = async ({ params }) => {
     const delta = await vcs.pull({ candidates: syncItems, teamId: project.parentId, teamProjectId: project.remoteId });
 
     await database.batchModifyDocs(delta as unknown as Operation);
+    delete remoteCompareCache[workspaceId];
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error while pulling from remote.';
     return {
