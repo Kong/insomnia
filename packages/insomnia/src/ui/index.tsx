@@ -119,6 +119,7 @@ const router = createMemoryRouter(
         {
           path: 'onboarding/*',
           element: <Onboarding />,
+          errorElement: <ErrorRoute />,
         },
         {
           path: 'onboarding/migrate',

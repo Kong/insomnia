@@ -24,9 +24,10 @@ export const ErrorRoute: FC = () => {
     return err?.message || 'Unknown error';
   };
   const getErrorStack = (err: any) => {
-    if (isRouteErrorResponse(err)) {
+    if ('error' in err) {
       return err.error?.stack;
     }
+
     return err?.stack;
   };
 
