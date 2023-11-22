@@ -188,13 +188,9 @@ export const GraphQLEditor: FC<Props> = ({
   } catch (err) {
     requestBody = { query: '' };
   }
-  if (typeof requestBody.variables === 'string') {
-    try {
-      requestBody.variables = JSON.parse(requestBody.variables);
-    } catch (err) {
-      requestBody.variables = '';
-    }
-  }
+
+  requestBody.variables = requestBody.variables || '';
+
   let documentAST;
   try {
     documentAST = parse(requestBody.query || '');
@@ -281,13 +277,11 @@ export const GraphQLEditor: FC<Props> = ({
   };
   const changeVariables = (variablesInput: string) => {
     try {
-      const variables = JSON.parse(variablesInput || '{}');
-
-      const content = getGraphQLContent(state.body, undefined, operationName, variables);
+      const content = getGraphQLContent(state.body, undefined, operationName, variablesInput);
       onChange(content);
       setState(state => ({
         ...state,
-        body: { ...state.body, variables },
+        body: { ...state.body, variablesInput },
         variablesSyntaxError: '',
       }));
     } catch (err) {
@@ -632,7 +626,7 @@ export const GraphQLEditor: FC<Props> = ({
           enableNunjucks
           uniquenessKey={uniquenessKey ? uniquenessKey + '::variables' : undefined}
           showPrettifyButton={false}
-          defaultValue={jsonPrettify(JSON.stringify(requestBody.variables))}
+          defaultValue={jsonPrettify(requestBody.variables)}
           className={className}
           getAutocompleteConstants={() => Object.keys(variableTypes)}
           lintOptions={{

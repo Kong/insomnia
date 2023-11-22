@@ -23,6 +23,7 @@ import { useRootLoaderData } from '../../routes/root';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
 import { AlertModal } from '../modals/alert-modal';
+import { AskModal } from '../modals/ask-modal';
 import { GenerateCodeModal } from '../modals/generate-code-modal';
 import { RequestSettingsModal } from '../modals/request-settings-modal';
 
@@ -140,12 +141,22 @@ export const RequestActionsDropdown = ({
   };
 
   const deleteRequest = () => {
-    incrementDeletedRequests();
-    requestFetcher.submit({ id: request._id },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
-        method: 'post',
-      });
+    showModal(AskModal, {
+      title: 'Delete Request',
+      message: `Do you really want to delete "${request.name}"?`,
+      yesText: 'Delete',
+      noText: 'Cancel',
+      onDone: async (isYes: boolean) => {
+        if (isYes) {
+          incrementDeletedRequests();
+          requestFetcher.submit({ id: request._id },
+            {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/delete`,
+              method: 'post',
+            });
+        }
+      },
+    });
   };
 
   // Can only generate code for regular requests, not gRPC requests
