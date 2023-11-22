@@ -62,6 +62,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
           message: `You are deleting the project "${projectName}" that may have collaborators. As a result of this, the project will be permanently deleted for every collaborator of the organization. Do you really want to continue?`,
           yesText: 'Delete',
           noText: 'Cancel',
+          color: 'danger',
           onDone: async (isYes: boolean) => {
             if (isYes) {
               deleteProjectFetcher.submit(

@@ -92,6 +92,7 @@ export const RequestGroupActionsDropdown = ({
       message: `Do you really want to delete "${requestGroup.name}"?`,
       yesText: 'Delete',
       noText: 'Cancel',
+      color: 'danger',
       onDone: async (isYes: boolean) => {
         if (isYes) {
           models.stats.incrementDeletedRequestsForDescendents(requestGroup);
