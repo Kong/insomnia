@@ -359,6 +359,13 @@ const router = createMemoryRouter(
                                     ).createRequestAction(...args),
                                 },
                                 {
+                                  path: 'request/new-mock-send',
+                                  action: async (...args) =>
+                                    (
+                                      await import('./routes/request')
+                                    ).createAndSendToMockbinAction(...args),
+                                },
+                                {
                                   path: 'request/delete',
                                   action: async (...args) =>
                                     (

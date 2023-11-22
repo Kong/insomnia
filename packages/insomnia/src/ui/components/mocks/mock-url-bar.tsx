@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from 'react-aria-components';
-import { useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { CONTENT_TYPE_PLAINTEXT, HTTP_METHODS, RESPONSE_CODE_REASONS } from '../../../common/constants';
@@ -24,7 +24,7 @@ export const MockUrlBar = () => {
   const { mockRoute } = useRouteLoaderData(':mockRouteId') as MockRouteLoaderData;
   console.log(mockRoute._id, { mockRoute });
   const patchMockRoute = useMockRoutePatcher();
-  const formToMockBin = async ({ statusCode, headersArray, body }: { statusCode: number; headersArray: RequestHeader[]; body: string }) => {
+  const formToMockBin = async ({ statusCode, headersArray, body }: { statusCode: number; headersArray: RequestHeader[]; body: string }): Promise<MockbinInput> => {
     // const headersArray = headers.split(/\r?\n|\r/g).map(l => l.split(/:\s(.+)/))
     //   .filter(([n]) => !!n)
     //   .map(([name, value = '']) => ({ name, value }));
@@ -67,7 +67,16 @@ export const MockUrlBar = () => {
     return '';
 
   };
+  const requestFetcher = useFetcher();
+  const { organizationId, projectId, workspaceId } = useParams() as { organizationId: string; projectId: string; workspaceId: string };
 
+  const createandSendRequest = ({ url, parentId, bin }: { url: string; parentId: string; bin?: Partial<MockbinInput> }) =>
+    requestFetcher.submit(JSON.stringify({ url, parentId, bin }),
+      {
+        encType: 'application/json',
+        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/new-mock-send`,
+        method: 'post',
+      });
   const test = async () => {
     console.log('test', mockRoute);
     const bin = await formToMockBin({
@@ -94,40 +103,44 @@ export const MockUrlBar = () => {
     patchMockRoute(mockRoute._id, { path: url, bins: [...mockRoute.bins, { binId: id, ...bin }] });
     // send to bin
     // create private request
-
-    const req = await models.request.create({
+    createandSendRequest({
       url,
-      headers: bin.headers,
-      body: {
-        mimeType: bin.content.mimeType,
-        text: bin.content.text,
-      },
-      isPrivate: true,
       parentId: mockRoute._id,
+      bin,
     });
-    const { request,
-      environment,
-      settings,
-      clientCertificates,
-      caCert,
-      activeEnvironmentId } = await fetchRequestData(req._id);
+    // const req = await models.request.create({
+    //   url,
+    //   headers: bin.headers,
+    //   body: {
+    //     mimeType: bin.content.mimeType,
+    //     text: bin.content.text,
+    //   },
+    //   isPrivate: true,
+    //   parentId: mockRoute._id,
+    // });
+    // const { request,
+    //   environment,
+    //   settings,
+    //   clientCertificates,
+    //   caCert,
+    //   activeEnvironmentId } = await fetchRequestData(req._id);
 
-    const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
-    const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-    const res = await sendCurlAndWriteTimeline(
-      renderedRequest,
-      clientCertificates,
-      caCert,
-      settings,
-    );
-    const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
-    await models.response.create(response);
+    // const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
+    // const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+    // const res = await sendCurlAndWriteTimeline(
+    //   renderedRequest,
+    //   clientCertificates,
+    //   caCert,
+    //   settings,
+    // );
+    // const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
+    // await models.response.create(response);
     // needs to be moved to action in order to trigger loader
     // const response = await window.main.axiosRequest({
     //   url: mockbinUrl + '/bin/' + id,
     //   method: 'get',
     // });
-    console.log({ response });
+    // console.log({ response });
 
   };
   return (<div className='w-full flex justify-between urlbar'>

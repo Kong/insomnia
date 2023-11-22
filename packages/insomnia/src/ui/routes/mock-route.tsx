@@ -19,7 +19,7 @@ import { SvgIcon } from '../components/svg-icon';
 
 export interface MockRouteLoaderData {
   mockRoute: MockRoute;
-  activeResponse: Response | null;
+  activeResponse?: Response;
 }
 
 export const loader: LoaderFunction = async ({ params }): Promise<MockRouteLoaderData> => {
@@ -30,13 +30,13 @@ export const loader: LoaderFunction = async ({ params }): Promise<MockRouteLoade
   invariant(mockRouteId, 'Mock route ID is required');
   const mockRoute = await models.mockRoute.getById(mockRouteId);
   invariant(mockRoute, 'Mock route is required');
+  // get current response via request children of
   const reqIds = (await models.request.findByParentId(mockRouteId)).map(r => r._id);
 
-  const res = await db.find<Response>(models.response.type, { parentId: { $in: reqIds } });
-  console.log({ reqIds, res });
+  const responses = await db.findMostRecentlyModified<Response>(models.response.type, { parentId: { $in: reqIds } });
   return {
     mockRoute,
-    activeResponse: res[res.length - 1],
+    activeResponse: responses?.[0],
   };
 };
 

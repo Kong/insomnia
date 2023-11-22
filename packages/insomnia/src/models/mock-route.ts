@@ -28,7 +28,9 @@ export interface MockbinInput {
     // todo: test default here
     mimeType: string;
     text: string;
+    compression: number;
   };
+  bodySize: number;
 };
 interface BaseMockRoute {
   body: string;

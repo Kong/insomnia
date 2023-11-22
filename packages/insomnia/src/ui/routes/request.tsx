@@ -17,7 +17,7 @@ import { CookieJar } from '../../models/cookie-jar';
 import { GrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { MockRoute } from '../../models/mock-route';
+import { MockbinInput, MockRoute } from '../../models/mock-route';
 import { MockServer } from '../../models/mock-server';
 import { getPathParametersFromUrl, isEventStreamRequest, isRequest, Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { isRequestMeta, RequestMeta } from '../../models/request-meta';
@@ -427,6 +427,41 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     url.searchParams.set('error', e);
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
+};
+export const createAndSendToMockbinAction: ActionFunction = async ({ request, params }) => {
+  const { url, parentId, bin } = await request.json() as { url: string; parentId: string; bin: Partial<MockbinInput> };
+  invariant(typeof url === 'string', 'URL is required');
+  invariant(typeof parentId === 'string', 'mock route ID is required');
+  invariant(bin.content, 'bin content is required');
+
+  const req = await models.request.create({
+    url,
+    headers: bin.headers,
+    body: {
+      mimeType: bin.content.mimeType,
+      text: bin.content.text,
+    },
+    isPrivate: true,
+    parentId,
+  });
+  const {
+    environment,
+    settings,
+    clientCertificates,
+    caCert,
+    activeEnvironmentId } = await fetchRequestData(req._id);
+
+  const renderResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
+  const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
+  const res = await sendCurlAndWriteTimeline(
+    renderedRequest,
+    clientCertificates,
+    caCert,
+    settings,
+  );
+  const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
+  await models.response.create(response);
+  return null;
 };
 export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
   const { workspaceId, requestId } = params;
