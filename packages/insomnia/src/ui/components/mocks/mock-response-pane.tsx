@@ -120,7 +120,7 @@ export const MockResponsePane = () => {
           error={activeResponse.error}
           filter={''}
           filterHistory={[]}
-          getBody={() => { }}
+          getBody={() => models.response.getBodyBuffer(activeResponse)}
           previewMode={PREVIEW_MODE_SOURCE}
           responseId={activeResponse._id}
           updateFilter={activeResponse.error ? undefined : () => { }}
@@ -128,7 +128,6 @@ export const MockResponsePane = () => {
         />}
       </TabItem>
       <TabItem key="headers" title="Headers">
-        {/* // todo: use headers from mockbin */}
         <ResponseHeadersViewer headers={activeResponse?.headers || []} />
       </TabItem>
       <TabItem key="timeline" title="Timeline">
