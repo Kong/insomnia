@@ -146,6 +146,7 @@ export const RequestActionsDropdown = ({
       message: `Do you really want to delete "${request.name}"?`,
       yesText: 'Delete',
       noText: 'Cancel',
+      color: 'danger',
       onDone: async (isYes: boolean) => {
         if (isYes) {
           incrementDeletedRequests();
