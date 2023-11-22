@@ -167,7 +167,7 @@
     "react-aria": "3.23.1",
     "react-aria-components": "^1.0.0-alpha.6",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.14.1",
+    "react-router-dom": "^6.19.0",
     "react-stately": "3.21.0",
     "react-use": "^17.4.0",
     "reselect": "^4.1.5",
