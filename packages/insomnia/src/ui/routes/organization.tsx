@@ -282,12 +282,6 @@ export interface FeatureList {
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params as { organizationId: string };
 
-  const organization = organizationsData.organizations.find(o => o.id === organizationId);
-
-  if (!organization) {
-    return redirect('/organization');
-  }
-
   const fallbackFeatures = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -297,6 +291,12 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     return {
       features: fallbackFeatures,
     };
+  }
+
+  const organization = organizationsData.organizations.find(o => o.id === organizationId);
+
+  if (!organization) {
+    return redirect('/organization');
   }
 
   try {
