@@ -1,4 +1,4 @@
-import { ActionFunction, LoaderFunction } from 'react-router-dom';
+import { ActionFunction, LoaderFunction, redirect } from 'react-router-dom';
 
 import { database, Operation } from '../../common/database';
 import { isNotNullOrUndefined } from '../../common/misc';
@@ -267,7 +267,9 @@ export const syncDataLoader: LoaderFunction = async ({ params }): Promise<SyncDa
 };
 
 export const checkoutBranchAction: ActionFunction = async ({ request, params }) => {
-  const { workspaceId } = params;
+  const { organizationId, projectId, workspaceId } = params;
+  invariant(typeof organizationId === 'string', 'Organization Id is required');
+  invariant(typeof projectId === 'string', 'Project Id is required');
   invariant(typeof workspaceId === 'string', 'Workspace Id is required');
   const formData = await request.formData();
   const branch = formData.get('branch');
@@ -285,7 +287,7 @@ export const checkoutBranchAction: ActionFunction = async ({ request, params }) 
     };
   }
 
-  return {};
+  return redirect(`/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug`);
 };
 
 export const mergeBranchAction: ActionFunction = async ({ request, params }) => {
