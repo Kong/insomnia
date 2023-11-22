@@ -4,11 +4,9 @@ import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
 import styled from 'styled-components';
 
 import { CONTENT_TYPE_PLAINTEXT, HTTP_METHODS, RESPONSE_CODE_REASONS } from '../../../common/constants';
-import { RENDER_PURPOSE_SEND } from '../../../common/render';
-import * as models from '../../../models';
 import { MockbinInput } from '../../../models/mock-route';
 import { RequestHeader } from '../../../models/request';
-import { fetchRequestData, responseTransform, sendCurlAndWriteTimeline, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../../network/network';
+import { invariant } from '../../../utils/invariant';
 import { MockRouteLoaderData } from '../../routes/mock-route';
 import { Dropdown, DropdownButton, DropdownItem, ItemContent } from '../base/dropdown';
 import { useMockRoutePatcher } from '../editors/mock-response-headers-editor';
@@ -25,11 +23,7 @@ export const MockUrlBar = () => {
   console.log(mockRoute._id, { mockRoute });
   const patchMockRoute = useMockRoutePatcher();
   const formToMockBin = async ({ statusCode, headersArray, body }: { statusCode: number; headersArray: RequestHeader[]; body: string }): Promise<MockbinInput> => {
-    // const headersArray = headers.split(/\r?\n|\r/g).map(l => l.split(/:\s(.+)/))
-    //   .filter(([n]) => !!n)
-    //   .map(([name, value = '']) => ({ name, value }));
     const contentType = headersArray.find(h => h.name.toLowerCase() === 'content-type')?.value || CONTENT_TYPE_PLAINTEXT;
-    // console.log({ headersArray });
     return {
       'status': +statusCode,
       'statusText': RESPONSE_CODE_REASONS[+statusCode] || '',
@@ -99,49 +93,14 @@ export const MockUrlBar = () => {
       id = await createBinOnRemoteFromResponse(bin);
     }
     const url = mockbinUrl + '/bin/' + id;
+    invariant(id, 'mockbin failed to return an id, its possible it does not support something within the request body');
     console.log('test', url);
     patchMockRoute(mockRoute._id, { path: url, bins: [...mockRoute.bins, { binId: id, ...bin }] });
-    // send to bin
-    // create private request
     createandSendRequest({
       url,
       parentId: mockRoute._id,
       bin,
     });
-    // const req = await models.request.create({
-    //   url,
-    //   headers: bin.headers,
-    //   body: {
-    //     mimeType: bin.content.mimeType,
-    //     text: bin.content.text,
-    //   },
-    //   isPrivate: true,
-    //   parentId: mockRoute._id,
-    // });
-    // const { request,
-    //   environment,
-    //   settings,
-    //   clientCertificates,
-    //   caCert,
-    //   activeEnvironmentId } = await fetchRequestData(req._id);
-
-    // const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
-    // const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-    // const res = await sendCurlAndWriteTimeline(
-    //   renderedRequest,
-    //   clientCertificates,
-    //   caCert,
-    //   settings,
-    // );
-    // const response = await responseTransform(res, activeEnvironmentId, renderedRequest, renderResult.context);
-    // await models.response.create(response);
-    // needs to be moved to action in order to trigger loader
-    // const response = await window.main.axiosRequest({
-    //   url: mockbinUrl + '/bin/' + id,
-    //   method: 'get',
-    // });
-    // console.log({ response });
-
   };
   return (<div className='w-full flex justify-between urlbar'>
     <Dropdown

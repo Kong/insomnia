@@ -428,7 +428,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
 };
-export const createAndSendToMockbinAction: ActionFunction = async ({ request, params }) => {
+export const createAndSendToMockbinAction: ActionFunction = async ({ request }) => {
   const { url, parentId, bin } = await request.json() as { url: string; parentId: string; bin: Partial<MockbinInput> };
   invariant(typeof url === 'string', 'URL is required');
   invariant(typeof parentId === 'string', 'mock route ID is required');

@@ -28,9 +28,7 @@ export const loader: LoaderFunction = async ({ params }): Promise<LoaderData> =>
   invariant(activeWorkspace, 'Workspace not found');
   const activeMockServer = await models.mockServer.findByParentId(workspaceId);
   invariant(activeMockServer, 'Mock Server not found');
-
   const mockRoutes = await models.mockRoute.findByParentId(activeMockServer._id);
-  console.log({ mockRoutes });
 
   return {
     mockServerId: activeMockServer._id,
