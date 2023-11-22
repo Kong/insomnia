@@ -70,19 +70,24 @@ export const MockResponsePane = () => {
 
   };
   const [logs, setLogs] = useState<MockbinLogOutput | null>(null);
-  const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>(null);
+  const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>([]);
   useEffect(() => {
     const fn = async () => {
       const logs = await getLogById(mockRoute.bins?.[mockRoute.bins.length - 1]?.binId);
       console.log(logs?.log.entries);
       setLogs(logs);
+    };
+    fn();
+  }, [mockRoute.bins]);
+  useEffect(() => {
+    const fn = async () => {
       if (activeResponse) {
         const timeline = await models.response.getTimeline(activeResponse, true);
         setTimeline(timeline);
       }
     };
     fn();
-  }, [mockRoute.bins]);
+  }, [activeResponse]);
 
   return (
     <Tabs aria-label="Mock response">
