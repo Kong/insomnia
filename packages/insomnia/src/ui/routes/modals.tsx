@@ -18,7 +18,6 @@ import { RequestRenderErrorModal } from '../components/modals/request-render-err
 import { ResponseDebugModal } from '../components/modals/response-debug-modal';
 import { SelectModal } from '../components/modals/select-modal';
 import { SettingsModal } from '../components/modals/settings-modal';
-import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { WrapperModal } from '../components/modals/wrapper-modal';
 import { WorkspaceLoaderData } from './workspace';
 
@@ -79,12 +78,6 @@ const Modals: FC = () => {
         <EnvironmentEditModal
           ref={instance => registerModal(instance, 'EnvironmentEditModal')}
         />
-
-        {activeWorkspace ? (
-          <SyncMergeModal
-            ref={instance => registerModal(instance, 'SyncMergeModal')}
-          />
-        ) : null}
 
         <AddKeyCombinationModal
           ref={instance => registerModal(instance, 'AddKeyCombinationModal')}
