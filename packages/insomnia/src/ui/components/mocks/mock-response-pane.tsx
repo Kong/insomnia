@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouteLoaderData } from 'react-router-dom';
 
 import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
+import { ResponseTimelineEntry } from '../../../main/network/libcurl-promise';
+import * as models from '../../../models';
 import { MockRouteLoaderData } from '../../routes/mock-route';
 import { useRootLoaderData } from '../../routes/root';
 import { TabItem, Tabs } from '../base/tabs';
@@ -68,11 +70,16 @@ export const MockResponsePane = () => {
 
   };
   const [logs, setLogs] = useState<MockbinLogOutput | null>(null);
+  const [timeline, setTimeline] = useState<ResponseTimelineEntry[]>(null);
   useEffect(() => {
     const fn = async () => {
       const logs = await getLogById(mockRoute.bins?.[mockRoute.bins.length - 1]?.binId);
       console.log(logs?.log.entries);
       setLogs(logs);
+      if (activeResponse) {
+        const timeline = await models.response.getTimeline(activeResponse, true);
+        setTimeline(timeline);
+      }
     };
     fn();
   }, [mockRoute.bins]);
@@ -122,12 +129,12 @@ export const MockResponsePane = () => {
       </TabItem>
       <TabItem key="headers" title="Headers">
         {/* // todo: use headers from mockbin */}
-        <ResponseHeadersViewer headers={mockRoute.headers} />
+        <ResponseHeadersViewer headers={activeResponse?.headers || []} />
       </TabItem>
       <TabItem key="timeline" title="Timeline">
         <ResponseTimelineViewer
-          // key={response._id}
-          timeline={[]}
+          key={activeResponse?._id}
+          timeline={timeline}
           pinToBottom={true}
         />
       </TabItem>
