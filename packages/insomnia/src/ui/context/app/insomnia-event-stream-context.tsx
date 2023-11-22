@@ -151,7 +151,10 @@ export const InsomniaEventStreamProvider: FC<PropsWithChildren> = ({ children })
                 method: 'POST',
               });
             } else if (event.type === 'FileDeleted' && event.team === organizationId && event.project === remoteId) {
-              revalidate();
+              syncProjectsFetcher.submit({}, {
+                action: `/organization/${organizationId}/sync-projects`,
+                method: 'POST',
+              });
             } else if (['BranchDeleted', 'FileChanged'].includes(event.type) && event.team === organizationId && event.project === remoteId) {
               syncDataFetcher.submit({}, {
                 method: 'POST',
