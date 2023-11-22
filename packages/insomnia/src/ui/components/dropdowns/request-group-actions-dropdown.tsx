@@ -18,6 +18,7 @@ import { WorkspaceLoaderData } from '../../routes/workspace';
 import { type DropdownHandle, type DropdownProps } from '../base/dropdown';
 import { Icon } from '../icon';
 import { showError, showModal, showPrompt } from '../modals';
+import { AskModal } from '../modals/ask-modal';
 import { EnvironmentEditModal } from '../modals/environment-edit-modal';
 import { PasteCurlModal } from '../modals/paste-curl-modal';
 import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
@@ -86,12 +87,22 @@ export const RequestGroupActionsDropdown = ({
   };
 
   const handleDeleteFolder = async () => {
-    models.stats.incrementDeletedRequestsForDescendents(requestGroup);
-    requestFetcher.submit({ id: requestGroup._id },
-      {
-        action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/delete`,
-        method: 'post',
-      });
+    showModal(AskModal, {
+      title: 'Delete Folder',
+      message: `Do you really want to delete "${requestGroup.name}"?`,
+      yesText: 'Delete',
+      noText: 'Cancel',
+      onDone: async (isYes: boolean) => {
+        if (isYes) {
+          models.stats.incrementDeletedRequestsForDescendents(requestGroup);
+          requestFetcher.submit({ id: requestGroup._id },
+            {
+              action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request-group/delete`,
+              method: 'post',
+            });
+        }
+      },
+    });
   };
 
   const handlePluginClick = async ({ label, plugin, action }: RequestGroupAction) => {
