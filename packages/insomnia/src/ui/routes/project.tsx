@@ -855,13 +855,27 @@ const ProjectRoute: FC = () => {
                                     </Radio>
                                   </div>
                                 </RadioGroup>
-                                <div className="flex justify-end">
-                                  <Button
-                                    type="submit"
-                                    className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-                                  >
-                                    Create
-                                  </Button>
+                                <div className="flex justify-between gap-2 items-center">
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <Icon icon="info-circle" />
+                                    <span>
+                                      For both project types you can optionally enable Git Sync
+                                    </span>
+                                  </div>
+                                  <div className='flex items-center gap-2'>
+                                    <Button
+                                      onPress={close}
+                                      className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      type="submit"
+                                      className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                                    >
+                                      Create
+                                    </Button>
+                                  </div>
                                 </div>
                               </form>
                             </div>
