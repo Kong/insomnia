@@ -11,18 +11,24 @@ import {
 
 import { Icon } from '../components/icon';
 
-export const ErrorRoute: FC<{ overrideMessage?: string }> = ({ overrideMessage }) => {
+export const ErrorRoute: FC<{ defaultMessage?: string }> = ({ defaultMessage }) => {
   const error = useRouteError();
   const getErrorMessage = (err: any) => {
     if (isRouteErrorResponse(err)) {
       return err.data;
     }
-    if (err instanceof Error) {
-      return err.message;
+
+    if (err?.message) {
+      return err?.message;
     }
 
-    return err?.message || 'Unknown error';
+    if (defaultMessage) {
+      return defaultMessage;
+    }
+
+    return 'Unknown error';
   };
+
   const getErrorStack = (err: any) => {
     if ('error' in err) {
       return err.error?.stack;
@@ -33,7 +39,7 @@ export const ErrorRoute: FC<{ overrideMessage?: string }> = ({ overrideMessage }
 
   const navigate = useNavigate();
   const navigation = useNavigation();
-  const errorMessage = overrideMessage ?? getErrorMessage(error);
+  const errorMessage = getErrorMessage(error);
   const logoutFetcher = useFetcher();
 
   return (

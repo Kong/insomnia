@@ -160,7 +160,7 @@ const router = createMemoryRouter(
           id: '/organization',
           loader: async (...args) => (await import('./routes/organization')).loader(...args),
           element: <Suspense fallback={<AppLoadingIndicator />}><Organization /></Suspense>,
-          errorElement: <ErrorRoute overrideMessage='A temporarily unexpected error occurred, please reload to try again' />,
+          errorElement: <ErrorRoute defaultMessage='A temporarily unexpected error occurred, please reload to try again' />,
           children: [
             {
               index: true,
