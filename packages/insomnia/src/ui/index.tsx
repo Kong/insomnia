@@ -989,6 +989,7 @@ const router = createMemoryRouter(
           element: <Suspense fallback={<AppLoadingIndicator />}>
             <Auth />
           </Suspense>,
+          errorElement: <ErrorRoute defaultMessage='A temporarily unexpected error occurred, please reload to try again' />,
           children: [
             {
               path: 'login',

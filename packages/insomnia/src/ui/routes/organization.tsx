@@ -152,9 +152,9 @@ export const indexLoader: LoaderFunction = async () => {
         sessionId,
       });
 
-      invariant(organizationsResult, 'Failed to load organizations');
-      invariant(user, 'Failed to load user');
-      invariant(currentPlan, 'Failed to load current plan');
+      invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
+      invariant(user && user.id, 'Failed to load user');
+      invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
 
       const { organizations } = organizationsResult;
 
