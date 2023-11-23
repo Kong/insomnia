@@ -340,6 +340,19 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     const renderedResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
+    // TODO: remove this temporary hack to support GraphQL variables in the request body properly
+    if (renderedRequest && renderedRequest.body?.text && renderedRequest.body?.mimeType === 'application/graphql') {
+      try {
+        const parsedBody = JSON.parse(renderedRequest.body.text);
+        if (typeof parsedBody.variables === 'string') {
+          parsedBody.variables = JSON.parse(parsedBody.variables);
+          renderedRequest.body.text = JSON.stringify(parsedBody, null, 2);
+        }
+      } catch (e) {
+        console.error('Failed to parse GraphQL variables', e);
+      }
+    }
+
     const response = await sendCurlAndWriteTimeline(
       renderedRequest,
       clientCertificates,
