@@ -9,6 +9,7 @@ interface State {
   message: React.ReactNode;
   yesText: string;
   noText: string;
+  color: string;
   onDone?: (success: boolean) => Promise<void>;
 }
 export interface AskModalOptions {
@@ -17,6 +18,7 @@ export interface AskModalOptions {
   onDone?: (success: boolean) => Promise<void>;
   yesText?: string;
   noText?: string;
+  color?: string;
 }
 export interface AskModalHandle {
   show: (options: AskModalOptions) => void;
@@ -29,6 +31,7 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
     message: '',
     yesText: 'Yes',
     noText: 'No',
+    color: 'surprise',
     onDone: async () => { },
   });
 
@@ -36,24 +39,25 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
     hide: () => {
       modalRef.current?.hide();
     },
-    show: ({ title, message, onDone, yesText, noText }) => {
+    show: ({ title, message, onDone, yesText, noText, color }) => {
       setState({
         title: title || 'Confirm',
         message: message || 'No message provided',
         yesText: yesText || 'Yes',
         noText: noText || 'No',
+        color: color || 'surprise',
         onDone,
       });
       modalRef.current?.show();
     },
   }), []);
-  const { message, title, yesText, noText, onDone } = state;
+  const { message, title, yesText, noText, color, onDone } = state;
   return (
     <Modal ref={modalRef}>
       <ModalHeader>{title || 'Confirm?'}</ModalHeader>
       <ModalBody className="wide pad">{message}</ModalBody>
       <ModalFooter>
-        <div>
+        <div className='flex items-center gap-4'>
           <button
             className="btn"
             onClick={() => {
@@ -65,6 +69,7 @@ export const AskModal = forwardRef<AskModalHandle, ModalProps>((_, ref) => {
           </button>
           <button
             className="btn"
+            style={{ color: `var(--color-font-${color})`, backgroundColor: `var(--color-${color})` }}
             onClick={() => {
               modalRef.current?.hide();
               onDone?.(true);

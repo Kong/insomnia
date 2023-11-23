@@ -313,6 +313,7 @@ export const Debug: FC = () => {
         showModal(AskModal, {
           title: 'Delete Request?',
           message: `Really delete ${activeRequest.name}?`,
+          color: 'danger',
           onDone: async (confirmed: boolean) => {
             if (confirmed) {
               requestFetcher.submit(
@@ -889,7 +890,7 @@ export const Debug: FC = () => {
 
             <GridList
               className="overflow-y-auto border-b border-t data-[empty]:py-0 py-[--padding-sm] data-[empty]:border-none border-solid border-[--hl-sm]"
-              items={collection.filter(item => !item.hidden && item.pinned)}
+              items={collection.filter(item => item.pinned)}
               aria-label="Pinned Requests"
               disallowEmptySelection
               selectedKeys={[requestId]}
@@ -949,8 +950,17 @@ export const Debug: FC = () => {
                         value={getRequestNameOrFallback(item.doc)}
                         name="request name"
                         ariaLabel="request name"
-                        paddingClass="px-0"
-                        onChange={name => {
+                        className="px-1 flex-1"
+                        onSingleClick={() => {
+                          if (item && isRequestGroup(item.doc)) {
+                            groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                          } else {
+                            navigate(
+                              `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
+                            );
+                          }
+                        }}
+                        onSubmit={name => {
                           if (isRequestGroup(item.doc)) {
                             patchGroup(item.doc._id, { name });
                           } else {
@@ -958,7 +968,6 @@ export const Debug: FC = () => {
                           }
                         }}
                       />
-                      <span className="flex-1" />
                       {item.pinned && (
                         <Icon className='text-[--font-size-sm]' icon="thumb-tack" />
                       )}
@@ -978,6 +987,7 @@ export const Debug: FC = () => {
 
             <div className='flex-1 overflow-y-auto' ref={parentRef} >
               <GridList
+                id="sidebar-request-gridlist"
                 style={{ height: virtualizer.getTotalSize() }}
                 items={virtualizer.getVirtualItems()}
                 className="relative"
@@ -1043,7 +1053,7 @@ export const Debug: FC = () => {
                           </span>
                         )}
                         {isWebSocketRequest(item.doc) && (
-                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center info justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
+                          <span className="w-10 flex-shrink-0 flex text-[0.65rem] rounded-sm border border-solid border-[--hl-sm] items-center justify-center text-[--color-font-notice] bg-[rgba(var(--color-notice-rgb),0.5)]">
                             WS
                           </span>
                         )}
@@ -1062,8 +1072,17 @@ export const Debug: FC = () => {
                           value={getRequestNameOrFallback(item.doc)}
                           name="request name"
                           ariaLabel="request name"
-                          paddingClass="px-0"
-                          onChange={name => {
+                          className="px-1 flex-1"
+                          onSingleClick={() => {
+                            if (item && isRequestGroup(item.doc)) {
+                              groupMetaPatcher(item.doc._id, { collapsed: !item.collapsed });
+                            } else {
+                              navigate(
+                                `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${item.doc._id}?${searchParams.toString()}`
+                              );
+                            }
+                          }}
+                          onSubmit={name => {
                             if (isRequestGroup(item.doc)) {
                               patchGroup(item.doc._id, { name });
                             } else {
@@ -1071,7 +1090,6 @@ export const Debug: FC = () => {
                             }
                           }}
                         />
-                        <span className="flex-1" />
                         {isWebSocketRequest(item.doc) && <WebSocketSpinner requestId={item.doc._id} />}
                         {isEventStreamRequest(item.doc) && <EventStreamSpinner requestId={item.doc._id} />}
                         {item.pinned && (

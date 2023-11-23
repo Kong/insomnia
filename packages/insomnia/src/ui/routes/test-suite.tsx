@@ -31,6 +31,8 @@ import {
 } from '../components/codemirror/code-editor';
 import { EditableInput } from '../components/editable-input';
 import { Icon } from '../components/icon';
+import { showModal } from '../components/modals';
+import { AskModal } from '../components/modals/ask-modal';
 import { getMethodShortHand } from '../components/tags/method-tag';
 
 const UnitTestItemView = ({
@@ -83,7 +85,8 @@ const UnitTestItemView = ({
         </Button>
         <Heading className="flex-1 truncate">
           <EditableInput
-            onChange={name => {
+            className='w-full px-1'
+            onSubmit={name => {
               if (name) {
                 updateUnitTestFetcher.submit(
                   {
@@ -221,17 +224,27 @@ const UnitTestItemView = ({
             </ListBox>
           </Popover>
         </Select>
-
         <Button
           className="flex flex-shrink-0 items-center justify-center aspect-square h-8 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
           onPress={() => {
-            deleteUnitTestFetcher.submit(
-              {},
-              {
-                action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/delete`,
-                method: 'POST',
-              }
-            );
+            showModal(AskModal, {
+              title: 'Delete Test',
+              message: `Do you really want to delete "${unitTest.name}"?`,
+              yesText: 'Delete',
+              noText: 'Cancel',
+              color: 'danger',
+              onDone: async (isYes: boolean) => {
+                if (isYes) {
+                  deleteUnitTestFetcher.submit(
+                    {},
+                    {
+                      action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${unitTestSuite._id}/test/${unitTest._id}/delete`,
+                      method: 'POST',
+                    }
+                  );
+                }
+              },
+            });
           }}
         >
           <Icon icon="trash" />
@@ -404,7 +417,8 @@ const TestSuiteRoute = () => {
       <div className="flex flex-shrink-0 gap-2 p-[--padding-md]">
         <Heading className="text-lg flex-shrink-0 flex items-center gap-2 w-full truncate flex-1">
           <EditableInput
-            onChange={name =>
+            className='w-full px-1'
+            onSubmit={name =>
               name &&
               renameTestSuiteFetcher.submit(
                 { name },

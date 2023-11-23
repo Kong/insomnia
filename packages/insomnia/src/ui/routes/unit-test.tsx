@@ -158,6 +158,7 @@ const TestRoute: FC = () => {
             message: `Do you really want to delete "${suiteName}"?`,
             yesText: 'Delete',
             noText: 'Cancel',
+            color: 'danger',
             onDone: async (isYes: boolean) => {
               if (isYes) {
                 deleteUnitTestSuiteFetcher.submit(
@@ -375,7 +376,13 @@ const TestRoute: FC = () => {
                         value={item.name}
                         name="name"
                         ariaLabel="Test suite name"
-                        onChange={name => {
+                        className='flex-1 px-1'
+                        onSingleClick={() => {
+                          navigate({
+                            pathname: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/test/test-suite/${item._id}`,
+                          });
+                        }}
+                        onSubmit={name => {
                           name && renameTestSuiteFetcher.submit(
                             { name },
                             {
@@ -385,7 +392,6 @@ const TestRoute: FC = () => {
                           );
                         }}
                       />
-                      <span className="flex-1" />
                       <MenuTrigger>
                         <Button
                           aria-label="Project Actions"

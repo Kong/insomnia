@@ -31,30 +31,25 @@ import {
 } from '../../account/session';
 import { getAppWebsiteBaseURL } from '../../common/constants';
 import { database } from '../../common/database';
-import { exportAllData } from '../../common/export-all-data';
 import { updateLocalProjectToRemote } from '../../models/helpers/project';
 import { isOwnerOfOrganization, isPersonalOrganization, isScratchpadOrganizationId, Organization } from '../../models/organization';
 import { Project } from '../../models/project';
 import { isDesign, isScratchpad } from '../../models/workspace';
-import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import { MergeConflict } from '../../sync/types';
+import { VCSInstance } from '../../sync/vcs/insomnia-sync';
 import { migrateProjectsIntoOrganization, shouldMigrateProjectUnderOrganization } from '../../sync/vcs/migrate-projects-into-organization';
-import { getVCS, initVCS } from '../../sync/vcs/vcs';
 import { invariant } from '../../utils/invariant';
-import { SegmentEvent } from '../analytics';
 import { getLoginUrl } from '../auth-session-provider';
 import { Avatar } from '../components/avatar';
 import { GitHubStarsButton } from '../components/github-stars-button';
 import { Hotkey } from '../components/hotkey';
 import { Icon } from '../components/icon';
 import { InsomniaAILogo } from '../components/insomnia-icon';
-import { showAlert, showModal } from '../components/modals';
+import { showAlert } from '../components/modals';
 import { showSettingsModal } from '../components/modals/settings-modal';
-import { SyncMergeModal } from '../components/modals/sync-merge-modal';
 import { OrganizationAvatar } from '../components/organization-avatar';
 import { PresentUsers } from '../components/present-users';
 import { Toast } from '../components/toast';
-import { PresenceProvider } from '../context/app/presence-context';
+import { InsomniaEventStreamProvider } from '../context/app/insomnia-event-stream-context';
 import { useRootLoaderData } from './root';
 import { WorkspaceLoaderData } from './workspace';
 
@@ -139,24 +134,6 @@ export const indexLoader: LoaderFunction = async () => {
   const sessionId = getCurrentSessionId();
   if (sessionId) {
     try {
-      let vcs = getVCS();
-      if (!vcs) {
-        const driver = FileSystemDriver.create(
-          process.env['INSOMNIA_DATA_PATH'] || window.app.getPath('userData'),
-        );
-
-        console.log('Initializing VCS');
-        vcs = await initVCS(driver, async conflicts => {
-          return new Promise(resolve => {
-            showModal(SyncMergeModal, {
-              conflicts,
-              handleDone: (conflicts?: MergeConflict[]) =>
-                resolve(conflicts || []),
-            });
-          });
-        });
-      }
-
       const organizationsResult = await window.main.insomniaFetch<OrganizationsResponse | void>({
         method: 'GET',
         path: '/v1/organizations',
@@ -175,9 +152,9 @@ export const indexLoader: LoaderFunction = async () => {
         sessionId,
       });
 
-      invariant(organizationsResult, 'Failed to load organizations');
-      invariant(user, 'Failed to load user');
-      invariant(currentPlan, 'Failed to load current plan');
+      invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
+      invariant(user && user.id, 'Failed to load user');
+      invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
 
       const { organizations } = organizationsResult;
 
@@ -211,7 +188,7 @@ export const indexLoader: LoaderFunction = async () => {
               project,
               organizationId: personalOrganization.id,
               sessionId,
-              vcs,
+              vcs: VCSInstance(),
             });
           }
         }
@@ -304,15 +281,24 @@ export interface FeatureList {
 
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params as { organizationId: string };
+
   const fallbackFeatures = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
   };
+
   if (isScratchpadOrganizationId(organizationId)) {
     return {
       features: fallbackFeatures,
     };
   }
+
+  const organization = organizationsData.organizations.find(o => o.id === organizationId);
+
+  if (!organization) {
+    return redirect('/organization');
+  }
+
   try {
     const response = await window.main.insomniaFetch<{ features: FeatureList } | undefined>({
       method: 'GET',
@@ -383,7 +369,7 @@ const UpgradeButton = ({
 };
 
 const OrganizationRoute = () => {
-  const { settings, workspaceCount } = useRootLoaderData();
+  const { settings } = useRootLoaderData();
 
   const { organizations, user, currentPlan } =
     useLoaderData() as OrganizationLoaderData;
@@ -418,7 +404,7 @@ const OrganizationRoute = () => {
   }, []);
 
   return (
-    <PresenceProvider>
+    <InsomniaEventStreamProvider>
       <div className="w-full h-full">
         <div className={`w-full h-full divide-x divide-solid divide-y divide-[--hl-md] ${isScratchPadBannerVisible ? 'grid-template-app-layout-with-banner' : 'grid-template-app-layout'} grid relative bg-[--color-bg]`}>
           <header className="[grid-area:Header] grid grid-cols-3 items-center">
@@ -459,7 +445,7 @@ const OrganizationRoute = () => {
                   <PresentUsers />
                   <Button
                     aria-label="Invite collaborators"
-                    className="px-4 text-[--color-font] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
+                    className="px-4 text-[--color-font-surprise] bg-opacity-100 bg-[rgba(var(--color-surprise-rgb),var(--tw-bg-opacity))] py-1 font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:opacity-80 rounded-sm hover:bg-opacity-80 focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm"
                     onPress={() => {
                       window.main.openInBrowser(`${getAppWebsiteBaseURL()}/app/dashboard/organizations/${organizationId}/collaborators`);
                     }}
@@ -470,7 +456,7 @@ const OrganizationRoute = () => {
                     </span>
                   </Button>
                   <MenuTrigger>
-                    <Button className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    <Button data-testid='user-dropdown' className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                       <Avatar
                         src={user.picture}
                         alt={user.name}
@@ -698,6 +684,8 @@ const OrganizationRoute = () => {
                   />
                 </Tooltip>
               </TooltipTrigger>
+            </div>
+            <div className='flex items-center gap-2 divide divide-y-[--hl-sm]'>
               <TooltipTrigger>
                 <Button
                   className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
@@ -732,65 +720,23 @@ const OrganizationRoute = () => {
                     : 'Log in to Insomnia to sync your data.'}
                 </Tooltip>
               </TooltipTrigger>
-              {isScratchpadOrganizationId(organizationId) ? (
-                <Button
-                  className="px-4 py-1 h-full flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] text-[--color-font] text-xs hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all"
-                  onPress={async () => {
-                    const { filePaths, canceled } = await window.dialog.showOpenDialog({
-                      properties: ['openDirectory', 'createDirectory', 'promptToCreate'],
-                      buttonLabel: 'Select',
-                      title: 'Export All Insomnia Data',
-                    });
-
-                    if (canceled) {
-                      return;
-                    }
-
-                    const [dirPath] = filePaths;
-
-                    try {
-                      dirPath && await exportAllData({
-                        dirPath,
-                      });
-                    } catch (e) {
-                      showAlert({
-                        title: 'Export Failed',
-                        message: 'An error occurred while exporting data. Please try again.',
-                      });
-                      console.error(e);
-                    }
-
-                    showAlert({
-                      title: 'Export Complete',
-                      message: 'All your data have been successfully exported',
-                    });
-                    window.main.trackSegmentEvent({
-                      event: SegmentEvent.exportAllCollections,
-                    });
-                  }}
-                >
-                  <Icon
-                    icon="file-export"
-                  />
-                  Export your data {`(${workspaceCount} files)`}
-                </Button>
-              ) : null}
-            </div>
+              <span className='w-[1px] h-full bg-[--hl-sm]' />
             <Link>
               <a
                 className="flex focus:outline-none focus:underline gap-1 items-center text-xs text-[--color-font] px-[--padding-md]"
                 href="https://konghq.com/"
               >
                 Made with
-                <Icon className="text-[--color-surprise]" icon="heart" /> by
+                  <Icon className="text-[--color-surprise-font]" icon="heart" /> by
                 Kong
               </a>
             </Link>
+            </div>
           </div>
         </div>
         <Toast />
       </div>
-    </PresenceProvider>
+    </InsomniaEventStreamProvider>
   );
 };
 

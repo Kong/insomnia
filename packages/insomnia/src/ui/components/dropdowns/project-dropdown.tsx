@@ -62,6 +62,7 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
           message: `You are deleting the project "${projectName}" that may have collaborators. As a result of this, the project will be permanently deleted for every collaborator of the organization. Do you really want to continue?`,
           yesText: 'Delete',
           noText: 'Cancel',
+          color: 'danger',
           onDone: async (isYes: boolean) => {
             if (isYes) {
               deleteProjectFetcher.submit(
@@ -256,25 +257,33 @@ export const ProjectDropdown: FC<Props> = ({ project, organizationId }) => {
                       </div>
                     </div>
                   )}
-                  <div className="flex justify-end gap-2 items-center">
-                    <Button
-                      onPress={() => {
-                        if (projectType) {
-                          setProjectType('');
-                        } else {
-                          close();
-                        }
-                      }}
-                      className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
-                    >
-                      {projectType ? 'Confirm' : 'Update'}
-                    </Button>
+                  <div className="flex justify-between gap-2 items-center">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Icon icon="info-circle" />
+                      <span>
+                        For both project types you can optionally enable Git Sync
+                      </span>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <Button
+                        onPress={() => {
+                          if (projectType) {
+                            setProjectType('');
+                          } else {
+                            close();
+                          }
+                        }}
+                        className="hover:no-underline hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font] transition-colors rounded-sm"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="hover:no-underline bg-[--color-surprise] hover:bg-opacity-90 border border-solid border-[--hl-md] py-2 px-3 text-[--color-font-surprise] transition-colors rounded-sm"
+                      >
+                        {projectType ? 'Confirm' : 'Update'}
+                      </Button>
+                    </div>
                   </div>
                 </form>
               </div>

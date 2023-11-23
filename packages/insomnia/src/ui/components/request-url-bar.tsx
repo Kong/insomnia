@@ -1,13 +1,10 @@
-
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { useFetcher, useParams, useRouteLoaderData } from 'react-router-dom';
+import { useFetcher, useParams, useRouteLoaderData, useSearchParams } from 'react-router-dom';
 import { useInterval } from 'react-use';
 import styled from 'styled-components';
 
-import { RENDER_PURPOSE_SEND } from '../../common/render';
 import * as models from '../../models';
 import { isEventStreamRequest } from '../../models/request';
-import { fetchRequestData, tryToInterpolateRequest, tryToTransformRequestWithPlugins } from '../../network/network';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '../../utils/try-interpolate';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from '../../utils/url/querystring';
 import { SegmentEvent } from '../analytics';
@@ -53,6 +50,25 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   setLoading,
   onPaste,
 }, ref) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  if (searchParams.has('error')) {
+    showAlert({
+      title: 'Unexpected Request Failure',
+      message: (
+        <div>
+          <p>The request failed due to an unhandled error:</p>
+          <code className="wide selectable">
+            <pre>{searchParams.get('error')}</pre>
+          </code>
+        </div>
+      ),
+    });
+
+    // clean up params
+    searchParams.delete('error');
+    setSearchParams({});
+  }
+
   const {
     activeWorkspace,
     activeEnvironment,
@@ -88,24 +104,24 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
   }, [fetcher.state, setLoading]);
   const { organizationId, projectId, workspaceId, requestId } = useParams() as { organizationId: string; projectId: string; workspaceId: string; requestId: string };
-  const connect = (connectParams: ConnectActionParams) => {
+  const connect = useCallback((connectParams: ConnectActionParams) => {
     fetcher.submit(JSON.stringify(connectParams),
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/connect`,
         method: 'post',
         encType: 'application/json',
       });
-  };
-  const send = (sendParams: SendActionParams) => {
+  }, [fetcher, organizationId, projectId, requestId, workspaceId]);
+  const send = useCallback((sendParams: SendActionParams) => {
     fetcher.submit(JSON.stringify(sendParams),
       {
         action: `/organization/${organizationId}/project/${projectId}/workspace/${workspaceId}/debug/request/${requestId}/send`,
         method: 'post',
         encType: 'application/json',
       });
-  };
+  }, [fetcher, organizationId, projectId, requestId, workspaceId]);
 
-  const sendOrConnect = async (shouldPromptForPathAfterResponse?: boolean) => {
+  const sendOrConnect = useCallback(async (shouldPromptForPathAfterResponse?: boolean) => {
     models.stats.incrementExecutedRequests();
     window.main.trackSegmentEvent({
       event: SegmentEvent.requestExecute,
@@ -148,15 +164,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
 
     try {
-      const { request,
-        environment } = await fetchRequestData(requestId);
-
-      const renderResult = await tryToInterpolateRequest(request, environment._id, RENDER_PURPOSE_SEND);
-      const renderedRequest = await tryToTransformRequestWithPlugins(renderResult);
-      renderedRequest && send({
-        renderedRequest,
-        shouldPromptForPathAfterResponse,
-      });
+      send({ requestId, shouldPromptForPathAfterResponse });
     } catch (err) {
       showAlert({
         title: 'Unexpected Request Failure',
@@ -170,7 +178,19 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         ),
       });
     }
-  };
+  }, [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, settings.preferredHttpVersion]);
+
+  useEffect(() => {
+    const sendOnMetaEnter = (event: KeyboardEvent) => {
+      if (event.metaKey && event.key === 'Enter') {
+        sendOrConnect();
+      }
+    };
+    document.getElementById('sidebar-request-gridlist')?.addEventListener('keydown', sendOnMetaEnter, { capture: true });
+    return () => {
+      document.getElementById('sidebar-request-gridlist')?.removeEventListener('keydown', sendOnMetaEnter, { capture: true });
+    };
+  }, [sendOrConnect]);
 
   useInterval(sendOrConnect, currentInterval ? currentInterval : null);
   useTimeoutWhen(sendOrConnect, currentTimeout, !!currentTimeout);

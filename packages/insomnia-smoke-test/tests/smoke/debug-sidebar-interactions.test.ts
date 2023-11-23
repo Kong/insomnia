@@ -106,6 +106,7 @@ test.describe('Debug-Sidebar', async () => {
       await requestLocator.click();
       await requestLocator.getByLabel('Request Actions').click();
       await page.getByRole('menuitemradio', { name: 'Delete' }).click();
+      await page.locator('.modal__content').getByRole('button', { name: 'Delete' }).click();
       await expect(page.locator('.app')).not.toContainText('example http');
     });
 
@@ -130,7 +131,7 @@ test.describe('Debug-Sidebar', async () => {
     });
 
     test('Rename a request by clicking', async ({ page }) => {
-      await page.getByTestId('example http').getByLabel('request name').click();
+      await page.getByTestId('example http').getByLabel('request name').dblclick();
       await page.getByRole('textbox', { name: 'request name' }).fill('new name');
       await page.getByLabel('Request Collection').click();
       await expect(page.getByTestId('new name').getByLabel('request name')).toContainText('new name');
