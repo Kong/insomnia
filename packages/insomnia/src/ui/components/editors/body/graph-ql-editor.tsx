@@ -190,6 +190,7 @@ export const GraphQLEditor: FC<Props> = ({
   }
 
   requestBody.variables = requestBody.variables || '';
+  // TODO: it should be always string, need to do this in the persistent layer
   if (typeof requestBody.variables !== 'string') {
     requestBody.variables = JSON.stringify(requestBody.variables);
   }
