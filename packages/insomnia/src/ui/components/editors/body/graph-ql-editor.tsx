@@ -190,6 +190,9 @@ export const GraphQLEditor: FC<Props> = ({
   }
 
   requestBody.variables = requestBody.variables || '';
+  if (typeof requestBody.variables !== 'string') {
+    requestBody.variables = JSON.stringify(requestBody.variables);
+  }
 
   let documentAST;
   try {
