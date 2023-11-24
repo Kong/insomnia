@@ -21,6 +21,8 @@ option objc_class_prefix = "RTG";
 
 package routeguide;
 
+import "google/protobuf/empty.proto";
+
 // Interface exported by the server.
 service RouteGuide {
   // A simple RPC.
@@ -50,6 +52,9 @@ service RouteGuide {
   // Accepts a stream of RouteNotes sent while a route is being traversed,
   // while receiving other RouteNotes (e.g. from other users).
   rpc RouteChat(stream RouteNote) returns (stream RouteNote) {}
+
+
+  rpc EchoMetadata(google.protobuf.Empty) returns (Metadata) {}
 }
 
 // Points are represented as latitude-longitude pairs in the E7 representation
@@ -108,4 +113,8 @@ message RouteSummary {
 
   // The duration of the traversal in seconds.
   int32 elapsed_time = 4;
+}
+
+message Metadata {
+  map<string, string> metadata = 1;
 }

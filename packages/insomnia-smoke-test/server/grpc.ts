@@ -59,6 +59,11 @@ const getFeature: HandleCall<any, any> = (call: any, callback: any) => {
   callback(null, checkFeature(call.request));
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const echoMetadata: HandleCall<any, any> = (call: any, callback: any) => {
+  callback(null, { metadata: call.metadata.getMap() });
+};
+
 /**
  * listFeatures request handler.
  */
@@ -192,6 +197,12 @@ export const startGRPCServer = (port: number) => {
     const server = new grpc.Server();
 
     // Enable reflection
+    // use this to generate .bin file:
+    // protoc \
+    // --descriptor_set_out=packages/insomnia-smoke-test/fixtures/route_guide.bin \
+    // --include_imports packages/insomnia/src/network/grpc/__fixtures__/library/route_guide.proto \
+    // -I <insomnia folder> \
+    // -I <protoc 'include' folder>
     const descriptorSet = '../../packages/insomnia-smoke-test/fixtures/route_guide.bin';
     addReflection(server, descriptorSet);
 
@@ -201,6 +212,7 @@ export const startGRPCServer = (port: number) => {
       listFeatures: listFeatures,
       recordRoute: recordRoute,
       routeChat: routeChat,
+      echoMetadata,
     });
     server.bindAsync(`localhost:${port}`, grpc.ServerCredentials.createInsecure(), error => {
       if (error) {
