@@ -60,7 +60,7 @@ export const MockRouteRoute = () => {
               aria-label='Change Body Type'
               triggerButton={
                 <DropdownButton>
-                  {mockRoute.mimeType ? contentTypesMap[mockRoute.mimeType]?.[0] : 'Mock Body'}
+                  {mockRoute.mimeType ? 'Response ' + contentTypesMap[mockRoute.mimeType]?.[0] : 'Response Body'}
                   <i className="fa fa-caret-down space-left" />
                 </DropdownButton>
               }
@@ -94,7 +94,7 @@ export const MockRouteRoute = () => {
                 title="Choose a mock body to return as a response"
               />)}
           </TabItem>
-          <TabItem key="headers" title="Mock Headers">
+          <TabItem key="headers" title="Response Headers">
             <MockResponseHeadersEditor
               bulk={false}
             />

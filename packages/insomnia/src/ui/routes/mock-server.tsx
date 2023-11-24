@@ -11,7 +11,9 @@ import { EditableInput } from '../components/editable-input';
 import { Icon } from '../components/icon';
 import { showModal, showPrompt } from '../components/modals';
 import { AskModal } from '../components/modals/ask-modal';
+import { EmptyStatePane } from '../components/panes/empty-state-pane';
 import { SidebarLayout } from '../components/sidebar-layout';
+import { SvgIcon } from '../components/svg-icon';
 import { formatMethodName } from '../components/tags/method-tag';
 import { MockRouteResponse, MockRouteRoute } from './mock-route';
 interface LoaderData {
@@ -261,7 +263,11 @@ const MockServerRoute = () => {
       <Route
         path="*"
         element={
-          <div className="p-[--padding-md]">No mock route selected</div>
+          <EmptyStatePane
+            icon={<SvgIcon icon="bug" />}
+            documentationLinks={[]}
+            title="Select or create a route to configured response here"
+          />
         }
       />
     </Routes>}
@@ -277,7 +283,11 @@ const MockServerRoute = () => {
       <Route
         path="*"
         element={
-          <div className="p-[--padding-md]">No mock route selected</div>
+          <EmptyStatePane
+            icon={<SvgIcon icon="bug" />}
+            documentationLinks={[]}
+            title="Select or create a route to see activity here"
+          />
         }
       />
     </Routes>}
