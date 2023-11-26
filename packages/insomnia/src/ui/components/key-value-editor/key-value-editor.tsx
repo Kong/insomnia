@@ -128,12 +128,14 @@ export const KeyValueEditor: FC<Props> = ({
                 <input
                   style={{ width: '100%' }}
                   defaultValue={pair.name}
+                  readOnly
                 />
               </div>
               <div className="form-control form-control--underlined form-control--wide">
                 <input
                   style={{ width: '100%' }}
                   defaultValue={pair.value}
+                  readOnly
                 />
               </div>
               <button><i className="fa fa-empty" /></button>
