@@ -1,3 +1,5 @@
+import { SentryError } from '@sentry/utils';
+
 import {
   EXPORT_TYPE_API_SPEC,
   EXPORT_TYPE_COOKIE_JAR,
@@ -186,6 +188,13 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
     model.init(),
   );
   const fullObject = Object.assign({}, objectDefaults, ...sources);
+  if (!fullObject.parentId && (type === 'Project' || type === 'Workspace')) {
+    const msg = `[bug] parent id is set null unexpectedly ${type} - ${fullObject._id}`;
+    console.warn(msg);
+
+    const err = new Error(msg);
+    SentryError.captureStackTrace(err);
+  }
 
   // Generate an _id if there isn't one yet
   if (!fullObject._id) {
