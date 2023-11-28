@@ -165,6 +165,16 @@ export function canDuplicate(type: string) {
   return model ? model.canDuplicate : false;
 }
 
+const assertModelWithParentId = (model: BaseModel, info: string) => {
+  if ((model.type === 'Project' || model.type === 'Workspace') && !model.parentId) {
+    const msg = `[bug] parent id is set null unexpectedly ${model.type} - ${model._id}. ${info}`;
+    console.warn(msg);
+
+    const err = new Error(msg);
+    SentryError.captureStackTrace(err);
+  }
+};
+
 export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
   const model = getModel(type);
 
@@ -188,13 +198,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
     model.init(),
   );
   const fullObject = Object.assign({}, objectDefaults, ...sources);
-  if (!fullObject.parentId && (type === 'Project' || type === 'Workspace')) {
-    const msg = `[bug] parent id is set null unexpectedly ${type} - ${fullObject._id}`;
-    console.warn(msg);
-
-    const err = new Error(msg);
-    SentryError.captureStackTrace(err);
-  }
+  assertModelWithParentId(fullObject, 'initModel');
 
   // Generate an _id if there isn't one yet
   if (!fullObject._id) {
@@ -204,7 +208,7 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   // Migrate the model
   // NOTE: Do migration before pruning because we might need to look at those fields
   const migratedDoc = model.migrate(fullObject);
-
+  assertModelWithParentId(migratedDoc, 'model.migrate');
   // Prune extra keys from doc
   for (const key of Object.keys(migratedDoc)) {
     if (!objectDefaults.hasOwnProperty(key)) {
@@ -212,6 +216,8 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
       delete migratedDoc[key];
     }
   }
+
+  assertModelWithParentId(migratedDoc, 'model.migrate after prune');
 
   // @ts-expect-error -- TSCONVERSION not sure why this error is occurring
   return migratedDoc;
