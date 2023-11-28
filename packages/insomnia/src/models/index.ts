@@ -1,4 +1,4 @@
-import { SentryError } from '@sentry/utils';
+import * as Sentry from '@sentry/electron';
 
 import {
   EXPORT_TYPE_API_SPEC,
@@ -171,7 +171,7 @@ const assertModelWithParentId = (model: BaseModel, info: string) => {
     console.warn(msg);
 
     const err = new Error(msg);
-    SentryError.captureStackTrace(err);
+    Sentry.captureException(err);
   }
 };
 
