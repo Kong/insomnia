@@ -61,18 +61,21 @@ export async function migrateUntrackedWorkspaces(vcs: VCS) {
 
     for (const workspace of workspacesWithBackendProject) {
       const projectRemoteId = fileToProjectMap[workspace._id];
-
-      if (projectRemoteId) {
-        const project = await database.getWhere<Project>(models.project.type, {
-          remoteId: projectRemoteId,
-        });
-
-        if (project) {
-          await models.workspace.update(workspace, {
-            parentId: project._id,
-          });
-        }
+      if (!projectRemoteId) {
+        continue;
       }
+
+      const project = await database.getWhere<Project>(models.project.type, {
+        remoteId: projectRemoteId,
+      });
+
+      if (!project) {
+        continue;
+      }
+
+      await models.workspace.update(workspace, {
+        parentId: project._id,
+      });
     }
   }
 
