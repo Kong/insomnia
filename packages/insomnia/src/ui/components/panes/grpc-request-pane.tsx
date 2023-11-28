@@ -231,9 +231,9 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
           </StyledUrlBar>
         </PaneHeader>
         <PaneBody>
-          {methodType && (
+
             <Tabs aria-label="Grpc request pane tabs">
-              <TabItem key="method-type" title={GrpcMethodTypeName[methodType]}>
+            <TabItem key="method-type" title={methodType ? GrpcMethodTypeName[methodType] : 'Method Type'}>
                 <>
                   {running && canClientStream(methodType) && (
                     <ActionButtonsContainer>
@@ -314,16 +314,13 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({
                   </ErrorBoundary>
                 </PanelContainer>
               </TabItem>
-            </Tabs>
-          )}
-          {!methodType && (
+          </Tabs>
             <EmptyStatePane
               icon={<SvgIcon icon="bug" />}
               documentationLinks={[documentationLinks.introductionToInsomnia]}
               secondaryAction="Select a body type from above to send data in the body of a request"
               title="Enter a URL and send to get a response"
-            />
-          )}
+          />
         </PaneBody>
       </Pane>
       {isProtoModalOpen && <ProtoFilesModal

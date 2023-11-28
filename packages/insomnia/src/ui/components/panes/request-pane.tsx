@@ -76,6 +76,7 @@ export const RequestPane: FC<Props> = ({
   const [isRequestSettingsModalOpen, setIsRequestSettingsModalOpen] =
     useState(false);
   const patchRequest = useRequestPatcher();
+  const [preRequestScript, setPreRequestSript] = useState('');
 
   useState(false);
   const handleImportQueryFromUrl = () => {
@@ -132,6 +133,7 @@ export const RequestPane: FC<Props> = ({
             nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
             setLoading={setLoading}
             onPaste={onPaste}
+            preRequestScript={preRequestScript}
           />
         </ErrorBoundary>
       </PaneHeader>
@@ -142,6 +144,9 @@ export const RequestPane: FC<Props> = ({
             request={activeRequest}
             environmentId={environmentId}
           />
+        </TabItem>
+        <TabItem key="pre-request-script" title="Pre-request Script">
+          <textarea style={{ width: '100%', height: '100%', padding: '5px' }} value={preRequestScript} onChange={e => setPreRequestSript(e.target.value)} />
         </TabItem>
         <TabItem key="auth" title={<AuthDropdown />}>
           <ErrorBoundary

@@ -285,6 +285,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave, reloadRe
             <AsyncButton
               onClick={handleAddFile}
               loadingNode={<i className="fa fa-spin fa-refresh" />}
+              data-testid="button-upload-proto"
             >
               Add Proto File
             </AsyncButton>

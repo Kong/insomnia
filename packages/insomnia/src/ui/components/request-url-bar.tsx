@@ -38,6 +38,7 @@ interface Props {
   uniquenessKey: string;
   setLoading: (l: boolean) => void;
   onPaste: (text: string) => void;
+  preRequestScript?: string;
 }
 
 export interface RequestUrlBarHandle {
@@ -49,6 +50,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
   uniquenessKey,
   setLoading,
   onPaste,
+  preRequestScript,
 }, ref) => {
   const [searchParams, setSearchParams] = useSearchParams();
   if (searchParams.has('error')) {
@@ -164,7 +166,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
     }
 
     try {
-      send({ requestId, shouldPromptForPathAfterResponse });
+      send({ requestId, shouldPromptForPathAfterResponse, preRequestScript });
     } catch (err) {
       showAlert({
         title: 'Unexpected Request Failure',
@@ -178,7 +180,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(({
         ),
       });
     }
-  }, [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, settings.preferredHttpVersion]);
+  }, [activeEnvironment._id, activeRequest, activeWorkspace._id, connect, requestId, send, settings.preferredHttpVersion, preRequestScript]);
 
   useEffect(() => {
     const sendOnMetaEnter = (event: KeyboardEvent) => {

@@ -1,5 +1,6 @@
 import { createWriteStream } from 'node:fs';
 import path from 'node:path';
+import vm from 'node:vm';
 
 import * as contentDisposition from 'content-disposition';
 import { extension as mimeExtension } from 'mime-types';
@@ -319,6 +320,7 @@ const writeToDownloadPath = (downloadPathAndName: string, responsePatch: Respons
 export interface SendActionParams {
   requestId: string;
   shouldPromptForPathAfterResponse?: boolean;
+  preRequestScript?: string;
 }
 export const sendAction: ActionFunction = async ({ request, params }) => {
   const { requestId, workspaceId } = params;
@@ -336,7 +338,29 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     activeEnvironmentId,
   } = await fetchRequestData(requestId);
   try {
-    const { shouldPromptForPathAfterResponse } = await request.json() as SendActionParams;
+    const { shouldPromptForPathAfterResponse, preRequestScript } = await request.json() as SendActionParams;
+
+    // run pre request script here
+    const headerMap = new Map<string, string>();
+    req.headers.forEach(header => {
+      headerMap.set(header.name, header.value);
+    });
+    const context = {
+      pm: {
+        headers: headerMap,
+      },
+    };
+    const preRequestScriptVm = new vm.Script(preRequestScript || ';');
+    vm.createContext(context);
+    preRequestScriptVm.runInContext(context);
+    req.headers = req.headers.map(header => {
+      const updated = context.pm.headers.get(header.name);
+      if (updated) {
+        header.value = updated;
+      }
+      return header;
+    });
+
     const renderedResult = await tryToInterpolateRequest(req, environment._id, RENDER_PURPOSE_SEND);
     const renderedRequest = await tryToTransformRequestWithPlugins(renderedResult);
 
@@ -359,10 +383,9 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
       caCert,
       settings,
     );
-
     const requestMeta = await models.requestMeta.getByParentId(requestId);
     invariant(requestMeta, 'RequestMeta not found');
-    const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, renderedResult.context);
+    const responsePatch = await responseTransform(response, activeEnvironmentId, renderedRequest, context.pm);
     const is2XXWithBodyPath = responsePatch.statusCode && responsePatch.statusCode >= 200 && responsePatch.statusCode < 300 && responsePatch.bodyPath;
     const shouldWriteToFile = shouldPromptForPathAfterResponse && is2XXWithBodyPath;
     if (!shouldWriteToFile) {
@@ -398,6 +421,7 @@ export const sendAction: ActionFunction = async ({ request, params }) => {
     return redirect(`${url.pathname}?${url.searchParams}`);
   }
 };
+
 export const deleteAllResponsesAction: ActionFunction = async ({ params }) => {
   const { workspaceId, requestId } = params;
   invariant(typeof requestId === 'string', 'Request ID is required');
