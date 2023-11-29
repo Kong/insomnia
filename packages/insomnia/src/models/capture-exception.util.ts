@@ -5,14 +5,13 @@
  */
 export type ExceptionCallback = (exception: unknown, captureContext?: unknown) => string;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-let captureException = (exception: unknown, _captureContext?: unknown) => {
+let captureException: ExceptionCallback = (exception: unknown) => {
     console.error(exception);
     return '';
 };
 
-export function loadCaptureException(capture: ExceptionCallback) {
-    captureException = capture;
+export function loadCaptureException(fn: ExceptionCallback) {
+    captureException = fn;
 }
 
 export default captureException;
