@@ -228,6 +228,13 @@ const router = createMemoryRouter(
                             ).moveProjectAction(...args),
                         },
                         {
+                          path: 'move-workspace',
+                          action: async (...args) =>
+                            (
+                              await import('./routes/actions')
+                            ).moveWorkspaceIntoProjectAction(...args),
+                        },
+                        {
                           path: 'update',
                           action: async (...args) =>
                             (
