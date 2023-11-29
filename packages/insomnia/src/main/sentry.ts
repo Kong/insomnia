@@ -4,6 +4,7 @@ import type { SentryRequestType } from '@sentry/types';
 import * as session from '../account/session';
 import { ChangeBufferEvent, database as db } from '../common/database';
 import { SENTRY_OPTIONS } from '../common/sentry';
+import { ExceptionCallback, loadCaptureException } from '../models/capture-exception.util';
 import * as models from '../models/index';
 import { isSettings } from '../models/settings';
 
@@ -44,4 +45,6 @@ export function initializeSentry() {
     ...SENTRY_OPTIONS,
     transport: ElectronSwitchableTransport,
   });
+
+  loadCaptureException(Sentry.captureException as ExceptionCallback);
 }

@@ -11,10 +11,8 @@ let captureException = (exception: unknown, _captureContext?: unknown) => {
     return '';
 };
 
-if (process.versions.electron) {
-    import('@sentry/electron').then(Sentry => {
-        captureException = Sentry.captureException as ExceptionCallback;
-    });
+export function loadCaptureException(capture: ExceptionCallback) {
+    captureException = capture;
 }
 
 export default captureException;
