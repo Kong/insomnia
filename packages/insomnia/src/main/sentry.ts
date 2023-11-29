@@ -46,5 +46,7 @@ export function initializeSentry() {
     transport: ElectronSwitchableTransport,
   });
 
+  // this is a hack for logging the sentry error synthetically made for database parent id null issue
+  // currently the database modules are used in the inso-cli as well as it uses NeDB (why?)
   loadCaptureException(Sentry.captureException as ExceptionCallback);
 }
