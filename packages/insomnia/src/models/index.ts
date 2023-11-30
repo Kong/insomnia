@@ -16,7 +16,7 @@ import {
 import { generateId } from '../common/misc';
 import * as _apiSpec from './api-spec';
 import * as _caCertificate from './ca-certificate';
-import captureException from './capture-exception.util';
+import { loadCaptureException } from './capture-exception.util';
 import * as _clientCertificate from './client-certificate';
 import * as _cookieJar from './cookie-jar';
 import * as _environment from './environment';
@@ -170,7 +170,8 @@ const assertModelWithParentId = (model: BaseModel, info: string) => {
     console.warn(msg);
 
     const err = new Error(msg);
-    captureException(err);
+    const capture = loadCaptureException();
+    capture(err);
   }
 };
 

@@ -10,8 +10,10 @@ let captureException: ExceptionCallback = (exception: unknown) => {
     return '';
 };
 
-export function loadCaptureException(fn: ExceptionCallback) {
-    captureException = fn;
+export function loadCaptureException() {
+    return captureException;
 }
 
-export default captureException;
+export function registerCaptureException(fn: ExceptionCallback) {
+    captureException = fn;
+}
