@@ -57,7 +57,8 @@ export type KeyboardShortcut =
   | 'request_togglePin'
   | 'environment_showVariableSourceAndValue'
   | 'beautifyRequestBody'
-  | 'graphql_explorer_focus_filter';
+  | 'graphql_explorer_focus_filter'
+  | 'toggle_comment';
 
 /**
  * The collection of defined hotkeys.

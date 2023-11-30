@@ -349,6 +349,9 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
       const isAutoCompleteBinding = isKeyCombinationInRegistry(pressedKeyComb, {
         'showAutocomplete': settings.hotKeyRegistry.showAutocomplete,
       });
+      const isToggleCommentBinding = isKeyCombinationInRegistry(pressedKeyComb, {
+        'toggle_comment': settings.hotKeyRegistry.toggle_comment,
+      });
       // Stop the editor from handling global keyboard shortcuts except for the autocomplete binding
       const isShortcutButNotAutocomplete = isUserDefinedKeyboardShortcut && !isAutoCompleteBinding;
       // Should not capture escape in order to exit modals
@@ -375,6 +378,9 @@ export const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(({
             doc.execCommand('autocomplete');
           }
         }
+      }
+      if (isToggleCommentBinding) {
+        doc.execCommand('toggleComment');
       }
     });
     // NOTE: maybe we don't need this anymore?
