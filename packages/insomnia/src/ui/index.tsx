@@ -35,6 +35,7 @@ import { Migrate } from './routes/onboarding.migrate';
 import { shouldOrganizationsRevalidate } from './routes/organization';
 import Root from './routes/root';
 import { initializeSentry } from './sentry';
+import { getWindowMessageHandler } from './window-message-handlers';
 
 const Organization = lazy(() => import('./routes/organization'));
 const Project = lazy(() => import('./routes/project'));
@@ -48,6 +49,9 @@ initializeLogging();
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
 document.title = getProductName();
+
+const windowMessageHandler = getWindowMessageHandler();
+windowMessageHandler.start();
 
 try {
   // In order to run playwight tests that simulate a logged in user
