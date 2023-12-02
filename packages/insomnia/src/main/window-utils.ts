@@ -16,6 +16,7 @@ import {
 } from '../common/constants';
 import { docsBase } from '../common/documentation';
 import * as log from '../common/log';
+import { registerUtilityProcessConsumer } from './ipc/message-channel';
 import LocalStorage from './local-storage';
 
 const { app, Menu, shell, dialog, clipboard, BrowserWindow } = electron;
@@ -26,7 +27,9 @@ const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
 
 let newWindow: ElectronBrowserWindow | null = null;
+let isolatedUtilityProcess: ElectronBrowserWindow | null = null;
 const windows = new Set<ElectronBrowserWindow>();
+const processes = new Set<ElectronBrowserWindow>();
 let localStorage: LocalStorage | null = null;
 
 interface Bounds {
@@ -38,6 +41,45 @@ interface Bounds {
 
 export function init() {
   initLocalStorage();
+}
+
+export function createIsolatedProcess(parent?: electron.BrowserWindow) {
+  isolatedUtilityProcess = new BrowserWindow({
+    parent,
+    show: false,
+    title: 'UtilityProcess',
+    webPreferences: {
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false,
+      webSecurity: true,
+      preload: path.join(__dirname, 'renderers/utility-process/preload-utility-process.js'),
+      spellcheck: false,
+    },
+  });
+
+  const utilityProcessPath = path.resolve(__dirname, './renderers/utility-process/index.html');
+  const utilityProcessUrl = pathToFileURL(utilityProcessPath).href;
+  isolatedUtilityProcess.loadURL(utilityProcessUrl);
+
+  isolatedUtilityProcess.once('ready-to-show', () => {
+    if (isolatedUtilityProcess) {
+      isolatedUtilityProcess.show();
+      if (parent) {
+        parent.webContents.openDevTools();
+      }
+      isolatedUtilityProcess.webContents.openDevTools();
+    }
+  });
+
+  isolatedUtilityProcess?.on('closed', () => {
+    if (isolatedUtilityProcess) {
+      processes.delete(isolatedUtilityProcess);
+      isolatedUtilityProcess = processes.values().next().value || null;
+    }
+  });
+
+  return isolatedUtilityProcess;
 }
 
 export function createWindow() {
@@ -445,10 +487,10 @@ export function createWindow() {
     helpMenu.submenu?.push({
       type: 'separator',
     },
-    {
-      label: `${MNEMONIC_SYM}About`,
-      click: aboutMenuClickHandler,
-    });
+      {
+        label: `${MNEMONIC_SYM}About`,
+        click: aboutMenuClickHandler,
+      });
   }
 
   const developerMenu: MenuItemConstructorOptions = {
@@ -547,6 +589,11 @@ export function createWindow() {
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
   windows.add(newWindow);
+
+  const isolatedProcess = createIsolatedProcess(newWindow);
+  processes.add(isolatedProcess);
+  registerUtilityProcessConsumer([newWindow]);
+
   return newWindow;
 }
 

@@ -6,3 +6,5 @@ src/main.min.js
 src/main.min.js.map
 src/preload.js
 src/preload.js.map
+src/renderers/utility-process/**/*.js
+src/renderers/utility-process/**/*.js.map
