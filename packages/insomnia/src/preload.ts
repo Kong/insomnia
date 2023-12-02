@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
 import { gRPCBridgeAPI } from './main/ipc/grpc';
 import { CurlBridgeAPI } from './main/network/curl';
@@ -100,3 +100,13 @@ if (process.contextIsolated) {
   window.shell = shell;
   window.clipboard = clipboard;
 }
+
+// it is different from window.main.on, it requires events to pass ports
+ipcRenderer.on('ipc://renderers/publish-port', async (ev: IpcRendererEvent) => {
+  const windowLoaded = new Promise(resolve => {
+    window.onload = resolve;
+  });
+  await windowLoaded;
+
+  window.postMessage({ action: 'message-event://renderers/publish-port' }, '*', ev.ports);
+});

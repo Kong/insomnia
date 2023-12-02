@@ -41,6 +41,26 @@ export default async function build(options: Options) {
     format: 'cjs',
     external: ['electron'],
   });
+  const preloadUtilityProcess = esbuild.build({
+    entryPoints: ['./src/renderers/utility-process/preload.ts'],
+    outfile: path.join(outdir, 'renderers/utility-process/preload-utility-process.js'),
+    target: 'esnext',
+    bundle: true,
+    platform: 'node',
+    sourcemap: true,
+    format: 'cjs',
+    external: ['electron'],
+  });
+  const utilityProcess = esbuild.build({
+    entryPoints: ['./src/renderers/utility-process/index.ts'],
+    outfile: path.join(outdir, 'renderers/utility-process/utility-process.min.js'),
+    target: 'esnext',
+    bundle: true,
+    platform: 'browser',
+    sourcemap: true,
+    format: 'cjs',
+    external: [],
+  });
   const main = esbuild.build({
     entryPoints: ['./src/main.development.ts'],
     outfile: path.join(outdir, 'main.min.js'),
@@ -56,7 +76,7 @@ export default async function build(options: Options) {
       ...Object.keys(builtinModules),
     ],
   });
-  return Promise.all([main, preload]);
+  return Promise.all([main, preload, preloadUtilityProcess, utilityProcess]);
 }
 
 // Build if ran as a cli script
