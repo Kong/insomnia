@@ -158,6 +158,7 @@ const TestRoute: FC = () => {
             message: `Do you really want to delete "${suiteName}"?`,
             yesText: 'Delete',
             noText: 'Cancel',
+            color: 'danger',
             onDone: async (isYes: boolean) => {
               if (isYes) {
                 deleteUnitTestSuiteFetcher.submit(

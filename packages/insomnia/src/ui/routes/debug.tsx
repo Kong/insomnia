@@ -313,6 +313,7 @@ export const Debug: FC = () => {
         showModal(AskModal, {
           title: 'Delete Request?',
           message: `Really delete ${activeRequest.name}?`,
+          color: 'danger',
           onDone: async (confirmed: boolean) => {
             if (confirmed) {
               requestFetcher.submit(

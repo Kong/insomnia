@@ -1,5 +1,5 @@
 import React from 'react';
-import { LoaderFunction, Outlet, useLoaderData } from 'react-router-dom';
+import { LoaderFunction, Outlet } from 'react-router-dom';
 
 import { isLoggedIn } from '../../account/session';
 import { SortOrder } from '../../common/constants';
@@ -256,9 +256,7 @@ export const workspaceLoader: LoaderFunction = async ({
 };
 
 const WorkspaceRoute = () => {
-  const workspaceData = useLoaderData() as WorkspaceLoaderData;
-  const branch = workspaceData.activeWorkspaceMeta.cachedGitRepositoryBranch;
-  return <Outlet key={branch} />;
+  return <Outlet />;
 };
 
 export default WorkspaceRoute;

@@ -1,4 +1,20 @@
-import { GraphQLEnumType, GraphQLObjectType, GraphQLSchema, GraphQLString } from 'graphql';
+import { GraphQLEnumType, GraphQLInputObjectType, GraphQLInt, GraphQLObjectType, GraphQLSchema, GraphQLString } from 'graphql';
+
+const TypeVars = new GraphQLObjectType({
+  name: 'Vars',
+  fields: () => ({
+    stringVar: { type: GraphQLString },
+    intVar: { type: GraphQLInt },
+  }),
+});
+
+const InputVars = new GraphQLInputObjectType({
+  name: 'VarsInput',
+  fields: () => ({
+    stringVar: { type: GraphQLString },
+    intVar: { type: GraphQLInt },
+  }),
+});
 
 export const schema = new GraphQLSchema({
   query: new GraphQLObjectType({
@@ -27,6 +43,20 @@ export const schema = new GraphQLSchema({
           },
         }),
         resolve: () => 3,
+      },
+      echoNum: {
+        type: GraphQLInt,
+        args: {
+          'intVar': { type: GraphQLInt },
+        },
+        resolve: () => 777,
+      },
+      echoVars: {
+        type: TypeVars,
+        args: {
+          'vars': { type: InputVars },
+        },
+        resolve: vars => vars,
       },
     },
   }),

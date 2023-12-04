@@ -232,6 +232,7 @@ const UnitTestItemView = ({
               message: `Do you really want to delete "${unitTest.name}"?`,
               yesText: 'Delete',
               noText: 'Cancel',
+              color: 'danger',
               onDone: async (isYes: boolean) => {
                 if (isYes) {
                   deleteUnitTestFetcher.submit(

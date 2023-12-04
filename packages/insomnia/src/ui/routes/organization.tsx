@@ -152,9 +152,9 @@ export const indexLoader: LoaderFunction = async () => {
         sessionId,
       });
 
-      invariant(organizationsResult, 'Failed to load organizations');
-      invariant(user, 'Failed to load user');
-      invariant(currentPlan, 'Failed to load current plan');
+      invariant(organizationsResult && organizationsResult.organizations, 'Failed to load organizations');
+      invariant(user && user.id, 'Failed to load user');
+      invariant(currentPlan && currentPlan.planId, 'Failed to load current plan');
 
       const { organizations } = organizationsResult;
 
@@ -282,12 +282,6 @@ export interface FeatureList {
 export const singleOrgLoader: LoaderFunction = async ({ params }) => {
   const { organizationId } = params as { organizationId: string };
 
-  const organization = organizationsData.organizations.find(o => o.id === organizationId);
-
-  if (!organization) {
-    return redirect('/organization');
-  }
-
   const fallbackFeatures = {
     gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
     orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
@@ -297,6 +291,12 @@ export const singleOrgLoader: LoaderFunction = async ({ params }) => {
     return {
       features: fallbackFeatures,
     };
+  }
+
+  const organization = organizationsData.organizations.find(o => o.id === organizationId);
+
+  if (!organization) {
+    return redirect('/organization');
   }
 
   try {
@@ -456,7 +456,7 @@ const OrganizationRoute = () => {
                     </span>
                   </Button>
                   <MenuTrigger>
-                    <Button className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
+                    <Button data-testid='user-dropdown' className="px-1 py-1 flex-shrink-0 flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] data-[pressed]:bg-[--hl-sm] rounded-full text-[--color-font] hover:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
                       <Avatar
                         src={user.picture}
                         alt={user.name}
