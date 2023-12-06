@@ -1,9 +1,9 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import {
   Button,
-  Item,
   Link,
   Menu,
+  MenuItem,
   MenuTrigger,
   Popover,
   Tooltip,
@@ -499,30 +499,30 @@ const OrganizationRoute = () => {
                           }
                         }}
                       >
-                        <Item
+                        <MenuItem
                           id="manage-organizations"
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                           aria-label="Manage organizations"
                         >
                           <Icon icon="users" />
                           <span>Manage Organizations</span>
-                        </Item>
-                        <Item
+                        </MenuItem>
+                        <MenuItem
                           id="account-settings"
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                           aria-label="Account settings"
                         >
                           <Icon icon="gear" />
                           <span>Account Settings</span>
-                        </Item>
-                        <Item
+                        </MenuItem>
+                        <MenuItem
                           id="logout"
                           className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                           aria-label="logout"
                         >
                           <Icon icon="sign-out" />
                           <span>Log out</span>
-                        </Item>
+                        </MenuItem>
                       </Menu>
                     </Popover>
                   </MenuTrigger>
@@ -639,22 +639,22 @@ const OrganizationRoute = () => {
                     }}
                     className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
                   >
-                    <Item
+                    <MenuItem
                       id="join-organization"
                       className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                       aria-label="Join an organization"
                     >
                       <Icon icon="city" />
                       <span>Join an organization</span>
-                    </Item>
-                    <Item
+                    </MenuItem>
+                    <MenuItem
                       id="new-organization"
                       className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
                       aria-label="Create new organization"
                     >
                       <Icon icon="sign-out" />
                       <span>Create a new organization</span>
-                    </Item>
+                    </MenuItem>
                   </Menu>
                 </Popover>
               </MenuTrigger>

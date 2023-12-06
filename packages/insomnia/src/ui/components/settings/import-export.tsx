@@ -1,5 +1,5 @@
 import React, { FC, Fragment, useEffect, useState } from 'react';
-import { Button, Heading, Item, ListBox, Popover, Select, SelectValue } from 'react-aria-components';
+import { Button, Heading, ListBox, ListBoxItem, Popover, Select, SelectValue } from 'react-aria-components';
 import { useFetcher, useParams } from 'react-router-dom';
 import { useRouteLoaderData } from 'react-router-dom';
 
@@ -62,7 +62,6 @@ const UntrackedProject = ({
           }}
           selectedKey={selectedOrganizationId}
           isDisabled={organizations.length === 0}
-          items={organizations}
         >
           <Button className="px-4 py-1 disabled:bg-[--hl-xs] disabled:cursor-not-allowed font-semibold border border-solid border-[--hl-md] flex items-center justify-center gap-2 aria-pressed:bg-[--hl-sm] rounded-sm text-[--color-font] hover:bg-[--hl-xs] data-[pressed]:bg-[--hl-xs] focus:ring-inset ring-1 ring-transparent focus:ring-[--hl-md] transition-all text-sm">
             <SelectValue<Organization> className="flex truncate items-center justify-center gap-2">
@@ -87,11 +86,12 @@ const UntrackedProject = ({
             <Icon icon="caret-down" />
           </Button>
           <Popover className="min-w-max">
-            <ListBox<Organization>
+            <ListBox
+              items={organizations}
               className="border select-none text-sm min-w-max border-solid border-[--hl-sm] shadow-lg bg-[--color-bg] py-2 rounded-md overflow-y-auto max-h-[85vh] focus:outline-none"
             >
               {item => (
-                <Item
+                <ListBoxItem
                   id={item.id}
                   key={item.id}
                   className="flex gap-2 px-[--padding-md] aria-selected:font-bold items-center text-[--color-font] h-[--line-height-xs] w-full text-md whitespace-nowrap bg-transparent hover:bg-[--hl-sm] disabled:cursor-not-allowed focus:bg-[--hl-xs] focus:outline-none transition-colors"
@@ -110,7 +110,7 @@ const UntrackedProject = ({
                       )}
                     </Fragment>
                   )}
-                </Item>
+                </ListBoxItem>
               )}
             </ListBox>
           </Popover>

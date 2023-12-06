@@ -165,7 +165,7 @@
     "postcss": "^8.4.6",
     "react": "^18.2.0",
     "react-aria": "3.23.1",
-    "react-aria-components": "^1.0.0-alpha.6",
+    "react-aria-components": "^1.0.0-rc.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.19.0",
     "react-stately": "3.21.0",
